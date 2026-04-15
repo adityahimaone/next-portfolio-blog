@@ -8,26 +8,34 @@ import {
   useMotionValueEvent,
 } from 'motion/react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { Sun, Moon, Menu, X } from 'lucide-react'
 import useClickOutside from '@/hooks/use-click-outside'
 
-const sectionItems = [
-  { name: 'HOME', href: '#' },
-  { name: 'ABOUT', href: '#about' },
-  { name: 'SKILLS', href: '#skills' },
-  { name: 'EXP', href: '#experience' },
-  { name: 'WORK', href: '#projects' },
-  { name: 'CONTACT', href: '#contact' },
+const homepageItems = [
+  { name: 'HOME', href: '/' },
+  { name: 'ABOUT', href: '/#about' },
+  { name: 'SKILLS', href: '/#skills' },
+  { name: 'EXP', href: '/#experience' },
+  { name: 'WORK', href: '/#projects' },
+  { name: 'BLOG', href: '/blog' },
+  { name: 'CONTACT', href: '/#contact' },
+  { name: 'PROJECTS', href: '/projects' },
 ]
 
-const pageItems = [
+const subpageItems = [
+  { name: 'HOME', href: '/' },
   { name: 'BLOG', href: '/blog' },
   { name: 'PROJECTS', href: '/projects' },
 ]
 
 export function HeaderKnob() {
+  const pathname = usePathname()
+  const isHomepage = pathname === '/'
+  const navItems = isHomepage ? homepageItems : subpageItems
+
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [activeKnob, setActiveKnob] = useState<string | null>(null)
@@ -115,7 +123,7 @@ export function HeaderKnob() {
 
         {/* Center: Navigation Knobs (Desktop) */}
         <nav className="hidden items-center gap-4 lg:flex xl:gap-8">
-          {sectionItems.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.name}
               href={item.href}
@@ -143,23 +151,6 @@ export function HeaderKnob() {
               >
                 {item.name}
               </span>
-            </Link>
-          ))}
-
-          {/* Separator */}
-          <div className="h-8 w-px bg-zinc-300 dark:bg-zinc-700" />
-
-          {/* Page Links */}
-          {pageItems.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="group relative text-sm font-semibold tracking-wider text-zinc-600 transition-colors hover:text-primary dark:text-zinc-400 dark:hover:text-primary-light"
-              onMouseEnter={() => setActiveKnob(item.name)}
-              onMouseLeave={() => setActiveKnob(null)}
-            >
-              {item.name}
-              <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-primary transition-all group-hover:w-full dark:bg-primary-light" />
             </Link>
           ))}
         </nav>
@@ -270,7 +261,7 @@ export function HeaderKnob() {
             className="fixed inset-x-4 top-24 z-40 overflow-hidden rounded-3xl border border-zinc-200 bg-white/95 p-6 shadow-2xl backdrop-blur-xl lg:hidden dark:border-zinc-800 dark:bg-zinc-900/95"
           >
             <nav className="grid gap-4">
-              {sectionItems.map((item, index) => (
+              {navItems.map((item, index) => (
                 <motion.div
                   key={item.name}
                   initial={{ opacity: 0, x: -20 }}
@@ -286,30 +277,6 @@ export function HeaderKnob() {
                       {item.name}
                     </span>
                     <div className="h-2 w-2 rounded-full bg-zinc-300 dark:bg-zinc-600" />
-                  </Link>
-                </motion.div>
-              ))}
-
-              {/* Separator */}
-              <div className="my-2 h-px bg-zinc-200 dark:bg-zinc-700" />
-
-              {/* Page Links */}
-              {pageItems.map((item, index) => (
-                <motion.div
-                  key={item.name}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (sectionItems.length + index) * 0.05 }}
-                >
-                  <Link
-                    href={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-between rounded-xl bg-primary/5 p-4 transition-colors hover:bg-primary/10 dark:bg-primary/10 dark:hover:bg-primary/20"
-                  >
-                    <span className="text-lg font-bold tracking-wider text-primary dark:text-primary-light">
-                      {item.name}
-                    </span>
-                    <div className="h-2 w-2 rounded-full bg-primary/30 dark:bg-primary-light/30" />
                   </Link>
                 </motion.div>
               ))}

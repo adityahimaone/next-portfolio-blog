@@ -22,7 +22,7 @@ import { SectionDivider } from '@/components/section-divider'
 import { ChevronUp } from 'lucide-react'
 import { MusicPlayer } from './spotify/music-player'
 import { MusicMarquee } from './spotify/music-marquee'
-import { ProjectsSection2025 } from '@/features/projects/components/projects-section'
+import { ProjectsSection2025 } from './sections/projects'
 
 export default function LandingPage() {
   const { scrollYProgress } = useScroll()

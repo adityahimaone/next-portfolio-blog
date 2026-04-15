@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useMemo } from 'react'
-import { cn } from '@shared/lib/utils'
+import { cn } from '@/lib/utils'
 import { useTheme } from 'next-themes'
 
 interface OscilloscopeBackgroundProps {

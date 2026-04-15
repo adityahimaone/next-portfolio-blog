@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, useAnimationFrame } from 'motion/react'
-import { cn } from '@shared/lib/utils'
+import { cn } from '@/lib/utils'
 import { useTheme } from 'next-themes'
 
 interface MusicBackgroundProps {

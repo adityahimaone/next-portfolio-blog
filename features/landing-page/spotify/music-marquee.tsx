@@ -3,7 +3,7 @@
 import { motion } from 'motion/react'
 import { useTheme } from 'next-themes'
 import { useState, useEffect } from 'react'
-import { cn } from '@shared/lib/utils'
+import { cn } from '@/lib/utils'
 
 interface MusicMarqueeProps {
   className?: string

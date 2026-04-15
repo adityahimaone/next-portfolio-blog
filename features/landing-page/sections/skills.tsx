@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { LazyMotion, domMax, m, useMotionValue, animate } from 'motion/react'
-import { cn } from '@shared/lib/utils'
+import { cn } from '@/lib/utils'
 import { Sliders, Music, Zap, Power } from 'lucide-react'
 
 // --- Data (Static - outside component for performance) ---

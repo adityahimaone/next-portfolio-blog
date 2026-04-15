@@ -3,8 +3,8 @@
 import { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'motion/react'
 import { Play, Pause, SkipForward, Disc } from 'lucide-react'
-import { Magnetic } from '@shared/components/magnetic'
-import { TextEffect } from '@shared/components/text-effect'
+import { Magnetic } from '@/components/magnetic'
+import { TextEffect } from '@/components/text-effect'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import { Monoton, Syne } from 'next/font/google'
 

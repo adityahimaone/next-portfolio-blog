@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { NowPlayingResponse, SpotifyNowPlayingData } from '@shared/types'
+import { NowPlayingResponse, SpotifyNowPlayingData } from '@/types'
 import { getNowPlaying } from '@/features/landing-page/spotify/spotify'
 
 export const revalidate = 0 // disable cache

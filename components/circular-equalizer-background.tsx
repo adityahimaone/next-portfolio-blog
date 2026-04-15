@@ -1,20 +1,20 @@
 'use client'
 
 import { useEffect, useRef, useState, useMemo } from 'react'
-import { cn } from '@shared/lib/utils'
+import { cn } from '@/lib/utils'
 import { useTheme } from 'next-themes'
 
-interface EqualizerBackgroundProps {
+interface CircularEqualizerBackgroundProps {
   className?: string
   children?: React.ReactNode
   barCount?: number
 }
 
-export function EqualizerBackground({
+export function CircularEqualizerBackground({
   className,
   children,
-  barCount = 40,
-}: EqualizerBackgroundProps) {
+  barCount = 120,
+}: CircularEqualizerBackgroundProps) {
   const { resolvedTheme } = useTheme()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [mounted, setMounted] = useState(false)
@@ -29,7 +29,6 @@ export function EqualizerBackground({
       primary: isDarkMode ? '#273281' : '#273281',
       secondary: isDarkMode ? '#3d468b' : '#3d468b',
       accent: isDarkMode ? '#E6A817' : '#E6A817',
-      bg: isDarkMode ? 'transparent' : 'transparent',
     }),
     [isDarkMode],
   )
@@ -48,15 +47,21 @@ export function EqualizerBackground({
     if (!ctx) return
 
     // Bar state
-    const bars: { height: number; targetHeight: number; speed: number }[] = []
+    const bars: {
+      height: number
+      targetHeight: number
+      speed: number
+      hue: number
+    }[] = []
 
     const initBars = () => {
       bars.length = 0
       for (let i = 0; i < barCount; i++) {
         bars.push({
-          height: Math.random() * 100,
-          targetHeight: Math.random() * 100,
-          speed: 0.5 + Math.random() * 2,
+          height: 10 + Math.random() * 50,
+          targetHeight: 10 + Math.random() * 50,
+          speed: 0.05 + Math.random() * 0.1,
+          hue: i % 3 === 0 ? 230 : i % 3 === 1 ? 235 : 40, // Approximate hues for primary, secondary, accent
         })
       }
     }
@@ -74,58 +79,91 @@ export function EqualizerBackground({
     window.addEventListener('resize', resizeCanvas)
     resizeCanvas()
 
+    let rotation = 0
+
     const render = () => {
       if (!ctx || !canvas) return
 
       const width = canvas.width / (window.devicePixelRatio || 1)
       const height = canvas.height / (window.devicePixelRatio || 1)
+      const centerX = width / 2
+      const centerY = height / 2
+      const radius = Math.min(width, height) * 0.25
 
       ctx.clearRect(0, 0, width, height)
 
-      const barWidth = width / barCount
-      const maxBarHeight = height * 0.4 // Max height is 40% of screen
+      rotation += 0.002
+
+      ctx.save()
+      ctx.translate(centerX, centerY)
+      ctx.rotate(rotation)
+
+      const angleStep = (Math.PI * 2) / barCount
 
       bars.forEach((bar, i) => {
         // Update bar height
         if (Math.abs(bar.height - bar.targetHeight) < 1) {
-          bar.targetHeight = Math.random() * 100
-          bar.speed = 0.5 + Math.random() * 2
+          bar.targetHeight =
+            10 + Math.random() * (Math.min(width, height) * 0.15)
+          bar.speed = 0.05 + Math.random() * 0.1
         } else {
-          bar.height += (bar.targetHeight - bar.height) * 0.05 * bar.speed
+          bar.height += (bar.targetHeight - bar.height) * bar.speed
         }
 
-        // Draw bar
-        const x = i * barWidth
-        const h = (bar.height / 100) * maxBarHeight
+        const angle = i * angleStep
 
-        // Create gradient
-        const gradient = ctx.createLinearGradient(x, height, x, height - h)
-        gradient.addColorStop(0, colors.primary)
-        gradient.addColorStop(0.5, colors.secondary)
-        gradient.addColorStop(1, colors.accent)
+        ctx.save()
+        ctx.rotate(angle)
+
+        // Draw bar
+        // We draw it at radius distance from center
+
+        // Create gradient for the bar
+        const gradient = ctx.createLinearGradient(
+          0,
+          radius,
+          0,
+          radius + bar.height,
+        )
+
+        if (i % 3 === 0) {
+          gradient.addColorStop(0, colors.primary)
+          gradient.addColorStop(1, 'transparent')
+        } else if (i % 3 === 1) {
+          gradient.addColorStop(0, colors.secondary)
+          gradient.addColorStop(1, 'transparent')
+        } else {
+          gradient.addColorStop(0, colors.accent)
+          gradient.addColorStop(1, 'transparent')
+        }
 
         ctx.fillStyle = gradient
 
-        // Draw rounded rect top
-        const radius = barWidth / 2
+        // Draw rounded rect
+        const barWidth = ((Math.PI * 2 * radius) / barCount) * 0.6
 
         ctx.beginPath()
-        ctx.moveTo(x, height)
-        ctx.lineTo(x, height - h + radius)
-        ctx.quadraticCurveTo(x, height - h, x + radius, height - h)
-        ctx.quadraticCurveTo(
-          x + barWidth,
-          height - h,
-          x + barWidth,
-          height - h + radius,
-        )
-        ctx.lineTo(x + barWidth, height)
-        ctx.closePath()
+        ctx.roundRect(-barWidth / 2, radius, barWidth, bar.height, barWidth / 2)
+        ctx.fill()
 
-        ctx.globalAlpha = 0.15 // Subtle opacity
+        // Reflection (inner bars)
+        ctx.fillStyle = gradient
+        ctx.globalAlpha = 0.3
+        ctx.beginPath()
+        ctx.roundRect(
+          -barWidth / 2,
+          radius - bar.height * 0.3,
+          barWidth,
+          bar.height * 0.3,
+          barWidth / 2,
+        )
         ctx.fill()
         ctx.globalAlpha = 1.0
+
+        ctx.restore()
       })
+
+      ctx.restore()
 
       animationFrameRef.current = requestAnimationFrame(render)
     }

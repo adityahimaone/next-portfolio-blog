@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
-import { cn } from '@shared/lib/utils'
+import { cn } from '@/lib/utils'
 
 const Screw = ({ className }: { className?: string }) => (
   <div

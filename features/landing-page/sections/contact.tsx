@@ -11,7 +11,7 @@ import {
   Radio,
   Square,
 } from 'lucide-react'
-import { cn } from '@shared/lib/utils'
+import { cn } from '@/lib/utils'
 import { useAudioEngine } from '@/features/landing-page/spotify/use-audio-engine'
 
 // --- Components ---

@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
-import { Slider } from '@shared/components/slider'
+import { Slider } from '@/components/slider'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
-import useClickOutside from '@shared/hooks/use-click-outside'
-import { cn } from '@shared/lib/utils'
+import useClickOutside from '@/hooks/use-click-outside'
+import { cn } from '@/lib/utils'
 
 export function MusicPlayer() {
   const { isPlaying, togglePlay, isMuted, toggleMute, volume, setVolume } =

@@ -9,9 +9,9 @@ import {
 } from 'motion/react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
-import { cn } from '@shared/lib/utils'
+import { cn } from '@/lib/utils'
 import { Sun, Moon, Menu, X } from 'lucide-react'
-import useClickOutside from '@shared/hooks/use-click-outside'
+import useClickOutside from '@/hooks/use-click-outside'
 
 const navItems = [
   { name: 'HOME', href: '#' },

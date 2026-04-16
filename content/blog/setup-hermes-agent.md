@@ -9,126 +9,52 @@ published: true
 
 # Setting Up Hermes Agent — My AI-Powered Dev Assistant
 
-I've been using AI assistants in my workflow for a while, but I wanted something deeper — an agent that knows my preferences, runs in my terminal, and automates my daily tasks. That's how I ended up building and configuring **Hermes Agent**.
+I got tired of copy-pasting terminal output into browser tabs. Every debugging session meant switching between ChatGPT, my editor, and my terminal, losing context every time I switched windows. I wanted something that lived where I already worked and remembered how I liked things done. That is how I ended up building and configuring Hermes Agent.
 
-## What Is Hermes Agent?
+## What Hermes Actually Is
 
-Hermes is a terminal-based AI assistant that lives on your machine. It's not just a chatbot — it can execute shell commands, manage files, run cron jobs, send messages, and even control smart home devices. Think of it as a programmable AI that you can customize with "skills" — reusable workflows for specific tasks.
+Hermes is a terminal-based AI assistant that runs on your machine. It can execute shell commands, manage files, schedule cron jobs, send messages, and control smart home devices. The difference from ChatGPT or Claude in a browser is not just convenience. Hermes maintains persistent memory across sessions, has direct tool access to your filesystem and network, and uses a system called "skills" to encode reusable procedures. A skill is a markdown file that tells the agent exactly how to perform a task the way you want it done.
 
-The key difference from ChatGPT or Claude in a browser? Hermes has **persistent memory**, **tool access**, and **skills** that encode how you like things done.
+## The Stack
 
-## My Setup
+I run Hermes on macOS. The primary model is Nemotron 3 Super 120B via OpenRouter, with Groq running GPT-OSS 20B as a fallback, and DeepSeek 3.2 as tertiary. The model routing is automatic — if one provider hits rate limits, it switches to the next without manual intervention.
 
-I run Hermes on macOS with the following stack:
+The real cost savings come from two tools layered on top: RTK (Rust Token Killer) and Caveman. RTK compresses CLI output by 60 to 90 percent depending on the command type. Running `rtk git log` instead of plain `git log` cuts the token count from 200-plus down to around 40, with the same information. It works across git, npm, pnpm, docker, tsc, lint, vitest, and Playwright. Test results compress by 90 percent, build output by 80 percent, git operations by 59 percent.
 
-- **Primary model:** Nemotron 3 Super 120B via OpenRouter
-- **Fallback:** Groq with GPT-OSS 20B, then DeepSeek 3.2
-- **Token optimization:** RTK (Rust Token Killer) — 60-90% savings on CLI output
-- **Templating:** Caveman — token-efficient output formatting
+Caveman goes further by letting you define output templates. Instead of raw CLI dump, you get structured, minimal responses. The two tools combined push savings into the 95 to 99 percent range on repetitive workflows. Over a full day of agent use, that is thousands of tokens saved.
 
-### RTK — The Token Saver
+## Forty-One Skills Across Nine Categories
 
-One of the first things I set up was RTK. If you've ever looked at `git log` output or build errors in an AI context window, you know how expensive verbose output can be. RTK prefixes your commands and compresses the output:
+Skills are where Hermes stops being a chatbot and becomes infrastructure. Each skill is a markdown file with instructions, examples, pitfalls, and verification steps. I have 41 of them organized into nine categories.
 
-```bash
-# Without RTK: 200+ tokens of git log output
-git log --oneline -20
+The finance category has five skills built around Zenith Finance, a multi-account ledger system that tracks transactions, processes OCR receipts, and syncs to Google Sheets automatically. The GitHub category covers the full PR lifecycle — creating branches, reviewing code with inline comments, monitoring CI, and merging. Thirteen productivity skills handle Obsidian note management, Google Workspace integration, Linear issue tracking, PowerPoint creation, and PDF text extraction. Seven research skills search arXiv papers, query Polymarket prediction data, monitor RSS feeds, and build persistent knowledge bases.
 
-# With RTK: ~40 tokens, same info
-rtk git log --oneline -20
-```
+The remaining categories handle DevOps tasks like Syncthing folder sync and MySQL service management, software development patterns like Caveman template integration and context optimization, regex debugging, frontend architecture templates, and multi-vault Obsidian management.
 
-It works with git, npm, pnpm, docker, tsc, lint, vitest, playwright — basically anything that produces structured CLI output. The savings add up fast: 90% on test results, 80% on build output, 59% on git operations.
-
-### Caveman Templates
-
-Caveman takes it further by letting you define output templates. Instead of raw CLI output, you get structured, minimal responses. Combined with RTK, I'm getting 90-99% token savings on repetitive workflows.
-
-## The Skills System
-
-This is where Hermes gets powerful. Skills are markdown files that encode procedures — how to do specific tasks. I have **41 custom skills** across 9 categories:
-
-### Finance (5 skills)
-- **Zenith Finance** — Multi-account ledger, transaction logging, OCR receipt processing
-- **Google Sheets Sync** — Auto-sync transactions and ledger to Google Sheets
-- **Finance Maintenance** — Keep local files clean and synced
-
-### GitHub (7 skills)
-- PR lifecycle management (create, review, merge)
-- Issue triage and management
-- Code review with inline comments
-- Repository management and SSH setup
-
-### Productivity (13 skills)
-- **Obsidian integration** — Create and search notes across vaults
-- **Google Workspace** — Gmail, Calendar, Drive, Sheets via Python
-- **Linear** — Issue management via GraphQL API
-- **PowerPoint** — Create and edit .pptx files
-- **OCR** — Extract text from PDFs and scanned documents
-
-### Research (7 skills)
-- **arXiv** — Search and retrieve academic papers
-- **Polymarket** — Query prediction market data
-- **Blogwatcher** — Monitor RSS/Atom feeds for updates
-- **LLM Wiki** — Build persistent knowledge bases
-
-### DevOps (4 skills)
-- **Syncthing** — Cross-device folder sync
-- **MySQL Service Manager** — Homebrew MySQL management
-- **Webhook Subscriptions** — Event-driven agent activation
-
-### Software Development (2 skills)
-- **Caveman + RTK Integration** — Token-efficient output formatting
-- **Context Optimization** — Manage memory and session pruning
-
-### Debugging (1 skill)
-- **Regex Pattern Debugging** — Systematic approach to fixing regex issues
-
-### Frontend Architect (1 skill)
-- **Caveman Template Integration** — Token-efficient CLI output for frontend workflows
-
-### Note Taking (1 skill)
-- **Obsidian** — Multi-vault note management with smart path resolution
+What makes skills different from just having good prompts is that they persist, they accumulate, and they get refined over time. A skill I wrote three months ago for Zenith Finance sync has been patched four times as I discovered edge cases. That institutional knowledge lives in the skill file, not in my head.
 
 ## Automated Workflows
 
-Hermes runs several automated workflows via cron jobs:
+Several processes run on schedule without my input. A morning digest aggregates overnight API costs, cron job health status, and any alerts from the past 24 hours. A self-improvement cron analyzes past sessions for recurring failures and skill gaps, then creates or patches skills automatically. Finance transactions sync to Google Sheets on a schedule. Work-from-office events get synchronized between Google Calendar and Apple Calendar so my phone and laptop stay in agreement.
 
-- **Morning digest** — Aggregates overnight costs, cron health, and alerts
-- **Self-improvement** — Analyzes past sessions for skill gaps and creates patches
-- **Finance sync** — Auto-syncs transactions to Google Sheets
-- **WFO tracking** — Monitors and syncs work-from-office events between Google and Apple Calendar
+These are not complex workflows individually. The value is that they run consistently without me remembering to trigger them.
 
-## The Backup Strategy
+## The Backup Problem
 
-I keep a complete backup of my Hermes setup in a GitHub repo: [hermes-agent-backup](https://github.com/adityahimaone/hermes-agent-backup). It includes:
+An AI agent with custom skills and persistent memory is a real investment. Losing it would mean weeks of reconfiguration. I keep a complete backup in a GitHub repo called hermes-agent-backup. It contains the core RTK configuration, all 41 skills organized by category, wrapper scripts for Caveman and Zenith Finance, token-efficient templates, and an automated installation script. Setting up Hermes on a new machine is a single command sequence — clone the repo and run the installer.
 
-- Core configuration (RTK rules, memory profile, user preferences)
-- All 41 custom skills organized by category
-- Wrapper scripts for Caveman and Zenith Finance
-- Token-efficient templates
-- Automated installation script (`install.sh`)
+The backup also serves as documentation. When I want to remember why I configured something a certain way, the skill files and configuration comments tell the story.
 
-If I ever need to set up Hermes on a new machine, it's one command:
+## What I Got Wrong Initially
 
-```bash
-git clone https://github.com/adityahimaone/hermes-agent-backup.git
-cd hermes-agent-backup
-./install.sh
-```
+I started with too many skills. The first iteration had 60-plus skills, many of them overlapping or too granular. A skill for "git commit" and another for "git push" is wasteful when a single "git workflow" skill handles both. I consolidated down to 41 and the system became faster and easier to maintain.
 
-## What I Learned
+I also underestimated token optimization at first. Running agents without RTK meant burning through context windows on verbose output that added no value. Once I integrated RTK and Caveman, the same tasks used a fraction of the tokens. That compounds over a full workday.
 
-1. **Skills are everything** — The value of an AI agent isn't in the model, it's in the procedures you teach it. A skill that encodes your exact workflow is worth more than a smarter model.
+The other mistake was not backing up early enough. I lost a week of skill refinations during a machine migration because I had not set up the backup repo yet. Now the backup runs as part of my regular workflow, not as an afterthought.
 
-2. **Token optimization matters** — RTK and Caveman saved me thousands of tokens per session. When you're running an agent all day, those savings compound.
+## Where This Goes Next
 
-3. **Backup your config** — An AI agent with custom skills and memory is a significant investment. Back it up like you would any other codebase.
+I am looking at MCP (Model Context Protocol) integrations to connect external services more cleanly, multi-agent workflows for running independent tasks in parallel, and expanding the research skills for deeper market analysis. The skills system is extensible by design — when I discover a new recurring workflow, I write a skill for it and it becomes permanent infrastructure.
 
-4. **Start simple, iterate** — I didn't build 41 skills at once. I started with the workflows I use most (git, finance, Obsidian) and added more as I discovered pain points.
-
-## What's Next
-
-I'm exploring MCP (Model Context Protocol) integrations for connecting external services, multi-agent workflows for parallel task execution, and expanding the research skills for better market analysis.
-
-If you're interested in setting up something similar, check out the [hermes-agent-backup](https://github.com/adityahimaone/hermes-agent-backup) repo — it's designed to be a starting point you can customize.
+The repo at hermes-agent-backup is designed as a starting point for anyone who wants to build something similar. The configuration, the skills, and the automation patterns are all there. What you build on top of it depends on what problems you actually have.

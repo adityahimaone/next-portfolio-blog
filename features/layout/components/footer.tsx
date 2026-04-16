@@ -1,6 +1,6 @@
 'use client'
 
-import { m as motion, useInView } from 'motion/react'
+import { motion, useInView } from 'motion/react'
 import Link from 'next/link'
 import { useRef, useState } from 'react'
 import {

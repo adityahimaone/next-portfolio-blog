@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { m as motion, AnimatePresence } from 'motion/react'
+import { motion, AnimatePresence } from 'motion/react'
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
 import { Slider } from '@/components/slider'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'

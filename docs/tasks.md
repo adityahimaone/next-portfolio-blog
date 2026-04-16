@@ -104,3 +104,11 @@
 ## ✅ Completed
 
 All phases updated and refined up to 2026-04-16.
+
+## Phase 5: Blog Content
+
+### 5.1 New Blog Posts
+- [x] "Setting Up Hermes Agent — My AI-Powered Dev Assistant" (setup-hermes-agent.md, 2026-04-16)
+
+### 5.2 Documentation
+- [x] Created `docs/hermes-skills.md` — Complete skills index (41 skills, 9 categories)

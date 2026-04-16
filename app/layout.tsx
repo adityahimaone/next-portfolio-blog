@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from 'next-themes'
 import { AudioProvider } from '@/features/landing-page/spotify/audio-context'
+import { MusicPlayer } from '@/features/landing-page/spotify/music-player'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -76,6 +77,7 @@ export default function RootLayout({
           <AudioProvider>
             <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-geist)]">
               <div className="relative flex-1">{children}</div>
+              <MusicPlayer />
             </div>
           </AudioProvider>
         </ThemeProvider>

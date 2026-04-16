@@ -1,5 +1,5 @@
-import { ExternalLink, Star } from 'lucide-react'
-import type { GitHubRepo } from '../github'
+import { ExternalLink, Star, Radio } from 'lucide-react'
+import type { GitHubRepo } from '../lib/github'
 
 export function ProjectCardMini({ repo }: { repo: GitHubRepo }) {
   return (
@@ -7,9 +7,14 @@ export function ProjectCardMini({ repo }: { repo: GitHubRepo }) {
       href={repo.html_url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex flex-col rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-primary/30 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-primary/50"
+      className="group relative flex flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-primary/30 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-primary/50"
     >
-      <div className="flex items-start justify-between">
+      {/* Decorative Radio Watermark */}
+      <div className="pointer-events-none absolute -bottom-4 -right-4 opacity-10 text-zinc-300 dark:text-zinc-700 transition-all duration-500 group-hover:scale-110 group-hover:-rotate-[-10deg] group-hover:text-primary/10">
+        <Radio size={80} strokeWidth={1} />
+      </div>
+
+      <div className="relative z-10 flex items-start justify-between">
         <h4 className="font-medium text-zinc-900 group-hover:text-primary dark:text-white dark:group-hover:text-primary-light">
           {repo.name}
         </h4>
@@ -19,11 +24,11 @@ export function ProjectCardMini({ repo }: { repo: GitHubRepo }) {
         />
       </div>
 
-      <p className="mt-1 line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="relative z-10 mt-1 line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">
         {repo.description || 'No description'}
       </p>
 
-      <div className="mt-3 flex items-center gap-3 text-xs text-zinc-400">
+      <div className="relative z-10 mt-3 flex items-center gap-3 text-xs text-zinc-400">
         {repo.language && (
           <span className="flex items-center gap-1">
             <span className="h-2.5 w-2.5 rounded-full bg-primary" />

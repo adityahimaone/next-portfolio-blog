@@ -5,15 +5,15 @@ const nextConfig = {
   reactStrictMode: true,
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
   images: {
-    domains: [
-      'images.unsplash.com',
-      'i.gifer.com',
-      'images.ctfassets.net',
-      'camo.githubusercontent.com',
-      'cdn.sanity.io',
-      'res.cloudinary.com',
-      'i.scdn.co',
-      'ucarecdn.com',
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'i.gifer.com' },
+      { protocol: 'https', hostname: 'images.ctfassets.net' },
+      { protocol: 'https', hostname: 'camo.githubusercontent.com' },
+      { protocol: 'https', hostname: 'cdn.sanity.io' },
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+      { protocol: 'https', hostname: 'i.scdn.co' },
+      { protocol: 'https', hostname: 'ucarecdn.com' },
     ],
   },
 }

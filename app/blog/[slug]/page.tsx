@@ -1,7 +1,5 @@
-import { getPost, getAllSlugs } from '@/features/blog/blog'
-import { BlogPost } from '@/features/blog/components/blog-post'
-import { HeaderKnob } from '@/features/layout/header'
-import { Footer2025V2 } from '@/features/layout/footer'
+import { getPost, getAllSlugs } from '@/features/blog/lib/blog'
+import { BlogPostPage } from '@/features/blog'
 import type { Metadata } from 'next'
 
 export async function generateStaticParams() {
@@ -33,11 +31,5 @@ export default async function Page({
 }) {
   const { slug } = await params
   const { meta, content } = getPost(slug)
-  return (
-    <>
-      <HeaderKnob />
-      <BlogPost meta={meta} content={content} />
-      <Footer2025V2 />
-    </>
-  )
+  return <BlogPostPage meta={meta} content={content} />
 }

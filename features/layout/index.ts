@@ -1,2 +1,3 @@
-export { HeaderKnob as Header } from './header'
-export { Footer2025V2 as Footer } from './footer'
+export { Header } from './components/header'
+export { SubpageHeader } from './components/subpage-header'
+export { Footer } from './components/footer'

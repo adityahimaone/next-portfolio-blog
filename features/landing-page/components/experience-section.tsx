@@ -6,99 +6,18 @@ import {
   Briefcase,
   Calendar,
   MapPin,
-  Disc,
   Music,
-  Play,
   ListMusic,
-  Mic2,
   Radio,
-  Headphones,
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { EXPERIENCES } from '../constants'
 
-const experiences = [
-  {
-    id: 1,
-    role: 'Frontend Developer',
-    type: 'Full Time',
-    company: 'Fast 8 People Hub',
-    location: 'Jakarta, Indonesia',
-    period: 'OCT 2022 - PRESENT',
-    color: 'bg-purple-500',
-    description: [
-      'Led the development of "Bisadaya" job-seeking platform serving thousands of users.',
-      'Architected an automated KPI tracking system with interactive dashboards.',
-      'Executed critical maintenance tasks and bug fixes across legacy and modern codebases.',
-    ],
-  },
-  {
-    id: 2,
-    role: 'Frontend Developer',
-    type: 'Part Time',
-    company: '80&Company',
-    location: 'Kyoto, Japan (Remote)',
-    period: 'APR 2024 - SEP 2024',
-    color: 'bg-blue-500',
-    description: [
-      'Spearheaded the development of a innovative Workforce Management System incorporating blockchain technology.',
-      'Maintained the application, resolving critical bugs to improve system reliability.',
-      'Collaborated with the design team to create a user-friendly interface.',
-    ],
-  },
-  {
-    id: 3,
-    role: 'Frontend Developer',
-    type: 'Full Time',
-    company: 'Unzypsoft',
-    location: 'Jakarta, Indonesia',
-    period: 'JUN 2022 - AUG 2024',
-    color: 'bg-pink-500',
-    description: [
-      'Collaborated on BSN e-commerce platform frontend using ReactJS.',
-      'Developed a dynamic NFT protocol interface with ReactJS and Tailwind CSS.',
-      'Created reusable components that boosted development efficiency.',
-    ],
-  },
-  {
-    id: 4,
-    role: 'Vocational Courses',
-    type: 'Education',
-    company: 'Various Academies',
-    location: 'Online',
-    period: '2021 - 2022',
-    color: 'bg-orange-500',
-    isGroup: true,
-    items: [
-      {
-        role: 'Frontend Developer',
-        period: 'FEB 2022 - JUL 2022',
-        company: 'Binar Academy',
-        description:
-          'Developed a car booking frontend using NodeJS, EJS, ReactJS, and NextJS.',
-      },
-      {
-        role: 'Fullstack Engineering',
-        period: 'AUG 2021 - JAN 2022',
-        company: 'Alterra Academy',
-        description:
-          'Built a Calories Tracker & Hospital Management System with Golang and ReactJS.',
-      },
-      {
-        role: 'Cloud Computing',
-        period: 'FEB 2021 - JUL 2021',
-        company: 'Bangkit Academy',
-        description:
-          'Capstone project: Machine learning app for calorie estimation deployed on Google Cloud.',
-      },
-    ],
-  },
-]
-
-export function ExperienceSection2025() {
-  const [selectedId, setSelectedId] = useState(experiences[0].id)
+export function ExperienceSection() {
+  const [selectedId, setSelectedId] = useState(EXPERIENCES[0].id)
   const selectedJob =
-    experiences.find((e) => e.id === selectedId) || experiences[0]
+    EXPERIENCES.find((e) => e.id === selectedId) || EXPERIENCES[0]
 
   return (
     <LazyMotion features={domMax}>
@@ -132,7 +51,7 @@ export function ExperienceSection2025() {
                 <div className="mb-2 px-4 py-2 text-xs font-bold tracking-wider text-zinc-400 uppercase">
                   Select a Track
                 </div>
-                {experiences.map((exp) => (
+                {EXPERIENCES.map((exp) => (
                   <button
                     key={exp.id}
                     onClick={() => setSelectedId(exp.id)}
@@ -382,7 +301,7 @@ export function ExperienceSection2025() {
                       <div className="flex items-center gap-2 text-zinc-800">
                         <ListMusic className="h-4 w-4" />
                         <span className="text-xs">
-                          {selectedId} / {experiences.length}
+                          {selectedId} / {EXPERIENCES.length}
                         </span>
                       </div>
                     </div>

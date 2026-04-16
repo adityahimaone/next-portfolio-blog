@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { ExternalLink, Star, Github } from 'lucide-react'
-import type { FeaturedProject } from '../data'
-import type { GitHubRepo } from '../github'
+import { ExternalLink, Star, Github, Disc3 } from 'lucide-react'
+import type { FeaturedProject } from '../constants'
+import type { GitHubRepo } from '../lib/github'
 
 export function ProjectCard({
   project,
@@ -14,7 +14,16 @@ export function ProjectCard({
     <div className="group relative flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition-all hover:border-primary/30 hover:shadow-xl dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-primary/50">
       {/* Gradient header */}
       <div className="relative h-40 overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
-        <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent dark:from-zinc-900/80" />
+        {/* Speaker Grille Pattern */}
+        <div 
+          className="absolute inset-0 bg-[radial-gradient(#000_1px,transparent_1px)] opacity-5 dark:bg-[radial-gradient(#fff_1px,transparent_1px)] dark:opacity-10" 
+          style={{ backgroundSize: '4px 4px' }} 
+        />
+        {/* Decorative Vinyl */}
+        <div className="absolute -right-8 -top-8 text-primary/10 transition-transform duration-700 ease-out group-hover:rotate-45 dark:text-primary-light/10">
+          <Disc3 size={160} strokeWidth={1} />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-white/90 to-transparent dark:from-zinc-900/90" />
         <div className="absolute bottom-4 left-4 right-4">
           <h3 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">
             {project.name}

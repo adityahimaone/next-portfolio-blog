@@ -4,45 +4,29 @@ import { useState, useEffect, useRef } from 'react'
 import {
   motion,
   AnimatePresence,
-  useScroll,
-  useMotionValueEvent,
 } from 'motion/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
-import { Sun, Moon, Menu, X } from 'lucide-react'
+import { Sun, Moon } from 'lucide-react'
 import useClickOutside from '@/hooks/use-click-outside'
+import { SUBPAGE_NAV_ITEMS } from '../constants'
+import { useScrollState } from '../hooks/use-scroll-state'
 
-const homepageItems = [
-  { name: 'HOME', href: '/' },
-  { name: 'ABOUT', href: '/#about' },
-  { name: 'SKILLS', href: '/#skills' },
-  { name: 'EXP', href: '/#experience' },
-  { name: 'WORK', href: '/#projects' },
-  { name: 'BLOG', href: '/blog' },
-  { name: 'CONTACT', href: '/#contact' },
-  { name: 'PROJECTS', href: '/projects' },
-]
-
-const subpageItems = [
-  { name: 'HOME', href: '/' },
-  { name: 'BLOG', href: '/blog' },
-  { name: 'PROJECTS', href: '/projects' },
-]
-
-export function HeaderKnob() {
+export function SubpageHeader() {
   const pathname = usePathname()
-  const isHomepage = pathname === '/'
-  const navItems = isHomepage ? homepageItems : subpageItems
+  const navItems = SUBPAGE_NAV_ITEMS
+  
+  const pageLinks = navItems.filter(item => !item.href.startsWith('/#') && item.href !== '/')
+  const scrollLinks = navItems.filter(item => !pageLinks.includes(item))
 
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [activeKnob, setActiveKnob] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isPlugged, setIsPlugged] = useState(false)
-  const { scrollY } = useScroll()
+  const isScrolled = useScrollState()
+  const [isPlugged, setIsPlugged] = useState(true) // Always plugged in subpages for aesthetic
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const toggleButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -59,14 +43,6 @@ export function HeaderKnob() {
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  useMotionValueEvent(scrollY, 'change', (latest) => {
-    if (latest > 50) {
-      setIsScrolled(true)
-    } else {
-      setIsScrolled(false)
-    }
-  })
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark')
@@ -121,38 +97,83 @@ export function HeaderKnob() {
           </div>
         </div>
 
-        {/* Center: Navigation Knobs (Desktop) */}
+        {/* Center: Navigation (Desktop) */}
         <nav className="hidden items-center gap-4 lg:flex xl:gap-8">
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="group flex flex-col items-center gap-1.5"
-              onMouseEnter={() => setActiveKnob(item.name)}
-              onMouseLeave={() => setActiveKnob(null)}
-            >
-              <div
-                className={cn(
-                  'group-hover:border-primary relative transform cursor-pointer rounded-full border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all group-hover:rotate-45 dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
-                  isScrolled ? 'h-10 w-10' : 'h-12 w-12',
-                )}
-              >
-                <div className="absolute top-1 left-1/2 h-3 w-0.5 -translate-x-1/2 bg-zinc-400 dark:bg-zinc-500" />
-                {/* Indicator Dot */}
-                <div className="bg-primary absolute top-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
-              </div>
-              <span
-                className={cn(
-                  'text-[10px] font-bold tracking-widest transition-colors',
-                  activeKnob === item.name
-                    ? 'text-primary'
-                    : 'text-zinc-600 dark:text-zinc-400',
-                )}
-              >
-                {item.name}
-              </span>
-            </Link>
-          ))}
+          {/* Section / Scroll Links as Knobs */}
+          {scrollLinks.length > 0 && (
+            <div className="flex items-center gap-4 xl:gap-8">
+              {scrollLinks.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="group flex flex-col items-center gap-1.5"
+                  onMouseEnter={() => setActiveKnob(item.name)}
+                  onMouseLeave={() => setActiveKnob(null)}
+                >
+                  <div
+                    className={cn(
+                      'group-hover:border-primary relative transform cursor-pointer rounded-full border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all group-hover:rotate-45 dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
+                      isScrolled ? 'h-10 w-10' : 'h-12 w-12',
+                    )}
+                  >
+                    <div className="absolute top-1 left-1/2 h-3 w-0.5 -translate-x-1/2 bg-zinc-400 dark:bg-zinc-500" />
+                    {/* Indicator Dot */}
+                    <div className="bg-primary absolute top-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
+                  </div>
+                  <span
+                    className={cn(
+                      'text-[10px] font-bold tracking-widest transition-colors',
+                      activeKnob === item.name || pathname === item.href
+                        ? 'text-primary'
+                        : 'text-zinc-600 dark:text-zinc-400',
+                    )}
+                  >
+                    {item.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* Page Links as Push Buttons (Grouped) */}
+          {pageLinks.length > 0 && (
+            <div className="flex items-center gap-4 border-l-2 border-zinc-300 pl-4 xl:gap-6 xl:pl-8 dark:border-zinc-700">
+              {pageLinks.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="group flex flex-col items-center gap-1.5"
+                  onMouseEnter={() => setActiveKnob(item.name)}
+                  onMouseLeave={() => setActiveKnob(null)}
+                >
+                  <div
+                    className={cn(
+                      'relative flex transform cursor-pointer flex-col items-center justify-end rounded-md border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all group-hover:-translate-y-0.5 group-active:translate-y-1 group-active:shadow-inner dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
+                      isScrolled ? 'h-10 w-10 pb-1.5' : 'h-12 w-12 pb-2'
+                    )}
+                  >
+                    {/* LED indicating 'page link' */}
+                    <div className={cn(
+                      "h-1.5 w-5 rounded-full transition-colors",
+                      (pathname.startsWith(item.href) && item.href !== '/') || pathname === item.href
+                        ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" 
+                        : "bg-red-800/40 group-hover:bg-red-600/60"
+                    )} />
+                  </div>
+                  <span
+                    className={cn(
+                      'text-[10px] font-bold tracking-widest transition-colors',
+                      activeKnob === item.name || ((pathname.startsWith(item.href) && item.href !== '/') || pathname === item.href)
+                        ? 'text-primary'
+                        : 'text-zinc-600 dark:text-zinc-400',
+                    )}
+                  >
+                    {item.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
         </nav>
 
         {/* Mobile Nav Toggle */}

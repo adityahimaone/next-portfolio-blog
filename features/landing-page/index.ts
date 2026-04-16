@@ -1,11 +1,12 @@
-export { default as LandingPage } from './landing-page'
+export { default as LandingPage } from './views/landing-page'
 
 // Landing page sections
-export { HeroSection2025v2 as HeroSection } from './sections/hero'
-export { AboutSection2025v2 as AboutSection } from './sections/about'
-export { SkillsMixer as SkillsSection } from './sections/skills'
-export { ExperienceSection2025 as ExperienceSection } from './sections/experience'
-export { ContactLaunchpad as ContactSection } from './sections/contact'
+export { HeroSection } from './components/hero-section'
+export { AboutSection } from './components/about-section'
+export { SkillsSection } from './components/skills-section'
+export { ExperienceSection } from './components/experience-section'
+export { ContactSection } from './components/contact/contact-section'
+export { ProjectsSection } from './components/projects-section'
 
 // Spotify
 export { MusicPlayer } from './spotify/music-player'
@@ -17,5 +18,5 @@ export { AudioProvider, useAudio } from './spotify/audio-context'
 // Animations
 export { Preloader } from './animations/preloader'
 
-// Data
-export * from './data'
+// Constants
+export * from './constants'

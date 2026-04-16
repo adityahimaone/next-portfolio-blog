@@ -4,14 +4,12 @@ import { useState, useRef } from 'react'
 import { LazyMotion, domMax, m, AnimatePresence, useInView } from 'motion/react'
 import Image from 'next/image'
 import {
-  ExternalLink,
   Disc,
   X,
   Play,
   Music,
-  Maximize2,
-  ArrowUpRight,
   Mic2,
+  ArrowUpRight,
   Globe,
   Code,
   Zap,
@@ -19,100 +17,13 @@ import {
   Database,
   Layers,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface IProjectData {
-  id: number
-  title: string
-  description: string
-  image: string
-  url: string
-  genre?: string
-  year?: string
-  vinylColor: string
-  vinylIcon: any
-}
+import { PROJECTS_SHOWCASE, type ProjectShowcaseItem } from '../constants'
 
-const projectsData: IProjectData[] = [
-  {
-    id: 1,
-    title: 'Primarindo Asia',
-    description:
-      'Company profile for Primarindo Asia Infrastructure Tbk, a manufacturer specializing in shoe production. The website showcases their manufacturing capabilities, product lines, and corporate information.',
-    image: '/assets/primarindo.png',
-    url: 'https://primarindo.niqcode.com/',
-    genre: 'Corporate / Manufacturing',
-    year: '2024',
-    vinylColor: 'from-blue-600 to-cyan-500',
-    vinylIcon: Globe,
-  },
-  {
-    id: 2,
-    title: 'Frontend Resources',
-    description:
-      'A curated collection of the best frontend development tools, libraries, and inspiration sources to supercharge your web development workflow.',
-    image: '/assets/frontend-resources.png',
-    url: 'https://frontend-resources-rouge.vercel.app/',
-    genre: 'Educational / Tools',
-    year: '2023',
-    vinylColor: 'from-yellow-500 to-orange-500',
-    vinylIcon: Code,
-  },
-  {
-    id: 3,
-    title: 'Quick Chat Whatsapp',
-    description:
-      "A utility app that lets users send WhatsApp messages without saving the recipient's phone number. Simplifies communication by eliminating the need to create contacts for one-time conversations.",
-    image: '/assets/quick-chat-wa.png',
-    url: 'http://quick-chat-whatsapp.vercel.app/',
-    genre: 'Utility / Productivity',
-    year: '2023',
-    vinylColor: 'from-green-500 to-emerald-500',
-    vinylIcon: Zap,
-  },
-  {
-    id: 4,
-    title: 'SeaPhantom',
-    description:
-      'Landing page for SeaPhantom, an NFT project focusing on innovative and sustainable technologies. Explore the world of NFTs and peer-to-peer trading on the SeaPhantom platform.',
-    image:
-      'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/y2l1g36bjudgsf6yr0eg.webp',
-    url: 'https://seaphantom.com',
-    genre: 'Web3 / NFT',
-    year: '2022',
-    vinylColor: 'from-purple-600 to-pink-600',
-    vinylIcon: Cpu,
-  },
-  {
-    id: 5,
-    title: 'SeaPhantom P2P',
-    description:
-      'Engage in NFT trading with the P2P Rum Token Escrow Trading project. This platform facilitates secure and transparent NFT transactions.',
-    image:
-      'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/fphb7ddemp4ixeutav1b.webp',
-    url: 'https://auth.seaphantom.com/',
-    genre: 'DeFi / Trading',
-    year: '2022',
-    vinylColor: 'from-indigo-600 to-violet-600',
-    vinylIcon: Database,
-  },
-  {
-    id: 6,
-    title: 'Labgrownbeasts',
-    description:
-      'Explore the Labgrownbeasts Company Profile, showcasing innovation and excellence in the field. Learn about our vision, mission, and the cutting-edge work we do.',
-    image:
-      'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/mqprcb6todunicq4cg0a.webp',
-    url: 'https://labgrownbeasts.com/',
-    genre: 'Biotech / Corporate',
-    year: '2022',
-    vinylColor: 'from-red-500 to-rose-500',
-    vinylIcon: Layers,
-  },
-]
-
-export function ProjectsSection2025() {
-  const [selectedProject, setSelectedProject] = useState<IProjectData | null>(
+export function ProjectsSection() {
+  const [selectedProject, setSelectedProject] = useState<ProjectShowcaseItem | null>(
     null,
   )
   const ref = useRef(null)
@@ -146,7 +57,7 @@ export function ProjectsSection2025() {
           </div>
 
           <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
-            {projectsData.map((project, index) => (
+            {PROJECTS_SHOWCASE.map((project, index) => (
               <m.div
                 key={project.id}
                 initial={{ opacity: 0, y: 50 }}

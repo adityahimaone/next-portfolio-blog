@@ -1,4 +1,4 @@
-import type { BlogMeta } from '../blog'
+import type { BlogMeta } from '../lib/blog'
 import { BlogHeader } from './blog-header'
 
 export function BlogPost({

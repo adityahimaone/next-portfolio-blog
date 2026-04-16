@@ -2,16 +2,27 @@
 
 import { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'motion/react'
-import { Play, Pause, SkipForward, Disc } from 'lucide-react'
+import { Play, Pause, SkipForward } from 'lucide-react'
 import { Magnetic } from '@/components/magnetic'
 import { TextEffect } from '@/components/text-effect'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
-import { Monoton, Syne } from 'next/font/google'
+import { Syne } from 'next/font/google'
 
-const monoton = Monoton({ weight: '400', subsets: ['latin'] })
+import { useState, useEffect } from 'react'
+
 const syne = Syne({ weight: ['700', '800'], subsets: ['latin'] })
 
-export function HeroSection2025v2() {
+export function HeroSection() {
+  const [baseDelay, setBaseDelay] = useState(1)
+
+  useEffect(() => {
+    // If preloader was already shown (skipped), we don't need a massive delay
+    // If it wasn't shown, it's running right now, so we need to wait for it
+    if (sessionStorage.getItem('preloaderShown')) {
+      setBaseDelay(0.1)
+    }
+  }, [])
+
   const { isPlaying, togglePlay, currentTrack } = useAudio()
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -23,6 +34,8 @@ export function HeroSection2025v2() {
   const y = useTransform(scrollYProgress, [0, 1], [0, 150])
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9])
+
+  console.log(baseDelay)
 
   return (
     <section
@@ -49,7 +62,7 @@ export function HeroSection2025v2() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1 }}
+            transition={{ duration: 0.8, delay: baseDelay }}
             className="mb-8 flex items-center gap-3 rounded-full border border-zinc-200 bg-white/40 px-4 py-1.5 text-sm font-medium text-zinc-700 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/40 dark:text-zinc-300"
           >
             <span className="relative flex h-2 w-2">
@@ -64,7 +77,7 @@ export function HeroSection2025v2() {
             <motion.h1
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 1.1 }}
+              transition={{ duration: 0.5, delay: baseDelay + 0.1 }}
               className="text-center text-[13vw] leading-[0.85] font-extrabold tracking-tighter text-zinc-900 italic drop-shadow-sm md:text-[10vw] lg:text-[8vw] dark:text-white dark:drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]"
             >
               <span className="block bg-linear-to-b from-zinc-700 via-zinc-900 to-black bg-clip-text text-transparent dark:from-white dark:via-zinc-200 dark:to-zinc-400">
@@ -74,7 +87,7 @@ export function HeroSection2025v2() {
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 1.2 }}
+              transition={{ duration: 0.5, delay: baseDelay + 0.2 }}
               className="text-primary/80 text-[5vw] font-bold tracking-[0.5em] md:text-[3vw] lg:text-[2.5vw]"
             >
               HIMAONE
@@ -85,7 +98,7 @@ export function HeroSection2025v2() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.4 }}
+            transition={{ duration: 0.8, delay: baseDelay + 0.4 }}
             className="mb-10 max-w-2xl text-center text-base font-light text-zinc-600 sm:text-lg md:text-xl dark:text-zinc-400"
           >
             Orchestrating code and rhythm into immersive digital experiences.
@@ -98,7 +111,11 @@ export function HeroSection2025v2() {
           <motion.div
             initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.8, delay: 1.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{
+              duration: 0.8,
+              delay: baseDelay + 0.8,
+              ease: [0.16, 1, 0.3, 1],
+            }}
             className="relative flex w-full max-w-[90vw] items-center gap-4 rounded-lg border-t border-white/20 bg-zinc-200 p-2 shadow-2xl sm:max-w-lg sm:gap-6 sm:p-3 dark:border-white/5 dark:bg-zinc-900"
           >
             {/* Inset Shadow for depth */}
@@ -197,7 +214,11 @@ export function HeroSection2025v2() {
           <motion.div
             initial={{ opacity: 0, scale: 0, rotate: 0 }}
             animate={{ opacity: 1, scale: 1, rotate: 12 }}
-            transition={{ delay: 1.2, type: 'spring', stiffness: 200 }}
+            transition={{
+              delay: baseDelay + 0.2,
+              type: 'spring',
+              stiffness: 200,
+            }}
             className="absolute -top-4 -right-4 rotate-12 transform border-2 border-white/20 bg-red-600 px-4 py-1.5 text-xs font-black tracking-wider text-white uppercase shadow-lg md:top-10 md:-right-10"
           >
             New Release

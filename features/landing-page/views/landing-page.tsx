@@ -10,19 +10,19 @@ import {
   useSpring,
   AnimatePresence,
 } from 'motion/react'
-import { Preloader } from './animations/preloader'
-import { HeaderKnob } from '@/features/layout/header'
-import { Footer2025V2 } from '@/features/layout/footer'
-import { HeroSection2025v2 } from './sections/hero'
-import { AboutSection2025v2 } from './sections/about'
-import { SkillsMixer } from './sections/skills'
-import { ExperienceSection2025 } from './sections/experience'
-import { ContactLaunchpad } from './sections/contact'
+import { Preloader } from '../animations/preloader'
+import { Header } from '@/features/layout/components/header'
+import { Footer } from '@/features/layout/components/footer'
+import { HeroSection } from '../components/hero-section'
+import { AboutSection } from '../components/about-section'
+import { SkillsSection } from '../components/skills-section'
+import { ExperienceSection } from '../components/experience-section'
+import { ContactSection } from '../components/contact/contact-section'
 import { SectionDivider } from '@/components/section-divider'
 import { ChevronUp } from 'lucide-react'
-import { MusicPlayer } from './spotify/music-player'
-import { MusicMarquee } from './spotify/music-marquee'
-import { ProjectsSection2025 } from './sections/projects'
+import { MusicMarquee } from '../spotify/music-marquee'
+import { ProjectsSection } from '../components/projects-section'
+import { usePreloader } from '../hooks/use-preloader'
 
 export default function LandingPage() {
   const { scrollYProgress } = useScroll()
@@ -33,20 +33,13 @@ export default function LandingPage() {
   const mainRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(mainRef, { once: false })
   const [showScrollTop, setShowScrollTop] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const isLoading = usePreloader()
   const heroRef = useRef<HTMLElement>(null)
   const { scrollYProgress: heroScrollY } = useScroll({
     target: heroRef,
     offset: ['start start', 'end start'],
   })
   const parallaxY = useTransform(heroScrollY, [0, 1], [0, 100])
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
-    return () => clearTimeout(timer)
-  }, [])
 
   // Parallax effect for background elements
   const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '20%'])
@@ -152,8 +145,8 @@ export default function LandingPage() {
                 className="relative h-screen snap-start overflow-hidden"
               >
                 <div className="relative">
-                  <HeaderKnob />
-                  <HeroSection2025v2 />
+                  <Header />
+                  <HeroSection />
                 </div>
               </section>
 
@@ -164,17 +157,17 @@ export default function LandingPage() {
               <div className="mx-auto w-full max-w-7xl space-y-2 py-20">
                 <SectionDivider />
                 <section id="about" className="snap-start scroll-mt-0">
-                  <AboutSection2025v2 />
+                  <AboutSection />
                 </section>
 
                 <SectionDivider />
                 <section id="skills" className="snap-start scroll-mt-0">
-                  <SkillsMixer />
+                  <SkillsSection />
                 </section>
 
                 <SectionDivider />
                 <section id="experience" className="snap-start scroll-mt-0">
-                  <ExperienceSection2025 />
+                  <ExperienceSection />
                 </section>
 
                 <SectionDivider />
@@ -184,7 +177,7 @@ export default function LandingPage() {
                 id="projects"
                 className="dark:bg-accent snap-start scroll-mt-0"
               >
-                <ProjectsSection2025 />
+                <ProjectsSection />
               </section>
 
               <div className="mb-5">
@@ -192,14 +185,14 @@ export default function LandingPage() {
               </div>
 
               <section id="contact" className="snap-start">
-                <ContactLaunchpad />
+                <ContactSection />
               </section>
             </div>
           </main>
         </m.div>
 
         {/* Footer */}
-        <Footer2025V2 />
+        <Footer />
 
         {/* Scroll to top button */}
         <m.button
@@ -216,9 +209,6 @@ export default function LandingPage() {
         >
           <ChevronUp size={24} className="text-zinc-600 dark:text-zinc-400" />
         </m.button>
-
-        {/* Music Player */}
-        <MusicPlayer />
       </>
     </LazyMotion>
   )

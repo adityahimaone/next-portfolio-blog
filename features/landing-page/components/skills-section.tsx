@@ -3,60 +3,14 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { LazyMotion, domMax, m, useMotionValue, animate } from 'motion/react'
 import { cn } from '@/lib/utils'
-import { Sliders, Music, Zap, Power } from 'lucide-react'
+import { Screw } from '@/components/screw'
+import { Sliders, Music } from 'lucide-react'
 
-// --- Data (Static - outside component for performance) ---
-const mixerData = [
-  {
-    id: 'languages',
-    label: 'LANGUAGES',
-    type: 'fader',
-    channels: [
-      { name: 'HTML', level: 95 },
-      { name: 'CSS', level: 95 },
-      { name: 'JS', level: 95 },
-      { name: 'TS', level: 90 },
-      { name: 'GO', level: 60 },
-      { name: 'SWIFT', level: 50 },
-    ],
-  },
-  {
-    id: 'frameworks',
-    label: 'FRAMEWORKS',
-    type: 'knob',
-    channels: [
-      { name: 'REACT', level: 95 },
-      { name: 'NEXT', level: 92 },
-      { name: 'REMIX', level: 70 },
-      { name: 'JQUERY', level: 85 },
-    ],
-  },
-  {
-    id: 'tools',
-    label: 'TOOLS & FX',
-    type: 'knob',
-    channels: [
-      { name: 'VS CODE', level: 99 },
-      { name: 'FIGMA', level: 85 },
-      { name: 'GIT', level: 90 },
-      { name: 'MOTION', level: 90 },
-    ],
-  },
-] as const
+import { MIXER_DATA } from '../constants'
 
 // --- Components ---
 
-const Screw = ({ className }: { className?: string }) => (
-  <div
-    className={cn(
-      'flex h-3 w-3 items-center justify-center rounded-full border border-zinc-500 bg-zinc-400 shadow-inner',
-      className,
-    )}
-  >
-    <div className="h-0.5 w-full rotate-45 bg-zinc-600" />
-    <div className="absolute h-0.5 w-full -rotate-45 bg-zinc-600" />
-  </div>
-)
+// Screw component imported from @/components/screw
 
 const Knob = ({ value, label }: { value: number; label: string }) => {
   const minDeg = -135
@@ -205,7 +159,7 @@ const VUMeter = ({ isOn }: { isOn: boolean }) => {
   )
 }
 
-export function SkillsMixer() {
+export function SkillsSection() {
   const [isOn, setIsOn] = useState(true)
 
   return (
@@ -330,7 +284,7 @@ export function SkillsMixer() {
                   </div>
                   {/* Desktop */}
                   <div className="hidden flex-wrap justify-between gap-2 sm:flex">
-                    {mixerData[0].channels.map((skill) => (
+                    {MIXER_DATA[0].channels.map((skill) => (
                       <Fader
                         key={skill.name}
                         value={isOn ? skill.level : 0}
@@ -340,7 +294,7 @@ export function SkillsMixer() {
                   </div>
                   {/* Mobile */}
                   <div className="flex flex-wrap justify-between gap-2 sm:hidden">
-                    {mixerData[0].channels.slice(-4).map((skill) => (
+                    {MIXER_DATA[0].channels.slice(-4).map((skill) => (
                       <Fader
                         key={skill.name}
                         value={isOn ? skill.level : 0}
@@ -361,7 +315,7 @@ export function SkillsMixer() {
                       <div className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
                     </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-8">
-                      {mixerData[1].channels.map((skill) => (
+                      {MIXER_DATA[1].channels.map((skill) => (
                         <Knob
                           key={skill.name}
                           value={isOn ? skill.level : 0}
@@ -380,7 +334,7 @@ export function SkillsMixer() {
                       <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                     </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-8">
-                      {mixerData[2].channels.map((skill) => (
+                      {MIXER_DATA[2].channels.map((skill) => (
                         <Knob
                           key={skill.name}
                           value={isOn ? skill.level : 0}

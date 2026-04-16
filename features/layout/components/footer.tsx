@@ -14,61 +14,14 @@ import {
   Volume2,
   Radio,
 } from 'lucide-react'
+import { SOCIAL_LINKS, FOOTER_NAVIGATION, TECH_STACK } from '../constants'
 
-export function Footer2025V2() {
+export function Footer() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
   const [hoveredSocial, setHoveredSocial] = useState<string | null>(null)
 
   const currentYear = new Date().getFullYear()
-
-  const socialLinks = [
-    {
-      name: 'GitHub',
-      href: 'https://github.com/adityahimaone',
-      icon: Github,
-      color: 'from-zinc-700 to-zinc-900',
-      label: '@adityahimaone',
-    },
-    {
-      name: 'LinkedIn',
-      href: 'https://linkedin.com/in/adityahimaone',
-      icon: Linkedin,
-      color: 'from-blue-600 to-blue-800',
-      label: 'adityahimaone',
-    },
-    {
-      name: 'Spotify',
-      href: 'https://open.spotify.com/user/212nmrqpklzmvpntgorzpavgq',
-      icon: Music,
-      color: 'from-green-500 to-emerald-600',
-      label: 'My Playlists',
-    },
-    {
-      name: 'Email',
-      href: 'mailto:adityahimaone@gmail.com',
-      icon: Mail,
-      color: 'from-purple-600 to-pink-600',
-      label: 'Get in Touch',
-    },
-  ]
-
-  const navigation = [
-    { name: 'About', href: '#about' },
-    { name: 'Skills', href: '#skills' },
-    { name: 'Experience', href: '#experience' },
-    { name: 'Projects', href: '#projects' },
-    { name: 'Contact', href: '#contact' },
-  ]
-
-  const techStack = [
-    'Next.js 15',
-    'React 19',
-    'TypeScript',
-    'Tailwind CSS',
-    'Framer Motion',
-    'Tone.js',
-  ]
 
   return (
     <footer
@@ -170,7 +123,7 @@ export function Footer2025V2() {
                 Connect
               </h3>
               <div className="flex flex-wrap gap-x-5 gap-y-3">
-                {socialLinks.map((link, idx) => (
+                {SOCIAL_LINKS.map((link, idx) => (
                   <motion.a
                     key={link.name}
                     href={link.href}
@@ -203,7 +156,7 @@ export function Footer2025V2() {
                         <div
                           className={`flex h-[40%] w-[40%] items-center justify-center rounded-full bg-linear-to-br text-white shadow-inner ${link.color}`}
                         >
-                          <link.icon className="h-3 w-3" />
+                          <div className="h-3 w-3 rounded-full bg-white opacity-20" />
                         </div>
                       </motion.div>
 
@@ -216,7 +169,20 @@ export function Footer2025V2() {
                         transition={{ duration: 0.5, ease: 'easeOut' }}
                         className={`relative z-10 flex h-14 w-14 items-center justify-center rounded-xl bg-linear-to-br text-white shadow-lg transition-all hover:shadow-xl ${link.color}`}
                       >
-                        <link.icon className="h-6 w-6" />
+                        {link.name.toLowerCase().includes('git') ? (
+                          <Github className="h-6 w-6" />
+                        ) : link.name.toLowerCase().includes('link') ? (
+                          <Linkedin className="h-6 w-6" />
+                        ) : link.name.toLowerCase().includes('spot') ? (
+                          <Music className="h-6 w-6" />
+                        ) : link.name.toLowerCase().includes('mail') ||
+                          link.name.toLowerCase().includes('email') ? (
+                          <Mail className="h-6 w-6" />
+                        ) : (
+                          <span className="text-xs font-bold">
+                            {link.name.substring(0, 2).toUpperCase()}
+                          </span>
+                        )}
                       </motion.div>
                     </div>
                   </motion.a>
@@ -236,7 +202,7 @@ export function Footer2025V2() {
                 Navigation
               </h3>
               <ul className="space-y-3">
-                {navigation.map((item, idx) => (
+                {FOOTER_NAVIGATION.map((item, idx) => (
                   <motion.li
                     key={item.name}
                     initial={{ opacity: 0, x: -10 }}
@@ -267,7 +233,7 @@ export function Footer2025V2() {
                 Tech Stack
               </h3>
               <div className="flex flex-wrap gap-2">
-                {techStack.map((tech, idx) => (
+                {TECH_STACK.map((tech, idx) => (
                   <motion.span
                     key={tech}
                     initial={{ opacity: 0, scale: 0.8 }}

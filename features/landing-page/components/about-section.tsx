@@ -7,21 +7,13 @@ import {
   Play,
   Pause,
   Square,
-  Mic2,
-  Cpu,
-  BarChart3,
   Music,
-  Settings,
-  MoreVertical,
   X,
   Maximize2,
-  Code2,
-  Globe,
-  Zap,
-  Layers,
   User,
-  Terminal,
   Activity,
+  Layers,
+  Zap,
 } from 'lucide-react'
 import NowPlaying from '@/features/landing-page/spotify/now-playing'
 
@@ -257,7 +249,7 @@ const DetailWindow = ({
   </m.div>
 )
 
-export function AboutSection2025v2() {
+export function AboutSection() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeClip, setActiveClip] = useState<Clip | null>(null)
   const [hoveredClip, setHoveredClip] = useState<Clip | null>(null)

@@ -36,6 +36,16 @@
     @apply bg-primary/20 text-primary dark:bg-primary/30 dark:text-primary-light;
   }
 
+  /* Fix unreadable text when highlighting inside code blocks */
+  pre ::selection,
+  code ::selection,
+  pre span::selection,
+  code span::selection {
+    background-color: #264f78 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
   /* Music-themed section headings */
   .section-heading {
     @apply text-3xl font-bold tracking-tight text-zinc-900 md:text-4xl lg:text-5xl dark:text-white;
@@ -113,6 +123,31 @@
 
   .music-wave .bar:nth-child(5) {
     animation-delay: 0.4s;
+  }
+
+  .cursor-glow {
+    position: relative;
+  }
+
+  body.e-ink-mode {
+    background-color: #f4f1ea !important;
+  }
+
+  .dark body.e-ink-mode {
+    background-color: #1a1a1a !important;
+  }
+
+  body.e-ink-mode::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999999;
+    pointer-events: none;
+    backdrop-filter: grayscale(100%) sepia(20%) contrast(1.15);
+    -webkit-backdrop-filter: grayscale(100%) sepia(20%) contrast(1.15);
   }
 
   /* Marquee animation */

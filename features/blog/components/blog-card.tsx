@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Pin } from 'lucide-react'
 import type { BlogMeta } from '../lib/blog'
 
 export function BlogCard({ post }: { post: BlogMeta }) {
@@ -21,6 +22,11 @@ export function BlogCard({ post }: { post: BlogMeta }) {
         
         <div className="relative z-10 flex h-full flex-col">
           <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+          {post.pinned && (
+            <span className="flex items-center gap-1 text-primary dark:text-primary-light">
+              <Pin size={14} className="fill-primary/20" />
+            </span>
+          )}
           <time dateTime={post.date}>
             {new Date(post.date).toLocaleDateString('en-US', {
               year: 'numeric',

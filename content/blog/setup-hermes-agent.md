@@ -5,6 +5,7 @@ date: 2026-04-16
 description: "How I set up Hermes Agent with 40+ custom skills, RTK token optimization, and automated workflows for finance, development, and productivity."
 tags: [ai, automation, terminal, productivity, devtools]
 published: true
+pinned: true
 ---
 
 # Setting Up Hermes Agent — My AI-Powered Dev Assistant

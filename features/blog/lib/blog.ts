@@ -13,6 +13,7 @@ export type BlogMeta = {
   tags: string[]
   cover?: string
   published: boolean
+  pinned?: boolean
   readingTime: string
 }
 
@@ -35,6 +36,7 @@ export function getAllPosts(): BlogMeta[] {
       tags: data.tags ?? [],
       cover: data.cover,
       published: data.published ?? true,
+      pinned: data.pinned ?? false,
       readingTime: stats.text,
     } as BlogMeta
   })
@@ -59,6 +61,7 @@ export function getPost(slug: string) {
       tags: data.tags ?? [],
       cover: data.cover,
       published: data.published ?? true,
+      pinned: data.pinned ?? false,
       readingTime: stats.text,
     } as BlogMeta,
     content: body,

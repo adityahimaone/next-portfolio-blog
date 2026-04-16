@@ -6,6 +6,7 @@ import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
 import { Slider } from '@/components/slider'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import useClickOutside from '@/hooks/use-click-outside'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 export function MusicPlayer() {
@@ -15,6 +16,10 @@ export function MusicPlayer() {
   const [isHovered, setIsHovered] = useState(false)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
+
+  const isBlogPost = pathname.startsWith('/blog/') && pathname !== '/blog'
+  const shouldRenderPlayer = isVisible && !(isBlogPost && !isPlaying)
 
   useClickOutside(containerRef, () => {
     setIsHovered(false)
@@ -45,7 +50,7 @@ export function MusicPlayer() {
 
   return (
     <AnimatePresence>
-      {isVisible && (
+      {shouldRenderPlayer && (
         <motion.div
           ref={containerRef}
           initial={{ opacity: 0, y: 20 }}

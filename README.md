@@ -75,12 +75,13 @@ next-portfolio-blog/
 
 ### Blog
 
-- Markdown-based posts in `content/blog/`
-- Auto-generated routes via `[slug]`
-- Client-side dynamic tag filtering system
-- Reading time estimation
-- Unified component layout parity with native Projects routing
-- Custom music-themed UI styling (Animated CSS equalizer decorations)
+- Markdown-based posts in `content/blog/` utilizing automated syntax injection
+- Real-time text Search and category Tag filtering mechanisms natively parsed
+- Featured / Pinned article segregation via optimized UI overlays (`BlogCardPinned`)
+- Reading time estimation and responsive scroll-progress UI tracking built-in
+- Interactive "Kindle Mode" / E-Ink Monochrone emulation via non-destructive CSS overlays
+- Implements optimal typographical constraints via `max-w-[65ch]` and dynamic `<code/>` highlighting logic
+- Automatic component layouts syncing intelligently with native Projects parity
 - Static generation (SSG)
 
 ### Projects

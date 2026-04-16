@@ -105,6 +105,27 @@
 
 All phases updated and refined up to 2026-04-16.
 
+## ✅ Completed
+
+## Phase 6: Advanced Blog & UX Integrations
+
+### 6.1 Blog Routing & Filtering Infrastructure
+- [x] Implemented real-time dynamic text-based search queries across title, description, and tags directly inside `BlogList`.
+- [x] Implemented temporal Sorting toggles (Latest / Oldest) aligned natively into the Tags filter row.
+- [x] Implemented dynamically extracted Featured/"Pinned" section ensuring priority posts automatically surface into an isolated top-grid block.
+
+### 6.2 Blog Component Architecture & Typography UX
+- [x] Constructed isolated `<BlogCardPinned />` component applying horizontal tightly-packed glassmorphic rendering attributes to delineate from standard layout entries.
+- [x] Resized the primary Article render wrapper strictly to an optimized horizontal `max-w-[65ch]` breakpoint, maximizing pure reading-line length cognitive comfort levels.
+- [x] Bumped and refined global typography scaling utilizing `prose-lg` combined with `leading-relaxed` configuration schemas directly onto raw Markdown output wrappers.
+- [x] Attached a sticky Framer-Motion driven scroll-tracking Progress Bar dynamically tethered to physical y-axis dimensions mapping reader height positions inherently.
+
+### 6.3 E-Ink / Kindle Monochrome Execution Matrix
+- [x] Programmed interactive `isReaderMode` switch explicitly pushing UI logic against root `body.e-ink-mode` triggers rendering immediate CSS context alterations.
+- [x] Circumvented widespread generic `filter: grayscale` rendering bugs by natively mapping the `backdrop-filter` matrix internally across an embedded, event-agnostic `::after` fixed layout grid.
+- [x] Overrode raw `vscDarkPlus` DOM structures mapping `#264f78` synthetic VSCode core structural boundaries across active cursor `::selection` environments, permanently negating background-conflict illegibility.
+- [x] Terminated the persistent global `music-player` logic internally utilizing explicit regex `pathname` extraction parameters rendering the DOM footprint hidden exclusively if idle inside pure-text articles.
+
 ## Phase 5: Blog Content
 
 ### 5.1 New Blog Posts

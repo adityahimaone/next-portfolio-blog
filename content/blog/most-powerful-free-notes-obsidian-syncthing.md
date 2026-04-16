@@ -5,6 +5,7 @@ date: 2026-04-16
 description: "A free, private, cross-platform note-taking system using Obsidian and Syncthing — with setup guides for macOS, Windows, and Android. No subscriptions, no cloud, no compromises."
 tags: [productivity, tools, obsidian, sync, devtools]
 published: true
+pinned: true
 ---
 
 # Stop Paying for Notes — Obsidian + Syncthing Is All You Need

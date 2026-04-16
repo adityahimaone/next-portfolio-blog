@@ -417,6 +417,7 @@ export function ContactSection() {
           <m.button
             key={pad.id}
             onClick={() => handlePadClick(pad)}
+            aria-label={pad.type === 'functional' && 'label' in pad ? `Pad ${(pad as any).label}` : `Empty Pad ${pad.id}`}
             className={cn(
               'group relative flex flex-col items-center justify-center overflow-hidden rounded-md border-b-4 border-zinc-950 bg-zinc-800 transition-all duration-100 active:translate-y-1 active:scale-95 active:border-b-0 sm:rounded-lg',
               pad.type === 'functional' ? 'z-10' : 'z-0',
@@ -567,6 +568,7 @@ export function ContactSection() {
                   <m.button
                     onClick={clearAllLoops}
                     disabled={activeLoops.size === 0}
+                    aria-label="Stop All Loops"
                     className={cn(
                       'flex items-center gap-1.5 rounded border px-3 py-1 text-[10px] font-bold transition-all',
                       activeLoops.size > 0
@@ -585,6 +587,7 @@ export function ContactSection() {
                     <m.button
                       key={preset.id}
                       onClick={() => loadPreset(preset.id)}
+                      aria-label={`Load preset ${preset.name}`}
                       className={cn(
                         'group relative overflow-hidden rounded-lg border p-2 text-left transition-all hover:scale-105',
                         currentPreset === preset.id

@@ -96,6 +96,7 @@ export function ProjectsSection() {
                         src={project.image}
                         alt={project.title}
                         fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
                         className="object-cover object-top transition-transform duration-500 group-hover:scale-105 group-active:scale-105"
                       />
 
@@ -141,6 +142,7 @@ export function ProjectsSection() {
                 {/* Close Button */}
                 <button
                   onClick={() => setSelectedProject(null)}
+                  aria-label="Close project modal"
                   className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/10 text-zinc-900 backdrop-blur-md transition-colors hover:bg-black/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
                 >
                   <X className="h-5 w-5" />
@@ -153,6 +155,7 @@ export function ProjectsSection() {
                       src={selectedProject.image}
                       alt={selectedProject.title}
                       fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
                       className="object-cover"
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />

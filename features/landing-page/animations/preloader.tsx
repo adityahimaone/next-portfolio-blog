@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { m as motion, AnimatePresence } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Music, Code2, Zap, Activity, Disc3, Cpu } from 'lucide-react'
 

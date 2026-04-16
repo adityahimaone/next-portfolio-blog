@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { motion, useScroll, useTransform } from 'motion/react'
+import { m as motion, useScroll, useTransform } from 'motion/react'
 import { Play, Pause, SkipForward } from 'lucide-react'
 import { Magnetic } from '@/components/magnetic'
 import { TextEffect } from '@/components/text-effect'
@@ -124,6 +124,7 @@ export function HeroSection() {
             <Magnetic intensity={0.2}>
               <button
                 onClick={togglePlay}
+                aria-label={isPlaying ? "Pause Session" : "Play Session"}
                 className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-zinc-100 to-zinc-300 shadow-[0_2px_5px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.1)] transition-all active:scale-95 active:shadow-inner sm:h-14 sm:w-14 dark:from-zinc-700 dark:to-zinc-800 dark:shadow-[0_2px_5px_rgba(0,0,0,0.5),0_0_0_1px_rgba(0,0,0,0.5)]"
               >
                 <div className="bg-primary/5 absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { motion, useAnimationFrame } from 'motion/react'
+import { m as motion, useAnimationFrame } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { useTheme } from 'next-themes'
 

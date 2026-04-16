@@ -4,6 +4,7 @@ import './globals.css'
 import { ThemeProvider } from 'next-themes'
 import { AudioProvider } from '@/features/landing-page/spotify/audio-context'
 import { MusicPlayer } from '@/features/landing-page/spotify/music-player'
+import { Analytics } from '@vercel/analytics/next'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -81,6 +82,7 @@ export default function RootLayout({
             </div>
           </AudioProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )

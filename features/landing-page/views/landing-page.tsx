@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   LazyMotion,
-  domMax,
   m,
   useScroll,
   useTransform,
@@ -10,18 +9,23 @@ import {
   useSpring,
   AnimatePresence,
 } from 'motion/react'
+
+const loadFeatures = () => import('motion/react').then((res) => res.domMax)
+
 import { Preloader } from '../animations/preloader'
+import dynamic from 'next/dynamic'
 import { Header } from '@/features/layout/components/header'
 import { Footer } from '@/features/layout/components/footer'
 import { HeroSection } from '../components/hero-section'
-import { AboutSection } from '../components/about-section'
-import { SkillsSection } from '../components/skills-section'
-import { ExperienceSection } from '../components/experience-section'
-import { ContactSection } from '../components/contact/contact-section'
+
+const AboutSection = dynamic(() => import('../components/about-section').then((mod) => mod.AboutSection))
+const SkillsSection = dynamic(() => import('../components/skills-section').then((mod) => mod.SkillsSection))
+const ExperienceSection = dynamic(() => import('../components/experience-section').then((mod) => mod.ExperienceSection))
+const ContactSection = dynamic(() => import('../components/contact/contact-section').then((mod) => mod.ContactSection))
 import { SectionDivider } from '@/components/section-divider'
 import { ChevronUp } from 'lucide-react'
 import { MusicMarquee } from '../spotify/music-marquee'
-import { ProjectsSection } from '../components/projects-section'
+const ProjectsSection = dynamic(() => import('../components/projects-section').then((mod) => mod.ProjectsSection))
 import { usePreloader } from '../hooks/use-preloader'
 
 export default function LandingPage() {
@@ -69,7 +73,7 @@ export default function LandingPage() {
   }, [])
 
   return (
-    <LazyMotion features={domMax}>
+    <LazyMotion features={loadFeatures}>
       <>
         <AnimatePresence mode="wait">
           {isLoading && <Preloader />}
@@ -197,6 +201,7 @@ export default function LandingPage() {
         {/* Scroll to top button */}
         <m.button
           onClick={handleScrollToTop}
+          aria-label="Scroll to top"
           className="fixed right-2 bottom-24 z-50 flex h-12 w-12 items-center justify-center rounded-lg border border-zinc-300 bg-zinc-200 shadow-[0_4px_0_rgb(161,161,170),0_5px_10px_rgba(0,0,0,0.2)] transition-all hover:bg-zinc-100 active:translate-y-1 active:shadow-none md:right-8 dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[0_4px_0_rgb(39,39,42),0_5px_10px_rgba(0,0,0,0.5)] dark:hover:bg-zinc-700"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{

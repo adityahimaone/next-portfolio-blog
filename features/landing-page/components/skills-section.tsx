@@ -232,6 +232,7 @@ export function SkillsSection() {
                     {/* Switch */}
                     <button
                       onClick={() => setIsOn(!isOn)}
+                      aria-label={isOn ? "Turn Power Off" : "Turn Power On"}
                       className={cn(
                         'relative flex h-12 w-8 cursor-pointer flex-col items-center justify-between overflow-hidden rounded border border-zinc-800 bg-zinc-950 py-1 shadow-[inset_0_0_5px_rgba(0,0,0,1)] transition-all',
                       )}

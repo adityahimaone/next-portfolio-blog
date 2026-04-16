@@ -2,7 +2,7 @@
 
 Personal portfolio and blog — Next.js 15, Tailwind CSS v4, feature-based architecture.
 
-**Live:** [adityahimaone.tech](https://adityahimaone.space)
+**Live:** [adityahimaone.space](https://adityahimaone.space)
 
 ## Stack
 

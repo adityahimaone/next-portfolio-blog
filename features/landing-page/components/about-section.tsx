@@ -91,6 +91,7 @@ const TrackHeader = ({
           e.stopPropagation()
           onMute()
         }}
+        aria-label={muted ? `Unmute ${track.name} track` : `Mute ${track.name} track`}
         className={cn(
           'flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold transition-colors',
           muted
@@ -105,6 +106,7 @@ const TrackHeader = ({
           e.stopPropagation()
           onSolo()
         }}
+        aria-label={soloed ? `Unsolo ${track.name} track` : `Solo ${track.name} track`}
         className={cn(
           'flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold transition-colors',
           soloed
@@ -134,6 +136,7 @@ const ClipBlock = ({
   return (
     <m.button
       layoutId={`clip-${clip.id}`}
+      aria-label={`Select clip ${clip.name}`}
       onClick={onClick}
       onMouseEnter={() => onHover(true)}
       onMouseLeave={() => onHover(false)}
@@ -234,6 +237,7 @@ const DetailWindow = ({
           <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800" />
           <button
             onClick={onClose}
+            aria-label="Close clip detail"
             className="rounded-full p-1 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
           >
             <X size={18} />
@@ -595,6 +599,7 @@ export function AboutSection() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setIsPlaying(!isPlaying)}
+                    aria-label={isPlaying ? "Pause Timeline" : "Play Timeline"}
                     className={cn(
                       'flex h-8 w-8 items-center justify-center rounded transition-colors',
                       isPlaying
@@ -610,6 +615,7 @@ export function AboutSection() {
                   </button>
                   <button
                     onClick={handleStop}
+                    aria-label="Stop Timeline"
                     className="flex h-8 w-8 items-center justify-center rounded bg-zinc-200 text-zinc-600 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
                   >
                     <Square size={16} fill="currentColor" />

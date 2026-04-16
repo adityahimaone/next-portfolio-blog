@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { AudioLines, Zap } from 'lucide-react'
 import { NowPlayingResponse } from '@/types'
 import Image from 'next/image'
-import { motion } from 'motion/react'
+import { m as motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 
 export default function NowPlaying() {

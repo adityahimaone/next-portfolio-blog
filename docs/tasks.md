@@ -81,4 +81,26 @@
 
 ## ✅ Completed
 
-All phases completed on 2026-04-15
+## Phase 4: UI Refinement & Music Integrations
+
+### 4.1 Navigation & Global UI
+- [x] Redesign `Header` and `SubpageHeader` to feature custom hardware square toggle buttons for page links with bottom labels and internal LEDs.
+- [x] Replace footer text-abbreviation links with mapped Lucide icons.
+- [x] Integrate `MusicPlayer` globally inside `app/layout.tsx` for persistent, uninterrupted audio playback during page navigation.
+
+### 4.2 Blog & Details
+- [x] Add dynamic Tag Filtering to `BlogList`.
+- [x] Unify Blog Layout constraints and navigation headers perfectly with Projects Layout.
+- [x] Inject music-themed flair: Add CSS `Equalizer` to `BlogCard`.
+
+### 4.3 Projects & Details
+- [x] Inject music-themed flair: Add `Disc3` spinning vinyl and speaker grilles to `ProjectCard`.
+- [x] Inject music-themed flair: Add oversized `Radio` boombox watermark to `ProjectCardMini`.
+
+### 4.4 Engine & Under-The-Hood
+- [x] Dynamically compute initial animation delays in `HeroSection` based on whether the Preloader is bypassed via `sessionStorage` logic.
+- [x] Pin explicit package versions without `^` or `~` auto-updaters in `package.json`.
+
+## ✅ Completed
+
+All phases updated and refined up to 2026-04-16.

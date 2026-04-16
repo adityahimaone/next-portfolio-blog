@@ -32,7 +32,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const audio = new Audio(audioSource)
     audioRef.current = audio
-    audio.preload = 'auto'
+    audio.preload = 'none'
     audio.loop = true
     audio.volume = volume
 

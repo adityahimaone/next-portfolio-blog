@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { LazyMotion, domMax, m, AnimatePresence } from 'motion/react'
+import { m, AnimatePresence } from 'motion/react'
 import { cn } from '@/lib/utils'
 import {
   Play,
@@ -91,7 +91,9 @@ const TrackHeader = ({
           e.stopPropagation()
           onMute()
         }}
-        aria-label={muted ? `Unmute ${track.name} track` : `Mute ${track.name} track`}
+        aria-label={
+          muted ? `Unmute ${track.name} track` : `Mute ${track.name} track`
+        }
         className={cn(
           'flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold transition-colors',
           muted
@@ -106,7 +108,9 @@ const TrackHeader = ({
           e.stopPropagation()
           onSolo()
         }}
-        aria-label={soloed ? `Unsolo ${track.name} track` : `Solo ${track.name} track`}
+        aria-label={
+          soloed ? `Unsolo ${track.name} track` : `Solo ${track.name} track`
+        }
         className={cn(
           'flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold transition-colors',
           soloed
@@ -573,7 +577,7 @@ export function AboutSection() {
   ]
 
   return (
-    <LazyMotion features={domMax}>
+    <>
       <section id="about" className="bg-white py-24 dark:bg-zinc-950">
         <div className="container mx-auto px-4 md:px-6">
           <div className="mb-12 flex flex-col items-center text-center">
@@ -599,7 +603,7 @@ export function AboutSection() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setIsPlaying(!isPlaying)}
-                    aria-label={isPlaying ? "Pause Timeline" : "Play Timeline"}
+                    aria-label={isPlaying ? 'Pause Timeline' : 'Play Timeline'}
                     className={cn(
                       'flex h-8 w-8 items-center justify-center rounded transition-colors',
                       isPlaying
@@ -746,6 +750,6 @@ export function AboutSection() {
           )}
         </AnimatePresence>
       </section>
-    </LazyMotion>
+    </>
   )
 }

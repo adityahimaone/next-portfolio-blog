@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { LazyMotion, domMax, m, useMotionValue, animate } from 'motion/react'
+import { m, useMotionValue, animate } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
 import { Sliders, Music } from 'lucide-react'
@@ -163,7 +163,7 @@ export function SkillsSection() {
   const [isOn, setIsOn] = useState(true)
 
   return (
-    <LazyMotion features={domMax}>
+    <>
       <section id="skills" className="overflow-hidden py-24">
         <div className="container mx-auto px-4">
           <div className="mb-16 flex flex-col items-center text-center">
@@ -357,6 +357,6 @@ export function SkillsSection() {
           </div>
         </div>
       </section>
-    </LazyMotion>
+    </>
   )
 }

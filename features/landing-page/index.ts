@@ -11,7 +11,6 @@ export { ProjectsSection } from './components/projects-section'
 // Spotify
 export { MusicPlayer } from './spotify/music-player'
 export { MusicMarquee } from './spotify/music-marquee'
-export { MusicBackground } from './spotify/music-background'
 export { default as NowPlaying } from './spotify/now-playing'
 export { AudioProvider, useAudio } from './spotify/audio-context'
 

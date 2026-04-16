@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import {
-  motion,
+  m as motion,
   AnimatePresence,
 } from 'motion/react'
 import Link from 'next/link'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { LazyMotion, domMax, m, AnimatePresence, useInView } from 'motion/react'
+import { m, AnimatePresence, useInView } from 'motion/react'
 import Image from 'next/image'
 import {
   Disc,
@@ -10,14 +10,7 @@ import {
   Music,
   Mic2,
   ArrowUpRight,
-  Globe,
-  Code,
-  Zap,
-  Cpu,
-  Database,
-  Layers,
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 import { PROJECTS_SHOWCASE, type ProjectShowcaseItem } from '../constants'
@@ -30,7 +23,7 @@ export function ProjectsSection() {
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
   return (
-    <LazyMotion features={domMax}>
+    <>
       <section
         id="projects"
         className="overflow-hidden py-24 2xl:overflow-visible"
@@ -228,6 +221,6 @@ export function ProjectsSection() {
           )}
         </AnimatePresence>
       </section>
-    </LazyMotion>
+    </>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LazyMotion, domMax, m, AnimatePresence } from 'motion/react'
+import { m, AnimatePresence } from 'motion/react'
 import {
   Briefcase,
   Calendar,
@@ -20,7 +20,7 @@ export function ExperienceSection() {
     EXPERIENCES.find((e) => e.id === selectedId) || EXPERIENCES[0]
 
   return (
-    <LazyMotion features={domMax}>
+    <>
       <section id="experience" className="py-24">
         <div className="container mx-auto px-4 md:px-6">
           <div className="mb-12 flex flex-col items-center text-center">
@@ -312,6 +312,6 @@ export function ExperienceSection() {
           </div>
         </div>
       </section>
-    </LazyMotion>
+    </>
   )
 }

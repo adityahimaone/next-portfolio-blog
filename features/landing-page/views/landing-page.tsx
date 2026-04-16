@@ -5,15 +5,14 @@ import {
   m,
   useScroll,
   useTransform,
-  useInView,
   useSpring,
   AnimatePresence,
 } from 'motion/react'
+import dynamic from 'next/dynamic'
 
 const loadFeatures = () => import('motion/react').then((res) => res.domMax)
 
 import { Preloader } from '../animations/preloader'
-import dynamic from 'next/dynamic'
 import { Header } from '@/features/layout/components/header'
 import { Footer } from '@/features/layout/components/footer'
 import { HeroSection } from '../components/hero-section'
@@ -22,10 +21,11 @@ const AboutSection = dynamic(() => import('../components/about-section').then((m
 const SkillsSection = dynamic(() => import('../components/skills-section').then((mod) => mod.SkillsSection))
 const ExperienceSection = dynamic(() => import('../components/experience-section').then((mod) => mod.ExperienceSection))
 const ContactSection = dynamic(() => import('../components/contact/contact-section').then((mod) => mod.ContactSection))
+const ProjectsSection = dynamic(() => import('../components/projects-section').then((mod) => mod.ProjectsSection))
+const MusicMarquee = dynamic(() => import('../spotify/music-marquee').then((mod) => mod.MusicMarquee))
+
 import { SectionDivider } from '@/components/section-divider'
 import { ChevronUp } from 'lucide-react'
-import { MusicMarquee } from '../spotify/music-marquee'
-const ProjectsSection = dynamic(() => import('../components/projects-section').then((mod) => mod.ProjectsSection))
 import { usePreloader } from '../hooks/use-preloader'
 
 export default function LandingPage() {
@@ -35,18 +35,8 @@ export default function LandingPage() {
     damping: 30,
   })
   const mainRef = useRef<HTMLDivElement>(null)
-  const isInView = useInView(mainRef, { once: false })
   const [showScrollTop, setShowScrollTop] = useState(false)
   const isLoading = usePreloader()
-  const heroRef = useRef<HTMLElement>(null)
-  const { scrollYProgress: heroScrollY } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start'],
-  })
-  const parallaxY = useTransform(heroScrollY, [0, 1], [0, 100])
-
-  // Parallax effect for background elements
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '20%'])
 
   // Opacity for floating elements based on scroll
   const floatingOpacity = useTransform(scrollYProgress, [0, 0.2], [0.2, 0])
@@ -145,7 +135,6 @@ export default function LandingPage() {
             <div className="snap-y snap-mandatory">
               {/* Hero Section */}
               <section
-                ref={heroRef}
                 className="relative h-screen snap-start overflow-hidden"
               >
                 <div className="relative">

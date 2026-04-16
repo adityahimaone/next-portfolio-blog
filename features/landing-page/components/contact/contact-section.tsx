@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { LazyMotion, domMax, m } from 'motion/react'
+import { m } from 'motion/react'
 import { Music, Radio, Square } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
@@ -506,7 +506,7 @@ export function ContactSection() {
   )
 
   return (
-    <LazyMotion features={domMax}>
+    <>
       <section id="contact" className="overflow-hidden py-24">
         <div className="container mx-auto px-4">
           <div className="mb-16 flex flex-col items-center text-center">
@@ -677,6 +677,6 @@ export function ContactSection() {
           </div>
         </div>
       </section>
-    </LazyMotion>
+    </>
   )
 }

@@ -4,7 +4,6 @@ import { useRef } from 'react'
 import { m as motion, useScroll, useTransform } from 'motion/react'
 import { Play, Pause, SkipForward } from 'lucide-react'
 import { Magnetic } from '@/components/magnetic'
-import { TextEffect } from '@/components/text-effect'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import { Syne } from 'next/font/google'
 
@@ -35,7 +34,6 @@ export function HeroSection() {
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9])
 
-  console.log(baseDelay)
 
   return (
     <section

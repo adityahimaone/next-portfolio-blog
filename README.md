@@ -2,20 +2,20 @@
 
 Personal portfolio and blog — Next.js 15, Tailwind CSS v4, feature-based architecture.
 
-**Live:** [adityahimaone.tech](https://adityahimaone.tech)
+**Live:** [adityahimaone.tech](https://adityahimaone.space)
 
 ## Stack
 
-| Layer | Tech |
-|-------|------|
-| Framework | Next.js 15 (App Router) |
-| Styling | Tailwind CSS v4 |
-| Animation | Motion (Framer Motion) |
-| Icons | Lucide React |
-| Theme | next-themes (dark/light) |
-| Blog | Raw Markdown + gray-matter |
-| Music | Tone.js |
-| Language | TypeScript |
+| Layer     | Tech                       |
+| --------- | -------------------------- |
+| Framework | Next.js 15 (App Router)    |
+| Styling   | Tailwind CSS v4            |
+| Animation | Motion (Framer Motion)     |
+| Icons     | Lucide React               |
+| Theme     | next-themes (dark/light)   |
+| Blog      | Raw Markdown + gray-matter |
+| Music     | Tone.js                    |
+| Language  | TypeScript                 |
 
 ## Project Structure
 
@@ -59,48 +59,64 @@ next-portfolio-blog/
 
 ## Features
 
+### Global / Application Layout
+
+- Hardware-styled navigation toggles with LED indicators
+- Persistent, uninterrupted `MusicPlayer` integrated directly into `app/layout.tsx` for seamless audio across all routes
+- Global Dark/Light theme toggle
+- Custom preloader sequences utilizing `sessionStorage` execution logic
+
 ### Landing Page
-- Hero section with animated elements
-- About, Skills, Experience sections
-- Spotify integration (now playing, music player)
-- Dark/light theme toggle
-- Smooth scroll with scroll-to-top
+
+- Hero section with hardware style constraints and dynamic initialization delays
+- About, Skills, Experience, Projects sections
+- Interactive Music/Spotify integration (now playing API, magnetic music player)
+- Hardware-styled smooth scrolling anchors
 
 ### Blog
+
 - Markdown-based posts in `content/blog/`
 - Auto-generated routes via `[slug]`
+- Client-side dynamic tag filtering system
 - Reading time estimation
-- Tag support
+- Unified component layout parity with native Projects routing
+- Custom music-themed UI styling (Animated CSS equalizer decorations)
 - Static generation (SSG)
 
 ### Projects
-- Featured projects with detailed cards
-- Auto-fetched recent repos from GitHub API
+
+- Featured projects with distinct, music-themed hover effects (Spinning Vinyl `/Disc3` watermark)
+- Auto-fetched recent repos from GitHub API presented on hardware-styled mini cards with Oversized Radio watermarks
 - Tech stack tags
 - GitHub stats (stars, language)
 
 ## Adding Content
 
 ### New Blog Post
+
 1. Create `content/blog/my-post.md`
 2. Add frontmatter:
+
 ```markdown
 ---
-title: "My Post Title"
+title: 'My Post Title'
 slug: my-post
 date: 2026-04-15
-description: "Short description"
+description: 'Short description'
 tags: [nextjs, typescript]
 published: true
 ---
 
 Content here...
 ```
+
 3. Done — route auto-generated at `/blog/my-post`
 
 ### New Featured Project
+
 1. Open `features/projects/data.ts`
 2. Add entry to `FEATURED_PROJECTS`:
+
 ```typescript
 {
   name: 'Project Name',
@@ -111,6 +127,7 @@ Content here...
   demo: 'https://demo.url', // optional
 }
 ```
+
 3. Done — shows in Projects section
 
 ## Development
@@ -132,6 +149,7 @@ pnpm start
 ## Documentation
 
 Detailed docs in [`docs/`](./docs/):
+
 - [tasks.md](./docs/tasks.md) — Task breakdown by phase
 - [structure.md](./docs/structure.md) — File structure design
 - [stack.md](./docs/stack.md) — Stack audit and upgrade plan

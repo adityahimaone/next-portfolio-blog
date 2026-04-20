@@ -6,8 +6,8 @@ export const HOMEPAGE_NAV_ITEMS = [
   { name: 'SKILLS', href: '/#skills' },
   { name: 'EXP', href: '/#experience' },
   { name: 'WORK', href: '/#projects' },
-  { name: 'BLOG', href: '/blog' },
   { name: 'CONTACT', href: '/#contact' },
+  { name: 'BLOG', href: '/blog' },
   { name: 'PROJECTS', href: '/projects' },
 ] as const
 

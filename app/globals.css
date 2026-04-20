@@ -27,6 +27,7 @@
   body {
     @apply bg-white text-zinc-800 dark:bg-zinc-950 dark:text-zinc-100;
     margin: 0;
+    transition: background-color 0.5s ease, color 0.5s ease;
   }
 
   ::selection {

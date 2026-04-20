@@ -8,8 +8,9 @@ import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { Sun, Moon } from 'lucide-react'
 import useClickOutside from '@/hooks/use-click-outside'
-import { HOMEPAGE_NAV_ITEMS, SUBPAGE_NAV_ITEMS } from '../constants'
+import { HOMEPAGE_NAV_ITEMS, SUBPAGE_NAV_ITEMS, SOCIAL_LINKS } from '../constants'
 import { useScrollState } from '../hooks/use-scroll-state'
+import { StaggeredMenu } from './staggered-menu/staggered-menu'
 
 export function Header() {
   const pathname = usePathname()
@@ -21,6 +22,16 @@ export function Header() {
       !item.href.startsWith('/#') && (isHomepage ? item.href !== '/' : true),
   )
   const scrollLinks = navItems.filter((item) => !pageLinks.includes(item))
+
+  const menuItems = navItems.map((item) => ({
+    label: item.name,
+    link: item.href,
+  }))
+
+  const socialMenuItems = SOCIAL_LINKS.map((link) => ({
+    label: link.name,
+    link: link.href,
+  }))
 
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -64,33 +75,26 @@ export function Header() {
           <div className="flex flex-col items-center gap-1">
             <button
               onClick={toggleTheme}
-              className="relative h-8 w-14 cursor-pointer rounded-sm bg-zinc-300 shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-colors dark:bg-zinc-800"
+              className="relative h-8 w-14 cursor-pointer rounded-md bg-zinc-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] transition-colors dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800"
               aria-label="Toggle Theme"
             >
-              <div className="absolute inset-0 flex items-center justify-between px-1.5">
-                <Sun size={12} className="text-zinc-500" />
-                <Moon size={12} className="text-zinc-500" />
+              <div className="absolute inset-0 flex items-center justify-between px-2">
+                <Sun size={12} className={cn("transition-opacity duration-300", mounted && theme === 'dark' ? 'opacity-30 text-zinc-600' : 'opacity-100 text-[#273281]')} />
+                <Moon size={12} className={cn("transition-opacity duration-300", mounted && theme === 'dark' ? 'opacity-100 text-[#f8fafc]' : 'opacity-30 text-zinc-600')} />
               </div>
-              <div className="absolute top-1 bottom-1 z-10 w-1/2 overflow-hidden rounded-sm shadow-md">
-                {/* Gray background for light mode */}
-                <motion.div
-                  className="absolute inset-0 bg-[#9ca3af]"
-                  animate={{
-                    x: theme === 'dark' ? '90%' : '10%',
-                    opacity: theme === 'dark' ? 0 : 1,
-                  }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-                {/* Primary color background for dark mode */}
-                <motion.div
-                  className="bg-primary absolute inset-0"
-                  animate={{
-                    x: theme === 'dark' ? '90%' : '10%',
-                    opacity: theme === 'dark' ? 1 : 0,
-                  }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-              </div>
+              <motion.div
+                className="absolute top-1 bottom-1 w-6 bg-primary rounded shadow-lg flex flex-col items-center justify-center gap-1 border border-white/10 dark:bg-[#3a4699]"
+                initial={false}
+                animate={{
+                  x: mounted && theme === 'dark' ? 28 : 2,
+                }}
+                transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+              >
+                {/* Grip lines for mixer feel */}
+                <div className="h-0.5 w-3 bg-white/30 rounded-full" />
+                <div className="h-0.5 w-3 bg-white/30 rounded-full" />
+                <div className="h-0.5 w-3 bg-white/30 rounded-full" />
+              </motion.div>
             </button>
             <span className="text-[8px] font-bold tracking-widest text-zinc-600 md:text-[10px] dark:text-zinc-400">
               POWER
@@ -99,10 +103,10 @@ export function Header() {
           <div className="relative mt-2 h-4 w-4 md:h-5 md:w-5">
             <div
               className={cn(
-                'absolute inset-0 rounded-full transition-colors duration-500',
+                'absolute inset-0 rounded-full transition-all duration-700',
                 mounted && theme === 'dark'
-                  ? 'animate-pulse bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]'
-                  : 'bg-zinc-400',
+                  ? 'animate-pulse bg-red-600 shadow-[0_0_12px_rgba(239,68,68,0.9)]'
+                  : 'bg-zinc-400 shadow-inner',
               )}
             />
             <div className="absolute top-1 left-1 h-1 w-1 rounded-full bg-white/50 md:top-1.5 md:left-1.5 md:h-1.5 md:w-1.5" />
@@ -289,39 +293,15 @@ export function Header() {
       </header>
 
       {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            ref={mobileMenuRef}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-4 top-24 z-40 overflow-hidden rounded-3xl border border-zinc-200 bg-white/95 p-6 shadow-2xl backdrop-blur-xl lg:hidden dark:border-zinc-800 dark:bg-zinc-900/95"
-          >
-            <nav className="grid gap-4">
-              {navItems.map((item, index) => (
-                <motion.div
-                  key={item.name}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Link
-                    href={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-between rounded-xl bg-zinc-50 p-4 transition-colors hover:bg-zinc-100 dark:bg-zinc-800/50 dark:hover:bg-zinc-800"
-                  >
-                    <span className="text-lg font-bold tracking-wider text-zinc-700 dark:text-zinc-200">
-                      {item.name}
-                    </span>
-                    <div className="h-2 w-2 rounded-full bg-zinc-300 dark:bg-zinc-600" />
-                  </Link>
-                </motion.div>
-              ))}
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <StaggeredMenu
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        items={menuItems}
+        colors={
+          theme === 'dark' ? ['#f59e0b', '#3a4699', '#1e2866'] : ['#273281', '#3d468b', '#e2e8f0']
+        }
+        accentColor={theme === 'dark' ? '#f59e0b' : '#273281'}
+      />
     </>
   )
 }

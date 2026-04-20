@@ -1,0 +1,183 @@
+.staggered-menu-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 40;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+[data-open] {
+  pointer-events: auto;
+}
+
+.staggered-menu-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: clamp(300px, 85vw, 500px);
+  height: 100%;
+  background-color: #0c0c0e;
+  /* Ventilated Mesh Texture */
+  background-image: 
+    radial-gradient(circle at center, #1a1a1c 1px, transparent 1.5px);
+  background-size: 8px 8px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  padding: 8rem 0 3rem 0;
+  overflow-y: auto;
+  z-index: 10;
+  pointer-events: auto;
+  opacity: 0;
+  border-left: 2px solid #1a1a1c;
+  box-shadow: -40px 0 100px rgba(0, 0, 0, 0.9);
+}
+
+.sm-panel-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sm-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* Small gap between modules */
+}
+
+/* Individual Module Item */
+.sm-panel-itemWrap {
+  position: relative;
+  background: #0f172a;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.sm-panel-item {
+  position: relative;
+  padding: 2rem 2.5rem;
+  color: #94a3b8;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+/* Module 'Inputs' */
+.sm-panel-item::before {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  width: 12px;
+  height: 12px;
+  background: #020617;
+  border-radius: 50%;
+  border: 1px solid #334155;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.sm-panel-item:hover {
+  background: #1e293b;
+  color: #f59e0b; /* Amber */
+}
+
+.sm-panel-item:hover::before {
+  border-color: #f59e0b;
+  box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.4), 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.sm-panel-itemLabel {
+  margin-left: 2rem;
+  z-index: 2;
+}
+
+/* Side Info Text */
+.sm-module-type {
+  position: absolute;
+  right: 1rem;
+  top: 0.5rem;
+  font-size: 0.6rem;
+  color: #334155;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+}
+
+.sm-panel-item:hover .sm-module-type {
+  color: #f59e0b;
+  opacity: 0.4;
+}
+
+/* Active VU Meter Visuals */
+.sm-meter {
+  margin-left: auto;
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 24px;
+}
+
+.sm-meter-bar {
+  width: 4px;
+  background: #1e293b;
+  height: 20%;
+  border-radius: 1px;
+  transition: all 0.3s ease;
+}
+
+.sm-panel-item:hover .sm-meter-bar {
+  background: #f59e0b;
+}
+
+.sm-panel-item:hover .sm-meter-bar:nth-child(1) { height: 80%; animation: sm-signal 0.4s 0.1s infinite; }
+.sm-panel-item:hover .sm-meter-bar:nth-child(2) { height: 100%; animation: sm-signal 0.5s 0.2s infinite; }
+.sm-panel-item:hover .sm-meter-bar:nth-child(3) { height: 60%; animation: sm-signal 0.3s 0s infinite; }
+
+@keyframes sm-signal {
+  0% { opacity: 1; transform: scaleY(1); }
+  50% { opacity: 0.7; transform: scaleY(0.6); }
+  100% { opacity: 1; transform: scaleY(1); }
+}
+
+/* Light Mode Overrides */
+.light .staggered-menu-panel {
+  background-color: #f1f5f9;
+  background-image: radial-gradient(circle at center, #cbd5e1 1px, transparent 1.5px);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.1);
+  border-left: 2px solid #cbd5e1;
+}
+
+.light .sm-panel-itemWrap {
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.light .sm-panel-item { color: #475569; }
+.light .sm-panel-item:hover { background: #f8fafc; color: #273281; }
+.light .sm-panel-item::before { background: #e2e8f0; border-color: #94a3b8; }
+.light .sm-panel-item:hover::before { border-color: #273281; box-shadow: none; }
+.light .sm-module-type { color: #94a3b8; }
+.light .sm-meter-bar { background: #e2e8f0; }
+.light .sm-panel-item:hover .sm-meter-bar { background: #273281; }
+
+@media (max-width: 640px) {
+  .staggered-menu-panel {
+    width: 100%;
+    padding-top: 8rem;
+  }
+}

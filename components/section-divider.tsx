@@ -13,7 +13,7 @@ export function SectionDivider() {
       >
         <motion.div
           className="absolute top-0 left-0 w-full bg-linear-to-b from-transparent via-zinc-500 to-transparent dark:via-zinc-400"
-          animate={{ top: ['-100%', '100%'] }}
+          animate={{ y: ['-200%', '200%'] }}
           transition={{
             duration: 2,
             repeat: Infinity,

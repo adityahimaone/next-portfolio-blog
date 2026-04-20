@@ -11,6 +11,7 @@ export function usePreloader(duration = 1200) {
   })
 
   useEffect(() => {
+    // If not loading (preloader skipped), don't set any timer
     if (!isLoading) return
 
     const timer = setTimeout(() => {

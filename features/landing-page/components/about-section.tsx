@@ -349,7 +349,7 @@ export function AboutSection() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-bold text-zinc-400">
+                    <div className="text-xs font-bold text-zinc-500">
                       MODEL NO.
                     </div>
                     <div className="text-xl font-bold text-zinc-700 dark:text-zinc-300">
@@ -363,7 +363,7 @@ export function AboutSection() {
                 {/* Left Column: Specs */}
                 <div className="space-y-6">
                   <div>
-                    <h3 className="mb-2 border-b border-zinc-200 pb-1 text-xs font-bold text-zinc-400 uppercase dark:border-zinc-800">
+                    <h3 className="mb-2 border-b border-zinc-200 pb-1 text-xs font-bold text-zinc-500 uppercase dark:border-zinc-800">
                       Technical Specifications
                     </h3>
                     <dl className="space-y-2">
@@ -395,7 +395,7 @@ export function AboutSection() {
                   </div>
 
                   <div>
-                    <h3 className="mb-2 border-b border-zinc-200 pb-1 text-xs font-bold text-zinc-400 uppercase dark:border-zinc-800">
+                    <h3 className="mb-2 border-b border-zinc-200 pb-1 text-xs font-bold text-zinc-500 uppercase dark:border-zinc-800">
                       Core Modules
                     </h3>
                     <div className="flex flex-wrap gap-2">
@@ -420,7 +420,7 @@ export function AboutSection() {
 
                 {/* Right Column: Description */}
                 <div>
-                  <h3 className="mb-2 border-b border-zinc-200 pb-1 text-xs font-bold text-zinc-400 uppercase dark:border-zinc-800">
+                  <h3 className="mb-2 border-b border-zinc-200 pb-1 text-xs font-bold text-zinc-500 uppercase dark:border-zinc-800">
                     Description
                   </h3>
                   <p className="leading-relaxed text-zinc-600 dark:text-zinc-300">
@@ -470,7 +470,7 @@ export function AboutSection() {
                 {/* Gauge 1 */}
                 <div className="flex flex-col items-center gap-4">
                   <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-4 border-zinc-300 bg-zinc-100 shadow-inner dark:border-zinc-700 dark:bg-zinc-800">
-                    <div className="absolute bottom-4 text-xs font-bold text-zinc-400">
+                    <div className="absolute bottom-4 text-xs font-bold text-zinc-500">
                       YEARS
                     </div>
                     <div className="text-4xl font-black text-zinc-800 dark:text-zinc-100">
@@ -488,7 +488,7 @@ export function AboutSection() {
                 {/* Gauge 2 */}
                 <div className="flex flex-col items-center gap-4">
                   <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-4 border-zinc-300 bg-zinc-100 shadow-inner dark:border-zinc-700 dark:bg-zinc-800">
-                    <div className="absolute bottom-4 text-xs font-bold text-zinc-400">
+                    <div className="absolute bottom-4 text-xs font-bold text-zinc-500">
                       COUNT
                     </div>
                     <div className="text-4xl font-black text-zinc-800 dark:text-zinc-100">
@@ -506,7 +506,7 @@ export function AboutSection() {
                 {/* Gauge 3 */}
                 <div className="flex flex-col items-center gap-4">
                   <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-4 border-zinc-300 bg-zinc-100 shadow-inner dark:border-zinc-700 dark:bg-zinc-800">
-                    <div className="absolute bottom-4 text-xs font-bold text-zinc-400">
+                    <div className="absolute bottom-4 text-xs font-bold text-zinc-500">
                       EFFORT
                     </div>
                     <div className="text-4xl font-black text-zinc-800 dark:text-zinc-100">
@@ -631,9 +631,9 @@ export function AboutSection() {
                     00:0{isPlaying ? Math.floor(Date.now() / 1000) % 10 : '0'}
                     :00
                   </span>
-                  <span className="text-zinc-400 dark:text-zinc-600">|</span>
+                  <span className="text-zinc-500 dark:text-zinc-600">|</span>
                   <span>120 BPM</span>
-                  <span className="text-zinc-400 dark:text-zinc-600">|</span>
+                  <span className="text-zinc-500 dark:text-zinc-600">|</span>
                   <span>4/4</span>
                 </div>
               </div>

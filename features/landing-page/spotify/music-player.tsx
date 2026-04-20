@@ -97,9 +97,9 @@ export function MusicPlayer() {
               {isHovered && (
                 <motion.div
                   className="flex items-center gap-3 overflow-hidden"
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 'auto', opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
+                  initial={{ scaleX: 0, opacity: 0, transformOrigin: 'left' }}
+                  animate={{ scaleX: 1, opacity: 1, transformOrigin: 'left' }}
+                  exit={{ scaleX: 0, opacity: 0, transformOrigin: 'left' }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                 >
                   {/* Divider */}

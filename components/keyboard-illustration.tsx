@@ -37,7 +37,8 @@ export const KeyboardIllustration = () => {
               <div className="h-1 w-8 overflow-hidden rounded-full bg-zinc-700">
                 <motion.div
                   className="h-full bg-green-500"
-                  animate={{ width: ['0%', '100%', '50%'] }}
+                  style={{ transformOrigin: 'left' }}
+                  animate={{ scaleX: [0, 1, 0.5] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
               </div>

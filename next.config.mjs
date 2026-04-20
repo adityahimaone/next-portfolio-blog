@@ -1,10 +1,6 @@
 import createMDX from '@next/mdx'
 import withBundleAnalyzerInit from '@next/bundle-analyzer'
 
-const withBundleAnalyzer = withBundleAnalyzerInit({
-  enabled: process.env.ANALYZE === 'true',
-})
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -14,6 +10,7 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react', 'motion'],
+    optimizeCss: true,
   },
   images: {
     remotePatterns: [
@@ -27,10 +24,46 @@ const nextConfig = {
       { protocol: 'https', hostname: 'ucarecdn.com' },
     ],
   },
+  headers: async () => {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ]
+  },
 }
 
 const withMDX = createMDX({
   extension: /\.mdx?$/,
 })
 
-export default withBundleAnalyzer(withMDX(nextConfig))
+// Create the base config with MDX
+const baseConfig = withMDX(nextConfig)
+
+// Only apply bundle analyzer when ANALYZE=true
+// This prevents it from running during normal development
+console.log(process.env.ANALYZE, 'process.env.ANALYZE')
+const finalConfig =
+  process.env.ANALYZE === 'true'
+    ? withBundleAnalyzerInit({ enabled: true })(baseConfig)
+    : baseConfig
+
+export default finalConfig

@@ -232,7 +232,7 @@ export function SkillsSection() {
                     {/* Switch */}
                     <button
                       onClick={() => setIsOn(!isOn)}
-                      aria-label={isOn ? "Turn Power Off" : "Turn Power On"}
+                      aria-label={isOn ? 'Turn Power Off' : 'Turn Power On'}
                       className={cn(
                         'relative flex h-12 w-8 cursor-pointer flex-col items-center justify-between overflow-hidden rounded border border-zinc-800 bg-zinc-950 py-1 shadow-[inset_0_0_5px_rgba(0,0,0,1)] transition-all',
                       )}
@@ -278,7 +278,7 @@ export function SkillsSection() {
                 {/* Section 1: Faders (Languages) */}
                 <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner lg:col-span-5 dark:border-zinc-800 dark:bg-zinc-900/50">
                   <div className="mb-6 flex items-center justify-between">
-                    <h4 className="text-sm font-black tracking-widest text-zinc-400 uppercase">
+                    <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
                       Channel 1: Languages
                     </h4>
                     <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
@@ -310,7 +310,7 @@ export function SkillsSection() {
                   {/* Frameworks */}
                   <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner dark:border-zinc-800 dark:bg-zinc-900/50">
                     <div className="mb-6 flex items-center justify-between">
-                      <h4 className="text-sm font-black tracking-widest text-zinc-400 uppercase">
+                      <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
                         EQ: Frameworks
                       </h4>
                       <div className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
@@ -329,7 +329,7 @@ export function SkillsSection() {
                   {/* Tools */}
                   <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner dark:border-zinc-800 dark:bg-zinc-900/50">
                     <div className="mb-6 flex items-center justify-between">
-                      <h4 className="text-sm font-black tracking-widest text-zinc-400 uppercase">
+                      <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
                         FX: Tools
                       </h4>
                       <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />

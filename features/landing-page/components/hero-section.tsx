@@ -34,7 +34,6 @@ export function HeroSection() {
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9])
 
-
   return (
     <section
       ref={containerRef}
@@ -93,16 +92,11 @@ export function HeroSection() {
           </div>
 
           {/* Subtitle / Description */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: baseDelay + 0.4 }}
-            className="mb-10 max-w-2xl text-center text-base font-light text-zinc-600 sm:text-lg md:text-xl dark:text-zinc-400"
-          >
+          <p className="animate-hero-desc mb-10 max-w-2xl text-center text-base font-light text-zinc-600 sm:text-lg md:text-xl dark:text-zinc-400">
             Orchestrating code and rhythm into immersive digital experiences.
             <br className="hidden sm:block" /> Frontend Developer & Audio
             Enthusiast.
-          </motion.p>
+          </p>
 
           {/* Player Controls / CTA */}
           {/* Player Controls / CTA - Hardware Style */}
@@ -122,7 +116,7 @@ export function HeroSection() {
             <Magnetic intensity={0.2}>
               <button
                 onClick={togglePlay}
-                aria-label={isPlaying ? "Pause Session" : "Play Session"}
+                aria-label={isPlaying ? 'Pause Session' : 'Play Session'}
                 className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-zinc-100 to-zinc-300 shadow-[0_2px_5px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.1)] transition-all active:scale-95 active:shadow-inner sm:h-14 sm:w-14 dark:from-zinc-700 dark:to-zinc-800 dark:shadow-[0_2px_5px_rgba(0,0,0,0.5),0_0_0_1px_rgba(0,0,0,0.5)]"
               >
                 <div className="bg-primary/5 absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />

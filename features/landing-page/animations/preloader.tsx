@@ -16,32 +16,52 @@ const loadingSteps = [
 export function Preloader() {
   const [stepIndex, setStepIndex] = useState(0)
   const [progress, setProgress] = useState(0)
+  const [shouldAnimate, setShouldAnimate] = useState(true)
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    // Check if preloader should be skipped (return visit)
+    if (typeof window !== 'undefined') {
+      const hasVisited = sessionStorage.getItem('preloaderShown')
+      if (hasVisited) {
+        // Skip animation entirely for return visits
+        setShouldAnimate(false)
+        return
+      }
+    }
+
+    // Animation timing adjusted for 1200ms maximum duration
+    // Step changes: 5 steps, show each for ~240ms to fit within 1200ms
+    const stepInterval = setInterval(() => {
       setStepIndex((prev) => {
         if (prev < loadingSteps.length - 1) {
           return prev + 1
         }
         return prev
       })
-    }, 800)
+    }, 240)
 
+    // Progress: aim for ~80% completion in 1200ms for smoother visual
+    // 3.33% every 50ms = 80% in 1200ms (24 intervals * 3.33% = 80%)
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(progressInterval)
           return 100
         }
-        return prev + 2
+        return Math.min(prev + 3.33, 100)
       })
-    }, 40)
+    }, 50)
 
     return () => {
-      clearInterval(interval)
+      clearInterval(stepInterval)
       clearInterval(progressInterval)
     }
   }, [])
+
+  // If preloader should be skipped (return visit), render nothing
+  if (!shouldAnimate) {
+    return null
+  }
 
   return (
     <motion.div

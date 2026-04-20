@@ -1,10 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import {
-  motion,
-  AnimatePresence,
-} from 'motion/react'
+import { motion, AnimatePresence } from 'motion/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
@@ -17,9 +14,11 @@ import { useScrollState } from '../hooks/use-scroll-state'
 export function SubpageHeader() {
   const pathname = usePathname()
   const navItems = SUBPAGE_NAV_ITEMS
-  
-  const pageLinks = navItems.filter(item => !item.href.startsWith('/#') && item.href !== '/')
-  const scrollLinks = navItems.filter(item => !pageLinks.includes(item))
+
+  const pageLinks = navItems.filter(
+    (item) => !item.href.startsWith('/#') && item.href !== '/',
+  )
+  const scrollLinks = navItems.filter((item) => !pageLinks.includes(item))
 
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -70,15 +69,26 @@ export function SubpageHeader() {
                 <Sun size={12} className="text-zinc-500" />
                 <Moon size={12} className="text-zinc-500" />
               </div>
-              <motion.div
-                className="bg-primary absolute top-1 bottom-1 z-10 w-1/2 rounded-sm shadow-md"
-                animate={{
-                  x: theme === 'dark' ? '90%' : '10%',
-                  backgroundColor:
-                    theme === 'dark' ? 'var(--primary)' : '#9ca3af',
-                }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              />
+              <div className="absolute top-1 bottom-1 z-10 w-1/2 overflow-hidden rounded-sm shadow-md">
+                {/* Gray background for light mode */}
+                <motion.div
+                  className="absolute inset-0 bg-[#9ca3af]"
+                  animate={{
+                    x: theme === 'dark' ? '90%' : '10%',
+                    opacity: theme === 'dark' ? 0 : 1,
+                  }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
+                {/* Primary color background for dark mode */}
+                <motion.div
+                  className="bg-primary absolute inset-0"
+                  animate={{
+                    x: theme === 'dark' ? '90%' : '10%',
+                    opacity: theme === 'dark' ? 1 : 0,
+                  }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
+              </div>
             </button>
             <span className="text-[8px] font-bold tracking-widest text-zinc-600 md:text-[10px] dark:text-zinc-400">
               POWER
@@ -149,21 +159,26 @@ export function SubpageHeader() {
                   <div
                     className={cn(
                       'relative flex transform cursor-pointer flex-col items-center justify-end rounded-md border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all group-hover:-translate-y-0.5 group-active:translate-y-1 group-active:shadow-inner dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
-                      isScrolled ? 'h-10 w-10 pb-1.5' : 'h-12 w-12 pb-2'
+                      isScrolled ? 'h-10 w-10 pb-1.5' : 'h-12 w-12 pb-2',
                     )}
                   >
                     {/* LED indicating 'page link' */}
-                    <div className={cn(
-                      "h-1.5 w-5 rounded-full transition-colors",
-                      (pathname.startsWith(item.href) && item.href !== '/') || pathname === item.href
-                        ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" 
-                        : "bg-red-800/40 group-hover:bg-red-600/60"
-                    )} />
+                    <div
+                      className={cn(
+                        'h-1.5 w-5 rounded-full transition-colors',
+                        (pathname.startsWith(item.href) && item.href !== '/') ||
+                          pathname === item.href
+                          ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'
+                          : 'bg-red-800/40 group-hover:bg-red-600/60',
+                      )}
+                    />
                   </div>
                   <span
                     className={cn(
                       'text-[10px] font-bold tracking-widest transition-colors',
-                      activeKnob === item.name || ((pathname.startsWith(item.href) && item.href !== '/') || pathname === item.href)
+                      activeKnob === item.name ||
+                        (pathname.startsWith(item.href) && item.href !== '/') ||
+                        pathname === item.href
                         ? 'text-primary'
                         : 'text-zinc-600 dark:text-zinc-400',
                     )}

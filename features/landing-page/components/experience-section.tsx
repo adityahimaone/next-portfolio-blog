@@ -48,7 +48,7 @@ export function ExperienceSection() {
             {/* Left Column: Tracklist / Selector */}
             <div className="lg:col-span-5">
               <div className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-                <div className="mb-2 px-4 py-2 text-xs font-bold tracking-wider text-zinc-400 uppercase">
+                <div className="mb-2 px-4 py-2 text-xs font-bold tracking-wider text-zinc-500 uppercase">
                   Select a Track
                 </div>
                 {EXPERIENCES.map((exp) => (
@@ -76,7 +76,7 @@ export function ExperienceSection() {
                         'flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-colors',
                         selectedId === exp.id
                           ? 'text-primary border-zinc-200 bg-white shadow-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-white'
-                          : 'border-transparent bg-zinc-50 text-zinc-400 group-hover:border-zinc-200 group-hover:bg-white group-hover:text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-500 dark:group-hover:bg-zinc-800 dark:group-hover:text-zinc-300',
+                          : 'border-transparent bg-zinc-50 text-zinc-500 group-hover:border-zinc-200 group-hover:bg-white group-hover:text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-500 dark:group-hover:bg-zinc-800 dark:group-hover:text-zinc-300',
                       )}
                     >
                       {selectedId === exp.id ? (
@@ -105,7 +105,7 @@ export function ExperienceSection() {
                             'hidden rounded-full border px-1.5 py-0.5 text-[10px] font-medium sm:inline-block',
                             selectedId === exp.id
                               ? 'border-zinc-200 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400'
-                              : 'border-transparent bg-transparent text-zinc-400',
+                              : 'border-transparent bg-transparent text-zinc-500',
                           )}
                         >
                           {exp.type}
@@ -116,7 +116,7 @@ export function ExperienceSection() {
                         {exp.company}
                       </p>
 
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-zinc-400">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-zinc-500">
                         <span className="flex items-center gap-1 truncate">
                           <Calendar className="h-3 w-3 shrink-0" />
                           {exp.period}
@@ -285,7 +285,11 @@ export function ExperienceSection() {
                             <m.div
                               key={i}
                               className="bg-primary w-1 rounded-full"
-                              animate={{ height: ['8px', '16px', '8px'] }}
+                              style={{
+                                height: '8px',
+                                transformOrigin: 'bottom',
+                              }}
+                              animate={{ scaleY: [1, 2, 1] }}
                               transition={{
                                 duration: 0.8,
                                 repeat: Infinity,

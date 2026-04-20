@@ -69,6 +69,7 @@ export function MusicPlayer() {
             <div className="relative">
               <button
                 onClick={togglePlay}
+                aria-label={isPlaying ? 'Pause music' : 'Play music'}
                 className={cn(
                   'flex h-10 w-10 items-center justify-center rounded-md border-2 transition-all active:scale-95',
                   isPlaying
@@ -77,9 +78,14 @@ export function MusicPlayer() {
                 )}
               >
                 {isPlaying ? (
-                  <Pause size={18} fill="currentColor" />
+                  <Pause size={18} fill="currentColor" aria-hidden="true" />
                 ) : (
-                  <Play size={18} fill="currentColor" className="ml-0.5" />
+                  <Play
+                    size={18}
+                    fill="currentColor"
+                    className="ml-0.5"
+                    aria-hidden="true"
+                  />
                 )}
               </button>
               {/* Status LED */}
@@ -109,9 +115,14 @@ export function MusicPlayer() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={toggleMute}
+                      aria-label={isMuted ? 'Unmute volume' : 'Mute volume'}
                       className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
                     >
-                      {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                      {isMuted ? (
+                        <VolumeX size={16} aria-hidden="true" />
+                      ) : (
+                        <Volume2 size={16} aria-hidden="true" />
+                      )}
                     </button>
                     <Slider
                       defaultValue={[0.5]}

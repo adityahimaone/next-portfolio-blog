@@ -48,7 +48,7 @@ export function ExperienceSection() {
             {/* Left Column: Tracklist / Selector */}
             <div className="lg:col-span-5">
               <div className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-                <div className="mb-2 px-4 py-2 text-xs font-bold tracking-wider text-zinc-500 uppercase">
+                <div className="mb-2 px-4 py-2 text-xs font-bold tracking-wider text-zinc-600 uppercase dark:text-zinc-400">
                   Select a Track
                 </div>
                 {EXPERIENCES.map((exp) => (
@@ -76,7 +76,7 @@ export function ExperienceSection() {
                         'flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-colors',
                         selectedId === exp.id
                           ? 'text-primary border-zinc-200 bg-white shadow-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-white'
-                          : 'border-transparent bg-zinc-50 text-zinc-500 group-hover:border-zinc-200 group-hover:bg-white group-hover:text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-500 dark:group-hover:bg-zinc-800 dark:group-hover:text-zinc-300',
+                          : 'border-transparent bg-zinc-50 text-zinc-600 group-hover:border-zinc-200 group-hover:bg-white group-hover:text-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400 dark:group-hover:bg-zinc-800 dark:group-hover:text-zinc-300',
                       )}
                     >
                       {selectedId === exp.id ? (
@@ -112,11 +112,11 @@ export function ExperienceSection() {
                         </span>
                       </div>
 
-                      <p className="mb-2 truncate text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                      <p className="mb-2 truncate text-xs font-medium text-zinc-600 dark:text-zinc-400">
                         {exp.company}
                       </p>
 
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-zinc-500">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-zinc-600 dark:text-zinc-400">
                         <span className="flex items-center gap-1 truncate">
                           <Calendar className="h-3 w-3 shrink-0" />
                           {exp.period}
@@ -219,7 +219,7 @@ export function ExperienceSection() {
                       >
                         {/* Period Badge */}
                         <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                          <Calendar className="h-3 w-3 text-zinc-500" />
+                          <Calendar className="h-3 w-3 text-zinc-600 dark:text-zinc-400" />
                           {selectedJob.period}
                         </div>
 

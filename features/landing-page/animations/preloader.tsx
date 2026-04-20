@@ -74,7 +74,7 @@ export function Preloader() {
       className="fixed inset-0 z-99999 flex flex-col items-center justify-center bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
     >
       {/* Background Texture */}
-      <div className="pointer-events-none absolute inset-0 z-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay dark:opacity-20" />
+      <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(45deg,#e5e5e5_25%,transparent_25%,transparent_75%,#e5e5e5_75%,#e5e5e5),linear-gradient(45deg,#e5e5e5_25%,transparent_25%,transparent_75%,#e5e5e5_75%,#e5e5e5)] bg-[length:4px_4px] bg-[position:0_0,2px_2px] opacity-10 mix-blend-overlay dark:opacity-20" />
       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(39,50,129,0.05)_0%,transparent_70%)] dark:bg-[radial-gradient(circle_at_center,rgba(39,50,129,0.15)_0%,transparent_70%)]" />
 
       {/* Pre-Amp Unit Container - Full Screen Mode */}

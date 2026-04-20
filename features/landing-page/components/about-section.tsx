@@ -331,7 +331,7 @@ export function AboutSection() {
           id: 'bio-main',
           name: 'profile.tsx',
           subtitle: 'About Me',
-          description: 'Frontend Engineer based in Jakarta. 3+ Years Exp.',
+          description: 'Frontend Engineer based in Jakarta. 4+ Years Exp.',
           start: 1,
           duration: 4,
           type: 'bio',
@@ -382,7 +382,7 @@ export function AboutSection() {
                       <div className="flex justify-between">
                         <dt className="text-zinc-500">Experience</dt>
                         <dd className="font-bold text-zinc-900 dark:text-zinc-200">
-                          3+ Years
+                          4+ Years
                         </dd>
                       </div>
                       <div className="flex justify-between">
@@ -460,7 +460,7 @@ export function AboutSection() {
           id: 'stats-main',
           name: 'metrics.json',
           subtitle: 'Key Stats',
-          description: '3+ Years Exp, 20+ Projects, 100% Commitment.',
+          description: '4+ Years Exp, 20+ Projects, 100% Commitment.',
           start: 3,
           duration: 3,
           type: 'stats',
@@ -474,7 +474,7 @@ export function AboutSection() {
                       YEARS
                     </div>
                     <div className="text-4xl font-black text-zinc-800 dark:text-zinc-100">
-                      3+
+                      4+
                     </div>
                     {/* Decorative Needle */}
                     <div className="absolute bottom-1/2 left-1/2 h-16 w-1 origin-bottom -translate-x-1/2 rotate-45 rounded-full bg-red-500 shadow-md" />
@@ -626,7 +626,7 @@ export function AboutSection() {
                   </button>
                 </div>
 
-                <div className="hidden items-center gap-4 rounded bg-white px-3 py-1 font-mono text-xs text-green-600 md:flex dark:bg-zinc-950 dark:text-green-500">
+                <div className="hidden items-center gap-4 rounded bg-white px-3 py-1 font-mono text-xs text-green-700 md:flex dark:bg-zinc-950 dark:text-green-400">
                   <span>
                     00:0{isPlaying ? Math.floor(Date.now() / 1000) % 10 : '0'}
                     :00
@@ -733,7 +733,9 @@ export function AboutSection() {
 
             {/* Info Bar */}
             <div className="flex h-8 items-center border-t border-zinc-200 bg-zinc-100 px-4 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
-              <span className="mr-2 font-bold text-blue-500">INFO</span>
+              <span className="mr-2 font-bold text-blue-600 dark:text-blue-400">
+                INFO
+              </span>
               {hoveredClip
                 ? hoveredClip.description
                 : 'Hover over a clip to view details. Click to expand.'}

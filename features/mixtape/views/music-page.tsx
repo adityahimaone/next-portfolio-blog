@@ -54,12 +54,38 @@ export function MusicPageView() {
   const [isPlayingLocal, setIsPlayingLocal] = useState(false)
   const [isPlayingYt, setIsPlayingYt] = useState(false)
   const frequencyData = useAudioFrequency(audioRef.current)
+  const [simulatedData, setSimulatedData] = useState<Uint8Array>(new Uint8Array(24))
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Simulated frequency data for YouTube
+  useEffect(() => {
+    if (isPlayingYt && activeDeck === 'youtube') {
+      const interval = setInterval(() => {
+        const newData = new Uint8Array(24).map(() => Math.floor(Math.random() * 255))
+        setSimulatedData(newData)
+      }, 100)
+      return () => clearInterval(interval)
+    } else {
+      setSimulatedData(new Uint8Array(24))
+    }
+  }, [isPlayingYt, activeDeck])
+
+  // Sync YouTube Player Play/Pause
+  useEffect(() => {
+    const iframe = document.getElementById('youtube-player') as HTMLIFrameElement
+    if (iframe?.contentWindow) {
+      const command = isPlayingYt ? 'playVideo' : 'pauseVideo'
+      iframe.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: command, args: [] }),
+        '*'
+      )
+    }
+  }, [isPlayingYt])
 
   // Optimized playback effect for track switching
   useEffect(() => {
@@ -128,6 +154,14 @@ export function MusicPageView() {
             : 'bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]',
         )}
       />
+
+      {/* Dynamic Background Visualizer (Local / YouTube) */}
+      <div className="absolute inset-x-0 bottom-0 z-0 h-[600px] opacity-30 blur-md transition-opacity">
+        <ReactiveVisualizer
+          frequencyData={activeDeck === 'local' ? frequencyData : simulatedData}
+        />
+      </div>
+
       <audio
         ref={audioRef}
         src={localTrack.src}
@@ -298,8 +332,9 @@ export function MusicPageView() {
                   </div>
                 ) : (
                   <iframe
+                    id="youtube-player"
                     className="absolute inset-0 h-full w-full border-0"
-                    src={`https://www.youtube.com/embed/${ytTrack.id}?autoplay=${isPlayingYt ? 1 : 0}&controls=0&modestbranding=1&rel=0&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
+                    src={`https://www.youtube.com/embed/${ytTrack.id}?autoplay=1&controls=0&modestbranding=1&rel=0&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
                     allow="autoplay; encrypted-media; picture-in-picture"
                     style={{ pointerEvents: isPlayingYt ? 'none' : 'auto' }}
                   />

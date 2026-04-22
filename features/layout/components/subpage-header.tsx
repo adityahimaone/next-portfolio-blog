@@ -62,10 +62,10 @@ export function SubpageHeader() {
     <>
       <header
         className={cn(
-          'fixed top-0 right-0 left-0 z-50 flex items-center justify-between border-b-4 px-6 shadow-xl transition-all duration-300 md:px-10',
+          'fixed top-0 right-0 left-0 z-50 flex items-center justify-between border-b-[3px] px-6 shadow-xl transition-all duration-300 md:px-10',
           isScrolled
-            ? 'border-primary/50 h-16 bg-white/80 backdrop-blur-md md:h-20 dark:bg-zinc-900/80'
-            : 'border-primary dark:border-primary/50 h-20 bg-linear-to-b from-zinc-100 to-zinc-200 md:h-24 dark:from-zinc-900 dark:to-zinc-950',
+            ? 'border-primary/50 h-14 bg-white/80 backdrop-blur-md md:h-16 dark:bg-zinc-900/80'
+            : 'border-primary dark:border-primary/50 h-16 bg-linear-to-b from-zinc-100 to-zinc-200 md:h-[84px] dark:from-zinc-900 dark:to-zinc-950',
         )}
       >
         {/* Left: Power Switch (Theme Toggle) */}
@@ -127,7 +127,7 @@ export function SubpageHeader() {
                   <div
                     className={cn(
                       'group-hover:border-primary relative transform cursor-pointer rounded-full border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all group-hover:rotate-45 dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
-                      isScrolled ? 'h-10 w-10' : 'h-12 w-12',
+                      isScrolled ? 'h-8 w-8' : 'h-10 w-10',
                     )}
                   >
                     <div className="absolute top-1 left-1/2 h-3 w-0.5 -translate-x-1/2 bg-zinc-400 dark:bg-zinc-500" />
@@ -163,7 +163,7 @@ export function SubpageHeader() {
                   <div
                     className={cn(
                       'relative flex transform cursor-pointer flex-col items-center justify-end rounded-md border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all group-hover:-translate-y-0.5 group-active:translate-y-1 group-active:shadow-inner dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
-                      isScrolled ? 'h-10 w-10 pb-1.5' : 'h-12 w-12 pb-2',
+                      isScrolled ? 'h-8 w-8 pb-1' : 'h-10 w-10 pb-1.5',
                     )}
                   >
                     {/* LED indicating 'page link' */}
@@ -202,7 +202,7 @@ export function SubpageHeader() {
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
               'relative transform cursor-pointer rounded-full border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
-              isScrolled ? 'h-10 w-10' : 'h-12 w-12',
+              isScrolled ? 'h-9 w-9' : 'h-11 w-11',
               isOpen ? 'border-primary rotate-135' : 'rotate-0',
             )}
             aria-label="Toggle Menu"
@@ -226,8 +226,8 @@ export function SubpageHeader() {
             <button
               onClick={() => setIsPlugged(!isPlugged)}
               className={cn(
-                'flex cursor-pointer items-center justify-center rounded-full border-4 border-zinc-300 bg-zinc-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all active:scale-95 dark:border-zinc-700 dark:bg-zinc-800',
-                isScrolled ? 'h-8 w-8 border-2' : 'h-10 w-10',
+                'flex cursor-pointer items-center justify-center rounded-full border-2 border-zinc-300 bg-zinc-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all active:scale-95 dark:border-zinc-700 dark:bg-zinc-800',
+                isScrolled ? 'h-7 w-7' : 'h-9 w-9',
                 isPlugged && 'shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]',
               )}
               aria-label="Input Jack"

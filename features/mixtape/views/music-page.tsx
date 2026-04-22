@@ -8,6 +8,7 @@ import { useAudioFrequency } from '../hooks/use-audio-frequency'
 import { cn } from '@/lib/utils'
 import { SubpageHeader } from '@/features/layout'
 import { useTheme } from 'next-themes'
+import Link from 'next/link'
 
 // --- MOCK DATA ---
 const MIXTAPES = [
@@ -60,10 +61,24 @@ export function MusicPageView() {
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [isScreenExpanded, setIsScreenExpanded] = useState(false)
+  const [isNavbarVisible, setIsNavbarVisible] = useState(true)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Handle Navbar Visibility (Stealth Mode)
+  useEffect(() => {
+    const header = document.querySelector('header')
+    if (header) {
+      header.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+      header.style.transform = isNavbarVisible
+        ? 'translateY(0)'
+        : 'translateY(-120%)'
+      header.style.opacity = isNavbarVisible ? '1' : '0'
+      header.style.pointerEvents = isNavbarVisible ? 'auto' : 'none'
+    }
+  }, [isNavbarVisible])
 
   // Simulated frequency data for YouTube
   useEffect(() => {
@@ -152,6 +167,47 @@ export function MusicPageView() {
         mounted && theme === 'light' ? 'bg-zinc-200' : 'bg-[#050505]',
       )}
     >
+      {/* Top Left Utility Controls */}
+      <div className="fixed top-[100px] left-8 z-[100] flex items-center gap-3">
+        {/* Toggle Navbar Button */}
+        <button
+          onClick={() => setIsNavbarVisible(!isNavbarVisible)}
+          className={cn(
+            'flex h-10 items-center gap-2 rounded-xl border border-white/10 px-4 font-mono text-[10px] font-bold tracking-widest backdrop-blur-md transition-all',
+            isNavbarVisible
+              ? 'bg-zinc-900/50 text-zinc-500 hover:bg-zinc-800'
+              : 'border-amber-500/20 bg-amber-500/10 text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)] hover:bg-amber-500/20',
+          )}
+        >
+          <div
+            className={cn(
+              'h-1.5 w-1.5 rounded-full shadow-[0_0_8px_currentColor] transition-all',
+              isNavbarVisible ? 'bg-zinc-500' : 'bg-amber-500',
+            )}
+          />
+          {isNavbarVisible ? 'HIDE UI' : 'SHOW UI'}
+        </button>
+
+        {/* Home Button (Visible only when Navbar is hidden) */}
+        <AnimatePresence>
+          {!isNavbarVisible && (
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -20, opacity: 0 }}
+            >
+              <Link
+                href="/"
+                className="flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-zinc-900/80 px-4 font-mono text-[10px] font-bold tracking-widest text-[#273281] backdrop-blur-md transition-all hover:bg-zinc-800 hover:text-white dark:text-amber-500"
+              >
+                <div className="h-1.5 w-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]" />
+                HOME
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       <SubpageHeader />
       <div
         className={cn(
@@ -219,7 +275,7 @@ export function MusicPageView() {
             className="flex h-full flex-1 gap-4"
           >
             {/* Left Column */}
-            <div className="flex w-20 flex-col justify-between py-2">
+            <div className="flex w-16 flex-col justify-between py-2">
               <div className="flex flex-col gap-3">
                 <InteractiveKnob label="VINYL" size="md" />
                 <MiniButton label="SLIP" color="amber" />
@@ -288,7 +344,7 @@ export function MusicPageView() {
             </div>
 
             {/* Right Column */}
-            <div className="flex w-20 flex-col items-center justify-between rounded-2xl border border-[#222] bg-[#0a0a0a] p-3 shadow-inner">
+            <div className="flex w-16 flex-col items-center justify-between rounded-2xl border border-[#222] bg-[#0a0a0a] p-3 shadow-inner">
               <div className="flex w-full flex-col gap-2">
                 <MiniButton label="SYNC" color="zinc" />
                 <MiniButton label="KEY" color="zinc" />
@@ -322,8 +378,8 @@ export function MusicPageView() {
           {/* Master Screen (Enlarged) */}
           <div
             className={cn(
-              "group relative cursor-pointer rounded-[2.5rem] border-2 border-[#1a1a1c] bg-[#0a0a0a] p-3 shadow-[inset_0_12px_24px_rgba(0,0,0,0.9)] transition-all hover:border-amber-500/50",
-              isScreenExpanded && "flex flex-1 flex-col"
+              'group relative cursor-pointer rounded-[2.5rem] border-2 border-[#1a1a1c] bg-[#0a0a0a] p-3 shadow-[inset_0_12px_24px_rgba(0,0,0,0.9)] transition-all hover:border-amber-500/50',
+              isScreenExpanded && 'flex flex-1 flex-col',
             )}
             onClick={() => setIsScreenExpanded(!isScreenExpanded)}
           >
@@ -526,7 +582,7 @@ export function MusicPageView() {
             className="flex h-full flex-1 flex-row-reverse gap-4"
           >
             {/* Left Column (Flipped) */}
-            <div className="flex w-20 flex-col justify-between py-2">
+            <div className="flex w-16 flex-col justify-between py-2">
               <div className="flex flex-col gap-3">
                 <InteractiveKnob label="VINYL" size="md" />
                 <MiniButton label="SLIP" color="red" />
@@ -600,7 +656,7 @@ export function MusicPageView() {
             </div>
 
             {/* Right Column */}
-            <div className="flex w-20 flex-col items-center justify-between rounded-2xl border border-[#222] bg-[#0a0a0a] p-3 shadow-inner">
+            <div className="flex w-16 flex-col items-center justify-between rounded-2xl border border-[#222] bg-[#0a0a0a] p-3 shadow-inner">
               <div className="flex w-full flex-col gap-2">
                 <MiniButton label="SYNC" color="zinc" />
                 <MiniButton label="KEY" color="zinc" />

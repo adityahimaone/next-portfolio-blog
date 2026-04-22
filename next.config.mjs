@@ -60,7 +60,6 @@ const baseConfig = withMDX(nextConfig)
 
 // Only apply bundle analyzer when ANALYZE=true
 // This prevents it from running during normal development
-console.log(process.env.ANALYZE, 'process.env.ANALYZE')
 const finalConfig =
   process.env.ANALYZE === 'true'
     ? withBundleAnalyzerInit({ enabled: true })(baseConfig)

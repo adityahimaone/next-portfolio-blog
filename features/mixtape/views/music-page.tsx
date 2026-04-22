@@ -11,40 +11,7 @@ import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { Eye, EyeOff, Home } from 'lucide-react'
 
-// --- MOCK DATA ---
-const MIXTAPES = [
-  {
-    id: 'loc_1',
-    title: 'Deep Focus',
-    artist: 'Late night coding',
-    cover: '/nwjns.jpeg',
-    src: '/music/attention.mp3',
-    color: 'bg-amber-500',
-  },
-  {
-    id: 'loc_2',
-    title: 'Live at Jakarta',
-    artist: 'TWICE Tour vibes',
-    cover: '/cover.jpg',
-    src: '/music/edge-of-desire-sunrise-mix.weba',
-    color: 'bg-blue-500',
-  },
-]
-
-const YOUTUBE_TRACKS = [
-  {
-    id: 'ygYPwsjyCzQ',
-    title: "'Who is she'",
-    artist: 'KISS OF LIFE',
-    color: 'bg-red-500',
-  },
-  {
-    id: 'dtKQfCr7N7I',
-    title: 'RIGHT HAND',
-    artist: 'TWICE',
-    color: 'bg-red-500',
-  },
-]
+import { MIXTAPES, YOUTUBE_TRACKS } from '../constants/music-data'
 
 export function MusicPageView() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -175,10 +142,10 @@ export function MusicPageView() {
           <button
             onClick={() => setIsNavbarVisible(!isNavbarVisible)}
             className={cn(
-              'flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 backdrop-blur-md transition-all shadow-lg',
+              'flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 shadow-lg backdrop-blur-md transition-all',
               isNavbarVisible
                 ? mounted && theme === 'light'
-                  ? 'bg-white/80 text-zinc-600 border-zinc-200 shadow-sm hover:bg-zinc-50'
+                  ? 'border-zinc-200 bg-white/80 text-zinc-600 shadow-sm hover:bg-zinc-50'
                   : 'bg-zinc-900/50 text-zinc-500 hover:bg-zinc-800'
                 : 'border-amber-500/20 bg-amber-500/10 text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-amber-500/20',
             )}
@@ -186,7 +153,7 @@ export function MusicPageView() {
             {isNavbarVisible ? <Eye size={16} /> : <EyeOff size={16} />}
           </button>
           {/* Tooltip */}
-          <div className="absolute left-full ml-3 px-2 py-1 rounded-md bg-[#18181b] border border-white/5 text-[9px] font-bold tracking-widest text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          <div className="pointer-events-none absolute left-full ml-3 rounded-md border border-white/5 bg-[#18181b] px-2 py-1 text-[9px] font-bold tracking-widest whitespace-nowrap text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100">
             {isNavbarVisible ? 'HIDE INTERFACE' : 'SHOW INTERFACE'}
           </div>
         </div>
@@ -203,16 +170,16 @@ export function MusicPageView() {
               <Link
                 href="/"
                 className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 backdrop-blur-md transition-all shadow-lg",
+                  'flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 shadow-lg backdrop-blur-md transition-all',
                   mounted && theme === 'light'
-                    ? "bg-white/80 text-[#273281] border-zinc-200 shadow-sm hover:bg-zinc-50"
-                    : "bg-zinc-900/80 text-[#273281] dark:text-amber-500 hover:bg-zinc-800"
+                    ? 'border-zinc-200 bg-white/80 text-[#273281] shadow-sm hover:bg-zinc-50'
+                    : 'bg-zinc-900/80 text-[#273281] hover:bg-zinc-800 dark:text-amber-500',
                 )}
               >
                 <Home size={16} />
               </Link>
               {/* Tooltip */}
-              <div className="absolute left-full ml-3 px-2 py-1 rounded-md bg-[#18181b] border border-white/5 text-[9px] font-bold tracking-widest text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              <div className="pointer-events-none absolute left-full ml-3 rounded-md border border-white/5 bg-[#18181b] px-2 py-1 text-[9px] font-bold tracking-widest whitespace-nowrap text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100">
                 RETURN HOME
               </div>
             </motion.div>
@@ -246,7 +213,7 @@ export function MusicPageView() {
         loop
       />
 
-      <div className="relative flex h-auto lg:h-[750px] w-full max-w-[1850px] flex-col lg:flex-row gap-4 overflow-y-auto lg:overflow-hidden rounded-[2.5rem] border border-[#222] bg-[#111] p-3 shadow-[0_60px_120px_rgba(0,0,0,0.9),inset_0_2px_6px_rgba(255,255,255,0.1)] sm:p-5">
+      <div className="relative flex h-auto w-full max-w-[1850px] flex-col gap-4 overflow-y-auto rounded-[2.5rem] border border-[#222] bg-[#111] p-3 shadow-[0_60px_120px_rgba(0,0,0,0.9),inset_0_2px_6px_rgba(255,255,255,0.1)] sm:p-5 lg:h-[750px] lg:flex-row lg:overflow-hidden">
         <div className="pointer-events-none absolute inset-0 rounded-[2.5rem] bg-[url('/noise.png')] opacity-[0.08] mix-blend-overlay" />
 
         {/* =======================
@@ -342,7 +309,7 @@ export function MusicPageView() {
                       onClick={() => loadLocalTrack(t)}
                     />
                   ))}
-                  {[...Array(6)].map((_, i) => (
+                  {[...Array(8 - MIXTAPES.length)].map((_, i) => (
                     <Pad
                       key={`dummyA${i}`}
                       label="CUE"
@@ -385,7 +352,7 @@ export function MusicPageView() {
             flex: isScreenExpanded ? 3 : 1,
           }}
           transition={{ type: 'spring', stiffness: 200, damping: 30 }}
-          className="relative flex h-auto min-h-[400px] lg:h-full flex-col gap-4"
+          className="relative flex h-auto min-h-[400px] flex-col gap-4 lg:h-full"
         >
           {/* Master Screen (Enlarged) */}
           <div
@@ -512,8 +479,8 @@ export function MusicPageView() {
                 <div className="flex flex-1 flex-col items-center gap-3 rounded-xl border border-white/5 bg-[#0a0a0a] px-2 py-3 shadow-inner">
                   <div className="flex w-full flex-col gap-2.5 rounded-lg border border-white/5 bg-black/40 p-2 shadow-inner">
                     <div className="flex w-full justify-around">
-                      <InteractiveKnob label="MASTER" size="sm" />
-                      <InteractiveKnob label="BOOTH" size="sm" />
+                      <InteractiveKnob label="MASTER" size="md" />
+                      <InteractiveKnob label="BOOTH" size="md" />
                     </div>
                   </div>
                   <div className="flex w-full flex-col gap-1.5 rounded border border-[#222] bg-[#050505] p-1.5 shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
@@ -528,7 +495,7 @@ export function MusicPageView() {
                     </div>
                   </div>
                   <div className="mt-auto flex w-full flex-col items-center gap-2 rounded-lg border border-white/5 bg-black/40 p-2 shadow-inner">
-                    <InteractiveKnob label="FX LVL" size="sm" />
+                    <InteractiveKnob label="FX LVL" size="md" />
                     <MiniButton label="ON" color="zinc" />
                   </div>
                 </div>
@@ -536,15 +503,15 @@ export function MusicPageView() {
                 {/* CH2 Strip */}
                 <div className="grid w-24 grid-cols-2 gap-x-1.5 gap-y-3 rounded-xl border border-white/5 bg-[#0a0a0a] p-2 shadow-inner">
                   <div className="col-span-2 flex flex-col items-center gap-1.5">
-                    <InteractiveKnob label="TRIM" size="sm" />
+                    <InteractiveKnob label="TRIM" size="md" />
                     <div className="h-[1px] w-full bg-white/10" />
                   </div>
-                  <InteractiveKnob label="HI" size="sm" />
-                  <InteractiveKnob label="MID" size="sm" />
-                  <InteractiveKnob label="LOW" size="sm" />
+                  <InteractiveKnob label="HI" size="md" />
+                  <InteractiveKnob label="MID" size="md" />
+                  <InteractiveKnob label="LOW" size="md" />
                   <InteractiveKnob
                     label="COLOR"
-                    size="sm"
+                    size="md"
                     ringColor="shadow-[0_0_8px_rgba(239,68,68,0.2)]"
                   />
                   <div className="col-span-2 mt-auto w-full pt-1">
@@ -654,7 +621,7 @@ export function MusicPageView() {
                       }}
                     />
                   ))}
-                  {[...Array(6)].map((_, i) => (
+                  {[...Array(8 - YOUTUBE_TRACKS.length)].map((_, i) => (
                     <Pad
                       key={`dummyB${i}`}
                       label="CUE"
@@ -694,121 +661,125 @@ export function MusicPageView() {
 // --- HARDWARE UI COMPONENTS ---
 
 // Fully Interactive Knob
-const InteractiveKnob = memo(({
-  label,
-  size = 'sm',
-  color = 'zinc',
-  defaultValue = 50,
-  ringColor = '',
-}: {
-  label: string
-  size?: 'sm' | 'md' | 'lg'
-  color?: string
-  defaultValue?: number
-  ringColor?: string
-}) => {
-  const [val, setVal] = useState(defaultValue)
-  const rotation = -135 + (val / 100) * 270
-  const sizeMap = { sm: 'w-7 h-7', md: 'w-9 h-9', lg: 'w-12 h-12' }
-  const markerMap = { sm: 'h-1/2', md: 'h-[55%]', lg: 'h-[60%]' }
+const InteractiveKnob = memo(
+  ({
+    label,
+    size = 'sm',
+    color = 'zinc',
+    defaultValue = 50,
+    ringColor = '',
+  }: {
+    label: string
+    size?: 'sm' | 'md' | 'lg'
+    color?: string
+    defaultValue?: number
+    ringColor?: string
+  }) => {
+    const [val, setVal] = useState(defaultValue)
+    const rotation = -135 + (val / 100) * 270
+    const sizeMap = { sm: 'w-7 h-7', md: 'w-9 h-9', lg: 'w-12 h-12' }
+    const markerMap = { sm: 'h-1/2', md: 'h-[55%]', lg: 'h-[60%]' }
 
-  return (
-    <div className="group relative flex flex-col items-center gap-1.5">
+    return (
+      <div className="group relative flex flex-col items-center gap-1.5">
+        <div
+          className={cn(
+            'relative flex items-center justify-center rounded-full border-b-2 border-zinc-800 bg-[#050505] p-[2px] shadow-[0_5px_10px_rgba(0,0,0,0.8)]',
+            sizeMap[size],
+            ringColor,
+          )}
+        >
+          <motion.div
+            animate={{ rotate: rotation }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-b from-[#333] to-[#151515] shadow-inner"
+          >
+            <div
+              className={cn(
+                'absolute top-[2px] left-1/2 w-[1.5px] origin-bottom -translate-x-1/2 rounded-full bg-white',
+                markerMap[size],
+              )}
+              style={{ boxShadow: '0 0 5px rgba(255,255,255,0.5)' }}
+            />
+          </motion.div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={val}
+            onChange={(e) => setVal(Number(e.target.value))}
+            className="absolute inset-0 z-10 h-full w-full cursor-ew-resize opacity-0"
+          />
+        </div>
+        <span className="font-mono text-[7px] font-bold tracking-widest whitespace-nowrap text-zinc-500 uppercase transition-colors group-hover:text-zinc-300">
+          {label}
+        </span>
+      </div>
+    )
+  },
+)
+
+const JogWheel = memo(
+  ({
+    cover,
+    isPlaying,
+    color,
+    ringColor,
+    isYoutube = false,
+  }: {
+    cover: string
+    isPlaying: boolean
+    color: string
+    ringColor: string
+    isYoutube?: boolean
+  }) => {
+    return (
       <div
         className={cn(
-          'relative flex items-center justify-center rounded-full border-b-2 border-zinc-800 bg-[#050505] p-[2px] shadow-[0_5px_10px_rgba(0,0,0,0.8)]',
-          sizeMap[size],
-          ringColor,
+          'relative flex aspect-square w-48 items-center justify-center rounded-full border-2 border-[#1a1a1a] bg-[#050505] p-2 sm:w-64 lg:w-80 xl:w-96',
+          color,
         )}
       >
         <motion.div
-          animate={{ rotate: rotation }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-b from-[#333] to-[#151515] shadow-inner"
+          className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border-[15px] border-[#151515] border-t-[#222] shadow-inner"
+          animate={{ rotate: isPlaying ? 360 : 0 }}
+          transition={{
+            rotate: isPlaying
+              ? { repeat: Infinity, duration: 1.8, ease: 'linear' }
+              : { duration: 0 },
+          }}
         >
+          <div className="absolute inset-2 rounded-full border-[2px] border-white/5" />
+          <div className="absolute inset-8 rounded-full border border-white/5" />
+          <div className="absolute inset-14 rounded-full border border-white/5" />
+          <div className="absolute inset-20 rounded-full border border-white/5" />
+
           <div
             className={cn(
-              'absolute top-[2px] left-1/2 w-[1.5px] origin-bottom -translate-x-1/2 rounded-full bg-white',
-              markerMap[size],
-            )}
-            style={{ boxShadow: '0 0 5px rgba(255,255,255,0.5)' }}
-          />
-        </motion.div>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={val}
-          onChange={(e) => setVal(Number(e.target.value))}
-          className="absolute inset-0 z-10 h-full w-full cursor-ew-resize opacity-0"
-        />
-      </div>
-      <span className="font-mono text-[7px] font-bold tracking-widest whitespace-nowrap text-zinc-500 uppercase transition-colors group-hover:text-zinc-300">
-        {label}
-      </span>
-    </div>
-  )
-})
-
-const JogWheel = memo(({
-  cover,
-  isPlaying,
-  color,
-  ringColor,
-  isYoutube = false,
-}: {
-  cover: string
-  isPlaying: boolean
-  color: string
-  ringColor: string
-  isYoutube?: boolean
-}) => {
-  return (
-    <div
-      className={cn(
-        'relative flex aspect-square w-48 items-center justify-center rounded-full border-2 border-[#1a1a1a] bg-[#050505] p-2 sm:w-64 lg:w-80 xl:w-96',
-        color,
-      )}
-    >
-      <motion.div
-        className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border-[15px] border-[#151515] border-t-[#222] shadow-inner"
-        animate={{ rotate: isPlaying ? 360 : 0 }}
-        transition={{
-          rotate: isPlaying
-            ? { repeat: Infinity, duration: 1.8, ease: 'linear' }
-            : { duration: 0 },
-        }}
-      >
-        <div className="absolute inset-2 rounded-full border-[2px] border-white/5" />
-        <div className="absolute inset-8 rounded-full border border-white/5" />
-        <div className="absolute inset-14 rounded-full border border-white/5" />
-        <div className="absolute inset-20 rounded-full border border-white/5" />
-
-        <div
-          className={cn(
-            'absolute inset-0 rounded-full border-[4px] opacity-40',
-            ringColor,
-          )}
-        />
-
-        <div className="relative h-28 w-28 overflow-hidden rounded-full border-[6px] border-[#2a2a2c] bg-black">
-          <Image
-            src={cover}
-            alt="center"
-            fill
-            className={cn(
-              'object-cover saturate-50',
-              isYoutube ? 'opacity-30 mix-blend-screen' : 'opacity-70',
+              'absolute inset-0 rounded-full border-[4px] opacity-40',
+              ringColor,
             )}
           />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <div className="h-4 w-4 rounded-full border border-zinc-700 bg-black shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)]" />
+
+          <div className="relative h-28 w-28 overflow-hidden rounded-full border-[6px] border-[#2a2a2c] bg-black">
+            <Image
+              src={cover}
+              alt="center"
+              fill
+              className={cn(
+                'object-cover saturate-50',
+                isYoutube ? 'opacity-30 mix-blend-screen' : 'opacity-70',
+              )}
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <div className="h-4 w-4 rounded-full border border-zinc-700 bg-black shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)]" />
+            </div>
           </div>
-        </div>
-      </motion.div>
-    </div>
-  )
-})
+        </motion.div>
+      </div>
+    )
+  },
+)
 
 const VuMeter = memo(({ horizontal = false }: { horizontal?: boolean }) => {
   const [level, setLevel] = useState(0)
@@ -862,188 +833,196 @@ const VuMeter = memo(({ horizontal = false }: { horizontal?: boolean }) => {
   )
 })
 
-const Pad = memo(({
-  label,
-  isActive,
-  color,
-  onClick,
-}: {
-  label: string
-  isActive: boolean
-  color: string
-  onClick: () => void
-}) => {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'relative flex items-center justify-center overflow-hidden rounded border-b-[3px] py-3 transition-all active:translate-y-[2px] active:border-b-0',
-        isActive
-          ? 'border-[#111] bg-[#2a2a2c] shadow-inner'
-          : 'border-[#111] bg-[#222] shadow-[0_4px_6px_rgba(0,0,0,0.5)] hover:bg-[#2c2c2e]',
-      )}
-    >
-      <div
+const Pad = memo(
+  ({
+    label,
+    isActive,
+    color,
+    onClick,
+  }: {
+    label: string
+    isActive: boolean
+    color: string
+    onClick: () => void
+  }) => {
+    return (
+      <button
+        onClick={onClick}
         className={cn(
-          'absolute inset-0 transition-opacity duration-300',
-          color,
-          isActive ? 'opacity-40' : 'opacity-0',
-        )}
-      />
-      <span
-        className={cn(
-          'relative z-10 px-1 text-center font-mono text-[8px] leading-tight font-bold tracking-widest drop-shadow-md transition-colors',
-          isActive ? 'text-white' : 'text-zinc-500',
+          'relative flex items-center justify-center overflow-hidden rounded border-b-[3px] py-3 transition-all active:translate-y-[2px] active:border-b-0',
+          isActive
+            ? 'border-[#111] bg-[#2a2a2c] shadow-inner'
+            : 'border-[#111] bg-[#222] shadow-[0_4px_6px_rgba(0,0,0,0.5)] hover:bg-[#2c2c2e]',
         )}
       >
-        {label}
-      </span>
-      {isActive && (
         <div
           className={cn(
-            'absolute top-1 right-1 h-1 w-1 rounded-full shadow-[0_0_8px_currentColor]',
-            color.replace('bg-', 'text-'),
+            'absolute inset-0 transition-opacity duration-300',
+            color,
+            isActive ? 'opacity-40' : 'opacity-0',
           )}
         />
-      )}
-    </button>
-  )
-})
-
-const PadMode = memo(({ label, isActive }: { label: string; isActive: boolean }) => {
-  return (
-    <button
-      className={cn(
-        'flex-1 rounded border border-transparent py-1 font-mono text-[7px] font-bold tracking-widest shadow-sm transition-colors',
-        isActive
-          ? 'bg-white text-black'
-          : 'border-[#222] bg-[#18181a] text-zinc-500 hover:border-zinc-700',
-      )}
-    >
-      {label}
-    </button>
-  )
-})
-
-const TransportButton = memo(({
-  label,
-  color,
-  isActive,
-  onClick,
-}: {
-  label: string
-  color: 'amber' | 'red' | 'zinc'
-  isActive: boolean
-  onClick: () => void
-}) => {
-  const colorMap = {
-    amber:
-      'bg-amber-500 border-amber-700 text-black shadow-[0_0_20px_rgba(245,158,11,0.5)]',
-    red: 'bg-red-500 border-red-700 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)]',
-    zinc: 'bg-[#222] border-[#111] text-zinc-400 shadow-[0_4px_10px_rgba(0,0,0,0.5)]',
-  }
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex aspect-square w-full items-center justify-center rounded-full border-b-[5px] font-mono text-[9px] font-black tracking-widest transition-all active:translate-y-1 active:border-b-0',
-        isActive ? colorMap[color] : colorMap.zinc,
-      )}
-    >
-      {label}
-    </button>
-  )
-})
-
-const MiniButton = memo(({
-  label,
-  color,
-}: {
-  label: string
-  color: 'amber' | 'red' | 'zinc'
-}) => {
-  const isColor = color !== 'zinc'
-  return (
-    <button className="flex w-full flex-1 items-center justify-center rounded border border-[#333] bg-[#18181a] px-1 py-1.5 font-mono text-[7px] font-bold whitespace-nowrap text-zinc-500 shadow-inner transition-colors active:bg-zinc-800">
-      <span
-        className={
-          isColor ? `text-${color}-500 drop-shadow-[0_0_5px_currentColor]` : ''
-        }
-      >
-        {label}
-      </span>
-    </button>
-  )
-})
-
-const VerticalFader = memo(({
-  label,
-  value,
-  onChange,
-  height = 'h-24',
-  hideValue = false,
-}: {
-  label: string
-  value: number
-  onChange: (e: any) => void
-  height?: string
-  hideValue?: boolean
-}) => {
-  return (
-    <div className="flex h-full w-full flex-col items-center">
-      <div
-        className={cn(
-          'relative mb-1 flex w-8 flex-1 items-center justify-center',
-          height,
-        )}
-      >
-        <div className="absolute h-full w-2 rounded-full border border-[#222] bg-[#050505] shadow-[inset_0_2px_5px_rgba(0,0,0,0.9)]" />
-        <div className="absolute top-1/2 left-1/2 h-[1px] w-4 -translate-x-1/2 -translate-y-1/2 bg-white/20" />
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={value}
-          onChange={onChange}
-          className="absolute h-6 w-[120%] -rotate-90 cursor-pointer appearance-none bg-transparent [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-sm [&::-webkit-slider-thumb]:border-y-[1.5px] [&::-webkit-slider-thumb]:border-[#111] [&::-webkit-slider-thumb]:bg-gradient-to-b [&::-webkit-slider-thumb]:from-[#555] [&::-webkit-slider-thumb]:to-[#222] [&::-webkit-slider-thumb]:shadow-[0_5px_10px_rgba(0,0,0,0.8)]"
-          style={{ width: height.replace('h-', '') + 'px' }}
-        />
-      </div>
-      {!hideValue && (
-        <span className="font-mono text-[7px] font-bold tracking-widest text-zinc-500">
+        <span
+          className={cn(
+            'relative z-10 px-1 text-center font-mono text-[8px] leading-tight font-bold tracking-widest drop-shadow-md transition-colors',
+            isActive ? 'text-white' : 'text-zinc-500',
+          )}
+        >
           {label}
         </span>
-      )}
-    </div>
-  )
-})
+        {isActive && (
+          <div
+            className={cn(
+              'absolute top-1 right-1 h-1 w-1 rounded-full shadow-[0_0_8px_currentColor]',
+              color.replace('bg-', 'text-'),
+            )}
+          />
+        )}
+      </button>
+    )
+  },
+)
 
-const HorizontalFader = memo(({
-  label,
-  value,
-  onChange,
-}: {
-  label: string
-  value: number
-  onChange: (e: any) => void
-}) => {
-  return (
-    <div className="flex w-full flex-col items-center">
-      <div className="relative flex h-8 w-full items-center justify-center">
-        <div className="absolute h-2.5 w-full rounded-full border border-[#222] bg-[#050505] shadow-[inset_0_2px_5px_rgba(0,0,0,0.9)]" />
-        <div className="absolute top-1/2 left-1/2 h-4 w-[1px] -translate-x-1/2 -translate-y-1/2 bg-white/20" />
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={value}
-          onChange={onChange}
-          className="absolute w-full cursor-pointer appearance-none bg-transparent [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-12 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-sm [&::-webkit-slider-thumb]:border-x-[1.5px] [&::-webkit-slider-thumb]:border-[#111] [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-[#555] [&::-webkit-slider-thumb]:to-[#222] [&::-webkit-slider-thumb]:shadow-[0_5px_10px_rgba(0,0,0,0.8)]"
-        />
-      </div>
-      <span className="mt-1 font-mono text-[8px] font-bold tracking-[0.4em] text-zinc-600">
+const PadMode = memo(
+  ({ label, isActive }: { label: string; isActive: boolean }) => {
+    return (
+      <button
+        className={cn(
+          'flex-1 rounded border border-transparent py-1 font-mono text-[7px] font-bold tracking-widest shadow-sm transition-colors',
+          isActive
+            ? 'bg-white text-black'
+            : 'border-[#222] bg-[#18181a] text-zinc-500 hover:border-zinc-700',
+        )}
+      >
         {label}
-      </span>
-    </div>
-  )
-})
+      </button>
+    )
+  },
+)
+
+const TransportButton = memo(
+  ({
+    label,
+    color,
+    isActive,
+    onClick,
+  }: {
+    label: string
+    color: 'amber' | 'red' | 'zinc'
+    isActive: boolean
+    onClick: () => void
+  }) => {
+    const colorMap = {
+      amber:
+        'bg-amber-500 border-amber-700 text-black shadow-[0_0_20px_rgba(245,158,11,0.5)]',
+      red: 'bg-red-500 border-red-700 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)]',
+      zinc: 'bg-[#222] border-[#111] text-zinc-400 shadow-[0_4px_10px_rgba(0,0,0,0.5)]',
+    }
+    return (
+      <button
+        onClick={onClick}
+        className={cn(
+          'flex aspect-square w-full items-center justify-center rounded-full border-b-[5px] font-mono text-[9px] font-black tracking-widest transition-all active:translate-y-1 active:border-b-0',
+          isActive ? colorMap[color] : colorMap.zinc,
+        )}
+      >
+        {label}
+      </button>
+    )
+  },
+)
+
+const MiniButton = memo(
+  ({ label, color }: { label: string; color: 'amber' | 'red' | 'zinc' }) => {
+    const isColor = color !== 'zinc'
+    return (
+      <button className="flex w-full flex-1 items-center justify-center rounded border border-[#333] bg-[#18181a] px-1 py-1.5 font-mono text-[7px] font-bold whitespace-nowrap text-zinc-500 shadow-inner transition-colors active:bg-zinc-800">
+        <span
+          className={
+            isColor
+              ? `text-${color}-500 drop-shadow-[0_0_5px_currentColor]`
+              : ''
+          }
+        >
+          {label}
+        </span>
+      </button>
+    )
+  },
+)
+
+const VerticalFader = memo(
+  ({
+    label,
+    value,
+    onChange,
+    height = 'h-24',
+    hideValue = false,
+  }: {
+    label: string
+    value: number
+    onChange: (e: any) => void
+    height?: string
+    hideValue?: boolean
+  }) => {
+    return (
+      <div className="flex h-full w-full flex-col items-center">
+        <div
+          className={cn(
+            'relative mb-1 flex w-8 flex-1 items-center justify-center',
+            height,
+          )}
+        >
+          <div className="absolute h-full w-2 rounded-full border border-[#222] bg-[#050505] shadow-[inset_0_2px_5px_rgba(0,0,0,0.9)]" />
+          <div className="absolute top-1/2 left-1/2 h-[1px] w-4 -translate-x-1/2 -translate-y-1/2 bg-white/20" />
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={value}
+            onChange={onChange}
+            className="absolute h-6 w-[120%] -rotate-90 cursor-pointer appearance-none bg-transparent [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-sm [&::-webkit-slider-thumb]:border-y-[1.5px] [&::-webkit-slider-thumb]:border-[#111] [&::-webkit-slider-thumb]:bg-gradient-to-b [&::-webkit-slider-thumb]:from-[#555] [&::-webkit-slider-thumb]:to-[#222] [&::-webkit-slider-thumb]:shadow-[0_5px_10px_rgba(0,0,0,0.8)]"
+            style={{ width: height.replace('h-', '') + 'px' }}
+          />
+        </div>
+        {!hideValue && (
+          <span className="font-mono text-[7px] font-bold tracking-widest text-zinc-500">
+            {label}
+          </span>
+        )}
+      </div>
+    )
+  },
+)
+
+const HorizontalFader = memo(
+  ({
+    label,
+    value,
+    onChange,
+  }: {
+    label: string
+    value: number
+    onChange: (e: any) => void
+  }) => {
+    return (
+      <div className="flex w-full flex-col items-center">
+        <div className="relative flex h-8 w-full items-center justify-center">
+          <div className="absolute h-2.5 w-full rounded-full border border-[#222] bg-[#050505] shadow-[inset_0_2px_5px_rgba(0,0,0,0.9)]" />
+          <div className="absolute top-1/2 left-1/2 h-4 w-[1px] -translate-x-1/2 -translate-y-1/2 bg-white/20" />
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={value}
+            onChange={onChange}
+            className="absolute w-full cursor-pointer appearance-none bg-transparent [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-12 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-sm [&::-webkit-slider-thumb]:border-x-[1.5px] [&::-webkit-slider-thumb]:border-[#111] [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-[#555] [&::-webkit-slider-thumb]:to-[#222] [&::-webkit-slider-thumb]:shadow-[0_5px_10px_rgba(0,0,0,0.8)]"
+          />
+        </div>
+        <span className="mt-1 font-mono text-[8px] font-bold tracking-[0.4em] text-zinc-600">
+          {label}
+        </span>
+      </div>
+    )
+  },
+)

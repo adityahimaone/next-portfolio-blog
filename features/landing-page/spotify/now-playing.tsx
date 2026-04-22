@@ -14,10 +14,12 @@ export default function NowPlaying() {
   useEffect(() => {
     const fetchNowPlaying = async () => {
       try {
-        setLoading(true)
-        const res = await fetch('/api/now-playing')
-        const newData: NowPlayingResponse = await res.json()
-        setData(newData)
+        // Add timestamp to prevent browser caching
+        const res = await fetch(`/api/now-playing?t=${Date.now()}`)
+        if (res.ok) {
+          const newData: NowPlayingResponse = await res.json()
+          setData(newData)
+        }
       } catch (error) {
         console.error('Error fetching now playing:', error)
       } finally {
@@ -26,7 +28,8 @@ export default function NowPlaying() {
     }
 
     fetchNowPlaying()
-    const interval = setInterval(fetchNowPlaying, 30000)
+    // Refresh every 10 seconds for a more responsive feel
+    const interval = setInterval(fetchNowPlaying, 10000)
 
     return () => clearInterval(interval)
   }, [])

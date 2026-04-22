@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect, useRef, memo } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'motion/react'
 import { ReactiveVisualizer } from '../components/reactive-visualizer'
@@ -88,7 +88,7 @@ export function MusicPageView() {
           Math.floor(Math.random() * 255),
         )
         setSimulatedData(newData)
-      }, 100)
+      }, 200) // Throttled from 100ms for performance
       return () => clearInterval(interval)
     } else {
       setSimulatedData(new Uint8Array(24))
@@ -682,7 +682,7 @@ export function MusicPageView() {
 // --- HARDWARE UI COMPONENTS ---
 
 // Fully Interactive Knob
-function InteractiveKnob({
+const InteractiveKnob = memo(({
   label,
   size = 'sm',
   color = 'zinc',
@@ -694,7 +694,7 @@ function InteractiveKnob({
   color?: string
   defaultValue?: number
   ringColor?: string
-}) {
+}) => {
   const [val, setVal] = useState(defaultValue)
   const rotation = -135 + (val / 100) * 270
   const sizeMap = { sm: 'w-7 h-7', md: 'w-9 h-9', lg: 'w-12 h-12' }
@@ -736,9 +736,9 @@ function InteractiveKnob({
       </span>
     </div>
   )
-}
+})
 
-function JogWheel({
+const JogWheel = memo(({
   cover,
   isPlaying,
   color,
@@ -750,7 +750,7 @@ function JogWheel({
   color: string
   ringColor: string
   isYoutube?: boolean
-}) {
+}) => {
   return (
     <div
       className={cn(
@@ -796,9 +796,9 @@ function JogWheel({
       </motion.div>
     </div>
   )
-}
+})
 
-function VuMeter({ horizontal = false }: { horizontal?: boolean }) {
+const VuMeter = memo(({ horizontal = false }: { horizontal?: boolean }) => {
   const [level, setLevel] = useState(0)
 
   // Smoother VU animation logic
@@ -808,7 +808,7 @@ function VuMeter({ horizontal = false }: { horizontal?: boolean }) {
         const next = Math.random() * 0.8 + 0.2
         return next > prev ? next : prev * 0.7
       })
-    }, 100)
+    }, 150) // Reduced frequency to 150ms for performance
     return () => clearInterval(interval)
   }, [])
 
@@ -822,23 +822,21 @@ function VuMeter({ horizontal = false }: { horizontal?: boolean }) {
       )}
     >
       {[...Array(20)].map((_, i) => {
-        // For vertical Top-to-Bottom: i=0 is top, level fills starting from 0
-        const isRed = horizontal ? i > 16 : i > 16 // Reverse vertical: red at the bottom
-        const isAmber = horizontal ? i > 12 && i <= 16 : i > 12 && i <= 16
+        const isRed = i > 16
+        const isAmber = i > 12 && i <= 16
         const color = isRed
           ? 'bg-red-500'
           : isAmber
             ? 'bg-amber-500'
             : 'bg-green-500'
 
-        // Directional logic: Top to Bottom for vertical
         const isLit = i <= level * 20
 
         return (
           <div
             key={i}
             className={cn(
-              'rounded-[1px] transition-all duration-75',
+              'rounded-[1px] transition-all duration-100',
               horizontal ? 'h-full flex-1' : 'w-full flex-1',
               color,
               isLit
@@ -850,9 +848,9 @@ function VuMeter({ horizontal = false }: { horizontal?: boolean }) {
       })}
     </div>
   )
-}
+})
 
-function Pad({
+const Pad = memo(({
   label,
   isActive,
   color,
@@ -862,7 +860,7 @@ function Pad({
   isActive: boolean
   color: string
   onClick: () => void
-}) {
+}) => {
   return (
     <button
       onClick={onClick}
@@ -898,9 +896,9 @@ function Pad({
       )}
     </button>
   )
-}
+})
 
-function PadMode({ label, isActive }: { label: string; isActive: boolean }) {
+const PadMode = memo(({ label, isActive }: { label: string; isActive: boolean }) => {
   return (
     <button
       className={cn(
@@ -913,9 +911,9 @@ function PadMode({ label, isActive }: { label: string; isActive: boolean }) {
       {label}
     </button>
   )
-}
+})
 
-function TransportButton({
+const TransportButton = memo(({
   label,
   color,
   isActive,
@@ -925,7 +923,7 @@ function TransportButton({
   color: 'amber' | 'red' | 'zinc'
   isActive: boolean
   onClick: () => void
-}) {
+}) => {
   const colorMap = {
     amber:
       'bg-amber-500 border-amber-700 text-black shadow-[0_0_20px_rgba(245,158,11,0.5)]',
@@ -943,15 +941,15 @@ function TransportButton({
       {label}
     </button>
   )
-}
+})
 
-function MiniButton({
+const MiniButton = memo(({
   label,
   color,
 }: {
   label: string
   color: 'amber' | 'red' | 'zinc'
-}) {
+}) => {
   const isColor = color !== 'zinc'
   return (
     <button className="flex w-full flex-1 items-center justify-center rounded border border-[#333] bg-[#18181a] px-1 py-1.5 font-mono text-[7px] font-bold whitespace-nowrap text-zinc-500 shadow-inner transition-colors active:bg-zinc-800">
@@ -964,9 +962,9 @@ function MiniButton({
       </span>
     </button>
   )
-}
+})
 
-function VerticalFader({
+const VerticalFader = memo(({
   label,
   value,
   onChange,
@@ -978,7 +976,7 @@ function VerticalFader({
   onChange: (e: any) => void
   height?: string
   hideValue?: boolean
-}) {
+}) => {
   return (
     <div className="flex h-full w-full flex-col items-center">
       <div
@@ -1006,9 +1004,9 @@ function VerticalFader({
       )}
     </div>
   )
-}
+})
 
-function HorizontalFader({
+const HorizontalFader = memo(({
   label,
   value,
   onChange,
@@ -1016,7 +1014,7 @@ function HorizontalFader({
   label: string
   value: number
   onChange: (e: any) => void
-}) {
+}) => {
   return (
     <div className="flex w-full flex-col items-center">
       <div className="relative flex h-8 w-full items-center justify-center">
@@ -1036,4 +1034,4 @@ function HorizontalFader({
       </span>
     </div>
   )
-}
+})

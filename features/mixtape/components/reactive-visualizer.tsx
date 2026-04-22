@@ -15,45 +15,49 @@ export const ReactiveVisualizer = ({
     <div className="pointer-events-none absolute inset-0 z-0 flex items-end justify-between gap-1 overflow-hidden px-4 opacity-40 lg:px-20">
       {bars.map((value, index) => {
         const normalized = value / 255
-        // Studio EQ color mapping (green -> yellow -> red based on height)
-        const getGlowColor = (val: number) => {
-          if (val > 0.8) return 'rgba(239, 68, 68, 0.8)' // Red peak
-          if (val > 0.5) return 'rgba(245, 158, 11, 0.8)' // Amber mid
-          return 'rgba(16, 185, 129, 0.5)' // Green low
+        
+        // Studio EQ color mapping (green -> yellow -> red)
+        const getColor = (val: number) => {
+          if (val > 0.8) return '#ef4444' // Red peak
+          if (val > 0.5) return '#f59e0b' // Amber mid
+          return '#10b981' // Green low
         }
 
-        return (
-          <div
-            key={index}
-            className="flex h-full flex-1 flex-col justify-end gap-[2px]"
-          >
-            {/* Create segmented LED blocks instead of a single solid bar (High Density) */}
-            {[...Array(50)].map((_, segmentIndex) => {
-              // 50 total segments.
-              const threshold = (49 - segmentIndex) / 50
-              const isActive = normalized > threshold
+        const color = getColor(normalized)
 
-              return (
-                <motion.div
-                  key={segmentIndex}
-                  className="h-1.5 w-full rounded-[1px] md:h-2"
-                  initial={{ backgroundColor: 'rgba(255,255,255,0.02)' }}
-                  animate={{
-                    backgroundColor: isActive
-                      ? getGlowColor(normalized)
-                      : 'rgba(255,255,255,0.02)',
-                    boxShadow: isActive
-                      ? `0 0 8px ${getGlowColor(normalized)}`
-                      : 'none',
-                  }}
-                  transition={{
-                    type: 'tween',
-                    duration: 0.05,
-                  }}
-                />
-              )
-            })}
-          </div>
+        return (
+          <motion.div
+            key={index}
+            className="relative flex-1 rounded-sm"
+            style={{
+              height: '100%',
+              transformOrigin: 'bottom',
+              background: `repeating-linear-gradient(to top, 
+                ${color} 0px, 
+                ${color} 6px, 
+                transparent 6px, 
+                transparent 8px
+              )`,
+            }}
+            animate={{
+              scaleY: normalized,
+              opacity: normalized > 0.05 ? 1 : 0.1,
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 300,
+              damping: 30,
+              restDelta: 0.001
+            }}
+          >
+            {/* High-intensity peak glow */}
+            {normalized > 0.7 && (
+              <div 
+                className="absolute top-0 left-0 w-full h-2 rounded-full blur-[4px]" 
+                style={{ backgroundColor: color }}
+              />
+            )}
+          </motion.div>
         )
       })}
     </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'motion/react'
-import { 
+import {
   ReactiveVisualizer,
   Pad,
   PadMode,
@@ -13,7 +13,7 @@ import {
   HorizontalFader,
   JogWheel,
   InteractiveKnob,
-  VuMeter
+  VuMeter,
 } from '../components'
 import { useAudioFrequency } from '../hooks/use-audio-frequency'
 import { cn } from '@/lib/utils'
@@ -362,16 +362,16 @@ export function MusicPageView() {
           animate={{
             flex: isScreenExpanded ? 3 : 1,
           }}
-          transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 40 }}
           className="relative flex h-auto min-h-[400px] flex-col gap-4 lg:h-full"
         >
           {/* Master Screen (Enlarged) */}
           <div
             className={cn(
-              'group relative cursor-pointer rounded-[2.5rem] border-2 border-[#1a1a1c] bg-[#0a0a0a] p-3 shadow-[inset_0_12px_24px_rgba(0,0,0,0.9)] transition-all hover:border-amber-500/50',
-              isScreenExpanded && 'flex flex-1 flex-col',
+              'group relative overflow-clip rounded-[2.5rem] border-2 border-[#1a1a1c] bg-[#0a0a0a] p-3 shadow-[inset_0_12px_24px_rgba(0,0,0,0.9)] transition-all hover:border-amber-500/50',
+              isScreenExpanded ? 'flex flex-1 flex-col' : 'cursor-pointer',
             )}
-            onClick={() => setIsScreenExpanded(!isScreenExpanded)}
+            onClick={() => !isScreenExpanded && setIsScreenExpanded(true)}
           >
             <motion.div
               layout
@@ -379,7 +379,7 @@ export function MusicPageView() {
               animate={{
                 height: isScreenExpanded ? '100%' : 'auto',
               }}
-              transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 40 }}
               className={cn(
                 'relative w-full overflow-hidden rounded-2xl border border-zinc-800 bg-black',
                 isScreenExpanded ? 'flex-1' : 'aspect-[16/8]',
@@ -428,17 +428,24 @@ export function MusicPageView() {
                   src={`https://www.youtube.com/embed/${ytTrack.id}?autoplay=1&controls=1&modestbranding=1&rel=0&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
                   allow="autoplay; encrypted-media; picture-in-picture"
                   style={{
-                    pointerEvents:
-                      isPlayingYt && !isScreenExpanded ? 'none' : 'auto',
+                    pointerEvents: isScreenExpanded ? 'auto' : 'none',
                   }}
                 />
               )}
             </motion.div>
-            <div className="absolute top-4 right-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100">
+
+            {/* Corner Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsScreenExpanded(!isScreenExpanded)
+              }}
+              className="absolute top-4 right-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white/10"
+            >
               <span className="text-[12px] font-bold">
                 {isScreenExpanded ? '−' : '+'}
               </span>
-            </div>
+            </button>
           </div>
 
           {/* Mixer Controls (Hidden if Enlarged) */}

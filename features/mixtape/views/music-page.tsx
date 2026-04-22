@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { SubpageHeader } from '@/features/layout'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
+import { Eye, EyeOff, Home } from 'lucide-react'
 
 // --- MOCK DATA ---
 const MIXTAPES = [
@@ -167,42 +168,53 @@ export function MusicPageView() {
         mounted && theme === 'light' ? 'bg-zinc-200' : 'bg-[#050505]',
       )}
     >
-      {/* Top Left Utility Controls */}
-      <div className="fixed top-[100px] left-8 z-[100] flex items-center gap-3">
+      {/* Top Left Utility Controls - Vertical Stack */}
+      <div className="fixed top-[100px] left-6 z-[100] flex flex-col items-center gap-4">
         {/* Toggle Navbar Button */}
-        <button
-          onClick={() => setIsNavbarVisible(!isNavbarVisible)}
-          className={cn(
-            'flex h-10 items-center gap-2 rounded-xl border border-white/10 px-4 font-mono text-[10px] font-bold tracking-widest backdrop-blur-md transition-all',
-            isNavbarVisible
-              ? 'bg-zinc-900/50 text-zinc-500 hover:bg-zinc-800'
-              : 'border-amber-500/20 bg-amber-500/10 text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)] hover:bg-amber-500/20',
-          )}
-        >
-          <div
+        <div className="group relative">
+          <button
+            onClick={() => setIsNavbarVisible(!isNavbarVisible)}
             className={cn(
-              'h-1.5 w-1.5 rounded-full shadow-[0_0_8px_currentColor] transition-all',
-              isNavbarVisible ? 'bg-zinc-500' : 'bg-amber-500',
+              'flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 backdrop-blur-md transition-all shadow-lg',
+              isNavbarVisible
+                ? mounted && theme === 'light'
+                  ? 'bg-white/80 text-zinc-600 border-zinc-200 shadow-sm hover:bg-zinc-50'
+                  : 'bg-zinc-900/50 text-zinc-500 hover:bg-zinc-800'
+                : 'border-amber-500/20 bg-amber-500/10 text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-amber-500/20',
             )}
-          />
-          {isNavbarVisible ? 'HIDE UI' : 'SHOW UI'}
-        </button>
+          >
+            {isNavbarVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+          </button>
+          {/* Tooltip */}
+          <div className="absolute left-full ml-3 px-2 py-1 rounded-md bg-[#18181b] border border-white/5 text-[9px] font-bold tracking-widest text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            {isNavbarVisible ? 'HIDE INTERFACE' : 'SHOW INTERFACE'}
+          </div>
+        </div>
 
         {/* Home Button (Visible only when Navbar is hidden) */}
         <AnimatePresence>
           {!isNavbarVisible && (
             <motion.div
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 10, opacity: 0 }}
+              className="group relative"
             >
               <Link
                 href="/"
-                className="flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-zinc-900/80 px-4 font-mono text-[10px] font-bold tracking-widest text-[#273281] backdrop-blur-md transition-all hover:bg-zinc-800 hover:text-white dark:text-amber-500"
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 backdrop-blur-md transition-all shadow-lg",
+                  mounted && theme === 'light'
+                    ? "bg-white/80 text-[#273281] border-zinc-200 shadow-sm hover:bg-zinc-50"
+                    : "bg-zinc-900/80 text-[#273281] dark:text-amber-500 hover:bg-zinc-800"
+                )}
               >
-                <div className="h-1.5 w-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]" />
-                HOME
+                <Home size={16} />
               </Link>
+              {/* Tooltip */}
+              <div className="absolute left-full ml-3 px-2 py-1 rounded-md bg-[#18181b] border border-white/5 text-[9px] font-bold tracking-widest text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                RETURN HOME
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

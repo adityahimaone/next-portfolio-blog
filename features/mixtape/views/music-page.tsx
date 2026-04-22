@@ -168,8 +168,8 @@ export function MusicPageView() {
         mounted && theme === 'light' ? 'bg-zinc-200' : 'bg-[#050505]',
       )}
     >
-      {/* Top Left Utility Controls - Vertical Stack */}
-      <div className="fixed top-[100px] left-6 z-[100] flex flex-col items-center gap-4">
+      {/* Bottom Left Utility Controls - Vertical Stack */}
+      <div className="fixed bottom-10 left-6 z-[100] flex flex-col-reverse items-center gap-4">
         {/* Toggle Navbar Button */}
         <div className="group relative">
           <button
@@ -246,7 +246,7 @@ export function MusicPageView() {
         loop
       />
 
-      <div className="relative flex h-[750px] w-full max-w-[1850px] gap-4 overflow-hidden rounded-[2.5rem] border border-[#222] bg-[#111] p-3 shadow-[0_60px_120px_rgba(0,0,0,0.9),inset_0_2px_6px_rgba(255,255,255,0.1)] sm:p-5">
+      <div className="relative flex h-auto lg:h-[750px] w-full max-w-[1850px] flex-col lg:flex-row gap-4 overflow-y-auto lg:overflow-hidden rounded-[2.5rem] border border-[#222] bg-[#111] p-3 shadow-[0_60px_120px_rgba(0,0,0,0.9),inset_0_2px_6px_rgba(255,255,255,0.1)] sm:p-5">
         <div className="pointer-events-none absolute inset-0 rounded-[2.5rem] bg-[url('/noise.png')] opacity-[0.08] mix-blend-overlay" />
 
         {/* =======================
@@ -385,7 +385,7 @@ export function MusicPageView() {
             flex: isScreenExpanded ? 3 : 1,
           }}
           transition={{ type: 'spring', stiffness: 200, damping: 30 }}
-          className="relative flex h-full flex-col gap-4"
+          className="relative flex h-auto min-h-[400px] lg:h-full flex-col gap-4"
         >
           {/* Master Screen (Enlarged) */}
           <div
@@ -766,7 +766,7 @@ const JogWheel = memo(({
   return (
     <div
       className={cn(
-        'relative flex aspect-square w-64 items-center justify-center rounded-full border-2 border-[#1a1a1a] bg-[#050505] p-2 sm:w-72 lg:w-80 xl:w-96',
+        'relative flex aspect-square w-48 items-center justify-center rounded-full border-2 border-[#1a1a1a] bg-[#050505] p-2 sm:w-64 lg:w-80 xl:w-96',
         color,
       )}
     >

@@ -52,9 +52,9 @@ export function HeroSection() {
         <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay dark:opacity-20" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%)] dark:bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
 
-        {/* Dynamic Audio Visualizer Background */}
+        {/* Dynamic Audio Visualizer Background (Extra Tall) */}
         {isPlaying && (
-          <div className="absolute inset-x-0 bottom-0 z-10 h-64 opacity-30 blur-sm dark:opacity-20">
+          <div className="absolute inset-x-0 bottom-0 z-10 h-[750px] opacity-70 blur-sm dark:opacity-50">
             <ReactiveVisualizer frequencyData={frequencyData} />
           </div>
         )}

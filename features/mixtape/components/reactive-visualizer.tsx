@@ -27,23 +27,23 @@ export const ReactiveVisualizer = ({
             key={index}
             className="flex h-full flex-1 flex-col justify-end gap-[2px]"
           >
-            {/* Create segmented LED blocks instead of a single solid bar */}
-            {[...Array(20)].map((_, segmentIndex) => {
-              // 20 total segments. If normalized height * 20 > current segment, light it up.
-              const threshold = (19 - segmentIndex) / 20
+            {/* Create segmented LED blocks instead of a single solid bar (High Density) */}
+            {[...Array(50)].map((_, segmentIndex) => {
+              // 50 total segments.
+              const threshold = (49 - segmentIndex) / 50
               const isActive = normalized > threshold
 
               return (
                 <motion.div
                   key={segmentIndex}
-                  className="h-3 w-full rounded-[1px] md:h-4"
+                  className="h-1.5 w-full rounded-[1px] md:h-2"
                   initial={{ backgroundColor: 'rgba(255,255,255,0.02)' }}
                   animate={{
                     backgroundColor: isActive
                       ? getGlowColor(normalized)
                       : 'rgba(255,255,255,0.02)',
                     boxShadow: isActive
-                      ? `0 0 10px ${getGlowColor(normalized)}`
+                      ? `0 0 8px ${getGlowColor(normalized)}`
                       : 'none',
                   }}
                   transition={{

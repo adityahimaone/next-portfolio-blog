@@ -12,7 +12,7 @@ export const ReactiveVisualizer = ({
   const bars = Array.from(frequencyData).slice(0, 24)
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-0 flex items-end justify-between gap-1 overflow-hidden px-4 pb-10 opacity-40 lg:px-20">
+    <div className="pointer-events-none absolute inset-0 z-0 flex items-end justify-between gap-1 overflow-hidden px-4 opacity-40 lg:px-20">
       {bars.map((value, index) => {
         const normalized = value / 255
         // Studio EQ color mapping (green -> yellow -> red based on height)

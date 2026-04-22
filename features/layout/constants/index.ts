@@ -9,12 +9,14 @@ export const HOMEPAGE_NAV_ITEMS = [
   { name: 'CONTACT', href: '/#contact' },
   { name: 'BLOG', href: '/blog' },
   { name: 'PROJECTS', href: '/projects' },
+  { name: 'MIXTAPE', href: '/music' },
 ] as const
 
 export const SUBPAGE_NAV_ITEMS = [
   { name: 'HOME', href: '/' },
   { name: 'BLOG', href: '/blog' },
   { name: 'PROJECTS', href: '/projects' },
+  { name: 'MIXTAPE', href: '/music' },
 ] as const
 
 export const SOCIAL_LINKS = [

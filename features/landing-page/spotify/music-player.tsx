@@ -19,7 +19,9 @@ export function MusicPlayer() {
   const pathname = usePathname()
 
   const isBlogPost = pathname.startsWith('/blog/') && pathname !== '/blog'
-  const shouldRenderPlayer = isVisible && !(isBlogPost && !isPlaying)
+  const isMusicPage = pathname.startsWith('/music')
+  const shouldRenderPlayer =
+    isVisible && !(isBlogPost && !isPlaying) && !isMusicPage
 
   useClickOutside(containerRef, () => {
     setIsHovered(false)

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { motion } from 'motion/react'
+import { motion, AnimatePresence } from 'motion/react'
 import { ReactiveVisualizer } from '../components/reactive-visualizer'
 import { useAudioFrequency } from '../hooks/use-audio-frequency'
 import { cn } from '@/lib/utils'
@@ -54,9 +54,12 @@ export function MusicPageView() {
   const [isPlayingLocal, setIsPlayingLocal] = useState(false)
   const [isPlayingYt, setIsPlayingYt] = useState(false)
   const frequencyData = useAudioFrequency(audioRef.current)
-  const [simulatedData, setSimulatedData] = useState<Uint8Array>(new Uint8Array(24))
+  const [simulatedData, setSimulatedData] = useState<Uint8Array>(
+    new Uint8Array(24),
+  )
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [isScreenExpanded, setIsScreenExpanded] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -66,7 +69,9 @@ export function MusicPageView() {
   useEffect(() => {
     if (isPlayingYt && activeDeck === 'youtube') {
       const interval = setInterval(() => {
-        const newData = new Uint8Array(24).map(() => Math.floor(Math.random() * 255))
+        const newData = new Uint8Array(24).map(() =>
+          Math.floor(Math.random() * 255),
+        )
         setSimulatedData(newData)
       }, 100)
       return () => clearInterval(interval)
@@ -77,12 +82,14 @@ export function MusicPageView() {
 
   // Sync YouTube Player Play/Pause
   useEffect(() => {
-    const iframe = document.getElementById('youtube-player') as HTMLIFrameElement
+    const iframe = document.getElementById(
+      'youtube-player',
+    ) as HTMLIFrameElement
     if (iframe?.contentWindow) {
       const command = isPlayingYt ? 'playVideo' : 'pauseVideo'
       iframe.contentWindow.postMessage(
         JSON.stringify({ event: 'command', func: command, args: [] }),
-        '*'
+        '*',
       )
     }
   }, [isPlayingYt])
@@ -171,179 +178,231 @@ export function MusicPageView() {
         loop
       />
 
-      {/* --- FLAGSHIP HARDWARE CONSOLE (Upscaled) --- */}
-      <div className="relative w-full max-w-[1850px] rounded-[2.5rem] border border-[#222] bg-[#111] p-3 shadow-[0_60px_120px_rgba(0,0,0,0.9),inset_0_2px_6px_rgba(255,255,255,0.1)] sm:p-5">
+      <div className="relative flex h-[750px] w-full max-w-[1850px] gap-4 overflow-hidden rounded-[2.5rem] border border-[#222] bg-[#111] p-3 shadow-[0_60px_120px_rgba(0,0,0,0.9),inset_0_2px_6px_rgba(255,255,255,0.1)] sm:p-5">
         <div className="pointer-events-none absolute inset-0 rounded-[2.5rem] bg-[url('/noise.png')] opacity-[0.08] mix-blend-overlay" />
 
-        <div className="relative flex h-full flex-col gap-4 xl:flex-row">
-          {/* =======================
+        {/* =======================
               DECK 1 (LOCAL)
           ======================= */}
-          <div className="flex flex-[1.3] flex-col gap-4 rounded-3xl border border-[#2c2c2e] bg-[#18181a] p-4 shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] sm:p-6">
-            {/* Top Bar: Needle Drop & Loop */}
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex gap-2 rounded-xl border border-[#222] bg-[#0a0a0a] p-2">
-                <MiniButton label="IN / 4BEAT" color="amber" />
-                <MiniButton label="OUT" color="amber" />
-                <MiniButton label="RELOOP" color="zinc" />
-              </div>
-              <div className="group relative h-8 flex-1 cursor-pointer overflow-hidden rounded-full border border-white/5 bg-[#050505] shadow-inner">
-                <div className="absolute top-1/2 left-0 h-[2px] w-full -translate-y-1/2 bg-zinc-800" />
-                <div className="absolute top-0 bottom-0 left-1/3 w-2 bg-amber-500 opacity-50 shadow-[0_0_15px_#f59e0b] transition-opacity group-hover:opacity-100" />
-                <span className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-[9px] font-bold tracking-[0.4em] text-zinc-600">
-                  NEEDLE SEARCH
-                </span>
-              </div>
+        <motion.div
+          layout
+          initial={false}
+          animate={{
+            flex: isScreenExpanded ? 0.2 : 1.3,
+          }}
+          transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+          className="relative flex h-full flex-col gap-4 overflow-hidden rounded-3xl border border-[#2c2c2e] bg-[#18181a] p-4 shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] sm:p-6"
+        >
+          {/* Top Bar: Needle Drop & Loop */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex gap-2 rounded-xl border border-[#222] bg-[#0a0a0a] p-2">
+              <MiniButton label="IN / 4BEAT" color="amber" />
+              <MiniButton label="OUT" color="amber" />
+              <MiniButton label="RELOOP" color="zinc" />
             </div>
-
-            {/* Main Deck Body */}
-            <div className="flex h-full flex-1 gap-4">
-              {/* Left Column */}
-              <div className="flex w-20 flex-col justify-between py-2">
-                <div className="flex flex-col gap-3">
-                  <InteractiveKnob label="VINYL" size="md" />
-                  <MiniButton label="SLIP" color="amber" />
-                  <MiniButton label="QNTZ" color="amber" />
-                  <div className="h-4" />
-                  <MiniButton label="CUE CALL" color="zinc" />
-                  <div className="flex gap-1.5">
-                    <MiniButton label="<" color="zinc" />
-                    <MiniButton label=">" color="zinc" />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3">
-                  <TransportButton
-                    label="CUE"
-                    color="zinc"
-                    isActive={false}
-                    onClick={() => {}}
-                  />
-                  <TransportButton
-                    label="PLAY"
-                    color="amber"
-                    isActive={isPlayingLocal}
-                    onClick={handlePlayLocal}
-                  />
-                </div>
-              </div>
-
-              {/* Center Column (Enlarged Jog) */}
-              <div className="flex flex-1 flex-col gap-6">
-                <div className="flex flex-1 items-center justify-center py-4">
-                  <JogWheel
-                    cover={localTrack.cover}
-                    isPlaying={isPlayingLocal}
-                    color="shadow-[0_0_50px_rgba(245,158,11,0.15)]"
-                    ringColor="border-amber-500/40"
-                  />
-                </div>
-                <div className="flex flex-col gap-2 rounded-2xl border border-white/5 bg-[#0a0a0a] p-3 shadow-inner">
-                  <div className="flex gap-1.5">
-                    <PadMode label="HOT CUE" isActive />
-                    <PadMode label="PAD FX1" isActive={false} />
-                    <PadMode label="BEAT JUMP" isActive={false} />
-                    <PadMode label="SAMPLER" isActive={false} />
-                  </div>
-                  <div className="grid grid-cols-4 grid-rows-2 gap-2">
-                    {MIXTAPES.map((t, i) => (
-                      <Pad
-                        key={t.id}
-                        label={`TRK ${i + 1}`}
-                        isActive={localTrack.id === t.id}
-                        color="bg-amber-500"
-                        onClick={() => loadLocalTrack(t)}
-                      />
-                    ))}
-                    {[...Array(6)].map((_, i) => (
-                      <Pad
-                        key={`dummyA${i}`}
-                        label="CUE"
-                        isActive={false}
-                        color="bg-amber-500"
-                        onClick={() => {}}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column */}
-              <div className="flex w-20 flex-col items-center justify-between rounded-2xl border border-[#222] bg-[#0a0a0a] p-3 shadow-inner">
-                <div className="flex w-full flex-col gap-2">
-                  <MiniButton label="SYNC" color="zinc" />
-                  <MiniButton label="KEY" color="zinc" />
-                </div>
-                <div className="w-full flex-1 py-6">
-                  <VerticalFader
-                    label="TEMPO"
-                    value={pitchA}
-                    onChange={(e) => setPitchA(Number(e.target.value))}
-                    height="h-full"
-                    hideValue
-                  />
-                </div>
-                <MiniButton label="MT" color="amber" />
-              </div>
+            <div className="group relative h-8 flex-1 cursor-pointer overflow-hidden rounded-full border border-white/5 bg-[#050505] shadow-inner">
+              <div className="absolute top-1/2 left-0 h-[2px] w-full -translate-y-1/2 bg-zinc-800" />
+              <div className="absolute top-0 bottom-0 left-1/3 w-2 bg-amber-500 opacity-50 shadow-[0_0_15px_#f59e0b] transition-opacity group-hover:opacity-100" />
+              <span className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-[9px] font-bold tracking-[0.4em] text-zinc-600">
+                {isScreenExpanded ? 'DECK 1' : 'NEEDLE SEARCH'}
+              </span>
             </div>
           </div>
 
-          {/* =======================
-              MIXER (CENTER) - Enlarged
-          ======================= */}
-          <div className="flex flex-1 flex-col gap-4 xl:max-w-[500px]">
-            {/* Master Screen (Enlarged) */}
-            <div className="rounded-[2rem] border-2 border-[#1a1a1c] bg-[#0a0a0a] p-3 shadow-[inset_0_12px_24px_rgba(0,0,0,0.9)] transition-all">
-              <div className="relative aspect-[16/8] w-full overflow-hidden rounded-2xl border border-zinc-800 bg-black">
-                {activeDeck === 'local' ? (
-                  <div className="absolute inset-0 flex flex-col justify-between">
-                    <Image
-                      src={localTrack.cover}
-                      alt="bg"
-                      fill
-                      className="object-cover opacity-30 blur-2xl saturate-150"
-                    />
-                    <div className="relative z-10 flex h-full items-end justify-between p-3">
-                      <div className="flex items-center gap-3">
-                        <Image
-                          src={localTrack.cover}
-                          alt="art"
-                          width={54}
-                          height={54}
-                          className="rounded-lg border-2 border-white/20 shadow-2xl"
-                        />
-                        <div className="flex flex-col gap-0.5">
-                          <h3 className="text-xs font-black tracking-tighter text-white uppercase">
-                            {localTrack.title}
-                          </h3>
-                          <p className="font-mono text-[9px] font-bold text-amber-500">
-                            {localTrack.artist}
-                          </p>
-                          <div className="mt-1 flex gap-1.5">
-                            <span className="rounded border border-white/10 bg-black/80 px-1.5 py-0.5 font-mono text-[8px] text-white">
-                              128.0
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="h-10 w-24 opacity-90">
-                        <ReactiveVisualizer frequencyData={frequencyData} />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <iframe
-                    id="youtube-player"
-                    className="absolute inset-0 h-full w-full border-0"
-                    src={`https://www.youtube.com/embed/${ytTrack.id}?autoplay=1&controls=0&modestbranding=1&rel=0&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-                    allow="autoplay; encrypted-media; picture-in-picture"
-                    style={{ pointerEvents: isPlayingYt ? 'none' : 'auto' }}
-                  />
-                )}
+          {/* Main Deck Body (Stays mounted but fades) */}
+          <motion.div
+            animate={{
+              opacity: isScreenExpanded ? 0 : 1,
+              pointerEvents: isScreenExpanded ? 'none' : 'auto',
+            }}
+            transition={{ duration: 0.3 }}
+            className="flex h-full flex-1 gap-4"
+          >
+            {/* Left Column */}
+            <div className="flex w-20 flex-col justify-between py-2">
+              <div className="flex flex-col gap-3">
+                <InteractiveKnob label="VINYL" size="md" />
+                <MiniButton label="SLIP" color="amber" />
+                <MiniButton label="QNTZ" color="amber" />
+                <div className="h-4" />
+                <MiniButton label="CUE CALL" color="zinc" />
+                <div className="flex gap-1.5">
+                  <MiniButton label="<" color="zinc" />
+                  <MiniButton label=">" color="zinc" />
+                </div>
+              </div>
+              <div className="flex flex-col gap-3">
+                <TransportButton
+                  label="CUE"
+                  color="zinc"
+                  isActive={false}
+                  onClick={() => {}}
+                />
+                <TransportButton
+                  label="PLAY"
+                  color="amber"
+                  isActive={isPlayingLocal}
+                  onClick={handlePlayLocal}
+                />
               </div>
             </div>
 
-            {/* Mixer Controls (Upscaled Strip) */}
-            <div className="flex flex-1 flex-col rounded-3xl border border-[#2c2c2e] bg-[#18181a] p-4 shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] sm:p-5">
+            {/* Center Column (Enlarged Jog) */}
+            <div className="flex flex-1 flex-col gap-6">
+              <div className="flex flex-1 items-center justify-center py-4">
+                <JogWheel
+                  cover={localTrack.cover}
+                  isPlaying={isPlayingLocal}
+                  color="shadow-[0_0_50px_rgba(245,158,11,0.15)]"
+                  ringColor="border-amber-500/40"
+                />
+              </div>
+              <div className="flex flex-col gap-2 rounded-2xl border border-white/5 bg-[#0a0a0a] p-3 shadow-inner">
+                <div className="flex gap-1.5">
+                  <PadMode label="HOT CUE" isActive />
+                  <PadMode label="PAD FX1" isActive={false} />
+                  <PadMode label="BEAT JUMP" isActive={false} />
+                  <PadMode label="SAMPLER" isActive={false} />
+                </div>
+                <div className="grid grid-cols-4 grid-rows-2 gap-2">
+                  {MIXTAPES.map((t, i) => (
+                    <Pad
+                      key={t.id}
+                      label={`TRK ${i + 1}`}
+                      isActive={localTrack.id === t.id}
+                      color="bg-amber-500"
+                      onClick={() => loadLocalTrack(t)}
+                    />
+                  ))}
+                  {[...Array(6)].map((_, i) => (
+                    <Pad
+                      key={`dummyA${i}`}
+                      label="CUE"
+                      isActive={false}
+                      color="bg-amber-500"
+                      onClick={() => {}}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="flex w-20 flex-col items-center justify-between rounded-2xl border border-[#222] bg-[#0a0a0a] p-3 shadow-inner">
+              <div className="flex w-full flex-col gap-2">
+                <MiniButton label="SYNC" color="zinc" />
+                <MiniButton label="KEY" color="zinc" />
+              </div>
+              <div className="w-full flex-1 py-6">
+                <VerticalFader
+                  label="TEMPO"
+                  value={pitchA}
+                  onChange={(e) => setPitchA(Number(e.target.value))}
+                  height="h-full"
+                  hideValue
+                />
+              </div>
+              <MiniButton label="MT" color="amber" />
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* =======================
+              MIXER (CENTER) - Enlarged
+          ======================= */}
+        <motion.div
+          layout
+          initial={false}
+          animate={{
+            flex: isScreenExpanded ? 3 : 1,
+          }}
+          transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+          className="relative flex h-full flex-col gap-4"
+        >
+          {/* Master Screen (Enlarged) */}
+          <div
+            className={cn(
+              "group relative cursor-pointer rounded-[2.5rem] border-2 border-[#1a1a1c] bg-[#0a0a0a] p-3 shadow-[inset_0_12px_24px_rgba(0,0,0,0.9)] transition-all hover:border-amber-500/50",
+              isScreenExpanded && "flex flex-1 flex-col"
+            )}
+            onClick={() => setIsScreenExpanded(!isScreenExpanded)}
+          >
+            <motion.div
+              layout
+              initial={false}
+              animate={{
+                height: isScreenExpanded ? '100%' : 'auto',
+              }}
+              transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+              className={cn(
+                'relative w-full overflow-hidden rounded-2xl border border-zinc-800 bg-black',
+                isScreenExpanded ? 'flex-1' : 'aspect-[16/8]',
+              )}
+            >
+              {activeDeck === 'local' ? (
+                <div className="absolute inset-0 flex flex-col justify-between">
+                  <Image
+                    src={localTrack.cover}
+                    alt="bg"
+                    fill
+                    className="object-cover opacity-30 blur-2xl saturate-150"
+                  />
+                  <div className="relative z-10 flex h-full items-end justify-between p-3">
+                    <div className="flex items-center gap-3">
+                      <Image
+                        src={localTrack.cover}
+                        alt="art"
+                        width={54}
+                        height={54}
+                        className="rounded-lg border-2 border-white/20 shadow-2xl"
+                      />
+                      <div className="flex flex-col gap-0.5">
+                        <h3 className="text-xs font-black tracking-tighter text-white uppercase">
+                          {localTrack.title}
+                        </h3>
+                        <p className="font-mono text-[9px] font-bold text-amber-500">
+                          {localTrack.artist}
+                        </p>
+                        <div className="mt-1 flex gap-1.5">
+                          <span className="rounded border border-white/10 bg-black/80 px-1.5 py-0.5 font-mono text-[8px] text-white">
+                            128.0
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="h-10 w-24 opacity-90">
+                      <ReactiveVisualizer frequencyData={frequencyData} />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <iframe
+                  id="youtube-player"
+                  className="absolute inset-0 h-full w-full border-0"
+                  src={`https://www.youtube.com/embed/${ytTrack.id}?autoplay=1&controls=1&modestbranding=1&rel=0&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  style={{
+                    pointerEvents:
+                      isPlayingYt && !isScreenExpanded ? 'none' : 'auto',
+                  }}
+                />
+              )}
+            </motion.div>
+            <div className="absolute top-4 right-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="text-[12px] font-bold">
+                {isScreenExpanded ? '−' : '+'}
+              </span>
+            </div>
+          </div>
+
+          {/* Mixer Controls (Hidden if Enlarged) */}
+          {!isScreenExpanded && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="flex flex-1 flex-col overflow-hidden rounded-3xl border border-[#2c2c2e] bg-[#18181a] p-4 shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] sm:p-5"
+            >
               {/* Browse Section */}
               <div className="mb-4 flex items-center justify-between rounded-xl border border-white/5 bg-[#0a0a0a] px-4 py-3 shadow-inner">
                 <button className="rounded-lg border border-[#444] bg-[#222] px-4 py-2 font-mono text-[10px] font-bold text-zinc-300 shadow-md transition-all hover:border-amber-500 active:bg-zinc-700">
@@ -362,7 +421,7 @@ export function MusicPageView() {
 
               {/* Main Console Grid */}
               <div className="mb-4 flex flex-1 justify-between gap-3 px-1">
-                {/* CH1 Strip (Two Column Layout) */}
+                {/* CH1 Strip */}
                 <div className="grid w-28 grid-cols-2 gap-x-2 gap-y-4 rounded-xl border border-white/5 bg-[#0a0a0a] p-3 shadow-inner">
                   <div className="col-span-2 flex flex-col items-center gap-2">
                     <InteractiveKnob label="TRIM" size="md" />
@@ -381,17 +440,14 @@ export function MusicPageView() {
                   </div>
                 </div>
 
-                {/* Center Strip (Grouped Knobs & Horizontal VU) */}
+                {/* Center Strip */}
                 <div className="flex flex-1 flex-col items-center gap-3 rounded-xl border border-white/5 bg-[#0a0a0a] px-2 py-3 shadow-inner">
-                  {/* Master & Booth Group */}
                   <div className="flex w-full flex-col gap-2.5 rounded-lg border border-white/5 bg-black/40 p-2 shadow-inner">
                     <div className="flex w-full justify-around">
                       <InteractiveKnob label="MASTER" size="sm" />
                       <InteractiveKnob label="BOOTH" size="sm" />
                     </div>
                   </div>
-
-                  {/* Horizontal VU Meters */}
                   <div className="flex w-full flex-col gap-1.5 rounded border border-[#222] bg-[#050505] p-1.5 shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
                     <div className="flex flex-col gap-1">
                       <VuMeter horizontal />
@@ -403,15 +459,13 @@ export function MusicPageView() {
                       <VuMeter horizontal />
                     </div>
                   </div>
-
-                  {/* FX Controls Group */}
                   <div className="mt-auto flex w-full flex-col items-center gap-2 rounded-lg border border-white/5 bg-black/40 p-2 shadow-inner">
                     <InteractiveKnob label="FX LVL" size="sm" />
                     <MiniButton label="ON" color="zinc" />
                   </div>
                 </div>
 
-                {/* CH2 Strip (Two Column Layout) */}
+                {/* CH2 Strip */}
                 <div className="grid w-24 grid-cols-2 gap-x-1.5 gap-y-3 rounded-xl border border-white/5 bg-[#0a0a0a] p-2 shadow-inner">
                   <div className="col-span-2 flex flex-col items-center gap-1.5">
                     <InteractiveKnob label="TRIM" size="sm" />
@@ -430,152 +484,140 @@ export function MusicPageView() {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          )}
+        </motion.div>
 
-              {/* Upfaders & Crossfader (Upscaled) */}
-              <div className="flex flex-col gap-4 rounded-2xl border border-white/5 bg-[#0a0a0a] p-4 shadow-inner">
-                <div className="flex h-20 items-end justify-between px-12">
-                  <VerticalFader
-                    label="CH 1"
-                    value={volA}
-                    onChange={(e) => setVolA(Number(e.target.value))}
-                    height="h-20"
-                    hideValue
-                  />
-                  <VerticalFader
-                    label="CH 2"
-                    value={volB}
-                    onChange={(e) => setVolB(Number(e.target.value))}
-                    height="h-20"
-                    hideValue
-                  />
-                </div>
-                <div className="px-10">
-                  <HorizontalFader
-                    label="CROSSFADER"
-                    value={crossfader}
-                    onChange={(e) => setCrossfader(Number(e.target.value))}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* =======================
+        {/* =======================
               DECK 2 (YOUTUBE) - Upscaled
           ======================= */}
-          <div className="flex flex-[1.3] flex-col gap-4 rounded-3xl border border-[#2c2c2e] bg-[#18181a] p-4 shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] sm:p-6">
-            {/* Top Bar */}
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex gap-2 rounded-xl border border-[#222] bg-[#0a0a0a] p-2">
-                <MiniButton label="IN / 4BEAT" color="red" />
-                <MiniButton label="OUT" color="red" />
-                <MiniButton label="RELOOP" color="zinc" />
-              </div>
-              <div className="group relative h-8 flex-1 cursor-pointer overflow-hidden rounded-full border border-white/5 bg-[#050505] shadow-inner">
-                <div className="absolute top-1/2 left-0 h-[2px] w-full -translate-y-1/2 bg-zinc-800" />
-                <div className="absolute top-0 bottom-0 left-2/3 w-2 bg-red-500 opacity-50 shadow-[0_0_15px_#ef4444] transition-opacity group-hover:opacity-100" />
-                <span className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-[9px] font-bold tracking-[0.4em] text-zinc-600">
-                  NEEDLE SEARCH
-                </span>
-              </div>
+        <motion.div
+          layout
+          initial={false}
+          animate={{
+            flex: isScreenExpanded ? 0.2 : 1.3,
+          }}
+          transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+          className="relative flex h-full flex-col gap-4 overflow-hidden rounded-3xl border border-[#2c2c2e] bg-[#18181a] p-4 shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] sm:p-6"
+        >
+          {/* Top Bar */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex gap-2 rounded-xl border border-[#222] bg-[#0a0a0a] p-2">
+              <MiniButton label="IN / 4BEAT" color="red" />
+              <MiniButton label="OUT" color="red" />
+              <MiniButton label="RELOOP" color="zinc" />
             </div>
-
-            {/* Main Deck Body */}
-            <div className="flex h-full flex-1 flex-row-reverse gap-4">
-              {/* Left Column (Flipped) */}
-              <div className="flex w-20 flex-col justify-between py-2">
-                <div className="flex flex-col gap-3">
-                  <InteractiveKnob label="VINYL" size="md" />
-                  <MiniButton label="SLIP" color="red" />
-                  <MiniButton label="QNTZ" color="red" />
-                  <div className="h-4" />
-                  <MiniButton label="CUE CALL" color="zinc" />
-                  <div className="flex gap-1.5">
-                    <MiniButton label="<" color="zinc" />
-                    <MiniButton label=">" color="zinc" />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-4">
-                  <TransportButton
-                    label="CUE"
-                    color="zinc"
-                    isActive={false}
-                    onClick={() => {}}
-                  />
-                  <TransportButton
-                    label="PLAY"
-                    color="red"
-                    isActive={isPlayingYt && activeDeck === 'youtube'}
-                    onClick={handlePlayYoutube}
-                  />
-                </div>
-              </div>
-
-              {/* Center Column (Enlarged Jog) */}
-              <div className="flex flex-1 flex-col gap-6">
-                <div className="flex flex-1 items-center justify-center py-4">
-                  <JogWheel
-                    cover="/noise.png"
-                    isPlaying={isPlayingYt && activeDeck === 'youtube'}
-                    color="shadow-[0_0_50px_rgba(239,68,68,0.15)]"
-                    ringColor="border-red-500/40"
-                    isYoutube
-                  />
-                </div>
-                <div className="flex flex-col gap-2 rounded-2xl border border-white/5 bg-[#0a0a0a] p-3 shadow-inner">
-                  <div className="flex flex-row-reverse gap-1.5">
-                    <PadMode label="HOT CUE" isActive />
-                    <PadMode label="PAD FX1" isActive={false} />
-                    <PadMode label="BEAT JUMP" isActive={false} />
-                    <PadMode label="SAMPLER" isActive={false} />
-                  </div>
-                  <div className="grid grid-cols-4 grid-rows-2 gap-2">
-                    {YOUTUBE_TRACKS.map((t, i) => (
-                      <Pad
-                        key={t.id}
-                        label={`VID ${i + 1}`}
-                        isActive={ytTrack.id === t.id}
-                        color="bg-red-500"
-                        onClick={() => {
-                          setYtTrack(t)
-                          setActiveDeck('youtube')
-                          setIsPlayingYt(true)
-                        }}
-                      />
-                    ))}
-                    {[...Array(6)].map((_, i) => (
-                      <Pad
-                        key={`dummyB${i}`}
-                        label="CUE"
-                        isActive={false}
-                        color="bg-red-500"
-                        onClick={() => {}}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column */}
-              <div className="flex w-20 flex-col items-center justify-between rounded-2xl border border-[#222] bg-[#0a0a0a] p-3 shadow-inner">
-                <div className="flex w-full flex-col gap-2">
-                  <MiniButton label="SYNC" color="zinc" />
-                  <MiniButton label="KEY" color="zinc" />
-                </div>
-                <div className="w-full flex-1 py-6">
-                  <VerticalFader
-                    label="TEMPO"
-                    value={pitchB}
-                    onChange={(e) => setPitchB(Number(e.target.value))}
-                    height="h-full"
-                    hideValue
-                  />
-                </div>
-                <MiniButton label="MT" color="red" />
-              </div>
+            <div className="group relative h-8 flex-1 cursor-pointer overflow-hidden rounded-full border border-white/5 bg-[#050505] shadow-inner">
+              <div className="absolute top-1/2 left-0 h-[2px] w-full -translate-y-1/2 bg-zinc-800" />
+              <div className="absolute top-0 bottom-0 left-2/3 w-2 bg-red-500 opacity-50 shadow-[0_0_15_#ef4444] transition-opacity group-hover:opacity-100" />
+              <span className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-[9px] font-bold tracking-[0.4em] text-zinc-600">
+                {isScreenExpanded ? 'DECK 2' : 'NEEDLE SEARCH'}
+              </span>
             </div>
           </div>
-        </div>
+
+          {/* Main Deck Body (Animated visibility) */}
+          <motion.div
+            animate={{
+              opacity: isScreenExpanded ? 0 : 1,
+              pointerEvents: isScreenExpanded ? 'none' : 'auto',
+            }}
+            transition={{ duration: 0.3 }}
+            className="flex h-full flex-1 flex-row-reverse gap-4"
+          >
+            {/* Left Column (Flipped) */}
+            <div className="flex w-20 flex-col justify-between py-2">
+              <div className="flex flex-col gap-3">
+                <InteractiveKnob label="VINYL" size="md" />
+                <MiniButton label="SLIP" color="red" />
+                <MiniButton label="QNTZ" color="red" />
+                <div className="h-4" />
+                <MiniButton label="CUE CALL" color="zinc" />
+                <div className="flex gap-1.5">
+                  <MiniButton label="<" color="zinc" />
+                  <MiniButton label=">" color="zinc" />
+                </div>
+              </div>
+              <div className="flex flex-col gap-4">
+                <TransportButton
+                  label="CUE"
+                  color="zinc"
+                  isActive={false}
+                  onClick={() => {}}
+                />
+                <TransportButton
+                  label="PLAY"
+                  color="red"
+                  isActive={isPlayingYt && activeDeck === 'youtube'}
+                  onClick={handlePlayYoutube}
+                />
+              </div>
+            </div>
+
+            {/* Center Column (Enlarged Jog) */}
+            <div className="flex flex-1 flex-col gap-6">
+              <div className="flex flex-1 items-center justify-center py-4">
+                <JogWheel
+                  cover="/noise.png"
+                  isPlaying={isPlayingYt && activeDeck === 'youtube'}
+                  color="shadow-[0_0_50px_rgba(239,68,68,0.15)]"
+                  ringColor="border-red-500/40"
+                  isYoutube
+                />
+              </div>
+              <div className="flex flex-col gap-2 rounded-2xl border border-white/5 bg-[#0a0a0a] p-3 shadow-inner">
+                <div className="flex flex-row-reverse gap-1.5">
+                  <PadMode label="HOT CUE" isActive />
+                  <PadMode label="PAD FX1" isActive={false} />
+                  <PadMode label="BEAT JUMP" isActive={false} />
+                  <PadMode label="SAMPLER" isActive={false} />
+                </div>
+                <div className="grid grid-cols-4 grid-rows-2 gap-2">
+                  {YOUTUBE_TRACKS.map((t, i) => (
+                    <Pad
+                      key={t.id}
+                      label={`VID ${i + 1}`}
+                      isActive={ytTrack.id === t.id}
+                      color="bg-red-500"
+                      onClick={() => {
+                        setYtTrack(t)
+                        setActiveDeck('youtube')
+                        setIsPlayingYt(true)
+                      }}
+                    />
+                  ))}
+                  {[...Array(6)].map((_, i) => (
+                    <Pad
+                      key={`dummyB${i}`}
+                      label="CUE"
+                      isActive={false}
+                      color="bg-red-500"
+                      onClick={() => {}}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="flex w-20 flex-col items-center justify-between rounded-2xl border border-[#222] bg-[#0a0a0a] p-3 shadow-inner">
+              <div className="flex w-full flex-col gap-2">
+                <MiniButton label="SYNC" color="zinc" />
+                <MiniButton label="KEY" color="zinc" />
+              </div>
+              <div className="w-full flex-1 py-6">
+                <VerticalFader
+                  label="TEMPO"
+                  value={pitchB}
+                  onChange={(e) => setPitchB(Number(e.target.value))}
+                  height="h-full"
+                  hideValue
+                />
+              </div>
+              <MiniButton label="MT" color="red" />
+            </div>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   )
@@ -706,7 +748,7 @@ function VuMeter({ horizontal = false }: { horizontal?: boolean }) {
   // Smoother VU animation logic
   useEffect(() => {
     const interval = setInterval(() => {
-      setLevel(prev => {
+      setLevel((prev) => {
         const next = Math.random() * 0.8 + 0.2
         return next > prev ? next : prev * 0.7
       })
@@ -732,7 +774,7 @@ function VuMeter({ horizontal = false }: { horizontal?: boolean }) {
           : isAmber
             ? 'bg-amber-500'
             : 'bg-green-500'
-        
+
         // Directional logic: Top to Bottom for vertical
         const isLit = i <= level * 20
 

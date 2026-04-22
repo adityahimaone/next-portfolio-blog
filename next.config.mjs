@@ -22,6 +22,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'i.scdn.co' },
       { protocol: 'https', hostname: 'ucarecdn.com' },
+      { protocol: 'https', hostname: 'img.youtube.com' },
     ],
   },
   headers: async () => {

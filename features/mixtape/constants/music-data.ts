@@ -22,24 +22,28 @@ export const YOUTUBE_TRACKS = [
     id: 'ygYPwsjyCzQ',
     title: "'Who is she'",
     artist: 'KISS OF LIFE',
+    cover: 'https://img.youtube.com/vi/ygYPwsjyCzQ/hqdefault.jpg',
     color: 'bg-red-500',
   },
   {
     id: '93ASUImTedo',
     title: 'Latch',
     artist: 'Disclosure ft. Sam Smith',
+    cover: 'https://img.youtube.com/vi/93ASUImTedo/hqdefault.jpg',
     color: 'bg-red-500',
   },
   {
     id: 'eHHQaoEW30Q',
     title: 'THIS IS FOR',
     artist: 'TWICE',
+    cover: 'https://img.youtube.com/vi/eHHQaoEW30Q/hqdefault.jpg',
     color: 'bg-red-500',
   },
   {
     id: '56WBK4ZK_cw',
     title: 'Eastside',
     artist: 'benny blanco, Halsey & Khalid',
+    cover: 'https://img.youtube.com/vi/56WBK4ZK_cw/hqdefault.jpg',
     color: 'bg-red-500',
   },
 ]

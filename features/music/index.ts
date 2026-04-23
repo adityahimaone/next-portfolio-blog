@@ -1,0 +1,5 @@
+export { StepSequencer } from './components/step-sequencer'
+export { SpectrumAnalyzer } from './components/spectrum-analyzer'
+export { BeatPad } from './components/beat-pad'
+export { AudioReactiveBg } from './components/audio-reactive-bg'
+export { useTone, getTone } from './hooks/use-tone'

@@ -235,7 +235,7 @@ export function BlogPost({
         </article>
 
         {/* TOC Sidebar */}
-        <aside className="w-64 shrink-0">
+        <aside className="hidden xl:block w-64 shrink-0">
           <TableOfContents content={content} />
         </aside>
       </div>

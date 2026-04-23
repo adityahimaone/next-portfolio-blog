@@ -103,58 +103,56 @@ export function TableOfContents({ content }: { content: string }) {
   return (
     <>
       {/* DESKTOP: Sticky Sidebar */}
-      <nav className="hidden xl:block">
-        <div className="sticky top-24">
-          {/* Header */}
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-5 w-5 items-center justify-center rounded-sm border border-zinc-300 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="h-1.5 w-1.5 rounded-full bg-primary dark:bg-primary-light" />
-            </div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              On this page
-            </h3>
+      <div className="sticky top-24">
+        {/* Header */}
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex h-5 w-5 items-center justify-center rounded-sm border border-zinc-300 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
+            <div className="h-1.5 w-1.5 rounded-full bg-primary dark:bg-primary-light" />
           </div>
-
-          {/* TOC List */}
-          <div className="max-h-[calc(100vh-10rem)] overflow-y-auto pr-2">
-            <ul className="space-y-0.5 border-l border-zinc-200 dark:border-zinc-800">
-              {items.map((item) => (
-                <li key={item.id}>
-                  <button
-                    onClick={() => handleClick(item.id)}
-                    className={cn(
-                      'group relative block w-full text-left text-sm transition-all',
-                      'py-1.5 pr-2',
-                      item.level === 3 && 'pl-6',
-                      item.level === 2 && 'pl-3',
-                      activeId === item.id
-                        ? 'font-medium text-primary dark:text-primary-light'
-                        : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200',
-                    )}
-                  >
-                    {/* Active indicator */}
-                    <span
-                      className={cn(
-                        'absolute -left-px top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full transition-all',
-                        activeId === item.id
-                          ? 'bg-primary dark:bg-primary-light'
-                          : 'bg-transparent group-hover:bg-zinc-300 dark:group-hover:bg-zinc-700',
-                      )}
-                    />
-                    {item.text}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Footer indicator */}
-          <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-400 dark:text-zinc-600">
-            <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-            <span>{items.length} sections</span>
-          </div>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            On this page
+          </h3>
         </div>
-      </nav>
+
+        {/* TOC List */}
+        <div className="max-h-[calc(100vh-10rem)] overflow-y-auto pr-2">
+          <ul className="space-y-0.5 border-l border-zinc-200 dark:border-zinc-800">
+            {items.map((item) => (
+              <li key={item.id}>
+                <button
+                  onClick={() => handleClick(item.id)}
+                  className={cn(
+                    'group relative block w-full text-left text-sm transition-all',
+                    'py-1.5 pr-2',
+                    item.level === 3 && 'pl-6',
+                    item.level === 2 && 'pl-3',
+                    activeId === item.id
+                      ? 'font-medium text-primary dark:text-primary-light'
+                      : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200',
+                  )}
+                >
+                  {/* Active indicator */}
+                  <span
+                    className={cn(
+                      'absolute -left-px top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full transition-all',
+                      activeId === item.id
+                        ? 'bg-primary dark:bg-primary-light'
+                        : 'bg-transparent group-hover:bg-zinc-300 dark:group-hover:bg-zinc-700',
+                    )}
+                  />
+                  {item.text}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Footer indicator */}
+        <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-400 dark:text-zinc-600">
+          <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+          <span>{items.length} sections</span>
+        </div>
+      </div>
 
       {/* MOBILE: Floating Pill + Drawer */}
       <div className="xl:hidden">

@@ -1,4 +1,4 @@
-import { getPost, getAllSlugs } from '@/features/blog/lib/blog'
+import { getPost, getAllSlugs, getRelatedPosts } from '@/features/blog/lib/blog'
 import { BlogPostPage } from '@/features/blog'
 import type { Metadata } from 'next'
 
@@ -31,5 +31,6 @@ export default async function Page({
 }) {
   const { slug } = await params
   const { meta, content } = getPost(slug)
-  return <BlogPostPage meta={meta} content={content} />
+  const relatedPosts = await getRelatedPosts(slug, 3)
+  return <BlogPostPage meta={meta} content={content} relatedPosts={relatedPosts} />
 }

@@ -1,7 +1,8 @@
+import { memo } from 'react'
 import { ExternalLink, Star, Radio } from 'lucide-react'
 import type { GitHubRepo } from '../lib/github'
 
-export function ProjectCardMini({ repo }: { repo: GitHubRepo }) {
+export const ProjectCardMini = memo(function ProjectCardMini({ repo }: { repo: GitHubRepo }) {
   return (
     <a
       href={repo.html_url}
@@ -44,4 +45,4 @@ export function ProjectCardMini({ repo }: { repo: GitHubRepo }) {
       </div>
     </a>
   )
-}
+})

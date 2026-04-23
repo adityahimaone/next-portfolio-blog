@@ -1,10 +1,11 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { Pin } from 'lucide-react'
 import type { BlogMeta } from '../lib/blog'
 
-export function BlogCard({ post }: { post: BlogMeta }) {
+export const BlogCard = memo(function BlogCard({ post }: { post: BlogMeta }) {
   return (
     <Link href={`/blog/${post.slug}`} className="group block h-full">
       <article className="relative flex h-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-primary/30 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-primary/50">
@@ -62,4 +63,4 @@ export function BlogCard({ post }: { post: BlogMeta }) {
       </article>
     </Link>
   )
-}
+})

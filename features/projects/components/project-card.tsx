@@ -1,9 +1,10 @@
+import { memo } from 'react'
 import Link from 'next/link'
 import { ExternalLink, Star, Github, Disc3 } from 'lucide-react'
 import type { FeaturedProject } from '../constants'
 import type { GitHubRepo } from '../lib/github'
 
-export function ProjectCard({
+export const ProjectCard = memo(function ProjectCard({
   project,
   repo,
 }: {
@@ -93,4 +94,4 @@ export function ProjectCard({
       </div>
     </div>
   )
-}
+})

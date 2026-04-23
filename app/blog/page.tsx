@@ -5,7 +5,7 @@ export const metadata = {
   description: 'Thoughts on frontend development, design, and code.',
 }
 
-export default function Page() {
-  const posts = getAllPosts()
+export default async function Page() {
+  const posts = await getAllPosts()
   return <BlogPage posts={posts} />
 }

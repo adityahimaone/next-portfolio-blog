@@ -7,6 +7,7 @@ export function useAudioFrequency(audioElement: HTMLAudioElement | null) {
   const analyser = useRef<AnalyserNode | null>(null);
   const source = useRef<MediaElementAudioSourceNode | null>(null);
   const animationRef = useRef<number | null>(null);
+  const lastUpdate = useRef<number>(0);
 
   useEffect(() => {
     if (!audioElement) return;
@@ -30,11 +31,16 @@ export function useAudioFrequency(audioElement: HTMLAudioElement | null) {
 
     audioElement.addEventListener('play', initAudio);
 
+    // Throttle to ~30fps instead of 60fps to reduce React re-renders
     const updateFrequency = () => {
-      if (analyser.current) {
-        const array = new Uint8Array(analyser.current.frequencyBinCount);
-        analyser.current.getByteFrequencyData(array);
-        setDataArray(new Uint8Array(array)); // Copy to trigger state update
+      const now = performance.now();
+      if (now - lastUpdate.current >= 33) { // ~30fps
+        lastUpdate.current = now;
+        if (analyser.current) {
+          const array = new Uint8Array(analyser.current.frequencyBinCount);
+          analyser.current.getByteFrequencyData(array);
+          setDataArray(new Uint8Array(array)); // Copy to trigger state update
+        }
       }
       animationRef.current = requestAnimationFrame(updateFrequency);
     };

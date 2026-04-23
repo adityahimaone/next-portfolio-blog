@@ -4,6 +4,8 @@ import React, { useState, useEffect, Suspense } from 'react'
 import { motion, useScroll, useSpring } from 'motion/react'
 import type { BlogMeta } from '../lib/blog'
 import { BlogHeader } from './blog-header'
+import { TableOfContents } from './table-of-contents'
+import { RelatedPosts } from './related-posts'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import dynamic from 'next/dynamic'
@@ -107,9 +109,11 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
 export function BlogPost({
   meta,
   content,
+  relatedPosts,
 }: {
   meta: BlogMeta
   content: string
+  relatedPosts?: BlogMeta[]
 }) {
   const [isReaderMode, setIsReaderMode] = useState(false)
   const { scrollYProgress } = useScroll()
@@ -170,56 +174,71 @@ export function BlogPost({
         style={{ scaleX }}
       />
 
-      <article className="mx-auto max-w-[65ch] px-4 py-16 sm:py-24">
-        <BlogHeader meta={meta} />
+      <div className="mx-auto flex max-w-7xl gap-8 px-4 py-16 sm:py-24">
+        {/* Main content */}
+        <article className="min-w-0 flex-1">
+          <div className="mx-auto max-w-[65ch]">
+            <BlogHeader meta={meta} />
 
-        <div className="prose prose-zinc prose-lg dark:prose-invert prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary dark:prose-a:text-primary-light prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed prose-p:text-zinc-700 dark:prose-p:text-zinc-300 mt-12 max-w-none">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              code: CodeBlock,
-              p: ({ node, children }) => (
-                <p className="mb-6 leading-relaxed">{children}</p>
-              ),
-              h1: ({ node, children }) => (
-                <h1 className="mt-10 mb-6 text-3xl font-bold">{children}</h1>
-              ),
-              h2: ({ node, children }) => (
-                <h2 className="mt-10 mb-4 text-2xl font-bold">{children}</h2>
-              ),
-              h3: ({ node, children }) => (
-                <h3 className="mt-8 mb-4 text-xl font-bold">{children}</h3>
-              ),
-              ul: ({ node, children }) => (
-                <ul className="mb-6 list-disc space-y-2 pl-6">{children}</ul>
-              ),
-              ol: ({ node, children }) => (
-                <ol className="mb-6 list-decimal space-y-2 pl-6">{children}</ol>
-              ),
-              li: ({ node, children }) => (
-                <li className="text-zinc-700 dark:text-zinc-300">{children}</li>
-              ),
-              a: ({ node, href, children }) => (
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary decoration-primary/30 hover:decoration-primary font-semibold underline-offset-4 transition-colors hover:underline"
-                >
-                  {children}
-                </a>
-              ),
-              blockquote: ({ node, children }) => (
-                <blockquote className="border-primary bg-primary/5 my-8 rounded-r-lg border-l-4 p-4 text-zinc-700 italic shadow-sm dark:text-zinc-300">
-                  {children}
-                </blockquote>
-              ),
-            }}
-          >
-            {content}
-          </ReactMarkdown>
-        </div>
-      </article>
+            <div className="prose prose-zinc prose-lg dark:prose-invert prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary dark:prose-a:text-primary-light prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed prose-p:text-zinc-700 dark:prose-p:text-zinc-300 mt-12 max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code: CodeBlock,
+                  p: ({ node, children }) => (
+                    <p className="mb-6 leading-relaxed">{children}</p>
+                  ),
+                  h1: ({ node, children }) => (
+                    <h1 className="mt-10 mb-6 text-3xl font-bold">{children}</h1>
+                  ),
+                  h2: ({ node, children }) => (
+                    <h2 className="mt-10 mb-4 text-2xl font-bold">{children}</h2>
+                  ),
+                  h3: ({ node, children }) => (
+                    <h3 className="mt-8 mb-4 text-xl font-bold">{children}</h3>
+                  ),
+                  ul: ({ node, children }) => (
+                    <ul className="mb-6 list-disc space-y-2 pl-6">{children}</ul>
+                  ),
+                  ol: ({ node, children }) => (
+                    <ol className="mb-6 list-decimal space-y-2 pl-6">{children}</ol>
+                  ),
+                  li: ({ node, children }) => (
+                    <li className="text-zinc-700 dark:text-zinc-300">{children}</li>
+                  ),
+                  a: ({ node, href, children }) => (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary decoration-primary/30 hover:decoration-primary font-semibold underline-offset-4 transition-colors hover:underline"
+                    >
+                      {children}
+                    </a>
+                  ),
+                  blockquote: ({ node, children }) => (
+                    <blockquote className="border-primary bg-primary/5 my-8 rounded-r-lg border-l-4 p-4 text-zinc-700 italic shadow-sm dark:text-zinc-300">
+                      {children}
+                    </blockquote>
+                  ),
+                }}
+              >
+                {content}
+              </ReactMarkdown>
+            </div>
+
+            {/* Related Posts */}
+            {relatedPosts && relatedPosts.length > 0 && (
+              <RelatedPosts posts={relatedPosts} />
+            )}
+          </div>
+        </article>
+
+        {/* TOC Sidebar */}
+        <aside className="w-64 shrink-0">
+          <TableOfContents content={content} />
+        </aside>
+      </div>
     </>
   )
 }

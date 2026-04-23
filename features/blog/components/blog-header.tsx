@@ -1,4 +1,5 @@
 import type { BlogMeta } from '../lib/blog'
+import { ViewCounter } from './view-counter'
 
 export function BlogHeader({ meta }: { meta: BlogMeta }) {
   return (
@@ -13,6 +14,8 @@ export function BlogHeader({ meta }: { meta: BlogMeta }) {
         </time>
         <span>·</span>
         <span>{meta.readingTime}</span>
+        <span>·</span>
+        <ViewCounter slug={meta.slug} />
       </div>
 
       <h1 className="mt-4 text-4xl font-bold tracking-tight text-zinc-900 md:text-5xl dark:text-white">

@@ -10,7 +10,7 @@ import { functionalPads, dummyColors } from './data/pads'
 import { presets } from './data/presets'
 
 export function ContactSection() {
-  const [activePad, setActivePad] = useState<string | null>(null)
+  const [activePads, setActivePads] = useState<Set<string>>(new Set())
   const [loopingPads, setLoopingPads] = useState<Set<string>>(new Set())
   const [copied, setCopied] = useState(false)
   const [currentPreset, setCurrentPreset] = useState<string | null>(null)
@@ -28,6 +28,7 @@ export function ContactSection() {
   const isInitializedRef = useRef(false)
   const masterVolRef = useRef<any>(null)
   const rafRef = useRef<number>(0)
+  const activeTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
   // ─── Initialize Synths ──────────────────────────────────────────
   const initializeSynths = useCallback(async () => {
@@ -151,8 +152,11 @@ export function ContactSection() {
     })
     padLoopsRef.current.clear()
 
+    activeTimeoutsRef.current.forEach((t) => clearTimeout(t))
+    activeTimeoutsRef.current.clear()
+
     setLoopingPads(new Set())
-    setActivePad(null)
+    setActivePads(new Set())
     setCurrentPreset(null)
     setIsPlaying(false)
     setIsPaused(false)
@@ -188,8 +192,15 @@ export function ContactSection() {
 
     // Start loop
     setLoopingPads((prev) => new Set(prev).add(pad.id))
-    setActivePad(pad.id)
-    setTimeout(() => setActivePad(null), 150)
+    setActivePads((prev) => new Set(prev).add(pad.id))
+    const t = setTimeout(() => {
+      setActivePads((prev) => {
+        const n = new Set(prev)
+        n.delete(pad.id)
+        return n
+      })
+    }, 150)
+    activeTimeoutsRef.current.set(pad.id, t)
 
     // Determine synth type and note
     const typePool = ['kick', 'snare', 'hihat', 'clap', 'melody', 'bass']
@@ -313,8 +324,17 @@ export function ContactSection() {
 
       // Visual feedback synced to audio
       Tone.Draw.schedule(() => {
-        setActivePad(event.id || 'preset')
-        setTimeout(() => setActivePad(null), 150)
+        const padId = event.padId || event.id
+        if (!padId || padId === 'preset') return
+        setActivePads((prev) => new Set(prev).add(padId))
+        const t = setTimeout(() => {
+          setActivePads((prev) => {
+            const n = new Set(prev)
+            n.delete(padId)
+            return n
+          })
+        }, 200)
+        activeTimeoutsRef.current.set(padId, t)
       }, time)
     }, events)
 
@@ -412,7 +432,7 @@ export function ContactSection() {
     >
       {items.map((pad) => {
         const isLooping = loopingPads.has(pad.id)
-        const isActive = activePad === pad.id
+        const isActive = activePads.has(pad.id)
         return (
           <m.button
             key={pad.id}
@@ -457,7 +477,7 @@ export function ContactSection() {
         )
       })}
     </div>
-  ), [loopingPads, activePad, copied, handlePadClick])
+  ), [loopingPads, activePads, copied, handlePadClick])
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { parseShapeOfYou } from './shape-of-you'
+import { parseShapeOfYou, type NoteEvent } from './shape-of-you'
 
 export interface Preset {
   readonly id: string
@@ -14,11 +14,7 @@ export interface Preset {
     readonly delay: number
     readonly duration?: string
   }>
-  readonly events?: ReadonlyArray<{
-    readonly time: number
-    readonly note: string
-    readonly duration: string
-  }>
+  readonly events?: ReadonlyArray<NoteEvent>
 }
 
 const shapeOfYouEvents = parseShapeOfYou()

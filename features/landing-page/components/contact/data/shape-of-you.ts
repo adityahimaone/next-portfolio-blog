@@ -1,5 +1,6 @@
 // Shape of You (Ed Sheeran) — Melody transcription
 // .Note = octave 3 (lower), Note = octave 4, Note-Note = two quick notes
+// Each note is mapped to a dummy pad ID for visual feedback on the launchpad grid
 
 const shapeOfYouText = `
 .B        E     E-E     E      E         E      E    E    E   E-E
@@ -114,6 +115,26 @@ E     F#   G#   F#     E      E      F#   C#
 I'm in love with the shape of you
 `
 
+// Map each note to a dummy pad ID on the launchpad grid
+// Desktop grid (8×4): row 3 (y=3) is fully free, row 1 (y=1) is fully free
+// Lower notes at bottom (row 3), higher notes at top (row 1)
+const NOTE_TO_PAD: Record<string, string> = {
+  'B3': 'dummy-0-3',
+  'C4': 'dummy-1-3',
+  'C#4': 'dummy-2-3',
+  'D4': 'dummy-3-3',
+  'D#4': 'dummy-4-3',
+  'E4': 'dummy-5-3',
+  'F4': 'dummy-6-3',
+  'F#4': 'dummy-7-3',
+  'G4': 'dummy-0-1',
+  'G#4': 'dummy-1-1',
+  'A4': 'dummy-2-1',
+  'A#4': 'dummy-3-1',
+  'B4': 'dummy-4-1',
+  'C5': 'dummy-5-1',
+}
+
 const NOTE_TOKEN_REGEX = /^\.?[A-G]#?$/
 
 function isNoteLine(line: string): boolean {
@@ -127,8 +148,15 @@ function isNoteLine(line: string): boolean {
   })
 }
 
-export function parseShapeOfYou(): Array<{ time: number; note: string; duration: string }> {
-  const events: Array<{ time: number; note: string; duration: string }> = []
+export interface NoteEvent {
+  time: number
+  note: string
+  duration: string
+  padId: string | null
+}
+
+export function parseShapeOfYou(): NoteEvent[] {
+  const events: NoteEvent[] = []
   let beat = 0
 
   const lines = shapeOfYouText.trim().split('\n')
@@ -148,7 +176,12 @@ export function parseShapeOfYou(): Array<{ time: number; note: string; duration:
         let note = notes[i]
         if (note.startsWith('.')) note = note.slice(1) + '3'
         else note = note + '4'
-        events.push({ time: beat + i * timePerNote, note, duration })
+        events.push({
+          time: beat + i * timePerNote,
+          note,
+          duration,
+          padId: NOTE_TO_PAD[note] ?? null,
+        })
       }
       beat += 0.5
     }

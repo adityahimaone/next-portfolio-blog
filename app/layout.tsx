@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     type: 'website',
     images:
       'https://ucarecdn.com/b624aa7d-978f-44ef-8e45-bf3c12f1e846/memojilaptop1.png',
-    url: 'https://adityahimaone.tech/',
+    url: 'https://adityahimaone.space/',
     description: "adit's personal website",
   },
   twitter: {

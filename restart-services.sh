@@ -5,6 +5,30 @@
 set -e
 
 LOG_FILE="$HOME/restart-services.log"
+
+# ── Log Rotation ───────────────────────────────────────────────────────────
+rotate_logs() {
+    local logfile="$1"
+    local max_size=$((1024 * 1024))  # 1 MB
+    local max_rotates=5
+
+    [[ -f "$logfile" ]] || return 0
+
+    local size=$(stat -c%s "$logfile" 2>/dev/null || echo 0)
+    [[ $size -lt $max_size ]] && return 0
+
+    for ((i = max_rotates; i >= 1; i--)); do
+        local next=$((i + 1))
+        if [[ -f "${logfile}.${i}" ]]; then
+            [[ $i -eq $max_rotates ]] && rm -f "${logfile}.${i}" || mv -f "${logfile}.${i}" "${logfile}.${next}"
+        fi
+    done
+
+    [[ -f "$logfile" ]] && mv -f "$logfile" "${logfile}.1"
+}
+
+rotate_logs "$LOG_FILE" || true
+# ────────────────────────────────────────────────────────────────────────────
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'

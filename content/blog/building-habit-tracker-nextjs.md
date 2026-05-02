@@ -1,9 +1,9 @@
 ---
-title: "Building a Habit Tracker with Next.js"
+title: "Building a Habit Tracker with Next.js 16, Tailwind v4 & shadcn/ui"
 slug: building-habit-tracker-nextjs
-date: 2026-03-20
-description: "How I built a habit tracking app to build better daily routines using Next.js and TypeScript."
-tags: [nextjs, typescript, side-project, productivity]
+date: 2026-05-02
+description: "A deep dive into building a mobile-first habit tracker with modern Next.js, shadcn/ui components, framer-motion animations, and a localStorage-first architecture for offline-first personal tracking."
+tags: [nextjs, tailwind, shadcn, typescript, side-project, productivity, localstorage]
 published: true
 ---
 

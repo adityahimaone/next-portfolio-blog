@@ -13,6 +13,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://adityahimaone.space'),
   title: 'adityahimaone - frontend developer',
   description:
     'I am a frontend developer who loves to craft beautiful and performant websites.',

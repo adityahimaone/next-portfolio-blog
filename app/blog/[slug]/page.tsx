@@ -13,10 +13,19 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const { meta } = getPost(slug)
+  const url = `https://adityahimaone.space/blog/${slug}`
   return {
     title: `${meta.title} — adityahimaone`,
     description: meta.description,
     openGraph: {
+      title: meta.title,
+      description: meta.description,
+      url,
+      type: 'article',
+      ...(meta.cover && { images: [meta.cover] }),
+    },
+    twitter: {
+      card: 'summary_large_image',
       title: meta.title,
       description: meta.description,
       ...(meta.cover && { images: [meta.cover] }),

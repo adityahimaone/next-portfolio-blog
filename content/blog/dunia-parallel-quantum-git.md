@@ -4,7 +4,7 @@ slug: dunia-parallel-quantum-git
 date: 2026-05-02
 description: "Interpretasi Many-Worlds Everett dalam fisika kuantum, difahami lewat analogi git branching yang familiar untuk developer."
 tags: [quantum-physics, many-worlds, git, science, philosophy]
-published: true
+published: false
 ---
 
 Interpretasi Many-Worlds Everett bukan sekadar teori fisika kuantum yang abstrak. Bayangkan sebuah sistem kontrol versi yang terus‑menerus branching setiap kali ada keputusan kuantum, tanpa pernah merge. Itu adalah dunia paralel Everett dalam satu kalimat.

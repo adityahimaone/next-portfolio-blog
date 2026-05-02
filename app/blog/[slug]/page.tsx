@@ -1,9 +1,10 @@
-import { getPost, getAllSlugs, getRelatedPosts } from '@/features/blog/lib/blog'
+import { getPost, getAllPosts, getRelatedPosts } from '@/features/blog/lib/blog'
 import { BlogPostPage } from '@/features/blog'
 import type { Metadata } from 'next'
 
 export async function generateStaticParams() {
-  return getAllSlugs().map(slug => ({ slug }))
+  const posts = await getAllPosts()
+  return posts.map(p => ({ slug: p.slug }))
 }
 
 export async function generateMetadata({
@@ -13,10 +14,19 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const { meta } = getPost(slug)
+  const url = `https://adityahimaone.space/blog/${slug}`
   return {
     title: `${meta.title} — adityahimaone`,
     description: meta.description,
     openGraph: {
+      title: meta.title,
+      description: meta.description,
+      url,
+      type: 'article',
+      ...(meta.cover && { images: [meta.cover] }),
+    },
+    twitter: {
+      card: 'summary_large_image',
       title: meta.title,
       description: meta.description,
       ...(meta.cover && { images: [meta.cover] }),

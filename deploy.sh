@@ -16,6 +16,42 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# ── Log Rotation Setup ───────────────────────────────────────────────────
+# Keep max 5 rotated logs (portfolio-deploy.log.1, .2, ...), each ~1MB max
+rotate_logs() {
+    local logfile="$1"
+    local max_size=$((1024 * 1024))  # 1 MB
+    local max_rotates=5
+
+    if [[ ! -f "$logfile" ]]; then
+        return 0
+    fi
+
+    local size=$(stat -c%s "$logfile" 2>/dev/null || echo 0)
+    if [[ $size -lt $max_size ]]; then
+        return 0
+    fi
+
+    # Rotate: .5 → delete, .4 → .5, .3 → .4, .2 → .3, .1 → .2, current → .1
+    for ((i = max_rotates; i >= 1; i--)); do
+        local next=$((i + 1))
+        if [[ -f "${logfile}.${i}" ]]; then
+            if [[ $i -eq $max_rotates ]]; then
+                rm -f "${logfile}.${i}"
+            else
+                mv -f "${logfile}.${i}" "${logfile}.${next}"
+            fi
+        fi
+    done
+
+    if [[ -f "$logfile" ]]; then
+        mv -f "$logfile" "${logfile}.1"
+    fi
+}
+
+# Rotate logs before starting (best effort, don't fail if rotation error)
+rotate_logs "$LOG_FILE" || true
+
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
@@ -76,9 +112,34 @@ echo "$CURRENT_COMMIT" > "$ROLLBACK_DIR/last_known_good.commit"
 
 # ── Pull latest code ───────────────────────────────────────────────────────
 log "Pulling latest changes..."
-git pull origin main
+
+# Ensure we have full history (unshallow if needed)
+if [ -f ".git/shallow" ]; then
+    log "Repository is shallow, fetching full history..."
+    git fetch --unshallow || true
+fi
+
+# Fetch only the main branch from origin (clean, no tag/other branch noise)
+git fetch origin main
+
+# Get the commit we just fetched
+REMOTE_COMMIT=$(git rev-parse FETCH_HEAD)
+log "Remote commit: $REMOTE_COMMIT"
+
+# Compare with current HEAD
+CURRENT_HEAD=$(git rev-parse HEAD)
+log "Local commit: $CURRENT_HEAD"
+
+if [ "$CURRENT_HEAD" = "$REMOTE_COMMIT" ]; then
+    log "No changes detected (already up-to-date)"
+    send_telegram "✅ *Portfolio Deploy*\nNo new changes (already up-to-date)\nCommit: \`$REMOTE_COMMIT\`"
+    exit 0
+fi
+
+# Force reset to exactly match remote
+git reset --hard FETCH_HEAD
 NEW_COMMIT=$(git rev-parse HEAD)
-log "New commit: $NEW_COMMIT"
+log "New commit after reset: $NEW_COMMIT"
 
 if [[ "$CURRENT_COMMIT" == "$NEW_COMMIT" ]]; then
     log "No changes detected (already up-to-date)"

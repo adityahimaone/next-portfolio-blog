@@ -76,7 +76,8 @@ echo "$CURRENT_COMMIT" > "$ROLLBACK_DIR/last_known_good.commit"
 
 # ── Pull latest code ───────────────────────────────────────────────────────
 log "Pulling latest changes..."
-git pull origin main
+git fetch --all --tags --prune
+git reset --hard origin/main
 NEW_COMMIT=$(git rev-parse HEAD)
 log "New commit: $NEW_COMMIT"
 

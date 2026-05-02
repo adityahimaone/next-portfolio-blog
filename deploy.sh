@@ -76,10 +76,34 @@ echo "$CURRENT_COMMIT" > "$ROLLBACK_DIR/last_known_good.commit"
 
 # ── Pull latest code ───────────────────────────────────────────────────────
 log "Pulling latest changes..."
-git fetch --all --tags --prune
-git reset --hard origin/main
+
+# Ensure we have full history (unshallow if needed)
+if [ -f ".git/shallow" ]; then
+    log "Repository is shallow, fetching full history..."
+    git fetch --unshallow || true
+fi
+
+# Fetch only the main branch from origin (clean, no tag/other branch noise)
+git fetch origin main
+
+# Get the commit we just fetched
+REMOTE_COMMIT=$(git rev-parse FETCH_HEAD)
+log "Remote commit: $REMOTE_COMMIT"
+
+# Compare with current HEAD
+CURRENT_HEAD=$(git rev-parse HEAD)
+log "Local commit: $CURRENT_HEAD"
+
+if [ "$CURRENT_HEAD" = "$REMOTE_COMMIT" ]; then
+    log "No changes detected (already up-to-date)"
+    send_telegram "✅ *Portfolio Deploy*\nNo new changes (already up-to-date)\nCommit: \`$REMOTE_COMMIT\`"
+    exit 0
+fi
+
+# Force reset to exactly match remote
+git reset --hard FETCH_HEAD
 NEW_COMMIT=$(git rev-parse HEAD)
-log "New commit: $NEW_COMMIT"
+log "New commit after reset: $NEW_COMMIT"
 
 if [[ "$CURRENT_COMMIT" == "$NEW_COMMIT" ]]; then
     log "No changes detected (already up-to-date)"

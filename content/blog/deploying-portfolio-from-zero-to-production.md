@@ -1,79 +1,74 @@
 ---
 title: "Deploying My Portfolio Website: From Zero to Production with VPS, Staging, and GitHub Actions"
-description: "A complete guide to deploying a Next.js portfolio website on a VPS (Tencent Cloud) with staging environment, PM2, Nginx, SSL, and automated CI/CD via GitHub Actions."
+description: "A complete guide to deploying a Next.js portfolio website on a VPS (Tencent Cloud Lighthouse) with staging environment, PM2, Nginx, SSL, and automated CI/CD via GitHub Actions."
 published: "2026-05-02"
 tags: ["deployment", "nextjs", "vps", "devops", "portfolio", "github-actions", "staging"]
----
-
 ## Intro
 
-Gw Adit — frontend dev yang stack utama Next.js + Tailwind + shadcn/ui. Last year gw bikin portfolio site pake Next.js App Router, DAW-inspired design (timeline, tracks, clips), sama feature-based folder structure. Tapi selama ini portfolio cuma live di **Vercel** — gakada control penuh ke infrastructure.
+Gw Adit, frontend dev yang stack utama Next.js + Tailwind + shadcn/ui. Tahun lalu gw bikin portfolio pake Next.js App Router, DAW-inspired design (timeline, tracks, clips), sama feature-based folder structure. Tapi selama ini portfolio cuma live di **Vercel**. Gak ada control penuh ke infrastructure.
 
-Jadi gw mutusin: **Deploy ke VPS sendiri** — pake **Tencent Cloud CVM** (karena low-cost, performa solid), setup **staging environment** (dev subdomain), otomasi **CI/CD** via GitHub Actions, plus **monitoring** (Prometheus + Grafana) sama **Telegram notifications** buat health checks sama deploy alerts.
+Jadi gw mutusin: **Deploy ke VPS sendiri**. Gw pake **Tencent Cloud Lighthouse** karena low-cost, performa solid buat workload kecil. Setup **staging environment** (staging subdomain), otomasi **CI/CD** via GitHub Actions, plus **monitoring** (Prometheus + Grafana + Uptime Kuma) sama **Telegram notifications** buat health checks sama deploy alerts.
 
-Artikel ini dokumen lengkapnya — dari nol (beli VPS) sampai production live, sama staging pipeline yang reliable. Jadi kalo lo juga mau deploy portfolio ke VPS, bisa follow step-by-step ini.
+Artikel ini dokumen lengkapnya, dari nol (beli VPS) sampai production live, sama staging pipeline yang reliable. Jadi kalo lo juga mau deploy portfolio ke VPS, bisa follow step-by-step ini.
 
 ---
 
 ## 📦 Tech Stack & Prerequisites
 
 **Core:**
-- **Frontend:** Next.js 15 (App Router), React, Tailwind CSS, shadcn/ui
-- **Backend/Server:** Node.js 22 LTS, PM2 (process manager), Nginx (reverse proxy)
-- **Infrastructure:** Tencent Cloud CVM (Ubuntu 24.04 LTS), Cloudflare DNS
-- **CI/CD:** GitHub Actions (appleboy/ssh-action, appleboy/telegram-action)
-- **Monitoring:** Prometheus + Node Exporter + Nginx Exporter + Alertmanager → Telegram
+- Frontend: Next.js 15 (App Router), React, Tailwind CSS, shadcn/ui
+- Backend/Server: Node.js 22 LTS, PM2 buat process management, Nginx sebagai reverse proxy
+- Infrastructure: Tencent Cloud Lighthouse (Ubuntu 24.04 LTS) dengan Cloudflare DNS
+- CI/CD: GitHub Actions pake appleboy/ssh-action sama telegram-action
+- Monitoring: Prometheus + Node Exporter + Nginx Exporter + Alertmanager (ngirim alert ke Telegram), plus Uptime Kuma buat monitor uptime sama bisa trigger service restart
 
 **Domain & SSL:**
-- Domain: `adityahimaone.space` (Cloudflare)
-- Production: `adityahimaone.space` → port 3000 (Next.js)
-- Staging: `dev.adityahimaone.space` → port 3002 (Next.js dev build)
-- SSL: Let's Encrypt (certbot) dengan DNS-01 challenge (karena HTTP-01 gabisa, Basic Auth nginx)
+- Domain pake Cloudflare, contoh: `YOUR_DOMAIN.com`
+- Production: `YOUR_DOMAIN.com` → port 3000 (Next.js)
+- Staging: `staging.YOUR_DOMAIN.com` → port 3002 (Next.js dev mode)
+- SSL: Let's Encrypt pake DNS-01 challenge (Cloudflare plugin) karena HTTP-01 gabisa karena Basic Auth di nginx
 
 **Notifications:**
-- Telegram bot `@hiumannbot` → chat_id `1236463779` (personal)
-- Deploy success/failure, health checks, rollback alerts
+- Telegram bot (`@YOUR_BOT_USERNAME`) ke chat_id `YOUR_CHAT_ID`
+- Notif untuk deploy success/failure, health checks, sama rollback alerts
 
 ---
 
-## ☁️ 1. Tencent Cloud VPS Setup
+## ☁️ 1. Tencent Cloud Lighthouse Setup
 
-**Why Tencent Cloud?**  
-- Pricing: ~$5-10/month untuk 2 vCPU, 4GB RAM (cukup buat portfolio + monitoring stack)
-- Region: Singapore (latency ke Jakarta baik)
-- SSD storage, 1TB transfer (more than enough)
+**Why Lighthouse?** Lighthouse pilihannya karena harganya murah, cuma ~$2-3/month buat 2 vCPU, 2 GB RAM, plus 40 GB SSD. Performanya solid untuk workload kecil kayak portfolio. Lokasi Singapore, latency ke Jakarta oke. Include bandwidth 500GB per bulan, more than enough.
 
-### Step 1: Buy CVM Instance
-1. Login ke Tencent Cloud Console → Cloud Virtual Machine (CVM)
+### Step 1: Buy Lighthouse Instance
+1. Login ke Tencent Cloud Console → Cloud Virtual Machine (CVM) → Lighthouse
 2. Create instance:
    - **OS:** Ubuntu 24.04 LTS
    - **Region:** Singapore
-   - **Instance type:** S5 (2 vCPU, 4 GB RAM)
-   - **System disk:** 50 GB SSD (default)
-   - **Network:** Assign public IP, enable port 22 (SSH), 80/443 (HTTP/HTTPS)
-   - **Security group:** Allow inbound 22 (SSH), 80 (HTTP), 443 (HTTPS), & internal ports untuk monitoring (9090, 4000, 8384, 9113, 9652)
+   - **Instance type:** Lighthouse (2 vCPU, 2 GB RAM, 40 GB SSD)
+   - **System disk:** 40 GB SSD (included)
+   - **Network:** Assign public IP, enable port 22 (SSH), 80/443 (HTTP/HTTPS), plus monitoring ports (9090, 4000, 8384, 9113, 9652)
+   - **Security group:** Allow inbound 22 (SSH), 80 (HTTP), 443 (HTTPS), and monitoring ports
 3. Create → generate SSH key or password (disarankan SSH key)
 
 ### Step 2: SSH Setup & Initial Security
 ```bash
 # Connect via SSH (ganti IP)
-ssh root@43.134.121.166
+ssh root@YOUR_VPS_IP
 
 # Buat user non-root (disarankan untuk production)
-adduser adityahimaone
-usermod -aG sudo adityahimaone
+adduser YOUR_USERNAME
+usermod -aG sudo YOUR_USERNAME
 ```
 
 **Security tweaks:**
 - Change SSH port (optional, 22 → custom port misal 2222)
 - Disable password auth, pake SSH key only
-- Install `ufw` atau `fail2ban` (opsional, karena firewall Cloudflare + security group udah cukup)
+- Install `ufw` atau `fail2ban` (opsional)
 
 ---
 
 ## 🐧 2. VPS Provisioning: System Packages & Tools
 
-Login sebagai user `adityahimaone`, install dependencies:
+Login sebagai user `YOUR_USERNAME`, install dependencies:
 
 ```bash
 # Update & upgrade
@@ -93,7 +88,10 @@ sudo apt install -y nginx
 sudo apt install -y certbot python3-certbot-dns-cloudflare
 
 # Monitoring tools
-sudo apt install -y wget curl git
+sudo apt install -y wget curl git docker.io docker-compose
+
+# Uptime Kuma (via npm for simplicity, atau docker)
+sudo npm install -g wtfismyip
 ```
 
 Buat folder structure untuk apps:
@@ -101,7 +99,7 @@ Buat folder structure untuk apps:
 mkdir -p ~/apps
 mkdir -p ~/apps/next-portfolio-blog      # production
 mkdir -p ~/apps/next-portfolio-blog-dev  # staging
-mkdir -p ~/dashboard/monitoring          # Prometheus, Grafana, exporters
+mkdir -p ~/dashboard/monitoring          # Prometheus, Grafana, exporters, Uptime Kuma
 ```
 
 ---
@@ -123,7 +121,7 @@ module.exports = {
   apps: [
     {
       name: "portfolio-blog",           // production
-      cwd: "/home/adityahimaone/apps/next-portfolio-blog",
+      cwd: "/home/YOUR_USERNAME/apps/next-portfolio-blog",
       script: "npm",
       args: "start",
       env: {
@@ -133,7 +131,7 @@ module.exports = {
     },
     {
       name: "portfolio-blog-dev",       // staging
-      cwd: "/home/adityahimaone/apps/next-portfolio-blog-dev",
+      cwd: "/home/YOUR_USERNAME/apps/next-portfolio-blog-dev",
       script: "npm",
       args: "run dev",
       env: {
@@ -174,17 +172,17 @@ upstream portfolio_dev {
 
 server {
     listen 80;
-    server_name adityahimaone.space www.adityahimaone.space;
+    server_name YOUR_DOMAIN.com www.YOUR_DOMAIN.com;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name adityahimaone.space www.adityahimaone.space;
+    server_name YOUR_DOMAIN.com www.YOUR_DOMAIN.com;
 
     # SSL certificates (Let's Encrypt)
-    ssl_certificate /etc/letsencrypt/live/adityahimaone.space/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/adityahimaone.space/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/YOUR_DOMAIN.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/YOUR_DOMAIN.com/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
 
@@ -212,21 +210,29 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
     }
+
+    # Uptime Kuma dashboard (optional, behind auth if needed)
+    # Uncomment if Uptime Kuma running on port 3001
+    # location /uptime/ {
+    #     proxy_pass http://127.0.0.1:3001;
+    #     proxy_set_header Host $host;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    # }
 }
 
 server {
     listen 80;
-    server_name dev.adityahimaone.space;
+    server_name staging.YOUR_DOMAIN.com;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name dev.adityahimaone.space;
+    server_name staging.YOUR_DOMAIN.com;
 
     # SSL cert untuk staging (subdomain)
-    ssl_certificate /etc/letsencrypt/live/dev.adityahimaone.space/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/dev.adityahimaone.space/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/staging.YOUR_DOMAIN.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/staging.YOUR_DOMAIN.com/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
 
@@ -258,7 +264,7 @@ Karena production domain pake **Cloudflare**, dan nginx sudah pake Basic Auth (m
 
 **Setup Cloudflare API token:**
 1. Cloudflare Dashboard → My Profile → API Tokens
-2. Create Token → Edit zone DNS → Zone: `adityahimaone.space`
+2. Create Token → Edit zone DNS → Zone: `YOUR_DOMAIN.com`
 3. Copy token
 
 **Issue cert untuk production:**
@@ -266,28 +272,28 @@ Karena production domain pake **Cloudflare**, dan nginx sudah pake Basic Auth (m
 sudo certbot certonly \
   --dns-cloudflare \
   --dns-cloudflare-credentials ~/.secrets/cloudflare.ini \
-  -d adityahimaone.space \
-  -d www.adityahimaone.space \
+  -d YOUR_DOMAIN.com \
+  -d www.YOUR_DOMAIN.com \
   --non-interactive \
   --agree-tos \
-  --email aditya.himawan@example.com
+  --email your-email@example.com
 ```
 
 `~/.secrets/cloudflare.ini`:
 ```
 dns_cloudflare_email = your-email@example.com
-dns_cloudflare_api_token = XXXXXX
+dns_cloudflare_api_token = YOUR_CLOUDFLARE_API_TOKEN
 ```
 
-**Issue cert untuk staging (`dev` subdomain):**
+**Issue cert untuk staging (`staging` subdomain):**
 ```bash
 sudo certbot certonly \
   --dns-cloudflare \
   --dns-cloudflare-credentials ~/.secrets/cloudflare.ini \
-  -d dev.adityahimaone.space \
+  -d staging.YOUR_DOMAIN.com \
   --non-interactive \
   --agree-tos \
-  --email aditya.himawan@example.com
+  --email your-email@example.com
 ```
 
 Auto-renew (crontab):
@@ -327,7 +333,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           script: |
-            /home/adityahimaone/apps/next-portfolio-blog/deploy.sh "${{ secrets.TELEGRAM_BOT_TOKEN }}" "${{ secrets.TELEGRAM_CHAT_ID }}"
+            /home/YOUR_USERNAME/apps/next-portfolio-blog/deploy.sh "${{ secrets.TELEGRAM_BOT_TOKEN }}" "${{ secrets.TELEGRAM_CHAT_ID }}"
 
   notify-failure:
     runs-on: ubuntu-latest
@@ -373,7 +379,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           script: |
-            /home/adityahimaone/apps/next-portfolio-blog-dev/deploy.sh "${{ secrets.TELEGRAM_BOT_TOKEN }}" "${{ secrets.TELEGRAM_CHAT_ID }}"
+            /home/YOUR_USERNAME/apps/next-portfolio-blog-dev/deploy.sh "${{ secrets.TELEGRAM_BOT_TOKEN }}" "${{ secrets.TELEGRAM_CHAT_ID }}"
 
   notify-failure:
     runs-on: ubuntu-latest
@@ -394,23 +400,23 @@ jobs:
 ```
 
 **GitHub Secrets:**
-- `VPS_HOST`: `43.134.121.166`
-- `VPS_USER`: `adityahimaone`
+- `VPS_HOST`: `YOUR_VPS_IP`
+- `VPS_USER`: `YOUR_USERNAME`
 - `VPS_SSH_KEY`: Private SSH key (RSA 4096) untuk akses VPS
 - `TELEGRAM_BOT_TOKEN`: Token bot Telegram
-- `TELEGRAM_CHAT_ID`: `1236463779`
+- `TELEGRAM_CHAT_ID`: `YOUR_CHAT_ID`
 
 ---
 
 ## 📜 7. Deploy Script: Production & Staging
 
-### Production Deploy Script (`/home/adityahimaone/apps/next-portfolio-blog/deploy.sh`)
+### Production Deploy Script (`/home/YOUR_USERNAME/apps/next-portfolio-blog/deploy.sh`)
 
 ```bash
 #!/bin/bash
 set -e
 
-APP_DIR="/home/adityahimaone/apps/next-portfolio-blog"
+APP_DIR="/home/YOUR_USERNAME/apps/next-portfolio-blog"
 LOG_FILE="$HOME/portfolio-deploy.log"
 ROLLBACK_DIR="$HOME/portfolio-rollback"
 TELEGRAM_BOT_TOKEN="$1"
@@ -492,7 +498,7 @@ sleep 3
 HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" http://127.0.0.1:3000)
 if [[ "$HTTP_CODE" =~ ^2 ]]; then
     log "✅ Deploy SUCCESS (HTTP $HTTP_CODE)"
-    send_telegram "✅ *Deploy Success*\nCommit: \`$NEW_COMMIT\`\nHTTP: $HTTP_CODE\nURL: https://adityahimaone.space"
+    send_telegram "✅ *Deploy Success*\nCommit: \`$NEW_COMMIT\`\nHTTP: $HTTP_CODE\nURL: https://YOUR_DOMAIN.com"
 else
     log "❌ Deploy FAILED (HTTP $HTTP_CODE)"
     send_telegram "🚨 *Deploy Failed - Health*\nCommit: \`$NEW_COMMIT\`\nHTTP: $HTTP_CODE\nRolling back..."
@@ -507,13 +513,13 @@ fi
 log "=== Deploy completed ==="
 ```
 
-### Staging Deploy Script (`/home/adityahimaone/apps/next-portfolio-blog-dev/deploy.sh`)
+### Staging Deploy Script (`/home/YOUR_USERNAME/apps/next-portfolio-blog-dev/deploy.sh`)
 
 ```bash
 #!/bin/bash
 set -e
 
-APP_DIR="/home/adityahimaone/apps/next-portfolio-blog-dev"
+APP_DIR="/home/YOUR_USERNAME/apps/next-portfolio-blog-dev"
 LOG_FILE="$HOME/portfolio-deploy-dev.log"
 ROLLBACK_DIR="$HOME/portfolio-rollback-dev"
 TELEGRAM_BOT_TOKEN="$1"
@@ -595,7 +601,7 @@ sleep 3
 HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" http://127.0.0.1:3002)
 if [[ "$HTTP_CODE" =~ ^2 ]]; then
     log "✅ Dev deploy SUCCESS (HTTP $HTTP_CODE)"
-    send_telegram "✅ *Dev Deploy Success*\nCommit: \`$NEW_COMMIT\`\nHTTP: $HTTP_CODE\nURL: https://dev.adityahimaone.space"
+    send_telegram "✅ *Dev Deploy Success*\nCommit: \`$NEW_COMMIT\`\nHTTP: $HTTP_CODE\nURL: https://staging.YOUR_DOMAIN.com"
 else
     log "❌ Dev deploy FAILED (HTTP $HTTP_CODE)")
     send_telegram "🚨 *Dev Deploy Failed - Health*\nCommit: \`$NEW_COMMIT\`\nHTTP: $HTTP_CODE\nRolling back..."
@@ -619,23 +625,35 @@ log "=== Dev deploy completed ==="
 
 ---
 
-## 📊 8. Monitoring Stack (Prometheus + Grafana)
+## 📊 8. Monitoring Stack (Prometheus + Grafana + Uptime Kuma)
 
 **Architecture:**
 ```
-VPS (43.134.121.166)
+VPS (YOUR_VPS_IP)
 ├── Prometheus (9090)        → scrapes metrics
 ├── Alertmanager (9093)      → alerts → Telegram
 ├── Grafana (4000, /grafana/) → dashboards (Basic Auth)
 ├── Node Exporter (9100)     → system metrics
 ├── Nginx Exporter (9113)    → nginx metrics
-└── PM2 Exporter (9652)      → app process metrics
+├── PM2 Exporter (9652)      → app process metrics
+└── Uptime Kuma (3001)       → uptime monitoring, service restart capabilities
 ```
 
-**Deploy monitoring via docker-compose atau manual services.**  
-Gunakan **Prometheus as Service** (systemd) atau PM2 juga bisa.
+**Deploy monitoring?** Bisa pake docker-compose atau manual services. Prometheus juga bisa jalan sebagai systemd service atau via PM2.
 
-**Prometheus config snippet (`/home/adityahimaone/dashboard/monitoring/prometheus.yml`):**
+**Uptime Kuma Setup:** Tool ini penting buat monitor uptime sama bisa trigger restart service otomatis. Cara setup:
+- Install via npm: `npm install -g uptime-kuma` (atau pake Docker: `docker run -d --restart=always -p 3001:3001 -v /path/to/data:/app/data louislam/uptime-kuma`)
+- Akses: `http://YOUR_VPS_IP:3001`
+- Tambah monitors:
+  - HTTP(s) ke `https://YOUR_DOMAIN.com` (production)
+  - HTTP(s) ke `https://staging.YOUR_DOMAIN.com` (staging)
+  - TCP ke `YOUR_VPS_IP:3000` (Next.js prod)
+  - TCP ke `YOUR_VPS_IP:3002` (Next.js dev)
+  - Ping ke `YOUR_VPS_IP`
+- **Service restart:** Uptime Kuma bisa setup webhook → GitHub Actions atau custom script yang otomatis restart PM2 services kalo downtime terdeteksi.
+- **Status page:** Bisa enable public status page di Uptime Kuma kalo perlu share uptime ke client.
+
+**Prometheus config snippet (`/home/YOUR_USERNAME/dashboard/monitoring/prometheus.yml`):**
 
 ```yaml
 global:
@@ -661,7 +679,7 @@ alerting:
         - targets: ['localhost:9093']
 ```
 
-**Grafana access:** `http://43.134.121.166:4000` (Basic Auth: `adityahimaone`)
+**Grafana access:** `http://YOUR_VPS_IP:4000` (Basic Auth: `YOUR_GRAFANA_USER` (default: admin))
 
 **Alertmanager rules → Telegram** jika:
 - CPU > 85% for 5m
@@ -669,7 +687,7 @@ alerting:
 - HTTP 5xx from nginx exporter
 - PM2 process down
 
-(Rinci setup monitoring ini di dokumentasi terpisah, tapi intinya semua metrics dikumpul dan visualisasi di Grafana.)
+(Rinci setup monitoring ini di dokumentasi terpisah, tapi intinya semua metrics dikumpul dan visualisasi di Grafana, plus uptime tracking via Uptime Kuma.)
 
 ---
 
@@ -684,7 +702,7 @@ alerting:
 
 ```bash
 #!/bin/bash
-APP_DIR="/home/adityahimaone/apps/next-portfolio-blog"
+APP_DIR="/home/YOUR_USERNAME/apps/next-portfolio-blog"
 ROLLBACK_DIR="$HOME/portfolio-rollback"
 
 if [[ ! -f "$ROLLBACK_DIR/last_known_good.commit" ]]; then
@@ -711,7 +729,7 @@ echo "✅ Rollback complete"
 ## 🏗️ 10. Directory Structure on VPS
 
 ```
-/home/adityahimaone/
+/home/YOUR_USERNAME/
 ├── apps/
 │   ├── next-portfolio-blog/          # production (branch: main)
 │   │   ├── .git/
@@ -792,8 +810,8 @@ Before claiming "deploy done", verify:
 - [ ] Nginx config valid (`sudo nginx -t`)
 - [ ] SSL certs active (`sudo certbot certificates`)
 - [ ] Domain DNS mengarah ke VPS IP (Cloudflare A record)
-- [ ] HTTP health check: `curl -I https://adityahimaone.space` → 200 OK
-- [ ] Staging health: `curl -I https://dev.adityahimaone.space` → 200 OK
+- [ ] HTTP health check: `curl -I https://YOUR_DOMAIN.com` → 200 OK
+- [ ] Staging health: `curl -I https://staging.YOUR_DOMAIN.com` → 200 OK
 - [ ] PM2 resurrect on boot: `pm2 startup` + `pm2 save`
 - [ ] GitHub Actions triggers successfully (check Actions tab)
 - [ ] Telegram notifications terkirim (sukses/gagal)
@@ -805,21 +823,22 @@ Before claiming "deploy done", verify:
 ## 🎯 Conclusion
 
 Dengan setup ini, portfolio **auto-deploy** setiap push ke:
-- `main` → production (`adityahimaone.space`)
-- `dev` → staging (`dev.adityahimaone.space`)
+- `main` → production (`YOUR_DOMAIN.com`)
+- `dev` → staging (`staging.YOUR_DOMAIN.com`)
 
-**Benefits:**
-1. **Isolation:** Staging terpisah dari production (break things without fear)
-2. **Speed:** Staging dev mode (`npm run dev`) no build step (hot reload)
-3. **Safety:** Automatic rollback on build/health failure + Telegram alerts
-4. **Observability:** Prometheus metrics + Grafana dashboards buat monitor performance
-5. **Cost-effective:** Single VPS handle everything (~$5-10/month)
-6. **Full control:** Bisa custom config (security headers, performance tuning)
+**Kenapa setup ini worth it?**
 
-**Next improvements:**
-- Add blue-green deployment (dual directories, swap symlink) — zero-downtime
-- Add preview deployments per PR (temporary subdomain `pr-123.dev.adityahimaone.space`)
-- Cache optimization (nginx caching, Next.js Image Optimization with Cloudinary)
+- **Isolation:** Staging terpisah dari production. Break things tanpa takut bikin production down.
+- **Speed:** Staging jalan di dev mode (`npm run dev`), gak perlu build step, hot reload langsung.
+- **Safety:** Auto rollback kalo build atau health check gagal, plus Telegram alerts.
+- **Observability:** Prometheus + Grafana dashboards lengkap, ditambah Uptime Kuma buat tracking uptime.
+- **Cost-effective:** Cuma perlu satu Lighthouse VPS, ~$2-3/bulan.
+- **Full control:** Bisa custom apapun, dari security headers sampe performance tuning.
+
+**Next improvements yang bisa ditambahkan:**
+- Blue-green deployment (dual directories, swap symlink). Zero downtime
+- Preview deployments per PR (temporary subdomain `pr-123.staging.YOUR_DOMAIN.com`)
+- Cache optimization (nginx caching, Next.js Image Optimization pake Cloudinary)
 - CDN integration (Cloudflare Pages untuk static assets)
 
 ---
@@ -836,4 +855,4 @@ Dengan setup ini, portfolio **auto-deploy** setiap push ke:
 ---
 
 *Written by Adit — Frontend Developer, Jakarta Selatan.  
-Portfolio: https://adityahimaone.space | GitHub: @adityahimaone*  
+Portfolio: https://YOUR_DOMAIN.com | GitHub: @YOUR_GITHUB_USERNAME*  

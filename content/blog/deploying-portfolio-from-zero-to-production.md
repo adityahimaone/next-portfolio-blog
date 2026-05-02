@@ -3,6 +3,8 @@ title: "Deploying My Portfolio Website: From Zero to Production with VPS, Stagin
 description: "A complete guide to deploying a Next.js portfolio website on a VPS (Tencent Cloud Lighthouse) with staging environment, PM2, Nginx, SSL, and automated CI/CD via GitHub Actions."
 published: "2026-05-02"
 tags: ["deployment", "nextjs", "vps", "devops", "portfolio", "github-actions", "staging"]
+---
+
 ## Intro
 
 Gw Adit, frontend dev yang stack utama Next.js + Tailwind + shadcn/ui. Tahun lalu gw bikin portfolio pake Next.js App Router, DAW-inspired design (timeline, tracks, clips), sama feature-based folder structure. Tapi selama ini portfolio cuma live di **Vercel**. Gak ada control penuh ke infrastructure.

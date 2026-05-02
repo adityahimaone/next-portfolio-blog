@@ -4,7 +4,7 @@ slug: black-hole-fisika-bikin-no-sense
 date: 2026-05-15
 description: "Kenapa black hole itu absurd, gimana kita bisa foto sesuatu yang nggak bikin cahaya bisa kabur, dan apa yang terjadi kalo kamu (maaf) jatuh ke dalamnya."
 tags: [black-hole, astrophysics, science, physics]
-published: true
+published: false
 ---
 
 # Black Hole: Tempat di Mana Fisika yang Kita Pelajari Bikin No Sense Lagi

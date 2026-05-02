@@ -1,9 +1,10 @@
-import { getPost, getAllSlugs, getRelatedPosts } from '@/features/blog/lib/blog'
+import { getPost, getAllPosts, getRelatedPosts } from '@/features/blog/lib/blog'
 import { BlogPostPage } from '@/features/blog'
 import type { Metadata } from 'next'
 
 export async function generateStaticParams() {
-  return getAllSlugs().map(slug => ({ slug }))
+  const posts = await getAllPosts()
+  return posts.map(p => ({ slug: p.slug }))
 }
 
 export async function generateMetadata({

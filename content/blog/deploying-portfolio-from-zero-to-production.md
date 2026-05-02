@@ -93,7 +93,7 @@ sudo apt install -y certbot python3-certbot-dns-cloudflare
 sudo apt install -y wget curl git docker.io docker-compose
 
 # Uptime Kuma (via npm for simplicity, atau docker)
-sudo npm install -g wtfismyip
+sudo npm install -g uptime-kuma
 ```
 
 Buat folder structure untuk apps:

@@ -231,27 +231,27 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
   },
   {
     id: 2,
+    title: 'Habit Tracker',
+    description:
+      'Habit tracking app to build better daily routines. Track streaks, view weekly overviews, and stay consistent.',
+    image: '/assets/thumbnail-habit-tracker.png',
+    url: 'https://habit.adityahimaone.space/',
+    genre: 'Utility / Productivity',
+    year: '2026',
+    vinylColor: 'from-green-500 to-emerald-500',
+    vinylIcon: Zap,
+  },
+  {
+    id: 3,
     title: 'Frontend Resources',
     description:
       'A curated collection of the best frontend development tools, libraries, and inspiration sources to supercharge your web development workflow.',
-    image: '/assets/frontend-resources.png',
+    image: '/assets/thumbnail-fe-resources.png',
     url: 'https://frontend-resources-rouge.vercel.app/',
     genre: 'Educational / Tools',
     year: '2023',
     vinylColor: 'from-yellow-500 to-orange-500',
     vinylIcon: Code,
-  },
-  {
-    id: 3,
-    title: 'Quick Chat Whatsapp',
-    description:
-      "A utility app that lets users send WhatsApp messages without saving the recipient's phone number. Simplifies communication by eliminating the need to create contacts for one-time conversations.",
-    image: '/assets/quick-chat-wa.png',
-    url: 'http://quick-chat-whatsapp.vercel.app/',
-    genre: 'Utility / Productivity',
-    year: '2023',
-    vinylColor: 'from-green-500 to-emerald-500',
-    vinylIcon: Zap,
   },
   {
     id: 4,

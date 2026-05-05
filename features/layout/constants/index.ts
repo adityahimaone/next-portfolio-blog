@@ -47,11 +47,10 @@ export const SOCIAL_LINKS = [
 ] as const
 
 export const FOOTER_NAVIGATION = [
-  { name: 'About', href: '#about' },
-  { name: 'Skills', href: '#skills' },
-  { name: 'Experience', href: '#experience' },
-  { name: 'Projects', href: '#projects' },
-  { name: 'Contact', href: '#contact' },
+  { name: 'Home', href: '/' },
+  { name: 'Blog', href: '/blog' },
+  { name: 'Projects', href: '/projects' },
+  { name: 'Mixtape', href: '/music' },
 ] as const
 
 export const TECH_STACK = [

@@ -130,7 +130,7 @@ export function ProjectsSection() {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-zinc-900"
+                className="relative max-h-[90vh] w-[95vw] max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-zinc-900"
               >
                 {/* Close Button */}
                 <button
@@ -143,7 +143,7 @@ export function ProjectsSection() {
 
                 <div className="grid h-full grid-cols-1 md:grid-cols-2">
                   {/* Left: Image Area */}
-                  <div className="relative h-64 bg-zinc-100 md:h-full dark:bg-zinc-800">
+                  <div className="relative h-64 bg-zinc-100 md:h-full dark:bg-zinc-800 lg:h-full">
                     <Image
                       src={selectedProject.image}
                       alt={selectedProject.title}
@@ -162,13 +162,13 @@ export function ProjectsSection() {
                   </div>
 
                   {/* Right: Content Area */}
-                  <div className="flex flex-col p-8">
-                    <div className="mb-6">
+                  <div className="flex flex-col p-6 md:p-8 overflow-hidden">
+                    <div className="mb-4 md:mb-6">
                       <div className="text-primary mb-2 flex items-center gap-2 text-sm font-medium">
                         <Mic2 className="h-4 w-4" />
                         <span>FEATURED TRACK</span>
                       </div>
-                      <h3 className="text-3xl leading-tight font-bold text-zinc-900 dark:text-zinc-100">
+                      <h3 className="text-2xl md:text-3xl leading-tight font-bold text-zinc-900 dark:text-zinc-100">
                         {selectedProject.title}
                       </h3>
                       <div className="mt-2 flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
@@ -178,8 +178,8 @@ export function ProjectsSection() {
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto">
-                      <p className="text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
+                    <div className="flex-1 overflow-y-auto pr-2">
+                      <p className="text-base md:text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
                         {selectedProject.description}
                       </p>
 

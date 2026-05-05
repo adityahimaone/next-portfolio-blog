@@ -130,21 +130,15 @@ log "Remote commit: $REMOTE_COMMIT"
 CURRENT_HEAD=$(git rev-parse HEAD)
 log "Local commit: $CURRENT_HEAD"
 
-if [ "$CURRENT_HEAD" = "$REMOTE_COMMIT" ]; then
-    log "No changes detected (already up-to-date)"
-    send_telegram "✅ *Portfolio Deploy*\nNo new changes (already up-to-date)\nCommit: \`$REMOTE_COMMIT\`"
-    exit 0
-fi
-
-# Force reset to exactly match remote
+# Always ensure local matches remote exactly
 git reset --hard FETCH_HEAD
 NEW_COMMIT=$(git rev-parse HEAD)
-log "New commit after reset: $NEW_COMMIT"
+log "Active commit after reset: $NEW_COMMIT"
 
-if [[ "$CURRENT_COMMIT" == "$NEW_COMMIT" ]]; then
-    log "No changes detected (already up-to-date)"
-    send_telegram "✅ *Portfolio Deploy*\nNo new changes (already up-to-date)\nCommit: \`$NEW_COMMIT\`"
-    exit 0
+if [ "$CURRENT_HEAD" = "$REMOTE_COMMIT" ]; then
+    log "No new commits, but forcing rebuild to ensure latest content (blog posts, etc.)"
+else
+    log "New commits detected, rebuilding..."
 fi
 
 # ── Install dependencies ────────────────────────────────────────────────────

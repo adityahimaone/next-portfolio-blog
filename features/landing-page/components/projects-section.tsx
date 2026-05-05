@@ -143,7 +143,7 @@ export function ProjectsSection() {
 
                 <div className="grid h-full grid-cols-1 md:grid-cols-2">
                   {/* Left: Image Area */}
-                  <div className="relative h-64 bg-zinc-100 md:h-full dark:bg-zinc-800 lg:h-full">
+                  <div className="relative h-48 bg-zinc-100 md:h-full dark:bg-zinc-800 lg:h-full">
                     <Image
                       src={selectedProject.image}
                       alt={selectedProject.title}
@@ -179,7 +179,7 @@ export function ProjectsSection() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto pr-2">
-                      <p className="text-base md:text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
+                      <p className="text-base md:text-lg leading-relaxed text-zinc-600 line-clamp-4 md:line-clamp-none dark:text-zinc-300">
                         {selectedProject.description}
                       </p>
 

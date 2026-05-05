@@ -472,7 +472,7 @@ export function ContactSection() {
         )
       })}
     </div>
-  ), [loopingPads, activePads, copied, handlePadClick])
+  ), [loopingPads, activePads, handlePadClick])
 
   return (
     <>

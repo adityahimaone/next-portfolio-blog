@@ -14,7 +14,7 @@ Managing a VPS (Virtual Private Server) itu kayak jagain rumah sendiri — lu ha
 
 ## The Stack
 
-VPS gw jalan di **Ubuntu 22.04** (43.134.121.166) dengan stack lengkap:
+VPS gw jalan di **Ubuntu 22.04** (xxx.xxx.xxx.xxx) dengan stack lengkap:
 
 - **Prometheus** — Time-series database buat nyimpen metrics
 - **Grafana** — Visualization & dashboard (subdomain: `grafana.adityahimaone.space`)
@@ -75,7 +75,7 @@ scrape_configs:
         target_label: instance
       - source_labels: [__param_target]
         target_label: __address__
-        replacement: 43.134.121.166:9115  # Blackbox exporter
+        replacement: xxx.xxx.xxx.xxx:9115  # Blackbox exporter
 ```
 
 Dengan config ini, Prometheus bakal nge-probe semua HTTPS endpoints dan nyimpen metrics:
@@ -132,8 +132,8 @@ Alertmanager config buat kirim alert ke Telegram:
 receivers:
   - name: 'telegram'
     telegram_configs:
-      - bot_token: '123456:ABC-DEF...'  # @hiumannbot
-        chat_id: 1236463779              # @sineztra00
+        - bot_token: '[REDACTED]'  # @hiumannbot
+        chat_id: 123456789              # @sineztra00
         message: |
           🚨 *Alert: {{ .GroupLabels.alertname }}*
           Service: {{ .CommonLabels.instance }}
@@ -156,7 +156,7 @@ location /grafana/ {
 }
 ```
 
-Credentials: `adit / adit143`
+Credentials: `adit / [HIDDEN]`
 
 **Challenge:** Karena pake Basic Auth, `HTTP-01` challenge buat SSL cert nggak bisa jalan (diblokir auth). Solution-nya: pake **DNS-01 challenge via Cloudflare**:
 
@@ -193,8 +193,8 @@ Fixed lewat Grafana API pake Python script + requests library.
 
 ## Dashboard Access
 
-- **Grafana**: https://grafana.adityahimaone.space (adit/adit143)
-- **Netdata**: https://netdata.adityahimaone.space (adit/adit143)
+- **Grafana**: https://grafana.adityahimaone.space (adit/[HIDDEN])
+- **Netdata**: https://netdata.adityahimaone.space (adit/[HIDDEN])
 - **Dashboard UID**: `vps-monitoring-v2`
 - **Version**: 10 (terakhir diupdate 5 Mei 2026)
 

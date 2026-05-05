@@ -12,7 +12,6 @@ import { presets } from './data/presets'
 export function ContactSection() {
   const [activePads, setActivePads] = useState<Set<string>>(new Set())
   const [loopingPads, setLoopingPads] = useState<Set<string>>(new Set())
-  const [copied, setCopied] = useState(false)
   const [currentPreset, setCurrentPreset] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
@@ -219,7 +218,7 @@ export function ContactSection() {
         case 'linkedin': type = 'melody'; note = 'E4'; interval = '4n'; duration = '8n'; break
         case 'github': type = 'bass'; note = 'C2'; interval = '2n'; duration = '4n'; break
         case 'spotify': type = 'hihat'; note = 'C2'; interval = '8n'; duration = '16n'; break
-        case 'copy': type = 'clap'; note = 'D2'; interval = '2n'; duration = '8n'; break
+        case 'resume': type = 'clap'; note = 'D2'; interval = '2n'; duration = '8n'; break
         default: type = 'melody'; note = notes[0]; interval = '4n'; duration = '8n'
       }
     } else {
@@ -379,11 +378,7 @@ export function ContactSection() {
 
     // Functional actions
     if (!pad.id.startsWith('dummy')) {
-      if (pad.action === 'copy' && pad.value) {
-        navigator.clipboard.writeText(pad.value)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-      } else if (pad.href) {
+      if (pad.href) {
         window.open(pad.href, '_blank')
       }
     }
@@ -454,8 +449,8 @@ export function ContactSection() {
               <div className="relative z-10 flex flex-col items-center gap-1 sm:gap-2">
                 <pad.icon className={cn('h-5 w-5 transition-colors duration-200 sm:h-8 sm:w-8', isLooping || isActive ? 'text-white' : 'text-zinc-500')} />
                 <div className="hidden flex-col items-center sm:flex">
-                  <span className={cn('text-[10px] font-bold tracking-wider transition-colors duration-200 sm:text-xs', isLooping || isActive ? 'text-white' : 'text-zinc-400')}>
-                    {pad.id === 'copy' && copied ? 'COPIED!' : (pad as any).label}
+                    <span className={cn('text-[10px] font-bold tracking-wider transition-colors duration-200 sm:text-xs', isLooping || isActive ? 'text-white' : 'text-zinc-400')}>
+                    {(pad as any).label}
                   </span>
                   {(pad as any).subLabel && (
                     <span className={cn('font-mono text-[8px] transition-colors duration-200 sm:text-[10px]', isLooping || isActive ? 'text-white/80' : 'text-zinc-600')}>

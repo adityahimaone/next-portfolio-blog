@@ -1,4 +1,4 @@
-import { Mail, Github, Linkedin, Music, Copy } from 'lucide-react'
+import { Mail, Github, Linkedin, Music, FileText } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 export interface FunctionalPad {
@@ -68,12 +68,11 @@ export const functionalPads: readonly FunctionalPad[] = [
     mobile: { x: 3, y: 2, w: 1, h: 1 },
   },
   {
-    id: 'copy',
-    label: 'COPY',
-    icon: Copy,
+    id: 'resume',
+    label: 'RESUME',
+    icon: FileText,
     color: 'bg-amber-500',
-    action: 'copy',
-    value: 'adityahimaone@gmail.com',
+    href: 'https://drive.google.com/file/d/13Ym0zbrZyi8oOkvUp0r9GBCM_Acsk2XM/view?usp=sharing',
     x: 5,
     y: 2,
     w: 1,

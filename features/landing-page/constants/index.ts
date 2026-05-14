@@ -45,7 +45,7 @@ export interface MixerGroup {
   readonly id: string
   readonly label: string
   readonly type: string
-  readonly channels: readonly { readonly name: string; readonly level: number }[]
+  readonly channels: readonly { readonly name: string; readonly level: number; readonly since?: number; readonly usage?: number }[]
 }
 
 export interface ProjectShowcaseItem {
@@ -177,18 +177,70 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
 ] as const
 
 // ─── Skills Mixer ────────────────────────────────────────
+
+export const MIXER_PRESETS = {
+  frontend: {
+    html: 95,
+    css: 95,
+    js: 95,
+    ts: 95,
+    react: 95,
+    next: 95,
+    remix: 70,
+    jquery: 50,
+    'vs code': 99,
+    figma: 85,
+    git: 90,
+    motion: 90,
+    go: 30,
+    swift: 20,
+  },
+  backend: {
+    html: 50,
+    css: 30,
+    js: 80,
+    ts: 75,
+    react: 30,
+    next: 30,
+    remix: 20,
+    jquery: 20,
+    'vs code': 90,
+    figma: 20,
+    git: 90,
+    motion: 30,
+    go: 75,
+    swift: 10,
+  },
+  design: {
+    html: 90,
+    css: 95,
+    js: 70,
+    ts: 60,
+    react: 50,
+    next: 40,
+    remix: 20,
+    jquery: 30,
+    'vs code': 85,
+    figma: 95,
+    git: 80,
+    motion: 85,
+    go: 10,
+    swift: 10,
+  },
+} as const
+
 export const MIXER_DATA: readonly MixerGroup[] = [
   {
     id: 'languages',
     label: 'LANGUAGES',
     type: 'fader',
     channels: [
-      { name: 'HTML', level: 95 },
-      { name: 'CSS', level: 95 },
-      { name: 'JS', level: 95 },
-      { name: 'TS', level: 90 },
-      { name: 'GO', level: 60 },
-      { name: 'SWIFT', level: 50 },
+      { name: 'HTML', level: 95, since: 2018, usage: 25 },
+      { name: 'CSS', level: 95, since: 2018, usage: 25 },
+      { name: 'JS', level: 95, since: 2018, usage: 23 },
+      { name: 'TS', level: 90, since: 2020, usage: 18 },
+      { name: 'GO', level: 60, since: 2022, usage: 3 },
+      { name: 'SWIFT', level: 50, since: 2023, usage: 2 },
     ],
   },
   {
@@ -196,10 +248,10 @@ export const MIXER_DATA: readonly MixerGroup[] = [
     label: 'FRAMEWORKS',
     type: 'knob',
     channels: [
-      { name: 'REACT', level: 95 },
-      { name: 'NEXT', level: 92 },
-      { name: 'REMIX', level: 70 },
-      { name: 'JQUERY', level: 85 },
+      { name: 'REACT', level: 95, since: 2019, usage: 22 },
+      { name: 'NEXT', level: 92, since: 2020, usage: 15 },
+      { name: 'REMIX', level: 70, since: 2022, usage: 2 },
+      { name: 'JQUERY', level: 85, since: 2018, usage: 8 },
     ],
   },
   {
@@ -207,10 +259,10 @@ export const MIXER_DATA: readonly MixerGroup[] = [
     label: 'TOOLS & FX',
     type: 'knob',
     channels: [
-      { name: 'VS CODE', level: 99 },
-      { name: 'FIGMA', level: 85 },
-      { name: 'GIT', level: 90 },
-      { name: 'MOTION', level: 90 },
+      { name: 'VS CODE', level: 99, since: 2018, usage: 25 },
+      { name: 'FIGMA', level: 85, since: 2020, usage: 18 },
+      { name: 'GIT', level: 90, since: 2018, usage: 25 },
+      { name: 'MOTION', level: 90, since: 2021, usage: 12 },
     ],
   },
 ] as const

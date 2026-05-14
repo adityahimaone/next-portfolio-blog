@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
 import { Sliders, Music } from 'lucide-react'
 
-import { MIXER_DATA } from '../constants'
+import { MIXER_DATA, MIXER_PRESETS } from '../constants'
 
 // --- Components ---
 
@@ -202,7 +202,7 @@ export function SkillsSection() {
                   </div>
                   <div>
                     <h3 className="text-xl font-black tracking-widest text-zinc-700 uppercase dark:text-zinc-300">
-                      MIX-MASTER <span className="text-primary">2025</span>
+                      MIX-MASTER <span className="text-primary">2026</span>
                     </h3>
                     <p className="font-mono text-xs text-zinc-500 uppercase">
                       Professional Audio/Code Interface
@@ -273,6 +273,22 @@ export function SkillsSection() {
                 </div>
               </div>
 
+              {/* Preset Chips */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {Object.entries(MIXER_PRESETS).map(([key, preset]) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      // TODO: Implement preset application
+                      console.log(`Apply ${key} preset`, preset)
+                    }}
+                    className="px-3 py-1.5 text-xs font-mono tracking-wider uppercase rounded border border-zinc-300 bg-zinc-100 text-zinc-700 hover:bg-zinc-200 transition-colors dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                  >
+                    [{key.toUpperCase()}]
+                  </button>
+                ))}
+              </div>
+
               {/* Mixer Sections */}
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
                 {/* Section 1: Faders (Languages) */}
@@ -294,13 +310,14 @@ export function SkillsSection() {
                     ))}
                   </div>
                   {/* Mobile */}
-                  <div className="flex flex-wrap justify-between gap-2 sm:hidden">
-                    {MIXER_DATA[0].channels.slice(-4).map((skill) => (
-                      <Fader
-                        key={skill.name}
-                        value={isOn ? skill.level : 0}
-                        label={skill.name}
-                      />
+                  <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory sm:hidden pb-2">
+                    {MIXER_DATA[0].channels.map((skill) => (
+                      <div key={skill.name} className="snap-center shrink-0">
+                        <Fader
+                          value={isOn ? skill.level : 0}
+                          label={skill.name}
+                        />
+                      </div>
                     ))}
                   </div>
                 </div>

@@ -104,9 +104,8 @@ export function HeroSection() {
 
           {/* Subtitle / Description */}
           <p className="animate-hero-desc mb-10 max-w-2xl text-center text-base font-light text-zinc-600 sm:text-lg md:text-xl dark:text-zinc-400">
-            Orchestrating code and rhythm into immersive digital experiences.
-            <br className="hidden sm:block" /> Frontend Developer & Audio
-            Enthusiast.
+            Frontend Engineer at Fast 8 — building Bisadaya for thousands of
+            <br className="hidden sm:block" /> jobseekers.
           </p>
 
           {/* Player Controls / CTA */}
@@ -214,18 +213,30 @@ export function HeroSection() {
             </Magnetic>
           </motion.div>
 
-          {/* Decorative "New Release" Badge */}
+          {/* Secondary CTA */}
+          <motion.a
+            href="#contact"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: baseDelay + 1.2 }}
+            className="mt-4 text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors group inline-flex items-center gap-1"
+          >
+            Or jam with me
+            <span className="transition-transform group-hover:translate-x-1">→</span>
+          </motion.a>
+
+          {/* Version Chip */}
           <motion.div
-            initial={{ opacity: 0, scale: 0, rotate: 0 }}
-            animate={{ opacity: 1, scale: 1, rotate: 12 }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{
               delay: baseDelay + 0.2,
               type: 'spring',
               stiffness: 200,
             }}
-            className="absolute -top-4 -right-4 rotate-12 transform border-2 border-white/20 bg-red-600 px-4 py-1.5 text-xs font-black tracking-wider text-white uppercase shadow-lg md:top-10 md:-right-10"
+            className="absolute top-4 right-4 font-mono text-[10px] tracking-wider text-zinc-500 dark:text-zinc-400"
           >
-            New Release
+            v2026.05
           </motion.div>
         </div>
       </motion.div>

@@ -1,6 +1,4 @@
 @import 'tailwindcss';
-@plugin '@tailwindcss/typography';
-@custom-variant dark (&:is(.dark *));
 
 /* ═══════════════════════════════════════════════════════════════════════════
    RETRO CONSOLE 2026 — Design Tokens
@@ -16,6 +14,97 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+
+  /* ─── CSS VARIABLES — RETRO CONSOLE PALETTE ─── */
+  :root {
+    /* ─── PALETTE (4 chrome + 4 derivatives) ─── */
+    --red:        #E10600;
+    --red-dim:    #8A0400;
+    --white:      #F5F5F2;
+    --white-dim:  #C8C8C4;
+    --gray:       #2A2A2D;
+    --gray-light: #4A4A4D;
+    --gray-deep:  #1A1A1C;
+    --black:      #0A0A0A;
+
+    /* ─── SEMANTIC ─── */
+    --bg:           var(--black);
+    --bg-elevated:  var(--gray-deep);
+    --bg-overlay:   var(--gray);
+    --fg:           var(--white);
+    --fg-dim:       var(--white-dim);
+    --fg-muted:     var(--gray-light);
+    --accent:       var(--red);
+    --accent-dim:   var(--red-dim);
+    --border:       var(--gray-light);
+    --border-strong: var(--white);
+
+    /* ─── GLOWS ─── */
+    --glow-red:        0 0 6px var(--red), 0 0 12px var(--red-dim);
+    --glow-red-strong: 0 0 8px var(--red), 0 0 16px var(--red), 0 0 32px var(--red-dim);
+    --glow-white:      0 0 4px rgba(245, 245, 242, 0.6);
+
+    /* ─── SHADOWS (chunky NES style) ─── */
+    --shadow-1: 2px 2px 0 0 var(--black);
+    --shadow-2: 4px 4px 0 0 var(--black);
+    --shadow-3: 6px 6px 0 0 var(--black);
+    --shadow-red: 4px 4px 0 0 var(--red);
+
+    /* ─── TYPOGRAPHY ─── */
+    --font-display: 'VT323', 'Press Start 2P', 'Pixelify Sans', monospace;
+    --font-heading: 'Space Grotesk', 'Archivo', system-ui, sans-serif;
+    --font-body:    'Inter', -apple-system, system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', 'IBM Plex Mono', monospace;
+
+    /* ─── SPACING (4px base) ─── */
+    --space-1:  4px;
+    --space-2:  8px;
+    --space-3:  12px;
+    --space-4:  16px;
+    --space-5:  20px;
+    --space-6:  24px;
+    --space-8:  32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-16: 64px;
+    --space-20: 80px;
+    --space-24: 96px;
+    --space-32: 128px;
+    --space-48: 192px;
+
+    /* ─── EASING / DURATION ─── */
+    --ease-linear:    linear;
+    --ease-step:      steps(8, end);            /* sprite-like stepped motion */
+    --ease-step-fast: steps(4, end);
+    --ease-pixel:     cubic-bezier(0.36, 0, 0.66, -0.56);  /* snappy, slightly anticipatory */
+    --ease-decel:     cubic-bezier(0, 0, 0.2, 1);
+    --ease-accel:     cubic-bezier(0.4, 0, 1, 1);
+
+    --duration-instant: 60ms;
+    --duration-fast:    120ms;
+    --duration-base:    200ms;
+    --duration-slow:    400ms;
+    --duration-stage:   800ms;     /* stage transition */
+
+    /* ─── Z-INDEX ─── */
+    --z-canvas-bg: 0;
+    --z-content:   10;
+    --z-hud:       50;
+    --z-modal:     100;
+    --z-crt:       9999;
+  }
+
+  /* ─── Light mode (optional, MVP-later) ─── */
+  [data-theme='light'] {
+    --bg:           #F5F5F2;
+    --bg-elevated:  #E0E0DC;
+    --bg-overlay:   #C8C8C4;
+    --fg:           #0A0A0A;
+    --fg-dim:       #2A2A2D;
+    --fg-muted:     #4A4A4D;
+    --border:       #2A2A2D;
+    --border-strong: #0A0A0A;
   }
 
   /* ─── BASE RESET ─── */
@@ -70,138 +159,6 @@
     outline: 2px solid var(--red);
     outline-offset: 2px;
   }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   CSS VARIABLES — RETRO CONSOLE PALETTE
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-:root {
-  /* ─── PALETTE (4 chrome + 4 derivatives) ─── */
-  --red:        #E10600;
-  --red-dim:    #8A0400;
-  --white:      #F5F5F2;
-  --white-dim:  #C8C8C4;
-  --gray:       #2A2A2D;
-  --gray-light: #4A4A4D;
-  --gray-deep:  #1A1A1C;
-  --black:      #0A0A0A;
-
-  /* ─── SEMANTIC ─── */
-  --bg:           var(--black);
-  --bg-elevated:  var(--gray-deep);
-  --bg-overlay:   var(--gray);
-  --fg:           var(--white);
-  --fg-dim:       var(--white-dim);
-  --fg-muted:     var(--gray-light);
-  --accent:       var(--red);
-  --accent-dim:   var(--red-dim);
-  --border:       var(--gray-light);
-  --border-strong: var(--white);
-
-  /* ─── GLOWS ─── */
-  --glow-red:        0 0 6px var(--red), 0 0 12px var(--red-dim);
-  --glow-red-strong: 0 0 8px var(--red), 0 0 16px var(--red), 0 0 32px var(--red-dim);
-  --glow-white:      0 0 4px rgba(245, 245, 242, 0.6);
-
-  /* ─── SHADOWS (chunky NES style) ─── */
-  --shadow-1: 2px 2px 0 0 var(--black);
-  --shadow-2: 4px 4px 0 0 var(--black);
-  --shadow-3: 6px 6px 0 0 var(--black);
-  --shadow-red: 4px 4px 0 0 var(--red);
-
-  /* ─── TYPOGRAPHY ─── */
-  --font-display: 'VT323', 'Press Start 2P', 'Pixelify Sans', monospace;
-  --font-heading: 'Space Grotesk', 'Archivo', system-ui, sans-serif;
-  --font-body:    'Inter', -apple-system, system-ui, sans-serif;
-  --font-mono:    'JetBrains Mono', 'IBM Plex Mono', monospace;
-
-  /* ─── SPACING (4px base) ─── */
-  --space-1:  4px;
-  --space-2:  8px;
-  --space-3:  12px;
-  --space-4:  16px;
-  --space-5:  20px;
-  --space-6:  24px;
-  --space-8:  32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --space-20: 80px;
-  --space-24: 96px;
-  --space-32: 128px;
-  --space-48: 192px;
-
-  /* ─── EASING / DURATION ─── */
-  --ease-linear:    linear;
-  --ease-step:      steps(8, end);            /* sprite-like stepped motion */
-  --ease-step-fast: steps(4, end);
-  --ease-pixel:     cubic-bezier(0.36, 0, 0.66, -0.56);  /* snappy, slightly anticipatory */
-  --ease-decel:     cubic-bezier(0, 0, 0.2, 1);
-  --ease-accel:     cubic-bezier(0.4, 0, 1, 1);
-
-  --duration-instant: 60ms;
-  --duration-fast:    120ms;
-  --duration-base:    200ms;
-  --duration-slow:    400ms;
-  --duration-stage:   800ms;     /* stage transition */
-
-  /* ─── Z-INDEX ─── */
-  --z-canvas-bg: 0;
-  --z-content:   10;
-  --z-hud:       50;
-  --z-modal:     100;
-  --z-crt:       9999;
-}
-
-/* ─── Light mode (optional, MVP-later) ─── */
-[data-theme='light'] {
-  --bg:           #F5F5F2;
-  --bg-elevated:  #E0E0DC;
-  --bg-overlay:   #C8C8C4;
-  --fg:           #0A0A0A;
-  --fg-dim:       #2A2A2D;
-  --fg-muted:     #4A4A4D;
-  --border:       #2A2A2D;
-  --border-strong: #0A0A0A;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   TAILWIND V4 @theme — Color/Font/Shadow Tokens
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-@theme {
-  /* ─── Colors ─── */
-  --color-red:        #E10600;
-  --color-red-dim:    #8A0400;
-  --color-white-bone: #F5F5F2;
-  --color-white-dim:  #C8C8C4;
-  --color-gray-1:     #2A2A2D;
-  --color-gray-2:     #4A4A4D;
-  --color-gray-deep:  #1A1A1C;
-  --color-black-true: #0A0A0A;
-
-  /* ─── Fonts ─── */
-  --font-display: 'VT323', monospace;
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-body:    'Inter', sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
-
-  /* ─── Custom radii (mostly 0) ─── */
-  --radius-none: 0;
-  --radius-pixel: 2px;          /* tiny step radius if needed */
-  --radius-led: 9999px;          /* only for LED dots */
-
-  /* ─── Animation timings ─── */
-  --animate-duration-instant: 60ms;
-  --animate-duration-fast:    120ms;
-  --animate-duration-base:    200ms;
-
-  /* ─── Custom shadows ─── */
-  --shadow-chunky-1: 2px 2px 0 0 #0A0A0A;
-  --shadow-chunky-2: 4px 4px 0 0 #0A0A0A;
-  --shadow-chunky-3: 6px 6px 0 0 #0A0A0A;
-  --shadow-chunky-red: 4px 4px 0 0 #E10600;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

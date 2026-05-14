@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Monitor, Volume2, VolumeX, Sun, Moon, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { SfxButton } from '@/components/ui/sfx-button'
 
 interface HUDBarProps {
   currentStage?: { num: string; name: string }
@@ -29,12 +30,15 @@ export function HUDBar({ currentStage }: HUDBarProps) {
     const newValue = !crtOn
     setCrtOn(newValue)
     localStorage.setItem('crt', String(newValue))
+    localStorage.setItem('crt-enabled', String(newValue))
+    window.dispatchEvent(new CustomEvent('crt-toggle', { detail: { enabled: newValue } }))
   }
 
   const toggleSfx = () => {
     const newValue = !sfxOn
     setSfxOn(newValue)
     localStorage.setItem('sfx', String(newValue))
+    window.dispatchEvent(new CustomEvent('sfx-toggle', { detail: { enabled: newValue } }))
   }
 
   const toggleTheme = () => {
@@ -106,7 +110,7 @@ export function HUDBar({ currentStage }: HUDBarProps) {
 
         {/* ─── ZONE 4: Controls Cluster ─── */}
         <div className="flex items-center gap-2">
-          <button
+          <SfxButton
             onClick={toggleCrt}
             className={cn(
               'flex h-8 w-8 items-center justify-center rounded-none border border-gray-light bg-gray-deep transition-colors hover:bg-gray',
@@ -116,9 +120,9 @@ export function HUDBar({ currentStage }: HUDBarProps) {
             aria-pressed={crtOn}
           >
             <Monitor size={14} className={crtOn ? 'text-red' : 'text-white-dim'} />
-          </button>
+          </SfxButton>
 
-          <button
+          <SfxButton
             onClick={toggleSfx}
             className={cn(
               'flex h-8 w-8 items-center justify-center rounded-none border border-gray-light bg-gray-deep transition-colors hover:bg-gray',
@@ -132,9 +136,9 @@ export function HUDBar({ currentStage }: HUDBarProps) {
             ) : (
               <VolumeX size={14} className="text-white-dim" />
             )}
-          </button>
+          </SfxButton>
 
-          <button
+          <SfxButton
             onClick={toggleTheme}
             className="flex h-8 w-8 items-center justify-center rounded-none border border-gray-light bg-gray-deep transition-colors hover:bg-gray"
             aria-label="Toggle theme"
@@ -144,15 +148,15 @@ export function HUDBar({ currentStage }: HUDBarProps) {
             ) : (
               <Sun size={14} className="text-white-dim" />
             )}
-          </button>
+          </SfxButton>
 
-          <button
+          <SfxButton
             onClick={handleReplay}
             className="flex h-8 w-8 items-center justify-center rounded-none border border-gray-light bg-gray-deep transition-colors hover:bg-gray"
             aria-label="Replay boot sequence"
           >
             <RotateCcw size={14} className="text-white-dim" />
-          </button>
+          </SfxButton>
         </div>
       </div>
     </header>

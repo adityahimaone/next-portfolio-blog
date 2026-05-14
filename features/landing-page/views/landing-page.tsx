@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { HUDBar } from '@/components/layout/hud-bar'
+import { CRTFilter } from '@/components/effects/crt-filter'
 import { HeroSection } from '../components/hero-section'
 import { AboutSection } from '../components/about-section'
 import { SkillsSection } from '../components/skills-section'
@@ -12,6 +13,24 @@ import { StageDivider } from '@/components/ui'
 
 export default function LandingPage() {
   const [currentStage, setCurrentStage] = useState({ num: '01', name: 'TITLE' })
+  const [crtEnabled, setCrtEnabled] = useState(true)
+
+  useEffect(() => {
+    // Read CRT preference from localStorage
+    const stored = localStorage.getItem('crt-enabled')
+    if (stored !== null) {
+      setCrtEnabled(stored === 'true')
+    }
+
+    // Listen for CRT toggle from HUDBar
+    const handleCrtToggle = (e: Event) => {
+      const customEvent = e as CustomEvent<{ enabled: boolean }>
+      setCrtEnabled(customEvent.detail.enabled)
+    }
+    window.addEventListener('crt-toggle', handleCrtToggle)
+
+    return () => window.removeEventListener('crt-toggle', handleCrtToggle)
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,6 +63,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-black-true">
+      <CRTFilter enabled={crtEnabled} intensity="medium" />
       <HUDBar currentStage={currentStage} />
 
       <main className="relative">

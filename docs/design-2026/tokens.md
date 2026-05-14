@@ -1,550 +1,424 @@
-# Design Tokens 2026
+# Design Tokens — RETRO CONSOLE 2026
 
-> Single source of truth for design values. Copy-paste ready.
-> Used by: `globals.css`, Tailwind config, component implementations.
-
----
-
-## 1. Naming Convention
-
-```
---<category>-<scale|variant>-[modifier]
-
-Examples:
---surface-0           (page bg)
---surface-1           (card bg)
---surface-2-light     (light mode variant)
---text-primary
---accent
---accent-glow
---led-rec
---space-4
---font-display
---ease-default
---duration-base
-```
-
-## 2. Color Tokens
-
-### 2.1 Surfaces (dark mode primary)
-
-```css
-:root {
-  --surface-0: #0A0A0B;        /* page bg, near-black warm */
-  --surface-1: #131316;        /* card bg */
-  --surface-2: #1C1C20;        /* nested card / modal */
-  --surface-3: #26262C;        /* hover state */
-}
-
-[data-theme='light'] {
-  --surface-0: #FAFAF8;        /* paper white, warm tint */
-  --surface-1: #F2F2F0;
-  --surface-2: #E8E8E5;
-  --surface-3: #DEDEDB;
-}
-```
-
-### 2.2 Borders
-
-```css
-:root {
-  --border: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
-  --border-emphasis: rgba(255, 255, 255, 0.20);
-}
-
-[data-theme='light'] {
-  --border: rgba(0, 0, 0, 0.08);
-  --border-strong: rgba(0, 0, 0, 0.16);
-  --border-emphasis: rgba(0, 0, 0, 0.24);
-}
-```
-
-### 2.3 Text
-
-```css
-:root {
-  --text-primary: #EDEDED;
-  --text-secondary: #A8A8AC;
-  --text-muted: #6E6E73;
-  --text-disabled: #4A4A4F;
-}
-
-[data-theme='light'] {
-  --text-primary: #18181B;
-  --text-secondary: #52525B;
-  --text-muted: #A1A1AA;
-  --text-disabled: #D4D4D8;
-}
-```
-
-### 2.4 Accent (Single)
-
-```css
-:root {
-  --accent: #FF6B35;                                     /* amber */
-  --accent-strong: #FF8F5C;                              /* hover */
-  --accent-bg-soft: rgba(255, 107, 53, 0.08);            /* tinted bg */
-  --accent-bg-mid: rgba(255, 107, 53, 0.16);             /* active bg */
-  --accent-glow: 0 0 12px rgba(255, 107, 53, 0.4);       /* default glow */
-  --accent-glow-strong: 0 0 24px rgba(255, 107, 53, 0.6); /* emphasis glow */
-}
-```
-
-> Note: amber works equally well in light and dark mode. No light-mode override needed.
-
-### 2.5 Signal Lights (Sparingly)
-
-```css
-:root {
-  --led-rec: #FF3B30;        /* red — recording, error */
-  --led-play: #34C759;       /* green — playing, ok */
-  --led-mute: #007AFF;       /* blue — mute, info */
-  --led-solo: #FFCC00;       /* yellow — solo, warning */
-}
-```
-
-> Light mode same — these are signal indicators, contrast already strong.
+> Copy-paste ready CSS variables, Tailwind config, and TS constants.
+> Companion: `design.md` (rationale), `3d-and-animation.md` (motion).
 
 ---
 
-## 3. Typography Tokens
+## 1. CSS Variables (globals.css)
 
-### 3.1 Font Families
-
-```css
-:root {
-  --font-display: 'Crimson Pro Variable', 'Crimson Pro', 'PP Editorial New', 'Migra', Georgia, serif;
-  --font-body: 'Inter Variable', 'Inter', -apple-system, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'IBM Plex Mono', Menlo, monospace;
-}
-```
-
-### 3.2 Font Sizes (fluid)
+Drop ke `src/app/globals.css` di `:root`:
 
 ```css
 :root {
-  --text-xs: 11px;
-  --text-sm: 12px;
-  --text-base: 14px;
-  --text-md: 16px;
-  --text-lg: clamp(18px, 1.5vw, 22px);
-  --text-xl: clamp(20px, 2vw, 28px);
-  --text-2xl: clamp(24px, 3vw, 36px);
-  --text-3xl: clamp(28px, 5vw, 48px);
-  --display-md: clamp(36px, 8vw, 84px);
-  --display-lg: clamp(56px, 12vw, 144px);
-}
-```
+  /* ─── PALETTE (4 chrome + 4 derivatives) ─── */
+  --red:        #E10600;
+  --red-dim:    #8A0400;
+  --white:      #F5F5F2;
+  --white-dim:  #C8C8C4;
+  --gray:       #2A2A2D;
+  --gray-light: #4A4A4D;
+  --gray-deep:  #1A1A1C;
+  --black:      #0A0A0A;
 
-### 3.3 Line Heights
+  /* ─── SEMANTIC ─── */
+  --bg:           var(--black);
+  --bg-elevated:  var(--gray-deep);
+  --bg-overlay:   var(--gray);
+  --fg:           var(--white);
+  --fg-dim:       var(--white-dim);
+  --fg-muted:     var(--gray-light);
+  --accent:       var(--red);
+  --accent-dim:   var(--red-dim);
+  --border:       var(--gray-light);
+  --border-strong: var(--white);
 
-```css
-:root {
-  --leading-tight: 1.05;
-  --leading-snug: 1.2;
-  --leading-base: 1.5;
-  --leading-relaxed: 1.7;
-}
-```
+  /* ─── GLOWS ─── */
+  --glow-red:        0 0 6px var(--red), 0 0 12px var(--red-dim);
+  --glow-red-strong: 0 0 8px var(--red), 0 0 16px var(--red), 0 0 32px var(--red-dim);
+  --glow-white:      0 0 4px rgba(245, 245, 242, 0.6);
 
-### 3.4 Tracking
+  /* ─── SHADOWS (chunky NES style) ─── */
+  --shadow-1: 2px 2px 0 0 var(--black);
+  --shadow-2: 4px 4px 0 0 var(--black);
+  --shadow-3: 6px 6px 0 0 var(--black);
+  --shadow-red: 4px 4px 0 0 var(--red);
 
-```css
-:root {
-  --tracking-tight: -0.04em;     /* display */
-  --tracking-snug: -0.02em;      /* card title */
-  --tracking-normal: 0;
-  --tracking-wide: 0.04em;
-  --tracking-mono: 0.16em;       /* uppercase mono labels */
-  --tracking-mono-wide: 0.24em;  /* tiny status */
-}
-```
+  /* ─── TYPOGRAPHY ─── */
+  --font-display: 'VT323', 'Press Start 2P', 'Pixelify Sans', monospace;
+  --font-heading: 'Space Grotesk', 'Archivo', system-ui, sans-serif;
+  --font-body:    'Inter', -apple-system, system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'IBM Plex Mono', monospace;
 
-### 3.5 Font Weights
-
-```css
-:root {
-  --weight-light: 300;
-  --weight-regular: 400;
-  --weight-medium: 500;
-  --weight-semibold: 600;
-  --weight-bold: 700;
-  --weight-black: 900;
-}
-```
-
----
-
-## 4. Spacing Tokens
-
-8pt baseline:
-
-```css
-:root {
-  --space-0: 0;
-  --space-px: 1px;
-  --space-0-5: 2px;
-  --space-1: 4px;
-  --space-1-5: 6px;
-  --space-2: 8px;
-  --space-2-5: 10px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-7: 28px;
-  --space-8: 32px;
+  /* ─── SPACING (4px base) ─── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
   --space-10: 40px;
   --space-12: 48px;
-  --space-14: 56px;
   --space-16: 64px;
   --space-20: 80px;
   --space-24: 96px;
   --space-32: 128px;
-  --space-40: 160px;
+  --space-48: 192px;
+
+  /* ─── EASING / DURATION ─── */
+  --ease-linear:    linear;
+  --ease-step:      steps(8, end);            /* sprite-like stepped motion */
+  --ease-step-fast: steps(4, end);
+  --ease-pixel:     cubic-bezier(0.36, 0, 0.66, -0.56);  /* snappy, slightly anticipatory */
+  --ease-decel:     cubic-bezier(0, 0, 0.2, 1);
+  --ease-accel:     cubic-bezier(0.4, 0, 1, 1);
+
+  --duration-instant: 60ms;
+  --duration-fast:    120ms;
+  --duration-base:    200ms;
+  --duration-slow:    400ms;
+  --duration-stage:   800ms;     /* stage transition */
+
+  /* ─── Z-INDEX ─── */
+  --z-canvas-bg: 0;
+  --z-content:   10;
+  --z-hud:       50;
+  --z-modal:     100;
+  --z-crt:       9999;
 }
-```
 
-### 4.1 Section Rhythm
-
-```css
-:root {
-  --section-py-mobile: var(--space-16);     /* 64px */
-  --section-py-tablet: var(--space-24);     /* 96px */
-  --section-py-desktop: var(--space-32);    /* 128px */
-  
-  --container-max: 1280px;
-  --container-px-mobile: var(--space-4);    /* 16px */
-  --container-px-tablet: var(--space-6);    /* 24px */
-  --container-px-desktop: var(--space-8);   /* 32px */
+/* ─── Light mode (opsional, MVP-later) ─── */
+[data-theme='light'] {
+  --bg:           #F5F5F2;
+  --bg-elevated:  #E0E0DC;
+  --bg-overlay:   #C8C8C4;
+  --fg:           #0A0A0A;
+  --fg-dim:       #2A2A2D;
+  --fg-muted:     #4A4A4D;
+  --border:       #2A2A2D;
+  --border-strong: #0A0A0A;
 }
-```
 
----
-
-## 5. Radii
-
-```css
-:root {
-  --radius-none: 0;
-  --radius-sm: 4px;
-  --radius-base: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --radius-3xl: 24px;
-  --radius-full: 9999px;
+/* ─── REDUCED MOTION GLOBAL OVERRIDE ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
-```
 
----
-
-## 6. Shadows
-
-```css
-:root {
-  /* Standard elevation */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.10), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.10), 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.10), 0 4px 6px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.10), 0 8px 10px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
-  
-  /* Inner shadows (rack/console depth) */
-  --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-inset-strong: inset 0 2px 6px rgba(0, 0, 0, 0.20);
-  
-  /* Hardware glow (LED-style) */
-  --glow-rec: 0 0 8px rgba(255, 59, 48, 0.6);
-  --glow-play: 0 0 8px rgba(52, 199, 89, 0.6);
-  --glow-amber: 0 0 8px rgba(255, 107, 53, 0.6);
+/* ─── BASE RESET ADDITIONS ─── */
+html {
+  background: var(--bg);
+  color: var(--fg);
 }
-```
 
----
-
-## 7. Motion
-
-### 7.1 Easing
-
-```css
-:root {
-  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-decel: cubic-bezier(0, 0, 0.2, 1);
-  --ease-accel: cubic-bezier(0.4, 0, 1, 1);
-  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
 }
-```
 
-### 7.2 Duration
+.font-display {
+  font-family: var(--font-display);
+  -webkit-font-smoothing: subpixel-antialiased;  /* keep pixel crispness */
+  font-smooth: never;
+}
 
-```css
-:root {
-  --duration-instant: 100ms;
-  --duration-fast: 200ms;
-  --duration-base: 300ms;
-  --duration-slow: 500ms;
-  --duration-storytelling: 800ms;
-  --duration-cinematic: 1200ms;
+::selection {
+  background: var(--red);
+  color: var(--white);
 }
 ```
 
 ---
 
-## 8. Z-Index Scale
+## 2. Tailwind Config (tailwind.config.ts)
+
+Adit pakai **Tailwind v4** (config via CSS `@theme` directive). Tambah ke `globals.css`:
 
 ```css
-:root {
-  --z-base: 0;
-  --z-elevated: 10;
-  --z-sticky: 20;
-  --z-overlay: 30;
-  --z-modal: 50;
-  --z-modal-backdrop: 49;
-  --z-toast: 60;
-  --z-tooltip: 70;
-  --z-popover: 80;
-  --z-cursor: 9999;
-}
-```
-
----
-
-## 9. Breakpoints (reference, Tailwind defaults)
-
-```
-sm: 640px
-md: 768px
-lg: 1024px
-xl: 1280px
-2xl: 1536px
-```
-
----
-
-## 10. Tailwind v4 Theme Integration
-
-Tailwind v4 (which this project uses) supports inline theme via `@theme`. Add to `globals.css`:
-
-```css
-@import 'tailwindcss';
-
 @theme {
-  /* Colors */
-  --color-surface-0: var(--surface-0);
-  --color-surface-1: var(--surface-1);
-  --color-surface-2: var(--surface-2);
-  --color-surface-3: var(--surface-3);
-  
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
-  --color-text-muted: var(--text-muted);
-  
-  --color-accent: var(--accent);
-  --color-accent-strong: var(--accent-strong);
-  
-  --color-led-rec: var(--led-rec);
-  --color-led-play: var(--led-play);
-  --color-led-mute: var(--led-mute);
-  --color-led-solo: var(--led-solo);
-  
-  /* Fonts */
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
-  --font-mono: var(--font-mono);
-  
-  /* Custom radii */
-  --radius-rack: 12px;
-  --radius-pad: 8px;
-  
-  /* Custom shadows for hardware aesthetic */
-  --shadow-rack: 0 4px 6px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --shadow-pad-pressed: inset 0 4px 8px rgba(0, 0, 0, 0.4);
+  /* ─── Colors ─── */
+  --color-red:        #E10600;
+  --color-red-dim:    #8A0400;
+  --color-white-bone: #F5F5F2;
+  --color-white-dim:  #C8C8C4;
+  --color-gray-1:     #2A2A2D;
+  --color-gray-2:     #4A4A4D;
+  --color-gray-deep:  #1A1A1C;
+  --color-black-true: #0A0A0A;
+
+  /* ─── Fonts ─── */
+  --font-display: 'VT323', monospace;
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body:    'Inter', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* ─── Spacing (extend defaults, 4px base preserved) ─── */
+  /* tailwind v4 already uses 4px base — no override needed */
+
+  /* ─── Custom radii (mostly 0) ─── */
+  --radius-none: 0;
+  --radius-pixel: 2px;          /* tiny step radius if needed */
+  --radius-led: 9999px;          /* only for LED dots */
+
+  /* ─── Animation timings ─── */
+  --animate-duration-instant: 60ms;
+  --animate-duration-fast:    120ms;
+  --animate-duration-base:    200ms;
+
+  /* ─── Custom shadows ─── */
+  --shadow-chunky-1: 2px 2px 0 0 #0A0A0A;
+  --shadow-chunky-2: 4px 4px 0 0 #0A0A0A;
+  --shadow-chunky-3: 6px 6px 0 0 #0A0A0A;
+  --shadow-chunky-red: 4px 4px 0 0 #E10600;
 }
 ```
 
-This gives you Tailwind utilities like:
-- `bg-surface-1`
-- `text-accent`
-- `font-display`
-- `shadow-rack`
+Usage di JSX:
+
+```jsx
+<button className="bg-gray-deep border-2 border-white-bone text-white-bone shadow-chunky-red">
+  PRESS START
+</button>
+```
 
 ---
 
-## 11. Component Token Mapping
+## 3. TypeScript Constants
 
-### 11.1 Button
+`src/lib/design-tokens.ts`:
+
+```ts
+export const COLORS = {
+  red:       '#E10600',
+  redDim:    '#8A0400',
+  white:     '#F5F5F2',
+  whiteDim:  '#C8C8C4',
+  gray:      '#2A2A2D',
+  grayLight: '#4A4A4D',
+  grayDeep:  '#1A1A1C',
+  black:     '#0A0A0A',
+} as const;
+
+export const TYPE = {
+  display: 'var(--font-display)',
+  heading: 'var(--font-heading)',
+  body:    'var(--font-body)',
+  mono:    'var(--font-mono)',
+} as const;
+
+export const SPACE = {
+  1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24,
+  8: 32, 10: 40, 12: 48, 16: 64, 20: 80, 24: 96,
+  32: 128, 48: 192,
+} as const;
+
+export const DURATION = {
+  instant: 60,
+  fast:    120,
+  base:    200,
+  slow:    400,
+  stage:   800,
+} as const;
+
+export const EASE = {
+  step:     'steps(8, end)',
+  stepFast: 'steps(4, end)',
+  pixel:    [0.36, 0, 0.66, -0.56] as const,
+  decel:    [0, 0, 0.2, 1] as const,
+  accel:    [0.4, 0, 1, 1] as const,
+} as const;
+
+export const Z = {
+  canvasBg: 0,
+  content:  10,
+  hud:      50,
+  modal:    100,
+  crt:      9999,
+} as const;
+
+/** Pre-baked common style props for use with motion / inline */
+export const STYLE_TOKENS = {
+  ledPulse: {
+    boxShadow: `0 0 6px ${COLORS.red}, 0 0 12px ${COLORS.redDim}`,
+  },
+  bracketBorder: {
+    border: `2px solid ${COLORS.white}`,
+  },
+  chunkyButtonShadow: `4px 4px 0 0 ${COLORS.red}`,
+} as const;
+```
+
+---
+
+## 4. Type Scale Reference Table
+
+| Class name (proposed) | font-size | line-height | font-family | weight | tracking | uppercase |
+|----------------------|-----------|-------------|-------------|--------|----------|-----------|
+| `.t-title-xl` | clamp(72px, 14vw, 192px) | 1.0 | display | 400 | 0 | yes |
+| `.t-title-l`  | clamp(48px, 9vw, 96px) | 1.0 | display | 400 | 0 | yes |
+| `.t-heading-l` | clamp(28px, 4vw, 40px) | 1.1 | heading | 700 | 0.02em | yes |
+| `.t-heading-m` | 18-20px | 1.2 | heading | 700 | 0.04em | yes |
+| `.t-heading-s` | 14px | 1.2 | heading | 700 | 0.08em | yes |
+| `.t-body-l` | 16-18px | 1.5 | body | 400 | 0 | no |
+| `.t-body-m` | 14px | 1.5 | body | 400 | 0 | no |
+| `.t-body-s` | 13px | 1.45 | body | 400 | 0 | no |
+| `.t-hud` | 12px | 1.3 | mono | 600 | 0.1em | yes |
+| `.t-hud-xs` | 10px | 1.2 | mono | 700 | 0.16em | yes |
+
+CSS implementation di `globals.css`:
 
 ```css
-.btn-primary {
-  background: var(--accent);
-  color: var(--text-primary);
-  padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-md);
-  font: var(--weight-semibold) var(--text-base) / var(--leading-snug) var(--font-body);
-  transition: all var(--duration-fast) var(--ease-default);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-primary:hover {
-  background: var(--accent-strong);
-  box-shadow: var(--shadow-lg), var(--accent-glow);
-}
-```
-
-### 11.2 Card
-
-```css
-.card-rack {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-rack);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-rack);
-}
-```
-
-### 11.3 Eyebrow Label
-
-```css
-.eyebrow {
-  font: var(--weight-semibold) var(--text-xs) / var(--leading-snug) var(--font-mono);
-  letter-spacing: var(--tracking-mono);
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-```
-
-### 11.4 Status Indicator
-
-```css
-.indicator-led {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-full);
-}
-
-.indicator-led--rec {
-  background: var(--led-rec);
-  box-shadow: var(--glow-rec);
-  animation: pulse-rec 1s ease-in-out infinite;
-}
-
-.indicator-led--play {
-  background: var(--led-play);
-  box-shadow: var(--glow-play);
-}
-
-@keyframes pulse-rec {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
+.t-title-xl  { font: 400 clamp(72px,14vw,192px)/1.0 var(--font-display); text-transform: uppercase; }
+.t-title-l   { font: 400 clamp(48px, 9vw, 96px)/1.0 var(--font-display); text-transform: uppercase; }
+.t-heading-l { font: 700 clamp(28px, 4vw, 40px)/1.1 var(--font-heading); letter-spacing: 0.02em; text-transform: uppercase; }
+.t-heading-m { font: 700 20px/1.2 var(--font-heading); letter-spacing: 0.04em; text-transform: uppercase; }
+.t-heading-s { font: 700 14px/1.2 var(--font-heading); letter-spacing: 0.08em; text-transform: uppercase; }
+.t-body-l    { font: 400 17px/1.5 var(--font-body); }
+.t-body-m    { font: 400 14px/1.5 var(--font-body); }
+.t-body-s    { font: 400 13px/1.45 var(--font-body); }
+.t-hud       { font: 600 12px/1.3 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; }
+.t-hud-xs    { font: 700 10px/1.2 var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; }
 ```
 
 ---
 
-## 12. Migration Reference (current → token)
+## 5. Migration Map (lama → baru)
 
-Saat refactor, mapping ini:
+Untuk find-replace systematic:
 
-### Color migration
+| Old token / class | New token / class |
+|-------------------|-------------------|
+| `bg-zinc-950` (page bg) | `bg-black-true` |
+| `bg-zinc-900` (card bg) | `bg-gray-deep` |
+| `bg-zinc-800` (nested) | `bg-gray-1` |
+| `bg-purple-500` | DELETE — not allowed |
+| `bg-blue-500` | DELETE — not allowed |
+| `bg-pink-500` | DELETE — not allowed |
+| `bg-orange-500` | DELETE — not allowed |
+| `bg-amber-500` (old accent) | `bg-red` |
+| `text-zinc-100` | `text-white-bone` |
+| `text-zinc-400` | `text-white-dim` |
+| `text-zinc-500` | `text-gray-2` |
+| `text-amber-*` | `text-red` |
+| `border-zinc-800` | `border-gray-2` |
+| `border-amber-*` | `border-red` |
+| `font-syne` (custom) | `font-display` (VT323) |
+| `font-mono` (existing) | keep |
+| `rounded-xl` / `rounded-2xl` | `rounded-none` (default) |
+| `rounded-full` (LED only) | keep on LED dots |
+| Vinyl gradient `from-blue-600 to-cyan-500` | DELETE — vinyl removed |
+| Section divider `<SectionDivider />` | replace with `<LoadingBar />` |
 
-```diff
-- bg-zinc-50         →  bg-surface-1 (light) / bg-surface-1 (dark via variable)
-- bg-zinc-100        →  bg-surface-2 (light)
-- bg-zinc-200        →  bg-surface-3 (light)
-- bg-white           →  bg-surface-0 (light) — page bg
-- bg-zinc-800        →  bg-surface-2 (dark)
-- bg-zinc-900        →  bg-surface-1 (dark)
-- bg-zinc-950        →  bg-surface-0 (dark)
+**Bulk find-replace candidates** (run setelah tokens terinstall):
 
-- text-zinc-100      →  text-primary (dark)
-- text-zinc-300/400  →  text-secondary
-- text-zinc-500      →  text-muted
-
-- bg-purple-500/blue-500/pink-500/orange-500 (chrome)  →  bg-accent OR neutral
-- bg-amber-500       →  bg-accent
-- text-blue-500/green-500/purple-500 (chrome)          →  text-accent OR text-primary
-
-- border-zinc-200    →  border (light) via CSS var
-- border-zinc-700/800 →  border (dark)
+```bash
+# In project root
+rg -l 'amber-500' src/ | xargs sed -i '' 's/amber-500/red/g'
+rg -l 'purple-500' src/ | xargs sed -i '' 's/bg-purple-500/bg-red/g'
+# (manual review per file untuk sure intent)
 ```
-
-### Font migration
-
-```diff
-- (default sans)            →  font-body
-- Syne (display)            →  font-display
-- font-mono (default)       →  font-mono
-```
-
-### Radius migration
-
-```diff
-- rounded-sm (2px)    →  rounded-sm (var(--radius-sm) = 4px)  ⚠ verify
-- rounded (4px)       →  rounded-base (6px)
-- rounded-md (6px)    →  rounded-md (8px)
-- rounded-lg (8px)    →  rounded-lg (12px)
-- rounded-xl (12px)   →  rounded-xl (16px)
-- rounded-2xl (16px)  →  rounded-2xl (20px)
-- rounded-3xl (24px)  →  rounded-3xl (24px) — same
-- rounded-full        →  rounded-full
-```
-
-> ⚠ **Tailwind defaults differ from token values** — be careful, audit case-by-case.
 
 ---
 
-## 13. Usage Cheat Sheet
+## 6. Asset Inventory
 
-### When to use what
+| Asset path | Type | Purpose | Status |
+|------------|------|---------|--------|
+| `public/fonts/vt323.woff2` | font | Display pixel | Use Google Fonts via `next/font` instead |
+| `public/cursor-arrow.svg` | svg | Custom cursor (optional) | TBD pending Adit choice |
+| `public/cursor-pointer.svg` | svg | Custom cursor pointer | TBD |
+| `public/icons/cartridge.svg` | svg | Custom icon | NEW |
+| `public/icons/dpad.svg` | svg | Custom icon | NEW |
+| `public/icons/buttons-abxy.svg` | svg | Controller buttons | NEW |
+| `public/icons/coin.svg` | svg | Insert coin | NEW |
+| `public/icons/save-crystal.svg` | svg | Save point silhouette | NEW |
+| `public/sfx/blip.wav` | audio | Hover sound (≤ 200ms) | OPTIONAL |
+| `public/sfx/confirm.wav` | audio | Click sound | OPTIONAL |
+| `public/3d/mascot.glb` | 3d | Hero character | TBD pending Adit choice |
+| `public/3d/cartridge.glb` | 3d | Project cartridge | NEW |
+| `public/3d/save-crystal.glb` | 3d | Save crystal octahedron | inline geometry |
 
-| Need | Use |
-|------|-----|
-| Page background | `bg-surface-0` |
-| Card background | `bg-surface-1` |
-| Modal background | `bg-surface-2` |
-| Body text | `text-primary` |
-| Helper text | `text-secondary` |
-| Disabled / placeholder | `text-muted` |
-| Heading | `font-display` |
-| Body / paragraph | `font-body` |
-| Label / metadata | `font-mono` |
-| Active state, focus | `bg-accent` or `text-accent` |
-| Recording / error | `bg-led-rec` |
-| Success / playing | `bg-led-play` |
-| Mute / info | `bg-led-mute` |
-| Solo / warning | `bg-led-solo` |
-| Standard transition | `transition-all duration-base ease-default` |
-| Hover scale | `hover:scale-[1.02]` |
+3D model details: `3d-and-animation.md` §6.
 
 ---
 
-## 14. Validation Rules
+## 7. Font Loading (next/font)
 
-When reviewing a PR or component, ensure:
+`src/app/layout.tsx`:
 
-- [ ] No raw hex colors (use tokens)
-- [ ] No raw rgba except for tokens defined here
-- [ ] No `bg-purple-X / bg-pink-X / bg-blue-X` etc as decorative chrome (use accent)
-- [ ] No raw font-family (use `font-display | font-body | font-mono`)
-- [ ] No magic numbers for spacing (use space tokens)
-- [ ] No magic numbers for animation duration (use duration tokens)
-- [ ] All animations use easing tokens
+```ts
+import { VT323, Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
+
+const display = VT323({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+});
+
+const heading = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-heading',
+  display: 'swap',
+});
+
+const body = Inter({
+  subsets: ['latin'],
+  variable: '--font-body',
+  display: 'swap',
+});
+
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-mono',
+  display: 'swap',
+});
+
+// In return:
+<html lang="en" className={`${display.variable} ${heading.variable} ${body.variable} ${mono.variable}`}>
+```
+
+VT323 is ~30 KB woff2 — affordable. Inter sudah ada; Space Grotesk ~20 KB; JetBrains Mono ~25 KB. Total ~75 KB fonts (gzipped, all subsets latin only).
 
 ---
 
-## 15. Token Update Process
+## 8. Quick-Reference Cheatsheet
 
-When adding new token:
+```
+COLORS (4 chrome):
+  RED   #E10600   active, hover, brand, danger
+  WHITE #F5F5F2   primary text
+  GRAY  #2A2A2D   surface, plastic
+  BLACK #0A0A0A   page bg
 
-1. Discuss in PR description (or update this doc directly + open PR)
-2. Add to relevant section above
-3. Update Tailwind theme integration if user-facing
-4. Document migration path if replacing existing
-5. Search codebase for usage that should adopt new token
+CONSTRAINTS:
+  ❌ NO blue / green / purple / amber / cyan
+  ❌ NO border-radius (except LED dots)
+  ❌ NO box-shadow with blur (use offset only)
+  ❌ NO smooth easing (use steps() or pixel cubic)
+
+SPACING base 4px. snap.
+
+TYPE:
+  display = VT323 (≥ 32px only)
+  heading = Space Grotesk uppercase
+  body    = Inter
+  mono    = JetBrains Mono (HUD)
+
+ANIMATION:
+  prefer steps() easing
+  prefer transform / opacity (no width/height/top)
+  vertex jitter on 3D (PS1-style)
+  CRT scanlines fixed overlay
+```
+
+---
+
+> Tokens ready. Implementation order: drop CSS vars first, swap fonts, then refactor section by section.

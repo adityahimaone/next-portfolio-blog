@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { VT323, Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from 'next-themes'
 import { AudioProvider } from '@/features/landing-page/spotify/audio-context'
@@ -9,7 +9,7 @@ import { Analytics } from '@vercel/analytics/next'
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#ffffff',
+  themeColor: '#0A0A0A',
 }
 
 export const metadata: Metadata = {
@@ -49,14 +49,32 @@ export const metadata: Metadata = {
   },
 }
 
-const geist = Geist({
-  variable: '--font-geist',
+/* ─── RETRO CONSOLE FONTS ─── */
+const display = VT323({
+  weight: '400',
   subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const heading = Space_Grotesk({
   subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-heading',
+  display: 'swap',
+})
+
+const body = Inter({
+  subsets: ['latin'],
+  variable: '--font-body',
+  display: 'swap',
+})
+
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-mono',
+  display: 'swap',
 })
 
 export default function RootLayout({
@@ -65,19 +83,21 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geist.variable} ${geistMono.variable} bg-white tracking-tight antialiased dark:bg-zinc-950`}
-      >
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${display.variable} ${heading.variable} ${body.variable} ${mono.variable}`}
+    >
+      <body className="bg-black-true text-white-bone tracking-tight antialiased">
         <ThemeProvider
           enableSystem={false}
-          attribute="class"
+          attribute="data-theme"
           storageKey="theme"
-          defaultTheme="light"
+          defaultTheme="dark"
           themes={['light', 'dark']}
         >
           <AudioProvider>
-            <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-geist)]">
+            <div className="flex min-h-screen w-full flex-col">
               <div className="relative flex-1">{children}</div>
               <MusicPlayer />
             </div>

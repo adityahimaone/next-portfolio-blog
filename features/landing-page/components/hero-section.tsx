@@ -1,245 +1,84 @@
 'use client'
 
-import { useRef } from 'react'
-import { m as motion, useScroll, useTransform } from 'motion/react'
-import { Play, Pause, SkipForward } from 'lucide-react'
-import { Magnetic } from '@/components/magnetic'
-import { useAudio } from '@/features/landing-page/spotify/audio-context'
-import { Syne } from 'next/font/google'
-
 import { useState, useEffect } from 'react'
-import { useAudioFrequency } from '@/features/mixtape/hooks/use-audio-frequency'
-import { ReactiveVisualizer } from '@/features/mixtape/components/reactive-visualizer'
+import dynamic from 'next/dynamic'
+import { StageLabel } from '@/components/ui'
+import { cn } from '@/lib/utils'
 
-const syne = Syne({ weight: ['700', '800'], subsets: ['latin'] })
+const Mascot3D = dynamic(
+  () => import('@/components/3d/mascot-3d').then((mod) => mod.Mascot3D),
+  { ssr: false, loading: () => <div className="h-64 w-64 bg-gray" /> },
+)
 
 export function HeroSection() {
-  const [baseDelay, setBaseDelay] = useState(1)
+  const [showPressStart, setShowPressStart] = useState(false)
 
   useEffect(() => {
-    // If preloader was already shown (skipped), we don't need a massive delay
-    // If it wasn't shown, it's running right now, so we need to wait for it
-    if (sessionStorage.getItem('preloaderShown')) {
-      setBaseDelay(0.1)
-    }
+    const timer = setTimeout(() => setShowPressStart(true), 800)
+    return () => clearTimeout(timer)
   }, [])
-
-  const { isPlaying, togglePlay, currentTrack, audioRef } = useAudio()
-  const frequencyData = useAudioFrequency(audioRef.current)
-
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end start'],
-  })
-
-  const y = useTransform(scrollYProgress, [0, 1], [0, 150])
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9])
 
   return (
     <section
-      ref={containerRef}
-      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-zinc-50 transition-colors dark:bg-zinc-950"
+      id="hero"
+      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-black-true"
+      data-stage-num="01"
+      data-stage-name="TITLE"
     >
-      {/* Amp Cabinet Background (Grille) */}
-      <div className="absolute inset-0 z-0">
-        <div
-          className="absolute inset-0 bg-[radial-gradient(#000_1.5px,transparent_1.5px)] opacity-10 dark:bg-[radial-gradient(#333_1.5px,transparent_1.5px)] dark:opacity-50"
-          style={{ backgroundSize: '4px 4px' }}
-        />
-        <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay dark:opacity-20" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%)] dark:bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
+      {/* Background pixel grid */}
+      <div
+        className="absolute inset-0 opacity-5"
+        style={{
+          backgroundImage: `linear-gradient(to right, #4A4A4D 1px, transparent 1px),
+                            linear-gradient(to bottom, #4A4A4D 1px, transparent 1px)`,
+          backgroundSize: '8px 8px',
+        }}
+      />
 
-        {/* Dynamic Audio Visualizer Background (Extra Tall) */}
-        {false && isPlaying && (
-          <div className="absolute inset-x-0 bottom-0 z-10 h-[750px] opacity-70 blur-sm dark:opacity-50">
-            <ReactiveVisualizer frequencyData={frequencyData} />
-          </div>
-        )}
+      {/* Vignette */}
+      <div className="absolute inset-0 bg-radial-gradient(circle at 50% 100%, transparent 30%, #0A0A0A 80%)" />
+
+      {/* Top HUD overlay */}
+      <div className="absolute top-6 left-6 right-6 flex items-center justify-between">
+        <StageLabel num="01" name="TITLE" glowing />
+        <div className="t-hud-xs text-white-dim">v26</div>
       </div>
 
-      <motion.div
-        style={{ y, opacity, scale }}
-        className="relative z-20 container mx-auto mt-24 flex flex-col items-center px-4 text-center md:px-6"
-      >
-        {/* Content Wrapper */}
-        <div className="relative z-10 flex w-full max-w-4xl flex-col items-center">
-          {/* Top Label */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: baseDelay }}
-            className="mb-8 flex items-center gap-3 rounded-full border border-zinc-200 bg-white/40 px-4 py-1.5 text-sm font-medium text-zinc-700 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/40 dark:text-zinc-300"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
-            </span>
-            LIVE SESSION
-          </motion.div>
-
-          {/* Brand Logo (The Name) */}
-          <div className={`mb-10 flex flex-col items-center ${syne.className}`}>
-            <motion.h1
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: baseDelay + 0.1 }}
-              className="text-center text-[13vw] leading-[0.85] font-extrabold tracking-tighter text-zinc-900 italic drop-shadow-sm md:text-[10vw] lg:text-[8vw] dark:text-white dark:drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]"
-            >
-              <span className="block bg-linear-to-b from-zinc-700 via-zinc-900 to-black bg-clip-text text-transparent dark:from-white dark:via-zinc-200 dark:to-zinc-400">
-                ADITYA
-              </span>
-            </motion.h1>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: baseDelay + 0.2 }}
-              className="text-primary/80 text-[5vw] font-bold tracking-[0.5em] md:text-[3vw] lg:text-[2.5vw]"
-            >
-              HIMAONE
-            </motion.h1>
-          </div>
-
-          {/* Subtitle / Description */}
-          <p className="animate-hero-desc mb-10 max-w-2xl text-center text-base font-light text-zinc-600 sm:text-lg md:text-xl dark:text-zinc-400">
-            Frontend Engineer at Fast 8 — building Bisadaya for thousands of
-            <br className="hidden sm:block" /> jobseekers.
-          </p>
-
-          {/* Player Controls / CTA */}
-          {/* Player Controls / CTA - Hardware Style */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{
-              duration: 0.8,
-              delay: baseDelay + 0.8,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            className="relative flex w-full max-w-[90vw] items-center gap-4 rounded-lg border-t border-white/20 bg-zinc-200 p-2 shadow-2xl sm:max-w-lg sm:gap-6 sm:p-3 dark:border-white/5 dark:bg-zinc-900"
-          >
-            {/* Inset Shadow for depth */}
-            <div className="pointer-events-none absolute inset-0 rounded-lg shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_4px_10px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),inset_0_4px_10px_rgba(0,0,0,0.5)]" />
-
-            <Magnetic intensity={0.2}>
-              <button
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause Session' : 'Play Session'}
-                className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-zinc-100 to-zinc-300 shadow-[0_2px_5px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.1)] transition-all active:scale-95 active:shadow-inner sm:h-14 sm:w-14 dark:from-zinc-700 dark:to-zinc-800 dark:shadow-[0_2px_5px_rgba(0,0,0,0.5),0_0_0_1px_rgba(0,0,0,0.5)]"
-              >
-                <div className="bg-primary/5 absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
-                {isPlaying ? (
-                  <Pause
-                    fill="currentColor"
-                    className="text-zinc-700 dark:text-zinc-200"
-                  />
-                ) : (
-                  <Play
-                    fill="currentColor"
-                    className="ml-1 text-zinc-700 dark:text-zinc-200"
-                  />
-                )}
-                {/* LED Indicator on button */}
-                <div
-                  className={`absolute top-2 right-2 h-1.5 w-1.5 rounded-full transition-colors ${isPlaying ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.8)]' : 'bg-zinc-400 dark:bg-zinc-600'}`}
-                />
-              </button>
-            </Magnetic>
-
-            {/* LCD Display */}
-            <div className="flex min-w-0 flex-1 flex-col items-start gap-1 rounded border-b border-white/10 bg-zinc-800 p-2 shadow-[inset_0_2px_6px_rgba(0,0,0,0.8)] dark:bg-black">
-              <div className="flex w-full items-center justify-between px-1">
-                <span className="text-[7px] font-bold tracking-widest text-zinc-500 uppercase">
-                  STATUS: {isPlaying ? 'PLAYING' : 'STANDBY'}
-                </span>
-                <div className="flex gap-0.5">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-1 w-1 rounded-full ${isPlaying ? 'animate-pulse bg-red-500' : 'bg-zinc-700'}`}
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-3 overflow-hidden px-1">
-                <div className="flex h-3 shrink-0 items-end gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-[1px] bg-amber-500/80"
-                      animate={{
-                        height: isPlaying ? [2, 10, 5, 8, 2] : 2,
-                        opacity: isPlaying ? 1 : 0.5,
-                      }}
-                      transition={{
-                        duration: 0.4,
-                        repeat: Infinity,
-                        delay: i * 0.05,
-                        ease: 'easeInOut',
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="relative flex-1 overflow-hidden">
-                  <motion.div
-                    className="flex w-fit font-mono text-xs whitespace-nowrap text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)] sm:text-sm"
-                    animate={{ x: ['0%', '-50%'] }}
-                    transition={{
-                      repeat: Infinity,
-                      ease: 'linear',
-                      duration: Math.max(8, currentTrack.length * 0.2),
-                    }}
-                  >
-                    <span className="mr-8">{currentTrack}</span>
-                    <span className="mr-8">{currentTrack}</span>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-
-            <div className="h-8 w-px shrink-0 bg-zinc-300 dark:bg-zinc-800" />
-
-            <Magnetic intensity={0.2}>
-              <a
-                href="#projects"
-                className="flex h-10 shrink-0 items-center gap-2 rounded bg-zinc-300 px-3 text-xs font-bold text-zinc-700 shadow-[0_1px_0_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.1)] transition-transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-inner sm:px-4 dark:bg-zinc-800 dark:text-zinc-300 dark:shadow-[0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)]"
-              >
-                <span className="hidden sm:inline">TRACKS</span>
-                <SkipForward size={14} />
-              </a>
-            </Magnetic>
-          </motion.div>
-
-          {/* Secondary CTA */}
-          <motion.a
-            href="#contact"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: baseDelay + 1.2 }}
-            className="mt-4 text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors group inline-flex items-center gap-1"
-          >
-            Or jam with me
-            <span className="transition-transform group-hover:translate-x-1">→</span>
-          </motion.a>
-
-          {/* Version Chip */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              delay: baseDelay + 0.2,
-              type: 'spring',
-              stiffness: 200,
-            }}
-            className="absolute top-4 right-4 font-mono text-[10px] tracking-wider text-zinc-500 dark:text-zinc-400"
-          >
-            v2026.05
-          </motion.div>
+      {/* Main content */}
+      <div className="relative z-10 mx-auto max-w-6xl px-4 text-center">
+        {/* Mascot 3D */}
+        <div className="mb-8 flex justify-center">
+          <Mascot3D />
         </div>
-      </motion.div>
+
+        {/* Title */}
+        <h1 className="t-title-xl mb-2 text-white-bone">
+          ADIT HIMAONE
+        </h1>
+        <p className="t-heading-s mb-12 text-white-dim uppercase tracking-widest">
+          FRONTEND ENGINEER · v26
+        </p>
+
+        {/* Press Start CTA */}
+        <button
+          className={cn(
+            't-heading-m mx-auto block border-2 border-white-bone bg-black-true px-8 py-4 text-white-bone transition-all hover:border-red hover:bg-red/10 hover:text-red',
+            showPressStart && 'animate-pulse',
+          )}
+          style={{ animationDuration: '1s' }}
+          onClick={() => {
+            document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
+          }}
+        >
+          PRESS START
+        </button>
+      </div>
+
+      {/* Bottom HUD overlay */}
+      <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
+        <div className="t-hud-xs text-white-dim">P1 · READY</div>
+        <div className="t-hud-xs text-white-dim">© FIRSTPARTY</div>
+      </div>
     </section>
   )
 }

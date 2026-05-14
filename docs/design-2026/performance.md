@@ -1,400 +1,418 @@
-# Performance Plan 2026
+# Performance — RETRO CONSOLE 2026
 
-> Specific performance budget, baseline, and fix list.
-> Extends `../perf-fix-plan.md` (April 2026 audit).
+> Performance budget, monitoring, and optimization checklist.
+> Companion: `requirements.md` (NFR-1 to NFR-9), `3d-and-animation.md` §7 (3D budget).
 
 ---
 
 ## 1. Performance Budget
 
-### 1.1 Hard Limits (NFR contract)
+### 1.1 Lighthouse Targets
 
 | Metric | Mobile | Desktop |
 |--------|--------|---------|
-| Lighthouse Performance | ≥ 85 | ≥ 95 |
-| LCP (Largest Contentful Paint) | ≤ 2.5s | ≤ 1.5s |
-| FCP (First Contentful Paint) | ≤ 1.8s | ≤ 1.0s |
-| TBT (Total Blocking Time) | ≤ 200ms | ≤ 150ms |
-| CLS (Cumulative Layout Shift) | ≤ 0.05 | ≤ 0.05 |
-| INP (Interaction to Next Paint) | ≤ 200ms | ≤ 200ms |
-| TTI (Time to Interactive) | ≤ 3.8s | ≤ 2.5s |
+| Performance | ≥ 85 | ≥ 95 |
+| LCP | ≤ 2.5s | ≤ 1.5s |
+| CLS | ≤ 0.05 | ≤ 0.05 |
+| TBT | ≤ 200ms | ≤ 150ms |
+| INP | ≤ 200ms (RUM) | ≤ 200ms |
+| FCP | ≤ 1.8s | ≤ 1.0s |
 
-### 1.2 Bundle Budget
+### 1.2 Bundle Budget (gzipped)
 
-| Asset | Budget (gzipped) |
-|-------|------------------|
-| First-load JS | ≤ 180 KiB |
-| First-load CSS | ≤ 25 KiB |
-| Per-route JS chunk | ≤ 80 KiB |
-| Total page weight (HTML+CSS+JS+image) | ≤ 1.2 MiB |
+| Asset | Budget | Note |
+|-------|--------|------|
+| First-load JS | ≤ 200 KiB | Raised from 180KB to fit R3F core (~50KB) |
+| First-load CSS | ≤ 30 KiB | Tailwind purge effective, custom CSS minimal |
+| Per-chunk max | ≤ 80 KiB | Code-split aggressive |
+| Total page weight (mobile, 3G slow) | ≤ 600 KiB | Includes 1 hero 3D model |
 
-### 1.3 Asset Budget
+### 1.3 3D / WebGL Budget
 
-| Asset Type | Max Size |
-|------------|----------|
-| Hero image | ≤ 80 KiB (AVIF) |
-| Project thumbnail | ≤ 60 KiB (AVIF) |
-| Audio file (Tone.js samples) | ≤ 200 KiB total |
-| Font files (woff2) | ≤ 100 KiB total |
-| SVG icons | ≤ 5 KiB each |
+| Item | Budget | Mitigation |
+|------|--------|-----------|
+| Mascot 3D first-paint | ≤ 250ms after hydrate | Poster fallback during load |
+| Cartridge canvas (per card) | ≤ 8ms / frame mobile | DPR 1-1.5, antialias off |
+| Total 3D bundle gzipped | ≤ 200 KiB | three core ~50KB, drei ~25KB, models ~70KB |
+| Per-model size | ≤ 50 KiB | gltfpack -cc -tc compression |
+| Shader code | ≤ 5 KiB inline per shader | Custom GLSL, no over-engineering |
+| EffectComposer overhead | ≤ 4ms / frame desktop | Default OFF mobile |
 
----
+### 1.4 Asset Budget
 
-## 2. Baseline (Pre-Redesign)
-
-> To be captured during T-001. Placeholder values from existing `perf-fix-plan.md`:
-
-| Metric | Mobile (current) | Mobile (target) | Delta |
-|--------|------------------|-----------------|-------|
-| Performance Score | ~60 | ≥ 85 | +25 |
-| LCP | ~5.5s | ≤ 2.5s | -3.0s |
-| Legacy JS waste | 11.1 KiB | 0 KiB | -11.1 KiB |
-| Render-blocking CSS | 110ms | < 50ms | -60ms |
-| Unused JS | ~70 KiB | < 20 KiB | -50 KiB |
-
-After T-001, replace placeholder with actual.
+| Asset type | Budget | Format |
+|------------|--------|--------|
+| Hero poster fallback | ≤ 80 KiB | WebP 800×800 |
+| Project thumbnail | ≤ 40 KiB | WebP 800×800 |
+| 3D model (.glb) | ≤ 50 KiB | gltfpack |
+| SFX file | ≤ 12 KiB | WAV mono 16-bit, ≤ 200ms |
+| Total SFX library | ≤ 60 KiB | 6 files |
+| Font (woff2 per face) | ≤ 35 KiB | latin subset |
+| Icon SVG | ≤ 1 KiB each | SVGO optimized |
 
 ---
 
-## 3. Issues & Fix Plan
+## 2. Critical Path
 
-### 3.1 P1 — LCP Render Delay (CRITICAL)
+```
+0ms      ─ HTML download starts (server response)
+50ms     ─ HTML received, parsing begins
+80ms     ─ <link rel="preload"> fires for fonts + critical CSS
+200ms    ─ FCP — title screen text visible (no 3D yet)
+600ms    ─ Hydration begins
+800ms    ─ Hydration complete, R3F mount triggered (lazy)
+1.0s     ─ 3D Canvas first frame painted
+1.5s     ─ LCP candidate stabilized
+2.0s     ─ Time to interactive
+```
 
-**Symptom**: LCP element (`<h1>` ADITYA in hero) takes 4220ms to render.
+LCP target candidate: `<h1>ADIT HIMAONE</h1>` (text node, paints with first font batch).
 
-**Root cause**:
-1. Element wrapped in `motion.h1` with `initial={{ opacity: 0, scale: 0.9 }}` and explicit `transition={{ delay: baseDelay + 0.1 }}` where `baseDelay = 1`. So minimum 1.1s before paint.
-2. Preloader covers screen for first ~1200ms, blocking visibility.
-3. Subtitle `<p>` similarly delayed.
+---
 
-**Fix**:
-1. **Hero h1 + subtitle**: Replace motion wrapper with plain HTML + CSS animation. Element is in DOM immediately for LCP measurement; CSS animation handles visual fade-in.
-2. **Preloader**: Verify `sessionStorage.getItem('preloaderShown')` skip path runs in <100ms (already implemented per `preloader.tsx`).
+## 3. Optimization Tactics
 
-**Code** (after T-100):
+### 3.1 Code Splitting
 
 ```tsx
-// hero-section.tsx — BEFORE
-<motion.h1
-  initial={{ opacity: 0, scale: 0.9 }}
-  animate={{ opacity: 1, scale: 1 }}
-  transition={{ duration: 0.5, delay: baseDelay + 0.1 }}
-  className="..."
->
-  ADITYA
-</motion.h1>
+// Sections — top-level dynamic imports
+const HeroSection      = dynamic(() => import('@/features/landing-page/components/hero/hero-section'));
+const AboutSection     = dynamic(() => import('@/features/landing-page/components/about/about-section'),     { loading: () => <SectionSkeleton /> });
+const SkillsSection    = dynamic(() => import('@/features/landing-page/components/skills/skills-section'),   { loading: () => <SectionSkeleton /> });
+const ExperienceSection = dynamic(() => import('@/features/landing-page/components/experience/experience-section'), { loading: () => <SectionSkeleton /> });
+const ProjectsSection  = dynamic(() => import('@/features/landing-page/components/projects/projects-section'), { loading: () => <SectionSkeleton /> });
+const ContactSection   = dynamic(() => import('@/features/landing-page/components/contact/contact-section'),  { loading: () => <SectionSkeleton /> });
 
-// hero-section.tsx — AFTER
-<h1 className="animate-hero-name ...">
-  ADITYA
-</h1>
+// 3D — never SSR
+const Mascot3D       = dynamic(() => import('@/components/3d/mascot-3d'),       { ssr: false, loading: () => <MascotPoster /> });
+const CartridgeCanvas = dynamic(() => import('@/components/3d/cartridge-canvas'), { ssr: false });
+const SaveCrystal    = dynamic(() => import('@/components/3d/save-crystal'),    { ssr: false });
+const CRTEffect      = dynamic(() => import('@/components/3d/effects/crt-effect'), { ssr: false });
+
+// Boot screen — only loaded on first visit
+const BootScreen = dynamic(() => import('@/components/layout/boot-screen'), { ssr: false });
 ```
 
-```css
-/* globals.css */
-@keyframes hero-name-in {
-  0%   { opacity: 0; transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
-}
+### 3.2 Tree Shaking Three.js
 
-.animate-hero-name {
-  animation: hero-name-in 0.6s cubic-bezier(0, 0, 0.2, 1) 0.1s both;
-}
-```
-
-**Expected gain**: LCP from 5.5s → ~2.0s mobile.
-
----
-
-### 3.2 P2 — Legacy JS Polyfills (-11.1 KiB)
-
-**Symptom**: 11.1 KiB of legacy polyfill code shipped to all browsers.
-
-**Root cause**: `tsconfig.json` target is `ES2017` while `package.json` browserslist already targets modern browsers (Chrome 109+, etc).
-
-**Fix**:
-```json
-// tsconfig.json
-{
-  "compilerOptions": {
-    "target": "ES2022",  // was: ES2017
-    ...
-  }
-}
-```
-
-**Expected gain**: -11.1 KiB JS payload, ~10ms parse time.
-
----
-
-### 3.3 P3 — Render-Blocking CSS (-110ms)
-
-**Symptom**: 3 CSS chunks block rendering for 110ms.
-
-**Root cause**: Critical CSS not inlined, multiple CSS chunks loaded synchronously.
-
-**Fix**:
-1. Verify Next.js automatically inlines critical CSS (default in Next 15).
-2. Check `next.config.ts` for `experimental.optimizeCss` or similar.
-3. Use `critters` (already in devDependencies) for additional inline.
-4. Reduce globals.css from 632 LOC → < 400 LOC (T-112) — saves CSS chunk size.
-
-**Expected gain**: -60ms TBT, -110ms render-blocking time.
-
----
-
-### 3.4 P4 — Unused JS (~50-70 KiB)
-
-**Symptom**: `react-syntax-highlighter` and `tone.js` in main bundle when not needed there.
-
-**Root cause**:
-- `tone.js` is loaded eagerly in `use-audio-engine.tsx` even though only Contact section uses it
-- `react-syntax-highlighter` only needed for blog post pages
-
-**Fix**:
-1. **`tone.js`**: Defer load via IntersectionObserver. Don't import until ContactSection enters viewport.
-   ```tsx
-   // contact-section.tsx
-   const [toneReady, setToneReady] = useState(false)
-   const sectionRef = useRef<HTMLDivElement>(null)
-   
-   useEffect(() => {
-     const observer = new IntersectionObserver(
-       ([entry]) => {
-         if (entry.isIntersecting && !toneReady) {
-           setToneReady(true)
-         }
-       },
-       { rootMargin: '200px' }  // load when 200px from viewport
-     )
-     if (sectionRef.current) observer.observe(sectionRef.current)
-     return () => observer.disconnect()
-   }, [toneReady])
-   
-   // Only render audio engine when ready
-   {toneReady && <AudioEngineProvider>...</AudioEngineProvider>}
-   ```
-
-2. **`react-syntax-highlighter`**: Verify already lazy via `dynamic()` for blog post route. Check `app/blog/[slug]/page.tsx` and `features/blog/components/blog-post.tsx`.
-
-**Expected gain**: -50-70 KiB initial bundle.
-
----
-
-### 3.5 P5 — Non-Composited Animations
-
-**Symptom**: Some Motion animations animate non-GPU properties (width, height, top, left, box-shadow).
-
-**Audit needed**: Run grep:
-```bash
-grep -rn "motion\." features/ | grep -E "width|height|top|left|boxShadow"
-```
-
-Replace with `transform` (translateX/Y/scale) and `opacity`.
-
-**Examples**:
-- `features/landing-page/components/about-section.tsx` — playhead `style.left = '...%'` → use `transform: translateX(...)`
-- Various `whileHover={{ scale: 1.02 }}` — already GPU-friendly, keep
-
----
-
-### 3.6 P6 — @next/mdx Version Mismatch
-
-**Symptom**: Pinned to `@next/mdx@14.2.13` while Next.js is `15.1.11`.
-
-**Fix**:
-```json
-// package.json
-"@next/mdx": "^15.1.11"
-```
-
-Verify build still succeeds, no breaking changes.
-
----
-
-### 3.7 P7 — About Section Bundle Bloat (NEW, gw add)
-
-**Symptom**: `about-section.tsx` is 957 LOC (~25 KiB minified). All clip content imported eagerly.
-
-**Fix**: Refactor (T-120):
-1. Split into per-clip files
-2. Lazy load clip content when clip clicked (not on initial render)
-
-**Expected gain**: -20-25 KiB initial bundle.
-
----
-
-### 3.8 P8 — Decorative Animations Cost (NEW)
-
-**Symptom**: 3 floating notes (♫ ♩ ♬) running infinite Motion animations on every render.
-
-**Fix**: Remove entirely (T-131). Already proposed in `redesign-2026.md`.
-
-**Expected gain**: -3 KiB JS, ~5% CPU during scroll.
-
----
-
-### 3.9 P9 — CLS from Dynamic Imports (NEW)
-
-**Symptom**: All sections `dynamic()` import without skeleton → height collapses then expands when section loads → CLS spike.
-
-**Fix** (T-105): Add `loading: () => <SectionSkeleton />` with appropriate min-height.
-
-**Expected gain**: CLS 0.10+ → < 0.05.
-
----
-
-### 3.10 P10 — Image Optimization Audit (NEW)
-
-**Symptom**: PNG/JPG images in `public/` not optimized.
-
-**Inventory**:
-| File | Current | Format | Action |
-|------|---------|--------|--------|
-| `public/cover.jpg` | unknown | JPG | Convert AVIF/WebP, resize ≤600px |
-| `public/nwjns.jpeg` | unknown | JPEG | Convert AVIF/WebP |
-| `public/Edge of Desire (Sunrise Mix).jpg` | unknown | JPG | Convert AVIF/WebP |
-| `public/memoji-1.png` | unknown | PNG | Keep PNG (transparency), reduce size |
-| `public/grid.svg` | small | SVG | Optimize via `svgo` |
-| `public/noise.png` | unknown | PNG | Keep, but verify <20 KiB |
-| `public/assets/primarindo.png` | unknown | PNG | Convert to AVIF |
-| `public/assets/quick-chat-wa.png` | unknown | PNG | Convert to AVIF |
-| `public/assets/thumbnail-fe-resources.png` | unknown | PNG | Convert to AVIF |
-| `public/assets/thumbnail-habit-tracker.png` | unknown | PNG | Convert to AVIF |
-| `public/assets/frontend-resources.png` | unknown | PNG | Convert to AVIF |
-| `public/assets/Edge of Desire.jpg` | unknown | JPG | Convert AVIF |
-
-**Fix** (T-400): Use `cwebp -q 80` or Squoosh CLI; verify Next.js `next/image` AVIF/WebP serves automatically.
-
-**Expected gain**: 30-50% size reduction per image, faster Project section load.
-
----
-
-## 4. Optimization Techniques
-
-### 4.1 Code Splitting Strategy
-
-```
-First load (initial page):
-  - layout.tsx + globals.css
-  - Hero section (eager)
-  - Header / Footer
-  - First-paint critical CSS
-
-Lazy loaded (post-paint):
-  - About section
-  - Skills section
-  - Experience section
-  - Projects section
-  - Contact section (PLUS Tone.js when in viewport)
-  - MusicMarquee
-  
-Route-specific:
-  - Blog list (/blog)
-  - Blog post (/blog/[slug]) — react-syntax-highlighter here
-  - Music page (/music) — heavy components
-  - Contact subpage (/contact) — full Contact section
-```
-
-### 4.2 Font Loading Strategy
+Three.js bisa fat kalau unused modules ke-bundle. Best practice:
 
 ```ts
-// app/layout.tsx — using next/font/google
-import { Inter, Crimson_Pro, JetBrains_Mono } from 'next/font/google'
+// ❌ Don't do this
+import * as THREE from 'three';
 
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',  // critical: avoid blocking
-  variable: '--font-body',
-})
-
-const display = Crimson_Pro({
-  weight: ['400', '500'],
-  style: ['italic', 'normal'],
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-display',
-})
-
-const mono = JetBrains_Mono({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-mono',
-})
+// ✅ Do this
+import { Mesh, IcosahedronGeometry, MeshStandardMaterial } from 'three';
 ```
 
-### 4.3 Image Loading Strategy
+Use `next.config.js` transpile rules:
+
+```js
+const nextConfig = {
+  experimental: { optimizePackageImports: ['three', '@react-three/drei', 'lucide-react'] },
+};
+```
+
+### 3.3 Font Subsetting
+
+Default `next/font/google` already subset to latin only. Avoid loading multiple weights when not needed:
+
+```ts
+// ❌
+const space = Space_Grotesk({ weight: ['300', '400', '500', '600', '700'] });
+
+// ✅ — only used weights
+const space = Space_Grotesk({ weight: ['400', '700'] });
+```
+
+Verify with `pnpm next build` and check `.next/static/chunks/_app-*.css` size.
+
+### 3.4 Image Optimization
+
+Use Next.js `<Image>` component everywhere:
 
 ```tsx
-// Hero image (above fold)
-<Image src="/hero.avif" priority alt="..." />
+import Image from 'next/image';
 
-// Project thumbnails (below fold, lazy)
-<Image src={project.image} loading="lazy" alt="..." />
+<Image
+  src="/3d/mascot-poster.webp"
+  alt="Adit's mascot cartridge"
+  width={400}
+  height={400}
+  priority           // hero image
+  placeholder="blur"
+  blurDataURL="data:image/webp;base64,..."
+/>
 ```
 
-### 4.4 Animation Performance Rules
+Pre-generate poster from R3F:
 
-1. **Animate transform/opacity only** — composited on GPU
-2. **Use `will-change` sparingly** — only on actively animating elements
-3. **Stop animations off-screen** — use `useInView` to pause Motion components
-4. **Prefer CSS keyframes for infinite animations** — Motion infinite is JS overhead
-5. **Use `requestAnimationFrame` for scroll-linked** — already doing this in playhead
+```bash
+# After mascot-3d component working
+node scripts/render-mascot-poster.mjs > public/3d/mascot-poster.webp
+```
+
+### 3.5 GLB Compression
+
+```bash
+npx gltfpack -i public/3d/cartridge.glb -o public/3d/cartridge.opt.glb -cc -tc
+mv public/3d/cartridge.opt.glb public/3d/cartridge.glb
+```
+
+Flags:
+- `-cc`: meshopt compression
+- `-tc`: texture compression
+- Result: typically 4-6x smaller
+
+### 3.6 Static Asset Caching
+
+```js
+// next.config.js
+async headers() {
+  return [
+    { source: '/3d/:path*',   headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
+    { source: '/sfx/:path*',  headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
+    { source: '/fonts/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
+  ];
+}
+```
+
+### 3.7 Preconnect / DNS-prefetch
+
+```tsx
+// src/app/layout.tsx
+<head>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+  <link rel="preconnect" href="https://api.spotify.com" />
+  <link rel="dns-prefetch" href="https://api.github.com" />
+</head>
+```
+
+### 3.8 Reduce Render-Blocking
+
+- Inline critical CSS (Next.js does automatically for above-fold)
+- Defer non-critical JS via `<Script strategy="lazyOnload">`
+- No third-party analytics in critical path (load post-hydration)
+
+---
+
+## 4. Specific Optimizations per Section
+
+### 4.1 Hero
+
+- LCP element: text `<h1>` (no image swap)
+- 3D mascot: lazy + poster fallback
+- Background pixel grid: pure CSS gradient, no image
+- Vignette: pure CSS radial-gradient
+- Boot sequence: skipped on subsequent visits (localStorage)
+
+### 4.2 About
+
+- 3D portrait: same shared mascot model (no second download)
+- Stats panel: pure CSS, no 3D needed
+- NES textbox: pure CSS
+
+### 4.3 Skills
+
+- No 3D needed
+- Icon SVGs: lucide-react tree-shaken, only used icons in bundle
+- 24 cells × ~0.5KB icon = ~12KB total
+
+### 4.4 Experience
+
+- No 3D needed
+- 4 stage tiles: thumbnail images optional, can be CSS-only solid color blocks
+
+### 4.5 Projects
+
+- Top 3 cards: 3D cartridge canvas (single shared model)
+- Bottom 3 cards: 2D SVG silhouette
+- Modal: lazy-loaded, only mounts on click
+- Filter: client-side, no API call
+
+### 4.6 Contact
+
+- 3D save crystal: tiny octahedron geometry, inline (no .glb)
+- 4 buttons: pure CSS, no 3D
+
+### 4.7 Footer
+
+- Last commit fetch: ISR cache 1h via Next.js Route Handler
+- Live timer: simple `setInterval`, no expensive re-render (use `useRef`)
 
 ---
 
 ## 5. Monitoring Plan
 
-### 5.1 Pre-deploy
-- Lighthouse CI (manual or via GitHub Action)
-- Bundle analyzer reports
-- Manual cross-device test
+### 5.1 Pre-Launch
 
-### 5.2 Post-deploy (RUM)
-- Vercel Analytics (already in `package.json`)
-- Track: LCP, FID, CLS, INP per route
-- Alert if any metric regress > 20% from baseline
+- Run Lighthouse on localhost (`pnpm next build && pnpm next start`)
+- Target metrics passed before merge
 
-### 5.3 Weekly Review
-- Check Vercel Analytics dashboard
-- Compare to budget
-- File regression issues if budget violated
+### 5.2 Launch Day
+
+- Run Lighthouse on production URL immediately after deploy
+- Compare against budget
+- Document in PR
+
+### 5.3 Post-Launch (Day 1-7)
+
+Real User Monitoring (RUM) via Vercel Analytics atau alternative:
+- Track LCP, CLS, INP per percentile
+- Alert if p75 LCP > 3s
+- Alert if error rate > 1%
+
+### 5.4 Weekly Check (Post-Launch)
+
+- Lighthouse run weekly
+- Bundle analyzer monthly
+- Check for dependency bloat
 
 ---
 
-## 6. Cheat Sheet (Common Wins)
+## 6. Performance Anti-Patterns to Avoid
+
+### 6.1 In Sections
+
+- ❌ Animating `width`, `height`, `padding`, `margin`, `top`, `left`
+- ❌ Infinite-loop `motion.div` for backgrounds
+- ❌ Re-rendering 3D on every scroll
+- ❌ Multiple `<Canvas>` instances when 1 shared works
+- ❌ `box-shadow` with non-zero blur in scroll-tied animations
+
+### 6.2 In 3D Code
+
+- ❌ `useFrame` doing expensive work (DOM access, state updates)
+- ❌ Creating new geometry / materials inside render loop
+- ❌ `console.log` in `useFrame`
+- ❌ Loading large textures (> 1MB) without compression
+- ❌ Using `MeshPhysicalMaterial` when `MeshStandardMaterial` suffices
+
+### 6.3 In React
+
+- ❌ Inline object/array props (causes child re-render)
+- ❌ Anonymous function props without `useCallback`
+- ❌ Large `useEffect` dependency arrays
+- ❌ Reading scroll position in component body (use IntersectionObserver instead)
+
+---
+
+## 7. Performance Test Checklist
+
+Pre-launch:
+
+- [ ] `pnpm next build` succeeds
+- [ ] Bundle analyzer no chunk > 80KB
+- [ ] First-load JS ≤ 200KB
+- [ ] First-load CSS ≤ 30KB
+- [ ] Lighthouse mobile (lab, simulated 4G) ≥ 85
+- [ ] Lighthouse desktop ≥ 95
+- [ ] LCP mobile ≤ 2.5s, desktop ≤ 1.5s
+- [ ] CLS ≤ 0.05 across all sections (test with Layout Shift highlighter)
+- [ ] No console errors
+- [ ] 60fps scroll desktop
+- [ ] 30fps scroll mobile (acceptable)
+- [ ] 3D scene mounts < 300ms after hydrate
+- [ ] Hover/click interactions < 100ms response
+
+Post-launch:
+
+- [ ] RUM data shows p75 LCP within budget
+- [ ] No regression vs pre-launch baseline
+- [ ] CDN/edge cache hit rate > 90%
+
+---
+
+## 8. Performance Debt / Known Trade-offs
+
+- **CRT post-FX** adds ~4ms/frame on desktop. Mitigation: default OFF mobile, toggle.
+- **Vertex jitter shader** adds tiny GPU work, but visible on 3 scenes simultaneously could compound. Mitigation: only mascot has jitter at all times; cartridges + crystal have it conditionally on hover.
+- **Boot sequence** delays first interaction by 1.6s on first visit. Mitigation: localStorage skip + `?nb=1` URL param.
+- **6 cartridge cards** with 3D would cost ~24ms/frame on mobile (6 canvases). Mitigation: top 3 = 3D, bottom = SVG.
+
+---
+
+## 9. Bundle Analysis Workflow
 
 ```bash
-# Bundle analysis
-ANALYZE=true pnpm build
+# Install
+pnpm add -D @next/bundle-analyzer
 
-# Lighthouse local
-npx lighthouse http://localhost:3000 \
-  --view \
-  --preset=desktop \
-  --output=json \
-  --output-path=./lighthouse-report.json
+# next.config.js
+const withBundleAnalyzer = require('@next/bundle-analyzer')({ enabled: process.env.ANALYZE === 'true' });
+module.exports = withBundleAnalyzer(nextConfig);
 
-# Image optimization (one-off)
-cwebp -q 80 input.jpg -o output.webp
+# Run
+ANALYZE=true pnpm next build
 
-# Find non-GPU animations
-grep -rn "motion\." features/ | grep -E "(width:|height:|left:|top:|boxShadow)"
+# Open the visualizer
+open .next/analyze/nodejs.html
+```
 
-# Check first-load JS
-pnpm build 2>&1 | grep "First Load JS"
+Identify:
+- What's in first-load chunk?
+- Any duplicate React versions?
+- Anything > 80KB that should be code-split?
+
+---
+
+## 10. Lighthouse CI (Optional)
+
+```yaml
+# .github/workflows/lighthouse.yml (optional, for PRs)
+name: Lighthouse CI
+on: [pull_request]
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm install -g @lhci/cli
+      - run: lhci autorun --config=.lighthouserc.json
+```
+
+`.lighthouserc.json`:
+```json
+{
+  "ci": {
+    "collect": { "url": ["http://localhost:3000"], "numberOfRuns": 3 },
+    "assert": {
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.85 }],
+        "first-contentful-paint": ["error", { "maxNumericValue": 1800 }],
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }]
+      }
+    }
+  }
+}
 ```
 
 ---
 
-## 7. Targets Summary (Visual)
+## 11. Mobile-Specific Tactics
 
-```
-Current → Target:
+- 3D Canvas DPR clamped to `[1, 1.5]` (vs desktop `[1, 2]`)
+- CRT post-FX OFF default
+- Cartridge SVG-only on mobile (override `use3D: true` to false on small viewport)
+- Pause Menu lazy-loaded on hamburger click
+- Scroll listener throttled (or use IntersectionObserver instead)
+- No infinite-loop animations in viewport
+- Reduce font weights loaded on mobile (skip 700 if not used in mobile layout)
 
-Performance Score    [████░░░░░░] 60   →   [████████░░] 85   ⬆ +25
-LCP (mobile)         [██████████]      →   [██░░░░░░░░]      ⬇ -3.0s
-First-load JS        [████████░░]      →   [████░░░░░░]      ⬇ -50KB
-TBT                  [████░░░░░░]      →   [██░░░░░░░░]      ⬇ -200ms
-CLS                  [██░░░░░░░░]      →   [▌░░░░░░░░░]      ⬇ -0.05+
-```
+---
+
+## 12. Performance Backlog
+
+Items deferred to v2 polish (post-launch):
+
+- ☐ Service Worker for offline-first
+- ☐ Web Workers for color audit / heavy processing
+- ☐ Image LQIP placeholder generation
+- ☐ Critical CSS extraction (above-fold only)
+- ☐ Preact compat swap (untested risk, save for later)
+- ☐ Edge function for last-commit (instead of ISR)
+
+---
+
+> Performance is a feature. Run Lighthouse before merge, every time.

@@ -1,40 +1,42 @@
-# Story Map — Section Narrative 2026
+# Story Map — Section Narrative RETRO CONSOLE 2026
 
-> Per-section story direction, voice, copy guidance.
-
----
-
-## 1. The Album Concept
-
-Treat the landing page as a **single album with 7 tracks** (sections). The user is the listener pressing play. Each track has its own mood but shares the same producer (Adit) and shares one continuous narrative thread.
-
-**Album title** (internal): "Side A — Studio Session 2026"
-**Genre**: Studio Pop / Engineering R&B / Frontend Soul
-**Runtime**: ~3 minutes scroll-through (target)
+> Per-section copy direction, voice, story beats.
+> Companion: `design.md` (visual layout), `requirements.md` (acceptance).
 
 ---
 
-## 2. The Listener Journey
+## 1. The Game Concept
+
+Treat the landing page as a **single-player retro console game** the user is booting up. From boot screen to stage clear, ada continuous game-flow narrative. User = player, Adit = the game protagonist + game designer.
+
+- **Game title** (internal): "PORTFOLIO 2026"
+- **Genre**: Career RPG / Visual Novel hybrid
+- **Console**: imaginary "FIRSTPARTY" hardware (Adit's own brand label)
+- **Runtime**: ~2-3 minute scroll playthrough
+
+---
+
+## 2. The Player Journey
 
 ```
-[ENTRY]    Hero       — "Who's playing?"            (2-3s)
-           ↓
-           Marquee    — "What's the channel?"        (transit)
-           ↓
-[VERSE 1]  About      — "Tell me about yourself"     (15s engaged)
-           ↓
-[VERSE 2]  Skills     — "What can you do?"           (20s engaged, interactive)
-           ↓
-[BRIDGE]   Experience — "Where have you been?"        (30s engaged)
-           ↓
-[CHORUS]   Projects   — "Show me the work"            (40s engaged)
-           ↓
-[OUTRO]    Contact    — "How do I reach you?"         (interactive, optional jam)
-           ↓
-[B-SIDE]   Footer     — "Where else can I find you?"  (5s scan)
+[BOOT]      Boot Screen   — "Powering on console"        (1.6s, skip after first visit)
+            ↓
+[TITLE]     Hero          — "PRESS START to begin"       (2-3s engaged)
+            ↓
+[STAGE 02]  About         — "CHARACTER SELECT"            (15-20s engaged)
+            ↓
+[STAGE 03]  Skills        — "Inventory check"             (15-25s engaged, interactive)
+            ↓
+[STAGE 04]  Experience    — "Stage select map"            (25-30s engaged)
+            ↓
+[STAGE 05]  Projects      — "Game library cartridges"     (40-60s engaged)
+            ↓
+[STAGE 06]  Contact       — "Save your progress"          (interactive)
+            ↓
+[CLEAR]     Footer        — "Stage clear, end credits"    (5s scan)
 ```
 
-Goal: ~2 minutes total scroll time for engaged user, with potential for extended Contact-section play (interactive launchpad).
+Goal: 2-3 menit playthrough untuk engaged user. Bonus loop: replay boot sequence via Header button.
 
 ---
 
@@ -42,228 +44,331 @@ Goal: ~2 minutes total scroll time for engaged user, with potential for extended
 
 ### 3.1 Persona Voice
 
-Adit's voice in copy = **Confident producer at a major label dropping their first album under their own name.**
+Adit's voice in copy = **Quietly confident game master / arcade announcer / NES manual writer**.
 
-Characteristics:
-- Direct, not aggrandizing ("Built X for Y" not "Spearheaded enterprise-grade solutions")
-- Specific, not generic ("Bisadaya for thousands of jobseekers" not "innovative platform")
-- Playful, but professional (use music metaphor naturally, never forced)
-- Mixed Indonesian-English allowed in personal copy (footer, casual blurbs) but NOT in main marketing copy (hero subtitle, project descriptions)
+Karakter:
+- Direct, command-style: `> PRESS A TO COPY EMAIL`, `> READY TO COLLAB?`
+- Specific, factual: `BISADAYA · FAST 8 · USED BY THOUSANDS`
+- Cheeky tapi profesional: `RANK : S` (otomatis kasih S, tongue-in-cheek)
+- Mixed Indo-English diizinkan di personal copy (footer, easter egg lines), TIDAK di marketing copy utama
 
 ### 3.2 Voice Don't
 
-❌ "I'm passionate about..." (everyone says this)
-❌ "Cutting-edge solutions" (corporate-speak)
-❌ "Bridging the gap between X and Y" (cliche)
-❌ "Innovative" (overused, meaningless)
-❌ "Spearheaded" (LinkedIn-speak)
+- ❌ "I'm passionate about..." (basic)
+- ❌ "Cutting-edge solutions" (corporate)
+- ❌ "Innovative" (cliche)
+- ❌ "Spearheaded" (LinkedIn-speak)
+- ❌ "Welcome to my portfolio" (boring)
+- ❌ "Hi I'm Adit, a Frontend Developer based in..." (generic)
+- ❌ Music metaphor (DAW dead, don't revive)
 
 ### 3.3 Voice Do
 
-✅ "Building Bisadaya at Fast 8 — used by thousands"
-✅ "Six records out. Pick one."
-✅ "Tap a pad. Make a beat. Send a message."
-✅ "Currently spinning: Edge of Desire (Sunrise Mix)"
-✅ "Frontend Engineer / Audio enthusiast / Side project addict"
+- ✅ `> PRESS START`
+- ✅ `STAGE-04 // CAREER`
+- ✅ `INSERT COIN ↻`
+- ✅ `★ CURRENT JOB`
+- ✅ `Building Bisadaya at Fast 8 — used by thousands`
+- ✅ `Six cartridges in the library. Pick one.`
+- ✅ `> READY PLAYER ONE`
+- ✅ `Currently spinning: bisadaya v2`
 
 ---
 
 ## 4. Per-Section Copy Direction
 
-### 4.1 Hero — "The Album Cover"
+### 4.1 Boot Screen (1.6s opening)
 
-**Story role**: Establish identity in 2 seconds. User decides to scroll or bounce.
+**Story role**: Console power-on. Establish brand world.
 
-**Eyebrow**: `◉ LIVE SESSION · v2026.05`
+**Sequence**:
+```
+0.0s  ─ [black screen]
+0.1s  ─ ◉ POWER LED ON           (red dot top-right)
+0.3s  ─ FIRSTPARTY                (display font, white, fade in)
+0.6s  ─ [scanline sweep]
+0.8s  ─ PRESS ANY KEY  PRESS ANY KEY     (blink x2)
+1.6s  ─ [transition to TITLE]
+```
 
-**Headline**: `Aditya Himaone` (his real handle)
+**Copy elements**:
+- "FIRSTPARTY" (Adit's imaginary console brand — keep mystery, don't explain)
+- "PRESS ANY KEY" (no localization)
 
-**Subtitle**: `Frontend Engineer at Fast 8 — building Bisadaya for thousands of jobseekers.`
-- *Why*: specific company + specific impact = credibility in 1 sentence
-- *Alt versions to A/B*:
-  - "Frontend Engineer · Building tools that thousands rely on daily."
-  - "Frontend Engineer at Fast 8. I make web apps people actually use."
+### 4.2 Hero — "TITLE SCREEN" (STAGE-01)
 
-**LCD Ticker**: `NOW PLAYING: <real-spotify-track>` (live)
+**Story role**: Game title screen. Identity in 2 seconds, decide to scroll.
 
-**CTA primary**: `▶ PLAY` (existing, keep)
-**CTA secondary**: `Or jam with me →` (new, scroll to #contact)
-**Scroll cue**: `↓ drop the needle`
+**Eyebrow** (top HUD):
+- `◉ POWER · STAGE-01 // TITLE · v2026.05`
 
-### 4.2 Marquee — "FM 96.0"
+**Headline** (center, VT323 ~144px):
+- `ADIT HIMAONE`
 
-**Story role**: Transit; gives screen breath between cover and content.
+**Sub-headline** (Space Grotesk 14px uppercase):
+- `FRONTEND ENGINEER · v26`
 
-**Content** (rotating phrases — keep ~10):
-Update from generic phrases ("WHERE CODE MEETS RHYTHM") to **personal/topical**:
-- `🎧 Currently looping: clean architecture`
-- `📻 Recently shipped: redesign 2026`
-- `🎚 Now mixing: bisadaya v2`
-- `📡 On rotation: deep work, indie tracks, terminal vibes`
-- `🎙 Recording from: Jakarta Selatan`
-- `💿 New release every quarter`
-- `⚡ Pushing pixels since 2017`
-- `🎛 Specialty: react, next, motion`
-- `📀 B-side available: blog, github, linkedin`
+**3D mascot**: floating cartridge slowly rotating
 
-### 4.3 About — "The Workflow"
+**CTA primary**:
+- `▶ PRESS  START`  (blink, click scrolls to STAGE-02)
 
-**Story role**: Verse 1 — establish who Adit is in human terms.
+**CTA secondary** (smaller, mono):
+- `> SAVE PROGRESS  →  STAGE-06`  (scrolls to Contact directly)
 
-**Eyebrow**: `◉ ARRANGEMENT VIEW`
-**Headline**: `The Workflow`
-**Subtitle**: (none, DAW interface speaks for itself)
+**Bottom HUD**:
+- `© FIRSTPARTY · MADE IN JAKARTA      P1: ADIT [READY]`
 
-**Track 1 — IDENTITY** (clip: `profile.tsx`)
-- Spec sheet: Role / Location / Experience / Focus / Architecture / Status
-- About paragraph: 2 short sentences max, voice-direct
-  - Para 1: `I'm Adit. Frontend Engineer at Fast 8 — currently building Bisadaya, a job-seeking platform used by thousands.`
-  - Para 2: `Specialized in interaction design, animation, and performance. Lately exploring the intersection of audio, code, and quiet UI.`
-- Signal Flow timeline: 3 entries — keep concise
+**Hover easter egg** (optional): hover the cartridge → tooltip "v2026.05.14 build"
 
-**Track 2 — NOW PLAYING** (clip: `now_playing.json`)
-*New, replaces audio clip*
-- Currently working on: Bisadaya Job Filtering Improvements (link to artifact)
-- Currently learning: WebGPU shaders, MDX best practices
-- Currently spinning (Spotify): live data
-- "If you find me online tonight": probably here, GitHub, or my terminal
+### 4.3 About — "CHARACTER SELECT" (STAGE-02)
 
-**Track 3 — METRICS** (clip: `metrics.json`)
-- Big numbers: 4+ years / 20+ projects / 100% commitment
-- Output history bars: yearly project count
-- Currently processing list (4 items max)
-- Design philosophy quote (1 quote, not multiple)
+**Story role**: Verse 1 — establish protagonist identity.
 
-### 4.4 Skills — "Sonic Arsenal"
+**Stage label**: `STAGE-02 // CHARACTER`
 
-**Story role**: Verse 2 — answer "what can you do?" with hands-on interaction.
+**Headline** (display 64px):
+- `CHARACTER  SELECT`
 
-**Eyebrow**: `◉ AUDIO ENGINEERING`
-**Headline**: `Sonic Arsenal`
-**Subtitle**: (under mixer) `Each fader = years of practice. Drag to remix the role.`
+**Sub** (mono):
+- `> AVAILABLE FIGHTER : 1`
 
-**Preset Buttons** (new):
-- `[FRONTEND]` — autoset for frontend role
-- `[BACKEND]` — autoset for backend-leaning role  
-- `[DESIGN]` — autoset for design-engineering role
+**Bio NES textbox**:
+```
+▼
 
-**Mixer label**: `MIX-MASTER 2026 · PROFESSIONAL AUDIO/CODE INTERFACE`
-**Footer label**: `DESIGNED & ENGINEERED BY ONE` (keep, lowercase last word feels intentional)
+I'm ADIT. Frontend Engineer at FAST 8.
+> Currently building BISADAYA, used by
+  thousands of jobseekers.
 
-**Skill names — keep as-is** (already music-themed via Channel/EQ/FX framing):
-- Channel 1: Languages (faders)
-- EQ: Frameworks (knobs)
-- FX: Tools (knobs)
+Specialty: interaction design, motion,
+performance. Lately exploring 3D web,
+shaders, and quiet UI.
+```
 
-### 4.5 Experience — "Career Discography"
+**Stats panel**:
+```
+NAME    : ADITYA HIMAWAN
+CLASS   : FRONTEND ENGINEER
+BASE    : JAKARTA SOUTH
+EXP     : 4 YEARS
+LOADOUT : REACT · NEXT.JS · MOTION
 
-**Story role**: Bridge — context for credibility.
+STATS
+─────
+REACT       ████████░░  85
+NEXT.JS     █████████░  92
+TYPESCRIPT  ████████░░  80
+MOTION      ██████░░░░  62
+SHIPPING    █████████░  90
+```
 
-**Eyebrow**: `◉ CAREER DISCOGRAPHY`
-**Headline**: `The Collection`
-**Subtitle**: (minimal) `Five tracks. One career. Hit play on each.`
+**Footer line**:
+- `> CURRENTLY EQUIPPED : BISADAYA (v2)`
 
-**Per experience copy** (existing structure, keep):
-- Role + company + period + location
-- 3 bullet description points (concise, action-verb led)
+### 4.4 Skills — "INVENTORY" (STAGE-03)
 
-**New badges**:
-- `★ CURRENT` for active job (Fast 8)
-- Duration: `3y 7m` displayed prominently
+**Story role**: Verse 2 — what abilities does this character have?
 
-**Footer "Now Playing"**: dynamic — shows currently selected track
-- `1/4 · NOW PLAYING: Frontend Developer · Fast 8 People Hub`
+**Stage label**: `STAGE-03 // INVENTORY`
 
-### 4.6 Projects — "Featured Releases"
+**Headline**:
+- `INVENTORY`
 
-**Story role**: Chorus — the hits, the reason recruiters are reading this.
+**Sub**:
+- `> ITEMS COLLECTED : 24`
 
-**Eyebrow**: `◉ TRACKS`
-**Headline**: `Featured Releases · 06 RELEASES`
-**Subtitle**: `Six records out. Pick one — I'll tell you what went into the mix.`
+**Grid**: 6×N square cells, 1 icon per skill
 
-**Filter chips**: `All · Web3 · Corporate · Productivity · DeFi · Biotech · Educational`
+**Detail panel** (selected cell):
+```
+> SELECTED : REACT
+─────────────────
+YEARS      : 4
+PROJECTS   : 12
+MASTERY    : ★ ★ ★ ★ ☆
+USED IN    : BISADAYA, [redacted side projects]
+```
 
-**Per project meta** (extended):
-- Title
-- Genre (existing)
-- Year (existing)
-- **NEW**: Metric (e.g. "10K+ visits", "Used by 3 enterprises", "Featured on Vercel")
+**Empty selection state**:
+- `> HOVER TO INSPECT`
 
-**Modal copy enhancement**:
-- Featured Track eyebrow → keep
-- Title → keep
-- Description → keep, but tighten if > 2 sentences
-- **NEW**: "Production Credits" (= tech stack, but dynamic per project)
-- **NEW**: "Studio Notes" (= role, e.g. "Solo dev", "FE Lead of 4")
-- **NEW**: "Source" button if `github` field exists
+### 4.5 Experience — "STAGE SELECT" (STAGE-04)
 
-**CTA**: `▶ Listen to Track (Visit Site)` (existing, keep)
-**CTA alt** (new): `View Source ↗`
+**Story role**: Bridge — career context (proof of work).
 
-### 4.7 Contact — "Launch Collaboration"
+**Stage label**: `STAGE-04 // CAREER`
 
-**Story role**: Outro — invitation to engage. The interactive element rewards the user who scrolled this far.
+**Headline**:
+- `STAGE  SELECT`
 
-**Eyebrow**: `◉ SESSION BOOKING`
-**Headline**: `Launch Collaboration`
-**Subtitle**: `Tap a pad. Make a beat. Send a message — or just jam.`
+**Sub**:
+- `> 4 STAGES UNLOCKED · 1 IN PROGRESS`
 
-**Preset Chips**: `[CHILL] [TRAP] [LOFI]` (surface presets data)
+**Per-tile copy**:
+```
+STAGE 1                    STAGE 2
+┌──────────┐              ┌──────────┐
+│ FAST 8   │              │ 80&CO    │
+│ '22-NOW  │              │ '21-'22  │
+│ ★ CURRENT│              │ COMPLETE │
+└──────────┘              └──────────┘
+```
 
-**Functional pad labels** (already exist, keep):
-- Email · adityahimaone@gmail.com
-- LinkedIn · /in/adityahimaone
-- GitHub · @adityahimaone
-- Spotify · listen along
-- Resume · download CV
+**NES textbox detail panel** (per selected tile):
+```
+▼
 
-**Transport**: keep (BPM, play/pause/stop, transport time, master volume)
+> NOW PLAYING : STAGE 1
+  FAST 8 · FRONTEND ENGINEER
+  OCT 2022 — PRESENT (3y 7m)
+  JAKARTA, ID
 
-**Footer message** (under launchpad):
-> `No formal forms. No "let's connect" emails. Just tap a pad and pick how to talk.`
+ACHIEVEMENTS
+─ Building Bisadaya, jobseekers platform
+─ Led FE rewrite 2024 (Next.js 13 → 15)
+─ Owns design system tokens + a11y review
 
-### 4.8 Footer — "End of Side A"
+ITEMS USED : REACT · NEXT.JS · TANSTACK · MOTION
+```
 
-**Story role**: B-side — additional metadata, reassurance the artist is alive.
+### 4.6 Projects — "GAME LIBRARY" (STAGE-05)
 
-**Brand block**: 
-- Adit name
-- Tagline: `Frontend Engineer · Audio enthusiast · Currently in Jakarta`
+**Story role**: Chorus — the released games (showcase).
 
-**Nav columns** (keep): Home / Blog / Music / Contact
+**Stage label**: `STAGE-05 // RELEASES`
 
-**Tech stack** (keep, but tighten labels if duplicating Skills section)
+**Headline**:
+- `GAME  LIBRARY`
 
-**Social** (keep)
+**Sub**:
+- `> 06 CARTRIDGES IN COLLECTION`
 
-**NEW — Last Commit badge**:
-> `LAST SHIPPED · 2 days ago · feat: redesign 2026 · adityahimaone/next-portfolio-blog`
+**Filter chips**: `[ALL] [WEB3] [CORP] [PROD] [DEFI] [BIO] [EDU]`
 
-**NEW — Mini Now Playing strip** (very bottom):
-> `🎧 Currently spinning: <track-name> · <artist>`
+**Per-card copy**:
+- Title (display 24px)
+- Genre tag (mono, RED)
+- Year (mono, GRAY-DIM)
+- Metric (1 line: `> 10K+ VISITS` or `> USED BY 3 ENTERPRISES` or `> FEATURED ON [X]`)
 
-**Copyright**:
-> `© <year> · Made with ☕ and ♫ in Jakarta · Side A complete · B-side available at /blog`
+**Hover state copy**:
+- `▲ EJECT TO INSPECT`
+
+**Modal copy** (on click):
+```
+LOADING CARTRIDGE...
+████████████████████  100%
+
+[BOOT SCREEN REVEAL]
+
+> NOW PLAYING : <PROJECT TITLE>
+  GENRE : <GENRE>
+  YEAR  : <YEAR>
+
+[Description — 2 sentences max]
+
+PRODUCTION CREDITS
+─────────────────
+ROLE  : Solo dev  (or "FE Lead of 4")
+STACK : <TECH ARRAY>
+LAUNCHED : <YEAR>
+
+> [▶ PLAY DEMO]   [⌥ VIEW SOURCE]
+```
+
+### 4.7 Contact — "SAVE POINT" (STAGE-06)
+
+**Story role**: Outro — invitation to engage. Rewards scroll-to-bottom.
+
+**Stage label**: `STAGE-06 // SAVE`
+
+**Headline**:
+- `SAVE  POINT`
+
+**Sub**:
+- `> READY TO COLLAB ?`
+
+**3D Save Crystal**: octahedron pulsing red
+
+**DAT lines**:
+```
+> SAVE PROGRESS
+
+CONTACT.DAT  : ADITYAHIMAONE@GMAIL.COM
+SOCIAL.DAT   : @ADITYAHIMAONE
+LINK.DAT     : LINKEDIN.COM/IN/ADITYAHIMAONE
+CV.DAT       : ADIT_CV_2026.PDF
+```
+
+**Action prompt**:
+```
+> CHOOSE ACTION :
+
+[A] COPY EMAIL
+[B] OPEN LINKEDIN
+[X] OPEN GITHUB
+[Y] DOWNLOAD CV
+```
+
+**Confirm state copy** (on click):
+- After Copy Email: `> EMAIL COPIED · 2026-05-14T22:31`
+- After other actions: `> OPENING IN NEW TAB...`
+
+**Footer prompt**:
+- `> NO FORMS. NO "LET'S CONNECT". JUST A KEY PRESS.`
+
+### 4.8 Footer — "STAGE CLEAR"
+
+**Story role**: B-side — game ending stats screen.
+
+**Stage label**: `STAGE-CLEAR`
+
+**Headline** (VT323 64px, blink, RED):
+- `★  STAGE  CLEAR  ★`
+
+**Stats**:
+```
+PLAYER     : ADIT
+TIME       : 00:02:43
+SCROLL     : 100%
+SECTIONS   : 6/6
+RANK       : S
+```
+
+**Last commit badge**:
+- `> LAST SHIPPED : 2 DAYS AGO · feat: redesign 2026`
+
+**Action chips**:
+- `[HOME]  [BLOG]  [GITHUB]  [LINKEDIN]`
+
+**Copyright line**:
+- `© 2026 · ADIT · MADE IN JAKARTA · INSERT COIN ↻`
+
+**Easter egg** (hover "INSERT COIN"):
+- Plays `coin.wav`
+- Triggers boot screen replay
 
 ---
 
 ## 5. Cross-Section Vocabulary
 
-Konsisten istilah lintas section biar dunia-nya nyatu:
+Konsistensi istilah lintas section biar dunia-nya nyambung:
 
 | Concept | Term to use | Term to avoid |
 |---------|-------------|---------------|
-| Section/Page | "Track" / "Side" | "Section" / "Page" |
-| Project | "Release" / "Record" | "Project" (boleh fallback) |
-| Job/role | "Track in discography" | "Position" / "Role" (boleh fallback) |
-| Skill | "Channel" / "Module" | "Skill" (boleh fallback) |
-| Tech | "Production Credits" / "Stack" | "Technologies" |
-| Contact | "Session" / "Jam" | "Form" / "Inquiry" |
-| Now | "Live" / "Currently spinning" | "At the moment" |
-| Past | "Discography" / "Releases" | "History" / "Past work" |
-| Future | "On rotation" / "Up next" | "Upcoming" / "Future plans" |
-| About | "Liner notes" / "Producer bio" | "About me" |
+| Section / page | "Stage" / "Screen" | "Section" / "Page" |
+| Project | "Cartridge" / "Release" / "Game" | "Project" |
+| Job / role | "Stage in career" / "Run" | "Position" / "Role" |
+| Skill | "Item" / "Loadout entry" | "Skill" |
+| Tech | "Items used" / "Loadout" | "Stack" / "Technologies" |
+| Contact | "Save point" / "Save progress" | "Form" / "Inquiry" |
+| Now | "Currently equipped" / "Now playing" | "At the moment" |
+| Past | "Completed stages" / "Cleared" | "History" |
+| Future | "On rotation" / "Next stage" | "Upcoming" |
+| About | "Character profile" / "Liner notes" | "About me" |
+| Years experience | "EXP : 4 years" | "Experience: 4 years" |
+| Click | "Press" | "Click" / "Tap" (mobile boleh "tap") |
 
 ---
 
@@ -271,58 +376,67 @@ Konsisten istilah lintas section biar dunia-nya nyatu:
 
 | Section | Tone | Energy |
 |---------|------|--------|
-| Hero | Confident, mysterious | High |
-| Marquee | Casual, observational | Low (transit) |
-| About | Personable, specific | Medium |
+| Boot | Mysterious, hardware | Low (suspense build) |
+| Hero | Confident, anticipatory | High |
+| About | Direct, factual | Medium |
 | Skills | Playful, technical | Medium-high |
-| Experience | Professional, structured | Medium |
+| Experience | Professional, historical | Medium |
 | Projects | Proud, factual | Medium-high |
-| Contact | Inviting, playful | High (interactive) |
+| Contact | Inviting, command-style | High (interactive) |
 | Footer | Quiet, complete | Low (closure) |
 
 ---
 
 ## 7. Microcopy Audit
 
-Saat write/refactor, follow guidelines ini buat tiap microcopy:
-
 ### 7.1 Status Indicators
 
-✅ `LIVE SESSION` (existing)
-✅ `STANDBY` 
-✅ `PLAYING` 
-✅ `RECORDING`
-✅ `SYSTEM OPERATIONAL`
-✅ `AVAILABLE FOR PROJECTS`
+✅ `◉ POWER`
+✅ `[READY]`
+✅ `[STANDBY]`
 ✅ `★ CURRENT`
+✅ `STAGE-NN`
+✅ `LOADING...`
+✅ `INSERT COIN`
+✅ `LIVE SESSION`
+✅ `OPERATIONAL`
 
 ### 7.2 CTAs
 
-✅ `▶ Play Session`
-✅ `View Tracks ↗`
-✅ `Or jam with me →`
-✅ `Listen to Track`
-✅ `Visit Site ↗`
-✅ `View Source ↗`
-✅ `Tap to Connect`
+✅ `▶ PRESS START`
+✅ `> READY TO COLLAB?`
+✅ `[A] COPY EMAIL`
+✅ `▲ EJECT TO INSPECT`
+✅ `▶ PLAY DEMO`
+✅ `⌥ VIEW SOURCE`
+✅ `↓ DROP THE NEEDLE` ← ❌ DELETED, music metaphor
 
 ❌ `Click here`
 ❌ `Submit`
 ❌ `Learn more`
 ❌ `Get in touch`
+❌ `Contact me`
 
-### 7.3 Empty States
+### 7.3 Empty / Loading States
 
-When no data (e.g. Spotify not playing):
-✅ `Standby — currently silent`
-✅ `Off air right now`
-✅ `Mic muted, signal clear`
+When 3D loading:
+✅ `LOADING ASSETS...`
+✅ `RENDERING GEOMETRY...`
+
+When API fails (last commit, Spotify):
+✅ `> SIGNAL LOST · TRY AGAIN`
+✅ `> CONNECTION TIMEOUT`
+✅ `> CARTRIDGE NOT FOUND`
+
+When no data (e.g. nothing playing):
+✅ `> STANDBY`
+✅ `> OFF AIR`
 
 ### 7.4 Error States
 
-API fail, image fail:
-✅ `Signal lost — try again`
-✅ `Track unavailable, but the show goes on`
+- 404 page: title screen with `> CARTRIDGE NOT FOUND · STAGE NOT LOADED`
+- 500 error: `> SYSTEM ERROR · RESET CONSOLE ?`
+- Form validation: `> INVALID INPUT · TRY AGAIN`
 
 ---
 
@@ -330,23 +444,42 @@ API fail, image fail:
 
 When updating any section, run through:
 
-- [ ] Eyebrow follows pattern: `◉ <UPPERCASE LABEL>` (mono font)
-- [ ] Headline uses display font, italic where appropriate
-- [ ] Subtitle is ≤ 2 sentences and section-specific
-- [ ] No generic phrases ("orchestrating code", "innovative", "passionate")
-- [ ] Music metaphor present but natural
-- [ ] CTA is action-verb led
-- [ ] Empty/error states defined
+- [ ] Stage label `STAGE-NN // <NAME>` present
+- [ ] Eyebrow uses mono font + RED prefix dot
+- [ ] Headline uses display font (VT323 ≥ 32px)
+- [ ] Subtitle ≤ 1 sentence dengan command-style `> ...`
+- [ ] No music metaphor (mixer, vinyl, DAW, track, B-side)
+- [ ] Game/console metaphor present but natural
+- [ ] CTA action-verb led (Press, Open, Save, Eject)
+- [ ] Empty/error states in retro voice
 
 ---
 
 ## 9. Localization Note
 
 Spec written in English. Indonesian voice may surface in:
-- Footer copyright
+- Footer copyright easter egg (e.g. `MADE IN JAKARTA`)
 - Personal blog post titles (existing)
-- Casual blurbs
+- Casual blurbs in About bio
 
-Do **NOT** translate hero copy, project descriptions, or experience entries. Keep main marketing English (recruiters/international audience).
+Do **NOT** translate hero copy, project descriptions, experience entries. Marketing copy stays English (international audience: recruiters, devs, freelance clients).
 
-Bahasa Indonesia full version is **out of scope** for 2026 redesign (see `requirements.md` Section 8).
+Bahasa Indonesia full version is **out of scope** for redesign 2026.
+
+---
+
+## 10. Easter Eggs (optional polish)
+
+Untuk diehard scrollers:
+
+1. Konami code (↑↑↓↓←→←→BA): unlock secret achievement on Footer with toast `> KONAMI CODE ACCEPTED · +1 LIFE`
+2. Hover "INSERT COIN" 5x: plays `coin.wav`, blinks footer rank to "SS"
+3. Type "boot" anywhere: replay boot sequence
+4. Hover Adit's name in hero 3 seconds: cartridge does barrel roll
+5. Refresh button (Header replay): increments visit counter shown in hero subtitle: `· v26 · visit #N`
+
+Implementation prioritas: P3 (post-launch nice-to-have).
+
+---
+
+> Visual + Story alignment locked. Implementation copy lifted directly from this doc into components.

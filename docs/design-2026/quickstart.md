@@ -1,228 +1,276 @@
-# Quick Start Guide — Day 1 Execution
+# Quickstart — RETRO CONSOLE 2026
 
-> 30-minute pre-flight buat memulai redesign 2026.
-> Run ini sebelum nyentuh kode apa pun.
+> Practical guide buat lu mulai eksekusi besok pagi tanpa harus baca semua doc dulu.
 
 ---
 
-## Day 1 Checklist (30 minutes total)
-
-### Step 1: Branching (3 min)
+## 0. TL;DR
 
 ```bash
 cd ~/Development/next-portfolio-blog
+git checkout -b feat/redesign-2026
 
-# Make sure on main and clean
-git status
-git checkout main
-git pull origin main
+# install deps
+pnpm add @react-three/fiber @react-three/drei three detect-gpu
+pnpm remove tone
 
-# Create backup branch
-git checkout -b backup/pre-redesign-2026
-git push -u origin backup/pre-redesign-2026
-
-# Return to main
-git checkout main
-
-# Create foundation branch (Sprint 1 base)
-git checkout -b design-2026/foundation
-git push -u origin design-2026/foundation
+# ready to start Sprint 1
 ```
 
-### Step 2: Capture Baseline (10 min)
+Theme: RETRO CONSOLE · 4 colors (RED #E10600 / WHITE #F5F5F2 / GRAY #2A2A2D / BLACK #0A0A0A) · low-poly 3D · CRT scanlines · pixel typography.
+
+---
+
+## 1. What's in This Folder
+
+```
+docs/design-2026/
+├── README.md                  · index + status
+├── quickstart.md              · this file (start here)
+├── design.md                  · visual identity (palette, type, sections, header)
+├── tokens.md                  · CSS vars, Tailwind config, TS constants
+├── 3d-and-animation.md        · WebGL/R3F, shaders, motion, sound
+├── requirements.md            · goals + acceptance criteria
+├── plan.md                    · 3-week sprint roadmap
+├── tasks.md                   · granular task list per file
+├── story-map.md               · copy direction per section
+├── migration.md                · feature flag + rollback strategy
+├── performance.md             · perf budget + tactics
+├── bugfix.md                  · known issues + tech debt
+└── VISUAL_ANIMATION_CHECKLIST.md  · ship gate checklist
+```
+
+Old DAW spec di `../design-2026-archive-studio-session/` — frozen reference.
+
+---
+
+## 2. Reading Order
+
+Pilih sesuai kebutuhan:
+
+**Just want to start coding** (Day 1):
+1. quickstart.md (you are here)
+2. tokens.md → drop CSS vars
+3. tasks.md → Phase A items
+
+**Want full visual context** (planning day):
+1. design.md
+2. story-map.md
+3. 3d-and-animation.md
+
+**Decision-maker review**:
+1. requirements.md
+2. plan.md
+3. migration.md
+
+**Implementation reference** (during sprint):
+- design.md — section layouts
+- tokens.md — values
+- 3d-and-animation.md — 3D scenes & shaders
+- VISUAL_ANIMATION_CHECKLIST.md — pre-ship gate
+
+---
+
+## 3. Day-by-Day Quick Reference
+
+| Day | Focus | Primary docs |
+|-----|-------|--------------|
+| 1 | Install + tokens | tokens.md §1, §2 |
+| 2 | Fonts + globals | tokens.md §7 |
+| 3 | Header HUD bar | design.md §4.5 |
+| 4 | Pause Menu | design.md §4.5.6 |
+| 5 | Stage Divider | 3d-and-animation.md §4 |
+| 6 | Hero TITLE SCREEN | design.md §5.1, story-map.md §4.2 |
+| 7 | About CHARACTER | design.md §5.2, story-map.md §4.3 |
+| 8 | Skills INVENTORY | design.md §5.3, story-map.md §4.4 |
+| 9 | Experience STAGE SELECT | design.md §5.4 |
+| 10 | Projects GAME LIBRARY | design.md §5.5, 3d-and-animation.md §2.3 |
+| 11 | Contact + Footer | design.md §5.6, §5.7 |
+| 12 | CRT post-FX shader | 3d-and-animation.md §3.3 |
+| 13 | Vertex jitter shader | 3d-and-animation.md §3.1 |
+| 14 | Boot sequence | 3d-and-animation.md §9 |
+| 15 | Sound effects | 3d-and-animation.md §5 |
+| 16 | A11y audit | requirements.md §6.2, §7.5 |
+| 17 | Perf tuning | performance.md |
+| 18 | Cross-browser + ship | VISUAL_ANIMATION_CHECKLIST.md |
+
+---
+
+## 4. Key Decisions Locked
+
+| Question | Answer |
+|----------|--------|
+| Theme | RETRO CONSOLE (full replacement) |
+| Palette | RED / WHITE / GRAY / BLACK + 4 derivatives |
+| Mascot | Cartridge (Option 4 — brand-cohesive) |
+| MVP scope | FULL RETRO (B) — all effects ON |
+| CRT default | ON (toggleable via Header) |
+| SFX default | OFF (mute, opt-in) |
+| Theme default | dark (light mode supported best-effort) |
+| Section names | TITLE / CHARACTER / INVENTORY / CAREER / RELEASES / SAVE / STAGE-CLEAR |
+| Cartridge 3D | Top 3 = R3F canvas, bottom = SVG fallback |
+| Header themed | Yes — HUD bar with stage indicator + controls |
+| Boot sequence | Yes (1.6s, skip after first visit) |
+| Vertex jitter | Yes (PS1-style wobble) |
+| Tone.js | DROPPED entirely |
+| Light mode | functional toggle, not deep audit |
+
+---
+
+## 5. Tech Stack at a Glance
+
+**Kept**:
+- Next.js 15.1, React 19, TypeScript
+- Tailwind v4
+- Motion 12 (formerly framer-motion)
+- next-themes
+- lucide-react
+
+**Added**:
+- @react-three/fiber
+- @react-three/drei
+- three
+- detect-gpu (capability detection)
+
+**Removed**:
+- tone (Tone.js)
+- ~~Syne~~ font (replaced by VT323 + Space Grotesk + Inter + JetBrains Mono)
+
+---
+
+## 6. Commands Cheatsheet
 
 ```bash
-# Bundle baseline
+# develop
+pnpm dev                    # localhost:3000
+
+# build + preview
+pnpm build && pnpm start
+
+# type check
+pnpm tsc --noEmit
+
+# bundle analyze
 ANALYZE=true pnpm build
-# This generates analyze/*.html — save copies:
-mkdir -p docs/design-2026/baseline
-cp analyze/*.html docs/design-2026/baseline/
 
-# Lighthouse baseline (need site running)
-pnpm dev &
-sleep 8
+# lighthouse local
+pnpm lighthouse:local       # alias kalau udah di-set di scripts
 
-# Run lighthouse — desktop
-npx lighthouse http://localhost:3000 \
-  --preset=desktop \
-  --output=html,json \
-  --output-path=docs/design-2026/baseline/lighthouse-desktop \
-  --chrome-flags="--headless"
+# audit colors (custom script — bikin di Sprint 3)
+node scripts/audit-colors.mjs
 
-# Run lighthouse — mobile (default preset)
-npx lighthouse http://localhost:3000 \
-  --output=html,json \
-  --output-path=docs/design-2026/baseline/lighthouse-mobile \
-  --chrome-flags="--headless"
+# uninstall Tone
+pnpm remove tone
 
-# Stop dev server
-kill %1 2>/dev/null || true
-```
-
-### Step 3: Visual Baseline (5 min)
-
-Open production URL or local in browser. Take screenshot per section:
-
-```bash
-mkdir -p docs/design-2026/baseline/screenshots
-# Open https://adityahimaone.tech (or wherever production is)
-# Use browser screenshot tool or:
-# - Cmd+Shift+5 on Mac (region capture)
-# Save as:
-#   01-hero.png
-#   02-marquee.png
-#   03-about.png
-#   04-skills.png
-#   05-experience.png
-#   06-projects.png
-#   07-contact.png
-#   08-footer.png
-# Save all to docs/design-2026/baseline/screenshots/
-```
-
-### Step 4: Verify Build & Tests (5 min)
-
-```bash
-# Type check clean
-pnpm dlx tsc --noEmit
-
-# Tests pass
-pnpm test
-
-# Lint clean
-pnpm lint
-
-# Build succeeds
-pnpm build
-```
-
-If anything fails, **stop here** — fix before redesign.
-
-### Step 5: Read & Confirm (7 min)
-
-```bash
-# Open docs in editor
-code docs/design-2026/
-
-# Read in this order:
-# 1. README.md — overview
-# 2. requirements.md — what we're committing to
-# 3. plan.md — how we'll execute
-# 4. tasks.md — first 5 tasks of Sprint 1
-```
-
-Confirm:
-- [ ] Goals make sense
-- [ ] Constraints are agreeable
-- [ ] No conflicting commitments this 4-week window
-- [ ] Acceptance criteria realistic
-
-If not — pause and revise spec before starting.
-
----
-
-## First Task to Execute
-
-After Day 1 done, start with **T-100** (LCP fix) — biggest impact.
-
-**File**: `features/landing-page/components/hero-section.tsx`
-**Spec**: `tasks.md` T-100 + `performance.md` Section 3.1
-
-```bash
-git checkout -b feat/perf-lcp-fix design-2026/foundation
-# ... do work ...
-git add -A
-git commit -m "perf(hero): replace motion-wrapped LCP with CSS animation (T-100, R-H1)"
-git push -u origin feat/perf-lcp-fix
-# Open PR to design-2026/foundation
+# install R3F stack
+pnpm add @react-three/fiber @react-three/drei three detect-gpu
 ```
 
 ---
 
-## Daily Workflow
+## 7. File Move Cheatsheet
 
-### Morning standup (with self)
-1. Open `tasks.md`
-2. Look at top of current sprint section
-3. Pick first ☐ task that doesn't have ⏳ predecessor blocking
-4. Update status: ☐ → ⏳
-
-### During work
-- Commit small + frequent
-- Reference task ID in commit: `feat(skills): add preset buttons (T-210)`
-- Update `bugfix.md` if discover issue
-
-### End of work
-- Update task status: ⏳ → ✅ (or ❌ if blocked)
-- Note any new bugs in `bugfix.md`
-- Push branch
-- Stop
-
-### End of sprint
-- Run sprint report template (`reports/TEMPLATE.md` → `reports/sprint-N.md`)
-- Merge sprint branch to next
-- Tag: `git tag v2026-sprint-N`
+| Old | New / Action |
+|-----|--------------|
+| `src/components/navigation.tsx` | DELETE → replace with `src/components/layout/hud-bar.tsx` |
+| `src/features/landing-page/components/about/about-section.tsx` (957 LOC) | ARCHIVE → rewrite to ≤ 250 LOC |
+| `src/features/landing-page/components/skills/mixer-channel.tsx` | ARCHIVE → DELETE concept |
+| `src/features/landing-page/components/projects/vinyl-sleeve.tsx` | ARCHIVE → replace with `cartridge-card.tsx` |
+| `src/features/landing-page/components/contact/launchpad.tsx` | ARCHIVE → replace with save-point UI |
+| `src/components/section-divider.tsx` | REWRITE → `<StageDivider />` with variants |
+| Constants `MIXER_DATA` | RENAME → `INVENTORY_ITEMS` |
+| Constants `MARQUEE_PHRASES` | DELETE — Marquee section removed |
+| `tone` package | UNINSTALL |
 
 ---
 
-## Help / Escape Hatches
+## 8. Visual Cue Cheatsheet
 
-### Stuck on a task
-1. Re-read the task in `tasks.md` — full context
-2. Check requirements (R-id) in `requirements.md`
-3. Check design intent in `design.md` or `story-map.md`
-4. If still stuck, ask Hermes: "stuck on T-XXX, here's what I tried..."
-
-### Visual reference
-- See `design.md` Section 7 (per-section direction)
-- See `story-map.md` for copy guidance
-- Reference projects: vercel.com, ableton.com, splice.com
-
-### Performance regression
-1. Re-run Lighthouse local
-2. Compare to `docs/design-2026/baseline/lighthouse-*.json`
-3. If regress > 5 points → revert last commit, investigate
-4. If <5 points but still bad → continue, optimize at end of sprint
-
-### Want to change spec
-Specs are living docs. If learn something during dev:
-1. Update relevant doc (requirements/design/plan)
-2. Note in `plan.md` Section 11 Decision Log
-3. Commit doc change separately from code
+| Element | Style |
+|---------|-------|
+| Page bg | `var(--black)` `#0A0A0A` |
+| Card bg | `var(--gray-deep)` `#1A1A1C` |
+| Primary text | `var(--white)` `#F5F5F2` |
+| Accent | `var(--red)` `#E10600` |
+| Border | `var(--gray-light)` `#4A4A4D` |
+| Power LED | 8px round RED dot, pulse 1.6s |
+| Display font | VT323 ≥ 32px |
+| Body font | Inter |
+| HUD font | JetBrains Mono uppercase tracking 0.1em |
+| Border radius | `0` (except LED dots = `9999px`) |
+| Box shadow | offset only (e.g. `4px 4px 0 0 var(--red)`) — no blur |
+| Easing | `steps(8, end)` for stepped/sprite feel |
 
 ---
 
-## Emergency Contacts
+## 9. "I'm Stuck" — Where to Look
 
-If everything breaks:
-- Rollback: `migration.md` Section 6
-- Restore from backup: `git reset --hard backup/pre-redesign-2026`
-- Production hot-fix: revert PR via GitHub UI, deploy
-
----
-
-## Estimated Total Time
-
-- Sprint 0 (this doc): 0.5 day
-- Sprint 1: 1 week (5 days × 2-4h evenings = 15-20h)
-- Sprint 2: 1 week
-- Sprint 3: 1 week
-- Sprint 4: 1 week (less dev, more testing)
-
-**Total**: ~80-100 hours over 4 calendar weeks
-
-If working evenings/weekends only, allow 5-6 weeks elapsed.
+| Stuck on | Look in |
+|----------|---------|
+| Color won't apply | tokens.md §2 (Tailwind v4 @theme) |
+| 3D rendering issue | 3d-and-animation.md §2 |
+| Shader compile error | 3d-and-animation.md §3 + bugfix.md B12 |
+| SSR error from R3F | bugfix.md B11 |
+| LCP regression | performance.md §4 |
+| Bundle too big | performance.md §3.1, §3.2 |
+| Header scroll bug | bugfix.md B17 |
+| Pause menu scroll lock leak | bugfix.md B16 |
+| Boot sequence flickering | bugfix.md B14 |
+| Section copy direction | story-map.md §4 |
+| Component pattern reuse | design.md §6 |
 
 ---
 
-## When You Finish
+## 10. Sanity Checks Before Each Commit
 
-After T-431 (production deploy) green:
+- [ ] `pnpm tsc --noEmit` no errors
+- [ ] `pnpm test` passing (if tests touched)
+- [ ] No `console.log` left in src/
+- [ ] No new color hex outside palette
+- [ ] No `from 'tone'` import
+- [ ] No `width`/`height`/`top`/`left` animation
+- [ ] All 3D Canvas wrapped in `dynamic({ ssr: false })`
+- [ ] Reduced motion graceful (test in DevTools)
 
-1. Tag: `git tag v2026.0.0`
-2. Write final blog post: "Why I redesigned (again) for 2026"
-3. Update LinkedIn / X with new portfolio link
-4. Save spec set to portfolio archive
-5. Pat yourself on the back. You did it. 🎚
+---
 
-Then start backlog (`plan.md` Section 12).
+## 11. Definition of "Stage Done"
+
+A section/stage is "done" when:
+- ✅ Has `data-stage-num` + `data-stage-name`
+- ✅ Visual matches design.md spec
+- ✅ Copy lifted from story-map.md
+- ✅ All tasks under that phase in tasks.md checked
+- ✅ Keyboard accessible
+- ✅ Reduced motion graceful
+- ✅ Lighthouse no regression
+- ✅ Reviewed by Adit (visual approval)
+
+---
+
+## 12. Quick Win Order (Day 1 Energy)
+
+Kalo lu mau ngerasain progress cepet di Day 1:
+1. Drop CSS vars → buka site → semua warna berubah ✓
+2. Install fonts → refresh → typography baru ✓
+3. Bikin `<HUDBar />` placeholder di header → langsung kelihatan retro ✓
+
+Done. Sisanya tinggal eksekusi sprint.
+
+---
+
+## 13. When to Ask Hermes for Help
+
+- Stuck on shader code (GLSL)
+- Need help debug 3D performance
+- Color audit script writing
+- Visual diff between sprints
+- Lighthouse interpretation
+
+```
+"hermes, help debug vertex jitter shader, output is black canvas in safari"
+```
+
+---
+
+> Now go. Press start.

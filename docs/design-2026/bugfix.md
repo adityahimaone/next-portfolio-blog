@@ -1,409 +1,254 @@
-# Bugfix & Tech Debt Tracker 2026
+# Bugfix — Known Issues + Tech Debt RETRO CONSOLE 2026
 
-> Known bugs, tech debt, dan issue yang ditemuin selama redesign.
-> Live document — update saat nemu issue.
-
----
-
-## 1. Critical Bugs (Found During Audit)
-
-### B-001 — LCP element wrapped in motion delay
-- **Severity**: P0 (blocker for perf goal)
-- **File**: `features/landing-page/components/hero-section.tsx:85-103`
-- **Issue**: `<motion.h1>ADITYA</motion.h1>` has `initial={{ opacity: 0 }}` + `transition={{ delay: baseDelay + 0.1 }}` where `baseDelay=1`. Effectively LCP element invisible for 1.1s minimum, plus motion paint cost.
-- **Fix**: T-100 (replace with CSS animation)
-- **Status**: ☐ todo
-
-### B-002 — Preloader sessionStorage skip not verified
-- **Severity**: P1
-- **File**: `features/landing-page/animations/preloader.tsx:21-30`
-- **Issue**: Skip path exists but unclear if exits in <100ms. Could still cause LCP delay on return visit.
-- **Fix**: T-101 (add timing log, verify)
-- **Status**: ☐ todo
-
-### B-003 — Tone.js loaded in initial bundle
-- **Severity**: P1
-- **File**: `features/landing-page/spotify/use-audio-engine.tsx`
-- **Issue**: `tone` library imported eagerly even though only Contact section uses it. Adds ~150 KiB to first-load.
-- **Fix**: T-401 (defer via IntersectionObserver)
-- **Status**: ☐ todo
-
-### B-004 — Floating notes infinite Motion components
-- **Severity**: P2
-- **File**: `features/landing-page/views/landing-page.tsx:80-131`
-- **Issue**: 3 `motion.div` with `repeat: Infinity` running on landing page render constantly. Wastes GPU and JS.
-- **Fix**: T-131 (delete entirely)
-- **Status**: ☐ todo
-
-### B-005 — All sections dynamic without skeleton
-- **Severity**: P1
-- **File**: `features/landing-page/views/landing-page.tsx:20-25`
-- **Issue**: 6 `dynamic()` imports without `loading` prop. Causes layout collapse → CLS spike.
-- **Fix**: T-105 (add SectionSkeleton)
-- **Status**: ☐ todo
+> Issues to address along the redesign. Some carry over dari `perf-fix-plan.md` lama.
+> Companion: `tasks.md` (granular execution).
 
 ---
 
-## 2. High Tech Debt
+## 1. Carry-Over from Studio Session Era
 
-### T-D-001 — about-section.tsx is 957 LOC
+Issues yang ada di repo sekarang tapi tidak di-fix sebelum redesign — di-kerjakan inline saat sprint.
+
+### B1. About section file size 957 LOC
+- **Severity**: P1
+- **Fix**: rewrite to ≤ 250 LOC (lihat tasks.md E1)
+- **Sprint**: Sprint 2 Day 7
+- **Status**: ☐ TODO
+
+### B2. Tone.js in first-load bundle
 - **Severity**: P0
-- **File**: `features/landing-page/components/about-section.tsx`
-- **Issue**: Single component with all clip content inline. Hard to maintain, slow to compile, blocks lazy load granularity.
-- **Fix**: T-120 (split into per-clip files)
-- **Status**: ☐ todo
+- **Fix**: Tone.js dropped entirely (Contact section redesigned)
+- **Sprint**: Sprint 2 Day 11
+- **Status**: ☐ TODO
 
-### T-D-002 — globals.css has 632 LOC, likely dead code
+### B3. Floating notes / decorative emoji background
 - **Severity**: P2
-- **File**: `app/globals.css`
-- **Issue**: 632 lines suggest legacy classes (`.vinyl-record`, `.music-wave`) that may not be used anywhere.
-- **Fix**: T-112 (audit + prune, target < 400 LOC)
-- **Status**: ☐ todo
+- **Fix**: Removed in retro console redesign — visual noise gone
+- **Sprint**: Implicit (deleted with section rewrites)
+- **Status**: ☐ TODO
 
-### T-D-003 — Hardcoded project tech stack
-- **Severity**: P2
-- **File**: `features/landing-page/components/projects-section.tsx:191-200`
-- **Issue**: `['React', 'Next.js', 'Tailwind', 'TypeScript']` hardcoded for ALL projects. Misleading — different projects use different stacks.
-- **Fix**: T-232 (use dynamic per-project from `tech` field)
-- **Status**: ☐ todo
+### B4. Multiple accent colors (5+)
+- **Severity**: P0
+- **Fix**: Single accent RED #E10600, palette enforced
+- **Sprint**: Sprint 1 Day 1 (tokens) + audit Sprint 3
+- **Status**: ☐ TODO
 
-### T-D-004 — Skill duplication across sections
+### B5. No `prefers-reduced-motion` global override
 - **Severity**: P1
-- **Files**: 
-  - `features/landing-page/components/about-section.tsx` (Track 2 - STACK)
-  - `features/landing-page/components/skills-section.tsx`
-  - `features/landing-page/components/about-section.tsx` (in IDENTITY clip "Core Modules")
-- **Issue**: Same skill data appears 3 times in different visualizations. User confused which is canonical.
-- **Fix**: T-121 (drop STACK from About, keep Skills section + IDENTITY summary only)
-- **Status**: ☐ todo
+- **Fix**: Added to globals.css (lihat tokens.md §1)
+- **Sprint**: Sprint 1 Day 2
+- **Status**: ☐ TODO
 
-### T-D-005 — Section colors inconsistent
+### B6. Section dividers static + decorative
+- **Severity**: P2
+- **Fix**: Replaced with `<StageDivider variant />` (loading/glitch/door)
+- **Sprint**: Sprint 1 Day 5
+- **Status**: ☐ TODO
+
+### B7. `dynamic()` imports tanpa skeleton
+- **Severity**: P1 (CLS contributor)
+- **Fix**: All `dynamic()` calls add `loading: () => <SectionSkeleton />`
+- **Sprint**: Sprint 2 (per section)
+- **Status**: ☐ TODO
+
+### B8. Spotify ticker tidak ada fallback
+- **Severity**: P2
+- **Fix**: Empty state copy `> STANDBY · OFF AIR`
+- **Sprint**: Sprint 2 (during About rewrite)
+- **Status**: ☐ TODO
+
+### B9. Project modal tech stack hardcoded
 - **Severity**: P1
-- **Files**: experience-section, about-section, skills-section
-- **Issue**: 5+ accent colors used (purple, pink, blue, orange, amber, green). No design system rationale.
-- **Fix**: T-300-304 (single amber accent migration)
-- **Status**: ☐ todo
+- **Fix**: New `tech` field per project (data schema migration §3.3)
+- **Sprint**: Sprint 2 Day 10 (Projects)
+- **Status**: ☐ TODO
 
-### T-D-006 — Mobile mixer cuts faders
+### B10. Experience section: no current job indicator
 - **Severity**: P1
-- **File**: `features/landing-page/components/skills-section.tsx:297-305`
-- **Issue**: Mobile shows only `MIXER_DATA[0].channels.slice(-4)` (last 4 of 6). Story breaks — user thinks Adit only knows 4 languages.
-- **Fix**: T-211 (horizontal scroll, all 6 visible)
-- **Status**: ☐ todo
+- **Fix**: New `current: boolean` field, RED border on current tile
+- **Sprint**: Sprint 2 Day 9
+- **Status**: ☐ TODO
 
 ---
 
-## 3. Medium Tech Debt
+## 2. New Issues Likely to Surface (Predicted)
 
-### T-D-010 — `@next/mdx` version mismatch
-- **Severity**: P2
-- **File**: `package.json`
-- **Issue**: `@next/mdx@14.2.13` while Next.js is `15.1.11`. Could cause subtle bugs.
-- **Fix**: T-103 / bump to ^15.1.11
-- **Status**: ☐ todo
+Based on tech stack changes + retro theme demands. Add to this list as encountered.
 
-### T-D-011 — `next.config.ts` empty
-- **Severity**: P2
-- **File**: `next.config.ts`
-- **Issue**: File is 0 bytes / empty. There's also `next.config.mjs`. Unclear which one Next reads.
-- **Fix**: Delete `next.config.ts`, keep `.mjs`. Or vice versa, but need single source.
-- **Status**: ☐ todo
+### B11. R3F SSR errors
+- **Symptom**: "ReferenceError: window is not defined" during build
+- **Cause**: 3D components must not SSR
+- **Fix**: Wrap all 3D imports in `dynamic({ ssr: false })`
+- **Status**: PROACTIVE — handle in Sprint 2 Day 6
 
-### T-D-012 — TypeScript target ES2017
-- **Severity**: P1
-- **File**: `tsconfig.json`
-- **Issue**: ES2017 target ships polyfills for modern browsers that already support ES2022. ~11 KiB waste.
-- **Fix**: T-102 (target ES2022)
-- **Status**: ☐ todo
+### B12. Custom shader compilation errors per browser
+- **Symptom**: Black canvas on Safari/Firefox, works on Chrome
+- **Cause**: GLSL precision qualifiers, WebGL2 vs WebGL1 differences
+- **Fix**: Test cross-browser, add `precision mediump float;` to fragment, fallback to plain material
+- **Status**: PROACTIVE — handle in Sprint 3 Day 13
 
-### T-D-013 — Hardcoded "MODEL NO. AH-2026-MKIII"
-- **Severity**: P3
-- **File**: `features/landing-page/components/about-section.tsx`
-- **Issue**: Specific model number hardcoded in JSX. If lu update version, harus edit string.
-- **Fix**: Move to constant or computed from package.json version
-- **Status**: ☐ todo
+### B13. VT323 font hairlines
+- **Symptom**: VT323 too thin to read at small sizes
+- **Cause**: Font designed for ≥ 32px
+- **Fix**: Strict rule: VT323 only for display ≥ 32px (enforce via lint)
+- **Status**: PROACTIVE — documented in design.md §3.3
 
-### T-D-014 — Memoji used inconsistently
-- **Severity**: P3
-- **File**: `public/memoji-1.png`
-- **Issue**: Memoji file exists but unclear where used. Search for `memoji-1.png` import:
-  ```bash
-  grep -rn "memoji" features/ app/ components/
-  ```
-- **Fix**: Either use prominently somewhere, or remove file
-- **Status**: ☐ todo (audit needed)
+### B14. Boot sequence flicker
+- **Symptom**: Boot screen disappears then reappears briefly during hydrate
+- **Cause**: Hydration mismatch — server renders boot, client checks localStorage and unmounts
+- **Fix**: Mount boot only after `useEffect` confirms localStorage state, render `null` initially
+- **Status**: PROACTIVE — handle in Sprint 3 Day 14
 
-### T-D-015 — Multiple background components unused
-- **Severity**: P3
-- **Files**: `components/*-background.tsx`
-- **List of background components**:
-  - `aurora-background.tsx`
-  - `circular-equalizer-background.tsx`
-  - `equalizer-background.tsx`
-  - `flowing-lines-background.tsx`
-  - `grid-distortion-background.tsx`
-  - `hexagon-wave-background.tsx`
-  - `oscilloscope-background.tsx`
-  - `retro-grid-background.tsx`
-  - `rhythm-background.tsx`
-- **Issue**: 9 background variant components — likely most are unused experimentation. Adds repo bloat.
-- **Fix**: Audit usage, delete unused. Move kept ones to `features/landing-page/spotify/` (where MusicBackground already lives).
-- **Status**: ☐ todo
+### B15. CRT shader breaks dark/light mode
+- **Symptom**: Light mode + CRT scanlines = unreadable
+- **Cause**: Scanline overlay uses `mix-blend-mode: multiply` which works on dark only
+- **Fix**: Different blend mode per theme, or auto-disable CRT on light mode
+- **Status**: PROACTIVE — handle in Sprint 3 Day 12
 
-### T-D-016 — Spotify auth flow scattered
-- **Severity**: P3
-- **Files**: 
-  - `app/api/spotify-auth/route.ts`
-  - `app/api/callback/route.ts`
-  - `app/api/now-playing/route.ts`
-  - `app/spotify-setup/page.tsx`
-- **Issue**: Spotify integration spread across 4 places. Could consolidate to a feature folder `features/spotify-integration/`.
-- **Fix**: Optional refactor, not blocking redesign
-- **Status**: ⏸ paused (not in scope)
+### B16. Pause menu scroll lock leaks
+- **Symptom**: Body scroll still works when pause menu open on iOS Safari
+- **Cause**: iOS Safari `overflow: hidden` doesn't fully lock
+- **Fix**: Use `position: fixed; top: -${scrollY}px` trick, restore on close
+- **Status**: PROACTIVE — handle in Sprint 1 Day 4
 
----
+### B17. Stage indicator stuck on wrong section
+- **Symptom**: HUD bar shows "STAGE-03" while user is at STAGE-04
+- **Cause**: IntersectionObserver threshold tuning, simultaneous overlapping sections
+- **Fix**: Use rootMargin + threshold tuple, prefer last-entered section if multiple intersect
+- **Status**: PROACTIVE — handle in Sprint 1 Day 3
 
-## 4. Low Priority Tech Debt
+### B18. Cartridge canvas too many WebGL contexts
+- **Symptom**: "Too many WebGL contexts" warning, canvases rendering empty
+- **Cause**: Browser limit ~16 simultaneous WebGL contexts; 6 cards × 1 each = 6 (OK) but cumulative across page (mascot 1 + portrait 1 + cartridge 3 + crystal 1 = 6) = 6 (OK)
+- **Fix**: Stay under 8 contexts at once; if exceed, use offscreen rendering pattern with single context (advanced)
+- **Status**: PROACTIVE — keep cartridge 3D top 3 only
 
-### T-D-020 — Test coverage thin
-- **Severity**: P3
-- **Files**: `tests/`
-- **Issue**: Only 2-3 tests exist (`performance-bug-condition`, `performance-preservation`). No component-level tests.
-- **Fix**: Add component tests in Sprint 4 (T-421)
-- **Status**: ☐ todo
+### B19. Scroll-snap conflicts with hash anchors
+- **Symptom**: `#about` link scrolls to wrong section due to scroll-snap
+- **Cause**: `scroll-snap-type` on `<html>` interferes with anchor jumps
+- **Fix**: Don't add scroll-snap to root; only to specific overflow containers (mobile experience tiles only)
+- **Status**: PROACTIVE — handle in Sprint 2 Day 9
 
-### T-D-021 — `.deploy-trigger-*` files
-- **Severity**: P3
-- **Files**: `.deploy-trigger-20260502-022626`, `deploy-test.txt`, `dev-deploy-test2.txt`, `test-notify.txt`
-- **Issue**: Trigger files shouldn't be committed to repo
-- **Fix**: Move to `.gitignore`, delete tracked instances
-- **Status**: ☐ todo
+### B20. SFX autoplay blocked
+- **Symptom**: First user interaction triggers no sound
+- **Cause**: Browser autoplay policy requires gesture
+- **Fix**: Default mute, opt-in via Header SFX button. First click of SFX-on triggers `play().catch()` which warms up
+- **Status**: PROACTIVE — documented in 3d-and-animation.md §5
 
-### T-D-022 — `analyze/nodejs.html` committed
-- **Severity**: P3
-- **File**: `analyze/nodejs.html`
-- **Issue**: Bundle analyzer output should not be in repo
-- **Fix**: Add `analyze/` to `.gitignore`
-- **Status**: ☐ todo
+### B21. Tailwind v4 @theme not picking up custom colors
+- **Symptom**: `bg-red` class doesn't apply, falls back to default
+- **Cause**: Tailwind v4 needs `@theme` block in correct CSS file (globals.css imported by app)
+- **Fix**: Verify `@theme` is in entry CSS, not nested
+- **Status**: PROACTIVE — handle in Sprint 1 Day 1
 
-### T-D-023 — Duplicate `morphing-dialog.tsx` and `slider.tsx` in components/
-- **Severity**: P3
-- **Files**: `components/morphing-dialog.tsx`, `components/slider.tsx`
-- **Issue**: Top-level components — usage unclear. Slider also exists in features.
-- **Fix**: Audit usage, either keep at top (truly shared) or move to feature folder
-- **Status**: ☐ todo
+### B22. localStorage SSR error
+- **Symptom**: Build fails with "localStorage is not defined"
+- **Cause**: Reading localStorage in component body during SSR
+- **Fix**: Always wrap in `useEffect` or `typeof window !== 'undefined'` check
+- **Status**: PROACTIVE — code review checklist
+
+### B23. Image alt text inconsistent
+- **Symptom**: Lighthouse a11y warning
+- **Cause**: Some `<Image>` use `alt=""` (decorative) others meaningful, some missing
+- **Fix**: Audit pass, decorative = `alt=""`, meaningful = descriptive
+- **Status**: PROACTIVE — Sprint 3 Day 16
+
+### B24. NEXT_PUBLIC_THEME_2026 cache mismatch
+- **Symptom**: Flag flip but old theme still serving
+- **Cause**: Next.js build-time constant baked in; need rebuild
+- **Fix**: Always rebuild after env change; or runtime flag with cookie (slower)
+- **Status**: ACCEPTED TRADE-OFF — build-time flag faster runtime
+
+### B25. lucide-react icon bloat
+- **Symptom**: First-load includes icons not used
+- **Cause**: Default import `import { Foo } from 'lucide-react'` works fine if `experimental.optimizePackageImports` is set
+- **Fix**: Verify `next.config.js` has `optimizePackageImports: ['lucide-react']`
+- **Status**: PROACTIVE — config check Sprint 1 Day 1
 
 ---
 
-## 5. Accessibility Issues
+## 3. Tech Debt Backlog (Defer to Post-Launch)
 
-### A-001 — Custom inputs (faders, knobs) lack keyboard nav
-- **Severity**: P1
-- **Files**: `features/landing-page/components/skills-section.tsx`, `features/landing-page/components/contact/contact-section.tsx`
-- **Issue**: Faders/knobs draggable via mouse but no arrow key support. Pads only respond to click, not Enter/Space.
-- **Fix**: T-411 (add `role="slider"`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, arrow key handlers)
-- **Status**: ☐ todo
+### TD1. Light mode deep audit
+Light mode functional but not visually polished per section. Defer to v2.
 
-### A-002 — `prefers-reduced-motion` not honored globally
-- **Severity**: P1
-- **File**: `app/globals.css`
-- **Issue**: No media query override. Users with motion sensitivity see all animations full speed.
-- **Fix**: T-104 (add global override)
-- **Status**: ☐ todo
+### TD2. Custom cursor
+Optional polish. Skip MVP.
 
-### A-003 — Color contrast unverified
-- **Severity**: P1 (after color migration)
-- **Files**: All sections
-- **Issue**: New amber accent on dark surface needs WCAG AA verification. Some `text-zinc-500` on `bg-zinc-900` may fail.
-- **Fix**: T-412 (Lighthouse a11y audit + manual check)
-- **Status**: ☐ todo
+### TD3. Konami code easter egg
+Story-map.md §10 mentions. Defer to v2.
 
-### A-004 — Some `aria-label` may be inaccurate
-- **Severity**: P2
-- **Files**: Various
-- **Issue**: e.g. `aria-label={isPlaying ? 'Pause Session' : 'Play Session'}` — good. But others like `aria-label={`Pad ${pad.id}`}` use ID which might be `dummy-3-2` — unhelpful.
-- **Fix**: T-410 (audit and improve labels)
-- **Status**: ☐ todo
+### TD4. Service Worker / offline mode
+Performance.md §12. Defer to v2.
 
-### A-005 — Modal dialogs may not trap focus
-- **Severity**: P2
-- **Files**: 
-  - `features/landing-page/components/about-section.tsx` (DetailWindow)
-  - `features/landing-page/components/projects-section.tsx` (Project modal)
-- **Issue**: Modal opens but Tab can leave the modal. Should focus-trap.
-- **Fix**: Use Radix Dialog or implement focus trap manually
-- **Status**: ☐ todo
+### TD5. Multi-language version
+Out of scope (requirements §3 / §8).
+
+### TD6. Real-time visit counter (footer "visit #N")
+Story-map.md §10. Defer to v2.
+
+### TD7. Recording mode di Contact (capture sequence)
+Studio Session-era backlog item. Now obsolete (Tone.js dropped). Killed.
+
+### TD8. Audio glue / Tone.js section automation
+Killed (Tone.js dropped).
+
+### TD9. 3D mascot upgrade from cartridge to character
+Currently mascot = cartridge (Option 4). v2 may upgrade to Option 2 (Game Boy character) or Option 3 (Adit avatar).
+
+### TD10. Server-side analytics
+Currently Vercel Analytics free tier. Defer enhancement.
 
 ---
 
-## 6. Performance Bugs
+## 4. Bug Reporting Process
 
-### P-001 — `useAudioFrequency` hook called even if audio not playing
-- **Severity**: P3
-- **File**: `features/landing-page/components/hero-section.tsx:28`
-- **Issue**: `const frequencyData = useAudioFrequency(audioRef.current)` runs always. The `ReactiveVisualizer` is dead code (`{false && isPlaying && ...}`) — hook should be conditional.
-- **Fix**: Remove `useAudioFrequency` call from Hero (visualizer disabled)
-- **Status**: ☐ todo
+### 4.1 During Sprint
 
-### P-002 — Images not optimized
-- **Severity**: P1
-- **Files**: `public/*.jpg`, `public/*.png`, `public/assets/*.png`
-- **Issue**: PNG/JPG without AVIF/WebP variants
-- **Fix**: T-400 (convert via cwebp or Squoosh)
-- **Status**: ☐ todo
+- Encountered bug → log in this file under Section 5 (Active Bugs)
+- Severity: P0 (blocker) / P1 (must fix) / P2 (should fix) / P3 (nice fix)
+- Fix in current sprint if P0/P1, defer to backlog if P2/P3
 
-### P-003 — Multiple bundle entry for similar functionality
-- **Severity**: P2
-- **Files**: 9 background components in `components/`
-- **Issue**: Each background-tsx file pulls into its own chunk if imported. Likely never bundled because unused.
-- **Fix**: Audit usage, delete unused (T-D-015)
-- **Status**: ☐ todo
+### 4.2 Post-Launch
 
-### P-004 — Heavy initial CSS
-- **Severity**: P2
-- **File**: `app/globals.css` (632 LOC)
-- **Issue**: All CSS shipped on every page even though some classes only apply to landing
-- **Fix**: T-112 (audit) + Next.js automatic critical CSS
-- **Status**: ☐ todo
+- User-reported bugs go to Linear/GitHub Issues
+- Triage weekly
+- Hotfix critical, batch P2 monthly
 
 ---
 
-## 7. Visual Bugs
+## 5. Active Bugs (live tracker — update as encountered)
 
-### V-001 — Hero "New Release" stamp clips on small screens
-- **Severity**: P2
-- **File**: `features/landing-page/components/hero-section.tsx:217-228`
-- **Issue**: Absolute-positioned stamp at `-top-4 -right-4` may be clipped on viewport <320px
-- **Fix**: T-203 (replace with version chip, less prone to clipping)
-- **Status**: ☐ todo
+> Empty during planning phase. Append entries here selama implementation.
 
-### V-002 — Mixer mobile layout cramped
-- **Severity**: P2
-- **File**: `features/landing-page/components/skills-section.tsx`
-- **Issue**: At 375px width, mixer panels stack but inner padding too tight
-- **Fix**: T-211 (mobile redesign with horizontal scroll)
-- **Status**: ☐ todo
-
-### V-003 — DAW timeline overflow on mobile
-- **Severity**: P2
-- **File**: `features/landing-page/components/about-section.tsx` (TimeRuler line 43-57)
-- **Issue**: `min-w-[800px]` forces horizontal scroll on mobile but no scroll indicator
-- **Fix**: Add scroll hint or rethink mobile DAW layout
-- **Status**: ☐ todo
-
-### V-004 — Project card vinyl partially hidden behind sleeve
-- **Severity**: P3
-- **File**: `features/landing-page/components/projects-section.tsx:62-82`
-- **Issue**: Vinyl record slides out from behind sleeve on hover, but on mobile (no hover) vinyl stays hidden — discovery problem
-- **Fix**: Add tap interaction for mobile (active state instead of hover)
-- **Status**: ☐ todo (probably cover via existing `group-active:translate-x-[50%]`)
-
-### V-005 — Section dividers look static/dead
-- **Severity**: P3
-- **File**: `components/section-divider.tsx`
-- **Issue**: Static divider doesn't match musical theme of rest of site
-- **Fix**: T-320 (musical variants)
-- **Status**: ☐ todo
+```
+### B-XXX. [Title]
+- Severity: P[0-3]
+- Reported by: [name/sprint]
+- Sprint: [N]
+- Steps to reproduce: ...
+- Expected: ...
+- Actual: ...
+- Fix: ...
+- Status: ☐ TODO / ⏳ IN PROGRESS / ✅ FIXED / ❌ BLOCKED
+```
 
 ---
 
-## 8. Content Bugs
+## 6. Verified Resolutions (after fix)
 
-### C-001 — Hero subtitle generic
-- **Severity**: P1
-- **File**: `features/landing-page/components/hero-section.tsx:106-110`
-- **Issue**: "Orchestrating code and rhythm into immersive digital experiences" — sounds like AI wrote it
-- **Fix**: T-201 (specific copy)
-- **Status**: ☐ todo
+> Move entries here from Section 1, 2, 5 once fixed and verified in production.
 
-### C-002 — Marquee phrases generic
-- **Severity**: P2
-- **File**: `features/landing-page/spotify/music-marquee.tsx:28-39`
-- **Issue**: "WHERE CODE MEETS RHYTHM", "FRONTEND SYMPHONIES" — cliche metaphors
-- **Fix**: Replace with personal/topical phrases (`story-map.md` Section 4.2)
-- **Status**: ☐ todo
-
-### C-003 — Project description first sentence too long for card
-- **Severity**: P3
-- **File**: `features/landing-page/constants/index.ts:223-294`
-- **Issue**: Project descriptions ~30-50 words. Card displays only 1 line. Modal shows full but card preview cut off mid-sentence.
-- **Fix**: Add `tagline?: string` field per project (1-line summary)
-- **Status**: ☐ todo
-
-### C-004 — Experience descriptions inconsistent voice
-- **Severity**: P3
-- **File**: `features/landing-page/constants/index.ts:101-177`
-- **Issue**: Some bullets start "Led the development", others "Spearheaded", others "Maintained" — voice inconsistent
-- **Fix**: Normalize to action-verb led, past tense, ≤ 12 words
-- **Status**: ☐ todo
-
-### C-005 — Some projects missing `metric` (impact)
-- **Severity**: P2
-- **File**: `features/landing-page/constants/index.ts`
-- **Issue**: After T-230 add `metric` field, may not have data for all 6 projects
-- **Fix**: Make optional. For projects without metric, hide badge gracefully.
-- **Status**: ☐ todo (depends on T-230)
+(empty)
 
 ---
 
-## 9. Build/Deploy Bugs
+## 7. Cross-Reference
 
-### D-001 — Multiple deploy trigger files in repo
-- **Severity**: P3
-- **Files**: `.deploy-trigger-20260502-022626`, `deploy-test.txt`, `test-notify.txt`, `dev-deploy-test2.txt`
-- **Issue**: Files used to trigger deploys committed to repo
-- **Fix**: Add to `.gitignore`, remove from history (or just untrack)
-- **Status**: ☐ todo
-
-### D-002 — Two next.config files
-- **Severity**: P2
-- **Files**: `next.config.ts`, `next.config.mjs`
-- **Issue**: Both exist. Next.js will use one, but unclear which. Risk of misconfig.
-- **Fix**: Keep one, delete other. Verify behavior unchanged.
-- **Status**: ☐ todo
-
-### D-003 — `analyze/` folder committed
-- **Severity**: P3
-- **File**: `analyze/nodejs.html`
-- **Issue**: Bundle analyzer output should not be tracked
-- **Fix**: Add `/analyze/` to `.gitignore`
-- **Status**: ☐ todo
+- Performance issues → also tracked in `performance.md`
+- Migration / rollback risks → `migration.md` §4
+- Acceptance criteria gates → `requirements.md` §7
 
 ---
 
-## 10. Discovered During Implementation
-
-> Add new bugs/debt here as found during sprint execution.
-
-### (template)
-### B-XXX — Title
-- **Severity**: PX
-- **File**: `path/to/file.tsx:LINE`
-- **Issue**: Description
-- **Fix**: Solution / task ID
-- **Found by**: Adit / Hermes / user
-- **Status**: ☐ todo
-
----
-
-## 11. Severity Definitions
-
-| Severity | Definition | Response Time |
-|----------|------------|---------------|
-| P0 | Blocks ship; functional broken | Fix in current sprint |
-| P1 | Major degradation, must fix before ship | Fix in current or next sprint |
-| P2 | Noticeable issue, should fix | Fix within 2 sprints |
-| P3 | Minor / cosmetic | Backlog, fix when convenient |
-
----
-
-## 12. Issue Triage Process
-
-1. Discover issue (during dev, audit, user report)
-2. Add entry here with template above
-3. Assign severity
-4. Link to related task in `tasks.md` (if exists) or create new task
-5. Update status as work progresses
-6. Mark `✅ done` when resolved + reference fix commit
-
-Don't let this doc go stale — every PR should update at least 1 entry here (close existing or note new).
+> Update entries as you go. Don't let bugs accumulate silently.

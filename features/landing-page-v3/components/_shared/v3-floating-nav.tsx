@@ -2,7 +2,7 @@
 
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
-import { SECTIONS_V3 } from '../constants'
+import { SECTIONS_V3 } from '../../constants'
 
 /**
  * V3FloatingNav — minimal floating section index.
@@ -73,9 +73,7 @@ export function V3FloatingNav() {
                 <span
                   className="v3-mono opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                   style={{
-                    color: isActive
-                      ? 'var(--v3-paper)'
-                      : 'var(--v3-fg-muted)',
+                    color: isActive ? 'var(--v3-paper)' : 'var(--v3-fg-muted)',
                   }}
                 >
                   {s.index} · {s.label}
@@ -84,9 +82,7 @@ export function V3FloatingNav() {
                   aria-hidden
                   className="block h-px transition-all duration-300"
                   style={{
-                    background: isActive
-                      ? 'var(--v3-iris-1)'
-                      : 'var(--v3-fog)',
+                    background: isActive ? 'var(--v3-iris-1)' : 'var(--v3-fog)',
                     width: isActive ? '32px' : '16px',
                   }}
                 />

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, useState, useEffect } from 'react'
 import {
   m as motion,
   useScroll,
@@ -10,21 +10,30 @@ import {
 import { Play, Pause, SkipForward } from 'lucide-react'
 import { Magnetic } from '@/components/magnetic'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
-import { Syne } from 'next/font/google'
-
-import { useState, useEffect } from 'react'
-
-const syne = Syne({ weight: ['700', '800'], subsets: ['latin'] })
 
 export function HeroSection() {
   const [baseDelay, setBaseDelay] = useState(1)
+  const [tapeCounter, setTapeCounter] = useState('00:00:00')
 
   useEffect(() => {
-    // If preloader was already shown (skipped), we don't need a massive delay
-    // If it wasn't shown, it's running right now, so we need to wait for it
     if (sessionStorage.getItem('preloaderShown')) {
       setBaseDelay(0.1)
     }
+  }, [])
+
+  // Tape counter animation - counts up from 00:00:00
+  useEffect(() => {
+    let startTime = Date.now()
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 100) // Update every 100ms
+      const minutes = Math.floor(elapsed / 600)
+      const seconds = Math.floor((elapsed % 600) / 10)
+      const frames = elapsed % 10
+      setTapeCounter(
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}:${String(frames).padStart(2, '0')}`
+      )
+    }, 100)
+    return () => clearInterval(interval)
   }, [])
 
   const { isPlaying, togglePlay, currentTrack } = useAudio()
@@ -44,14 +53,15 @@ export function HeroSection() {
 
   const y = useTransform(scrollYProgress, [0, 1], [0, 150])
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9])
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.95])
 
   return (
     <section
       ref={containerRef}
-      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-zinc-50 transition-colors dark:bg-zinc-950"
+      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden"
+      style={{ backgroundColor: 'var(--color-charcoal)' }}
     >
-      {/* CSS Scroll-Driven Animations (progressive enhancement, Chrome 115+) */}
+      {/* CSS Scroll-Driven Animations */}
       <style jsx>{`
         @supports (animation-timeline: scroll()) {
           @keyframes hero-parallax {
@@ -60,7 +70,7 @@ export function HeroSection() {
               opacity: 1;
             }
             to {
-              transform: translateY(150px) scale(0.9);
+              transform: translateY(150px) scale(0.95);
               opacity: 0;
             }
           }
@@ -71,152 +81,250 @@ export function HeroSection() {
             animation-range: 0vh 100vh;
           }
 
-          /* Disable Framer Motion transforms when CSS scroll-driven animations are supported */
           .hero-content-enhanced > * {
             transform: none !important;
           }
         }
+
+        @keyframes tape-reel-spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .tape-reel {
+          animation: tape-reel-spin 3s linear infinite;
+          animation-play-state: ${isPlaying ? 'running' : 'paused'};
+        }
+
+        .tape-reel-slow {
+          animation: tape-reel-spin 4s linear infinite;
+          animation-play-state: ${isPlaying ? 'running' : 'paused'};
+        }
       `}</style>
 
-      {/* Amp Cabinet Background (Grille) */}
+      {/* Background: Deep charcoal with noise texture */}
       <div className="absolute inset-0 z-0">
         <div
-          className="absolute inset-0 bg-[radial-gradient(#000_1.5px,transparent_1.5px)] opacity-10 dark:bg-[radial-gradient(#333_1.5px,transparent_1.5px)] dark:opacity-50"
-          style={{ backgroundSize: '4px 4px' }}
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)',
+          }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay dark:opacity-20" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%)] dark:bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '200px 200px',
+          }}
+        />
+      </div>
+
+      {/* Tape Reel Animation - Decorative */}
+      <div className="absolute top-20 left-10 z-10 hidden opacity-20 md:block" aria-hidden="true">
+        <div className="tape-reel relative h-24 w-24">
+          <div
+            className="absolute inset-0 rounded-full border-4"
+            style={{
+              borderColor: 'var(--color-ochre)',
+              background: 'radial-gradient(circle, var(--color-surface) 30%, transparent 30%)',
+            }}
+          />
+          <div className="absolute inset-4 rounded-full border-2" style={{ borderColor: 'var(--color-ochre)' }} />
+          <div className="absolute inset-8 rounded-full" style={{ backgroundColor: 'var(--color-surface)' }} />
+        </div>
+      </div>
+
+      <div className="absolute top-20 right-10 z-10 hidden opacity-20 md:block" aria-hidden="true">
+        <div className="tape-reel-slow relative h-24 w-24">
+          <div
+            className="absolute inset-0 rounded-full border-4"
+            style={{
+              borderColor: 'var(--color-ochre)',
+              background: 'radial-gradient(circle, var(--color-surface) 30%, transparent 30%)',
+            }}
+          />
+          <div className="absolute inset-4 rounded-full border-2" style={{ borderColor: 'var(--color-ochre)' }} />
+          <div className="absolute inset-8 rounded-full" style={{ backgroundColor: 'var(--color-surface)' }} />
+        </div>
       </div>
 
       <motion.div
         style={{ y, opacity, scale }}
         className="hero-content-enhanced relative z-20 container mx-auto mt-24 flex flex-col items-center px-4 text-center md:px-6"
       >
-        {/* Content Wrapper */}
         <div className="relative z-10 flex w-full max-w-4xl flex-col items-center">
-          {/* Top Label */}
+          {/* New Release Badge - Ochre pill with terracotta dot */}
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: baseDelay }}
-            className="mb-8 flex items-center gap-3 rounded-full border border-zinc-200 bg-white/40 px-4 py-1.5 text-sm font-medium text-zinc-700 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/40 dark:text-zinc-300"
+            initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.8 }}
+            animate={prefersReducedMotion ? undefined : { opacity: 1, scale: 1 }}
+            transition={{
+              duration: 0.5,
+              delay: baseDelay,
+              ease: [0.34, 1.56, 0.64, 1],
+            }}
+            className="mb-8 flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold uppercase tracking-wider"
+            style={{
+              backgroundColor: 'var(--color-ochre)',
+              color: 'var(--color-charcoal)',
+              fontFamily: 'var(--font-display)',
+            }}
+            role="status"
+            aria-label="New release available"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
-            </span>
-            LIVE SESSION
-          </motion.div>
-
-          {/* Brand Logo (The Name) */}
-          <div className={`mb-10 flex flex-col items-center ${syne.className}`}>
-            <motion.h1
-              initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.9 }}
-              animate={prefersReducedMotion ? undefined : { opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: baseDelay + 0.1 }}
-              aria-label="Aditya Himaone"
-              className="flex flex-col items-center"
+            <span
+              className="relative flex h-2 w-2"
+              style={{ backgroundColor: 'var(--color-terracotta)' }}
+              aria-hidden="true"
             >
               <span
-                aria-hidden="true"
-                className="block text-center text-[13vw] leading-[0.85] font-extrabold tracking-tighter text-zinc-900 italic drop-shadow-sm md:text-[10vw] lg:text-[8vw] dark:text-white dark:drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]"
-              >
-                <span className="block bg-linear-to-b from-zinc-700 via-zinc-900 to-black bg-clip-text text-transparent dark:from-white dark:via-zinc-200 dark:to-zinc-400">
-                  ADITYA
-                </span>
-              </span>
-              <motion.span
-                aria-hidden="true"
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
-                animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: baseDelay + 0.2 }}
-                className="text-primary/80 text-[5vw] font-bold tracking-[0.5em] md:text-[3vw] lg:text-[2.5vw]"
-              >
-                HIMAONE
-              </motion.span>
-            </motion.h1>
-          </div>
+                className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
+                style={{ backgroundColor: 'var(--color-terracotta)' }}
+              />
+              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: 'var(--color-terracotta)' }} />
+            </span>
+            New Release
+          </motion.div>
 
-          {/* Subtitle / Description */}
-          <p className="animate-hero-desc mb-10 max-w-2xl text-center text-base font-light text-zinc-600 sm:text-lg md:text-xl dark:text-zinc-400">
+          {/* Main Title - Space Grotesk, warm cream */}
+          <motion.h1
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+            animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: baseDelay + 0.1 }}
+            className="mb-4 text-center text-[14vw] font-bold leading-[0.9] tracking-tight sm:text-[12vw] md:text-[10vw] lg:text-[8vw]"
+            style={{
+              fontFamily: 'var(--font-display)',
+              color: 'var(--color-highlight)',
+            }}
+          >
+            ADITYA
+            <br />
+            <span className="text-[10vw] tracking-[0.2em] sm:text-[8vw] md:text-[6vw] lg:text-[5vw]">HIMAONE</span>
+          </motion.h1>
+
+          {/* Subtitle - EB Garamond italic */}
+          <motion.p
+            initial={prefersReducedMotion ? false : { opacity: 0 }}
+            animate={prefersReducedMotion ? undefined : { opacity: 1 }}
+            transition={{ duration: 0.6, delay: baseDelay + 0.3 }}
+            className="mb-12 max-w-2xl text-center text-lg italic leading-relaxed sm:text-xl md:text-2xl"
+            style={{
+              fontFamily: 'var(--font-serif)',
+              color: 'var(--color-slate)',
+            }}
+          >
             Orchestrating code and rhythm into immersive digital experiences.
-            <br className="hidden sm:block" /> Frontend Developer & Audio
-            Enthusiast.
-          </p>
+            <br className="hidden sm:block" />
+            Frontend Developer & Audio Enthusiast.
+          </motion.p>
 
-          {/* Player Controls / CTA */}
-          {/* Player Controls / CTA - Hardware Style */}
+          {/* DAW Player Controls */}
           <motion.div
-            initial={
-              prefersReducedMotion
-                ? false
-                : { opacity: 0, y: 20, filter: 'blur(10px)' }
-            }
-            animate={
-              prefersReducedMotion
-                ? undefined
-                : { opacity: 1, y: 0, filter: 'blur(0px)' }
-            }
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+            animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
             transition={{
               duration: 0.8,
-              delay: baseDelay + 0.8,
-              ease: [0.16, 1, 0.3, 1],
+              delay: baseDelay + 0.5,
+              ease: [0.34, 1.56, 0.64, 1],
             }}
-            className="relative flex w-full max-w-[90vw] items-center gap-4 rounded-lg border-t border-white/20 bg-zinc-200 p-2 shadow-2xl sm:max-w-lg sm:gap-6 sm:p-3 dark:border-white/5 dark:bg-zinc-900"
+            className="relative flex w-full max-w-[90vw] items-center gap-3 rounded-lg p-3 shadow-2xl sm:max-w-lg sm:gap-4 sm:p-4"
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid var(--color-border-subtle)',
+            }}
           >
-            {/* Inset Shadow for depth */}
-            <div className="pointer-events-none absolute inset-0 rounded-lg shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_4px_10px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),inset_0_4px_10px_rgba(0,0,0,0.5)]" />
+            {/* Inset shadow for depth */}
+            <div
+              className="pointer-events-none absolute inset-0 rounded-lg"
+              style={{
+                boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.4)',
+              }}
+            />
 
+            {/* Play/Pause Button - Warm metal */}
             <Magnetic intensity={0.2}>
               <button
                 onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause Session' : 'Play Session'}
-                className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-zinc-100 to-zinc-300 shadow-[0_2px_5px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.1)] transition-all active:scale-95 active:shadow-inner sm:h-14 sm:w-14 dark:from-zinc-700 dark:to-zinc-800 dark:shadow-[0_2px_5px_rgba(0,0,0,0.5),0_0_0_1px_rgba(0,0,0,0.5)]"
+                aria-label={isPlaying ? 'Pause tape' : 'Press record'}
+                className="group relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full transition-all active:scale-95 sm:h-16 sm:w-16"
+                style={{
+                  backgroundColor: 'var(--color-surface)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+                  border: '2px solid var(--color-border-default)',
+                }}
               >
-                <div className="bg-primary/5 absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
-                {isPlaying ? (
-                  <Pause
-                    fill="currentColor"
-                    className="text-zinc-700 dark:text-zinc-200"
-                  />
-                ) : (
-                  <Play
-                    fill="currentColor"
-                    className="ml-1 text-zinc-700 dark:text-zinc-200"
-                  />
-                )}
-                {/* LED Indicator on button */}
                 <div
-                  className={`absolute top-2 right-2 h-1.5 w-1.5 rounded-full transition-colors ${isPlaying ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.8)]' : 'bg-zinc-400 dark:bg-zinc-600'}`}
+                  className="absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100"
+                  style={{ backgroundColor: 'var(--color-ochre)', opacity: 0.1 }}
+                />
+                {isPlaying ? (
+                  <Pause fill="currentColor" className="h-6 w-6" style={{ color: 'var(--color-ochre)' }} />
+                ) : (
+                  <Play fill="currentColor" className="ml-1 h-6 w-6" style={{ color: 'var(--color-ochre)' }} />
+                )}
+                {/* LED Indicator */}
+                <div
+                  className={`absolute top-2 right-2 h-2 w-2 rounded-full transition-all ${
+                    isPlaying ? 'animate-pulse' : ''
+                  }`}
+                  style={{
+                    backgroundColor: isPlaying ? 'var(--color-terracotta)' : 'var(--color-slate)',
+                    boxShadow: isPlaying ? '0 0 8px var(--color-terracotta)' : 'none',
+                  }}
+                  aria-hidden="true"
                 />
               </button>
             </Magnetic>
 
-            {/* LCD Display */}
-            <div className="flex min-w-0 flex-1 flex-col items-start gap-1 rounded border-b border-white/10 bg-zinc-800 p-2 shadow-[inset_0_2px_6px_rgba(0,0,0,0.8)] dark:bg-black">
-              <div className="flex w-full items-center justify-between px-1">
-                <span className="text-[7px] font-bold tracking-widest text-zinc-500 uppercase">
-                  STATUS: {isPlaying ? 'PLAYING' : 'STANDBY'}
+            {/* LCD Tape Counter Display */}
+            <div
+              className="flex min-w-0 flex-1 flex-col gap-2 rounded p-3"
+              style={{
+                backgroundColor: 'var(--color-charcoal)',
+                boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8)',
+                border: '1px solid rgba(0,0,0,0.5)',
+              }}
+            >
+              {/* Tape Counter */}
+              <div className="flex items-center justify-between">
+                <span
+                  className="text-xs font-bold uppercase tracking-widest"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--color-slate)',
+                  }}
+                >
+                  {isPlaying ? 'REC' : 'STOP'}
                 </span>
-                <div className="flex gap-0.5">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-1 w-1 rounded-full ${isPlaying ? 'animate-pulse bg-red-500' : 'bg-zinc-700'}`}
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    />
-                  ))}
+                <div
+                  className="text-2xl font-bold tabular-nums tracking-wider"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--color-ochre)',
+                    textShadow: '0 0 10px rgba(212, 168, 75, 0.5)',
+                  }}
+                  aria-live="polite"
+                  aria-label={`Tape counter: ${tapeCounter}`}
+                >
+                  {tapeCounter}
                 </div>
               </div>
-              <div className="flex w-full items-center gap-3 overflow-hidden px-1">
-                <div className="flex h-3 shrink-0 items-end gap-0.5">
+
+              {/* Track Info with VU Meter */}
+              <div className="flex items-center gap-2 overflow-hidden">
+                <div className="flex h-4 shrink-0 items-end gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <motion.div
                       key={i}
-                      className="w-1 rounded-[1px] bg-amber-500/80"
+                      className="w-1 rounded-[1px]"
+                      style={{ backgroundColor: 'var(--color-ochre)' }}
                       animate={{
-                        height: isPlaying ? [2, 10, 5, 8, 2] : 2,
-                        opacity: isPlaying ? 1 : 0.5,
+                        height: isPlaying ? [4, 12, 6, 10, 4] : 4,
+                        opacity: isPlaying ? 0.8 : 0.3,
                       }}
                       transition={{
                         duration: 0.4,
@@ -229,7 +337,12 @@ export function HeroSection() {
                 </div>
                 <div className="relative flex-1 overflow-hidden">
                   <motion.div
-                    className="flex w-fit font-mono text-xs whitespace-nowrap text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)] sm:text-sm"
+                    className="whitespace-nowrap text-sm"
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      color: 'var(--color-ochre)',
+                      textShadow: '0 0 8px rgba(212, 168, 75, 0.4)',
+                    }}
                     animate={{ x: ['0%', '-50%'] }}
                     transition={{
                       repeat: Infinity,
@@ -242,47 +355,40 @@ export function HeroSection() {
                   </motion.div>
                 </div>
               </div>
+
+              {/* Metadata - JetBrains Mono */}
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-slate)' }}>
+                <span>120 BPM</span>
+                <span>KEY: Am</span>
+                <span>24-BIT</span>
+              </div>
             </div>
 
-            <div className="h-8 w-px shrink-0 bg-zinc-300 dark:bg-zinc-800" />
+            {/* Divider */}
+            <div className="h-12 w-px shrink-0" style={{ backgroundColor: 'var(--color-border-subtle)' }} />
 
+            {/* Skip Button */}
             <Magnetic intensity={0.2}>
               <a
                 href="#projects"
                 onClick={(e) => {
                   e.preventDefault()
-                  document
-                    .getElementById('projects')
-                    ?.scrollIntoView({ behavior: 'smooth' })
+                  document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className="flex h-10 shrink-0 items-center gap-2 rounded bg-zinc-300 px-3 text-xs font-bold text-zinc-700 shadow-[0_1px_0_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.1)] transition-transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-inner sm:px-4 dark:bg-zinc-800 dark:text-zinc-300 dark:shadow-[0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)]"
+                className="flex h-11 shrink-0 items-center gap-2 rounded px-4 text-xs font-bold uppercase tracking-wider transition-all hover:-translate-y-0.5 active:translate-y-0"
+                style={{
+                  backgroundColor: 'var(--color-surface)',
+                  color: 'var(--color-ochre)',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+                  border: '1px solid var(--color-border-default)',
+                  fontFamily: 'var(--font-display)',
+                }}
+                aria-label="Skip to projects section"
               >
                 <span className="hidden sm:inline">TRACKS</span>
-                <SkipForward size={14} />
+                <SkipForward size={16} aria-hidden="true" />
               </a>
             </Magnetic>
-          </motion.div>
-
-          {/* Decorative "New Release" Badge */}
-          <motion.div
-            initial={
-              prefersReducedMotion
-                ? false
-                : { opacity: 0, scale: 0, rotate: 0 }
-            }
-            animate={
-              prefersReducedMotion
-                ? undefined
-                : { opacity: 1, scale: 1, rotate: 12 }
-            }
-            transition={{
-              delay: baseDelay + 0.2,
-              type: 'spring',
-              stiffness: 200,
-            }}
-            className="absolute -top-2 -right-2 rotate-12 transform border-2 border-white/20 bg-red-600 px-4 py-1.5 text-xs font-black tracking-wider text-white uppercase shadow-lg md:top-10 md:-right-10"
-          >
-            New Release
           </motion.div>
         </div>
       </motion.div>

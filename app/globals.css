@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 @custom-variant dark (&:is(.dark *));
+@import './design-tokens.css';
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
@@ -25,7 +26,7 @@
   }
 
   body {
-    @apply bg-white text-zinc-800 dark:bg-zinc-950 dark:text-zinc-100;
+    @apply bg-white text-zinc-800 dark:bg-[var(--color-bg-primary)] dark:text-[var(--color-text-primary)];
     margin: 0;
     transition: background-color 0.5s ease, color 0.5s ease;
   }

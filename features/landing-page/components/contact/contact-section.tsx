@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { m, AnimatePresence } from 'motion/react'
+import { m, useInView } from 'motion/react'
 import { Music, Radio, Square, Play, Pause, Volume2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
@@ -21,6 +21,9 @@ export function ContactSection() {
 
   const { toneRef, startAudio, isLoaded } = useAudioEngine()
 
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const isInView = useInView(sectionRef, { once: true, amount: 0.2 })
+
   const synthsRef = useRef<Record<string, any>>({})
   const padLoopsRef = useRef<Map<string, any>>(new Map())
   const partRef = useRef<any>(null)
@@ -29,37 +32,40 @@ export function ContactSection() {
   const rafRef = useRef<number>(0)
   const activeTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
-  // ─── Keyboard shortcuts: QWERTY layout maps to pad grid ────────
-  useEffect(() => {
-    const keyMap: Record<string, { x: number; y: number }> = {
-      // Top row (desktop 8-col grid)
-      '1': { x: 0, y: 0 }, '2': { x: 1, y: 0 }, '3': { x: 2, y: 0 }, '4': { x: 3, y: 0 },
-      '5': { x: 4, y: 0 }, '6': { x: 5, y: 0 }, '7': { x: 6, y: 0 }, '8': { x: 7, y: 0 },
-      // Second row
-      'q': { x: 0, y: 1 }, 'w': { x: 1, y: 1 }, 'e': { x: 2, y: 1 }, 'r': { x: 3, y: 1 },
-      't': { x: 4, y: 1 }, 'y': { x: 5, y: 1 }, 'u': { x: 6, y: 1 }, 'i': { x: 7, y: 1 },
-      // Third row
-      'a': { x: 0, y: 2 }, 's': { x: 1, y: 2 }, 'd': { x: 2, y: 2 }, 'f': { x: 3, y: 2 },
-      'g': { x: 4, y: 2 }, 'h': { x: 5, y: 2 }, 'j': { x: 6, y: 2 }, 'k': { x: 7, y: 2 },
-      // Bottom row
-      'z': { x: 0, y: 3 }, 'x': { x: 1, y: 3 }, 'c': { x: 2, y: 3 }, 'v': { x: 3, y: 3 },
-      'b': { x: 4, y: 3 }, 'n': { x: 5, y: 3 }, 'm': { x: 6, y: 3 }, ',': { x: 7, y: 3 },
-    }
+  // ─── Generate Grid ──────────────────────────────────────────────
+  const { desktopGrid, mobileGrid } = useMemo(() => {
+    const generateGridItems = (rows: number, cols: number, isMobile: boolean) => {
+      const items: any[] = []
+      const occupied = new Set<string>()
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const pos = keyMap[e.key.toLowerCase()]
-      if (!pos) return
+      functionalPads.forEach((pad) => {
+        const config = isMobile ? pad.mobile : pad
+        for (let i = 0; i < config.w; i++) {
+          for (let j = 0; j < config.h; j++) {
+            occupied.add(`${config.x + i},${config.y + j}`)
+          }
+        }
+      })
 
-      e.preventDefault()
-      const pad = desktopGrid.find((p) => p.x === pos.x && p.y === pos.y)
-      if (pad) {
-        handlePadClick(pad)
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          if (occupied.has(`${x},${y}`)) {
+            const pad = functionalPads.find((p) => {
+              const config = isMobile ? p.mobile : p
+              return x >= config.x && x < config.x + config.w && y >= config.y && y < config.y + config.h
+            })
+            if (pad && (isMobile ? pad.mobile.x === x && pad.mobile.y === y : pad.x === x && pad.y === y)) {
+              items.push({ ...pad, type: 'functional', w: isMobile ? pad.mobile.w : pad.w, h: isMobile ? pad.mobile.h : pad.h })
+            }
+          } else {
+            items.push({ id: `dummy-${x}-${y}`, x, y, w: 1, h: 1, type: 'dummy', color: dummyColors[(x + y) % dummyColors.length] })
+          }
+        }
       }
+      return items
     }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [desktopGrid, handlePadClick])
+    return { desktopGrid: generateGridItems(4, 8, false), mobileGrid: generateGridItems(6, 4, true) }
+  }, [])
 
   // ─── Initialize Synths ──────────────────────────────────────────
   const initializeSynths = useCallback(async () => {
@@ -67,7 +73,6 @@ export function ContactSection() {
     const Tone = toneRef.current
 
     try {
-      // Master volume
       masterVolRef.current = new Tone.Volume(masterVol).toDestination()
 
       const melody = new Tone.Synth({
@@ -206,7 +211,6 @@ export function ContactSection() {
     const isLooping = padLoopsRef.current.has(pad.id)
 
     if (isLooping) {
-      // Stop loop
       const loop = padLoopsRef.current.get(pad.id)
       if (loop) {
         loop.stop()
@@ -221,7 +225,6 @@ export function ContactSection() {
       return
     }
 
-    // Start loop
     setLoopingPads((prev) => new Set(prev).add(pad.id))
     setActivePads((prev) => new Set(prev).add(pad.id))
     const t = setTimeout(() => {
@@ -233,7 +236,6 @@ export function ContactSection() {
     }, 150)
     activeTimeoutsRef.current.set(pad.id, t)
 
-    // Determine synth type and note
     const typePool = ['kick', 'snare', 'hihat', 'clap', 'melody', 'bass']
     const notePool = ['C2', 'D2', 'E2', 'F2', 'G2', 'A2', 'C3', 'D3', 'E3', 'G3', 'A3', 'C4', 'D4', 'E4', 'G4']
     const notes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5']
@@ -244,7 +246,6 @@ export function ContactSection() {
     let duration: string
 
     if (pad.type === 'functional') {
-      // Functional pads get assigned a specific sound
       switch (pad.id) {
         case 'email': type = 'chord'; note = 'C4'; interval = '2n'; duration = '4n'; break
         case 'linkedin': type = 'melody'; note = 'E4'; interval = '4n'; duration = '8n'; break
@@ -282,7 +283,6 @@ export function ContactSection() {
 
     padLoopsRef.current.set(pad.id, loop)
 
-    // Start transport if not already running
     if (!isPlaying && !isPaused) {
       Tone.Transport.start()
       setIsPlaying(true)
@@ -303,7 +303,6 @@ export function ContactSection() {
     const Tone = toneRef.current
     if (!Tone || !isInitializedRef.current) return
 
-    // Set BPM
     if (preset.bpm) {
       Tone.Transport.bpm.value = preset.bpm
       setBpm(preset.bpm)
@@ -318,16 +317,13 @@ export function ContactSection() {
     Tone.Transport.position = 0
     Tone.Transport.cancel()
 
-    // Build Part from events or pads
     const events: any[] = []
 
     if (preset.events && preset.events.length > 0) {
-      // New format: events with beat times
       preset.events.forEach((evt) => {
         events.push([evt.time, evt])
       })
     } else if (preset.pads && preset.pads.length > 0) {
-      // Legacy format: pads with ms delays
       preset.pads.forEach((pad) => {
         events.push([pad.delay / 1000, pad])
       })
@@ -353,7 +349,6 @@ export function ContactSection() {
         synth.triggerAttackRelease(note, dur, time)
       }
 
-      // Visual feedback synced to audio
       Tone.Draw.schedule(() => {
         const padId = event.padId || event.id
         if (!padId || padId === 'preset') return
@@ -405,10 +400,7 @@ export function ContactSection() {
 
   // ─── Handle Pad Click ───────────────────────────────────────────
   const handlePadClick = useCallback(async (pad: any) => {
-    // Toggle loop for all pads
     await togglePadLoop(pad)
-
-    // Functional actions
     if (!pad.id.startsWith('dummy')) {
       if (pad.href) {
         window.open(pad.href, '_blank')
@@ -416,203 +408,411 @@ export function ContactSection() {
     }
   }, [togglePadLoop])
 
-  // ─── Generate Grid ──────────────────────────────────────────────
-  const { desktopGrid, mobileGrid } = useMemo(() => {
-    const generateGridItems = (rows: number, cols: number, isMobile: boolean) => {
-      const items: any[] = []
-      const occupied = new Set<string>()
-
-      functionalPads.forEach((pad) => {
-        const config = isMobile ? pad.mobile : pad
-        for (let i = 0; i < config.w; i++) {
-          for (let j = 0; j < config.h; j++) {
-            occupied.add(`${config.x + i},${config.y + j}`)
-          }
-        }
-      })
-
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-          if (occupied.has(`${x},${y}`)) {
-            const pad = functionalPads.find((p) => {
-              const config = isMobile ? p.mobile : p
-              return x >= config.x && x < config.x + config.w && y >= config.y && y < config.y + config.h
-            })
-            if (pad && (isMobile ? pad.mobile.x === x && pad.mobile.y === y : pad.x === x && pad.y === y)) {
-              items.push({ ...pad, type: 'functional', w: isMobile ? pad.mobile.w : pad.w, h: isMobile ? pad.mobile.h : pad.h })
-            }
-          } else {
-            items.push({ id: `dummy-${x}-${y}`, x, y, w: 1, h: 1, type: 'dummy', color: dummyColors[(x + y) % dummyColors.length] })
-          }
-        }
-      }
-      return items
+  // ─── Keyboard shortcuts: QWERTY layout maps to port grid ────────
+  useEffect(() => {
+    const keyMap: Record<string, { x: number; y: number }> = {
+      '1': { x: 0, y: 0 }, '2': { x: 1, y: 0 }, '3': { x: 2, y: 0 }, '4': { x: 3, y: 0 },
+      '5': { x: 4, y: 0 }, '6': { x: 5, y: 0 }, '7': { x: 6, y: 0 }, '8': { x: 7, y: 0 },
+      'q': { x: 0, y: 1 }, 'w': { x: 1, y: 1 }, 'e': { x: 2, y: 1 }, 'r': { x: 3, y: 1 },
+      't': { x: 4, y: 1 }, 'y': { x: 5, y: 1 }, 'u': { x: 6, y: 1 }, 'i': { x: 7, y: 1 },
+      'a': { x: 0, y: 2 }, 's': { x: 1, y: 2 }, 'd': { x: 2, y: 2 }, 'f': { x: 3, y: 2 },
+      'g': { x: 4, y: 2 }, 'h': { x: 5, y: 2 }, 'j': { x: 6, y: 2 }, 'k': { x: 7, y: 2 },
+      'z': { x: 0, y: 3 }, 'x': { x: 1, y: 3 }, 'c': { x: 2, y: 3 }, 'v': { x: 3, y: 3 },
+      'b': { x: 4, y: 3 }, 'n': { x: 5, y: 3 }, 'm': { x: 6, y: 3 }, ',': { x: 7, y: 3 },
     }
-    return { desktopGrid: generateGridItems(4, 8, false), mobileGrid: generateGridItems(6, 4, true) }
-  }, [])
 
-  // ─── Launchpad Grid Component ───────────────────────────────────
-  const LaunchpadGrid = useCallback(({ items, cols, rows }: { items: any[]; cols: number; rows: number }) => (
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const pos = keyMap[e.key.toLowerCase()]
+      if (!pos) return
+      e.preventDefault()
+      const pad = desktopGrid.find((p) => p.x === pos.x && p.y === pos.y)
+      if (pad) handlePadClick(pad)
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [desktopGrid, handlePadClick])
+
+  // ─── Port Grid: Patch Bay ───────────────────────────────────────
+  const PortGrid = useCallback(({ items, cols, rows }: { items: any[]; cols: number; rows: number }) => (
     <div
       className="grid gap-2 sm:gap-3"
       style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`, aspectRatio: `${cols}/${rows}` }}
     >
-      {items.map((pad) => {
+      {items.map((pad, index) => {
         const isLooping = loopingPads.has(pad.id)
         const isActive = activePads.has(pad.id)
+        const isFunctional = pad.type === 'functional'
+        const isEmail = pad.id === 'email'
+        const isSocial = isFunctional && !isEmail
+        const portLabel = isFunctional && 'label' in pad ? (pad as any).label : ''
+
+        // Sequential scroll animation delay
+        const scrollDelay = 0.08 * index
+
         return (
           <m.button
             key={pad.id}
             onClick={() => handlePadClick(pad)}
-            aria-label={pad.type === 'functional' && 'label' in pad ? `Pad ${(pad as any).label}` : `Pad ${pad.id}`}
+            aria-label={isFunctional && 'label' in pad ? `Patch ${(pad as any).label}` : `Port ${pad.id}`}
             aria-pressed={isLooping}
             className={cn(
-              'group relative flex flex-col items-center justify-center overflow-hidden rounded-md border-b-4 border-zinc-950 bg-zinc-800 transition-all duration-100 active:translate-y-1 active:scale-95 active:border-b-0 sm:rounded-lg',
-              pad.type === 'functional' ? 'z-10' : 'z-0',
+              'group relative flex min-h-[48px] flex-col items-center justify-center overflow-hidden',
+              'rounded-full transition-all duration-200 select-none',
+              isFunctional ? 'z-10' : 'z-0',
+              !isFunctional && 'opacity-60',
             )}
-            style={{ gridColumn: `span ${pad.w}`, gridRow: `span ${pad.h}` }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            style={{
+              gridColumn: `span ${pad.w}`,
+              gridRow: `span ${pad.h}`,
+              minWidth: isFunctional ? (isEmail ? 80 : 56) : 48,
+              minHeight: 48,
+            }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={isInView ? { scale: 1, opacity: 1 } : {}}
+            transition={{
+              type: 'spring',
+              stiffness: 200,
+              damping: 18,
+              delay: scrollDelay,
+            }}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.95 }}
           >
-            {/* Glow — persistent when looping, brief on active */}
-            <div className={cn('absolute inset-0 z-0 transition-opacity duration-150', pad.color, isLooping ? 'opacity-80' : isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-60')} />
+            {/* ── Jack Port Ring ── */}
+            <div
+              className={cn(
+                'absolute inset-0 rounded-full transition-all duration-300',
+                // Warm metal border ring
+                'border-2',
+                isEmail
+                  ? 'border-[var(--color-ochre)]' // Email = main output jack
+                  : isFunctional
+                    ? 'border-[var(--color-border-subtle)] group-hover:border-[var(--color-ochre)]' // Social = small jack
+                    : 'border-[var(--color-border-subtle)] opacity-30', // Dummy ports
+                (isLooping || isActive) && 'border-[var(--color-ochre)]',
+              )}
+            />
 
-            {/* Content */}
-            {pad.type === 'functional' && 'icon' in pad && (
-              <div className="relative z-10 flex flex-col items-center gap-1 sm:gap-2">
-                <pad.icon className={cn('h-5 w-5 transition-colors duration-200 sm:h-8 sm:w-8', isLooping || isActive ? 'text-white' : 'text-zinc-500')} />
-                <div className="hidden flex-col items-center sm:flex">
-                    <span className={cn('text-[10px] font-bold tracking-wider transition-colors duration-200 sm:text-xs', isLooping || isActive ? 'text-white' : 'text-zinc-400')}>
-                    {(pad as any).label}
-                  </span>
-                  {(pad as any).subLabel && (
-                    <span className={cn('font-mono text-[8px] transition-colors duration-200 sm:text-[10px]', isLooping || isActive ? 'text-white/80' : 'text-zinc-600')}>
-                      {(pad as any).subLabel}
-                    </span>
+            {/* ── Active Glow ── */}
+            {(isLooping || isActive) && (
+              <m.div
+                className={cn(
+                  'absolute inset-0 rounded-full',
+                  isEmail
+                    ? 'bg-[var(--color-terracotta)]/30' // Email = terracotta glow
+                    : 'bg-[var(--color-ochre)]/20', // Others = ochre glow
+                )}
+                layoutId={`glow-${pad.id}`}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              />
+            )}
+
+            {/* ── Port Center (dark inner circle) ── */}
+            <div
+              className={cn(
+                'absolute z-[1] rounded-full',
+                'bg-[var(--color-charcoal)]',
+                isEmail ? 'h-10 w-10' : 'h-7 w-7',
+                (isLooping || isActive) && 'bg-[var(--color-surface)]',
+              )}
+            />
+
+            {/* ── Inner highlight dot ── */}
+            <div
+              className={cn(
+                'absolute z-[2] rounded-full transition-colors duration-200',
+                isEmail ? 'h-3 w-3' : 'h-2 w-2',
+                isLooping || isActive
+                  ? isEmail
+                    ? 'bg-[var(--color-terracotta)]'
+                    : 'bg-[var(--color-ochre)]'
+                  : 'bg-[var(--color-slate)]',
+              )}
+            />
+
+            {/* ── Port Label ── */}
+            {isFunctional && (
+              <div
+                className={cn(
+                  'absolute z-[3] flex flex-col items-center',
+                  // Position label below port
+                  'top-full mt-1.5',
+                  'pointer-events-none',
+                )}
+              >
+                <span
+                  className={cn(
+                    'text-[9px] font-bold tracking-wider whitespace-nowrap',
+                    'font-mono',
+                    'transition-colors duration-200',
+                    isLooping || isActive
+                      ? 'text-[var(--color-ochre)]'
+                      : isFunctional
+                        ? 'text-[var(--color-text-secondary)] group-hover:text-[var(--color-ochre)]'
+                        : 'text-[var(--color-text-tertiary)]',
                   )}
-                </div>
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                >
+                  {portLabel}
+                </span>
+                {(pad as any).subLabel && (
+                  <span
+                    className="text-[7px] tracking-wider text-[var(--color-text-tertiary)] whitespace-nowrap"
+                    style={{ fontFamily: 'var(--font-mono)' }}
+                  >
+                    {(pad as any).subLabel}
+                  </span>
+                )}
               </div>
             )}
 
-            {/* LED — pulse when looping */}
-            <div className={cn('absolute top-1 right-1 h-1.5 w-1.5 rounded-full transition-colors duration-200 sm:top-2 sm:right-2', isLooping ? 'animate-pulse bg-white' : isActive ? 'bg-white' : 'bg-zinc-900')} />
+            {/* ── Patch Cable Line (social links only) ── */}
+            {isSocial && !isEmail && pad.href && (
+              <m.div
+                className={cn(
+                  'absolute z-0',
+                  // Line from port to bottom-right destination
+                  'h-px w-8 sm:w-12',
+                  'bottom-0 right-0 origin-right',
+                  'translate-x-full translate-y-1/2',
+                )}
+                initial={{ scaleX: 0 }}
+                animate={isLooping || isActive ? { scaleX: 1 } : {}}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+              >
+                <div className="h-full w-full bg-gradient-to-r from-[var(--color-ochre)]/60 to-transparent" />
+                {/* Cable end dot */}
+                <div className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[var(--color-ochre)]/40" />
+              </m.div>
+            )}
 
-            {/* Loop indicator */}
+            {/* ── Active LED ── */}
+            <div
+              className={cn(
+                'absolute top-1 right-1 h-1.5 w-1.5 rounded-full transition-colors duration-200 sm:top-2 sm:right-2 z-[4]',
+                isLooping
+                  ? 'bg-[var(--color-ochre)] shadow-[0_0_6px_var(--color-ochre)]'
+                  : isActive
+                    ? 'bg-[var(--color-ochre)]'
+                    : 'bg-[var(--color-interactive-disabled)]',
+              )}
+            />
+
+            {/* ── Loop indicator ── */}
             {isLooping && (
-              <div className="absolute bottom-1 left-1 h-1 w-1 rounded-full bg-white/50 sm:bottom-2 sm:left-2" />
+              <div className="absolute bottom-1 left-1 h-1 w-1 rounded-full bg-[var(--color-ochre)]/50 sm:bottom-2 sm:left-2 z-[4]" />
             )}
           </m.button>
         )
       })}
     </div>
-  ), [loopingPads, activePads, handlePadClick])
+  ), [loopingPads, activePads, handlePadClick, isInView])
 
   return (
     <>
-      <section id="contact" className="overflow-hidden py-24">
+      <section id="contact" ref={sectionRef} className="overflow-hidden py-24">
         <div className="container mx-auto px-4">
           <div className="mb-16 flex flex-col items-center text-center">
             <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-200/50 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400"
+              className="mb-4 flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium"
+              style={{
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-ochre)',
+                border: '1px solid var(--color-border-subtle)',
+              }}
             >
               <Radio className="h-4 w-4" />
-              <span>SESSION BOOKING</span>
+              <span style={{ fontFamily: 'var(--font-mono)', letterSpacing: '0.15em' }}>PATCH IN</span>
             </m.div>
             <m.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-4xl font-black tracking-tighter text-zinc-900 sm:text-5xl dark:text-white"
+              className="text-4xl font-black tracking-tight sm:text-5xl"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}
             >
-              Launch Collaboration
+              Connect to the Studio
             </m.h2>
-            <p className="mt-4 max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
-              Hit a pad to start a loop. Stack multiple loops to build a beat.
+            <p
+              className="mt-4 max-w-2xl text-lg"
+              style={{ color: 'var(--color-text-secondary)' }}
+            >
+              Plug into the patch bay. Tap a jack to connect — stack signals to build your mix.
             </p>
           </div>
 
-          {/* Launchpad Board */}
-          <div className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-800 p-2 shadow-2xl sm:p-4 dark:bg-zinc-950">
-            <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
+          {/* ── Patch Bay Board ── */}
+          <div
+            className="relative mx-auto max-w-6xl rounded-2xl p-2 shadow-2xl sm:p-4"
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid var(--color-border-default)',
+              boxShadow: '0 0 40px rgba(0,0,0,0.5)',
+              // Rack panel texture: subtle horizontal lines
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px)',
+            }}
+          >
+            {/* Noise overlay */}
+            <div
+              className="pointer-events-none absolute inset-0 rounded-2xl opacity-[0.03] mix-blend-overlay"
+              style={{ backgroundImage: "url('/noise.png')" }}
+            />
 
-            <div className="relative rounded-2xl border border-zinc-700 bg-zinc-900 p-4 shadow-inner sm:p-6 md:p-10">
+            <div
+              className="relative rounded-xl p-4 shadow-inner sm:p-6 md:p-10"
+              style={{
+                backgroundColor: 'var(--color-bg-tertiary)',
+                border: '1px solid var(--color-border-subtle)',
+              }}
+            >
               <Screw className="absolute top-2 left-2 sm:top-4 sm:left-4" />
               <Screw className="absolute top-2 right-2 sm:top-4 sm:right-4" />
               <Screw className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4" />
               <Screw className="absolute right-2 bottom-2 sm:right-4 sm:bottom-4" />
 
-              {/* Top Panel */}
-              <div className="mb-4 flex items-center justify-between px-2 sm:mb-8">
+              {/* ── Top Panel: Transport ── */}
+              <div
+                className="mb-4 flex items-center justify-between px-2 sm:mb-8"
+                style={{ fontFamily: 'var(--font-mono)' }}
+              >
                 <div className="flex items-center gap-2">
-                  <div className={cn('h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2', isPlaying ? 'animate-pulse bg-red-500' : 'bg-zinc-600')} />
-                  <span className="font-mono text-[10px] tracking-widest text-zinc-500 sm:text-xs">REC</span>
+                  <div
+                    className={cn(
+                      'h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2',
+                      isPlaying ? 'animate-pulse' : '',
+                    )}
+                    style={{
+                      backgroundColor: isPlaying ? 'var(--color-terracotta)' : 'var(--color-interactive-disabled)',
+                      boxShadow: isPlaying ? '0 0 6px var(--color-terracotta)' : 'none',
+                    }}
+                  />
+                  <span
+                    className="text-[10px] tracking-widest sm:text-xs"
+                    style={{ color: isPlaying ? 'var(--color-terracotta)' : 'var(--color-text-tertiary)' }}
+                  >
+                    REC
+                  </span>
                 </div>
-                <span className="text-[10px] font-black tracking-[0.3em] text-zinc-600 sm:text-xs dark:text-zinc-400">LAUNCHPAD PRO</span>
+                <span
+                  className="text-[10px] font-bold tracking-[0.3em] sm:text-xs"
+                  style={{ color: 'var(--color-text-tertiary)' }}
+                >
+                  PATCH BAY
+                </span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] text-zinc-500">{transportTime}</span>
-                  <span className="text-[10px] text-zinc-600">{bpm}BPM</span>
+                  <span className="text-[10px]" style={{ color: 'var(--color-slate)' }}>
+                    {transportTime}
+                  </span>
+                  <span
+                    className="text-[10px]"
+                    style={{ color: 'var(--color-ochre)' }}
+                  >
+                    {bpm} BPM
+                  </span>
                 </div>
               </div>
 
-              {/* Control Panel */}
-              <div className="mb-4 space-y-3 rounded-lg border border-zinc-700/50 bg-zinc-800/50 p-3">
-                {/* Top row: Presets + Transport */}
+              {/* ── Control Panel ── */}
+              <div
+                className="mb-4 space-y-3 rounded-lg p-3"
+                style={{
+                  backgroundColor: 'var(--color-bg-elevated)',
+                  border: '1px solid var(--color-border-subtle)',
+                }}
+              >
+                {/* Presets + Transport Row */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[10px] font-bold text-zinc-500">SONG PRESETS:</span>
+                  <span
+                    className="text-[10px] font-bold tracking-wider"
+                    style={{ color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-mono)' }}
+                  >
+                    PATCH MEMORY:
+                  </span>
 
                   <div className="flex items-center gap-2">
-                    {/* BPM */}
+                    {/* BPM — warm metal knob */}
                     <div className="hidden items-center gap-1.5 sm:flex">
-                      <span className="text-[9px] text-zinc-500">BPM</span>
-                      <input
-                        type="range"
-                        min={60}
-                        max={140}
-                        value={bpm}
-                        onChange={(e) => handleBpmChange(Number(e.target.value))}
-                        className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
-                      />
+                      <span
+                        className="text-[9px]"
+                        style={{ color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-mono)' }}
+                      >
+                        BPM
+                      </span>
+                      <div
+                        className="flex h-6 w-16 items-center justify-center rounded-sm"
+                        style={{
+                          background: 'linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-charcoal) 100%)',
+                          border: '1px solid var(--color-border-default)',
+                        }}
+                      >
+                        <input
+                          type="range"
+                          min={60}
+                          max={140}
+                          value={bpm}
+                          onChange={(e) => handleBpmChange(Number(e.target.value))}
+                          className="h-1 w-12 cursor-pointer appearance-none rounded-full accent-[var(--color-ochre)]"
+                          style={{ backgroundColor: 'var(--color-border-subtle)' }}
+                        />
+                      </div>
                     </div>
 
-                    {/* Volume */}
+                    {/* Volume — warm metal knob */}
                     <div className="hidden items-center gap-1.5 sm:flex">
-                      <Volume2 size={10} className="text-zinc-500" />
-                      <input
-                        type="range"
-                        min={-30}
-                        max={0}
-                        value={masterVol}
-                        onChange={(e) => setMasterVol(Number(e.target.value))}
-                        className="h-1 w-14 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
-                      />
+                      <Volume2 size={10} style={{ color: 'var(--color-text-tertiary)' }} />
+                      <div
+                        className="flex h-6 w-14 items-center justify-center rounded-sm"
+                        style={{
+                          background: 'linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-charcoal) 100%)',
+                          border: '1px solid var(--color-border-default)',
+                        }}
+                      >
+                        <input
+                          type="range"
+                          min={-30}
+                          max={0}
+                          value={masterVol}
+                          onChange={(e) => setMasterVol(Number(e.target.value))}
+                          className="h-1 w-10 cursor-pointer appearance-none rounded-full accent-[var(--color-ochre)]"
+                          style={{ backgroundColor: 'var(--color-border-subtle)' }}
+                        />
+                      </div>
                     </div>
 
-                    {/* Transport */}
+                    {/* Transport buttons — warm metal */}
                     {currentPreset && (
                       <>
                         <m.button
                           whileTap={{ scale: 0.9 }}
                           onClick={togglePause}
-                          className={cn(
-                            'flex h-8 w-8 items-center justify-center rounded border shadow-sm transition-colors',
-                            isPlaying
-                              ? 'border-amber-300 bg-amber-50 text-amber-600 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400'
-                              : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-                          )}
+                          className="flex h-7 w-7 items-center justify-center rounded-sm sm:h-8 sm:w-8"
+                          style={{
+                            background: isPlaying
+                              ? 'linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-charcoal) 100%)'
+                              : 'linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-charcoal) 100%)',
+                            border: `1px solid ${isPlaying ? 'var(--color-ochre)' : 'var(--color-border-default)'}`,
+                            color: isPlaying ? 'var(--color-ochre)' : 'var(--color-text-tertiary)',
+                          }}
                         >
-                          {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+                          {isPlaying ? <Pause size={12} /> : <Play size={12} />}
                         </m.button>
 
                         <m.button
                           whileTap={{ scale: 0.9 }}
                           onClick={stopAllPlayback}
-                          className="flex h-8 w-8 items-center justify-center rounded border border-red-300 bg-red-50 text-red-600 shadow-sm dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
+                          className="flex h-7 w-7 items-center justify-center rounded-sm sm:h-8 sm:w-8"
+                          style={{
+                            background: 'linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-charcoal) 100%)',
+                            border: '1px solid var(--color-terracotta)',
+                            color: 'var(--color-terracotta)',
+                          }}
                         >
-                          <Square size={12} />
+                          <Square size={10} />
                         </m.button>
                       </>
                     )}
@@ -623,11 +823,17 @@ export function ContactSection() {
                         onClick={stopAllPlayback}
                         disabled={loopingPads.size === 0}
                         className={cn(
-                          'flex items-center gap-1.5 rounded border px-3 py-1.5 text-[10px] font-bold transition-all',
-                          loopingPads.size > 0
-                            ? 'border-red-500 bg-red-500/20 text-red-400 hover:scale-105 hover:bg-red-500/30'
-                            : 'cursor-not-allowed border-zinc-700 bg-zinc-900/50 text-zinc-600',
+                          'flex items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-[10px] font-bold transition-all',
                         )}
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          background: loopingPads.size > 0
+                            ? 'linear-gradient(180deg, rgba(184,74,57,0.3) 0%, rgba(184,74,57,0.1) 100%)'
+                            : 'var(--color-bg-elevated)',
+                          border: `1px solid ${loopingPads.size > 0 ? 'var(--color-terracotta)' : 'var(--color-border-default)'}`,
+                          color: loopingPads.size > 0 ? 'var(--color-terracotta)' : 'var(--color-text-tertiary)',
+                          cursor: loopingPads.size > 0 ? 'pointer' : 'not-allowed',
+                        }}
                       >
                         <Square className="h-3 w-3" />
                         STOP ALL
@@ -639,97 +845,158 @@ export function ContactSection() {
                 {/* Mobile BPM + Vol */}
                 <div className="flex items-center gap-3 sm:hidden">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] text-zinc-500">BPM</span>
+                    <span
+                      className="text-[9px]"
+                      style={{ color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-mono)' }}
+                    >
+                      BPM
+                    </span>
                     <input
                       type="range"
                       min={60}
                       max={140}
                       value={bpm}
                       onChange={(e) => handleBpmChange(Number(e.target.value))}
-                      className="h-1 w-20 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
+                      className="h-1 w-20 cursor-pointer appearance-none rounded-full accent-[var(--color-ochre)]"
+                      style={{ backgroundColor: 'var(--color-border-subtle)' }}
                     />
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Volume2 size={10} className="text-zinc-500" />
+                    <Volume2 size={10} style={{ color: 'var(--color-text-tertiary)' }} />
                     <input
                       type="range"
                       min={-30}
                       max={0}
                       value={masterVol}
                       onChange={(e) => setMasterVol(Number(e.target.value))}
-                      className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
+                      className="h-1 w-16 cursor-pointer appearance-none rounded-full accent-[var(--color-ochre)]"
+                      style={{ backgroundColor: 'var(--color-border-subtle)' }}
                     />
                   </div>
                 </div>
 
-                {/* Preset Buttons */}
+                {/* ── Preset Grid: Patch Memory Slots ── */}
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {presets.map((preset) => (
+                  {presets.map((preset, idx) => (
                     <m.button
                       key={preset.id}
                       onClick={() => playPreset(preset.id)}
-                      aria-label={`Load preset ${preset.name}`}
-                      className={cn(
-                        'group relative overflow-hidden rounded-lg border p-2 text-left transition-all hover:scale-105',
-                        currentPreset === preset.id
-                          ? 'border-green-500 bg-green-500/20'
-                          : 'border-zinc-600 bg-zinc-900 hover:border-zinc-500 hover:bg-zinc-800',
-                      )}
+                      aria-label={`Load patch ${preset.name}`}
+                      className="relative overflow-hidden rounded-md border p-2 text-left transition-all hover:scale-[1.02]"
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        borderColor: currentPreset === preset.id
+                          ? 'var(--color-ochre)'
+                          : 'var(--color-border-default)',
+                        backgroundColor: currentPreset === preset.id
+                          ? 'rgba(212,168,75,0.08)'
+                          : 'var(--color-bg-elevated)',
+                      }}
                       whileTap={{ scale: 0.95 }}
                       title={preset.description}
                     >
                       <div className="relative z-10">
                         <div className="mb-1 flex items-center justify-between">
-                          <span className={cn('text-[10px] font-bold', currentPreset === preset.id ? 'text-green-400' : 'text-zinc-400 group-hover:text-zinc-300')}>
-                            {preset.name.toUpperCase()}
+                          {/* Slot number */}
+                          <span
+                            className="text-[8px] tracking-wider"
+                            style={{ color: 'var(--color-text-tertiary)' }}
+                          >
+                            {`SLOT ${String(idx + 1).padStart(2, '0')}`}
                           </span>
                           {currentPreset === preset.id && (
-                            <m.div className="h-1.5 w-1.5 rounded-full bg-green-500" animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1, repeat: Infinity }} />
+                            <m.div
+                              className="h-1.5 w-1.5 rounded-full"
+                              style={{ backgroundColor: 'var(--color-ochre)' }}
+                              animate={{ opacity: [1, 0.3, 1] }}
+                              transition={{ duration: 1, repeat: Infinity }}
+                            />
                           )}
                         </div>
-                        <p className={cn('text-[8px]', currentPreset === preset.id ? 'text-green-500/80' : 'text-zinc-500 group-hover:text-zinc-400')}>
+                        <div
+                          className={cn(
+                            'text-[10px] font-bold',
+                          )}
+                          style={{
+                            color: currentPreset === preset.id
+                              ? 'var(--color-ochre)'
+                              : 'var(--color-text-primary)',
+                          }}
+                        >
+                          {preset.name.toUpperCase()}
+                        </div>
+                        <p
+                          className="mt-0.5 text-[8px] leading-tight"
+                          style={{
+                            color: currentPreset === preset.id
+                              ? 'rgba(212,168,75,0.7)'
+                              : 'var(--color-text-tertiary)',
+                          }}
+                        >
                           {preset.description}
                         </p>
                       </div>
                       {currentPreset === preset.id && (
-                        <m.div className="absolute inset-0 bg-green-500/10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+                        <m.div
+                          className="absolute inset-0"
+                          style={{ backgroundColor: 'rgba(212,168,75,0.05)' }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        />
                       )}
                     </m.button>
                   ))}
                 </div>
 
                 {/* Now Playing */}
-                <AnimatePresence>
-                  {currentPreset && (
-                    <m.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="flex items-center gap-2 rounded border border-green-500/30 bg-green-500/10 px-3 py-1.5"
-                    >
-                      <Music className="h-3 w-3 text-green-500" />
-                      <span className="text-[10px] font-medium text-green-400">
-                        Now Playing: {presets.find((p) => p.id === currentPreset)?.name}
-                        {isPaused && ' (PAUSED)'}
-                      </span>
-                    </m.div>
+                <m.div
+                  initial={false}
+                  animate={currentPreset ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
+                  className={cn(
+                    'flex items-center gap-2 rounded-sm px-3 py-1.5',
+                    currentPreset ? '' : 'hidden',
                   )}
-                </AnimatePresence>
+                  style={{
+                    border: currentPreset ? '1px solid rgba(212,168,75,0.3)' : 'none',
+                    backgroundColor: currentPreset ? 'rgba(212,168,75,0.05)' : 'transparent',
+                  }}
+                >
+                  <Music className="h-3 w-3" style={{ color: 'var(--color-ochre)' }} />
+                  <span
+                    className="text-[10px] font-medium"
+                    style={{ color: 'var(--color-ochre)', fontFamily: 'var(--font-mono)' }}
+                  >
+                    Now Playing: {presets.find((p) => p.id === currentPreset)?.name}
+                    {isPaused && ' (PAUSED)'}
+                  </span>
+                </m.div>
               </div>
 
-              {/* Desktop Grid */}
+              {/* ── Desktop Port Grid ── */}
               <div className="hidden md:block">
-                <LaunchpadGrid items={desktopGrid} cols={8} rows={4} />
+                <PortGrid items={desktopGrid} cols={8} rows={4} />
               </div>
-              {/* Mobile Grid */}
+              {/* ── Mobile Port Grid ── */}
               <div className="md:hidden">
-                <LaunchpadGrid items={mobileGrid} cols={4} rows={6} />
+                <PortGrid items={mobileGrid} cols={4} rows={6} />
               </div>
 
-              {/* Cable */}
+              {/* ── Cable Out ── */}
               <div className="-mt-0.5 flex justify-center">
-                <div className="flex h-8 w-24 items-end justify-center rounded-b-xl border-x border-b border-zinc-700 bg-zinc-800 pb-1 shadow-lg sm:h-12 sm:w-32 sm:pb-2">
-                  <span className="font-mono text-[8px] text-zinc-500 sm:text-[10px]">USB-C</span>
+                <div
+                  className="flex h-8 w-24 items-end justify-center rounded-b-xl border-x border-b pb-1 shadow-lg sm:h-12 sm:w-32 sm:pb-2"
+                  style={{
+                    borderColor: 'var(--color-border-default)',
+                    backgroundColor: 'var(--color-bg-elevated)',
+                  }}
+                >
+                  <span
+                    className="text-[8px] tracking-wider sm:text-[10px]"
+                    style={{ color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-mono)' }}
+                  >
+                    TRS OUT
+                  </span>
                 </div>
               </div>
             </div>

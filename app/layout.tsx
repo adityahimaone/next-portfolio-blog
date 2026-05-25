@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Space_Grotesk, JetBrains_Mono, EB_Garamond } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from 'next-themes'
 import { AudioProvider } from '@/features/landing-page/spotify/audio-context'
@@ -49,14 +49,22 @@ export const metadata: Metadata = {
   },
 }
 
-const geist = Geist({
-  variable: '--font-geist',
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-display',
   subsets: ['latin'],
+  display: 'swap',
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-mono',
   subsets: ['latin'],
+  display: 'swap',
+})
+
+const ebGaramond = EB_Garamond({
+  variable: '--font-serif',
+  subsets: ['latin'],
+  display: 'swap',
 })
 
 export default function RootLayout({
@@ -67,7 +75,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geist.variable} ${geistMono.variable} bg-white tracking-tight antialiased dark:bg-zinc-950`}
+        className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} ${ebGaramond.variable} bg-white tracking-tight antialiased dark:bg-zinc-950`}
       >
         <ThemeProvider
           enableSystem={false}
@@ -77,7 +85,7 @@ export default function RootLayout({
           themes={['light', 'dark']}
         >
           <AudioProvider>
-            <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-geist)]">
+            <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-display)]">
               <div className="relative flex-1">{children}</div>
               <MusicPlayer />
             </div>

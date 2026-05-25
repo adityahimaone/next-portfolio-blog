@@ -1,25 +1,194 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
-import { m, useMotionValue, animate, useReducedMotion } from 'motion/react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
+import { m, useMotionValue, animate, useReducedMotion, useInView } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
-import { Sliders, Music } from 'lucide-react'
+import { Power } from 'lucide-react'
 
 import { MIXER_DATA } from '../constants'
 
-// --- Components ---
+// --- Helper Components ---
 
-// Screw component imported from @/components/screw
+const RackScrew = ({ className }: { className?: string }) => (
+  <div
+    className={cn(
+      'flex h-2 w-2 items-center justify-center rounded-full border shadow-inner',
+      'border-[var(--color-border-default)] bg-[var(--color-surface)]',
+      className,
+    )}
+  >
+    <div className="h-px w-full rotate-45 bg-[var(--color-border-strong)]" />
+    <div className="absolute h-px w-full -rotate-45 bg-[var(--color-border-strong)]" />
+  </div>
+)
 
-const Knob = ({
+const LEDIndicator = ({ level, isOn }: { level: number; isOn: boolean }) => {
+  const getColor = () => {
+    if (!isOn) return 'bg-zinc-800'
+    if (level >= 90) return 'bg-[var(--color-moss)] shadow-[0_0_8px_var(--color-moss)]'
+    if (level >= 70) return 'bg-[var(--color-ochre)] shadow-[0_0_8px_var(--color-ochre)]'
+    return 'bg-[var(--color-terracotta)] shadow-[0_0_6px_var(--color-terracotta)]'
+  }
+
+  return (
+    <div
+      className={cn(
+        'h-1.5 w-1.5 rounded-full transition-all duration-300',
+        getColor(),
+      )}
+    />
+  )
+}
+
+const VUMeter = ({ level, isOn }: { level: number; isOn: boolean }) => {
+  const bars = 12
+
+  return (
+    <div className="flex h-full w-8 flex-col-reverse gap-0.5 rounded border border-[var(--color-border-subtle)] bg-[var(--color-charcoal)] p-1">
+      {[...Array(bars)].map((_, i) => {
+        const isActive = isOn && i < Math.floor((level / 100) * bars)
+        const isPeak = i >= bars - 2
+        const isHot = i >= bars - 4 && i < bars - 2
+
+        return (
+          <m.div
+            key={i}
+            className={cn(
+              'h-full w-full rounded-[1px]',
+              isActive
+                ? isPeak
+                  ? 'bg-[var(--color-terracotta)]'
+                  : isHot
+                    ? 'bg-[var(--color-ochre)]'
+                    : 'bg-[var(--color-moss)]'
+                : 'bg-zinc-800/50',
+            )}
+            animate={
+              isActive
+                ? { opacity: [0.7, 1, 0.7] }
+                : { opacity: 0.3 }
+            }
+            transition={{
+              duration: 0.8 + Math.random() * 0.4,
+              repeat: Infinity,
+              repeatType: 'reverse',
+              delay: i * 0.05,
+            }}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+const RackFader = ({
   value,
   label,
   index = 0,
+  isOn,
 }: {
   value: number
   label: string
   index?: number
+  isOn: boolean
+}) => {
+  const maxTravel = 80
+  const initialY = -((value / 100) * maxTravel)
+  const y = useMotionValue(0)
+  const prefersReduced = useReducedMotion()
+
+  useEffect(() => {
+    if (prefersReduced) {
+      y.set(initialY)
+      return
+    }
+    const controls = animate(y, initialY, {
+      duration: 0.6,
+      ease: [0.34, 1.56, 0.64, 1],
+      delay: index * 0.08,
+    })
+    return () => controls.stop()
+  }, [initialY, index, prefersReduced])
+
+  return (
+    <div className="group relative flex h-full touch-none flex-col items-center gap-2">
+      <span
+        className="pointer-events-none absolute -top-5 z-20 rounded bg-[var(--color-surface)] px-1.5 py-0.5 text-[10px] text-[var(--color-ochre)] opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100"
+        style={{ fontFamily: 'var(--font-mono)' }}
+        aria-hidden="true"
+      >
+        {value}%
+      </span>
+      <div
+        role="slider"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={isOn ? value : 0}
+        aria-orientation="vertical"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+            e.preventDefault()
+            const newY = Math.max(-maxTravel, y.get() - 4)
+            y.set(newY)
+          } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+            e.preventDefault()
+            const newY = Math.min(0, y.get() + 4)
+            y.set(newY)
+          }
+        }}
+        className="relative flex h-32 w-10 justify-center rounded border border-[var(--color-border-default)] bg-[var(--color-charcoal)] py-3 shadow-inner focus:outline-none focus:ring-2 focus:ring-[var(--color-ochre)] focus:ring-offset-2 focus:ring-offset-[var(--color-charcoal)]"
+      >
+        {/* Track */}
+        <div className="absolute top-3 bottom-3 w-1 rounded-full bg-zinc-950 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]" />
+
+        {/* Ticks */}
+        <div className="absolute top-3 bottom-3 left-1.5 flex flex-col justify-between py-0.5">
+          {[...Array(9)].map((_, i) => (
+            <div key={i} className="h-px w-1 bg-[var(--color-border-default)]" />
+          ))}
+        </div>
+
+        {/* Fader Cap */}
+        <m.div
+          className="absolute bottom-3 left-1/2 z-10 flex h-10 w-7 min-h-[44px] -translate-x-1/2 cursor-grab items-center justify-center rounded border-t shadow-[0_4px_6px_rgba(0,0,0,0.5)] active:cursor-grabbing"
+          style={{
+            y,
+            borderColor: 'var(--color-ochre)',
+            background: 'linear-gradient(to bottom, var(--color-ochre), rgb(180, 140, 60))',
+          }}
+          drag="y"
+          dragConstraints={{ top: -maxTravel, bottom: 0 }}
+          dragElastic={0}
+          dragMomentum={false}
+        >
+          <div className="mb-0.5 h-px w-full bg-zinc-950/30" />
+          <div className="h-px w-full bg-zinc-950/30" />
+          <div className="mt-0.5 h-px w-full bg-zinc-950/30" />
+        </m.div>
+      </div>
+      <span
+        className="text-[9px] font-bold tracking-widest text-[var(--color-slate)] uppercase select-none"
+        style={{ fontFamily: 'var(--font-mono)' }}
+      >
+        {label}
+      </span>
+    </div>
+  )
+}
+
+const RackKnob = ({
+  value,
+  label,
+  index = 0,
+  isOn,
+}: {
+  value: number
+  label: string
+  index?: number
+  isOn: boolean
 }) => {
   const minDeg = -135
   const maxDeg = 135
@@ -33,25 +202,25 @@ const Knob = ({
       return
     }
     const controls = animate(rotation, startDeg, {
-      duration: 0.6,
-      ease: [0.32, 0.72, 0, 1],
-      delay: index * 0.05,
+      duration: 0.7,
+      ease: [0.34, 1.56, 0.64, 1],
+      delay: index * 0.08,
     })
     return () => controls.stop()
   }, [startDeg, index, prefersReduced])
 
   const handlePan = (_: any, info: { delta: { y: number } }) => {
     const current = rotation.get()
-    // Drag up (negative y) -> increase rotation (positive delta)
     const delta = -info.delta.y * 2
     const newRot = Math.min(maxDeg, Math.max(minDeg, current + delta))
     rotation.set(newRot)
   }
 
   return (
-    <div className="group relative flex touch-none flex-col items-center gap-3">
+    <div className="group relative flex touch-none flex-col items-center gap-2">
       <span
-        className="pointer-events-none absolute -top-6 rounded bg-zinc-900/90 px-1.5 py-0.5 font-mono text-xs text-zinc-100 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100"
+        className="pointer-events-none absolute -top-5 rounded bg-[var(--color-surface)] px-1.5 py-0.5 text-[10px] text-[var(--color-ochre)] opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100"
+        style={{ fontFamily: 'var(--font-mono)' }}
         aria-hidden="true"
       >
         {value}%
@@ -61,20 +230,20 @@ const Knob = ({
         aria-label={label}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={value}
+        aria-valuenow={isOn ? value : 0}
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
             e.preventDefault()
-            const newDeg = Math.min(maxDeg, rotation.get() + 13.5) // +5%
+            const newDeg = Math.min(maxDeg, rotation.get() + 13.5)
             rotation.set(newDeg)
           } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
             e.preventDefault()
-            const newDeg = Math.max(minDeg, rotation.get() - 13.5) // -5%
+            const newDeg = Math.max(minDeg, rotation.get() - 13.5)
             rotation.set(newDeg)
           }
         }}
-        className="relative flex h-20 w-20 items-center justify-center rounded-full border border-zinc-700/50 bg-zinc-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-zinc-900"
+        className="relative flex h-16 w-16 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-surface)] shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.05)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ochre)] focus:ring-offset-2 focus:ring-offset-[var(--color-charcoal)]"
       >
         {/* Ticks */}
         {[...Array(11)].map((_, i) => {
@@ -85,372 +254,385 @@ const Knob = ({
               className="absolute h-full w-full"
               style={{ transform: `rotate(${rot}deg)` }}
             >
-              <div className="absolute top-1 left-1/2 h-1.5 w-0.5 -translate-x-1/2 bg-zinc-600" />
+              <div
+                className="absolute top-1 left-1/2 h-1 w-px -translate-x-1/2 bg-[var(--color-border-strong)]"
+              />
             </div>
           )
         })}
 
         {/* The Knob */}
         <m.div
-          className="relative h-14 w-14 cursor-grab rounded-full border border-zinc-950 bg-linear-to-b from-zinc-700 to-zinc-900 shadow-[0_4px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] active:cursor-grabbing"
-          style={{ rotate: rotation }}
+          className="relative h-12 w-12 cursor-grab rounded-full border border-zinc-950 shadow-[0_4px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] active:cursor-grabbing"
+          style={{
+            rotate: rotation,
+            background:
+              'radial-gradient(circle at 30% 30%, var(--color-surface), var(--color-charcoal))',
+          }}
           onPan={handlePan}
         >
-          {/* Indicator Line */}
-          <div className="bg-primary absolute top-1.5 left-1/2 h-4 w-1 -translate-x-1/2 rounded-full shadow-[0_0_5px_rgba(var(--primary),0.8)]" />
+          {/* Indicator Dot */}
+          <div
+            className="absolute top-1.5 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full shadow-[0_0_5px_var(--color-ochre)]"
+            style={{ backgroundColor: 'var(--color-ochre)' }}
+          />
         </m.div>
       </div>
-      <span className="text-[10px] font-bold tracking-widest text-zinc-500 select-none">
-        {label}
-      </span>
-    </div>
-  )
-}
-
-const Fader = ({
-  value,
-  label,
-  index = 0,
-}: {
-  value: number
-  label: string
-  index?: number
-}) => {
-  // Track height 192px (h-48) - Padding 32px (py-4) - Cap 48px (h-12) = 112px travel
-  const maxTravel = 112
-  const initialY = -((value / 100) * maxTravel)
-  const y = useMotionValue(0)
-  const prefersReduced = useReducedMotion()
-
-  useEffect(() => {
-    if (prefersReduced) {
-      y.set(initialY)
-      return
-    }
-    const controls = animate(y, initialY, {
-      duration: 0.5,
-      ease: 'easeOut',
-      delay: index * 0.05,
-    })
-    return () => controls.stop()
-  }, [initialY, index, prefersReduced])
-
-  return (
-    <div className="group relative flex h-full touch-none flex-col items-center gap-3">
       <span
-        className="pointer-events-none absolute -top-6 z-20 rounded bg-zinc-900/90 px-1.5 py-0.5 font-mono text-xs text-zinc-100 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100"
-        aria-hidden="true"
+        className="text-[9px] font-bold tracking-widest text-[var(--color-slate)] uppercase select-none"
+        style={{ fontFamily: 'var(--font-mono)' }}
       >
-        {value}%
-      </span>
-      <div
-        role="slider"
-        aria-label={label}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={value}
-        aria-orientation="vertical"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
-            e.preventDefault()
-            const newY = Math.max(-maxTravel, y.get() - 5.6) // +5%
-            y.set(newY)
-          } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
-            e.preventDefault()
-            const newY = Math.min(0, y.get() + 5.6) // -5%
-            y.set(newY)
-          }
-        }}
-        className="relative flex h-48 w-12 justify-center rounded-lg border border-zinc-800/50 bg-zinc-900/50 py-4 shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-zinc-900"
-      >
-        {/* Track Line */}
-        <div className="absolute top-4 bottom-4 w-1 rounded-full bg-zinc-950 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]" />
-
-        {/* Ticks */}
-        <div className="absolute top-4 bottom-4 left-2 flex flex-col justify-between py-1">
-          {[...Array(11)].map((_, i) => (
-            <div key={i} className="h-px w-1.5 bg-zinc-700" />
-          ))}
-        </div>
-
-        {/* The Fader Cap */}
-        <m.div
-          className="absolute bottom-4 left-1/2 z-10 flex h-12 w-8 -translate-x-1/2 cursor-grab items-center justify-center rounded border-t border-zinc-600 bg-linear-to-b from-zinc-700 to-zinc-800 shadow-[0_4px_6px_rgba(0,0,0,0.5)] active:cursor-grabbing"
-          style={{ y }}
-          drag="y"
-          dragConstraints={{ top: -maxTravel, bottom: 0 }}
-          dragElastic={0}
-          dragMomentum={false}
-        >
-          <div className="mb-1 h-0.5 w-full bg-zinc-950/50" />
-          <div className="h-0.5 w-full bg-zinc-950/50" />
-          <div className="mt-1 h-0.5 w-full bg-zinc-950/50" />
-
-          {/* LED on fader */}
-          <div className="bg-primary absolute top-1/2 left-1/2 h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_5px_rgba(var(--primary),0.5)]" />
-        </m.div>
-      </div>
-      <span className="text-[10px] font-bold tracking-widest text-zinc-500 select-none">
         {label}
       </span>
     </div>
   )
 }
 
-const VUMeter = ({ isOn }: { isOn: boolean }) => {
-  // Pre-compute stable per-bar timing so values don't reshuffle on re-render
-  const barTimings = useMemo(
-    () =>
-      Array.from({ length: 2 }, () =>
-        Array.from({ length: 15 }, () => ({
-          dur: 0.5 + Math.random() * 0.5,
-          delay: Math.random() * 0.5,
-        })),
-      ),
-    [],
-  )
+// --- Rack Unit Component (each skill category) ---
+
+const RackSection = ({
+  group,
+  index,
+  isOn,
+}: {
+  group: (typeof MIXER_DATA)[number]
+  index: number
+  isOn: boolean
+}) => {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-50px' })
+  const prefersReduced = useReducedMotion()
+  const is2U = group.type === 'fader'
 
   return (
-    <div className="flex h-32 items-end gap-1 rounded border border-zinc-800 bg-zinc-900/80 p-2 shadow-inner">
-      {[...Array(2)].map((_, ch) => (
-        <div key={ch} className="flex w-3 flex-col gap-0.5">
-          {[...Array(15)].map((_, i) => {
-            const isRed = i > 12
-            const isYellow = i > 9 && i <= 12
-            const colorClass = isRed
-              ? 'bg-red-500'
-              : isYellow
-                ? 'bg-yellow-500'
-                : 'bg-green-500'
-            const timing = barTimings[ch][i]
+    <m.div
+      ref={ref}
+      initial={prefersReduced ? false : { opacity: 0, x: -60 }}
+      animate={isInView ? { opacity: 1, x: 0 } : undefined}
+      transition={{
+        duration: 0.6,
+        ease: [0.34, 1.56, 0.64, 1],
+        delay: index * 0.15,
+      }}
+      className={cn(
+        'relative rounded-lg border border-[var(--color-border-default)] bg-[var(--color-surface)] p-4 md:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_4px_12px_rgba(0,0,0,0.3)]',
+        is2U ? 'min-h-[280px]' : 'min-h-[200px]',
+      )}
+    >
+      {/* Rack screw holes */}
+      <RackScrew className="absolute top-3 left-3" />
+      <RackScrew className="absolute top-3 right-3" />
+      <RackScrew className="absolute bottom-3 left-3" />
+      <RackScrew className="absolute right-3 bottom-3" />
 
-            return (
-              <m.div
-                key={i}
-                className={cn(
-                  'h-1.5 w-full rounded-[1px] opacity-20',
-                  colorClass,
-                )}
-                animate={isOn ? { opacity: [0.2, 1, 0.2] } : { opacity: 0.1 }}
-                transition={{
-                  duration: timing.dur,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                  delay: timing.delay,
-                }}
-              />
-            )
-          })}
+      {/* Unit Header */}
+      <div className="mb-4 flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+        <div className="flex items-center gap-3">
+          <LEDIndicator level={isOn ? 90 : 0} isOn={isOn} />
+          <h4
+            className="text-sm font-bold tracking-widest text-[var(--color-highlight)] uppercase"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            {group.label}
+          </h4>
         </div>
-      ))}
-    </div>
+        <span
+          className="text-[10px] text-[var(--color-slate)]"
+          style={{ fontFamily: 'var(--font-mono)' }}
+        >
+          {group.type === 'fader' ? 'FADER BANK' : 'ROTARY CTRL'}
+        </span>
+      </div>
+
+      {/* Controls */}
+      <div className="flex items-end justify-center gap-3 md:gap-4">
+        <div className="hidden sm:block">
+          <VUMeter
+            level={isOn ? Math.max(...group.channels.map((c) => c.level)) : 0}
+            isOn={isOn}
+          />
+        </div>
+
+        <div
+          className={cn(
+            'flex flex-wrap items-end justify-center gap-3 md:gap-5',
+            group.type === 'fader' ? 'gap-2 md:gap-4' : 'gap-4 md:gap-6',
+          )}
+        >
+          {group.channels.map((skill, i) =>
+            group.type === 'fader' ? (
+              <RackFader
+                key={skill.name}
+                value={isOn ? skill.level : 0}
+                label={skill.name}
+                index={i}
+                isOn={isOn}
+              />
+            ) : (
+              <RackKnob
+                key={skill.name}
+                value={isOn ? skill.level : 0}
+                label={skill.name}
+                index={i}
+                isOn={isOn}
+              />
+            ),
+          )}
+        </div>
+
+        <div className="hidden sm:block">
+          <VUMeter
+            level={
+              isOn
+                ? Math.round(
+                    group.channels.reduce((a, c) => a + c.level, 0) /
+                      group.channels.length,
+                  )
+                : 0
+            }
+            isOn={isOn}
+          />
+        </div>
+      </div>
+
+      {/* Bottom LED strip */}
+      <div className="mt-4 flex items-center justify-center gap-2 border-t border-[var(--color-border-subtle)] pt-3">
+        {group.channels.map((skill) => (
+          <div key={skill.name} className="flex flex-col items-center gap-1">
+            <LEDIndicator level={skill.level} isOn={isOn} />
+          </div>
+        ))}
+      </div>
+    </m.div>
   )
 }
+
+// --- Power Switch ---
+
+const PowerSwitch = ({
+  isOn,
+  onToggle,
+}: {
+  isOn: boolean
+  onToggle: () => void
+}) => (
+  <button
+    onClick={onToggle}
+    aria-label={isOn ? 'Turn Rack Power Off' : 'Turn Rack Power On'}
+    className={cn(
+      'relative flex h-12 w-12 min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300',
+      isOn
+        ? 'border-[var(--color-ochre)] bg-[var(--color-surface)] shadow-[0_0_20px_var(--color-ochre),inset_0_0_10px_rgba(0,0,0,0.3)]'
+        : 'border-[var(--color-border-default)] bg-[var(--color-charcoal)] shadow-inner',
+    )}
+  >
+    <Power
+      className={cn(
+        'h-5 w-5 transition-colors duration-300',
+        isOn ? 'text-[var(--color-ochre)]' : 'text-[var(--color-slate)]',
+      )}
+    />
+  </button>
+)
+
+// --- Main Section Export ---
 
 export function SkillsSection() {
   const [isOn, setIsOn] = useState(true)
   const prefersReduced = useReducedMotion()
 
   return (
-    <>
-      <section id="skills" className="overflow-hidden py-24">
-        <div className="container mx-auto px-4">
-          <div className="mb-16 flex flex-col items-center text-center">
-            <m.div
-              initial={prefersReduced ? false : { opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-200/50 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400"
+    <section
+      id="skills"
+      className="relative overflow-hidden py-24"
+      style={{ backgroundColor: 'var(--color-charcoal)' }}
+    >
+      {/* Background rack texture - subtle screw hole pattern */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle, var(--color-slate) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+        }}
+      />
+
+      <div className="container relative mx-auto px-4">
+        {/* Section Header */}
+        <div className="mb-16 flex flex-col items-center text-center">
+          <m.div
+            initial={prefersReduced ? false : { opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-4 flex items-center gap-2 rounded-full border border-[var(--color-border-default)] px-4 py-1.5 text-sm font-medium"
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              color: 'var(--color-ochre)',
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ochre)] shadow-[0_0_6px_var(--color-ochre)]" />
+            <span>THE RACK</span>
+          </m.div>
+          <h2
+            className="text-4xl font-bold tracking-tight sm:text-5xl"
+            style={{
+              color: 'var(--color-highlight)',
+              fontFamily: 'var(--font-display)',
+            }}
+          >
+            Outboard Gear
+          </h2>
+          <p
+            className="mt-3 max-w-md text-sm"
+            style={{
+              color: 'var(--color-slate)',
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
+            Each unit represents a skill &mdash; proficiency drives the signal level
+          </p>
+        </div>
+
+        {/* The Rack Enclosure */}
+        <div
+          className="relative mx-auto max-w-5xl rounded-2xl border p-3 shadow-2xl md:p-5"
+          style={{
+            borderColor: 'var(--color-border-default)',
+            backgroundColor: 'var(--color-charcoal)',
+          }}
+        >
+          {/* Rack Rails (left and right) */}
+          <div
+            className="pointer-events-none absolute top-0 bottom-0 left-0 w-3 rounded-l-2xl md:w-5"
+            style={{
+              background:
+                'linear-gradient(to right, var(--color-surface), transparent)',
+            }}
+          />
+          <div
+            className="pointer-events-none absolute top-0 right-0 bottom-0 w-3 rounded-r-2xl md:w-5"
+            style={{
+              background:
+                'linear-gradient(to left, var(--color-surface), transparent)',
+            }}
+          />
+
+          {/* Inner Panel */}
+          <div
+            className="relative rounded-xl border p-4 md:p-8"
+            style={{
+              borderColor: 'var(--color-border-subtle)',
+              backgroundColor: 'var(--color-bg-secondary)',
+            }}
+          >
+            {/* Corner Screws */}
+            <Screw className="absolute top-3 left-3" />
+            <Screw className="absolute top-3 right-3" />
+            <Screw className="absolute bottom-3 left-3" />
+            <Screw className="absolute right-3 bottom-3" />
+
+            {/* Top Panel: Branding & Power */}
+            <div
+              className="mb-8 flex items-center justify-between border-b pb-5"
+              style={{ borderColor: 'var(--color-border-subtle)' }}
             >
-              <Sliders className="h-4 w-4" />
-              <span>AUDIO ENGINEERING</span>
-            </m.div>
-            <h2 className="text-4xl font-black tracking-tighter text-zinc-900 sm:text-5xl dark:text-white">
-              Sonic Arsenal
-            </h2>
-          </div>
-
-          {/* The Mixer Board */}
-          <div className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-200 p-4 shadow-2xl dark:bg-zinc-900">
-            {/* Metallic Texture Overlay */}
-            <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
-
-            {/* Inner Casing */}
-            <div className="relative rounded-2xl border border-zinc-400/50 bg-zinc-300 p-6 shadow-inner md:p-10 dark:border-zinc-800 dark:bg-zinc-950">
-              {/* Screws */}
-              <Screw className="absolute top-4 left-4" />
-              <Screw className="absolute top-4 right-4" />
-              <Screw className="absolute bottom-4 left-4" />
-              <Screw className="absolute right-4 bottom-4" />
-
-              {/* Top Panel: Branding & Power */}
-              <div className="mb-12 flex items-center justify-between border-b border-zinc-400/30 pb-6 dark:border-zinc-800">
-                <div className="flex items-center gap-4">
-                  <div className="hidden h-12 w-12 items-center justify-center rounded border border-zinc-700 bg-zinc-900 shadow-lg sm:flex">
-                    <Music className="text-primary h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black tracking-widest text-zinc-700 uppercase dark:text-zinc-300">
-                      MIX-MASTER <span className="text-primary">2025</span>
-                    </h3>
-                    <p className="font-mono text-xs text-zinc-500 uppercase">
-                      Professional Audio/Code Interface
-                    </p>
-                  </div>
+              <div className="flex items-center gap-4">
+                <div
+                  className="hidden h-10 w-10 items-center justify-center rounded border sm:flex"
+                  style={{
+                    borderColor: 'var(--color-ochre)',
+                    backgroundColor: 'var(--color-charcoal)',
+                  }}
+                >
+                  <span
+                    className="text-lg font-bold"
+                    style={{ color: 'var(--color-ochre)' }}
+                  >
+                    ⚡
+                  </span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-3 rounded-xl border border-zinc-500 bg-zinc-400/50 p-2 px-3">
-                    {/* LED */}
-                    <div className="flex flex-col items-center gap-1">
-                      <div
-                        className={cn(
-                          'h-2 w-2 rounded-full transition-all duration-300',
-                          isOn
-                            ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]'
-                            : 'bg-red-900/30',
-                        )}
-                      />
-                      <span className="text-[8px] font-bold tracking-wider text-zinc-600">
-                        PWR
-                      </span>
-                    </div>
-
-                    {/* Separator */}
-                    <div className="h-8 w-px bg-zinc-800" />
-
-                    {/* Switch */}
-                    <button
-                      onClick={() => setIsOn(!isOn)}
-                      aria-label={isOn ? 'Turn Power Off' : 'Turn Power On'}
-                      className={cn(
-                        'relative flex h-12 w-8 cursor-pointer flex-col items-center justify-between overflow-hidden rounded border border-zinc-800 bg-zinc-950 py-1 shadow-[inset_0_0_5px_rgba(0,0,0,1)] transition-all',
-                      )}
-                    >
-                      {/* ON State (Top) */}
-                      <div
-                        className={cn(
-                          'flex h-4 w-6 items-center justify-center rounded-[1px] transition-all duration-200',
-                          isOn
-                            ? 'translate-y-0.5 bg-zinc-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
-                            : 'bg-zinc-900 opacity-50 shadow-inner',
-                        )}
-                      >
-                        <span className="text-[8px] font-bold text-zinc-400">
-                          |
-                        </span>
-                      </div>
-
-                      {/* OFF State (Bottom) */}
-                      <div
-                        className={cn(
-                          'flex h-4 w-6 items-center justify-center rounded-[1px] transition-all duration-200',
-                          !isOn
-                            ? '-translate-y-0.5 bg-zinc-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
-                            : 'bg-zinc-900 opacity-50 shadow-inner',
-                        )}
-                      >
-                        <span className="text-[8px] font-bold text-zinc-400">
-                          O
-                        </span>
-                      </div>
-                    </button>
-                  </div>
-
-                  <div className="hidden md:block">
-                    <VUMeter isOn={isOn} />
-                  </div>
+                <div>
+                  <h3
+                    className="text-lg font-bold tracking-widest uppercase"
+                    style={{
+                      color: 'var(--color-highlight)',
+                      fontFamily: 'var(--font-display)',
+                    }}
+                  >
+                    RACK-MASTER{' '}
+                    <span style={{ color: 'var(--color-ochre)' }}>2026</span>
+                  </h3>
+                  <p
+                    className="text-[10px] uppercase"
+                    style={{
+                      color: 'var(--color-slate)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  >
+                    Professional Outboard Signal Processor
+                  </p>
                 </div>
               </div>
 
-              {/* Mixer Sections */}
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
-                {/* Section 1: Faders (Languages) */}
-                <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner lg:col-span-5 dark:border-zinc-800 dark:bg-zinc-900/50">
-                  <div className="mb-6 flex items-center justify-between">
-                    <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
-                      Channel 1: Languages
-                    </h4>
-                    <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                  </div>
-                  {/* Desktop */}
-                  <div className="hidden flex-wrap justify-between gap-2 sm:flex">
-                    {MIXER_DATA[0].channels.map((skill, i) => (
-                      <Fader
-                        key={skill.name}
-                        value={isOn ? skill.level : 0}
-                        label={skill.name}
-                        index={i}
-                      />
-                    ))}
-                  </div>
-                  {/* Mobile */}
-                  <div className="flex flex-wrap justify-between gap-2 sm:hidden">
-                    {MIXER_DATA[0].channels.slice(-4).map((skill, i) => (
-                      <Fader
-                        key={skill.name}
-                        value={isOn ? skill.level : 0}
-                        label={skill.name}
-                        index={i}
-                      />
-                    ))}
-                  </div>
+              <div className="flex items-center gap-4">
+                {/* Master VU */}
+                <div className="hidden h-24 md:flex">
+                  <VUMeter level={isOn ? 85 : 0} isOn={isOn} />
                 </div>
 
-                {/* Section 2: Knobs (Frameworks & Tools) */}
-                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:col-span-7">
-                  {/* Frameworks */}
-                  <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <div className="mb-6 flex items-center justify-between">
-                      <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
-                        EQ: Frameworks
-                      </h4>
-                      <div className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-8">
-                      {MIXER_DATA[1].channels.map((skill, i) => (
-                        <Knob
-                          key={skill.name}
-                          value={isOn ? skill.level : 0}
-                          label={skill.name}
-                          index={i}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Tools */}
-                  <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <div className="mb-6 flex items-center justify-between">
-                      <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
-                        FX: Tools
-                      </h4>
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-8">
-                      {MIXER_DATA[2].channels.map((skill, i) => (
-                        <Knob
-                          key={skill.name}
-                          value={isOn ? skill.level : 0}
-                          label={skill.name}
-                          index={i}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                {/* Power */}
+                <div className="flex flex-col items-center gap-1">
+                  <PowerSwitch isOn={isOn} onToggle={() => setIsOn(!isOn)} />
+                  <span
+                    className="text-[8px] font-bold tracking-wider"
+                    style={{
+                      color: 'var(--color-slate)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  >
+                    PWR
+                  </span>
                 </div>
               </div>
+            </div>
 
-              {/* Bottom Label */}
-              <div className="mt-12 border-t border-zinc-400/30 pt-4 text-center dark:border-zinc-800">
-                <p className="font-mono text-[10px] tracking-[0.2em] text-zinc-500 uppercase">
-                  Designed & Engineered by One
-                </p>
-              </div>
+            {/* Rack Units - grouped by category */}
+            <div className="flex flex-col gap-4">
+              {MIXER_DATA.map((group, i) => (
+                <React.Fragment key={group.id}>
+                  {i > 0 && (
+                    <div
+                      className="mx-auto h-px w-3/4"
+                      style={{
+                        backgroundColor: 'var(--color-ochre)',
+                        opacity: 0.3,
+                      }}
+                    />
+                  )}
+                  <RackSection group={group} index={i} isOn={isOn} />
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Bottom Label */}
+            <div
+              className="mt-8 border-t pt-4 text-center"
+              style={{ borderColor: 'var(--color-border-subtle)' }}
+            >
+              <p
+                className="text-[10px] tracking-[0.2em] uppercase"
+                style={{
+                  color: 'var(--color-slate)',
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
+                Designed &amp; Engineered by One &mdash; Serial No. AH-2026
+              </p>
             </div>
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   )
 }

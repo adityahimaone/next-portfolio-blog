@@ -1,0 +1,350 @@
+/**
+ * Studio Tape Design System
+ * A warm, analog-inspired design system with earthy tones and vintage aesthetics
+ * 
+ * Usage: Import this file in your globals.css
+ * @import './design-tokens.css';
+ */
+
+/* ============================================================================
+   COLOR SYSTEM - OKLCH Format
+   ============================================================================
+   OKLCH provides perceptually uniform colors with better interpolation
+   Format: oklch(lightness chroma hue / alpha)
+   - Lightness: 0-1 (0 = black, 1 = white)
+   - Chroma: 0-0.4 (saturation intensity)
+   - Hue: 0-360 (color angle)
+   ============================================================================ */
+
+:root {
+  /* -------------------------------------------------------------------------
+     Base Colors - Studio Tape Palette
+     ------------------------------------------------------------------------- */
+  
+  /* Deep warm charcoal - Primary background */
+  --color-charcoal: oklch(0.12 0.015 35);
+  --color-charcoal-rgb: 26 22 20;
+  
+  /* Surface - Elevated elements */
+  --color-surface: oklch(0.17 0.02 30);
+  --color-surface-rgb: 43 37 32;
+  
+  /* Ochre - Primary accent, warm golden yellow */
+  --color-ochre: oklch(0.72 0.12 75);
+  --color-ochre-rgb: 212 168 75;
+  
+  /* Slate - Neutral gray for secondary text */
+  --color-slate: oklch(0.48 0 0);
+  --color-slate-rgb: 107 107 107;
+  
+  /* Moss - Earthy green accent */
+  --color-moss: oklch(0.47 0.06 125);
+  --color-moss-rgb: 94 109 75;
+  
+  /* Highlight - Warm cream for emphasis */
+  --color-highlight: oklch(0.92 0.05 80);
+  --color-highlight-rgb: 245 230 204;
+  
+  /* Terracotta - Warm red-orange accent */
+  --color-terracotta: oklch(0.52 0.12 35);
+  --color-terracotta-rgb: 184 74 57;
+
+  /* -------------------------------------------------------------------------
+     Semantic Color Assignments
+     ------------------------------------------------------------------------- */
+  
+  /* Backgrounds */
+  --color-bg-primary: var(--color-charcoal);
+  --color-bg-secondary: var(--color-surface);
+  --color-bg-tertiary: oklch(0.20 0.02 30);
+  --color-bg-elevated: oklch(0.22 0.02 30);
+  
+  /* Foreground / Text */
+  --color-text-primary: var(--color-highlight);
+  --color-text-secondary: var(--color-slate);
+  --color-text-tertiary: oklch(0.40 0.01 30);
+  --color-text-inverse: var(--color-charcoal);
+  
+  /* Accent colors */
+  --color-accent-primary: var(--color-ochre);
+  --color-accent-secondary: var(--color-moss);
+  --color-accent-tertiary: var(--color-terracotta);
+  
+  /* Interactive states */
+  --color-interactive-default: var(--color-ochre);
+  --color-interactive-hover: oklch(0.78 0.13 75);
+  --color-interactive-active: oklch(0.65 0.11 75);
+  --color-interactive-disabled: oklch(0.35 0.03 30);
+  
+  /* Borders */
+  --color-border-subtle: oklch(0.25 0.02 30);
+  --color-border-default: oklch(0.30 0.03 30);
+  --color-border-strong: oklch(0.40 0.04 30);
+  --color-border-accent: var(--color-ochre);
+  
+  /* Status colors */
+  --color-success: oklch(0.55 0.12 140);
+  --color-warning: oklch(0.70 0.15 70);
+  --color-error: var(--color-terracotta);
+  --color-info: oklch(0.60 0.10 240);
+
+  /* -------------------------------------------------------------------------
+     Typography System
+     ------------------------------------------------------------------------- */
+  
+  /* Font Families */
+  --font-display: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --font-body: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --font-serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Font Sizes - Mobile First (Base 16px) */
+  --font-size-xs: 0.75rem;      /* 12px */
+  --font-size-sm: 0.875rem;     /* 14px */
+  --font-size-base: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;     /* 18px */
+  --font-size-xl: 1.25rem;      /* 20px */
+  --font-size-2xl: 1.5rem;      /* 24px */
+  --font-size-3xl: 1.875rem;    /* 30px */
+  --font-size-4xl: 2.25rem;     /* 36px */
+  --font-size-5xl: 3rem;        /* 48px */
+  --font-size-6xl: 3.75rem;     /* 60px */
+  --font-size-7xl: 4.5rem;      /* 72px */
+  
+  /* Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+  
+  /* Letter Spacing */
+  --letter-spacing-tighter: -0.05em;
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-wider: 0.05em;
+  --letter-spacing-widest: 0.1em;
+
+  /* -------------------------------------------------------------------------
+     Typography Scale - Heading Styles
+     ------------------------------------------------------------------------- */
+  
+  /* H1 - Hero/Display */
+  --h1-font-family: var(--font-display);
+  --h1-font-size: var(--font-size-4xl);
+  --h1-font-weight: var(--font-weight-bold);
+  --h1-line-height: var(--line-height-tight);
+  --h1-letter-spacing: var(--letter-spacing-tight);
+  
+  /* H2 - Section Headers */
+  --h2-font-family: var(--font-display);
+  --h2-font-size: var(--font-size-3xl);
+  --h2-font-weight: var(--font-weight-bold);
+  --h2-line-height: var(--line-height-tight);
+  --h2-letter-spacing: var(--letter-spacing-tight);
+  
+  /* H3 - Subsection Headers */
+  --h3-font-family: var(--font-display);
+  --h3-font-size: var(--font-size-2xl);
+  --h3-font-weight: var(--font-weight-semibold);
+  --h3-line-height: var(--line-height-snug);
+  --h3-letter-spacing: var(--letter-spacing-normal);
+  
+  /* H4 - Card Headers */
+  --h4-font-family: var(--font-display);
+  --h4-font-size: var(--font-size-xl);
+  --h4-font-weight: var(--font-weight-semibold);
+  --h4-line-height: var(--line-height-snug);
+  --h4-letter-spacing: var(--letter-spacing-normal);
+  
+  /* H5 - Small Headers */
+  --h5-font-family: var(--font-display);
+  --h5-font-size: var(--font-size-lg);
+  --h5-font-weight: var(--font-weight-medium);
+  --h5-line-height: var(--line-height-normal);
+  --h5-letter-spacing: var(--letter-spacing-normal);
+  
+  /* H6 - Micro Headers */
+  --h6-font-family: var(--font-display);
+  --h6-font-size: var(--font-size-base);
+  --h6-font-weight: var(--font-weight-medium);
+  --h6-line-height: var(--line-height-normal);
+  --h6-letter-spacing: var(--letter-spacing-wide);
+  
+  /* Body Text */
+  --body-font-family: var(--font-body);
+  --body-font-size: var(--font-size-base);
+  --body-font-weight: var(--font-weight-regular);
+  --body-line-height: var(--line-height-relaxed);
+  --body-letter-spacing: var(--letter-spacing-normal);
+  
+  /* Body Large */
+  --body-lg-font-family: var(--font-body);
+  --body-lg-font-size: var(--font-size-lg);
+  --body-lg-font-weight: var(--font-weight-regular);
+  --body-lg-line-height: var(--line-height-relaxed);
+  --body-lg-letter-spacing: var(--letter-spacing-normal);
+  
+  /* Body Small */
+  --body-sm-font-family: var(--font-body);
+  --body-sm-font-size: var(--font-size-sm);
+  --body-sm-font-weight: var(--font-weight-regular);
+  --body-sm-line-height: var(--line-height-normal);
+  --body-sm-letter-spacing: var(--letter-spacing-normal);
+  
+  /* Monospace */
+  --mono-font-family: var(--font-mono);
+  --mono-font-size: var(--font-size-sm);
+  --mono-font-weight: var(--font-weight-regular);
+  --mono-line-height: var(--line-height-normal);
+  --mono-letter-spacing: var(--letter-spacing-normal);
+
+  /* -------------------------------------------------------------------------
+     Spacing System - 8px Base Grid
+     ------------------------------------------------------------------------- */
+  
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 0.125rem;   /* 2px */
+  --space-1: 0.25rem;      /* 4px */
+  --space-1-5: 0.375rem;   /* 6px */
+  --space-2: 0.5rem;       /* 8px */
+  --space-2-5: 0.625rem;   /* 10px */
+  --space-3: 0.75rem;      /* 12px */
+  --space-3-5: 0.875rem;   /* 14px */
+  --space-4: 1rem;         /* 16px */
+  --space-5: 1.25rem;      /* 20px */
+  --space-6: 1.5rem;       /* 24px */
+  --space-7: 1.75rem;      /* 28px */
+  --space-8: 2rem;         /* 32px */
+  --space-9: 2.25rem;      /* 36px */
+  --space-10: 2.5rem;      /* 40px */
+  --space-11: 2.75rem;     /* 44px */
+  --space-12: 3rem;        /* 48px */
+  --space-14: 3.5rem;      /* 56px */
+  --space-16: 4rem;        /* 64px */
+  --space-20: 5rem;        /* 80px */
+  --space-24: 6rem;        /* 96px */
+  --space-28: 7rem;        /* 112px */
+  --space-32: 8rem;        /* 128px */
+  --space-36: 9rem;        /* 144px */
+  --space-40: 10rem;       /* 160px */
+  --space-44: 11rem;       /* 176px */
+  --space-48: 12rem;       /* 192px */
+  --space-52: 13rem;       /* 208px */
+  --space-56: 14rem;       /* 224px */
+  --space-60: 15rem;       /* 240px */
+  --space-64: 16rem;       /* 256px */
+  --space-72: 18rem;       /* 288px */
+  --space-80: 20rem;       /* 320px */
+  --space-96: 24rem;       /* 384px */
+
+  /* -------------------------------------------------------------------------
+     Motion System - Easing & Duration
+     ------------------------------------------------------------------------- */
+  
+  /* Easing Functions */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Custom Easing - Analog/Tape-inspired */
+  --ease-tape: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-vinyl: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-bounce: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  
+  /* Duration */
+  --duration-instant: 0ms;
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --duration-slower: 500ms;
+  --duration-slowest: 750ms;
+  
+  /* Combined Transitions */
+  --transition-fast: var(--duration-fast) var(--ease-out);
+  --transition-normal: var(--duration-normal) var(--ease-in-out);
+  --transition-slow: var(--duration-slow) var(--ease-smooth);
+  --transition-tape: var(--duration-normal) var(--ease-tape);
+  --transition-vinyl: var(--duration-slow) var(--ease-vinyl);
+
+  /* -------------------------------------------------------------------------
+     Border Radius
+     ------------------------------------------------------------------------- */
+  
+  --radius-none: 0;
+  --radius-sm: 0.125rem;    /* 2px */
+  --radius-base: 0.25rem;   /* 4px */
+  --radius-md: 0.375rem;    /* 6px */
+  --radius-lg: 0.5rem;      /* 8px */
+  --radius-xl: 0.75rem;     /* 12px */
+  --radius-2xl: 1rem;       /* 16px */
+  --radius-3xl: 1.5rem;     /* 24px */
+  --radius-full: 9999px;
+
+  /* -------------------------------------------------------------------------
+     Shadows - Analog-inspired depth
+     ------------------------------------------------------------------------- */
+  
+  --shadow-xs: 0 1px 2px 0 oklch(0.12 0.015 35 / 0.05);
+  --shadow-sm: 0 1px 3px 0 oklch(0.12 0.015 35 / 0.1),
+               0 1px 2px -1px oklch(0.12 0.015 35 / 0.1);
+  --shadow-base: 0 4px 6px -1px oklch(0.12 0.015 35 / 0.1),
+                 0 2px 4px -2px oklch(0.12 0.015 35 / 0.1);
+  --shadow-md: 0 10px 15px -3px oklch(0.12 0.015 35 / 0.1),
+               0 4px 6px -4px oklch(0.12 0.015 35 / 0.1);
+  --shadow-lg: 0 20px 25px -5px oklch(0.12 0.015 35 / 0.1),
+               0 8px 10px -6px oklch(0.12 0.015 35 / 0.1);
+  --shadow-xl: 0 25px 50px -12px oklch(0.12 0.015 35 / 0.25);
+  
+  /* Glow effects */
+  --shadow-glow-ochre: 0 0 20px oklch(0.72 0.12 75 / 0.3);
+  --shadow-glow-moss: 0 0 20px oklch(0.47 0.06 125 / 0.3);
+  --shadow-glow-terracotta: 0 0 20px oklch(0.52 0.12 35 / 0.3);
+
+  /* -------------------------------------------------------------------------
+     Z-Index Scale
+     ------------------------------------------------------------------------- */
+  
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-fixed: 1200;
+  --z-modal-backdrop: 1300;
+  --z-modal: 1400;
+  --z-popover: 1500;
+  --z-tooltip: 1600;
+  --z-toast: 1700;
+  --z-max: 9999;
+}
+
+/* ============================================================================
+   Responsive Typography - Desktop Overrides
+   ============================================================================ */
+
+@media (min-width: 768px) {
+  :root {
+    --h1-font-size: var(--font-size-6xl);
+    --h2-font-size: var(--font-size-5xl);
+    --h3-font-size: var(--font-size-3xl);
+    --h4-font-size: var(--font-size-2xl);
+    --body-lg-font-size: var(--font-size-xl);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --h1-font-size: var(--font-size-7xl);
+    --h2-font-size: var(--font-size-6xl);
+  }
+}

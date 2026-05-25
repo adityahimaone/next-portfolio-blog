@@ -29,6 +29,38 @@ export function ContactSection() {
   const rafRef = useRef<number>(0)
   const activeTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
+  // ─── Keyboard shortcuts: QWERTY layout maps to pad grid ────────
+  useEffect(() => {
+    const keyMap: Record<string, { x: number; y: number }> = {
+      // Top row (desktop 8-col grid)
+      '1': { x: 0, y: 0 }, '2': { x: 1, y: 0 }, '3': { x: 2, y: 0 }, '4': { x: 3, y: 0 },
+      '5': { x: 4, y: 0 }, '6': { x: 5, y: 0 }, '7': { x: 6, y: 0 }, '8': { x: 7, y: 0 },
+      // Second row
+      'q': { x: 0, y: 1 }, 'w': { x: 1, y: 1 }, 'e': { x: 2, y: 1 }, 'r': { x: 3, y: 1 },
+      't': { x: 4, y: 1 }, 'y': { x: 5, y: 1 }, 'u': { x: 6, y: 1 }, 'i': { x: 7, y: 1 },
+      // Third row
+      'a': { x: 0, y: 2 }, 's': { x: 1, y: 2 }, 'd': { x: 2, y: 2 }, 'f': { x: 3, y: 2 },
+      'g': { x: 4, y: 2 }, 'h': { x: 5, y: 2 }, 'j': { x: 6, y: 2 }, 'k': { x: 7, y: 2 },
+      // Bottom row
+      'z': { x: 0, y: 3 }, 'x': { x: 1, y: 3 }, 'c': { x: 2, y: 3 }, 'v': { x: 3, y: 3 },
+      'b': { x: 4, y: 3 }, 'n': { x: 5, y: 3 }, 'm': { x: 6, y: 3 }, ',': { x: 7, y: 3 },
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const pos = keyMap[e.key.toLowerCase()]
+      if (!pos) return
+
+      e.preventDefault()
+      const pad = desktopGrid.find((p) => p.x === pos.x && p.y === pos.y)
+      if (pad) {
+        handlePadClick(pad)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [desktopGrid, handlePadClick])
+
   // ─── Initialize Synths ──────────────────────────────────────────
   const initializeSynths = useCallback(async () => {
     if (isInitializedRef.current || !toneRef.current) return
@@ -433,6 +465,7 @@ export function ContactSection() {
             key={pad.id}
             onClick={() => handlePadClick(pad)}
             aria-label={pad.type === 'functional' && 'label' in pad ? `Pad ${(pad as any).label}` : `Pad ${pad.id}`}
+            aria-pressed={isLooping}
             className={cn(
               'group relative flex flex-col items-center justify-center overflow-hidden rounded-md border-b-4 border-zinc-950 bg-zinc-800 transition-all duration-100 active:translate-y-1 active:scale-95 active:border-b-0 sm:rounded-lg',
               pad.type === 'functional' ? 'z-10' : 'z-0',

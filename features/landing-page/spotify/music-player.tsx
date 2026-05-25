@@ -14,6 +14,7 @@ export function MusicPlayer() {
     useAudio()
   const [isVisible, setIsVisible] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
@@ -41,6 +42,25 @@ export function MusicPlayer() {
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Detect autoplay policy blocking
+  useEffect(() => {
+    if (!isPlaying) return
+
+    const testAutoplay = async () => {
+      try {
+        const audio = new Audio()
+        audio.volume = 0
+        await audio.play()
+        audio.pause()
+        setAutoplayBlocked(false)
+      } catch (e) {
+        setAutoplayBlocked(true)
+      }
+    }
+
+    testAutoplay()
+  }, [isPlaying])
 
   const handleVolumeChange = (newValue: number[]) => {
     setVolume(newValue[0])
@@ -70,7 +90,23 @@ export function MusicPlayer() {
           className="fixed right-2 bottom-8 z-50 md:right-8"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
+          onClick={() => {
+            // Mobile tap-to-expand (replace hover-only)
+            if (window.innerWidth < 768) {
+              setIsHovered((prev) => !prev)
+            }
+          }}
         >
+          {/* Autoplay blocked overlay */}
+          {autoplayBlocked && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute -top-10 right-0 whitespace-nowrap rounded-md bg-zinc-900 px-2.5 py-1 text-[10px] font-medium text-zinc-300 shadow-lg dark:bg-zinc-800"
+            >
+              Tap play to enable audio ↓
+            </motion.div>
+          )}
           <motion.div
             className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-zinc-200 p-1 shadow-[0_4px_0_rgb(161,161,170),0_5px_10px_rgba(0,0,0,0.2)] transition-all dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-[0_4px_0_rgb(39,39,42),0_5px_10px_rgba(0,0,0,0.5)]"
             layout

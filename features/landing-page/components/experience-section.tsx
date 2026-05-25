@@ -19,6 +19,34 @@ export function ExperienceSection() {
   const selectedJob =
     EXPERIENCES.find((e) => e.id === selectedId) || EXPERIENCES[0]
 
+  // Keyboard shortcuts: `[` for previous, `]` for next
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '[') {
+        e.preventDefault()
+        const prev = EXPERIENCES.findIndex((e) => e.id === selectedId) - 1
+        const id = EXPERIENCES[(prev + EXPERIENCES.length) % EXPERIENCES.length].id
+        setSelectedId(id)
+      } else if (e.key === ']') {
+        e.preventDefault()
+        const next = (EXPERIENCES.findIndex((e) => e.id === selectedId) + 1) % EXPERIENCES.length
+        setSelectedId(EXPERIENCES[next].id)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedId])
+
+  // Scroll selected experience into view on mobile (< 1024px)
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      const element = document.getElementById('experience')
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }
+    }
+  }, [selectedId])
+
   return (
     <>
       <section id="experience" className="py-24">
@@ -299,7 +327,7 @@ export function ExperienceSection() {
                       </m.div>
                     </AnimatePresence>
                   </div>
-                  {/* Player Controls (Decorative) */}
+                    {/* Player Controls (Decorative) */}
                   <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -325,11 +353,31 @@ export function ExperienceSection() {
                           Now Playing
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-zinc-800">
-                        <ListMusic className="h-4 w-4" />
-                        <span className="text-xs">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const prev = EXPERIENCES.findIndex((e) => e.id === selectedId) - 1
+                            const id = EXPERIENCES[(prev + EXPERIENCES.length) % EXPERIENCES.length].id
+                            setSelectedId(id)
+                          }}
+                          aria-label="Previous track"
+                          className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100"
+                        >
+                          <ChevronRight className="h-3.5 w-3.5 rotate-180" />
+                        </button>
+                        <span className="min-w-[3ch] text-center font-mono text-xs text-zinc-800 dark:text-zinc-400">
                           {selectedId} / {EXPERIENCES.length}
                         </span>
+                        <button
+                          onClick={() => {
+                            const next = (EXPERIENCES.findIndex((e) => e.id === selectedId) + 1) % EXPERIENCES.length
+                            setSelectedId(EXPERIENCES[next].id)
+                          }}
+                          aria-label="Next track"
+                          className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100"
+                        >
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     </div>
                   </div>

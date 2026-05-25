@@ -52,6 +52,24 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [volume, isMuted])
 
+  // MediaSession API — lock screen / Bluetooth controls
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: 'Edge Of Desire (Sunrise Mix)',
+      artist: 'Jonas Blue & Malive',
+      album: 'Portfolio Mix',
+    })
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      if (audioRef.current && !isPlaying) togglePlay()
+    })
+    navigator.mediaSession.setActionHandler('pause', () => {
+      if (audioRef.current && isPlaying) togglePlay()
+    })
+  }, [isPlaying])
+
   const togglePlay = () => {
     if (!audioRef.current) return
 

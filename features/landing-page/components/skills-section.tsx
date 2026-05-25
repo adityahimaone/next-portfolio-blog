@@ -56,7 +56,26 @@ const Knob = ({
       >
         {value}%
       </span>
-      <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-zinc-700/50 bg-zinc-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.1)]">
+      <div
+        role="slider"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={value}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+            e.preventDefault()
+            const newDeg = Math.min(maxDeg, rotation.get() + 13.5) // +5%
+            rotation.set(newDeg)
+          } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+            e.preventDefault()
+            const newDeg = Math.max(minDeg, rotation.get() - 13.5) // -5%
+            rotation.set(newDeg)
+          }
+        }}
+        className="relative flex h-20 w-20 items-center justify-center rounded-full border border-zinc-700/50 bg-zinc-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.1)] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-zinc-900"
+      >
         {/* Ticks */}
         {[...Array(11)].map((_, i) => {
           const rot = (i / 10) * 270 - 135
@@ -124,7 +143,27 @@ const Fader = ({
       >
         {value}%
       </span>
-      <div className="relative flex h-48 w-12 justify-center rounded-lg border border-zinc-800/50 bg-zinc-900/50 py-4 shadow-inner">
+      <div
+        role="slider"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={value}
+        aria-orientation="vertical"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+            e.preventDefault()
+            const newY = Math.max(-maxTravel, y.get() - 5.6) // +5%
+            y.set(newY)
+          } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+            e.preventDefault()
+            const newY = Math.min(0, y.get() + 5.6) // -5%
+            y.set(newY)
+          }
+        }}
+        className="relative flex h-48 w-12 justify-center rounded-lg border border-zinc-800/50 bg-zinc-900/50 py-4 shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-zinc-900"
+      >
         {/* Track Line */}
         <div className="absolute top-4 bottom-4 w-1 rounded-full bg-zinc-950 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]" />
 

@@ -241,17 +241,30 @@ export function ProjectsSection() {
                           Production Credits
                         </h4>
                         <div className="flex flex-wrap gap-2">
-                          {['React', 'Next.js', 'Tailwind', 'TypeScript'].map(
-                            (tech) => (
-                              <span
-                                key={tech}
-                                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                              >
-                                {tech}
-                              </span>
-                            ),
+                          {selectedProject.tech?.map((tech) => (
+                            <span
+                              key={tech}
+                              className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                            >
+                              {tech}
+                            </span>
+                          )) ?? (
+                            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                              No tech stack specified
+                            </span>
                           )}
                         </div>
+                        {selectedProject.repoUrl && (
+                          <a
+                            href={selectedProject.repoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                          >
+                            <Github className="h-3.5 w-3.5" />
+                            View source code on GitHub
+                          </a>
+                        )}
                       </div>
                     </div>
 

@@ -55,6 +55,7 @@ export interface ProjectShowcaseItem {
   readonly image: string
   readonly url: string
   readonly repoUrl?: string
+  readonly tech?: readonly string[]
   readonly genre?: string
   readonly year?: string
   readonly vinylColor: string
@@ -225,6 +226,8 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
       'Company profile for Primarindo Asia Infrastructure Tbk, a manufacturer specializing in shoe production. The website showcases their manufacturing capabilities, product lines, and corporate information.',
     image: '/assets/primarindo.png',
     url: 'https://primarindo.niqcode.com/',
+    repoUrl: 'https://github.com/adityahimaone/primarindo',
+    tech: ['Next.js', 'Tailwind CSS', 'TypeScript', 'Framer Motion'],
     genre: 'Corporate / Manufacturing',
     year: '2024',
     vinylColor: 'from-blue-600 to-cyan-500',
@@ -237,6 +240,8 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
       'Habit tracking app to build better daily routines. Track streaks, view weekly overviews, and stay consistent.',
     image: '/assets/thumbnail-habit-tracker.png',
     url: 'https://habit.adityahimaone.space/',
+    repoUrl: 'https://github.com/adityahimaone/habit-tracker',
+    tech: ['Next.js', 'Tailwind CSS', 'shadcn/ui', 'localStorage'],
     genre: 'Utility / Productivity',
     year: '2026',
     vinylColor: 'from-green-500 to-emerald-500',
@@ -249,6 +254,8 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
       'A curated collection of the best frontend development tools, libraries, and inspiration sources to supercharge your web development workflow.',
     image: '/assets/thumbnail-fe-resources.png',
     url: 'https://frontend-resources-rouge.vercel.app/',
+    repoUrl: 'https://github.com/adityahimaone/frontend-resources',
+    tech: ['Next.js', 'Tailwind CSS', 'TypeScript'],
     genre: 'Educational / Tools',
     year: '2023',
     vinylColor: 'from-yellow-500 to-orange-500',
@@ -262,6 +269,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     image:
       'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/y2l1g36bjudgsf6yr0eg.webp',
     url: 'https://seaphantom.com',
+    tech: ['React', 'Tailwind CSS', 'Web3.js', 'Ethers.js'],
     genre: 'Web3 / NFT',
     year: '2022',
     vinylColor: 'from-purple-600 to-pink-600',
@@ -275,6 +283,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     image:
       'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/fphb7ddemp4ixeutav1b.webp',
     url: 'https://auth.seaphantom.com/',
+    tech: ['React', 'TypeScript', 'Web3.js', 'Smart Contracts'],
     genre: 'DeFi / Trading',
     year: '2022',
     vinylColor: 'from-indigo-600 to-violet-600',
@@ -288,6 +297,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     image:
       'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/mqprcb6todunicq4cg0a.webp',
     url: 'https://labgrownbeasts.com/',
+    tech: ['React', 'Tailwind CSS', 'Framer Motion'],
     genre: 'Biotech / Corporate',
     year: '2022',
     vinylColor: 'from-red-500 to-rose-500',

@@ -152,6 +152,7 @@ const ClipBlock = ({
       )}
       style={{
         gridColumn: `${clip.start} / span ${clip.duration}`,
+        viewTransitionName: `clip-${clip.id}`,
       }}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -945,7 +946,15 @@ export function AboutSection() {
                               clip={clip}
                               color={track.color}
                               isActive={activeClip?.id === clip.id}
-                              onClick={() => setActiveClip(clip)}
+                              onClick={() => {
+                                if ('startViewTransition' in document) {
+                                  ;(document as any).startViewTransition(() => {
+                                    setActiveClip(clip)
+                                  })
+                                } else {
+                                  setActiveClip(clip)
+                                }
+                              }}
                               onHover={(isHovered) =>
                                 setHoveredClip(isHovered ? clip : null)
                               }

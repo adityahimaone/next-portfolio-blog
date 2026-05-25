@@ -51,6 +51,33 @@ export function HeroSection() {
       ref={containerRef}
       className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-zinc-50 transition-colors dark:bg-zinc-950"
     >
+      {/* CSS Scroll-Driven Animations (progressive enhancement, Chrome 115+) */}
+      <style jsx>{`
+        @supports (animation-timeline: scroll()) {
+          @keyframes hero-parallax {
+            from {
+              transform: translateY(0) scale(1);
+              opacity: 1;
+            }
+            to {
+              transform: translateY(150px) scale(0.9);
+              opacity: 0;
+            }
+          }
+
+          .hero-content-enhanced {
+            animation: hero-parallax linear;
+            animation-timeline: scroll();
+            animation-range: 0vh 100vh;
+          }
+
+          /* Disable Framer Motion transforms when CSS scroll-driven animations are supported */
+          .hero-content-enhanced > * {
+            transform: none !important;
+          }
+        }
+      `}</style>
+
       {/* Amp Cabinet Background (Grille) */}
       <div className="absolute inset-0 z-0">
         <div
@@ -63,7 +90,7 @@ export function HeroSection() {
 
       <motion.div
         style={{ y, opacity, scale }}
-        className="relative z-20 container mx-auto mt-24 flex flex-col items-center px-4 text-center md:px-6"
+        className="hero-content-enhanced relative z-20 container mx-auto mt-24 flex flex-col items-center px-4 text-center md:px-6"
       >
         {/* Content Wrapper */}
         <div className="relative z-10 flex w-full max-w-4xl flex-col items-center">

@@ -1,0 +1,378 @@
+/* ───────────────────────────────────────────────────────────────────
+   V3 Design Tokens — Spatial + Motion (2026)
+   Scoped to .v3-root only. Iridescent accents, deep space surfaces.
+   Inspired by: Lusion, ActiveTheory, igloo.inc, Awwwards SOTM 2026.
+   ─────────────────────────────────────────────────────────────────── */
+
+.v3-root {
+  /* ─── Color Tokens (Dark — primary) ──────────────────────────── */
+  --v3-void: oklch(0.06 0.012 260);          /* deepest black */
+  --v3-space: oklch(0.10 0.018 260);         /* surface 0 */
+  --v3-deep: oklch(0.14 0.022 260);          /* surface 1 */
+  --v3-shade: oklch(0.20 0.025 260);         /* surface 2 */
+  --v3-fog: oklch(0.32 0.020 260);           /* surface 3 / borders */
+  --v3-mist: oklch(0.55 0.015 260);          /* muted text */
+  --v3-paper: oklch(0.92 0.008 80);          /* primary text */
+  --v3-bright: oklch(0.98 0.005 80);         /* highlights */
+
+  /* Iridescent accent set — used in conic gradients */
+  --v3-iris-1: oklch(0.72 0.28 320);         /* magenta */
+  --v3-iris-2: oklch(0.78 0.20 220);         /* cyan */
+  --v3-iris-3: oklch(0.86 0.18 120);         /* lime */
+  --v3-iris-4: oklch(0.78 0.22 50);          /* amber */
+
+  /* Single signature accent (for non-iridescent moments) */
+  --v3-signal: oklch(0.78 0.18 220);         /* electric cyan */
+  --v3-signal-soft: oklch(0.78 0.18 220 / 0.16);
+
+  /* Glass / glow surfaces */
+  --v3-glass: oklch(0.20 0.025 260 / 0.55);
+  --v3-glass-edge: oklch(0.55 0.015 260 / 0.20);
+  --v3-glow: oklch(0.78 0.18 220 / 0.40);
+
+  /* Surface assignments */
+  --v3-bg: var(--v3-void);
+  --v3-fg: var(--v3-paper);
+  --v3-fg-muted: var(--v3-mist);
+  --v3-border: var(--v3-fog);
+
+  /* ─── Type Scale (Modular 1.25 + display jumps) ──────────────── */
+  --v3-step--2: 0.78rem;
+  --v3-step--1: 0.875rem;
+  --v3-step-0: 1rem;
+  --v3-step-1: 1.25rem;
+  --v3-step-2: 1.563rem;
+  --v3-step-3: 1.953rem;
+  --v3-step-4: 2.441rem;
+  --v3-step-5: 3.052rem;
+  --v3-step-6: 3.815rem;
+
+  /* Display sizes (fluid) */
+  --v3-display-sm: clamp(2.5rem, 6vw, 4.5rem);
+  --v3-display-md: clamp(3.5rem, 9vw, 7rem);
+  --v3-display-lg: clamp(4.5rem, 13vw, 11rem);
+  --v3-display-xl: clamp(6rem, 18vw, 16rem);
+
+  /* ─── Spacing Scale (golden-ish) ─────────────────────────────── */
+  --v3-space-1: 0.25rem;
+  --v3-space-2: 0.5rem;
+  --v3-space-3: 0.75rem;
+  --v3-space-4: 1rem;
+  --v3-space-6: 1.5rem;
+  --v3-space-8: 2rem;
+  --v3-space-12: 3rem;
+  --v3-space-16: 4rem;
+  --v3-space-24: 6rem;
+  --v3-space-32: 8rem;
+  --v3-space-48: 12rem;
+
+  /* ─── Radius (organic, varied) ───────────────────────────────── */
+  --v3-radius-pill: 9999px;
+  --v3-radius-button: 0.625rem;
+  --v3-radius-card: 1rem;
+  --v3-radius-screen: 1.5rem;
+
+  /* ─── Motion Tokens (the soul of spatial+motion) ─────────────── */
+  --v3-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --v3-ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --v3-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --v3-ease-mass: cubic-bezier(0.83, 0, 0.17, 1);
+
+  --v3-dur-instant: 120ms;
+  --v3-dur-fast: 240ms;
+  --v3-dur-base: 480ms;
+  --v3-dur-slow: 760ms;
+  --v3-dur-cinematic: 1200ms;
+
+  /* ─── Surface ────────────────────────────────────────────────── */
+  background: var(--v3-bg);
+  color: var(--v3-fg);
+  font-family:
+    var(--font-bricolage, 'Bricolage Grotesque'),
+    var(--font-inter-tight, 'Inter Tight'),
+    'Inter',
+    system-ui,
+    sans-serif;
+  font-size: var(--v3-step-0);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  cursor: none; /* custom cursor handles it */
+}
+
+/* On touch devices, restore native cursor (no precision pointer) */
+@media (hover: none) {
+  .v3-root {
+    cursor: auto;
+  }
+}
+
+/* ─── Display Fonts ────────────────────────────────────────────── */
+.v3-root .v3-display {
+  font-family:
+    var(--font-instrument-serif, 'Instrument Serif'),
+    'Times New Roman',
+    Georgia,
+    serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 0.88;
+}
+
+.v3-root .v3-display-sans {
+  font-family:
+    var(--font-bricolage, 'Bricolage Grotesque'),
+    'Inter Tight',
+    sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  font-variation-settings: 'wdth' 75;
+}
+
+.v3-root .v3-mono {
+  font-family:
+    var(--font-geist-mono, 'Geist Mono'),
+    'JetBrains Mono',
+    ui-monospace,
+    monospace;
+  font-size: var(--v3-step--1);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Iridescent Effects ───────────────────────────────────────── */
+.v3-root .v3-iris {
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    var(--v3-iris-1),
+    var(--v3-iris-2),
+    var(--v3-iris-3),
+    var(--v3-iris-4),
+    var(--v3-iris-1)
+  );
+  background-size: 200% 200%;
+  animation: v3-iris-rotate 12s linear infinite;
+}
+
+.v3-root .v3-iris-text {
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--v3-iris-1),
+    var(--v3-iris-2),
+    var(--v3-iris-3),
+    var(--v3-iris-4),
+    var(--v3-iris-1)
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: v3-iris-rotate 14s linear infinite;
+}
+
+@keyframes v3-iris-rotate {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.v3-root .v3-iris-edge {
+  position: relative;
+}
+.v3-root .v3-iris-edge::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from 0deg,
+    var(--v3-iris-1),
+    var(--v3-iris-2),
+    var(--v3-iris-3),
+    var(--v3-iris-4),
+    var(--v3-iris-1)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: v3-iris-rotate 8s linear infinite;
+  pointer-events: none;
+}
+
+/* ─── Glass surfaces ───────────────────────────────────────────── */
+.v3-root .v3-glass {
+  background: var(--v3-glass);
+  border: 1px solid var(--v3-glass-edge);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+}
+
+.v3-root .v3-card {
+  background: var(--v3-deep);
+  border: 1px solid var(--v3-fog);
+  border-radius: var(--v3-radius-card);
+}
+
+/* ─── Buttons (always visible — Adit rule) ─────────────────────── */
+.v3-root .v3-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0 1.5rem;
+  border-radius: var(--v3-radius-pill);
+  font-family:
+    var(--font-geist-mono, 'Geist Mono'),
+    ui-monospace,
+    monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  transition:
+    background-color var(--v3-dur-base) var(--v3-ease-out-expo),
+    color var(--v3-dur-base) var(--v3-ease-out-expo),
+    transform var(--v3-dur-base) var(--v3-ease-spring);
+  will-change: transform;
+}
+
+.v3-root .v3-btn-primary {
+  background: var(--v3-paper);
+  color: var(--v3-void);
+}
+
+.v3-root .v3-btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(
+    from 0deg,
+    var(--v3-iris-1),
+    var(--v3-iris-2),
+    var(--v3-iris-3),
+    var(--v3-iris-4),
+    var(--v3-iris-1)
+  );
+  opacity: 0;
+  transition: opacity var(--v3-dur-base) var(--v3-ease-out-expo);
+  z-index: 0;
+}
+
+.v3-root .v3-btn-primary:hover::before {
+  opacity: 1;
+}
+
+.v3-root .v3-btn-primary:hover {
+  color: var(--v3-bright);
+}
+
+.v3-root .v3-btn-primary > * {
+  position: relative;
+  z-index: 1;
+}
+
+.v3-root .v3-btn-ghost {
+  background: transparent;
+  color: var(--v3-paper);
+  border: 1px solid var(--v3-fog);
+}
+
+.v3-root .v3-btn-ghost:hover {
+  border-color: var(--v3-paper);
+  background: var(--v3-deep);
+}
+
+/* ─── Reveal mask (text/image) ─────────────────────────────────── */
+.v3-root .v3-reveal {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  line-height: 1.1;
+}
+.v3-root .v3-reveal > span {
+  display: inline-block;
+  transform: translateY(110%);
+  will-change: transform;
+}
+.v3-root .v3-reveal[data-revealed="true"] > span {
+  transform: translateY(0);
+  transition: transform var(--v3-dur-cinematic) var(--v3-ease-out-expo);
+}
+
+/* ─── Grain noise overlay (SVG turbulence) ─────────────────────── */
+.v3-root .v3-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 200px 200px;
+  opacity: 0.45;
+  mix-blend-mode: overlay;
+  z-index: 1;
+}
+
+/* ─── Focus ring (accessibility, won't break custom cursor) ────── */
+.v3-root :focus-visible {
+  outline: 2px solid var(--v3-signal);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* ─── Scroll-driven reveal (CSS native, no JS) ─────────────────── */
+@supports (animation-timeline: scroll()) {
+  .v3-root .v3-scroll-reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    animation: v3-fade-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+  }
+}
+
+@keyframes v3-fade-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Reduced motion ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .v3-root *,
+  .v3-root *::before,
+  .v3-root *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .v3-root .v3-reveal > span {
+    transform: translateY(0);
+  }
+  .v3-root {
+    cursor: auto;
+  }
+}
+
+/* ─── Selection ────────────────────────────────────────────────── */
+.v3-root ::selection {
+  background: var(--v3-iris-1);
+  color: var(--v3-void);
+}
+
+/* ─── Hide scrollbar in horizontal scrollers ───────────────────── */
+.v3-root .v3-no-scrollbar {
+  scrollbar-width: none;
+}
+.v3-root .v3-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

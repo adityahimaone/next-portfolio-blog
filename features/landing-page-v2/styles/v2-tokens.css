@@ -1,0 +1,265 @@
+/* ─────────────────────────────────────────────────────────────────
+   V2 design tokens — scoped to .v2-root only.
+   Editorial / liner-notes aesthetic. Restrained palette.
+   Dark mode uses OKLCH lightness shifts, not naive invert.
+   ───────────────────────────────────────────────────────────────── */
+
+.v2-root {
+  /* Color tokens (light) */
+  --v2-background: oklch(0.98 0.005 80);
+  --v2-foreground: oklch(0.20 0.02 30);
+  --v2-foreground-muted: oklch(0.42 0.02 30);
+  --v2-accent: oklch(0.55 0.18 20);
+  --v2-accent-soft: oklch(0.55 0.18 20 / 0.12);
+  --v2-muted: oklch(0.92 0.01 80);
+  --v2-border: oklch(0.88 0.01 80);
+  --v2-paper-line: oklch(0.86 0.012 80);
+
+  /* Type scale (1.333 perfect fourth) */
+  --v2-step--1: 0.84rem;   /* caption */
+  --v2-step-0:  1.0625rem; /* body 17px desktop */
+  --v2-step-1:  1.418rem;
+  --v2-step-2:  1.890rem;
+  --v2-step-3:  2.520rem;
+  --v2-step-4:  3.361rem;
+
+  /* Hero */
+  --v2-hero-size: clamp(3rem, 8vw, 6rem);
+
+  /* Radii (intentionally varied) */
+  --v2-radius-button: 0.375rem; /* rounded-md */
+  --v2-radius-card: 0.5rem;     /* rounded-lg */
+  --v2-radius-modal: 1rem;      /* rounded-2xl */
+
+  /* Surface */
+  background-color: var(--v2-background);
+  color: var(--v2-foreground);
+  font-family:
+    var(--font-inter-tight, 'Inter Tight'),
+    'Inter',
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    sans-serif;
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  font-size: 1rem;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+}
+
+@media (min-width: 768px) {
+  .v2-root {
+    font-size: var(--v2-step-0);
+  }
+}
+
+/* Dark mode — shift L only, keep chroma/hue. */
+.dark .v2-root {
+  --v2-background: oklch(0.18 0.01 60);
+  --v2-foreground: oklch(0.94 0.005 80);
+  --v2-foreground-muted: oklch(0.74 0.01 80);
+  --v2-accent: oklch(0.72 0.16 25);
+  --v2-accent-soft: oklch(0.72 0.16 25 / 0.16);
+  --v2-muted: oklch(0.24 0.01 60);
+  --v2-border: oklch(0.30 0.01 60);
+  --v2-paper-line: oklch(0.32 0.012 60);
+}
+
+/* Display family override */
+.v2-root .v2-display {
+  font-family:
+    var(--font-fraunces, 'Fraunces'),
+    'Times New Roman',
+    Georgia,
+    serif;
+  font-optical-sizing: auto;
+  font-feature-settings: 'ss01', 'ss02';
+  letter-spacing: -0.02em;
+}
+
+.v2-root .v2-mono {
+  font-family:
+    var(--font-geist-mono, 'Geist Mono'),
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: var(--v2-step--1);
+}
+
+/* Hero display */
+.v2-root .v2-hero-name {
+  font-family:
+    var(--font-fraunces, 'Fraunces'),
+    Georgia,
+    serif;
+  font-optical-sizing: auto;
+  font-variation-settings: 'opsz' 144, 'SOFT' 30;
+  font-weight: 500;
+  font-size: var(--v2-hero-size);
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+}
+
+/* Drop cap for About */
+.v2-root .v2-dropcap::first-letter {
+  font-family:
+    var(--font-fraunces, 'Fraunces'),
+    Georgia,
+    serif;
+  font-weight: 500;
+  font-size: 4.5em;
+  line-height: 0.85;
+  float: left;
+  padding: 0.05em 0.15em 0 0;
+  color: var(--v2-accent);
+  font-variation-settings: 'opsz' 144, 'SOFT' 50;
+}
+
+/* Pull quote */
+.v2-root .v2-pullquote {
+  font-family:
+    var(--font-fraunces, 'Fraunces'),
+    Georgia,
+    serif;
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: 'opsz' 72, 'SOFT' 70;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+/* Ornamental rule between entries */
+.v2-root .v2-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--v2-foreground-muted);
+}
+.v2-root .v2-rule::before,
+.v2-root .v2-rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--v2-border);
+}
+
+/* Body line-length cap */
+.v2-root .v2-prose {
+  max-width: 68ch;
+  line-height: 1.7;
+  color: var(--v2-foreground);
+}
+.v2-root .v2-prose p + p {
+  margin-top: 1rem;
+}
+
+/* Subtle paper grain overlay */
+.v2-root .v2-grain {
+  position: relative;
+  isolation: isolate;
+}
+.v2-root .v2-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    rgba(0, 0, 0, 0.04) 1px,
+    transparent 1px
+  );
+  background-size: 3px 3px;
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+  border-radius: inherit;
+  z-index: 1;
+}
+.dark .v2-root .v2-grain::after {
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px
+  );
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+/* Underline link */
+.v2-root .v2-link {
+  color: var(--v2-foreground);
+  text-decoration: underline;
+  text-decoration-color: var(--v2-border);
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color 200ms ease, color 200ms ease;
+}
+.v2-root .v2-link:hover {
+  text-decoration-color: var(--v2-accent);
+  color: var(--v2-accent);
+}
+
+/* Buttons (rounded-md, accent-aware, always visible) */
+.v2-root .v2-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border-radius: var(--v2-radius-button);
+  font-family:
+    var(--font-geist-mono, 'Geist Mono'),
+    ui-monospace,
+    monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    background-color 250ms ease,
+    color 250ms ease,
+    border-color 250ms ease,
+    transform 250ms ease;
+}
+.v2-root .v2-btn-primary {
+  background: var(--v2-foreground);
+  color: var(--v2-background);
+  border: 1px solid var(--v2-foreground);
+}
+.v2-root .v2-btn-primary:hover {
+  background: var(--v2-accent);
+  border-color: var(--v2-accent);
+}
+.v2-root .v2-btn-ghost {
+  background: transparent;
+  color: var(--v2-foreground);
+  border: 1px solid var(--v2-border);
+}
+.v2-root .v2-btn-ghost:hover {
+  border-color: var(--v2-foreground);
+}
+
+/* Editorial card (rounded-lg) */
+.v2-root .v2-card {
+  border: 1px solid var(--v2-border);
+  border-radius: var(--v2-radius-card);
+  background: var(--v2-background);
+  overflow: hidden;
+}
+
+/* Print-style focus ring */
+.v2-root :focus-visible {
+  outline: 2px solid var(--v2-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .v2-root *,
+  .v2-root *::before,
+  .v2-root *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

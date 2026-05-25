@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 @custom-variant dark (&:is(.dark *));
+
+/* V2 design tokens — scoped to .v2-root, doesn't leak into main route. */
+@import '../features/landing-page-v2/styles/v2-tokens.css';
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still

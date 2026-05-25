@@ -28,10 +28,18 @@ export function MusicPlayer() {
   })
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(true)
-    }, 3000)
-    return () => clearTimeout(timer)
+    // Reveal player once user has scrolled past 200px (less arbitrary than a fixed delay)
+    const handleScroll = () => {
+      if (window.scrollY > 200) {
+        setIsVisible(true)
+        window.removeEventListener('scroll', handleScroll)
+      }
+    }
+
+    // Check immediately in case page loads already scrolled (back-nav, anchor)
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   const handleVolumeChange = (newValue: number[]) => {
@@ -127,11 +135,11 @@ export function MusicPlayer() {
                       )}
                     </button>
                     <Slider
-                      defaultValue={[0.5]}
                       value={[volume]}
                       onValueChange={handleVolumeChange}
                       max={1}
                       step={0.01}
+                      aria-label="Volume"
                       className="w-20"
                     />
                   </div>

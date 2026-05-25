@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { m, useMotionValue, animate } from 'motion/react'
+import { m, useMotionValue, animate, useReducedMotion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
 import { Sliders, Music } from 'lucide-react'
@@ -12,21 +12,33 @@ import { MIXER_DATA } from '../constants'
 
 // Screw component imported from @/components/screw
 
-const Knob = ({ value, label }: { value: number; label: string }) => {
+const Knob = ({
+  value,
+  label,
+  index = 0,
+}: {
+  value: number
+  label: string
+  index?: number
+}) => {
   const minDeg = -135
   const maxDeg = 135
   const startDeg = (value / 100) * 270 - 135
   const rotation = useMotionValue(minDeg)
+  const prefersReduced = useReducedMotion()
 
   useEffect(() => {
+    if (prefersReduced) {
+      rotation.set(startDeg)
+      return
+    }
     const controls = animate(rotation, startDeg, {
-      duration: 1.5,
-      type: 'spring',
-      bounce: 0.2,
-      delay: 0.5,
+      duration: 0.6,
+      ease: [0.32, 0.72, 0, 1],
+      delay: index * 0.05,
     })
     return () => controls.stop()
-  }, [startDeg])
+  }, [startDeg, index, prefersReduced])
 
   const handlePan = (_: any, info: { delta: { y: number } }) => {
     const current = rotation.get()
@@ -37,7 +49,13 @@ const Knob = ({ value, label }: { value: number; label: string }) => {
   }
 
   return (
-    <div className="flex touch-none flex-col items-center gap-3">
+    <div className="group relative flex touch-none flex-col items-center gap-3">
+      <span
+        className="pointer-events-none absolute -top-6 rounded bg-zinc-900/90 px-1.5 py-0.5 font-mono text-xs text-zinc-100 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100"
+        aria-hidden="true"
+      >
+        {value}%
+      </span>
       <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-zinc-700/50 bg-zinc-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.1)]">
         {/* Ticks */}
         {[...Array(11)].map((_, i) => {
@@ -70,23 +88,42 @@ const Knob = ({ value, label }: { value: number; label: string }) => {
   )
 }
 
-const Fader = ({ value, label }: { value: number; label: string }) => {
+const Fader = ({
+  value,
+  label,
+  index = 0,
+}: {
+  value: number
+  label: string
+  index?: number
+}) => {
   // Track height 192px (h-48) - Padding 32px (py-4) - Cap 48px (h-12) = 112px travel
   const maxTravel = 112
   const initialY = -((value / 100) * maxTravel)
   const y = useMotionValue(0)
+  const prefersReduced = useReducedMotion()
 
   useEffect(() => {
+    if (prefersReduced) {
+      y.set(initialY)
+      return
+    }
     const controls = animate(y, initialY, {
-      duration: 1.2,
+      duration: 0.5,
       ease: 'easeOut',
-      delay: 0.2,
+      delay: index * 0.05,
     })
     return () => controls.stop()
-  }, [initialY])
+  }, [initialY, index, prefersReduced])
 
   return (
-    <div className="flex h-full touch-none flex-col items-center gap-3">
+    <div className="group relative flex h-full touch-none flex-col items-center gap-3">
+      <span
+        className="pointer-events-none absolute -top-6 z-20 rounded bg-zinc-900/90 px-1.5 py-0.5 font-mono text-xs text-zinc-100 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100"
+        aria-hidden="true"
+      >
+        {value}%
+      </span>
       <div className="relative flex h-48 w-12 justify-center rounded-lg border border-zinc-800/50 bg-zinc-900/50 py-4 shadow-inner">
         {/* Track Line */}
         <div className="absolute top-4 bottom-4 w-1 rounded-full bg-zinc-950 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]" />
@@ -123,6 +160,18 @@ const Fader = ({ value, label }: { value: number; label: string }) => {
 }
 
 const VUMeter = ({ isOn }: { isOn: boolean }) => {
+  // Pre-compute stable per-bar timing so values don't reshuffle on re-render
+  const barTimings = useMemo(
+    () =>
+      Array.from({ length: 2 }, () =>
+        Array.from({ length: 15 }, () => ({
+          dur: 0.5 + Math.random() * 0.5,
+          delay: Math.random() * 0.5,
+        })),
+      ),
+    [],
+  )
+
   return (
     <div className="flex h-32 items-end gap-1 rounded border border-zinc-800 bg-zinc-900/80 p-2 shadow-inner">
       {[...Array(2)].map((_, ch) => (
@@ -135,6 +184,7 @@ const VUMeter = ({ isOn }: { isOn: boolean }) => {
               : isYellow
                 ? 'bg-yellow-500'
                 : 'bg-green-500'
+            const timing = barTimings[ch][i]
 
             return (
               <m.div
@@ -145,10 +195,10 @@ const VUMeter = ({ isOn }: { isOn: boolean }) => {
                 )}
                 animate={isOn ? { opacity: [0.2, 1, 0.2] } : { opacity: 0.1 }}
                 transition={{
-                  duration: 0.5 + Math.random() * 0.5,
+                  duration: timing.dur,
                   repeat: Infinity,
                   repeatType: 'reverse',
-                  delay: Math.random() * 0.5,
+                  delay: timing.delay,
                 }}
               />
             )
@@ -161,6 +211,7 @@ const VUMeter = ({ isOn }: { isOn: boolean }) => {
 
 export function SkillsSection() {
   const [isOn, setIsOn] = useState(true)
+  const prefersReduced = useReducedMotion()
 
   return (
     <>
@@ -168,7 +219,7 @@ export function SkillsSection() {
         <div className="container mx-auto px-4">
           <div className="mb-16 flex flex-col items-center text-center">
             <m.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={prefersReduced ? false : { opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="mb-4 flex items-center gap-2 rounded-full bg-zinc-200/50 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400"
@@ -285,21 +336,23 @@ export function SkillsSection() {
                   </div>
                   {/* Desktop */}
                   <div className="hidden flex-wrap justify-between gap-2 sm:flex">
-                    {MIXER_DATA[0].channels.map((skill) => (
+                    {MIXER_DATA[0].channels.map((skill, i) => (
                       <Fader
                         key={skill.name}
                         value={isOn ? skill.level : 0}
                         label={skill.name}
+                        index={i}
                       />
                     ))}
                   </div>
                   {/* Mobile */}
                   <div className="flex flex-wrap justify-between gap-2 sm:hidden">
-                    {MIXER_DATA[0].channels.slice(-4).map((skill) => (
+                    {MIXER_DATA[0].channels.slice(-4).map((skill, i) => (
                       <Fader
                         key={skill.name}
                         value={isOn ? skill.level : 0}
                         label={skill.name}
+                        index={i}
                       />
                     ))}
                   </div>
@@ -316,11 +369,12 @@ export function SkillsSection() {
                       <div className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
                     </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-8">
-                      {MIXER_DATA[1].channels.map((skill) => (
+                      {MIXER_DATA[1].channels.map((skill, i) => (
                         <Knob
                           key={skill.name}
                           value={isOn ? skill.level : 0}
                           label={skill.name}
+                          index={i}
                         />
                       ))}
                     </div>
@@ -335,11 +389,12 @@ export function SkillsSection() {
                       <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                     </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-8">
-                      {MIXER_DATA[2].channels.map((skill) => (
+                      {MIXER_DATA[2].channels.map((skill, i) => (
                         <Knob
                           key={skill.name}
                           value={isOn ? skill.level : 0}
                           label={skill.name}
+                          index={i}
                         />
                       ))}
                     </div>

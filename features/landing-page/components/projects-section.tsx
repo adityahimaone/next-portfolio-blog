@@ -10,6 +10,8 @@ import {
   Music,
   Mic2,
   ArrowUpRight,
+  ExternalLink,
+  Github,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -19,8 +21,14 @@ export function ProjectsSection() {
   const [selectedProject, setSelectedProject] = useState<ProjectShowcaseItem | null>(
     null,
   )
+  const [expanded, setExpanded] = useState(false)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
+
+  const openProject = (project: ProjectShowcaseItem) => {
+    setExpanded(false)
+    setSelectedProject(project)
+  }
 
   return (
     <>
@@ -57,7 +65,16 @@ export function ProjectsSection() {
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: index * 0.1 }}
                 className="group relative flex flex-col items-center"
-                onClick={() => setSelectedProject(project)}
+                role="button"
+                tabIndex={0}
+                aria-label={`View project: ${project.title}`}
+                onClick={() => openProject(project)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    openProject(project)
+                  }
+                }}
               >
                 <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
                   {/* Vinyl Record sliding out */}
@@ -95,11 +112,37 @@ export function ProjectsSection() {
 
                       {/* Glare effect */}
                       <div className="pointer-events-none absolute inset-0 bg-linear-to-tr from-white/20 to-transparent opacity-50" />
+
+                      {/* Always-visible action buttons (top-right) */}
+                      <div className="absolute top-2 right-2 flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openProject(project)
+                          }}
+                          aria-label={`View details for ${project.title}`}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-lg backdrop-blur-sm transition-all hover:bg-white hover:scale-110 dark:bg-zinc-900/90 dark:text-white dark:hover:bg-zinc-900"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </button>
+                        {project.url && (
+                          <a
+                            href={project.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`Visit ${project.title} website`}
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-lg backdrop-blur-sm transition-all hover:bg-white hover:scale-110 dark:bg-zinc-900/90 dark:text-white dark:hover:bg-zinc-900"
+                          >
+                            <Github className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
                     </div>
 
                     {/* Info Area (Footer) */}
                     <div className="relative flex h-[25%] flex-col justify-center border-t border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-950">
-                      <h3 className="truncate text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                      <h3 className="line-clamp-2 min-h-[3.5rem] text-lg font-bold text-zinc-900 dark:text-zinc-100">
                         {project.title}
                       </h3>
                       <div className="mt-1 flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -179,9 +222,19 @@ export function ProjectsSection() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto pr-2">
-                      <p className="text-base md:text-lg leading-relaxed text-zinc-600 line-clamp-4 md:line-clamp-none dark:text-zinc-300">
-                        {selectedProject.description}
-                      </p>
+                      <div className={expanded ? '' : 'line-clamp-4 md:line-clamp-none'}>
+                        <p className="text-base md:text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
+                          {selectedProject.description}
+                        </p>
+                      </div>
+
+                      {/* Expand toggle (mobile only — md:line-clamp-none handles desktop) */}
+                      <button
+                        onClick={() => setExpanded(!expanded)}
+                        className="mt-2 text-xs font-semibold text-zinc-500 hover:text-zinc-700 md:hidden dark:text-zinc-400 dark:hover:text-zinc-200"
+                      >
+                        {expanded ? 'Show less ↑' : 'Read more ↓'}
+                      </button>
 
                       <div className="mt-8 space-y-4">
                         <h4 className="text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-zinc-100">

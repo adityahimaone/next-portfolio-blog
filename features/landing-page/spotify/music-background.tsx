@@ -57,6 +57,8 @@ export function MusicBackground({
       phase: number
     }>
   >([])
+  // Pause RAF work when tab is hidden to save CPU/battery
+  const pausedRef = useRef(false)
 
   // Determine if dark mode based on theme
   const isDarkMode = !mounted || resolvedTheme === 'dark'
@@ -71,6 +73,18 @@ export function MusicBackground({
   // Set mounted state on client-side only
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  // Pause animation work when tab is hidden (Page Visibility API)
+  useEffect(() => {
+    const handleVisibility = () => {
+      pausedRef.current = document.hidden
+    }
+    // Sync initial state
+    pausedRef.current = document.hidden
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () =>
+      document.removeEventListener('visibilitychange', handleVisibility)
   }, [])
 
   // Initialize animation
@@ -133,6 +147,8 @@ export function MusicBackground({
   // Animation frame update
   useAnimationFrame((time) => {
     if (!mounted) return
+    // Skip work entirely while tab is hidden
+    if (pausedRef.current) return
 
     const canvas = canvasRef.current
     if (!canvas) return

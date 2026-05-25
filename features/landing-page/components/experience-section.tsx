@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import {
   Briefcase,
@@ -48,13 +48,31 @@ export function ExperienceSection() {
             {/* Left Column: Tracklist / Selector */}
             <div className="lg:col-span-5">
               <div className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-                <div className="mb-2 px-4 py-2 text-xs font-bold tracking-wider text-zinc-600 uppercase dark:text-zinc-400">
+                <div className="mb-2 px-4 py-2 text-xs font-bold tracking-wider text-zinc-600 uppercase dark:text-zinc-400" id="experience-tablist-label">
                   Select a Track
                 </div>
                 {EXPERIENCES.map((exp) => (
                   <button
                     key={exp.id}
+                    role="tab"
+                    aria-selected={selectedId === exp.id}
+                    aria-controls="experience-detail-panel"
+                    tabIndex={selectedId === exp.id ? 0 : -1}
                     onClick={() => setSelectedId(exp.id)}
+                    onKeyDown={(e) => {
+                      const currentIndex = EXPERIENCES.findIndex((x) => x.id === exp.id)
+                      let nextIndex: number | null = null
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault()
+                        nextIndex = (currentIndex + 1) % EXPERIENCES.length
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault()
+                        nextIndex = (currentIndex - 1 + EXPERIENCES.length) % EXPERIENCES.length
+                      }
+                      if (nextIndex !== null) {
+                        setSelectedId(EXPERIENCES[nextIndex].id)
+                      }
+                    }}
                     className={cn(
                       'group relative flex w-full items-center gap-4 rounded-xl p-4 text-left transition-all',
                       selectedId === exp.id
@@ -134,7 +152,12 @@ export function ExperienceSection() {
 
             {/* Right Column: The Player / Details */}
             <div className="lg:col-span-7">
-              <div className="relative h-full min-h-[500px] overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
+              <div
+                role="tabpanel"
+                id="experience-detail-panel"
+                aria-labelledby="experience-tablist-label"
+                className="relative h-full min-h-[500px] overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+              >
                 {/* Background Ambience */}
                 <AnimatePresence mode="wait">
                   <m.div

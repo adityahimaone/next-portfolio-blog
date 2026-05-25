@@ -54,6 +54,7 @@ export interface ProjectShowcaseItem {
   readonly description: string
   readonly image: string
   readonly url: string
+  readonly repoUrl?: string
   readonly genre?: string
   readonly year?: string
   readonly vinylColor: string

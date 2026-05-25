@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { AudioLines, Zap } from 'lucide-react'
 import { NowPlayingResponse } from '@/types'
 import Image from 'next/image'
@@ -28,16 +28,38 @@ export default function NowPlaying() {
     }
 
     fetchNowPlaying()
-    // Refresh every 10 seconds for a more responsive feel
-    const interval = setInterval(fetchNowPlaying, 10000)
+    // Refresh every 30 seconds (was 10s — reduces API load)
+    const interval = setInterval(fetchNowPlaying, 30000)
 
     return () => clearInterval(interval)
   }, [])
 
   const isPlaying = data?.isPlaying ?? false
 
+  // Pre-compute stable visualizer bar values to avoid hydration mismatch
+  // (Math.random() during render = different values on server vs client)
+  const bars = useMemo(
+    () =>
+      Array.from({ length: 15 }, () => ({
+        h1: Math.random() * 100,
+        h2: Math.random() * 100,
+      })),
+    [],
+  )
+
+  const currentTrack =
+    isPlaying && data?.title
+      ? { name: data.title, artist: data.artist ?? '' }
+      : null
+
   return (
     <div className="relative w-full overflow-hidden rounded-lg border-4 border-zinc-800 bg-zinc-900 shadow-2xl">
+      {/* Screen-reader-only live region announcing track changes */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {currentTrack
+          ? `Now playing: ${currentTrack.name} by ${currentTrack.artist}`
+          : ''}
+      </div>
       {/* Screw details */}
       <div className="absolute top-2 left-2 flex h-2 w-2 items-center justify-center rounded-full bg-zinc-700 shadow-[inset_0_1px_1px_rgba(0,0,0,1)]">
         <div className="h-px w-1 rotate-45 bg-zinc-900" />
@@ -125,13 +147,13 @@ export default function NowPlaying() {
 
             {/* Visualizer Bars (Fake) */}
             <div className="relative z-20 mt-2 flex h-4 items-end gap-0.5">
-              {[...Array(15)].map((_, i) => (
+              {bars.map((bar, i) => (
                 <motion.div
                   key={i}
                   className="flex-1 bg-amber-500/50"
                   animate={{
                     height: isPlaying
-                      ? [`${Math.random() * 100}%`, `${Math.random() * 100}%`]
+                      ? [`${bar.h1}%`, `${bar.h2}%`]
                       : '5%',
                   }}
                   transition={{

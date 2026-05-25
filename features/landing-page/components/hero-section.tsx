@@ -1,15 +1,18 @@
 'use client'
 
-import { useRef } from 'react'
-import { m as motion, useScroll, useTransform } from 'motion/react'
+import { useRef, useMemo } from 'react'
+import {
+  m as motion,
+  useScroll,
+  useTransform,
+  useReducedMotion,
+} from 'motion/react'
 import { Play, Pause, SkipForward } from 'lucide-react'
 import { Magnetic } from '@/components/magnetic'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import { Syne } from 'next/font/google'
 
 import { useState, useEffect } from 'react'
-import { useAudioFrequency } from '@/features/mixtape/hooks/use-audio-frequency'
-import { ReactiveVisualizer } from '@/features/mixtape/components/reactive-visualizer'
 
 const syne = Syne({ weight: ['700', '800'], subsets: ['latin'] })
 
@@ -24,10 +27,15 @@ export function HeroSection() {
     }
   }, [])
 
-  const { isPlaying, togglePlay, currentTrack, audioRef } = useAudio()
-  const frequencyData = useAudioFrequency(audioRef.current)
+  const { isPlaying, togglePlay, currentTrack } = useAudio()
+  const prefersReducedMotion = useReducedMotion()
 
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const marqueeDuration = useMemo(
+    () => Math.max(8, currentTrack.length * 0.2),
+    [currentTrack],
+  )
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -51,13 +59,6 @@ export function HeroSection() {
         />
         <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay dark:opacity-20" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%)] dark:bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
-
-        {/* Dynamic Audio Visualizer Background (Extra Tall) */}
-        {false && isPlaying && (
-          <div className="absolute inset-x-0 bottom-0 z-10 h-[750px] opacity-70 blur-sm dark:opacity-50">
-            <ReactiveVisualizer frequencyData={frequencyData} />
-          </div>
-        )}
       </div>
 
       <motion.div
@@ -83,22 +84,29 @@ export function HeroSection() {
           {/* Brand Logo (The Name) */}
           <div className={`mb-10 flex flex-col items-center ${syne.className}`}>
             <motion.h1
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.9 }}
+              animate={prefersReducedMotion ? undefined : { opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: baseDelay + 0.1 }}
-              className="text-center text-[13vw] leading-[0.85] font-extrabold tracking-tighter text-zinc-900 italic drop-shadow-sm md:text-[10vw] lg:text-[8vw] dark:text-white dark:drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]"
+              aria-label="Aditya Himaone"
+              className="flex flex-col items-center"
             >
-              <span className="block bg-linear-to-b from-zinc-700 via-zinc-900 to-black bg-clip-text text-transparent dark:from-white dark:via-zinc-200 dark:to-zinc-400">
-                ADITYA
+              <span
+                aria-hidden="true"
+                className="block text-center text-[13vw] leading-[0.85] font-extrabold tracking-tighter text-zinc-900 italic drop-shadow-sm md:text-[10vw] lg:text-[8vw] dark:text-white dark:drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]"
+              >
+                <span className="block bg-linear-to-b from-zinc-700 via-zinc-900 to-black bg-clip-text text-transparent dark:from-white dark:via-zinc-200 dark:to-zinc-400">
+                  ADITYA
+                </span>
               </span>
-            </motion.h1>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: baseDelay + 0.2 }}
-              className="text-primary/80 text-[5vw] font-bold tracking-[0.5em] md:text-[3vw] lg:text-[2.5vw]"
-            >
-              HIMAONE
+              <motion.span
+                aria-hidden="true"
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+                animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: baseDelay + 0.2 }}
+                className="text-primary/80 text-[5vw] font-bold tracking-[0.5em] md:text-[3vw] lg:text-[2.5vw]"
+              >
+                HIMAONE
+              </motion.span>
             </motion.h1>
           </div>
 
@@ -112,8 +120,16 @@ export function HeroSection() {
           {/* Player Controls / CTA */}
           {/* Player Controls / CTA - Hardware Style */}
           <motion.div
-            initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            initial={
+              prefersReducedMotion
+                ? false
+                : { opacity: 0, y: 20, filter: 'blur(10px)' }
+            }
+            animate={
+              prefersReducedMotion
+                ? undefined
+                : { opacity: 1, y: 0, filter: 'blur(0px)' }
+            }
             transition={{
               duration: 0.8,
               delay: baseDelay + 0.8,
@@ -191,7 +207,7 @@ export function HeroSection() {
                     transition={{
                       repeat: Infinity,
                       ease: 'linear',
-                      duration: Math.max(8, currentTrack.length * 0.2),
+                      duration: marqueeDuration,
                     }}
                   >
                     <span className="mr-8">{currentTrack}</span>
@@ -206,6 +222,12 @@ export function HeroSection() {
             <Magnetic intensity={0.2}>
               <a
                 href="#projects"
+                onClick={(e) => {
+                  e.preventDefault()
+                  document
+                    .getElementById('projects')
+                    ?.scrollIntoView({ behavior: 'smooth' })
+                }}
                 className="flex h-10 shrink-0 items-center gap-2 rounded bg-zinc-300 px-3 text-xs font-bold text-zinc-700 shadow-[0_1px_0_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.1)] transition-transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-inner sm:px-4 dark:bg-zinc-800 dark:text-zinc-300 dark:shadow-[0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)]"
               >
                 <span className="hidden sm:inline">TRACKS</span>
@@ -216,14 +238,22 @@ export function HeroSection() {
 
           {/* Decorative "New Release" Badge */}
           <motion.div
-            initial={{ opacity: 0, scale: 0, rotate: 0 }}
-            animate={{ opacity: 1, scale: 1, rotate: 12 }}
+            initial={
+              prefersReducedMotion
+                ? false
+                : { opacity: 0, scale: 0, rotate: 0 }
+            }
+            animate={
+              prefersReducedMotion
+                ? undefined
+                : { opacity: 1, scale: 1, rotate: 12 }
+            }
             transition={{
               delay: baseDelay + 0.2,
               type: 'spring',
               stiffness: 200,
             }}
-            className="absolute -top-4 -right-4 rotate-12 transform border-2 border-white/20 bg-red-600 px-4 py-1.5 text-xs font-black tracking-wider text-white uppercase shadow-lg md:top-10 md:-right-10"
+            className="absolute -top-2 -right-2 rotate-12 transform border-2 border-white/20 bg-red-600 px-4 py-1.5 text-xs font-black tracking-wider text-white uppercase shadow-lg md:top-10 md:-right-10"
           >
             New Release
           </motion.div>

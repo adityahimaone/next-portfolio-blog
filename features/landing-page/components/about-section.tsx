@@ -193,69 +193,87 @@ const DetailWindow = ({
 }: {
   clip: Clip
   onClose: () => void
-}) => (
-  <m.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm md:p-8"
-    onClick={onClose}
-  >
-    <m.div
-      initial={{ scale: 0.95, y: 20 }}
-      animate={{ scale: 1, y: 0 }}
-      exit={{ scale: 0.95, y: 20 }}
-      onClick={(e) => e.stopPropagation()}
-      className="relative flex h-full max-h-[500px] w-full max-w-5xl flex-col overflow-hidden rounded-xl border-2 border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-900"
-    >
-      {/* VST Header */}
-      <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="flex items-center gap-4">
-          {/* Screws */}
-          <div className="flex gap-2">
-            <div className="h-2 w-2 rounded-full border border-zinc-300 bg-zinc-200 shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)] dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.5)]" />
-            <div className="h-2 w-2 rounded-full border border-zinc-300 bg-zinc-200 shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)] dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.5)]" />
-          </div>
-          {/* LCD Title */}
-          <div className="rounded border border-blue-200 bg-blue-50 px-3 py-1 shadow-sm dark:border-blue-900/30 dark:bg-blue-950/30 dark:shadow-[inset_0_0_10px_rgba(59,130,246,0.1)]">
-            <span className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400 dark:drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]">
-              {clip.name.toUpperCase()}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* Fake Knobs */}
-          <div className="hidden gap-3 md:flex">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="relative flex h-8 w-8 items-center justify-center rounded-full border border-zinc-300 bg-zinc-100 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-lg"
-              >
-                <div
-                  className="absolute top-1 h-2 w-0.5 rounded-full bg-zinc-400 dark:bg-zinc-400"
-                  style={{ transform: `rotate(${i * 45}deg)` }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800" />
-          <button
-            onClick={onClose}
-            aria-label="Close clip detail"
-            className="rounded-full p-1 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-          >
-            <X size={18} />
-          </button>
-        </div>
-      </div>
+}) => {
+  const titleId = `clip-title-${clip.id}`
 
-      {/* Window Content */}
-      <div className="scrollbar-thin scrollbar-track-zinc-100 scrollbar-thumb-zinc-300 dark:scrollbar-track-zinc-900 dark:scrollbar-thumb-zinc-700 flex-1 overflow-y-auto bg-zinc-50 p-6 text-zinc-900 dark:bg-zinc-900/50 dark:text-zinc-300">
-        {clip.content}
-      </div>
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [onClose])
+
+  return (
+    <m.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm md:p-8"
+      onClick={onClose}
+    >
+      <m.div
+        initial={{ scale: 0.95, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.95, y: 20 }}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative flex h-[90dvh] max-h-[700px] w-full max-w-5xl flex-col overflow-hidden rounded-xl border-2 border-zinc-200 bg-white shadow-2xl md:h-auto md:max-h-[85vh] dark:border-zinc-800 dark:bg-zinc-900"
+      >
+        {/* VST Header */}
+        <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="flex items-center gap-4">
+            {/* Screws */}
+            <div className="flex gap-2">
+              <div className="h-2 w-2 rounded-full border border-zinc-300 bg-zinc-200 shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)] dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.5)]" />
+              <div className="h-2 w-2 rounded-full border border-zinc-300 bg-zinc-200 shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)] dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.5)]" />
+            </div>
+            {/* LCD Title */}
+            <div className="rounded border border-blue-200 bg-blue-50 px-3 py-1 shadow-sm dark:border-blue-900/30 dark:bg-blue-950/30 dark:shadow-[inset_0_0_10px_rgba(59,130,246,0.1)]">
+              <span
+                id={titleId}
+                className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400 dark:drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]"
+              >
+                {clip.name.toUpperCase()}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            {/* Fake Knobs */}
+            <div className="hidden gap-3 md:flex">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="relative flex h-8 w-8 items-center justify-center rounded-full border border-zinc-300 bg-zinc-100 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-lg"
+                >
+                  <div
+                    className="absolute top-1 h-2 w-0.5 rounded-full bg-zinc-400 dark:bg-zinc-400"
+                    style={{ transform: `rotate(${i * 45}deg)` }}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800" />
+            <button
+              onClick={onClose}
+              aria-label="Close clip detail"
+              className="rounded-full p-1 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Window Content */}
+        <div className="scrollbar-thin scrollbar-track-zinc-100 scrollbar-thumb-zinc-300 dark:scrollbar-track-zinc-900 dark:scrollbar-thumb-zinc-700 flex-1 overflow-y-auto bg-zinc-50 p-6 text-zinc-900 dark:bg-zinc-900/50 dark:text-zinc-300">
+          {clip.content}
+        </div>
+      </m.div>
     </m.div>
-  </m.div>
-)
+  )
+}
 
 export function AboutSection() {
   const [isPlaying, setIsPlaying] = useState(false)
@@ -263,6 +281,16 @@ export function AboutSection() {
   const [hoveredClip, setHoveredClip] = useState<Clip | null>(null)
   const [mutedTracks, setMutedTracks] = useState<Set<string>>(new Set())
   const [soloedTrack, setSoloedTrack] = useState<string | null>(null)
+  const [tick, setTick] = useState(0)
+
+  // Toolbar fake-clock tick. Only runs when isPlaying so we don't churn renders.
+  useEffect(() => {
+    if (!isPlaying) return
+    const id = setInterval(() => {
+      setTick((t) => (t + 1) % 10)
+    }, 1000)
+    return () => clearInterval(id)
+  }, [isPlaying])
 
   // Playhead animation
   const playheadRef = useRef<HTMLDivElement>(null)
@@ -828,7 +856,7 @@ export function AboutSection() {
 
                 <div className="hidden items-center gap-4 rounded bg-white px-3 py-1 font-mono text-xs text-green-700 md:flex dark:bg-zinc-950 dark:text-green-400">
                   <span>
-                    00:0{isPlaying ? Math.floor(Date.now() / 1000) % 10 : '0'}
+                    00:0{isPlaying ? tick : '0'}
                     :00
                   </span>
                   <span className="text-zinc-500 dark:text-zinc-600">|</span>
@@ -864,6 +892,8 @@ export function AboutSection() {
 
               {/* Timeline (Right) */}
               <div className="relative flex-1 overflow-x-auto overflow-y-hidden bg-zinc-50 dark:bg-zinc-950">
+                {/* Scroll-hint fade on the right edge */}
+                <div className="pointer-events-none absolute top-0 right-0 bottom-0 z-30 w-12 bg-gradient-to-l from-zinc-50 to-transparent dark:from-zinc-950" />
                 <div className="relative h-full min-w-[800px]">
                   <TimeRuler />
 

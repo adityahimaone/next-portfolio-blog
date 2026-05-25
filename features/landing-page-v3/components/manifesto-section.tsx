@@ -2,6 +2,7 @@
 
 import { motion, useScroll, useTransform } from 'motion/react'
 import { useRef } from 'react'
+import { ArrowDown, ArrowRight, Mail } from 'lucide-react'
 import { MANIFESTO_V3 } from '../constants'
 import { V3ShaderBackground } from './_shared/v3-shader-background'
 
@@ -113,13 +114,14 @@ export function ManifestoSection() {
             data-cursor="link"
           >
             <span>{MANIFESTO_V3.primaryCta.label}</span>
-            <span aria-hidden>→</span>
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden strokeWidth={2} />
           </a>
           <a
             href={MANIFESTO_V3.secondaryCta.href}
             className="v3-btn v3-btn-ghost"
             data-cursor="link"
           >
+            <Mail className="h-3.5 w-3.5" aria-hidden strokeWidth={1.75} />
             {MANIFESTO_V3.secondaryCta.label}
           </a>
         </div>
@@ -185,9 +187,10 @@ function ScrollCue() {
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className="v3-mono"
+        className="v3-mono inline-flex items-center gap-1.5"
       >
-        SCROLL ↓
+        SCROLL
+        <ArrowDown className="h-3 w-3" strokeWidth={2} />
       </motion.span>
     </div>
   )

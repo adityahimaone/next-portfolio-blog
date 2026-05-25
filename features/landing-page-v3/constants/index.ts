@@ -4,6 +4,26 @@
  * Source of truth stays in features/landing-page.
  */
 import {
+  Atom,
+  Box,
+  Braces,
+  Code2,
+  Database,
+  FileCode2,
+  FileType,
+  Flame,
+  GitBranch,
+  Layers,
+  Layout,
+  Palette,
+  Server,
+  Sparkles,
+  Workflow,
+  Wrench,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react'
+import {
   EMAIL,
   EXPERIENCES,
   MIXER_DATA,
@@ -59,19 +79,59 @@ export type StackEntry = {
   readonly id: string
   readonly name: string
   readonly group: 'language' | 'framework' | 'tool'
+  readonly icon: LucideIcon
+}
+
+/**
+ * Map stack item names to Lucide icons.
+ * Defaults vary by group when no specific match exists.
+ */
+function iconFor(name: string, group: StackEntry['group']): LucideIcon {
+  const k = name.toLowerCase()
+  // Languages
+  if (k.includes('typescript')) return FileType
+  if (k.includes('javascript')) return Braces
+  if (k.includes('php')) return FileCode2
+  if (k.includes('python')) return Code2
+  // Frameworks
+  if (k.includes('react') || k.includes('next')) return Atom
+  if (k.includes('tailwind') || k.includes('css')) return Palette
+  if (k.includes('node') || k.includes('express') || k.includes('nest'))
+    return Server
+  if (k.includes('vue') || k.includes('nuxt')) return Layers
+  if (k.includes('laravel') || k.includes('codeigniter')) return Flame
+  if (k.includes('shadcn') || k.includes('ui')) return Layout
+  if (k.includes('tanstack') || k.includes('query') || k.includes('router'))
+    return Workflow
+  // Tools
+  if (k.includes('git')) return GitBranch
+  if (k.includes('docker') || k.includes('container')) return Box
+  if (k.includes('vite') || k.includes('webpack') || k.includes('turbo'))
+    return Zap
+  if (k.includes('postgres') || k.includes('mysql') || k.includes('sql'))
+    return Database
+  if (k.includes('figma') || k.includes('design')) return Sparkles
+  // Group fallbacks
+  if (group === 'language') return Code2
+  if (group === 'framework') return Layers
+  return Wrench
 }
 
 export const STACK_V3: readonly StackEntry[] = MIXER_DATA.flatMap((g) =>
-  g.channels.map((c, i) => ({
-    id: `${g.id}-${i}`,
-    name: c.name,
-    group:
+  g.channels.map((c, i) => {
+    const group: StackEntry['group'] =
       g.id === 'languages'
-        ? ('language' as const)
+        ? 'language'
         : g.id === 'frameworks'
-          ? ('framework' as const)
-          : ('tool' as const),
-  })),
+          ? 'framework'
+          : 'tool'
+    return {
+      id: `${g.id}-${i}`,
+      name: c.name,
+      group,
+      icon: iconFor(c.name, group),
+    }
+  }),
 )
 
 // ─── Work / Catalog Releases ─────────────────────────────────────

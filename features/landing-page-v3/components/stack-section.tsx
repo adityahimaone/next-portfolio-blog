@@ -201,6 +201,8 @@ function FloatingTags({
                 ? 'var(--v3-iris-2)'
                 : 'var(--v3-iris-3)'
 
+          const Icon = item.icon
+
           return (
             <motion.span
               key={item.id}
@@ -240,7 +242,7 @@ function FloatingTags({
                 },
               }}
               data-cursor="link"
-              className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors duration-300 will-change-transform md:px-5 md:py-2.5 md:text-base"
+              className="group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors duration-300 will-change-transform md:px-5 md:py-2.5 md:text-base"
               style={{
                 borderColor: 'var(--v3-fog)',
                 color: 'var(--v3-paper)',
@@ -249,10 +251,11 @@ function FloatingTags({
                 cursor: 'pointer',
               }}
             >
-              <span
-                className="block h-1.5 w-1.5 rounded-full"
-                style={{ background: accent }}
+              <Icon
+                className="h-3.5 w-3.5 transition-colors duration-300 md:h-4 md:w-4"
+                style={{ color: accent }}
                 aria-hidden
+                strokeWidth={1.75}
               />
               {item.name}
             </motion.span>

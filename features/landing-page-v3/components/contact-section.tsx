@@ -1,9 +1,30 @@
 'use client'
 
 import { motion } from 'motion/react'
+import {
+  ArrowUpRight,
+  Github,
+  Instagram,
+  Linkedin,
+  Mail,
+  Twitter,
+  type LucideIcon,
+} from 'lucide-react'
 import { useInView } from '../hooks/use-in-view'
 import { CONTACT_V3 } from '../constants'
 import { V3ShaderBackground } from './_shared/v3-shader-background'
+
+/**
+ * Map social platform name to Lucide icon.
+ */
+function socialIcon(name: string): LucideIcon {
+  const k = name.toLowerCase()
+  if (k.includes('github')) return Github
+  if (k.includes('linkedin')) return Linkedin
+  if (k.includes('twitter') || k === 'x') return Twitter
+  if (k.includes('instagram')) return Instagram
+  return ArrowUpRight
+}
 
 /**
  * ContactSection (06) — closing CTA with shader background.
@@ -140,8 +161,13 @@ export function ContactSection() {
               className="v3-btn v3-btn-primary"
               data-cursor="link"
             >
+              <Mail className="h-3.5 w-3.5" aria-hidden strokeWidth={2} />
               <span>{CONTACT_V3.cta.label}</span>
-              <span aria-hidden>→</span>
+              <ArrowUpRight
+                className="h-3.5 w-3.5"
+                aria-hidden
+                strokeWidth={2}
+              />
             </a>
             <a
               href={`mailto:${CONTACT_V3.email}`}
@@ -158,30 +184,38 @@ export function ContactSection() {
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : {}}
             transition={{ duration: 0.8, delay: 0.9 }}
-            className="mt-12 flex flex-wrap gap-4"
+            className="mt-12 flex flex-wrap gap-3"
           >
-            {CONTACT_V3.social.map((s) => (
-              <a
-                key={s.name}
-                href={s.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-cursor="link"
-                className="v3-mono inline-flex items-center gap-2 rounded-full border px-4 py-2 transition-colors duration-300"
-                style={{
-                  borderColor: 'var(--v3-fog)',
-                  color: 'var(--v3-paper)',
-                }}
-              >
-                <span
-                  aria-hidden
-                  className="block h-1.5 w-1.5 rounded-full"
-                  style={{ background: 'var(--v3-iris-2)' }}
-                />
-                {s.name}
-                <span aria-hidden>↗</span>
-              </a>
-            ))}
+            {CONTACT_V3.social.map((s) => {
+              const Icon = socialIcon(s.label)
+              return (
+                <a
+                  key={s.label}
+                  href={s.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-cursor="link"
+                  aria-label={`Visit ${s.label}`}
+                  className="v3-mono group inline-flex items-center gap-2 rounded-full border px-4 py-2 transition-all duration-300 hover:border-[var(--v3-paper)]"
+                  style={{
+                    borderColor: 'var(--v3-fog)',
+                    color: 'var(--v3-paper)',
+                  }}
+                >
+                  <Icon
+                    className="h-3.5 w-3.5 transition-colors duration-300"
+                    style={{ color: 'var(--v3-iris-2)' }}
+                    aria-hidden
+                    strokeWidth={1.75}
+                  />
+                  {s.label}
+                  <ArrowUpRight
+                    className="h-3 w-3 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                    aria-hidden
+                  />
+                </a>
+              )
+            })}
           </motion.div>
         </div>
       </div>

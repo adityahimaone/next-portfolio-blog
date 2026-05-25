@@ -618,32 +618,37 @@ export function ContactSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium"
+              className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium"
               style={{
                 backgroundColor: 'var(--color-surface)',
                 color: 'var(--color-ochre)',
                 border: '1px solid var(--color-border-subtle)',
+                fontFamily: 'var(--font-mono)',
               }}
             >
-              <Radio className="h-4 w-4" />
-              <span style={{ fontFamily: 'var(--font-mono)', letterSpacing: '0.15em' }}>PATCH IN</span>
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'var(--color-ochre)' }} />
+              <span>CONNECT</span>
             </m.div>
             <m.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-4xl font-black tracking-tight sm:text-5xl"
+              className="text-4xl font-bold tracking-tight sm:text-5xl"
               style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}
             >
-              Connect to the Studio
+              Get in Touch
             </m.h2>
-            <p
-              className="mt-4 max-w-2xl text-lg"
-              style={{ color: 'var(--color-text-secondary)' }}
+            <m.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.15 }}
+              className="mt-3 max-w-md text-sm leading-relaxed"
+              style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-body)' }}
             >
-              Plug into the patch bay. Tap a jack to connect — stack signals to build your mix.
-            </p>
+              Reach out through email or social channels. Let's create something together.
+            </m.p>
           </div>
 
           {/* ── Patch Bay Board ── */}

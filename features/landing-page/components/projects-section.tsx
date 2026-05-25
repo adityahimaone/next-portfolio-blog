@@ -9,25 +9,12 @@ import {
 
 import { PROJECTS_SHOWCASE, type ProjectShowcaseItem } from '../constants'
 
-// ─── Tape Reel (concentric circles + spokes) ─────────────────────────
+// ─── Tape Reel (simplified, subtle) ─────────────────────────────
 function TapeReel({ className = '' }: { className?: string }) {
-  const rings = [
-    { size: '80%', border: '2px solid var(--color-ochre)', opacity: 0.3 },
-    { size: '55%', border: '1.5px solid var(--color-ochre)', opacity: 0.4 },
-    { size: '32%', border: '1px solid var(--color-ochre)', opacity: 0.5 },
-  ]
   return (
     <div className={`pointer-events-none absolute inset-0 flex items-center justify-center ${className}`}>
-      {rings.map((r, i) => (
-        <div key={i} className="absolute rounded-full" style={{ width: r.size, height: r.size, border: r.border, opacity: r.opacity }} />
-      ))}
-      <div className="absolute rounded-full" style={{ width: '14%', height: '14%', backgroundColor: 'var(--color-ochre)', opacity: 0.6 }} />
-      <div className="absolute rounded-full" style={{ width: '4%', height: '4%', backgroundColor: 'var(--color-charcoal)' }} />
-      <svg className="absolute h-full w-full" viewBox="0 0 100 100" fill="none" style={{ opacity: 0.2 }}>
-        {[[50,10,50,90],[10,50,90,50],[22,22,78,78],[78,22,22,78]].map(([x1,y1,x2,y2], i) => (
-          <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--color-ochre)" strokeWidth="0.8" />
-        ))}
-      </svg>
+      <div className="absolute rounded-full" style={{ width: '60%', height: '60%', border: '1.5px solid var(--color-ochre)', opacity: 0.15 }} />
+      <div className="absolute rounded-full" style={{ width: '14%', height: '14%', backgroundColor: 'var(--color-ochre)', opacity: 0.3 }} />
     </div>
   )
 }
@@ -50,8 +37,8 @@ function TapeBoxCard({ project, index, onOpen }: {
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: index * 0.1, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       className="group cursor-pointer overflow-hidden rounded-lg"
-      style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border-subtle)', boxShadow: 'var(--shadow-md)' }}
-      whileHover={{ boxShadow: '0 12px 28px -8px rgba(0,0,0,0.4)' }}
+      style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border-subtle)', boxShadow: 'var(--shadow-sm)' }}
+      whileHover={{ boxShadow: 'var(--shadow-md)' }}
     >
       <div className="flex transition-transform duration-[var(--duration-slow)] ease-[var(--ease-smooth)] group-hover:translate-x-2">
         {/* Ochre spine label */}
@@ -134,20 +121,25 @@ export function ProjectsSection() {
         backgroundSize: '256px 256px' }}
       />
       <div className="container relative z-10 mx-auto px-4 md:px-6">
-        {/* Header */}
+        {/* Header - Refined */}
         <div className="mb-16 flex flex-col items-center text-center">
           <m.div initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}}
-            className="mb-4 flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium"
+            className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium"
             style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-ochre)', fontFamily: 'var(--font-mono)', border: '1px solid var(--color-border-subtle)' }}
           >
-            <Film className="h-4 w-4" />
-            <span>MASTER TAPES</span>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'var(--color-ochre)' }} />
+            <span>PROJECTS</span>
           </m.div>
           <m.h2 initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.1 }}
-            className="text-4xl font-bold tracking-tighter sm:text-5xl" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-highlight)' }}
+            className="text-4xl font-bold tracking-tight sm:text-5xl" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-highlight)' }}
           >
-            Featured Releases
+            Featured Work
           </m.h2>
+          <m.p initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.15 }}
+            className="mt-3 max-w-md text-sm leading-relaxed" style={{ color: 'var(--color-slate)', fontFamily: 'var(--font-body)' }}
+          >
+            A collection of projects that showcase technical skills and creative problem-solving.
+          </m.p>
         </div>
 
         {/* Mobile: horizontal snap-scroll */}

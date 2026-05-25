@@ -222,7 +222,7 @@ export function HeroSection() {
             Frontend Developer & Audio Enthusiast.
           </motion.p>
 
-          {/* DAW Player Controls */}
+          {/* Simplified Transport Controls */}
           <motion.div
             initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
             animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
@@ -231,99 +231,52 @@ export function HeroSection() {
               delay: baseDelay + 0.5,
               ease: [0.34, 1.56, 0.64, 1],
             }}
-            className="relative flex w-full max-w-[90vw] items-center gap-3 rounded-lg p-3 shadow-2xl sm:max-w-lg sm:gap-4 sm:p-4"
-            style={{
-              backgroundColor: 'var(--color-surface)',
-              border: '1px solid var(--color-border-subtle)',
-            }}
+            className="flex w-full max-w-[90vw] items-center gap-4 sm:max-w-md sm:gap-5"
           >
-            {/* Inset shadow for depth */}
-            <div
-              className="pointer-events-none absolute inset-0 rounded-lg"
-              style={{
-                boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.4)',
-              }}
-            />
-
-            {/* Play/Pause Button - Warm metal */}
+            {/* Play/Pause Button - Simplified */}
             <Magnetic intensity={0.2}>
               <button
                 onClick={togglePlay}
                 aria-label={isPlaying ? 'Pause tape' : 'Press record'}
-                className="group relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full transition-all active:scale-95 sm:h-16 sm:w-16"
+                className="group relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full transition-all active:scale-95 sm:h-20 sm:w-20"
                 style={{
-                  backgroundColor: 'var(--color-surface)',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-                  border: '2px solid var(--color-border-default)',
+                  backgroundColor: 'var(--color-ochre)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
                 }}
               >
-                <div
-                  className="absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100"
-                  style={{ backgroundColor: 'var(--color-ochre)', opacity: 0.1 }}
-                />
                 {isPlaying ? (
-                  <Pause fill="currentColor" className="h-6 w-6" style={{ color: 'var(--color-ochre)' }} />
+                  <Pause fill="currentColor" className="h-7 w-7 sm:h-8 sm:w-8" style={{ color: 'var(--color-charcoal)' }} />
                 ) : (
-                  <Play fill="currentColor" className="ml-1 h-6 w-6" style={{ color: 'var(--color-ochre)' }} />
+                  <Play fill="currentColor" className="ml-1 h-7 w-7 sm:h-8 sm:w-8" style={{ color: 'var(--color-charcoal)' }} />
                 )}
-                {/* LED Indicator */}
-                <div
-                  className={`absolute top-2 right-2 h-2 w-2 rounded-full transition-all ${
-                    isPlaying ? 'animate-pulse' : ''
-                  }`}
-                  style={{
-                    backgroundColor: isPlaying ? 'var(--color-terracotta)' : 'var(--color-slate)',
-                    boxShadow: isPlaying ? '0 0 8px var(--color-terracotta)' : 'none',
-                  }}
-                  aria-hidden="true"
-                />
               </button>
             </Magnetic>
 
-            {/* LCD Tape Counter Display */}
-            <div
-              className="flex min-w-0 flex-1 flex-col gap-2 rounded p-3"
-              style={{
-                backgroundColor: 'var(--color-charcoal)',
-                boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8)',
-                border: '1px solid rgba(0,0,0,0.5)',
-              }}
-            >
-              {/* Tape Counter */}
-              <div className="flex items-center justify-between">
-                <span
-                  className="text-xs font-bold uppercase tracking-widest"
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    color: 'var(--color-slate)',
-                  }}
-                >
-                  {isPlaying ? 'REC' : 'STOP'}
-                </span>
-                <div
-                  className="text-2xl font-bold tabular-nums tracking-wider"
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    color: 'var(--color-ochre)',
-                    textShadow: '0 0 10px rgba(212, 168, 75, 0.5)',
-                  }}
-                  aria-live="polite"
-                  aria-label={`Tape counter: ${tapeCounter}`}
-                >
-                  {tapeCounter}
-                </div>
+            {/* Simplified Info Display */}
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              {/* Tape Counter - Subtle */}
+              <div
+                className="text-sm font-bold tabular-nums tracking-wider opacity-60"
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--color-ochre)',
+                }}
+                aria-live="polite"
+                aria-label={`Tape counter: ${tapeCounter}`}
+              >
+                {tapeCounter}
               </div>
 
-              {/* Track Info with VU Meter */}
-              <div className="flex items-center gap-2 overflow-hidden">
-                <div className="flex h-4 shrink-0 items-end gap-0.5">
-                  {[...Array(5)].map((_, i) => (
+              {/* Track Info - Simplified */}
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="flex h-3 shrink-0 items-end gap-0.5">
+                  {[...Array(4)].map((_, i) => (
                     <motion.div
                       key={i}
-                      className="w-1 rounded-[1px]"
+                      className="w-0.5 rounded-[1px]"
                       style={{ backgroundColor: 'var(--color-ochre)' }}
                       animate={{
-                        height: isPlaying ? [4, 12, 6, 10, 4] : 4,
+                        height: isPlaying ? [4, 10, 6, 8] : 4,
                         opacity: isPlaying ? 0.8 : 0.3,
                       }}
                       transition={{
@@ -340,8 +293,7 @@ export function HeroSection() {
                     className="whitespace-nowrap text-sm"
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      color: 'var(--color-ochre)',
-                      textShadow: '0 0 8px rgba(212, 168, 75, 0.4)',
+                      color: 'var(--color-highlight)',
                     }}
                     animate={{ x: ['0%', '-50%'] }}
                     transition={{
@@ -355,19 +307,9 @@ export function HeroSection() {
                   </motion.div>
                 </div>
               </div>
-
-              {/* Metadata - JetBrains Mono */}
-              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-slate)' }}>
-                <span>120 BPM</span>
-                <span>KEY: Am</span>
-                <span>24-BIT</span>
-              </div>
             </div>
 
-            {/* Divider */}
-            <div className="h-12 w-px shrink-0" style={{ backgroundColor: 'var(--color-border-subtle)' }} />
-
-            {/* Skip Button */}
+            {/* Skip Button - Simplified */}
             <Magnetic intensity={0.2}>
               <a
                 href="#projects"
@@ -375,12 +317,11 @@ export function HeroSection() {
                   e.preventDefault()
                   document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className="flex h-11 shrink-0 items-center gap-2 rounded px-4 text-xs font-bold uppercase tracking-wider transition-all hover:-translate-y-0.5 active:translate-y-0"
+                className="flex h-12 shrink-0 items-center gap-2 rounded-lg px-4 text-xs font-bold uppercase tracking-wider transition-all hover:-translate-y-0.5 active:translate-y-0 sm:h-14 sm:px-5"
                 style={{
                   backgroundColor: 'var(--color-surface)',
                   color: 'var(--color-ochre)',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-                  border: '1px solid var(--color-border-default)',
+                  border: '1px solid var(--color-border-subtle)',
                   fontFamily: 'var(--font-display)',
                 }}
                 aria-label="Skip to projects section"

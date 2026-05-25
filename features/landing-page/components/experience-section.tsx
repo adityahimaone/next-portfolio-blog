@@ -8,19 +8,13 @@ import { EXPERIENCES } from '../constants'
 
 const T = [0.34, 1.56, 0.64, 1] as const
 
-/* ─── Tape Reel ─── */
+/* ─── Simplified Tape Reel ─── */
 function TapeReel() {
   return (
-    <div className="relative flex h-24 w-24 items-center justify-center">
-      <m.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-        className="absolute inset-0 rounded-full border-[3px]" style={{ borderColor: 'var(--color-ochre)' }} />
-      <m.div animate={{ rotate: -360 }} transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
-        className="h-12 w-12 rounded-full border-2" style={{ borderColor: 'var(--color-ochre)', opacity: 0.7 }} />
-      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: 'var(--color-ochre)' }} />
-      <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 96 96" fill="none">
-        <line x1="48" y1="8" x2="48" y2="88" stroke="var(--color-ochre)" strokeWidth="1.5" opacity="0.3" />
-        <line x1="8" y1="48" x2="88" y2="48" stroke="var(--color-ochre)" strokeWidth="1.5" opacity="0.3" />
-      </svg>
+    <div className="relative flex h-16 w-16 items-center justify-center opacity-40">
+      <m.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+        className="absolute inset-0 rounded-full border-2" style={{ borderColor: 'var(--color-ochre)' }} />
+      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: 'var(--color-ochre)' }} />
     </div>
   )
 }
@@ -31,15 +25,7 @@ function Led({ s }: { s: 'active' | 'completed' | 'current' }) {
   return <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: c[s] }} />
 }
 
-/* ─── Mute/Solo ─── */
-function Ms({ l }: { l: string }) {
-  return (
-    <button className="rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors"
-      style={{ backgroundColor: 'var(--color-surface)', color: l === 'MUTE' ? 'var(--color-terracotta)' : 'var(--color-ochre)', border: '1px solid var(--color-border-subtle)' }}>
-      {l}
-    </button>
-  )
-}
+/* ─── Mute/Solo removed - reducing complexity ─── */
 
 /* ─── Tape Segment (for group items) ─── */
 function TSeg({ role, company, period, description, i }: { role: string; company: string; period: string; description: string; i: number }) {
@@ -93,18 +79,19 @@ export function ExperienceSection() {
       </div>
 
       <div className="container relative z-10 mx-auto px-4 md:px-6">
-        {/* Header */}
+        {/* Header - Simplified */}
         <m.div initial={{ opacity: 0, y: 20 }} animate={siv ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: T }}
           className="mb-12 flex flex-col items-center text-center">
-          <div className="mb-4 flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium"
-            style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-ochre)', border: '1px solid var(--color-border-subtle)' }}>
-            <Radio className="h-4 w-4" /><span>SESSION LOG</span>
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium"
+            style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-ochre)', border: '1px solid var(--color-border-subtle)', fontFamily: 'var(--font-mono)' }}>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'var(--color-ochre)' }} />
+            <span>SESSIONS</span>
           </div>
-          <h2 className="text-4xl font-bold tracking-tighter sm:text-5xl"
-            style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>The Sessions</h2>
-          <p className="mt-2 max-w-md text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-            A recording of the career journey &mdash; each job, a tape session.
+          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl"
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>Career Journey</h2>
+          <p className="mt-3 max-w-md text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-body)' }}>
+            A timeline of roles and experiences &mdash; each session a chapter in the story.
           </p>
         </m.div>
 
@@ -168,9 +155,6 @@ export function ExperienceSection() {
                             <MapPin className="h-2.5 w-2.5 shrink-0" />{exp.location}
                           </span>
                         </div>
-                      </div>
-                      <div className="hidden shrink-0 flex-col gap-1 sm:flex">
-                        <Ms l="MUTE" /><Ms l="SOLO" />
                       </div>
                     </button>
                   </m.div>

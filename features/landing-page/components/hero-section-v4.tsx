@@ -17,11 +17,11 @@ export function HeroSectionV4() {
       />
 
       {/* Layer 1: Illustration A — classical landscape painting (placeholder) */}
-      <ParallaxLayer speed={0.10} className="absolute inset-0 z-[1] md:block">
+      <ParallaxLayer speed={0.08} className="absolute inset-0 z-[1] md:block">
         <div
           className="absolute inset-0 scale-[1.15]"
           style={{
-            opacity: 0.6,
+            opacity: 0.5,
             background:
               'linear-gradient(135deg, #2A2A2A 0%, #1A1A1A 50%, #0F0F0F 100%)',
           }}
@@ -30,11 +30,11 @@ export function HeroSectionV4() {
       </ParallaxLayer>
 
       {/* Layer 2: Illustration B — figure/portrait, positioned right (placeholder) */}
-      <ParallaxLayer speed={0.25} className="absolute inset-0 z-[2] md:block">
+      <ParallaxLayer speed={0.18} className="absolute inset-0 z-[2] md:block">
         <div
           className="absolute inset-0 translate-x-[15%]"
           style={{
-            opacity: 0.35,
+            opacity: 0.3,
             background:
               'linear-gradient(90deg, transparent 0%, #3A3A3A 30%, #2A2A2A 70%, transparent 100%)',
           }}
@@ -55,13 +55,13 @@ export function HeroSectionV4() {
 
       {/* Layer 4: Content — centered */}
       <ParallaxLayer
-        speed={0.55}
+        speed={0.40}
         className="absolute inset-0 z-[4] flex items-center justify-center"
       >
         <div className="hero-content flex flex-col items-center px-4 text-center md:px-0">
           {/* Label */}
           <div
-            className="font-[family-name:var(--font-ui)] mb-4 uppercase"
+            className="font-[family-name:var(--font-ui)] mb-3 uppercase"
             style={{
               fontSize: '11px',
               letterSpacing: '0.2em',
@@ -73,9 +73,9 @@ export function HeroSectionV4() {
 
           {/* Line */}
           <div
-            className="mb-8"
+            className="mb-6"
             style={{
-              width: '80px',
+              width: '60px',
               height: '1px',
               backgroundColor: 'var(--color-off-white)',
             }}
@@ -84,7 +84,7 @@ export function HeroSectionV4() {
           {/* Name */}
           <h1 className="font-[family-name:var(--font-display)] leading-none">
             <span
-              className="block text-[72px] md:text-[140px]"
+              className="block text-[60px] md:text-[120px]"
               style={{
                 letterSpacing: '-0.009em',
                 color: 'var(--color-off-white)',
@@ -94,7 +94,7 @@ export function HeroSectionV4() {
               ADITYA
             </span>
             <span
-              className="block text-[72px] md:text-[140px]"
+              className="block text-[60px] md:text-[120px]"
               style={{
                 letterSpacing: '-0.009em',
                 color: 'var(--color-off-white)',
@@ -107,9 +107,9 @@ export function HeroSectionV4() {
 
           {/* Subtitle */}
           <p
-            className="font-[family-name:var(--font-ui)] mt-8 max-w-[420px]"
+            className="font-[family-name:var(--font-ui)] mt-6 max-w-[380px]"
             style={{
-              fontSize: '15px',
+              fontSize: '14px',
               color: 'var(--color-off-white)',
               lineHeight: 1.6,
             }}
@@ -120,9 +120,9 @@ export function HeroSectionV4() {
           {/* CTA Button */}
           <a
             href="#about"
-            className="font-[family-name:var(--font-ui)] mt-10 inline-flex items-center justify-center px-8 py-3 transition-colors hover:bg-white/10"
+            className="font-[family-name:var(--font-ui)] mt-8 inline-flex items-center justify-center px-7 py-2.5 transition-colors hover:bg-white/10"
             style={{
-              fontSize: '12px',
+              fontSize: '11px',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               color: 'var(--color-off-white)',

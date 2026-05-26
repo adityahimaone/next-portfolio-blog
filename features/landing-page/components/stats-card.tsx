@@ -11,7 +11,7 @@ interface StatsCardProps {
 export function StatsCard({ number, label, sublabel }: StatsCardProps) {
   return (
     <motion.div
-      className="flex flex-col items-center justify-center p-6 bg-[var(--color-smoke)] rounded-[var(--radius-card)] transition-all duration-300 cursor-default"
+      className="flex flex-col items-center justify-center p-4 bg-[var(--color-smoke)] rounded-[var(--radius-card)] transition-all duration-300 cursor-default"
       whileHover={{
         y: -4,
         boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
@@ -21,13 +21,13 @@ export function StatsCard({ number, label, sublabel }: StatsCardProps) {
       viewport={{ once: true }}
       transition={{ duration: 0.3 }}
     >
-      <div className="text-[var(--text-lg)] font-display font-bold text-[var(--color-ink)] mb-1">
+      <div className="text-[28px] font-display font-bold text-[var(--color-ink)] mb-1 leading-none">
         {number}
       </div>
-      <div className="text-[var(--text-xs)] font-ui uppercase tracking-[0.1em] text-[var(--color-accent-grey)] mb-0.5">
+      <div className="text-[10px] font-ui uppercase tracking-[0.1em] text-[var(--color-accent-grey)] mb-0.5">
         {label}
       </div>
-      <div className="text-[var(--text-xs)] font-ui text-[var(--color-ink)] opacity-80">
+      <div className="text-[11px] font-ui text-[var(--color-ink)] opacity-80">
         {sublabel}
       </div>
     </motion.div>

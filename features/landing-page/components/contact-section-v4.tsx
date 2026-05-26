@@ -58,7 +58,7 @@ export function ContactSectionV4() {
         <motion.p
           initial={prefersReduced ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.5 }}
           className="font-ui text-[11px] uppercase tracking-[0.2em] text-[var(--color-accent-grey)] mb-4"
         >
@@ -69,19 +69,19 @@ export function ContactSectionV4() {
         <motion.div
           initial={prefersReduced ? false : { scaleX: 0 }}
           whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="h-px w-20 bg-[var(--color-accent-grey)] mb-10 origin-center"
+          className="h-px w-16 bg-[var(--color-accent-grey)] mb-8 origin-center"
         />
 
         {/* Heading */}
         <motion.h2
           initial={prefersReduced ? false : { opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.6, delay: 0.15 }}
-          className="font-display text-2xl md:text-2xl text-[var(--color-off-white)] leading-tight mb-6"
-          style={{ fontSize: 'clamp(52px, 8vw, 94px)' }}
+          className="font-display text-2xl md:text-2xl text-[var(--color-off-white)] leading-tight mb-5"
+          style={{ fontSize: 'clamp(48px, 7vw, 72px)' }}
         >
           Get in touch
         </motion.h2>
@@ -90,9 +90,9 @@ export function ContactSectionV4() {
         <motion.p
           initial={prefersReduced ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.5, delay: 0.25 }}
-          className="font-ui text-sm text-[var(--color-off-white)]/75 max-w-[420px] mb-10 leading-relaxed"
+          className="font-ui text-[14px] text-[var(--color-off-white)]/75 max-w-[380px] mb-8 leading-relaxed"
         >
           Open for freelance, full-time roles, and interesting collaborations.
         </motion.p>
@@ -101,9 +101,9 @@ export function ContactSectionV4() {
         <motion.div
           initial={prefersReduced ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.5, delay: 0.35 }}
-          className="mb-12"
+          className="mb-10"
         >
           <a
             href="mailto:halo@adityahimaone.space"
@@ -118,9 +118,9 @@ export function ContactSectionV4() {
         <motion.div
           initial={prefersReduced ? false : { opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.5, delay: 0.45 }}
-          className="flex items-center gap-8"
+          className="flex items-center gap-6"
         >
           {SOCIAL_LINKS.map((link) => (
             <a

@@ -78,9 +78,9 @@ export function NowPlayingCard({
   }
 
   return (
-    <div className="bg-[var(--color-canvas)] rounded-[var(--radius-card)] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
+    <div className="bg-[var(--color-canvas)] rounded-[var(--radius-card)] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
       {/* Album Art */}
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-6">
         <m.div
           animate={isPlaying && !prefersReduced ? { rotate: 360 } : { rotate: 0 }}
           transition={{
@@ -88,25 +88,25 @@ export function NowPlayingCard({
             repeat: isPlaying ? Infinity : 0,
             ease: 'linear',
           }}
-          className="w-48 h-48 rounded-full overflow-hidden border-4 border-[var(--color-ink)]/10 flex items-center justify-center bg-gradient-to-br from-[var(--color-slate)] to-[var(--color-accent-grey)]"
+          className="w-[180px] h-[180px] rounded-full overflow-hidden border-4 border-[var(--color-ink)]/10 flex items-center justify-center bg-gradient-to-br from-[var(--color-slate)] to-[var(--color-accent-grey)]"
         >
           <div className="text-center">
-            <div className="text-4xl mb-2">♪</div>
-            <p className="text-xs text-[var(--color-accent-grey)]">Album Art</p>
+            <div className="text-3xl mb-1">♪</div>
+            <p className="text-[10px] text-[var(--color-accent-grey)]">Album Art</p>
           </div>
         </m.div>
       </div>
 
       {/* Now Playing Label */}
-      <div className="text-center mb-6">
-        <p className="font-ui text-[10px] uppercase tracking-[0.15em] text-[var(--color-accent-grey)] mb-2">
+      <div className="text-center mb-5">
+        <p className="font-ui text-[10px] uppercase tracking-[0.15em] text-[var(--color-accent-grey)] mb-1.5">
           Now Playing
         </p>
-        <div className="h-px bg-[var(--color-accent-grey)] mx-auto mb-4 w-16" />
-        <h3 className="font-display text-[22px] text-[var(--color-ink)] mb-1">
+        <div className="h-px bg-[var(--color-accent-grey)] mx-auto mb-3 w-12" />
+        <h3 className="font-display text-[18px] text-[var(--color-ink)] mb-0.5">
           {DEMO_TRACK.title}
         </h3>
-        <p className="font-ui text-[13px] text-[var(--color-accent-grey)]">
+        <p className="font-ui text-[12px] text-[var(--color-accent-grey)]">
           {DEMO_TRACK.artist}
         </p>
       </div>

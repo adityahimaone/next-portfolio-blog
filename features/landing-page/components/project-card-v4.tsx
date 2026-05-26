@@ -27,7 +27,7 @@ export function ProjectCardV4({
       rel="noopener noreferrer"
       className={cn(
         'group relative block overflow-hidden rounded-[9px]',
-        featured ? 'aspect-[16/7]' : 'aspect-[4/5]',
+        featured ? 'aspect-[3/2]' : 'aspect-[3/4]',
       )}
       data-cursor="hover-project"
       whileHover="hover"
@@ -44,7 +44,7 @@ export function ProjectCardV4({
         }}
         variants={{
           rest: { y: 0, scale: 1.1 },
-          hover: { y: -10, scale: 1.05 },
+          hover: { y: -8, scale: 1.06 },
         }}
         transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
       />
@@ -60,25 +60,25 @@ export function ProjectCardV4({
       />
 
       {/* Text panel */}
-      <div className="absolute inset-x-0 bottom-0 p-6 md:p-8 flex flex-col gap-2 z-10">
+      <div className="absolute inset-x-0 bottom-0 p-5 flex flex-col gap-1.5 z-10">
         {/* Top row: number + category/year */}
         <div className="flex items-center justify-between">
-          <span className="font-display text-[16px] text-[var(--color-off-white)] opacity-50">
+          <span className="font-display text-[14px] text-[var(--color-off-white)] opacity-50">
             {number}
           </span>
-          <span className="font-ui text-[12px] uppercase tracking-[0.05em] text-[var(--color-off-white)] opacity-70">
+          <span className="font-ui text-[11px] uppercase tracking-[0.05em] text-[var(--color-off-white)] opacity-70">
             {category} / {year}
           </span>
         </div>
 
         {/* Title */}
-        <h3 className="font-display text-[24px] text-[var(--color-off-white)] leading-tight">
+        <h3 className="font-display text-[20px] text-[var(--color-off-white)] leading-tight">
           {title}
         </h3>
 
         {/* CTA */}
-        <div className="flex items-center justify-end mt-2">
-          <span className="font-ui text-[13px] text-[var(--color-off-white)] opacity-80 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center justify-end mt-1">
+          <span className="font-ui text-[12px] text-[var(--color-off-white)] opacity-80 group-hover:opacity-100 transition-opacity">
             VIEW →
           </span>
         </div>

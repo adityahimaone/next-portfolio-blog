@@ -66,14 +66,14 @@ export function SkillCard({
     >
       {/* Illustration placeholder */}
       <div
-        className="h-[280px] w-full flex items-center justify-center text-[var(--color-off-white)]/40 font-display text-sm"
+        className="h-[200px] w-full flex items-center justify-center text-[var(--color-off-white)]/40 font-display text-sm"
         style={{ background: getIllustrationGradient() }}
       >
         {illustrationStyle.charAt(0).toUpperCase() + illustrationStyle.slice(1)}
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col p-8">
+      <div className="flex-1 flex flex-col p-6">
         {/* Category label */}
         <div className="text-[var(--text-xs)] font-ui uppercase tracking-[0.15em] text-[var(--color-accent-grey)] mb-4">
           {category}

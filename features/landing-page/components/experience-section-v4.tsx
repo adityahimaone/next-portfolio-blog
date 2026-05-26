@@ -9,16 +9,16 @@ export function ExperienceSectionV4() {
   return (
     <section
       id="experience"
-      className="relative py-[168px] px-6 md:px-12 lg:px-24"
+      className="relative py-24 px-6 md:px-12 lg:px-20"
       style={{ backgroundColor: 'var(--color-canvas)' }}
     >
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-6xl">
         {/* Heading */}
         <motion.h2
-          className="font-display text-[94px] text-[var(--color-ink)] text-center mb-20 leading-[1.0]"
+          className="font-display text-[clamp(40px,7vw,72px)] text-[var(--color-ink)] text-center mb-16 leading-[1.0]"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.5 }}
         >
           Career
@@ -30,7 +30,7 @@ export function ExperienceSectionV4() {
           <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-[var(--color-slate)] transform -translate-x-1/2" />
 
           {/* Parallax background layer */}
-          <ParallaxLayer speed={0.08} direction="up" className="absolute inset-0 pointer-events-none">
+          <ParallaxLayer speed={0.06} direction="up" className="absolute inset-0 pointer-events-none">
             <div
               className="absolute inset-0 opacity-6"
               style={{
@@ -41,7 +41,7 @@ export function ExperienceSectionV4() {
           </ParallaxLayer>
 
           {/* Timeline entries */}
-          <div className="relative space-y-12 md:space-y-16">
+          <div className="relative space-y-8 md:space-y-12">
             {EXPERIENCES.map((exp, index) => (
               <ExperienceCard
                 key={exp.id}

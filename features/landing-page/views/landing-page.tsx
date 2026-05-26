@@ -19,13 +19,14 @@ import { HeaderV4 } from '../components/header-v4'
 
 const loadFeatures = () => import('motion/react').then((res) => res.domMax)
 
+// Phase 2 — v4 editorial sections
+const AboutSectionV4 = dynamic(() =>
+  import('../components/about-section-v4').then((m) => m.AboutSectionV4),
+)
+const SkillsSectionV4 = dynamic(() =>
+  import('../components/skills-section-v4').then((m) => m.SkillsSectionV4),
+)
 // Sections from existing v3 — will be replaced phase by phase
-const AboutSection = dynamic(() =>
-  import('../components/about-section').then((m) => m.AboutSection),
-)
-const SkillsSection = dynamic(() =>
-  import('../components/skills-section').then((m) => m.SkillsSection),
-)
 const ProjectsSection = dynamic(() =>
   import('../components/projects-section').then((m) => m.ProjectsSection),
 )
@@ -48,9 +49,10 @@ export default function LandingPage() {
         <main className="relative z-[2]">
           <HeroSectionV4 />
           <ScrollIndicator />
-          {/* Phase 2-4: v4 sections (currently using v3 temporarily) */}
-          <AboutSection />
-          <SkillsSection />
+          {/* Phase 2: About + Skills v4 sections */}
+          <AboutSectionV4 />
+          <SkillsSectionV4 />
+          {/* Phase 3-4: remaining sections (using v3 temporarily) */}
           <ProjectsSection />
           <MusicSection />
           <BlogSection />

@@ -819,6 +819,42 @@ body:has(.r3-root) {
   animation: r3-scan 3s linear infinite;
 }
 
+/* ──── LCD / Scanline utilities (Synth Hero) ──── */
+.r3-root .r3-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.18) 3px,
+    rgba(0, 0, 0, 0.18) 3px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+
+.r3-root .r3-lcd {
+  /* Slight saturate / brightness shift to fake CRT phosphor */
+  filter: saturate(1.1) contrast(1.05);
+}
+
+@keyframes r3-flicker {
+  0%, 100% { opacity: 1; }
+  47% { opacity: 0.96; }
+  49% { opacity: 1; }
+  73% { opacity: 0.94; }
+  76% { opacity: 1; }
+}
+
+.r3-root .r3-lcd::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(57, 255, 110, 0.05) 0%, transparent 30%, transparent 70%, rgba(0, 0, 0, 0.2) 100%);
+  animation: r3-flicker 6s infinite;
+}
+
 /* Reduced motion override for r3 */
 @media (prefers-reduced-motion: reduce) {
   .r3-root *, .r3-root *::before, .r3-root *::after {

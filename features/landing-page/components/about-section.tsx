@@ -1,16 +1,17 @@
 'use client'
 
 /**
- * Ravemped 3.0 — About Section (Piano Roll / Timeline)
+ * Ravemped 4.0 — About Section (FL Studio Piano Roll)
  *
- * Concept: Timeline hidup Adit sebagai MIDI notes di piano roll horizontal.
- * X-axis = tahun (2020–2026), Y-axis = significance (low/mid/high).
- * Hover note → tooltip detail (role, company, period).
- * Mobile: vertical stack cards fallback.
+ * Concept: Hidup Adit sebagai komposisi MIDI. Sumbu X = tahun (2020–2026),
+ * Sumbu Y = 4 kategori lane (LEARNING, PROJECTS, CAREER, PIVOTS).
+ * Hover note → tooltip detail. Toolbar visual props (select/draw/zoom).
+ * Mobile: vertical card stack fallback.
  */
 
 import { useState, useMemo } from 'react'
 import { m, useReducedMotion, AnimatePresence } from 'motion/react'
+import { Pointer, Pencil, Eraser, ZoomIn, ZoomOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SectionFrame } from '../r3/section-frame'
 import { EXPERIENCES } from '../constants'
@@ -22,20 +23,20 @@ const YEAR_START = 2020
 const YEAR_END = 2026
 const TOTAL_YEARS = YEAR_END - YEAR_START + 1 // 7 years
 
+type LaneType = 'learning' | 'projects' | 'career' | 'pivots'
+
 type NoteData = {
   id: number
   role: string
   company: string
   period: string
-  type: 'work' | 'education'
+  lane: LaneType
   startYear: number
   endYear: number
-  significance: 'high' | 'mid' | 'low'
   description?: string
 }
 
 function parseYear(periodStr: string): { start: number; end: number } {
-  // Formats: "OCT 2022 - PRESENT", "APR 2024 - SEP 2024", "FEB 2022 - JUL 2022"
   const parts = periodStr.split(' - ')
   const startMatch = parts[0]?.match(/(\d{4})/)
   const endMatch = parts[1]?.match(/(\d{4})/)
@@ -44,10 +45,12 @@ function parseYear(periodStr: string): { start: number; end: number } {
   return { start, end }
 }
 
-function getSignificance(exp: ExperienceItem): 'high' | 'mid' | 'low' {
-  if (exp.type === 'Full Time') return 'high'
-  if (exp.type === 'Part Time') return 'mid'
-  return 'low'
+function getLane(exp: ExperienceItem): LaneType {
+  // Map experience type to lane
+  if (exp.type === 'Education') return 'learning'
+  if (exp.type === 'Full Time') return 'career'
+  if (exp.type === 'Part Time') return 'projects'
+  return 'pivots'
 }
 
 function buildNotes(experiences: readonly ExperienceItem[]): NoteData[] {
@@ -62,10 +65,9 @@ function buildNotes(experiences: readonly ExperienceItem[]): NoteData[] {
           role: item.role,
           company: item.company,
           period: item.period,
-          type: 'education',
+          lane: 'learning',
           startYear: start,
           endYear: end,
-          significance: 'low',
           description: item.description,
         })
       }
@@ -76,10 +78,9 @@ function buildNotes(experiences: readonly ExperienceItem[]): NoteData[] {
         role: exp.role,
         company: exp.company,
         period: exp.period,
-        type: exp.type === 'Education' ? 'education' : 'work',
+        lane: getLane(exp),
         startYear: start,
         endYear: end,
-        significance: getSignificance(exp),
         description: exp.description?.[0],
       })
     }
@@ -88,9 +89,15 @@ function buildNotes(experiences: readonly ExperienceItem[]): NoteData[] {
   return notes
 }
 
-// ─── Significance → row position ─────────────────────────
-const SIG_ROW: Record<string, number> = { high: 0, mid: 1, low: 2 }
-const SIG_LABELS = ['HIGH', 'MID', 'LOW']
+// ─── Lane config ─────────────────────────────────────────
+const LANES: Record<LaneType, { label: string; color: string; token: string }> = {
+  learning: { label: 'LEARNING', color: 'bg-[var(--r3-beat)]', token: 'var(--r3-beat)' },
+  projects: { label: 'PROJECTS', color: 'bg-[var(--r3-clip)]', token: 'var(--r3-clip)' },
+  career: { label: 'CAREER', color: 'bg-[var(--r3-signal)]', token: 'var(--r3-signal)' },
+  pivots: { label: 'PIVOTS', color: 'bg-[var(--r3-melody)]', token: 'var(--r3-melody)' },
+}
+
+const LANE_ORDER: LaneType[] = ['learning', 'projects', 'career', 'pivots']
 
 // ─── Note Component (Desktop) ─────────────────────────────
 function PianoNote({
@@ -103,31 +110,25 @@ function PianoNote({
   isHovered: boolean
 }) {
   const prefersReduced = useReducedMotion()
+  const laneConfig = LANES[note.lane]
 
   // Calculate position as percentage
   const leftPct = ((note.startYear - YEAR_START) / TOTAL_YEARS) * 100
   const widthPct = ((note.endYear - note.startYear + 0.5) / TOTAL_YEARS) * 100
-  const row = SIG_ROW[note.significance]
-
-  const colorClass = note.type === 'work'
-    ? 'bg-[var(--r3-clip)] shadow-[0_0_8px_var(--r3-clip)]'
-    : 'bg-[var(--r3-beat)] shadow-[0_0_8px_var(--r3-beat)]'
-
-  const hoverColor = note.type === 'work'
-    ? 'bg-[var(--r3-clip)]/90'
-    : 'bg-[var(--r3-beat)]/90'
+  const laneIndex = LANE_ORDER.indexOf(note.lane)
 
   return (
     <m.div
       className={cn(
-        'absolute h-8 sm:h-9 rounded-sm cursor-pointer transition-shadow',
-        colorClass,
-        isHovered && 'ring-1 ring-white/40 z-10',
+        'absolute h-10 sm:h-11 rounded-sm cursor-pointer transition-shadow',
+        laneConfig.color,
+        'shadow-[0_0_8px_var(--r3-edge)]',
+        isHovered && 'ring-1 ring-white/40 z-10 shadow-[0_0_12px_currentColor]',
       )}
       style={{
         left: `${leftPct}%`,
         width: `${Math.max(widthPct, 4)}%`,
-        top: `${row * 44 + 8}px`,
+        top: `${laneIndex * 52 + 8}px`,
       }}
       initial={prefersReduced ? false : { opacity: 0, scaleX: 0 }}
       whileInView={{ opacity: 1, scaleX: 1 }}
@@ -141,7 +142,7 @@ function PianoNote({
       role="button"
       aria-label={`${note.role} at ${note.company}, ${note.period}`}
     >
-      <span className="r3-mono text-[9px] sm:text-[10px] text-[var(--r3-studio)] px-2 py-1 truncate block leading-8 sm:leading-9 font-semibold">
+      <span className="r3-mono text-[9px] sm:text-[10px] text-[var(--r3-studio)] px-2 py-1 truncate block leading-10 sm:leading-11 font-semibold">
         {note.company}
       </span>
     </m.div>
@@ -150,6 +151,8 @@ function PianoNote({
 
 // ─── Tooltip ──────────────────────────────────────────────
 function NoteTooltip({ note }: { note: NoteData }) {
+  const laneConfig = LANES[note.lane]
+
   return (
     <m.div
       initial={{ opacity: 0, y: 4 }}
@@ -157,15 +160,13 @@ function NoteTooltip({ note }: { note: NoteData }) {
       exit={{ opacity: 0, y: 4 }}
       className="r3-panel p-3 sm:p-4 max-w-xs"
     >
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-2 mb-2">
         <span
-          className={cn(
-            'h-2 w-2 rounded-full shrink-0',
-            note.type === 'work' ? 'bg-[var(--r3-clip)]' : 'bg-[var(--r3-beat)]',
-          )}
+          className="h-2.5 w-2.5 rounded-full shrink-0"
+          style={{ backgroundColor: laneConfig.token }}
         />
         <span className="r3-mono text-[10px] tracking-widest text-[var(--r3-text-mute)] uppercase">
-          {note.type}
+          {laneConfig.label}
         </span>
       </div>
       <h4 className="r3-display text-sm font-semibold text-[var(--r3-text)]">
@@ -189,6 +190,7 @@ function NoteTooltip({ note }: { note: NoteData }) {
 // ─── Mobile Card ──────────────────────────────────────────
 function MobileNoteCard({ note }: { note: NoteData }) {
   const prefersReduced = useReducedMotion()
+  const laneConfig = LANES[note.lane]
 
   return (
     <m.div
@@ -200,17 +202,15 @@ function MobileNoteCard({ note }: { note: NoteData }) {
     >
       <div className="flex flex-col items-center gap-1 shrink-0">
         <span
-          className={cn(
-            'h-3 w-3 rounded-full',
-            note.type === 'work' ? 'bg-[var(--r3-clip)]' : 'bg-[var(--r3-beat)]',
-          )}
+          className="h-3 w-3 rounded-full"
+          style={{ backgroundColor: laneConfig.token }}
         />
         <span className="h-full w-px bg-[var(--r3-edge)]" />
       </div>
       <div className="min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className="r3-mono text-[10px] tracking-widest text-[var(--r3-text-mute)] uppercase">
-            {note.type}
+            {laneConfig.label}
           </span>
           <span className="r3-mono text-[10px] text-[var(--r3-label)]">
             {note.period}
@@ -232,6 +232,30 @@ function MobileNoteCard({ note }: { note: NoteData }) {
   )
 }
 
+// ─── Toolbar (visual props only) ──────────────────────────
+function PianoToolbar() {
+  const tools = [
+    { icon: Pointer, label: 'SELECT' },
+    { icon: Pencil, label: 'DRAW' },
+    { icon: Eraser, label: 'ERASE' },
+    { icon: ZoomIn, label: 'ZOOM IN' },
+    { icon: ZoomOut, label: 'ZOOM OUT' },
+  ]
+
+  return (
+    <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[var(--r3-edge)]">
+      {tools.map(({ icon: Icon, label }) => (
+        <div key={label} className="flex items-center gap-1.5 px-2 py-1.5">
+          <Icon size={14} className="text-[var(--r3-text-mute)]" />
+          <span className="r3-mono text-[8px] text-[var(--r3-label)] tracking-widest uppercase">
+            {label}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── Main Export ──────────────────────────────────────────
 export function AboutSection() {
   const prefersReduced = useReducedMotion()
@@ -242,12 +266,12 @@ export function AboutSection() {
   return (
     <SectionFrame
       id="about"
-      track="01"
+      track="02"
       name="ABOUT"
       device="Piano Roll / Timeline"
       color="clip"
     >
-      {/* Prose intro */}
+      {/* Intro prose */}
       <m.div
         initial={prefersReduced ? false : { opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -256,16 +280,19 @@ export function AboutSection() {
         className="mb-8 sm:mb-12"
       >
         <p className="r3-prose text-sm sm:text-base text-[var(--r3-text-mute)] max-w-2xl leading-relaxed">
-          Six years. Every milestone is a note — some short staccato bursts,
-          others long sustained chords. Hover the piano roll to hear the story.
+          Enam tahun. Setiap milestone adalah satu note — ada yang staccato pendek,
+          ada yang sustained chord panjang. Hover piano roll untuk dengar ceritanya.
         </p>
       </m.div>
 
       {/* ─── Desktop Piano Roll ─────────────────────────── */}
       <div className="hidden sm:block">
         <div className="r3-panel-rack p-4 sm:p-6 overflow-x-auto">
+          {/* Toolbar */}
+          <PianoToolbar />
+
           {/* Year axis (top) */}
-          <div className="flex mb-2 ml-12">
+          <div className="flex mb-2 ml-16">
             {Array.from({ length: TOTAL_YEARS }).map((_, i) => (
               <div
                 key={i}
@@ -278,20 +305,20 @@ export function AboutSection() {
 
           {/* Grid area */}
           <div className="flex">
-            {/* Y-axis labels */}
-            <div className="w-12 shrink-0 flex flex-col justify-around">
-              {SIG_LABELS.map((label) => (
+            {/* Y-axis lane labels */}
+            <div className="w-16 shrink-0 flex flex-col justify-around">
+              {LANE_ORDER.map((lane) => (
                 <span
-                  key={label}
-                  className="r3-mono text-[9px] text-[var(--r3-label)] text-right pr-2"
+                  key={lane}
+                  className="r3-mono text-[9px] text-[var(--r3-label)] text-right pr-2 h-[52px] flex items-center"
                 >
-                  {label}
+                  {LANES[lane].label}
                 </span>
               ))}
             </div>
 
             {/* Note area */}
-            <div className="flex-1 relative min-h-[140px] border border-[var(--r3-edge)] rounded-sm bg-[var(--r3-studio)]/50">
+            <div className="flex-1 relative min-h-[220px] border border-[var(--r3-edge)] rounded-sm bg-[var(--r3-studio)]/50">
               {/* Grid lines (vertical per year) */}
               {Array.from({ length: TOTAL_YEARS - 1 }).map((_, i) => (
                 <div
@@ -301,9 +328,14 @@ export function AboutSection() {
                 />
               ))}
 
-              {/* Horizontal row dividers */}
-              <div className="absolute left-0 right-0 top-[44px] h-px bg-[var(--r3-edge)]/30" />
-              <div className="absolute left-0 right-0 top-[88px] h-px bg-[var(--r3-edge)]/30" />
+              {/* Horizontal lane dividers */}
+              {Array.from({ length: LANE_ORDER.length - 1 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute left-0 right-0 w-full h-px bg-[var(--r3-edge)]/30"
+                  style={{ top: `${(i + 1) * 52 + 8}px` }}
+                />
+              ))}
 
               {/* Notes */}
               {notes.map((note) => (
@@ -318,15 +350,18 @@ export function AboutSection() {
           </div>
 
           {/* Legend */}
-          <div className="flex items-center gap-4 mt-4 ml-12">
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-6 rounded-sm bg-[var(--r3-clip)]" />
-              <span className="r3-mono text-[10px] text-[var(--r3-text-mute)]">Work</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-6 rounded-sm bg-[var(--r3-beat)]" />
-              <span className="r3-mono text-[10px] text-[var(--r3-text-mute)]">Education</span>
-            </div>
+          <div className="flex items-center gap-4 mt-4 ml-16 flex-wrap">
+            {LANE_ORDER.map((lane) => (
+              <div key={lane} className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-6 rounded-sm"
+                  style={{ backgroundColor: LANES[lane].token }}
+                />
+                <span className="r3-mono text-[10px] text-[var(--r3-text-mute)]">
+                  {LANES[lane].label}
+                </span>
+              </div>
+            ))}
             <div className="ml-auto r3-mono text-[10px] text-[var(--r3-label)]">
               hover notes for details
             </div>
@@ -349,6 +384,32 @@ export function AboutSection() {
           <MobileNoteCard key={note.id} note={note} />
         ))}
       </div>
+
+      {/* ─── Liner Notes (Prose) ─────────────────────────── */}
+      <m.div
+        initial={prefersReduced ? false : { opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+        className="mt-12 sm:mt-16 max-w-2xl"
+      >
+        <p className="r3-prose text-sm sm:text-base text-[var(--r3-text-mute)] leading-relaxed mb-4">
+          Gw mulai dari self-taught, belajar dari YouTube, dokumentasi, dan trial-error.
+          Enam tahun jadi frontend developer, dari freelance kecil-kecilan sampai full-time
+          di perusahaan yang serius. Tapi yang paling gw suka adalah bikin tools yang gw
+          butuh sendiri — tools yang terasa kayak extension dari otak gw. Gw percaya design
+          dan engineering harus jalan bareng, bukan terpisah. Setiap pixel, setiap interaction,
+          harus punya alasan.
+        </p>
+        <p className="r3-prose text-sm sm:text-base text-[var(--r3-text-mute)] leading-relaxed">
+          Sekarang gw kejar sesuatu yang lebih ambitious: bikin produk yang terasa kayak
+          alat musik — tactile, responsive, opinionated. Passion gw ke audio dan music
+          production bukan cuma hobi, tapi filosofi cara gw design. Gw juga sedang build
+          Hermes Agent, sebuah autonomous AI system untuk produktivitas. Semua ini adalah
+          satu journey: mencari cara terbaik untuk collaborate dengan tools, dengan AI,
+          dengan orang lain. Setiap project adalah satu chapter dalam komposisi yang lebih besar.
+        </p>
+      </m.div>
     </SectionFrame>
   )
 }

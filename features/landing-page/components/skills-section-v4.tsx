@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { motion } from 'motion/react'
 import { ParallaxLayer } from './parallax-layer'
 import { SkillCard } from './skill-card'
@@ -40,16 +41,47 @@ const skillsData = [
   },
 ]
 
-const parallaxSpeeds = [0.12, 0.14, 0.11]
+const parallaxSpeeds = [0.12, 0.14, 0.13]
 
 export function SkillsSectionV4() {
   return (
     <section
       id="skills"
-      className="relative py-24 px-6 md:px-12 lg:px-20"
+      className="relative py-24 px-6 md:px-12 lg:px-20 overflow-hidden"
       style={{ backgroundColor: 'var(--color-dark-surface)' }}
     >
-      <div className="mx-auto max-w-6xl">
+      {/* Background tile layer */}
+      <ParallaxLayer speed={0.025} direction="up" className="absolute inset-0 z-0 pointer-events-none">
+        <Image
+          src="/illustrations/structured-ref/tile-3-bg.jpg"
+          alt=""
+          fill
+          className="object-cover opacity-60"
+          sizes="100vw"
+        />
+      </ParallaxLayer>
+
+      {/* Illustration overlay layer */}
+      <ParallaxLayer speed={0.14} direction="up" className="absolute inset-0 z-[1] pointer-events-none">
+        <Image
+          src="/illustrations/structured-ref/tile-3-illustration.png"
+          alt=""
+          fill
+          className="object-cover opacity-35"
+          sizes="100vw"
+        />
+      </ParallaxLayer>
+
+      {/* Vignette for content readability */}
+      <div
+        className="absolute inset-0 z-[2] pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(ellipse at center, transparent 20%, rgba(15,15,15,0.65) 100%)',
+        }}
+      />
+
+      <div className="relative z-[3] mx-auto max-w-6xl">
         {/* Section header */}
         <div className="text-center mb-16">
           <motion.span

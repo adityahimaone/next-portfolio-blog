@@ -27,9 +27,9 @@ export function useParallaxLayer({
   const clampedSpeed = Math.max(0, Math.min(1, speed))
 
   // Calculate parallax offset based on section scroll progress
-  // offset range: -speed*300 to +speed*300 pixels
+  // offset range: -speed*50 to +speed*50 pixels (subtle, Locomotive Scroll style)
   const multiplier = direction === 'up' ? -1 : 1
-  const pixelRange = clampedSpeed * 300
+  const pixelRange = clampedSpeed * 50
   const y = useTransform(
     scrollYProgress,
     [0, 1],

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { ParallaxLayer } from './parallax-layer'
 import { motion } from 'motion/react'
 
@@ -10,40 +11,32 @@ export function HeroSectionV4() {
       className="relative h-screen w-full overflow-hidden"
       style={{ backgroundColor: 'var(--color-dark-surface)' }}
     >
-      {/* Layer 0: Background */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{ backgroundColor: 'var(--color-dark-surface)' }}
-      />
-
-      {/* Layer 1: Illustration A — classical landscape painting (placeholder) */}
-      <ParallaxLayer speed={0.08} className="absolute inset-0 z-[1] md:block">
-        <div
-          className="absolute inset-0 scale-[1.15]"
-          style={{
-            opacity: 0.5,
-            background:
-              'linear-gradient(135deg, #2A2A2A 0%, #1A1A1A 50%, #0F0F0F 100%)',
-          }}
-          data-cursor="image"
+      {/* Layer 0: Background tile image */}
+      <ParallaxLayer speed={0.025} className="absolute inset-0 z-0">
+        <Image
+          src="/illustrations/structured-ref/tile-1-bg.jpg"
+          alt=""
+          fill
+          className="object-cover opacity-60 scale-[1.05]"
+          priority
+          sizes="100vw"
         />
       </ParallaxLayer>
 
-      {/* Layer 2: Illustration B — figure/portrait, positioned right (placeholder) */}
-      <ParallaxLayer speed={0.18} className="absolute inset-0 z-[2] md:block">
-        <div
-          className="absolute inset-0 translate-x-[15%]"
-          style={{
-            opacity: 0.3,
-            background:
-              'linear-gradient(90deg, transparent 0%, #3A3A3A 30%, #2A2A2A 70%, transparent 100%)',
-          }}
-          data-cursor="image"
+      {/* Layer 1: Illustration overlay */}
+      <ParallaxLayer speed={0.15} className="absolute inset-0 z-[1]">
+        <Image
+          src="/illustrations/structured-ref/tile-1-illustration.png"
+          alt=""
+          fill
+          className="object-cover opacity-35"
+          priority
+          sizes="100vw"
         />
       </ParallaxLayer>
 
-      {/* Layer 3: Radial gradient vignette */}
-      <div className="absolute inset-0 z-[3]">
+      {/* Layer 2: Radial gradient vignette */}
+      <div className="absolute inset-0 z-[2]">
         <div
           className="absolute inset-0"
           style={{
@@ -53,10 +46,10 @@ export function HeroSectionV4() {
         />
       </div>
 
-      {/* Layer 4: Content — centered */}
+      {/* Layer 3: Content — centered */}
       <ParallaxLayer
         speed={0.40}
-        className="absolute inset-0 z-[4] flex items-center justify-center"
+        className="absolute inset-0 z-[3] flex items-center justify-center"
       >
         <div className="hero-content flex flex-col items-center px-4 text-center md:px-0">
           {/* Label */}

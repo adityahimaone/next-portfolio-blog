@@ -9,7 +9,7 @@ export function ExperienceSectionV4() {
   return (
     <section
       id="experience"
-      className="relative py-24 px-6 md:px-12 lg:px-20"
+      className="relative py-24 px-6 md:px-12 lg:px-20 overflow-hidden"
       style={{ backgroundColor: 'var(--color-canvas)' }}
     >
       <div className="mx-auto max-w-6xl">

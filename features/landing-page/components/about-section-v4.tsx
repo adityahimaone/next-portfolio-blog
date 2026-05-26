@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { motion } from 'motion/react'
 import { ParallaxLayer } from './parallax-layer'
 import { StatsCard } from './stats-card'
@@ -15,10 +16,33 @@ export function AboutSectionV4() {
   return (
     <section
       id="about"
-      className="relative py-24 px-6 md:px-12 lg:px-20"
+      className="relative py-24 px-6 md:px-12 lg:px-20 overflow-hidden"
       style={{ backgroundColor: 'var(--color-canvas)' }}
     >
-      <div className="mx-auto max-w-6xl">
+      {/* Background tile layer */}
+      <ParallaxLayer speed={0.025} direction="up" className="absolute inset-0 z-0 pointer-events-none">
+        <Image
+          src="/illustrations/structured-ref/tile-2-bg.jpg"
+          alt=""
+          fill
+          className="object-cover opacity-60"
+          sizes="100vw"
+        />
+      </ParallaxLayer>
+
+      {/* Illustration overlay layer */}
+      <ParallaxLayer speed={0.20} direction="up" className="absolute inset-0 z-[1] pointer-events-none">
+        <Image
+          src="/illustrations/structured-ref/tile-2-illustration.png"
+          alt=""
+          fill
+          className="object-cover opacity-35"
+          sizes="100vw"
+        />
+      </ParallaxLayer>
+
+      {/* Content */}
+      <div className="relative z-[2] mx-auto max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
           {/* Left column — Illustration */}
           <div className="flex justify-center md:justify-start">

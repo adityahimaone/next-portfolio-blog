@@ -1,226 +1,165 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { m, AnimatePresence, useInView } from 'motion/react'
-import Image from 'next/image'
-import {
-  Disc,
-  X,
-  Play,
-  Music,
-  Mic2,
-  ArrowUpRight,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-
-import { PROJECTS_SHOWCASE, type ProjectShowcaseItem } from '../constants'
+/**
+ * Track 05 — Crate Digging (the A-Sides).
+ *
+ * Horizontal scrolling crate of vinyl sleeves. Selecting a project pulls
+ * the record halfway out of its sleeve to reveal genre + year + links.
+ * Reuses PROJECTS_SHOWCASE from constants.
+ */
+import { useState } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
+import { ArrowUpRight, Disc3 } from 'lucide-react'
+import { TrackSection } from '@/components/track-section'
+import { PROJECTS_SHOWCASE } from '../constants'
 
 export function ProjectsSection() {
-  const [selectedProject, setSelectedProject] = useState<ProjectShowcaseItem | null>(
-    null,
-  )
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
+  const [activeId, setActiveId] = useState<number | null>(null)
+  const prefersReduced = useReducedMotion()
 
   return (
-    <>
-      <section
-        id="projects"
-        className="overflow-hidden py-24 2xl:overflow-visible"
-        ref={ref}
+    <TrackSection
+      trackNumber="05"
+      id="projects"
+      title="Crate Digging"
+      subtitle="Selected A-sides. Tap a sleeve, slide the record halfway out, see what&rsquo;s on the label."
+    >
+      {/* Crate scroller */}
+      <div
+        role="list"
+        className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-6 md:-mx-12 md:gap-6 md:px-12"
+        style={{ scrollbarWidth: 'thin' }}
       >
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="mb-16 flex flex-col items-center text-center">
-            <m.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+        {PROJECTS_SHOWCASE.map((project) => {
+          const isActive = activeId === project.id
+          const Icon = project.vinylIcon
+          return (
+            <motion.article
+              key={project.id}
+              role="listitem"
+              onClick={() => setActiveId(isActive ? null : project.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  setActiveId(isActive ? null : project.id)
+                }
+              }}
+              tabIndex={0}
+              role-button="true"
+              aria-pressed={isActive}
+              className="group relative flex shrink-0 snap-start cursor-pointer flex-col"
+              style={{ width: 'min(80vw, 320px)' }}
             >
-              <Disc className="h-4 w-4" />
-              <span>TRACKS</span>
-            </m.div>
-            <m.h2
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.1 }}
-              className="text-4xl font-bold tracking-tighter sm:text-5xl"
-            >
-              Featured Releases
-            </m.h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
-            {PROJECTS_SHOWCASE.map((project, index) => (
-              <m.div
-                key={project.id}
-                initial={{ opacity: 0, y: 50 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: index * 0.1 }}
-                className="group relative flex flex-col items-center"
-                onClick={() => setSelectedProject(project)}
-              >
-                <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
-                  {/* Vinyl Record sliding out */}
-                  <div className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl transition-all duration-700 ease-out group-hover:translate-x-[50%] group-hover:rotate-360 group-active:translate-x-[50%] group-active:rotate-360">
-                    <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
-                    {/* Grooves */}
-                    <div className="absolute inset-[15%] rounded-full border border-zinc-800/40" />
-                    <div className="absolute inset-[25%] rounded-full border border-zinc-800/40" />
-                    <div className="absolute inset-[35%] rounded-full border border-zinc-800/40" />
-
-                    {/* Center Label */}
-                    <div
-                      className={cn(
-                        'flex h-1/3 w-1/3 items-center justify-center rounded-full bg-linear-to-br text-white shadow-inner',
-                        project.vinylColor,
-                      )}
-                    >
-                      {/* <project.vinylIcon className="w-5 h-5" /> */}
-                    </div>
-                    {/* Center Hole */}
-                    <div className="absolute h-1.5 w-1.5 rounded-full bg-black" />
+              {/* Sleeve + record container */}
+              <div className="relative aspect-square overflow-hidden">
+                {/* Record (behind sleeve, slides out) */}
+                <motion.div
+                  initial={false}
+                  animate={{
+                    x: isActive ? '40%' : '0%',
+                    rotate: isActive && !prefersReduced ? 360 : 0,
+                  }}
+                  transition={{
+                    x: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+                    rotate: { duration: 8, repeat: isActive ? Infinity : 0, ease: 'linear' },
+                  }}
+                  className={`absolute inset-0 z-0 vinyl-grooves rounded-full bg-gradient-to-br ${project.vinylColor}`}
+                  aria-hidden="true"
+                >
+                  {/* Center label */}
+                  <div className="absolute top-1/2 left-1/2 flex h-[35%] w-[35%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-base text-text-main">
+                    <Icon size={20} className="text-accent" />
+                    <span className="mt-1 font-mono text-[8px] tracking-widest text-text-muted">
+                      {project.year}
+                    </span>
                   </div>
+                  {/* Spindle */}
+                  <div className="absolute top-1/2 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-base" />
+                </motion.div>
 
-                  {/* Album Cover (Card) */}
-                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm bg-zinc-100 shadow-2xl transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:bg-zinc-900">
-                    {/* Image Area */}
-                    <div className="relative h-[75%] w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
-                      <Image
+                {/* Sleeve (front) */}
+                <div className="relative z-10 h-full w-full bg-elevated">
+                  <div className="relative h-full w-full">
+                    {project.image && (
+                      <img
                         src={project.image}
-                        alt={project.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-cover object-top transition-transform duration-500 group-hover:scale-105 group-active:scale-105"
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover"
                       />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-base via-base/60 to-transparent" />
+                    <div className="absolute inset-0 border border-edge" />
 
-                      {/* Glare effect */}
-                      <div className="pointer-events-none absolute inset-0 bg-linear-to-tr from-white/20 to-transparent opacity-50" />
-                    </div>
-
-                    {/* Info Area (Footer) */}
-                    <div className="relative flex h-[25%] flex-col justify-center border-t border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-950">
-                      <h3 className="truncate text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                    {/* Sleeve metadata */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <span className="meta-label text-accent">
+                        {project.genre ?? 'Side A'}
+                      </span>
+                      <h3 className="display-heading mt-1 text-lg md:text-2xl">
                         {project.title}
                       </h3>
-                      <div className="mt-1 flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                        <span className="truncate">{project.genre}</span>
-                        <span className="h-1 w-1 shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                        <span>{project.year}</span>
-                      </div>
                     </div>
+
+                    {/* Active indicator */}
+                    {isActive && (
+                      <span className="absolute top-3 right-3 led-dot" aria-hidden="true" />
+                    )}
                   </div>
                 </div>
-              </m.div>
-            ))}
-          </div>
-        </div>
+              </div>
 
-        {/* Project Detail Modal (Liner Notes) */}
-        <AnimatePresence>
-          {selectedProject && (
-            <m.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-              onClick={() => setSelectedProject(null)}
-            >
-              <m.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className="relative max-h-[90vh] w-[95vw] max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-zinc-900"
-              >
-                {/* Close Button */}
-                <button
-                  onClick={() => setSelectedProject(null)}
-                  aria-label="Close project modal"
-                  className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/10 text-zinc-900 backdrop-blur-md transition-colors hover:bg-black/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-
-                <div className="grid h-full grid-cols-1 md:grid-cols-2">
-                  {/* Left: Image Area */}
-                  <div className="relative h-48 bg-zinc-100 md:h-full dark:bg-zinc-800 lg:h-full">
-                    <Image
-                      src={selectedProject.image}
-                      alt={selectedProject.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
-
-                    {/* Floating Music Note */}
-                    <div className="absolute bottom-6 left-6">
-                      <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg">
-                        <Music className="h-6 w-6 animate-pulse" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right: Content Area */}
-                  <div className="flex flex-col p-6 md:p-8 overflow-hidden">
-                    <div className="mb-4 md:mb-6">
-                      <div className="text-primary mb-2 flex items-center gap-2 text-sm font-medium">
-                        <Mic2 className="h-4 w-4" />
-                        <span>FEATURED TRACK</span>
-                      </div>
-                      <h3 className="text-2xl md:text-3xl leading-tight font-bold text-zinc-900 dark:text-zinc-100">
-                        {selectedProject.title}
-                      </h3>
-                      <div className="mt-2 flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-                        <span>{selectedProject.genre}</span>
-                        <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                        <span>{selectedProject.year}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto pr-2">
-                      <p className="text-base md:text-lg leading-relaxed text-zinc-600 line-clamp-4 md:line-clamp-none dark:text-zinc-300">
-                        {selectedProject.description}
+              {/* Description (revealed on active) */}
+              <AnimatePresence initial={false}>
+                {isActive && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="border-x border-b border-edge bg-elevated/40 p-4">
+                      <p className="text-sm leading-relaxed text-text-muted">
+                        {project.description}
                       </p>
-
-                      <div className="mt-8 space-y-4">
-                        <h4 className="text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-zinc-100">
-                          Production Credits
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {['React', 'Next.js', 'Tailwind', 'TypeScript'].map(
-                            (tech) => (
-                              <span
-                                key={tech}
-                                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                              >
-                                {tech}
-                              </span>
-                            ),
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-8 border-t border-zinc-100 pt-6 dark:border-zinc-800">
                       <a
-                        href={selectedProject.url}
+                        href={project.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 py-4 font-bold text-white transition-all hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs tracking-widest text-accent hover:text-accent-bright"
                       >
-                        <Play className="h-5 w-5 fill-current" />
-                        <span>Listen to Track (Visit Site)</span>
-                        <ArrowUpRight className="ml-auto h-5 w-5 opacity-50 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                        VISIT SET
+                        <ArrowUpRight size={14} />
                       </a>
                     </div>
-                  </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Title strip (always visible, replaces card heading when not active) */}
+              {!isActive && (
+                <div className="mt-3 flex items-center justify-between text-xs text-text-muted">
+                  <span className="font-mono tracking-widest">
+                    {String(project.id).padStart(2, '0')} · {project.year ?? ''}
+                  </span>
+                  <Disc3
+                    size={12}
+                    className="opacity-50 transition-opacity group-hover:opacity-100"
+                  />
                 </div>
-              </m.div>
-            </m.div>
-          )}
-        </AnimatePresence>
-      </section>
-    </>
+              )}
+            </motion.article>
+          )
+        })}
+      </div>
+
+      {/* Crate footer hint */}
+      <div className="mt-6 flex items-center justify-between border-t border-edge pt-4 md:mt-8">
+        <span className="meta-label">Drag sideways · or use arrow keys</span>
+        <span className="meta-label text-accent">{PROJECTS_SHOWCASE.length} CUTS</span>
+      </div>
+    </TrackSection>
   )
 }

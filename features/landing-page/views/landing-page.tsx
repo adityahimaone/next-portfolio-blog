@@ -1,209 +1,33 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
-import {
-  LazyMotion,
-  m,
-  useScroll,
-  useTransform,
-  useSpring,
-  AnimatePresence,
-} from 'motion/react'
-import dynamic from 'next/dynamic'
 
-const loadFeatures = () => import('motion/react').then((res) => res.domMax)
-
-import { Preloader } from '../animations/preloader'
-import { Header } from '@/features/layout/components/header'
-import { Footer } from '@/features/layout/components/footer'
+/**
+ * The Concept Album — landing page orchestrator.
+ *
+ * Wires the six tracks in order. RecordGroove + Header live in app/layout.tsx.
+ * No preloader, no audio context, no scroll-snap (RecordGroove is the
+ * connective tissue, not snap points). Each section is wrapped in
+ * TrackSection from inside its own component, so this view stays thin.
+ */
 import { HeroSection } from '../components/hero-section'
-
-const AboutSection = dynamic(() => import('../components/about-section').then((mod) => mod.AboutSection))
-const SkillsSection = dynamic(() => import('../components/skills-section').then((mod) => mod.SkillsSection))
-const ExperienceSection = dynamic(() => import('../components/experience-section').then((mod) => mod.ExperienceSection))
-const ContactSection = dynamic(() => import('../components/contact/contact-section').then((mod) => mod.ContactSection))
-const ProjectsSection = dynamic(() => import('../components/projects-section').then((mod) => mod.ProjectsSection))
-const MusicMarquee = dynamic(() => import('../spotify/music-marquee').then((mod) => mod.MusicMarquee))
-
-import { SectionDivider } from '@/components/section-divider'
-import { ChevronUp } from 'lucide-react'
-import { usePreloader } from '../hooks/use-preloader'
+import { AboutSection } from '../components/about-section'
+import { SkillsSection } from '../components/skills-section'
+import { ExperienceSection } from '../components/experience-section'
+import { ProjectsSection } from '../components/projects-section'
+import { ContactSection } from '../components/contact/contact-section'
+import { Footer } from '@/features/layout/components/footer'
 
 export default function LandingPage() {
-  const { scrollYProgress } = useScroll()
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-  })
-  const mainRef = useRef<HTMLDivElement>(null)
-  const [showScrollTop, setShowScrollTop] = useState(false)
-  const isLoading = usePreloader()
-
-  // Opacity for floating elements based on scroll
-  const floatingOpacity = useTransform(scrollYProgress, [0, 0.2], [0.2, 0])
-
-  // Handle scroll to top
-  const handleScrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  useEffect(() => {
-    // Preload any assets or initialize animations
-    const body = document.querySelector('body')
-    if (body) {
-      body.classList.add('cursor-glow')
-    }
-
-    // Show scroll-to-top button after scrolling down
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500)
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   return (
-    <LazyMotion features={loadFeatures}>
-      <>
-        <AnimatePresence mode="wait">
-          {isLoading && <Preloader />}
-        </AnimatePresence>
-
-        <m.div
-          ref={mainRef}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="relative"
-        >
-          {/* Music notes scattered in background */}
-          <m.div
-            className="pointer-events-none fixed top-1/3 right-[15%] text-5xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -30, 0],
-              rotate: [0, -15, 0],
-            }}
-            transition={{
-              duration: 7,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 1,
-            }}
-          >
-            <span className="text-secondary opacity-20 drop-shadow-md">♫</span>
-          </m.div>
-
-          <m.div
-            className="pointer-events-none fixed bottom-1/4 left-1/4 text-6xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -25, 0],
-              rotate: [0, 20, 0],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 2,
-            }}
-          >
-            <span className="text-primary-light opacity-20 drop-shadow-md">
-              ♩
-            </span>
-          </m.div>
-
-          <m.div
-            className="pointer-events-none fixed right-1/4 bottom-1/3 text-5xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -20, 0],
-              rotate: [0, -10, 0],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 3,
-            }}
-          >
-            <span className="text-accent opacity-20 drop-shadow-md">♬</span>
-          </m.div>
-
-          {/* Main content */}
-          <main className="relative">
-            <div className="snap-y snap-mandatory">
-              {/* Hero Section */}
-              <section
-                className="relative h-screen snap-start overflow-hidden"
-              >
-                <div className="relative">
-                  <Header />
-                  <HeroSection />
-                </div>
-              </section>
-
-              {/* Music-themed marquee divider */}
-              <MusicMarquee speed="normal" direction="left" />
-
-              {/* Main Content Sections */}
-              <div className="mx-auto w-full max-w-7xl space-y-2 py-20">
-                <SectionDivider />
-                <section id="about" className="snap-start scroll-mt-0">
-                  <AboutSection />
-                </section>
-
-                <SectionDivider />
-                <section id="skills" className="snap-start scroll-mt-0">
-                  <SkillsSection />
-                </section>
-
-                <SectionDivider />
-                <section id="experience" className="snap-start scroll-mt-0">
-                  <ExperienceSection />
-                </section>
-
-                <SectionDivider />
-              </div>
-
-              <section
-                id="projects"
-                className="dark:bg-accent snap-start scroll-mt-0"
-              >
-                <ProjectsSection />
-              </section>
-
-              <div className="mb-5">
-                <SectionDivider />
-              </div>
-
-              <section id="contact" className="snap-start">
-                <ContactSection />
-              </section>
-            </div>
-          </main>
-        </m.div>
-
-        {/* Footer */}
-        <Footer />
-
-        {/* Scroll to top button */}
-        <m.button
-          onClick={handleScrollToTop}
-          aria-label="Scroll to top"
-          className="fixed right-2 bottom-24 z-50 flex h-12 w-12 items-center justify-center rounded-lg border border-zinc-300 bg-zinc-200 shadow-[0_4px_0_rgb(161,161,170),0_5px_10px_rgba(0,0,0,0.2)] transition-all hover:bg-zinc-100 active:translate-y-1 active:shadow-none md:right-8 dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[0_4px_0_rgb(39,39,42),0_5px_10px_rgba(0,0,0,0.5)] dark:hover:bg-zinc-700"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{
-            opacity: showScrollTop ? 1 : 0,
-            scale: showScrollTop ? 1 : 0.8,
-            y: showScrollTop ? 0 : 50,
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <ChevronUp size={24} className="text-zinc-600 dark:text-zinc-400" />
-        </m.button>
-      </>
-    </LazyMotion>
+    <>
+      <main className="relative">
+        <HeroSection />
+        <AboutSection />
+        <SkillsSection />
+        <ExperienceSection />
+        <ProjectsSection />
+        <ContactSection />
+      </main>
+      <Footer />
+    </>
   )
 }

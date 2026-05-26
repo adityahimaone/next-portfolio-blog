@@ -47,7 +47,7 @@ const TimeRuler = () => (
       {[...Array(12)].map((_, i) => (
         <div
           key={i}
-          className="flex flex-1 items-end justify-start border-r border-zinc-200/50 px-1 pb-1 dark:border-zinc-800/50"
+          className="absolute top-0 flex h-full flex-col justify-end border-l border-stone-200 px-1 pb-1 dark:border-stone-800"
         >
           {i + 1}
         </div>
@@ -242,7 +242,7 @@ const DetailWindow = ({
           <button
             onClick={onClose}
             aria-label="Close clip detail"
-            className="rounded-full p-1 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+            className="rounded-full p-2 text-stone-500 transition-colors hover:bg-stone-200 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-white"
           >
             <X size={18} />
           </button>
@@ -354,7 +354,7 @@ export function AboutSection() {
                 </div>
                 <div className="hidden text-right sm:block">
                   <div className="text-xs font-bold text-zinc-500">MODEL NO.</div>
-                  <div className="text-xl font-bold text-zinc-700 dark:text-zinc-300">
+                  <div className="relative flex-1 font-[family-name:var(--font-mono)] text-[10px] text-stone-400 dark:text-stone-600">
                     AH-2026-MKIII
                   </div>
                 </div>
@@ -395,7 +395,7 @@ export function AboutSection() {
                       <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                       About
                     </h3>
-                    <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+                    <p className="text-stone-600 leading-relaxed dark:text-stone-400">
                       Passionate developer bridging the gap between engineering logic
                       and creative design. Just as a producer layers sounds to create
                       a song, I layer code to build immersive digital experiences.
@@ -426,11 +426,11 @@ export function AboutSection() {
                               {item.year.slice(2)}
                             </div>
                             {i < 2 && (
-                              <div className="mt-1 h-full w-px bg-zinc-200 dark:bg-zinc-800" />
+                              <div className="mt-1 h-2 w-full rounded-sm bg-stone-200/50 dark:bg-stone-800/50" />
                             )}
                           </div>
                           <div className="pb-4">
-                            <div className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                            <div className="font-[family-name:var(--font-mono)] hidden text-xs font-medium tracking-widest text-stone-500 md:block dark:text-stone-400">
                               {item.label}
                             </div>
                             <div className="text-xs text-zinc-500">{item.desc}</div>
@@ -465,9 +465,9 @@ export function AboutSection() {
                               {tech.level}%
                             </span>
                           </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
-                            <div
-                              className="h-full rounded-full bg-blue-500 dark:bg-blue-400"
+                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
+                            <m.div
+                              className="bg-copper h-full rounded-full dark:bg-copper-light"
                               style={{ width: `${tech.level}%` }}
                             />
                           </div>
@@ -517,7 +517,7 @@ export function AboutSection() {
                           className="flex items-center justify-between text-xs"
                         >
                           <span className="text-zinc-500">{link.label}</span>
-                          <span className="font-mono text-zinc-700 dark:text-zinc-300">
+                          <span className="font-[family-name:var(--font-mono)] text-xs font-medium text-stone-500">
                             {link.value}
                           </span>
                         </div>
@@ -586,9 +586,9 @@ export function AboutSection() {
                           {stat.value}
                           <span className="text-lg">{stat.suffix}</span>
                         </span>
-                        <span className="mt-1 text-[10px] font-bold tracking-wider text-zinc-500 uppercase">
+                        <div className="font-[family-name:var(--font-mono)] hidden text-[10px] font-medium tracking-wider uppercase md:block">
                           {stat.label}
-                        </span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -640,9 +640,9 @@ export function AboutSection() {
                         { year: '26', val: 90 },
                       ].map((bar) => (
                         <div key={bar.year} className="flex flex-1 flex-col items-center gap-1">
-                          <div className="w-full rounded-t bg-zinc-200 dark:bg-zinc-800" style={{ height: `${bar.val * 0.8}px` }}>
+                          <div className="h-full w-2 shrink-0 bg-stone-300 dark:bg-stone-700" style={{ height: `${bar.val * 0.8}px` }}>
                             <div
-                              className="h-full rounded-t bg-blue-500/80 dark:bg-blue-400/80"
+                              className="h-full rounded-sm bg-stone-300/50 dark:bg-stone-700/50"
                               style={{ height: `${bar.val}%` }}
                             />
                           </div>
@@ -785,20 +785,20 @@ export function AboutSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400"
+              className="mb-4 flex items-center gap-2 rounded-full bg-stone-100 px-4 py-1.5 text-sm font-medium text-stone-900 dark:bg-stone-800 dark:text-stone-100"
             >
               <Layers className="h-4 w-4" />
               <span>ARRANGEMENT VIEW</span>
             </m.div>
-            <h2 className="text-4xl font-bold tracking-tighter text-zinc-900 sm:text-5xl dark:text-white">
+            <h2 className="text-4xl font-black tracking-tighter text-stone-900 sm:text-5xl dark:text-white">
               The Workflow
             </h2>
           </div>
 
           {/* DAW Interface */}
-          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="relative mx-auto max-w-6xl rounded-xl border border-stone-200 bg-white shadow-2xl dark:border-stone-800 dark:bg-stone-950">
             {/* Toolbar */}
-            <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-2 dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="flex h-12 items-center justify-between border-b border-stone-200 bg-stone-50 px-4 dark:border-stone-800 dark:bg-stone-900/50">
               <div className="flex items-center gap-4">
                 <div className="flex gap-2">
                   <button
@@ -820,7 +820,7 @@ export function AboutSection() {
                   <button
                     onClick={handleStop}
                     aria-label="Stop Timeline"
-                    className="flex h-8 w-8 items-center justify-center rounded bg-zinc-200 text-zinc-600 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                    className="flex w-1/3 items-center justify-center gap-4 text-stone-500 md:w-auto dark:text-stone-400"
                   >
                     <Square size={16} fill="currentColor" />
                   </button>
@@ -848,7 +848,7 @@ export function AboutSection() {
             <div className="relative flex h-[400px]">
               {/* Track Headers (Left) */}
               <div className="relative z-20 flex flex-col border-r border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
-                <div className="h-8 border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900" />{' '}
+                <div className="flex h-8 items-center border-b border-stone-200 bg-stone-100/50 dark:border-stone-800 dark:bg-stone-900/30" />{' '}
                 {/* Ruler Spacer */}
                 {tracks.map((track) => (
                   <TrackHeader

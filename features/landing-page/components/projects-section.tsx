@@ -34,7 +34,7 @@ export function ProjectsSection() {
             <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+              className="mb-4 flex items-center gap-2 rounded-full bg-stone-100 px-4 py-1.5 text-sm font-medium text-stone-900 dark:bg-stone-800 dark:text-stone-100"
             >
               <Disc className="h-4 w-4" />
               <span>TRACKS</span>
@@ -61,12 +61,12 @@ export function ProjectsSection() {
               >
                 <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
                   {/* Vinyl Record sliding out */}
-                  <div className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl transition-all duration-700 ease-out group-hover:translate-x-[50%] group-hover:rotate-360 group-active:translate-x-[50%] group-active:rotate-360">
+                  <div className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-stone-950 shadow-xl transition-all duration-700 ease-out group-hover:translate-x-[50%] group-hover:rotate-360 group-active:translate-x-[50%] group-active:rotate-360">
                     <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
                     {/* Grooves */}
-                    <div className="absolute inset-[15%] rounded-full border border-zinc-800/40" />
-                    <div className="absolute inset-[25%] rounded-full border border-zinc-800/40" />
-                    <div className="absolute inset-[35%] rounded-full border border-zinc-800/40" />
+                    <div className="absolute inset-[15%] rounded-full border border-stone-800/40" />
+                    <div className="absolute inset-[25%] rounded-full border border-stone-800/40" />
+                    <div className="absolute inset-[35%] rounded-full border border-stone-800/40" />
 
                     {/* Center Label */}
                     <div
@@ -82,9 +82,9 @@ export function ProjectsSection() {
                   </div>
 
                   {/* Album Cover (Card) */}
-                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm bg-zinc-100 shadow-2xl transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:bg-zinc-900">
+                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm bg-stone-100 shadow-2xl transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:bg-stone-900">
                     {/* Image Area */}
-                    <div className="relative h-[75%] w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
+                    <div className="relative h-[75%] w-full overflow-hidden bg-stone-200 dark:bg-stone-800">
                       <Image
                         src={project.image}
                         alt={project.title}
@@ -98,11 +98,11 @@ export function ProjectsSection() {
                     </div>
 
                     {/* Info Area (Footer) */}
-                    <div className="relative flex h-[25%] flex-col justify-center border-t border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-950">
-                      <h3 className="truncate text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                    <div className="relative flex h-[25%] flex-col justify-center border-t border-stone-200 bg-white px-5 py-3 dark:border-stone-800 dark:bg-stone-950">
+                      <h3 className="truncate text-lg font-bold text-stone-900 dark:text-stone-100">
                         {project.title}
                       </h3>
-                      <div className="mt-1 flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                      <div className="mt-1 flex items-center gap-2 text-xs font-medium text-stone-500 dark:text-stone-400">
                         <span className="truncate">{project.genre}</span>
                         <span className="h-1 w-1 shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-700" />
                         <span>{project.year}</span>
@@ -130,7 +130,7 @@ export function ProjectsSection() {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative max-h-[90vh] w-[95vw] max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-zinc-900"
+                className="relative max-h-[90vh] w-[95vw] max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-stone-900"
               >
                 {/* Close Button */}
                 <button
@@ -143,7 +143,7 @@ export function ProjectsSection() {
 
                 <div className="grid h-full grid-cols-1 md:grid-cols-2">
                   {/* Left: Image Area */}
-                  <div className="relative h-48 bg-zinc-100 md:h-full dark:bg-zinc-800 lg:h-full">
+                  <div className="relative h-48 bg-stone-100 md:h-full dark:bg-stone-800 lg:h-full">
                     <Image
                       src={selectedProject.image}
                       alt={selectedProject.title}
@@ -155,7 +155,7 @@ export function ProjectsSection() {
 
                     {/* Floating Music Note */}
                     <div className="absolute bottom-6 left-6">
-                      <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg">
+                      <div className="bg-copper flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg dark:bg-copper-light">
                         <Music className="h-6 w-6 animate-pulse" />
                       </div>
                     </div>
@@ -164,16 +164,16 @@ export function ProjectsSection() {
                   {/* Right: Content Area */}
                   <div className="flex flex-col p-6 md:p-8 overflow-hidden">
                     <div className="mb-4 md:mb-6">
-                      <div className="text-primary mb-2 flex items-center gap-2 text-sm font-medium">
+                      <div className="text-copper mb-2 flex items-center gap-2 text-sm font-medium dark:text-copper-light">
                         <Mic2 className="h-4 w-4" />
                         <span>FEATURED TRACK</span>
                       </div>
-                      <h3 className="text-2xl md:text-3xl leading-tight font-bold text-zinc-900 dark:text-zinc-100">
+                      <h3 className="text-2xl md:text-3xl leading-tight font-bold text-stone-900 dark:text-stone-100">
                         {selectedProject.title}
                       </h3>
                       <div className="mt-2 flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
                         <span>{selectedProject.genre}</span>
-                        <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                        <span className="h-1 w-1 rounded-full bg-stone-300 dark:bg-stone-700" />
                         <span>{selectedProject.year}</span>
                       </div>
                     </div>
@@ -184,7 +184,7 @@ export function ProjectsSection() {
                       </p>
 
                       <div className="mt-8 space-y-4">
-                        <h4 className="text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-zinc-100">
+                        <h4 className="text-sm font-bold tracking-wider text-stone-900 uppercase dark:text-stone-100">
                           Production Credits
                         </h4>
                         <div className="flex flex-wrap gap-2">
@@ -192,7 +192,7 @@ export function ProjectsSection() {
                             (tech) => (
                               <span
                                 key={tech}
-                                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                                className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-xs font-medium text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
                               >
                                 {tech}
                               </span>
@@ -202,12 +202,12 @@ export function ProjectsSection() {
                       </div>
                     </div>
 
-                    <div className="mt-8 border-t border-zinc-100 pt-6 dark:border-zinc-800">
+                    <div className="mt-8 border-t border-stone-100 pt-6 dark:border-stone-800">
                       <a
                         href={selectedProject.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 py-4 font-bold text-white transition-all hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+                        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-stone-900 px-6 py-4 font-bold text-white transition-all hover:bg-stone-800 active:scale-95 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-100"
                       >
                         <Play className="h-5 w-5 fill-current" />
                         <span>Listen to Track (Visit Site)</span>

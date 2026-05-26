@@ -24,7 +24,7 @@ const ContactSection = dynamic(() => import('../components/contact/contact-secti
 const ProjectsSection = dynamic(() => import('../components/projects-section').then((mod) => mod.ProjectsSection))
 const MusicMarquee = dynamic(() => import('../spotify/music-marquee').then((mod) => mod.MusicMarquee))
 
-import { SectionDivider } from '@/components/section-divider'
+import { SectionConnector } from '@/components/section-connector'
 import { ChevronUp } from 'lucide-react'
 import { usePreloader } from '../hooks/use-preloader'
 
@@ -38,8 +38,8 @@ export default function LandingPage() {
   const [showScrollTop, setShowScrollTop] = useState(false)
   const isLoading = usePreloader()
 
-  // Opacity for floating elements based on scroll
-  const floatingOpacity = useTransform(scrollYProgress, [0, 0.2], [0.2, 0])
+  // Scroll progress bar width
+  const progressWidth = useTransform(smoothProgress, [0, 1], ['0%', '100%'])
 
   // Handle scroll to top
   const handleScrollToTop = () => {
@@ -47,13 +47,11 @@ export default function LandingPage() {
   }
 
   useEffect(() => {
-    // Preload any assets or initialize animations
     const body = document.querySelector('body')
     if (body) {
       body.classList.add('cursor-glow')
     }
 
-    // Show scroll-to-top button after scrolling down
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 500)
     }
@@ -76,64 +74,24 @@ export default function LandingPage() {
           transition={{ duration: 0.5 }}
           className="relative"
         >
-          {/* Music notes scattered in background */}
+          {/* Audio Transport Progress Bar */}
           <m.div
-            className="pointer-events-none fixed top-1/3 right-[15%] text-5xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -30, 0],
-              rotate: [0, -15, 0],
-            }}
-            transition={{
-              duration: 7,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 1,
-            }}
-          >
-            <span className="text-secondary opacity-20 drop-shadow-md">♫</span>
-          </m.div>
-
+            className="fixed top-0 left-0 z-[60] h-[3px] origin-left bg-gradient-to-r from-copper via-accent to-copper-light dark:from-copper-light dark:via-accent-light dark:to-copper"
+            style={{ width: progressWidth }}
+          />
+          {/* Glow effect on progress bar */}
           <m.div
-            className="pointer-events-none fixed bottom-1/4 left-1/4 text-6xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -25, 0],
-              rotate: [0, 20, 0],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 2,
-            }}
-          >
-            <span className="text-primary-light opacity-20 drop-shadow-md">
-              ♩
-            </span>
-          </m.div>
-
-          <m.div
-            className="pointer-events-none fixed right-1/4 bottom-1/3 text-5xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -20, 0],
-              rotate: [0, -10, 0],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 3,
-            }}
-          >
-            <span className="text-accent opacity-20 drop-shadow-md">♬</span>
-          </m.div>
+            className="fixed top-0 left-0 z-[59] h-[6px] origin-left bg-gradient-to-r from-copper/40 via-accent/40 to-copper-light/40 blur-sm"
+            style={{ width: progressWidth }}
+          />
 
           {/* Main content */}
           <main className="relative">
             <div className="snap-y snap-mandatory">
-              {/* Hero Section */}
+              {/* ═══════════════════════════════════════════════════════
+                  CH 00 — HERO: "Signal On"
+                  The studio powers up. Live session begins.
+              ═══════════════════════════════════════════════════════ */}
               <section
                 className="relative h-screen snap-start overflow-hidden"
               >
@@ -146,26 +104,44 @@ export default function LandingPage() {
               {/* Music-themed marquee divider */}
               <MusicMarquee speed="normal" direction="left" />
 
-              {/* Main Content Sections */}
-              <div className="mx-auto w-full max-w-7xl space-y-2 py-20">
-                <SectionDivider />
+              {/* ═══════════════════════════════════════════════════════
+                  CH 01 — ABOUT: "The Producer"
+                  Meet who's behind the mixing board.
+              ═══════════════════════════════════════════════════════ */}
+              <div className="mx-auto w-full max-w-7xl py-20">
+                <SectionConnector variant="waveform" channelNumber={1} label="IDENTITY" />
+
                 <section id="about" className="snap-start scroll-mt-0">
                   <AboutSection />
                 </section>
 
-                <SectionDivider />
+                {/* ═══════════════════════════════════════════════════════
+                    CH 02 — SKILLS: "The Gear Check"
+                    Calibrating the equipment.
+                ═══════════════════════════════════════════════════════ */}
+                <SectionConnector variant="cable" channelNumber={2} label="AUDIO ENGINE" />
+
                 <section id="skills" className="snap-start scroll-mt-0">
                   <SkillsSection />
                 </section>
 
-                <SectionDivider />
+                {/* ═══════════════════════════════════════════════════════
+                    CH 03 — EXPERIENCE: "The Discography"
+                    Career albums on the shelf.
+                ═══════════════════════════════════════════════════════ */}
+                <SectionConnector variant="frequency" channelNumber={3} label="DISCOGRAPHY" />
+
                 <section id="experience" className="snap-start scroll-mt-0">
                   <ExperienceSection />
                 </section>
 
-                <SectionDivider />
+                <SectionConnector variant="groove" channelNumber={4} label="RELEASES" />
               </div>
 
+              {/* ═══════════════════════════════════════════════════════
+                  CH 04 — PROJECTS: "Featured Releases"
+                  Each project is a pressed vinyl.
+              ═══════════════════════════════════════════════════════ */}
               <section
                 id="projects"
                 className="dark:bg-accent snap-start scroll-mt-0"
@@ -173,8 +149,12 @@ export default function LandingPage() {
                 <ProjectsSection />
               </section>
 
-              <div className="mb-5">
-                <SectionDivider />
+              {/* ═══════════════════════════════════════════════════════
+                  CH 05 — CONTACT: "Book a Session"
+                  The launchpad — interact to connect.
+              ═══════════════════════════════════════════════════════ */}
+              <div className="mx-auto w-full max-w-7xl">
+                <SectionConnector variant="cable" channelNumber={5} label="SESSION BOOKING" />
               </div>
 
               <section id="contact" className="snap-start">
@@ -187,11 +167,11 @@ export default function LandingPage() {
         {/* Footer */}
         <Footer />
 
-        {/* Scroll to top button */}
+        {/* Scroll to top button — styled as REWIND */}
         <m.button
           onClick={handleScrollToTop}
           aria-label="Scroll to top"
-          className="fixed right-2 bottom-24 z-50 flex h-12 w-12 items-center justify-center rounded-lg border border-zinc-300 bg-zinc-200 shadow-[0_4px_0_rgb(161,161,170),0_5px_10px_rgba(0,0,0,0.2)] transition-all hover:bg-zinc-100 active:translate-y-1 active:shadow-none md:right-8 dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[0_4px_0_rgb(39,39,42),0_5px_10px_rgba(0,0,0,0.5)] dark:hover:bg-zinc-700"
+          className="fixed right-2 bottom-24 z-50 flex h-12 w-12 items-center justify-center rounded-lg border border-stone-300 bg-stone-200 shadow-[0_4px_0_rgb(168,162,158),0_5px_10px_rgba(0,0,0,0.2)] transition-all hover:bg-stone-100 active:translate-y-1 active:shadow-none md:right-8 dark:border-stone-700 dark:bg-stone-800 dark:shadow-[0_4px_0_rgb(41,37,36),0_5px_10px_rgba(0,0,0,0.5)] dark:hover:bg-stone-700"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{
             opacity: showScrollTop ? 1 : 0,
@@ -201,7 +181,7 @@ export default function LandingPage() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <ChevronUp size={24} className="text-zinc-600 dark:text-zinc-400" />
+          <ChevronUp size={24} className="text-stone-600 dark:text-stone-400" />
         </m.button>
       </>
     </LazyMotion>

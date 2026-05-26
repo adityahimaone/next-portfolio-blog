@@ -63,7 +63,7 @@ const Knob = ({ value, label }: { value: number; label: string }) => {
           <div className="bg-primary absolute top-1.5 left-1/2 h-4 w-1 -translate-x-1/2 rounded-full shadow-[0_0_5px_rgba(var(--primary),0.8)]" />
         </m.div>
       </div>
-      <span className="text-[10px] font-bold tracking-widest text-zinc-500 select-none">
+      <span className="text-[10px] font-bold tracking-widest text-stone-500 select-none">
         {label}
       </span>
     </div>
@@ -115,7 +115,7 @@ const Fader = ({ value, label }: { value: number; label: string }) => {
           <div className="bg-primary absolute top-1/2 left-1/2 h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_5px_rgba(var(--primary),0.5)]" />
         </m.div>
       </div>
-      <span className="text-[10px] font-bold tracking-widest text-zinc-500 select-none">
+      <span className="text-[10px] font-bold tracking-widest text-stone-500 select-none">
         {label}
       </span>
     </div>
@@ -176,18 +176,18 @@ export function SkillsSection() {
               <Sliders className="h-4 w-4" />
               <span>AUDIO ENGINEERING</span>
             </m.div>
-            <h2 className="text-4xl font-black tracking-tighter text-zinc-900 sm:text-5xl dark:text-white">
+            <h2 className="text-4xl font-black tracking-tighter text-stone-900 sm:text-5xl dark:text-white">
               Sonic Arsenal
             </h2>
           </div>
 
           {/* The Mixer Board */}
-          <div className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-200 p-4 shadow-2xl dark:bg-zinc-900">
+          <div className="relative mx-auto max-w-6xl rounded-3xl bg-stone-200 p-4 shadow-2xl dark:bg-stone-900">
             {/* Metallic Texture Overlay */}
             <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
 
             {/* Inner Casing */}
-            <div className="relative rounded-2xl border border-zinc-400/50 bg-zinc-300 p-6 shadow-inner md:p-10 dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="relative rounded-2xl border border-stone-400/50 bg-stone-300 p-6 shadow-inner md:p-10 dark:border-stone-800 dark:bg-stone-950">
               {/* Screws */}
               <Screw className="absolute top-4 left-4" />
               <Screw className="absolute top-4 right-4" />
@@ -201,10 +201,10 @@ export function SkillsSection() {
                     <Music className="text-primary h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black tracking-widest text-zinc-700 uppercase dark:text-zinc-300">
-                      MIX-MASTER <span className="text-primary">2025</span>
+                    <h3 className="text-xl font-black tracking-widest text-stone-700 uppercase dark:text-stone-300">
+                      MIX-MASTER <span className="text-copper dark:text-copper-light">2026</span>
                     </h3>
-                    <p className="font-mono text-xs text-zinc-500 uppercase">
+                    <p className="font-[family-name:var(--font-mono)] text-xs text-stone-500 uppercase">
                       Professional Audio/Code Interface
                     </p>
                   </div>
@@ -278,7 +278,7 @@ export function SkillsSection() {
                 {/* Section 1: Faders (Languages) */}
                 <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner lg:col-span-5 dark:border-zinc-800 dark:bg-zinc-900/50">
                   <div className="mb-6 flex items-center justify-between">
-                    <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
+                    <h4 className="text-sm font-black tracking-widest text-copper uppercase dark:text-copper-light">
                       Channel 1: Languages
                     </h4>
                     <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
@@ -310,7 +310,7 @@ export function SkillsSection() {
                   {/* Frameworks */}
                   <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner dark:border-zinc-800 dark:bg-zinc-900/50">
                     <div className="mb-6 flex items-center justify-between">
-                      <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
+                      <h4 className="text-sm font-black tracking-widest text-copper uppercase dark:text-copper-light">
                         EQ: Frameworks
                       </h4>
                       <div className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
@@ -329,7 +329,7 @@ export function SkillsSection() {
                   {/* Tools */}
                   <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner dark:border-zinc-800 dark:bg-zinc-900/50">
                     <div className="mb-6 flex items-center justify-between">
-                      <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
+                      <h4 className="text-sm font-black tracking-widest text-copper uppercase dark:text-copper-light">
                         FX: Tools
                       </h4>
                       <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
@@ -349,7 +349,7 @@ export function SkillsSection() {
 
               {/* Bottom Label */}
               <div className="mt-12 border-t border-zinc-400/30 pt-4 text-center dark:border-zinc-800">
-                <p className="font-mono text-[10px] tracking-[0.2em] text-zinc-500 uppercase">
+                <p className="font-[family-name:var(--font-mono)] text-[10px] tracking-[0.2em] text-stone-500 uppercase">
                   Designed & Engineered by One
                 </p>
               </div>

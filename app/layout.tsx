@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from 'next-themes'
 import { AudioProvider } from '@/features/landing-page/spotify/audio-context'
@@ -49,14 +49,16 @@ export const metadata: Metadata = {
   },
 }
 
-const geist = Geist({
-  variable: '--font-geist',
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-display',
   subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-mono',
   subsets: ['latin'],
+  weight: ['400', '500', '700'],
 })
 
 export default function RootLayout({
@@ -67,7 +69,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geist.variable} ${geistMono.variable} bg-white tracking-tight antialiased dark:bg-zinc-950`}
+        className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} bg-white tracking-tight antialiased dark:bg-zinc-950`}
       >
         <ThemeProvider
           enableSystem={false}
@@ -77,7 +79,7 @@ export default function RootLayout({
           themes={['light', 'dark']}
         >
           <AudioProvider>
-            <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-geist)]">
+            <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-display)]">
               <div className="relative flex-1">{children}</div>
               <MusicPlayer />
             </div>

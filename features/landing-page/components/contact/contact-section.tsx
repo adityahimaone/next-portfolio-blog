@@ -488,25 +488,20 @@ export function ContactSection() {
               <Radio className="h-4 w-4" />
               <span>SESSION BOOKING</span>
             </m.div>
-            <m.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="text-4xl font-black tracking-tighter text-zinc-900 sm:text-5xl dark:text-white"
-            >
-              Launch Collaboration
-            </m.h2>
-            <p className="mt-4 max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
+            <h2 className="mb-4 text-4xl font-black tracking-tighter text-stone-900 sm:text-5xl md:text-6xl dark:text-white">
+          <span className="text-copper dark:text-copper-light">Drop</span> a
+          Beat
+        </h2>
+        <p className="mx-auto max-w-2xl text-lg text-stone-600 dark:text-stone-400">
               Hit a pad to start a loop. Stack multiple loops to build a beat.
             </p>
           </div>
 
           {/* Launchpad Board */}
-          <div className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-800 p-2 shadow-2xl sm:p-4 dark:bg-zinc-950">
+          <div className="relative mx-auto max-w-3xl rounded-3xl bg-stone-200 p-4 shadow-2xl md:p-6 dark:bg-stone-900">
             <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
 
-            <div className="relative rounded-2xl border border-zinc-700 bg-zinc-900 p-4 shadow-inner sm:p-6 md:p-10">
+            <div className="relative rounded-2xl border border-stone-400/50 bg-stone-300 p-4 shadow-inner md:p-8 dark:border-stone-800 dark:bg-stone-950">
               <Screw className="absolute top-2 left-2 sm:top-4 sm:left-4" />
               <Screw className="absolute top-2 right-2 sm:top-4 sm:right-4" />
               <Screw className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4" />
@@ -516,7 +511,7 @@ export function ContactSection() {
               <div className="mb-4 flex items-center justify-between px-2 sm:mb-8">
                 <div className="flex items-center gap-2">
                   <div className={cn('h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2', isPlaying ? 'animate-pulse bg-red-500' : 'bg-zinc-600')} />
-                  <span className="font-mono text-[10px] tracking-widest text-zinc-500 sm:text-xs">REC</span>
+                  <p className="font-[family-name:var(--font-mono)] text-[10px] tracking-[0.2em] text-stone-500 uppercase">REC</p>
                 </div>
                 <span className="text-[10px] font-black tracking-[0.3em] text-zinc-600 sm:text-xs dark:text-zinc-400">LAUNCHPAD PRO</span>
                 <div className="flex items-center gap-2">
@@ -529,7 +524,7 @@ export function ContactSection() {
               <div className="mb-4 space-y-3 rounded-lg border border-zinc-700/50 bg-zinc-800/50 p-3">
                 {/* Top row: Presets + Transport */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[10px] font-bold text-zinc-500">SONG PRESETS:</span>
+                  <span className="font-[family-name:var(--font-mono)] text-[8px] font-bold text-stone-500 uppercase">SONG PRESETS:</span>
 
                   <div className="flex items-center gap-2">
                     {/* BPM */}
@@ -568,7 +563,7 @@ export function ContactSection() {
                             'flex h-8 w-8 items-center justify-center rounded border shadow-sm transition-colors',
                             isPlaying
                               ? 'border-amber-300 bg-amber-50 text-amber-600 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400'
-                              : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+                              : 'bg-stone-700 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
                           )}
                         >
                           {isPlaying ? <Pause size={14} /> : <Play size={14} />}
@@ -592,7 +587,7 @@ export function ContactSection() {
                         className={cn(
                           'flex items-center gap-1.5 rounded border px-3 py-1.5 text-[10px] font-bold transition-all',
                           loopingPads.size > 0
-                            ? 'border-red-500 bg-red-500/20 text-red-400 hover:scale-105 hover:bg-red-500/30'
+                            ? 'bg-signal shadow-[0_0_8px_rgba(34,197,94,0.8)]'
                             : 'cursor-not-allowed border-zinc-700 bg-zinc-900/50 text-zinc-600',
                         )}
                       >

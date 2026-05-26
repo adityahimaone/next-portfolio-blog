@@ -66,8 +66,8 @@ export function Header() {
         className={cn(
           'fixed top-0 right-0 left-0 z-50 flex items-center justify-between border-b-[3px] px-6 shadow-xl transition-all duration-300 md:px-10',
           isScrolled
-            ? 'border-primary/50 h-14 bg-white/80 backdrop-blur-md md:h-16 dark:bg-zinc-900/80'
-            : 'border-primary dark:border-primary/50 h-16 bg-linear-to-b from-zinc-100 to-zinc-200 md:h-[84px] dark:from-zinc-900 dark:to-zinc-950',
+            ? 'border-copper/50 h-14 bg-stone-50/80 backdrop-blur-md md:h-16 dark:border-copper-light/30 dark:bg-stone-900/80'
+            : 'border-primary dark:border-primary/50 h-16 bg-gradient-to-b from-stone-100 to-stone-200 md:h-[84px] dark:from-stone-900 dark:to-stone-950',
         )}
       >
         {/* Left: Power Switch (Theme Toggle) */}
@@ -75,15 +75,15 @@ export function Header() {
           <div className="flex flex-col items-center gap-1">
             <button
               onClick={toggleTheme}
-              className="relative h-8 w-14 cursor-pointer rounded-md bg-zinc-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] transition-colors dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800"
+              className="relative h-8 w-14 cursor-pointer rounded-md bg-stone-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] transition-colors dark:bg-stone-900 border border-stone-300 dark:border-stone-800"
               aria-label="Toggle Theme"
             >
               <div className="absolute inset-0 flex items-center justify-between px-2">
-                <Sun size={12} className={cn("transition-opacity duration-300", mounted && theme === 'dark' ? 'opacity-30 text-zinc-600' : 'opacity-100 text-[#273281]')} />
-                <Moon size={12} className={cn("transition-opacity duration-300", mounted && theme === 'dark' ? 'opacity-100 text-[#f8fafc]' : 'opacity-30 text-zinc-600')} />
+                <Sun size={12} className={cn("transition-opacity duration-300", mounted && theme === 'dark' ? 'opacity-30 text-stone-600' : 'opacity-100 text-[#2d3561]')} />
+                <Moon size={12} className={cn("transition-opacity duration-300", mounted && theme === 'dark' ? 'opacity-100 text-[#fafaf9]' : 'opacity-30 text-stone-600')} />
               </div>
               <motion.div
-                className="absolute top-1 bottom-1 w-6 bg-primary rounded shadow-lg flex flex-col items-center justify-center gap-1 border border-white/10 dark:bg-[#3a4699]"
+                className="absolute top-1 bottom-1 w-6 bg-primary rounded shadow-lg flex flex-col items-center justify-center gap-1 border border-white/10 dark:bg-[#6c7bd4]"
                 initial={false}
                 animate={{
                   x: mounted && theme === 'dark' ? 28 : 2,
@@ -96,7 +96,7 @@ export function Header() {
                 <div className="h-0.5 w-3 bg-white/30 rounded-full" />
               </motion.div>
             </button>
-            <span className="text-[8px] font-bold tracking-widest text-zinc-600 md:text-[10px] dark:text-zinc-400">
+            <span className="font-[family-name:var(--font-mono)] text-[8px] font-bold tracking-widest text-stone-600 md:text-[10px] dark:text-stone-400">
               POWER
             </span>
           </div>
@@ -105,8 +105,8 @@ export function Header() {
               className={cn(
                 'absolute inset-0 rounded-full transition-all duration-700',
                 mounted && theme === 'dark'
-                  ? 'animate-pulse bg-red-600 shadow-[0_0_12px_rgba(239,68,68,0.9)]'
-                  : 'bg-zinc-400 shadow-inner',
+                  ? 'animate-pulse bg-signal shadow-[0_0_12px_rgba(34,197,94,0.9)]'
+                  : 'bg-stone-400 shadow-inner',
               )}
             />
             <div className="absolute top-1 left-1 h-1 w-1 rounded-full bg-white/50 md:top-1.5 md:left-1.5 md:h-1.5 md:w-1.5" />
@@ -128,20 +128,20 @@ export function Header() {
                 >
                   <div
                     className={cn(
-                      'group-hover:border-primary relative transform cursor-pointer rounded-full border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all group-hover:rotate-45 dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
+                      'group-hover:border-copper relative transform cursor-pointer rounded-full border-2 border-stone-300 bg-gradient-to-b from-stone-100 to-stone-300 shadow-lg transition-all group-hover:rotate-45 dark:border-stone-700 dark:from-stone-800 dark:to-stone-900',
                       isScrolled ? 'h-8 w-8' : 'h-10 w-10',
                     )}
                   >
-                    <div className="absolute top-1 left-1/2 h-3 w-0.5 -translate-x-1/2 bg-zinc-400 dark:bg-zinc-500" />
+                    <div className="absolute top-1 left-1/2 h-3 w-0.5 -translate-x-1/2 bg-stone-400 dark:bg-stone-500" />
                     {/* Indicator Dot */}
-                    <div className="bg-primary absolute top-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
+                    <div className="bg-copper absolute top-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
                   </div>
                   <span
                     className={cn(
                       'text-[10px] font-bold tracking-widest transition-colors',
                       activeKnob === item.name
-                        ? 'text-primary'
-                        : 'text-zinc-600 dark:text-zinc-400',
+                        ? 'text-copper dark:text-copper-light'
+                        : 'text-stone-600 dark:text-stone-400',
                     )}
                   >
                     {item.name}
@@ -153,7 +153,7 @@ export function Header() {
 
           {/* Page Links as Push Buttons (Grouped) */}
           {pageLinks.length > 0 && (
-            <div className="flex items-center gap-4 border-l-2 border-zinc-300 pl-4 xl:gap-6 xl:pl-8 dark:border-zinc-700">
+            <div className="flex items-center gap-4 border-l-2 border-stone-300 pl-4 xl:gap-6 xl:pl-8 dark:border-stone-700">
               {pageLinks.map((item) => (
                 <Link
                   key={item.name}
@@ -164,7 +164,7 @@ export function Header() {
                 >
                   <div
                     className={cn(
-                      'relative flex transform cursor-pointer flex-col items-center justify-end rounded-md border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all group-hover:-translate-y-0.5 group-active:translate-y-1 group-active:shadow-inner dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
+                      'relative flex transform cursor-pointer flex-col items-center justify-end rounded-md border-2 border-stone-300 bg-gradient-to-b from-stone-100 to-stone-300 shadow-lg transition-all group-hover:-translate-y-0.5 group-active:translate-y-1 group-active:shadow-inner dark:border-stone-700 dark:from-stone-800 dark:to-stone-900',
                       isScrolled ? 'h-8 w-8 pb-1' : 'h-10 w-10 pb-1.5',
                     )}
                   >
@@ -174,8 +174,8 @@ export function Header() {
                         'h-1.5 w-5 rounded-full transition-colors',
                         (pathname.startsWith(item.href) && item.href !== '/') ||
                           pathname === item.href
-                          ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'
-                          : 'bg-red-800/40 group-hover:bg-red-600/60',
+                          ? 'bg-signal shadow-[0_0_8px_rgba(34,197,94,0.8)]'
+                          : 'bg-signal/40 group-hover:bg-signal/60',
                       )}
                     />
                   </div>
@@ -185,8 +185,8 @@ export function Header() {
                       activeKnob === item.name ||
                         (pathname.startsWith(item.href) && item.href !== '/') ||
                         pathname === item.href
-                        ? 'text-primary'
-                        : 'text-zinc-600 dark:text-zinc-400',
+                        ? 'text-copper dark:text-copper-light'
+                        : 'text-stone-600 dark:text-stone-400',
                     )}
                   >
                     {item.name}
@@ -203,21 +203,21 @@ export function Header() {
             ref={toggleButtonRef}
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
-              'relative transform cursor-pointer rounded-full border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
+              'relative transform cursor-pointer rounded-full border-2 border-stone-300 bg-gradient-to-b from-stone-100 to-stone-300 shadow-lg transition-all dark:border-stone-700 dark:from-stone-800 dark:to-stone-900',
               isScrolled ? 'h-9 w-9' : 'h-11 w-11',
-              isOpen ? 'border-primary rotate-135' : 'rotate-0',
+              isOpen ? 'border-copper rotate-135' : 'rotate-0',
             )}
             aria-label="Toggle Menu"
           >
-            <div className="absolute top-1 left-1/2 h-3 w-0.5 -translate-x-1/2 bg-zinc-400 dark:bg-zinc-500" />
+            <div className="absolute top-1 left-1/2 h-3 w-0.5 -translate-x-1/2 bg-stone-400 dark:bg-stone-500" />
             <div
               className={cn(
-                'bg-primary absolute top-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full transition-opacity',
+                'bg-copper absolute top-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full transition-opacity',
                 isOpen ? 'opacity-100' : 'opacity-0',
               )}
             />
           </button>
-          <span className="text-[8px] font-bold tracking-widest text-zinc-600 md:text-[10px] dark:text-zinc-400">
+          <span className="font-[family-name:var(--font-mono)] text-[8px] font-bold tracking-widest text-stone-600 md:text-[10px] dark:text-stone-400">
             MENU
           </span>
         </div>
@@ -228,7 +228,7 @@ export function Header() {
             <button
               onClick={() => setIsPlugged(!isPlugged)}
               className={cn(
-                'flex cursor-pointer items-center justify-center rounded-full border-2 border-zinc-300 bg-zinc-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all active:scale-95 dark:border-zinc-700 dark:bg-zinc-800',
+                'flex cursor-pointer items-center justify-center rounded-full border-2 border-stone-300 bg-stone-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all active:scale-95 dark:border-stone-700 dark:bg-stone-800',
                 isScrolled ? 'h-7 w-7' : 'h-9 w-9',
                 isPlugged && 'shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]',
               )}
@@ -286,7 +286,7 @@ export function Header() {
               )}
             </AnimatePresence>
           </div>
-          <span className="text-[8px] font-bold tracking-widest text-zinc-600 md:text-[10px] dark:text-zinc-400">
+          <span className="font-[family-name:var(--font-mono)] text-[8px] font-bold tracking-widest text-stone-600 md:text-[10px] dark:text-stone-400">
             INPUT
           </span>
         </div>
@@ -298,9 +298,9 @@ export function Header() {
         onClose={() => setIsOpen(false)}
         items={menuItems}
         colors={
-          theme === 'dark' ? ['#f59e0b', '#3a4699', '#1e2866'] : ['#273281', '#3d468b', '#e2e8f0']
+          theme === 'dark' ? ['#f59e0b', '#6c7bd4', '#1e2445'] : ['#2d3561', '#354280', '#e7e5e4']
         }
-        accentColor={theme === 'dark' ? '#f59e0b' : '#273281'}
+        accentColor={theme === 'dark' ? '#f59e0b' : '#2d3561'}
       />
     </>
   )

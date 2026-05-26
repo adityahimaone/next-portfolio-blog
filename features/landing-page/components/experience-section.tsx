@@ -28,7 +28,7 @@ export function ExperienceSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+              className="mb-4 flex items-center gap-2 rounded-full bg-stone-100 px-4 py-1.5 text-sm font-medium text-stone-900 dark:bg-stone-800 dark:text-stone-100"
             >
               <Radio className="h-4 w-4" />
               <span>CAREER DISCOGRAPHY</span>
@@ -47,8 +47,8 @@ export function ExperienceSection() {
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
             {/* Left Column: Tracklist / Selector */}
             <div className="lg:col-span-5">
-              <div className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-                <div className="mb-2 px-4 py-2 text-xs font-bold tracking-wider text-zinc-600 uppercase dark:text-zinc-400">
+              <div className="flex flex-col gap-2 rounded-2xl border border-stone-200 bg-white p-2 shadow-sm dark:border-stone-800 dark:bg-stone-900/50">
+                <div className="mb-2 px-4 py-2 font-[family-name:var(--font-mono)] text-xs font-bold tracking-wider text-copper uppercase dark:text-copper-light">
                   Select a Track
                 </div>
                 {EXPERIENCES.map((exp) => (
@@ -58,15 +58,15 @@ export function ExperienceSection() {
                     className={cn(
                       'group relative flex w-full items-center gap-4 rounded-xl p-4 text-left transition-all',
                       selectedId === exp.id
-                        ? 'bg-zinc-100 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-800 dark:ring-zinc-700'
-                        : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50',
+                        ? 'bg-stone-100 shadow-sm ring-1 ring-stone-200 dark:bg-stone-800 dark:ring-stone-700'
+                        : 'hover:bg-stone-50 dark:hover:bg-stone-800/50',
                     )}
                   >
                     {/* Active Indicator */}
                     {selectedId === exp.id && (
                       <m.div
                         layoutId="active-indicator"
-                        className="bg-primary absolute top-1/2 left-0 h-12 w-1 -translate-y-1/2 rounded-r-full"
+                        className="bg-copper absolute top-1/2 left-0 h-12 w-1 -translate-y-1/2 rounded-r-full"
                       />
                     )}
 
@@ -74,9 +74,9 @@ export function ExperienceSection() {
                     <div
                       className={cn(
                         'flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-colors',
-                        selectedId === exp.id
-                          ? 'text-primary border-zinc-200 bg-white shadow-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-white'
-                          : 'border-transparent bg-zinc-50 text-zinc-600 group-hover:border-zinc-200 group-hover:bg-white group-hover:text-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400 dark:group-hover:bg-zinc-800 dark:group-hover:text-zinc-300',
+                          selectedId === exp.id
+                            ? 'text-copper border-stone-200 bg-white shadow-sm dark:border-stone-600 dark:bg-stone-700 dark:text-copper-light'
+                            : 'border-transparent bg-stone-50 text-stone-600 group-hover:border-stone-200 group-hover:bg-white group-hover:text-stone-700 dark:bg-stone-800/50 dark:text-stone-400 dark:group-hover:bg-stone-800 dark:group-hover:text-stone-300',
                       )}
                     >
                       {selectedId === exp.id ? (
@@ -94,8 +94,8 @@ export function ExperienceSection() {
                           className={cn(
                             'truncate text-sm font-bold transition-colors',
                             selectedId === exp.id
-                              ? 'text-zinc-900 dark:text-zinc-100'
-                              : 'text-zinc-700 dark:text-zinc-300',
+                              ? 'text-stone-900 dark:text-stone-100'
+                              : 'text-stone-700 dark:text-stone-300',
                           )}
                         >
                           {exp.role}
@@ -104,8 +104,8 @@ export function ExperienceSection() {
                           className={cn(
                             'hidden rounded-full border px-1.5 py-0.5 text-[10px] font-medium sm:inline-block',
                             selectedId === exp.id
-                              ? 'border-zinc-200 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400'
-                              : 'border-transparent bg-transparent text-zinc-500',
+                              ? 'border-stone-200 bg-white text-stone-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400'
+                              : 'border-transparent bg-transparent text-stone-500',
                           )}
                         >
                           {exp.type}
@@ -134,7 +134,7 @@ export function ExperienceSection() {
 
             {/* Right Column: The Player / Details */}
             <div className="lg:col-span-7">
-              <div className="relative h-full min-h-[500px] overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
+              <div className="relative h-full min-h-[500px] overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-2xl dark:border-stone-800 dark:bg-stone-950">
                 {/* Background Ambience */}
                 <AnimatePresence mode="wait">
                   <m.div
@@ -166,7 +166,7 @@ export function ExperienceSection() {
                           {selectedJob.role}
                         </h3>
                         <div className="mt-2 flex flex-wrap items-center gap-3 text-zinc-700 dark:text-zinc-400">
-                          <span className="text-primary flex items-center gap-1.5 font-medium">
+                          <span className="text-copper flex items-center gap-1.5 font-medium dark:text-copper-light">
                             <Briefcase className="h-4 w-4" />
                             {selectedJob.company}
                           </span>
@@ -194,7 +194,7 @@ export function ExperienceSection() {
                           scale: { duration: 0.4 },
                           opacity: { duration: 0.4 },
                         }}
-                        className="relative flex h-24 w-24 items-center justify-center rounded-full border-4 border-zinc-900 bg-zinc-950 shadow-xl dark:border-zinc-800"
+                        className="relative flex h-24 w-24 items-center justify-center rounded-full border-4 border-stone-900 bg-stone-950 shadow-xl dark:border-stone-800"
                       >
                         <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
                         <div
@@ -218,8 +218,8 @@ export function ExperienceSection() {
                         className="space-y-6"
                       >
                         {/* Period Badge */}
-                        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                          <Calendar className="h-3 w-3 text-zinc-600 dark:text-zinc-400" />
+                        <div className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium shadow-sm dark:border-stone-800 dark:bg-stone-900">
+                          <Calendar className="h-3 w-3 text-stone-600 dark:text-stone-400" />
                           {selectedJob.period}
                         </div>
 
@@ -232,7 +232,7 @@ export function ExperienceSection() {
                                   key={i}
                                   className="relative flex w-full items-start gap-3"
                                 >
-                                  <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+                                  <div className="bg-copper/10 text-copper dark:bg-copper-light/10 dark:text-copper-light flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
                                     <ChevronRight className="h-3.5 w-3.5" />
                                   </div>
                                   <div className="flex w-full flex-col">
@@ -262,7 +262,7 @@ export function ExperienceSection() {
                                   transition={{ delay: i * 0.1 }}
                                   className="flex items-start gap-3"
                                 >
-                                  <div className="bg-primary/10 text-primary mt-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+                                  <div className="bg-copper/10 text-copper dark:bg-copper-light/10 dark:text-copper-light mt-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
                                     <ChevronRight className="h-3.5 w-3.5" />
                                   </div>
                                   <span className="mt-1.5 text-base font-medium text-zinc-900 dark:text-zinc-200">
@@ -277,14 +277,14 @@ export function ExperienceSection() {
                     </AnimatePresence>
                   </div>
                   {/* Player Controls (Decorative) */}
-                  <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+                  <div className="mt-8 border-t border-stone-200 pt-6 dark:border-stone-800">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="flex gap-1">
                           {[...Array(3)].map((_, i) => (
                             <m.div
                               key={i}
-                              className="bg-primary w-1 rounded-full"
+                              className="bg-copper dark:bg-copper-light w-1 rounded-full"
                               style={{
                                 height: '8px',
                                 transformOrigin: 'bottom',

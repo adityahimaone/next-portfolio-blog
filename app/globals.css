@@ -18,7 +18,7 @@
     border-color: var(--color-gray-200, currentColor);
   }
   html {
-    font-family: system-ui, sans-serif;
+    font-family: var(--font-display, system-ui), sans-serif;
     line-height: 1.5;
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
@@ -379,113 +379,127 @@
 
 :root {
   /* Base colors */
-  --background: #ffffff;
-  --foreground: #18181b;
+  --background: #fafaf9;
+  --foreground: #1c1917;
   --card: #ffffff;
-  --card-foreground: #18181b;
+  --card-foreground: #1c1917;
   --popover: #ffffff;
-  --popover-foreground: #18181b;
+  --popover-foreground: #1c1917;
 
-  /* Primary colors - Deep navy blue */
-  --primary: #273281;
-  --primary-light: #3a4699;
-  --primary-dark: #1e2866;
+  /* Primary colors - Deep studio indigo */
+  --primary: #2d3561;
+  --primary-light: #3f4a80;
+  --primary-dark: #1e2445;
   --primary-foreground: #f8fafc;
 
-  /* Secondary colors - Lighter blue */
-  --secondary: #3d468b;
-  --secondary-light: #505aa3;
-  --secondary-dark: #333b74;
+  /* Secondary colors - Lighter studio blue */
+  --secondary: #354280;
+  --secondary-light: #4a5ca3;
+  --secondary-dark: #2a3566;
   --secondary-foreground: #f8fafc;
 
-  /* Accent colors - Golden amber */
-  --accent: #e6a817;
-  --accent-light: #f2bc36;
-  --accent-dark: #cc920a;
-  --accent-foreground: #18181b;
+  /* Accent colors - Warm copper (studio hardware) */
+  --accent: #d97706;
+  --accent-light: #f59e0b;
+  --accent-dark: #b45309;
+  --accent-foreground: #1c1917;
+
+  /* Studio-specific tokens */
+  --signal: #22c55e;
+  --signal-light: #4ade80;
+  --glow: #6366f1;
+  --copper: #e07c24;
+  --copper-light: #f4a83d;
 
   /* UI colors */
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  --muted: #f5f5f4;
+  --muted-foreground: #78716c;
   --destructive: #ef4444;
   --destructive-foreground: #fef2f2;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #273281;
+  --border: #e7e5e4;
+  --input: #e7e5e4;
+  --ring: #2d3561;
 
   /* Chart colors */
-  --chart-1: #273281;
-  --chart-2: #3d468b;
-  --chart-3: #e6a817;
-  --chart-4: #3a4699;
-  --chart-5: #505aa3;
+  --chart-1: #2d3561;
+  --chart-2: #354280;
+  --chart-3: #d97706;
+  --chart-4: #3f4a80;
+  --chart-5: #4a5ca3;
 
   /* Border radius */
   --radius: 0.625rem;
 
   /* Sidebar colors */
-  --sidebar: #f8fafc;
-  --sidebar-foreground: #18181b;
-  --sidebar-primary: #273281;
+  --sidebar: #fafaf9;
+  --sidebar-foreground: #1c1917;
+  --sidebar-primary: #2d3561;
   --sidebar-primary-foreground: #f8fafc;
-  --sidebar-accent: #e6a817;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #e4e4e7;
-  --sidebar-ring: #273281;
+  --sidebar-accent: #d97706;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #e7e5e4;
+  --sidebar-ring: #2d3561;
 }
 
 .dark {
   /* Base colors */
-  --background: #18181b;
-  --foreground: #f8fafc;
-  --card: #18181b;
-  --card-foreground: #f8fafc;
-  --popover: #18181b;
-  --popover-foreground: #f8fafc;
+  --background: #0c0a09;
+  --foreground: #fafaf9;
+  --card: #1c1917;
+  --card-foreground: #fafaf9;
+  --popover: #1c1917;
+  --popover-foreground: #fafaf9;
 
-  /* Primary colors - Lighter in dark mode */
-  --primary: #3a4699;
-  --primary-light: #505aa3;
-  --primary-dark: #273281;
-  --primary-foreground: #f8fafc;
+  /* Primary colors - Lighter indigo in dark mode */
+  --primary: #6c7bd4;
+  --primary-light: #8b9ae8;
+  --primary-dark: #4a5699;
+  --primary-foreground: #fafaf9;
 
-  /* Secondary colors - Lighter in dark mode */
-  --secondary: #505aa3;
-  --secondary-light: #6571bd;
-  --secondary-dark: #3d468b;
-  --secondary-foreground: #f8fafc;
+  /* Secondary colors */
+  --secondary: #8b9ae8;
+  --secondary-light: #a3b0f0;
+  --secondary-dark: #6c7bd4;
+  --secondary-foreground: #fafaf9;
 
-  /* Accent colors - Brighter in dark mode */
-  --accent: #f2bc36;
-  --accent-light: #f7cd5c;
-  --accent-dark: #e6a817;
-  --accent-foreground: #18181b;
+  /* Accent colors - Brighter copper in dark mode */
+  --accent: #f59e0b;
+  --accent-light: #fbbf24;
+  --accent-dark: #d97706;
+  --accent-foreground: #1c1917;
+
+  /* Studio-specific tokens */
+  --signal: #4ade80;
+  --signal-light: #86efac;
+  --glow: #818cf8;
+  --copper: #f4a83d;
+  --copper-light: #fbbf24;
 
   /* UI colors */
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
+  --muted: #292524;
+  --muted-foreground: #a8a29e;
   --destructive: #7f1d1d;
   --destructive-foreground: #ef4444;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #3a4699;
+  --border: #292524;
+  --input: #292524;
+  --ring: #6c7bd4;
 
   /* Chart colors */
-  --chart-1: #3a4699;
-  --chart-2: #505aa3;
-  --chart-3: #f2bc36;
-  --chart-4: #6571bd;
-  --chart-5: #f7cd5c;
+  --chart-1: #6c7bd4;
+  --chart-2: #8b9ae8;
+  --chart-3: #f59e0b;
+  --chart-4: #a3b0f0;
+  --chart-5: #fbbf24;
 
   /* Sidebar colors */
-  --sidebar: #27272a;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #3a4699;
-  --sidebar-primary-foreground: #f8fafc;
-  --sidebar-accent: #f2bc36;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #3f3f46;
-  --sidebar-ring: #505aa3;
+  --sidebar: #1c1917;
+  --sidebar-foreground: #fafaf9;
+  --sidebar-primary: #6c7bd4;
+  --sidebar-primary-foreground: #fafaf9;
+  --sidebar-accent: #f59e0b;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #44403c;
+  --sidebar-ring: #8b9ae8;
 }
 
 @theme inline {
@@ -535,6 +549,13 @@
   --color-vinyl-DEFAULT: #191f47;
   --color-vinyl-groove: #2b335e;
   --color-vinyl-label: #fef3c7;
+
+  /* Studio-specific tokens */
+  --color-signal: var(--signal);
+  --color-signal-light: var(--signal-light);
+  --color-glow: var(--glow);
+  --color-copper: var(--copper);
+  --color-copper-light: var(--copper-light);
 
   --animate-spin-slow: spin 4s linear infinite;
   --animate-float: float 6s ease-in-out infinite;

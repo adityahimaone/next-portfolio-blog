@@ -6,12 +6,14 @@
  * Concept: Hidup Adit sebagai komposisi MIDI. Sumbu X = tahun (2020–2026),
  * Sumbu Y = 4 kategori lane (LEARNING, PROJECTS, CAREER, PIVOTS).
  * Hover note → tooltip detail. Toolbar visual props (select/draw/zoom).
+ * Moving playhead across the timeline.
  * Mobile: vertical card stack fallback.
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { m, useReducedMotion, AnimatePresence } from 'motion/react'
 import { Pointer, Pencil, Eraser, ZoomIn, ZoomOut } from 'lucide-react'
+import { useInView } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { SectionFrame } from '../r3/section-frame'
 import { EXPERIENCES } from '../constants'
@@ -46,7 +48,6 @@ function parseYear(periodStr: string): { start: number; end: number } {
 }
 
 function getLane(exp: ExperienceItem): LaneType {
-  // Map experience type to lane
   if (exp.type === 'Education') return 'learning'
   if (exp.type === 'Full Time') return 'career'
   if (exp.type === 'Part Time') return 'projects'
@@ -102,17 +103,18 @@ const LANE_ORDER: LaneType[] = ['learning', 'projects', 'career', 'pivots']
 // ─── Note Component (Desktop) ─────────────────────────────
 function PianoNote({
   note,
+  index,
   onHover,
   isHovered,
 }: {
   note: NoteData
+  index: number
   onHover: (n: NoteData | null) => void
   isHovered: boolean
 }) {
   const prefersReduced = useReducedMotion()
   const laneConfig = LANES[note.lane]
 
-  // Calculate position as percentage
   const leftPct = ((note.startYear - YEAR_START) / TOTAL_YEARS) * 100
   const widthPct = ((note.endYear - note.startYear + 0.5) / TOTAL_YEARS) * 100
   const laneIndex = LANE_ORDER.indexOf(note.lane)
@@ -122,8 +124,8 @@ function PianoNote({
       className={cn(
         'absolute h-10 sm:h-11 rounded-sm cursor-pointer transition-shadow',
         laneConfig.color,
-        'shadow-[0_0_8px_var(--r3-edge)]',
-        isHovered && 'ring-1 ring-white/40 z-10 shadow-[0_0_12px_currentColor]',
+        'shadow-[0_0_6px_var(--r3-edge)]',
+        isHovered && 'ring-1 ring-white/40 z-10 shadow-[0_0_14px_currentColor]',
       )}
       style={{
         left: `${leftPct}%`,
@@ -133,7 +135,7 @@ function PianoNote({
       initial={prefersReduced ? false : { opacity: 0, scaleX: 0 }}
       whileInView={{ opacity: 1, scaleX: 1 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.4, delay: note.id * 0.05 }}
+      transition={{ duration: 0.35, delay: index * 0.08 }}
       onMouseEnter={() => onHover(note)}
       onMouseLeave={() => onHover(null)}
       onFocus={() => onHover(note)}
@@ -155,9 +157,9 @@ function NoteTooltip({ note }: { note: NoteData }) {
 
   return (
     <m.div
-      initial={{ opacity: 0, y: 4 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 4 }}
+      exit={{ opacity: 0, y: 6 }}
       className="r3-panel p-3 sm:p-4 max-w-xs"
     >
       <div className="flex items-center gap-2 mb-2">
@@ -198,7 +200,7 @@ function MobileNoteCard({ note }: { note: NoteData }) {
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.3 }}
-      className="r3-panel p-4 flex gap-3"
+      className="r3-panel p-3 sm:p-4 flex gap-3"
     >
       <div className="flex flex-col items-center gap-1 shrink-0">
         <span
@@ -209,10 +211,10 @@ function MobileNoteCard({ note }: { note: NoteData }) {
       </div>
       <div className="min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className="r3-mono text-[10px] tracking-widest text-[var(--r3-text-mute)] uppercase">
+          <span className="r3-mono text-[9px] tracking-widest text-[var(--r3-text-mute)] uppercase">
             {laneConfig.label}
           </span>
-          <span className="r3-mono text-[10px] text-[var(--r3-label)]">
+          <span className="r3-mono text-[9px] text-[var(--r3-label)]">
             {note.period}
           </span>
         </div>
@@ -243,11 +245,11 @@ function PianoToolbar() {
   ]
 
   return (
-    <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[var(--r3-edge)]">
+    <div className="flex items-center gap-1 sm:gap-2 mb-4 pb-3 border-b border-[var(--r3-edge)]">
       {tools.map(({ icon: Icon, label }) => (
-        <div key={label} className="flex items-center gap-1.5 px-2 py-1.5">
+        <div key={label} className="flex items-center gap-1.5 px-1.5 sm:px-2 py-1.5">
           <Icon size={14} className="text-[var(--r3-text-mute)]" />
-          <span className="r3-mono text-[8px] text-[var(--r3-label)] tracking-widest uppercase">
+          <span className="r3-mono text-[8px] text-[var(--r3-label)] tracking-widest uppercase hidden sm:inline">
             {label}
           </span>
         </div>
@@ -260,8 +262,22 @@ function PianoToolbar() {
 export function AboutSection() {
   const prefersReduced = useReducedMotion()
   const [hoveredNote, setHoveredNote] = useState<NoteData | null>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
+  const isGridInView = useInView(gridRef, { once: false, margin: '-40px' })
+  const [playheadPos, setPlayheadPos] = useState(0)
 
   const notes = useMemo(() => buildNotes(EXPERIENCES), [])
+
+  // Moving playhead while grid is in view
+  useEffect(() => {
+    if (prefersReduced || !isGridInView) return
+    let frame = 0
+    const interval = setInterval(() => {
+      frame = (frame + 1) % 180
+      setPlayheadPos((frame / 180) * 100)
+    }, 60)
+    return () => clearInterval(interval)
+  }, [prefersReduced, isGridInView])
 
   return (
     <SectionFrame
@@ -281,14 +297,13 @@ export function AboutSection() {
       >
         <p className="r3-prose text-sm sm:text-base text-[var(--r3-text-mute)] max-w-2xl leading-relaxed">
           Enam tahun. Setiap milestone adalah satu note — ada yang staccato pendek,
-          ada yang sustained chord panjang. Hover piano roll untuk dengar ceritanya.
+          ada yang sustained chord panjang. Hover piano roll untuk detailnya.
         </p>
       </m.div>
 
       {/* ─── Desktop Piano Roll ─────────────────────────── */}
-      <div className="hidden sm:block">
+      <div ref={gridRef} className="hidden sm:block">
         <div className="r3-panel-rack p-4 sm:p-6 overflow-x-auto">
-          {/* Toolbar */}
           <PianoToolbar />
 
           {/* Year axis (top) */}
@@ -301,6 +316,16 @@ export function AboutSection() {
                 {YEAR_START + i}
               </div>
             ))}
+          </div>
+
+          {/* Playhead track */}
+          <div className="flex mb-2 ml-16">
+            <div className="flex-1 relative h-1.5 bg-[var(--r3-edge)]/30 rounded-full overflow-hidden">
+              <div
+                className="absolute top-0 bottom-0 w-[2px] bg-[var(--r3-clip)] shadow-[0_0_8px_var(--r3-clip)] transition-all duration-[60ms]"
+                style={{ left: `${playheadPos}%` }}
+              />
+            </div>
           </div>
 
           {/* Grid area */}
@@ -319,7 +344,7 @@ export function AboutSection() {
 
             {/* Note area */}
             <div className="flex-1 relative min-h-[220px] border border-[var(--r3-edge)] rounded-sm bg-[var(--r3-studio)]/50">
-              {/* Grid lines (vertical per year) */}
+              {/* Grid lines */}
               {Array.from({ length: TOTAL_YEARS - 1 }).map((_, i) => (
                 <div
                   key={i}
@@ -328,7 +353,7 @@ export function AboutSection() {
                 />
               ))}
 
-              {/* Horizontal lane dividers */}
+              {/* Lane dividers */}
               {Array.from({ length: LANE_ORDER.length - 1 }).map((_, i) => (
                 <div
                   key={i}
@@ -338,10 +363,11 @@ export function AboutSection() {
               ))}
 
               {/* Notes */}
-              {notes.map((note) => (
+              {notes.map((note, index) => (
                 <PianoNote
                   key={note.id}
                   note={note}
+                  index={index}
                   onHover={setHoveredNote}
                   isHovered={hoveredNote?.id === note.id}
                 />
@@ -369,7 +395,7 @@ export function AboutSection() {
         </div>
 
         {/* Tooltip */}
-        <div className="h-28 mt-4">
+        <div className="min-h-[100px] mt-4">
           <AnimatePresence mode="wait">
             {hoveredNote && (
               <NoteTooltip key={hoveredNote.id} note={hoveredNote} />

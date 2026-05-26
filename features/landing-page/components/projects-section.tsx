@@ -9,8 +9,8 @@
  * Mobile: vertical card stack. Desktop: horizontal scroll arrangement.
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { m, useReducedMotion, AnimatePresence } from 'motion/react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { m, useReducedMotion, AnimatePresence, useInView } from 'motion/react'
 import { Star, Github, ExternalLink, X } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
@@ -23,7 +23,6 @@ interface TrackConfig {
   id: string
   label: string
   color: string
-  icon?: JSX.Element
 }
 
 const TRACKS: TrackConfig[] = [
@@ -36,10 +35,10 @@ const TRACKS: TrackConfig[] = [
 // ─── Categorize projects ──────────────────────────────────
 
 function categorizeProjects(projects: ProjectShowcaseItem[]) {
-  const featured = projects.filter((p) => p.id === 1) // Primarindo = featured
-  const webapp = projects.filter((p) => [2, 3].includes(p.id)) // Habit Tracker, Frontend Resources
-  const tools = projects.filter((p) => [4, 5].includes(p.id)) // SeaPhantom, SeaPhantom P2P
-  const sketches = projects.filter((p) => [6].includes(p.id)) // Labgrownbeasts
+  const featured = projects.filter((p) => p.id === 1)
+  const webapp = projects.filter((p) => [2, 3].includes(p.id))
+  const tools = projects.filter((p) => [4, 5].includes(p.id))
+  const sketches = projects.filter((p) => [6].includes(p.id))
 
   return { featured, webapp, tools, sketches }
 }
@@ -57,11 +56,14 @@ function ArrangementClip({
   track: TrackConfig
   onSelect: (p: ProjectShowcaseItem) => void
   isSelected: boolean
-  playheadPos: number // 0-100%
+  playheadPos: number
 }) {
   const prefersReduced = useReducedMotion()
-  // Simulate clip position based on project ID (for demo)
-  const clipStart = (project.id * 12) % 80
+  // Map year to position: 2022 = 0%, 2026 = 100%
+  const yearMin = 2022
+  const yearMax = 2026
+  const projectYear = parseInt(project.year || '2024')
+  const clipStart = Math.max(0, Math.min(100, ((projectYear - yearMin) / (yearMax - yearMin)) * 100 - 7.5))
   const clipLength = 15
 
   const isUnderPlayhead =
@@ -78,9 +80,9 @@ function ArrangementClip({
         left: `${clipStart}%`,
         width: `${clipLength}%`,
         backgroundColor: track.color,
-        opacity: isUnderPlayhead ? 1 : 0.7,
+        opacity: isUnderPlayhead ? 1 : 0.65,
         boxShadow: isUnderPlayhead
-          ? `0 0 12px ${track.color}, inset 0 0 8px rgba(255,255,255,0.1)`
+          ? `0 0 14px ${track.color}, inset 0 0 8px rgba(255,255,255,0.1)`
           : `0 2px 4px rgba(0,0,0,0.3)`,
       }}
       onClick={() => onSelect(project)}
@@ -273,20 +275,31 @@ export function ProjectsSection() {
   const prefersReduced = useReducedMotion()
   const [selectedProject, setSelectedProject] = useState<ProjectShowcaseItem | null>(null)
   const [playheadPos, setPlayheadPos] = useState(0)
+  const gridRef = useRef<HTMLDivElement>(null)
+  const isGridInView = useInView(gridRef, { once: false, margin: '-40px' })
+  const detailRef = useRef<HTMLDivElement>(null)
 
   const categorized = useMemo(() => categorizeProjects(PROJECTS_SHOWCASE), [])
 
-  // ─── Playhead animation ───────────────────────────────────
-  // Simulate playhead moving across arrangement (0-100%)
+  // Playhead animation
   useEffect(() => {
-    if (prefersReduced) return
+    if (prefersReduced || !isGridInView) return
     let frame = 0
     const interval = setInterval(() => {
-      frame = (frame + 1) % 200 // 200 frames = full cycle
+      frame = (frame + 1) % 200
       setPlayheadPos((frame / 200) * 100)
     }, 50)
     return () => clearInterval(interval)
-  }, [prefersReduced])
+  }, [prefersReduced, isGridInView])
+
+  // Auto-scroll to detail panel on mobile when selected
+  useEffect(() => {
+    if (selectedProject && detailRef.current && window.innerWidth < 640) {
+      setTimeout(() => {
+        detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+    }
+  }, [selectedProject])
 
   return (
     <SectionFrame
@@ -311,17 +324,17 @@ export function ProjectsSection() {
       </m.div>
 
       {/* ─── Desktop: Arrangement Grid ──────────────────── */}
-      <div className="hidden sm:block">
+      <div ref={gridRef} className="hidden sm:block">
         <div className="r3-panel p-4 overflow-x-auto">
           {/* Timeline ruler */}
           <div className="flex items-center gap-2 mb-3">
             <div className="w-24 sm:w-32 shrink-0" />
             <div className="flex-1 relative h-6">
               <div className="absolute inset-0 flex">
-                {Array.from({ length: 9 }).map((_, i) => (
+                {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="flex-1 flex items-end justify-start px-1">
                     <span className="r3-mono text-[8px] text-[var(--r3-label)]">
-                      {i * 10}%
+                      {2022 + i * 1}
                     </span>
                   </div>
                 ))}
@@ -334,7 +347,7 @@ export function ProjectsSection() {
             <div className="w-24 sm:w-32 shrink-0" />
             <div className="flex-1 relative h-1 bg-[var(--r3-edge)]/30 rounded-full overflow-hidden">
               <div
-                className="absolute top-0 bottom-0 w-1 bg-[var(--r3-signal)] shadow-[0_0_8px_var(--r3-signal)]"
+                className="absolute top-0 bottom-0 w-1 bg-[var(--r3-signal)] shadow-[0_0_8px_var(--r3-signal)] transition-all duration-[50ms]"
                 style={{ left: `${playheadPos}%` }}
               />
             </div>
@@ -433,14 +446,16 @@ export function ProjectsSection() {
       </div>
 
       {/* Detail panel */}
-      <AnimatePresence mode="wait">
-        {selectedProject && (
-          <DetailPanel
-            project={selectedProject}
-            onClose={() => setSelectedProject(null)}
-          />
-        )}
-      </AnimatePresence>
+      <div ref={detailRef}>
+        <AnimatePresence mode="wait">
+          {selectedProject && (
+            <DetailPanel
+              project={selectedProject}
+              onClose={() => setSelectedProject(null)}
+            />
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Status bar */}
       <m.div

@@ -1,6 +1,81 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 @custom-variant dark (&:is(.dark *));
+
+/* ──────────────────────────────────────────────────────────────
+   EDITORIAL v4 — Design Tokens
+   Classical fine-art aesthetic: achromatic palette, serif display,
+   structured spacing, refined radii.
+   ────────────────────────────────────────────────────────────── */
+@theme {
+  /* Editorial v4 colors */
+  --color-canvas: #EBEBEB;
+  --color-slate: #C4C3B6;
+  --color-smoke: #E7E5E4;
+  --color-ink: #000000;
+  --color-off-white: #DFDCD5;
+  --color-accent-grey: #595855;
+  --color-dark-surface: #0F0F0F;
+  --color-dark-card: #1A1A1A;
+
+  /* Editorial v4 fonts (next/font injects --font-playfair, --font-inter) */
+  --font-display: var(--font-playfair), 'Playfair Display', Georgia, serif;
+  --font-ui: var(--font-inter), 'Inter', system-ui, sans-serif;
+
+  /* Editorial v4 type scale */
+  --text-xs: 12px;
+  --text-sm: 15px;
+  --text-base: 16px;
+  --text-md: 24px;
+  --text-lg: 34px;
+  --text-xl: 52px;
+  --text-2xl: 94px;
+  --text-3xl: 140px;
+
+  /* Editorial v4 letter spacing */
+  --tracking-display: -0.009em;
+  --tracking-heading: -0.005em;
+  --tracking-body: -0.001em;
+  --tracking-ui: 0em;
+
+  /* Editorial v4 spacing tokens */
+  --spacing-1: 4px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-7: 28px;
+  --spacing-8: 32px;
+  --spacing-9: 36px;
+  --spacing-10: 40px;
+  --spacing-13: 52px;
+  --spacing-15: 60px;
+  --spacing-24: 96px;
+  --spacing-42: 168px;
+
+  /* Editorial v4 layout tokens */
+  --section-gap: 25px;
+  --card-padding: 18px;
+  --element-gap: 6px;
+
+  /* Editorial v4 radii */
+  --radius-card: 9px;
+  --radius-button: 0px;
+  --radius-inline: 2px;
+  --radius-pill: 28.8px;
+}
+
+/* Editorial v4 — Reduced motion: disable parallax + cursor follower */
+@media (prefers-reduced-motion: reduce) {
+  .cursor-follower {
+    display: none !important;
+  }
+}
+
+/* Editorial v4 — Hide cursor follower on mobile */
+@media (max-width: 768px) {
+  .cursor-follower {
+    display: none !important;
+  }
+}
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still

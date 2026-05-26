@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono, Bricolage_Grotesque, Lora, JetBrains_Mono } from 'next/font/google'
+import { Geist, Geist_Mono, Bricolage_Grotesque, Lora, JetBrains_Mono, Playfair_Display, Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from 'next-themes'
 import { AudioProvider } from '@/features/landing-page/spotify/audio-context'
 import { MusicPlayer } from '@/features/landing-page/spotify/music-player'
 import { Analytics } from '@vercel/analytics/next'
+import { SmoothScroll } from './providers/smooth-scroll'
+import { CursorFollower } from '@/features/landing-page/components/cursor-follower'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -80,6 +82,19 @@ const lora = Lora({
   display: 'swap',
 })
 
+// Editorial v4 fonts
+const playfair = Playfair_Display({
+  variable: '--font-playfair',
+  subsets: ['latin'],
+  display: 'swap',
+})
+
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin'],
+  display: 'swap',
+})
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -88,7 +103,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geist.variable} ${geistMono.variable} ${bricolage.variable} ${jetbrainsMono.variable} ${lora.variable} bg-white tracking-tight antialiased dark:bg-zinc-950`}
+        className={`${geist.variable} ${geistMono.variable} ${bricolage.variable} ${jetbrainsMono.variable} ${lora.variable} ${playfair.variable} ${inter.variable} bg-white tracking-tight antialiased dark:bg-zinc-950`}
         style={
           {
             '--font-bricolage-grotesque': 'var(--font-bricolage)',
@@ -104,12 +119,15 @@ export default function RootLayout({
           defaultTheme="light"
           themes={['light', 'dark']}
         >
-          <AudioProvider>
-            <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-geist)]">
-              <div className="relative flex-1">{children}</div>
-              <MusicPlayer />
-            </div>
-          </AudioProvider>
+          <SmoothScroll>
+            <AudioProvider>
+              <CursorFollower />
+              <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-geist)]">
+                <div className="relative flex-1">{children}</div>
+                <MusicPlayer />
+              </div>
+            </AudioProvider>
+          </SmoothScroll>
         </ThemeProvider>
         <Analytics />
       </body>

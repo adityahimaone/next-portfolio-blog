@@ -630,3 +630,199 @@
 .animate-hero-desc {
   animation: hero-desc-in 0.6s ease 0.2s both;
 }
+
+/* ──────────────────────────────────────────────────────────────
+   RAVEMPED 3.0 — "One Track. Built from scratch."
+   Concept: Music production session. Tokens scoped under .r3-root
+   so legacy subroutes (/blog, /projects, /music) stay intact.
+   ────────────────────────────────────────────────────────────── */
+
+.r3-root {
+  /* Surfaces */
+  --r3-studio: #090912;
+  --r3-console: #111120;
+  --r3-rack: #18182a;
+  --r3-edge: #25253a;
+
+  /* Text */
+  --r3-text: #e8e8f8;
+  --r3-text-mute: #8b8ba8;
+  --r3-label: #3a3a55;
+
+  /* Accents — DAW track colors */
+  --r3-filament: #ffd580;       /* warm lamp / hero accent */
+  --r3-signal: #39ff6e;         /* active / playing / armed */
+  --r3-clip: #ff7043;           /* featured / clip orange */
+  --r3-beat: #4d9fff;           /* technical / systems */
+  --r3-melody: #c084fc;         /* contact / future / purple */
+
+  /* Track colors per section */
+  --r3-track-hero: var(--r3-clip);
+  --r3-track-about: var(--r3-clip);
+  --r3-track-skills: var(--r3-beat);
+  --r3-track-projects: var(--r3-signal);
+  --r3-track-music: var(--r3-filament);
+  --r3-track-blog: var(--r3-filament);
+  --r3-track-contact: var(--r3-melody);
+
+  /* Type stack */
+  --r3-display: 'Bricolage Grotesque', 'Inter Tight', system-ui, sans-serif;
+  --r3-mono: 'JetBrains Mono', 'Geist Mono', ui-monospace, monospace;
+  --r3-prose: 'Lora', 'Source Serif 4', Georgia, serif;
+
+  background: var(--r3-studio);
+  color: var(--r3-text);
+  font-family: var(--r3-display);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Body lock when ravemped3 root is on the page */
+body:has(.r3-root) {
+  background: var(--r3-studio, #090912);
+  color: var(--r3-text, #e8e8f8);
+}
+
+/* ──── Utility classes scoped to .r3-root ──── */
+.r3-root .r3-mono { font-family: var(--r3-mono); }
+.r3-root .r3-prose { font-family: var(--r3-prose); }
+.r3-root .r3-display { font-family: var(--r3-display); letter-spacing: -0.02em; }
+
+.r3-root .r3-label {
+  font-family: var(--r3-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--r3-text-mute);
+}
+
+.r3-root .r3-panel {
+  background: var(--r3-console);
+  border: 1px solid var(--r3-edge);
+  border-radius: 4px;
+}
+
+.r3-root .r3-panel-rack {
+  background: var(--r3-rack);
+  border: 1px solid var(--r3-edge);
+  border-radius: 2px;
+}
+
+.r3-root .r3-led {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--r3-signal);
+  box-shadow: 0 0 8px currentColor;
+  color: var(--r3-signal);
+}
+
+.r3-root .r3-led--off {
+  background: var(--r3-edge);
+  box-shadow: none;
+  color: var(--r3-edge);
+}
+
+.r3-root .r3-led--filament {
+  background: var(--r3-filament);
+  box-shadow: 0 0 10px var(--r3-filament);
+  color: var(--r3-filament);
+}
+
+.r3-root .r3-led--clip {
+  background: var(--r3-clip);
+  box-shadow: 0 0 10px var(--r3-clip);
+  color: var(--r3-clip);
+}
+
+.r3-root .r3-led--beat {
+  background: var(--r3-beat);
+  box-shadow: 0 0 10px var(--r3-beat);
+  color: var(--r3-beat);
+}
+
+/* Studio grain overlay */
+.r3-root .r3-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  background-size: 3px 3px;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  z-index: 1;
+}
+
+/* DAW grid background */
+.r3-root .r3-grid {
+  background-image:
+    linear-gradient(to right, rgba(232, 232, 248, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232, 232, 248, 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.r3-root .r3-grid-fine {
+  background-image:
+    linear-gradient(to right, rgba(232, 232, 248, 0.03) 1px, transparent 1px);
+  background-size: 16px 100%;
+}
+
+/* Channel fader visual */
+.r3-root .r3-fader-track {
+  position: relative;
+  width: 4px;
+  height: 100%;
+  background: var(--r3-rack);
+  border: 1px solid var(--r3-edge);
+  border-radius: 2px;
+}
+
+.r3-root .r3-fader-thumb {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 8px;
+  background: linear-gradient(180deg, #2c2c44 0%, #1a1a2c 100%);
+  border: 1px solid var(--r3-edge);
+  border-radius: 2px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Animated playhead glow */
+@keyframes r3-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.r3-root .r3-pulse {
+  animation: r3-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes r3-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.r3-root .r3-blink {
+  animation: r3-blink 1s steps(1) infinite;
+}
+
+@keyframes r3-scan {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+.r3-root .r3-scan-line {
+  animation: r3-scan 3s linear infinite;
+}
+
+/* Reduced motion override for r3 */
+@media (prefers-reduced-motion: reduce) {
+  .r3-root *, .r3-root *::before, .r3-root *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

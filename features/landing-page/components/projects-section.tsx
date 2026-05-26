@@ -1,226 +1,149 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { m, AnimatePresence, useInView } from 'motion/react'
-import Image from 'next/image'
-import {
-  Disc,
-  X,
-  Play,
-  Music,
-  Mic2,
-  ArrowUpRight,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+/**
+ * Ravemped 3.0 — Projects Section
+ * Concept: Projects = audio clips in an arrangement timeline.
+ * Horizontal snap-scroll on mobile, grid on md+.
+ */
 
+import { useRef } from 'react'
+import { m, useInView, useReducedMotion } from 'motion/react'
+import Image from 'next/image'
+import { ArrowUpRight } from 'lucide-react'
+
+import { SectionFrame } from '../r3'
 import { PROJECTS_SHOWCASE, type ProjectShowcaseItem } from '../constants'
 
-export function ProjectsSection() {
-  const [selectedProject, setSelectedProject] = useState<ProjectShowcaseItem | null>(
-    null,
-  )
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
+// ─── Clip Card ────────────────────────────────────────────────────────────────
+
+function ClipCard({
+  project,
+  index,
+  isInView,
+}: {
+  project: ProjectShowcaseItem
+  index: number
+  isInView: boolean
+}) {
+  const prefersReduced = useReducedMotion()
 
   return (
-    <>
-      <section
-        id="projects"
-        className="overflow-hidden py-24 2xl:overflow-visible"
-        ref={ref}
+    <m.article
+      initial={prefersReduced ? false : { opacity: 0, y: 24 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay: index * 0.08 }}
+      className="group relative flex w-[70vw] max-w-[320px] shrink-0 snap-center flex-col md:w-full md:max-w-none"
+    >
+      <a
+        href={project.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="r3-panel relative flex flex-col overflow-hidden transition-transform duration-300 group-hover:-translate-y-1"
+        style={{
+          boxShadow: 'none',
+          transition: 'transform 0.3s, box-shadow 0.3s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 20px 2px color-mix(in srgb, var(--r3-signal) 40%, transparent)`
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = 'none'
+        }}
       >
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="mb-16 flex flex-col items-center text-center">
-            <m.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-            >
-              <Disc className="h-4 w-4" />
-              <span>TRACKS</span>
-            </m.div>
-            <m.h2
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.1 }}
-              className="text-4xl font-bold tracking-tighter sm:text-5xl"
-            >
-              Featured Releases
-            </m.h2>
-          </div>
+        {/* Image */}
+        <div className="relative aspect-[16/10] w-full overflow-hidden bg-[var(--r3-rack)]">
+          <Image
+            src={project.image}
+            alt={project.title}
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 70vw"
+            className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+          />
+          {/* Overlay gradient */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--r3-studio)]/80 via-transparent to-transparent" />
 
-          <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
-            {PROJECTS_SHOWCASE.map((project, index) => (
-              <m.div
-                key={project.id}
-                initial={{ opacity: 0, y: 50 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: index * 0.1 }}
-                className="group relative flex flex-col items-center"
-                onClick={() => setSelectedProject(project)}
-              >
-                <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
-                  {/* Vinyl Record sliding out */}
-                  <div className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl transition-all duration-700 ease-out group-hover:translate-x-[50%] group-hover:rotate-360 group-active:translate-x-[50%] group-active:rotate-360">
-                    <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
-                    {/* Grooves */}
-                    <div className="absolute inset-[15%] rounded-full border border-zinc-800/40" />
-                    <div className="absolute inset-[25%] rounded-full border border-zinc-800/40" />
-                    <div className="absolute inset-[35%] rounded-full border border-zinc-800/40" />
-
-                    {/* Center Label */}
-                    <div
-                      className={cn(
-                        'flex h-1/3 w-1/3 items-center justify-center rounded-full bg-linear-to-br text-white shadow-inner',
-                        project.vinylColor,
-                      )}
-                    >
-                      {/* <project.vinylIcon className="w-5 h-5" /> */}
-                    </div>
-                    {/* Center Hole */}
-                    <div className="absolute h-1.5 w-1.5 rounded-full bg-black" />
-                  </div>
-
-                  {/* Album Cover (Card) */}
-                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm bg-zinc-100 shadow-2xl transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:bg-zinc-900">
-                    {/* Image Area */}
-                    <div className="relative h-[75%] w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
-                      <Image
-                        src={project.image}
-                        alt={project.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-cover object-top transition-transform duration-500 group-hover:scale-105 group-active:scale-105"
-                      />
-
-                      {/* Glare effect */}
-                      <div className="pointer-events-none absolute inset-0 bg-linear-to-tr from-white/20 to-transparent opacity-50" />
-                    </div>
-
-                    {/* Info Area (Footer) */}
-                    <div className="relative flex h-[25%] flex-col justify-center border-t border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-950">
-                      <h3 className="truncate text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                        {project.title}
-                      </h3>
-                      <div className="mt-1 flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                        <span className="truncate">{project.genre}</span>
-                        <span className="h-1 w-1 shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                        <span>{project.year}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </m.div>
-            ))}
+          {/* Overlay info */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+            <h3 className="r3-display text-sm font-semibold text-[var(--r3-text)] sm:text-base">
+              {project.title}
+            </h3>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="r3-mono text-[10px] text-[var(--r3-text-mute)]">
+                {project.genre}
+              </span>
+              <span className="h-1 w-1 rounded-full bg-[var(--r3-edge)]" />
+              <span className="r3-mono text-[10px] tabular-nums text-[var(--r3-text-mute)]">
+                {project.year}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Project Detail Modal (Liner Notes) */}
-        <AnimatePresence>
-          {selectedProject && (
-            <m.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-              onClick={() => setSelectedProject(null)}
-            >
-              <m.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className="relative max-h-[90vh] w-[95vw] max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-zinc-900"
-              >
-                {/* Close Button */}
-                <button
-                  onClick={() => setSelectedProject(null)}
-                  aria-label="Close project modal"
-                  className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/10 text-zinc-900 backdrop-blur-md transition-colors hover:bg-black/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+        {/* Footer CTA */}
+        <div className="flex items-center justify-between border-t border-[var(--r3-edge)] bg-[var(--r3-rack)] px-3 py-2.5 sm:px-4">
+          <span className="r3-mono text-[10px] tracking-widest text-[var(--r3-text-mute)]">
+            View case
+          </span>
+          <ArrowUpRight
+            className="h-3.5 w-3.5 text-[var(--r3-text-mute)] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[var(--r3-signal)]"
+            aria-hidden
+          />
+        </div>
+      </a>
+    </m.article>
+  )
+}
 
-                <div className="grid h-full grid-cols-1 md:grid-cols-2">
-                  {/* Left: Image Area */}
-                  <div className="relative h-48 bg-zinc-100 md:h-full dark:bg-zinc-800 lg:h-full">
-                    <Image
-                      src={selectedProject.image}
-                      alt={selectedProject.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
+// ─── Main Section ─────────────────────────────────────────────────────────────
 
-                    {/* Floating Music Note */}
-                    <div className="absolute bottom-6 left-6">
-                      <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg">
-                        <Music className="h-6 w-6 animate-pulse" />
-                      </div>
-                    </div>
-                  </div>
+export function ProjectsSection() {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: '-80px' })
 
-                  {/* Right: Content Area */}
-                  <div className="flex flex-col p-6 md:p-8 overflow-hidden">
-                    <div className="mb-4 md:mb-6">
-                      <div className="text-primary mb-2 flex items-center gap-2 text-sm font-medium">
-                        <Mic2 className="h-4 w-4" />
-                        <span>FEATURED TRACK</span>
-                      </div>
-                      <h3 className="text-2xl md:text-3xl leading-tight font-bold text-zinc-900 dark:text-zinc-100">
-                        {selectedProject.title}
-                      </h3>
-                      <div className="mt-2 flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-                        <span>{selectedProject.genre}</span>
-                        <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                        <span>{selectedProject.year}</span>
-                      </div>
-                    </div>
+  return (
+    <SectionFrame
+      id="projects"
+      track="03"
+      name="WORK"
+      device="Arrangement View / Clips"
+      color="signal"
+    >
+      <div ref={ref}>
+        {/* Mobile: horizontal snap scroll */}
+        <div className="scrollbar-none -mx-4 flex gap-4 overflow-x-auto scroll-smooth px-4 snap-x snap-mandatory md:hidden">
+          {PROJECTS_SHOWCASE.map((project, index) => (
+            <ClipCard
+              key={project.id}
+              project={project}
+              index={index}
+              isInView={isInView}
+            />
+          ))}
+          {/* Spacer for last card peek */}
+          <div className="w-4 shrink-0" aria-hidden />
+        </div>
 
-                    <div className="flex-1 overflow-y-auto pr-2">
-                      <p className="text-base md:text-lg leading-relaxed text-zinc-600 line-clamp-4 md:line-clamp-none dark:text-zinc-300">
-                        {selectedProject.description}
-                      </p>
+        {/* Desktop: grid */}
+        <div className="hidden md:grid md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-6">
+          {PROJECTS_SHOWCASE.map((project, index) => (
+            <ClipCard
+              key={project.id}
+              project={project}
+              index={index}
+              isInView={isInView}
+            />
+          ))}
+        </div>
 
-                      <div className="mt-8 space-y-4">
-                        <h4 className="text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-zinc-100">
-                          Production Credits
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {['React', 'Next.js', 'Tailwind', 'TypeScript'].map(
-                            (tech) => (
-                              <span
-                                key={tech}
-                                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                              >
-                                {tech}
-                              </span>
-                            ),
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-8 border-t border-zinc-100 pt-6 dark:border-zinc-800">
-                      <a
-                        href={selectedProject.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 py-4 font-bold text-white transition-all hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
-                      >
-                        <Play className="h-5 w-5 fill-current" />
-                        <span>Listen to Track (Visit Site)</span>
-                        <ArrowUpRight className="ml-auto h-5 w-5 opacity-50 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </m.div>
-            </m.div>
-          )}
-        </AnimatePresence>
-      </section>
-    </>
+        {/* Scroll hint (mobile only) */}
+        <div className="mt-4 flex items-center justify-center gap-2 md:hidden">
+          <span className="h-px w-6 bg-[var(--r3-edge)]" />
+          <span className="r3-mono text-[9px] tracking-widest text-[var(--r3-text-mute)]">
+            SWIPE →
+          </span>
+          <span className="h-px w-6 bg-[var(--r3-edge)]" />
+        </div>
+      </div>
+    </SectionFrame>
   )
 }

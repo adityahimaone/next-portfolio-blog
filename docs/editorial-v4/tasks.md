@@ -128,20 +128,20 @@ Semua content dari v2 **dipertahankan dan dimapping ulang** — tidak ada yang h
 
 ---
 
-## Phase 4 — Music Player + Contact 🔥 ACTIVE
+## Phase 4 — Music Player + Contact ✅ DONE
 
 **Acceptance criteria:**
-- [ ] Music: canvas section (--color-slate background)
-- [ ] Music: two-column layout (now playing card left, prose right)
-- [ ] Music: now playing card (album art circular mask, progress bar, controls, waveform visualizer)
-- [ ] Music: Tone.js integration retained (audio engine from revamped-4.0)
-- [ ] Music: background illustration (opacity 0.08, parallax 0.12)
-- [ ] Contact: full-viewport closing section (100vh, --color-ink background)
-- [ ] Contact: multi-layer parallax (illustration, vignette, centered content)
-- [ ] Contact: email button (ghost style, mailto link)
-- [ ] Contact: social links (GitHub, LinkedIn, Email)
-- [ ] Contact: footer text (copyright)
-- [ ] Mobile responsive
+- [x] Music: canvas section (--color-slate background)
+- [x] Music: two-column layout (now playing card left, prose right)
+- [x] Music: now playing card (album art circular mask, progress bar, controls, waveform visualizer)
+- [x] Music: Tone.js integration retained (audio engine from revamped-4.0)
+- [x] Music: background illustration (opacity 0.08, parallax 0.12)
+- [x] Contact: full-viewport closing section (100vh, --color-ink background)
+- [x] Contact: multi-layer parallax (illustration, vignette, centered content)
+- [x] Contact: email button (ghost style, mailto link)
+- [x] Contact: social links (GitHub, LinkedIn, Email)
+- [x] Contact: footer text (copyright)
+- [x] Mobile responsive
 
 **Files to create:**
 - `features/landing-page/components/music-section-v4.tsx`
@@ -154,7 +154,7 @@ Semua content dari v2 **dipertahankan dan dimapping ulang** — tidak ada yang h
 
 ---
 
-## Phase 5 — Polish + Responsive
+## Phase 5 — Polish + Responsive 🔥 NEXT
 
 **Acceptance criteria:**
 - [ ] All parallax speeds tuned (visual audit on Mac)

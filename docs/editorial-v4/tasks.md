@@ -24,20 +24,20 @@ Semua content dari v2 **dipertahankan dan dimapping ulang** — tidak ada yang h
 
 ---
 
-## Phase 0 — Foundation & Design Tokens 🔥 ACTIVE
+## Phase 0 — Foundation & Design Tokens ✅ DONE
 
 **Acceptance criteria:**
-- [ ] Tailwind v4 @theme tokens untuk color palette (canvas, slate, smoke, ink, off-white, accent-grey, dark-surface, dark-card)
-- [ ] Typography tokens (Playfair Display + Inter via next/font)
-- [ ] Spacing + radius tokens (section-gap, card-padding, element-gap, radius-card, radius-button, radius-pill)
-- [ ] CSS variables injected ke globals.css
-- [ ] Lenis smooth scroll provider setup
-- [ ] ParallaxLayer component (reusable Framer Motion + useScroll)
-- [ ] useCursorFollower hook (lerp-based cursor tracking)
-- [ ] Cursor follower DOM element (global, z-index 9999)
-- [ ] Preloader redesign (new sequence: title fade → subtitle → line extend → fade out)
-- [ ] Header component (transparent → solid on scroll, ghost nav links)
-- [ ] Illustration assets downloaded + optimized (Next.js Image)
+- [x] Tailwind v4 @theme tokens untuk color palette (canvas, slate, smoke, ink, off-white, accent-grey, dark-surface, dark-card)
+- [x] Typography tokens (Playfair Display + Inter via next/font)
+- [x] Spacing + radius tokens (section-gap, card-padding, element-gap, radius-card, radius-button, radius-pill)
+- [x] CSS variables injected ke globals.css
+- [x] Lenis smooth scroll provider setup
+- [x] ParallaxLayer component (reusable Framer Motion + useScroll)
+- [x] useCursorFollower hook (lerp-based cursor tracking)
+- [x] Cursor follower DOM element (global, z-index 9999)
+- [x] Preloader redesign (new sequence: title fade → subtitle → line extend → fade out)
+- [x] Header component (transparent → solid on scroll, ghost nav links)
+- [ ] Illustration assets downloaded + optimized (Next.js Image) — SKIP (manual)
 
 **Files to create:**
 - `app/globals.css` — @theme tokens + Lenis setup
@@ -56,7 +56,7 @@ Semua content dari v2 **dipertahankan dan dimapping ulang** — tidak ada yang h
 
 ---
 
-## Phase 1 — Preloader + Hero
+## Phase 1 — Preloader + Hero 🔥 ACTIVE
 
 **Acceptance criteria:**
 - [ ] Preloader sequence (1200ms total: title fade → subtitle → line → fade out)

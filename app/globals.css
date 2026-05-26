@@ -75,6 +75,11 @@
   .cursor-follower {
     display: none !important;
   }
+  
+  /* Disable parallax on mobile */
+  [data-parallax="true"] {
+    transform: none !important;
+  }
 }
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,

@@ -19,7 +19,12 @@ export function ParallaxLayer({
   const { ref, y } = useParallaxLayer({ speed, direction })
 
   return (
-    <motion.div ref={ref} style={{ y }} className={className}>
+    <motion.div
+      ref={ref}
+      style={{ y }}
+      className={className}
+      data-parallax="true"
+    >
       {children}
     </motion.div>
   )

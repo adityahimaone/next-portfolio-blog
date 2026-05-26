@@ -56,17 +56,17 @@ Semua content dari v2 **dipertahankan dan dimapping ulang** — tidak ada yang h
 
 ---
 
-## Phase 1 — Preloader + Hero 🔥 ACTIVE
+## Phase 1 — Preloader + Hero ✅ DONE
 
 **Acceptance criteria:**
-- [ ] Preloader sequence (1200ms total: title fade → subtitle → line → fade out)
-- [ ] Hero full-viewport layout (100vh, overflow hidden)
-- [ ] Hero: 5-layer stack (bg dark surface, illustration A, illustration B, radial gradient vignette, centered content)
-- [ ] Hero: parallax speeds (0.10, 0.25, 0.55 per layer)
-- [ ] Hero: centered content (label, line, name, subtitle, CTA button)
-- [ ] Hero: cursor follower integration (40px circle, expand on hover)
-- [ ] Hero: scroll indicator (bottom center, fade out on scroll)
-- [ ] Mobile responsive (parallax disabled, stacked layout)
+- [x] Preloader sequence (1200ms total: title fade → subtitle → line → fade out)
+- [x] Hero full-viewport layout (100vh, overflow hidden)
+- [x] Hero: 5-layer stack (bg dark surface, illustration A, illustration B, radial gradient vignette, centered content)
+- [x] Hero: parallax speeds (0.10, 0.25, 0.55 per layer)
+- [x] Hero: centered content (label, line, name, subtitle, CTA button)
+- [x] Hero: cursor follower integration (40px circle, expand on hover)
+- [x] Hero: scroll indicator (bottom center, fade out on scroll)
+- [x] Mobile responsive (parallax disabled, stacked layout)
 
 **Files to create:**
 - `features/landing-page/components/hero-section-v4.tsx`
@@ -77,19 +77,19 @@ Semua content dari v2 **dipertahankan dan dimapping ulang** — tidak ada yang h
 
 ---
 
-## Phase 2 — About + Skills
+## Phase 2 — About + Skills ✅ DONE
 
 **Acceptance criteria:**
-- [ ] About: two-column layout (illustration left, prose right)
-- [ ] About: circular mask illustration (480px diameter)
-- [ ] About: stats cards (2x2 grid, hover lift animation)
-- [ ] About: parallax on illustration (0.30 speed)
-- [ ] Skills: dark alternating section (--color-dark-surface)
-- [ ] Skills: three-column feature cards
-- [ ] Skills: illustration per card (parallax 0.20–0.25)
-- [ ] Skills: [ + - ] expand toggle (Framer Motion layout animation)
-- [ ] Skills: proficiency indicator (dot system 1–5) on expand
-- [ ] Mobile responsive (stack to single column)
+- [x] About: two-column layout (illustration left, prose right)
+- [x] About: circular mask illustration (480px diameter)
+- [x] About: stats cards (2x2 grid, hover lift animation)
+- [x] About: parallax on illustration (0.30 speed)
+- [x] Skills: dark alternating section (--color-dark-surface)
+- [x] Skills: three-column feature cards
+- [x] Skills: illustration per card (parallax 0.20–0.25)
+- [x] Skills: [ + - ] expand toggle (Framer Motion layout animation)
+- [x] Skills: proficiency indicator (dot system 1–5) on expand
+- [x] Mobile responsive (stack to single column)
 
 **Files to create:**
 - `features/landing-page/components/about-section-v4.tsx`
@@ -102,7 +102,7 @@ Semua content dari v2 **dipertahankan dan dimapping ulang** — tidak ada yang h
 
 ---
 
-## Phase 3 — Experience + Projects
+## Phase 3 — Experience + Projects 🔥 ACTIVE
 
 **Acceptance criteria:**
 - [ ] Experience: canvas section, vertical timeline (central line, alternating left/right entries)

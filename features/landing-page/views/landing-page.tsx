@@ -5,8 +5,8 @@
  *
  * Wraps all v4 sections in editorial design language.
  * Section order:
- *   00 Preloader → 01 Hero → 02 About → 03 Skills → 04 Projects
- *      → 05 Music → 06 Blog → 07 Contact
+ *   00 Preloader → 01 Hero → 02 About → 03 Skills → 04 Experience → 05 Projects
+ *      → 06 Music → 07 Blog → 08 Contact
  */
 
 import dynamic from 'next/dynamic'
@@ -26,10 +26,16 @@ const AboutSectionV4 = dynamic(() =>
 const SkillsSectionV4 = dynamic(() =>
   import('../components/skills-section-v4').then((m) => m.SkillsSectionV4),
 )
-// Sections from existing v3 — will be replaced phase by phase
-const ProjectsSection = dynamic(() =>
-  import('../components/projects-section').then((m) => m.ProjectsSection),
+// Phase 3 — Experience + Projects v4 sections
+const ExperienceSectionV4 = dynamic(() =>
+  import('../components/experience-section-v4').then(
+    (m) => m.ExperienceSectionV4,
+  ),
 )
+const ProjectsSectionV4 = dynamic(() =>
+  import('../components/projects-section-v4').then((m) => m.ProjectsSectionV4),
+)
+// Sections from existing v3 — will be replaced phase by phase
 const MusicSection = dynamic(() =>
   import('../components/music-section').then((m) => m.MusicSection),
 )
@@ -52,8 +58,10 @@ export default function LandingPage() {
           {/* Phase 2: About + Skills v4 sections */}
           <AboutSectionV4 />
           <SkillsSectionV4 />
-          {/* Phase 3-4: remaining sections (using v3 temporarily) */}
-          <ProjectsSection />
+          {/* Phase 3: Experience + Projects v4 sections */}
+          <ExperienceSectionV4 />
+          <ProjectsSectionV4 />
+          {/* Phase 4: remaining sections (using v3 temporarily) */}
           <MusicSection />
           <BlogSection />
           <ContactSection />

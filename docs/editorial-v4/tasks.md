@@ -102,20 +102,20 @@ Semua content dari v2 **dipertahankan dan dimapping ulang** — tidak ada yang h
 
 ---
 
-## Phase 3 — Experience + Projects 🔥 ACTIVE
+## Phase 3 — Experience + Projects ✅ DONE
 
 **Acceptance criteria:**
-- [ ] Experience: canvas section, vertical timeline (central line, alternating left/right entries)
-- [ ] Experience: entry cards (--color-smoke background, 9px radius, 32px padding)
-- [ ] Experience: background illustration layer (opacity 0.06, parallax 0.08)
-- [ ] Experience: hover lift animation on cards
-- [ ] Experience: pulsing dot animation on timeline
-- [ ] Projects: dark section (--color-dark-surface)
-- [ ] Projects: featured full-width card (16/7 aspect ratio)
-- [ ] Projects: 2-column grid cards (4/5 aspect ratio)
-- [ ] Projects: in-card image parallax on hover (scale + translateY)
-- [ ] Projects: overlay gradient + text panel
-- [ ] Mobile responsive (single column)
+- [x] Experience: canvas section, vertical timeline (central line, alternating left/right entries)
+- [x] Experience: entry cards (--color-smoke background, 9px radius, 32px padding)
+- [x] Experience: background illustration layer (opacity 0.06, parallax 0.08)
+- [x] Experience: hover lift animation on cards
+- [x] Experience: pulsing dot animation on timeline
+- [x] Projects: dark section (--color-dark-surface)
+- [x] Projects: featured full-width card (16/7 aspect ratio)
+- [x] Projects: 2-column grid cards (4/5 aspect ratio)
+- [x] Projects: in-card image parallax on hover (scale + translateY)
+- [x] Projects: overlay gradient + text panel
+- [x] Mobile responsive (single column)
 
 **Files to create:**
 - `features/landing-page/components/experience-section-v4.tsx`
@@ -128,7 +128,7 @@ Semua content dari v2 **dipertahankan dan dimapping ulang** — tidak ada yang h
 
 ---
 
-## Phase 4 — Music Player + Contact
+## Phase 4 — Music Player + Contact 🔥 ACTIVE
 
 **Acceptance criteria:**
 - [ ] Music: canvas section (--color-slate background)

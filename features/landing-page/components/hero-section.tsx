@@ -128,7 +128,10 @@ export function HeroSection() {
               <button
                 onClick={togglePlay}
                 aria-label={isPlaying ? 'Pause Session' : 'Play Session'}
-                className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-zinc-100 to-zinc-300 shadow-[0_2px_5px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.1)] transition-all active:scale-95 active:shadow-inner sm:h-14 sm:w-14 dark:from-zinc-700 dark:to-zinc-800 dark:shadow-[0_2px_5px_rgba(0,0,0,0.5),0_0_0_1px_rgba(0,0,0,0.5)]"
+                className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-zinc-100 to-zinc-300 transition-all active:scale-95 sm:h-14 sm:w-14 dark:from-zinc-700 dark:to-zinc-800"
+                style={{
+                  boxShadow: '6px 6px 12px rgba(0,0,0,0.15), -6px -6px 12px rgba(255,255,255,0.7), inset 0 1px 0 rgba(255,255,255,0.3)',
+                }}
               >
                 <div className="bg-primary/5 absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
                 {isPlaying ? (

@@ -64,11 +64,16 @@ export function Header() {
     <>
       <header
         className={cn(
-          'fixed top-0 right-0 left-0 z-50 flex items-center justify-between border-b-[3px] px-6 shadow-xl transition-all duration-300 md:px-10',
+          'fixed top-0 right-0 left-0 z-50 flex items-center justify-between border-b-[3px] px-6 transition-all duration-300 md:px-10',
           isScrolled
-            ? 'border-primary/50 h-14 neu-raised bg-[#f0f0f3]/90 backdrop-blur-md md:h-16 dark:bg-zinc-900/90 rounded-b-2xl'
-            : 'border-primary dark:border-primary/50 h-16 neu-raised bg-[#f0f0f3] md:h-[84px] dark:bg-zinc-900 rounded-b-2xl',
+            ? 'border-primary/50 h-14 bg-[#f0f0f3]/90 backdrop-blur-md md:h-16 dark:bg-zinc-900/90'
+            : 'border-primary dark:border-primary/50 h-16 bg-[#f0f0f3] md:h-[84px] dark:bg-zinc-900',
         )}
+        style={{
+          boxShadow: isScrolled
+            ? '6px 6px 12px rgba(0,0,0,0.06), -6px -6px 12px rgba(255,255,255,0.5)'
+            : '8px 8px 16px rgba(0,0,0,0.08), -8px -8px 16px rgba(255,255,255,0.7)',
+        }}
       >
         {/* Left: Power Switch (Theme Toggle) */}
         <div className="flex items-start gap-4 md:gap-6">

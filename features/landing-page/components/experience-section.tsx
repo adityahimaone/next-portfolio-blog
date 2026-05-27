@@ -47,7 +47,7 @@ export function ExperienceSection() {
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
             {/* Left Column: Tracklist / Selector */}
             <div className="lg:col-span-5">
-              <div className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+              <div className="flex flex-col gap-2 rounded-2xl neu-raised bg-[#f0f0f3] p-2 dark:bg-zinc-900">
                 <div className="mb-2 px-4 py-2 text-xs font-bold tracking-wider text-zinc-600 uppercase dark:text-zinc-400">
                   Select a Track
                 </div>
@@ -134,7 +134,7 @@ export function ExperienceSection() {
 
             {/* Right Column: The Player / Details */}
             <div className="lg:col-span-7">
-              <div className="relative h-full min-h-[500px] overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
+              <div className="relative h-full min-h-[500px] overflow-hidden rounded-3xl neu-raised bg-[#f0f0f3] dark:bg-zinc-900">
                 {/* Background Ambience */}
                 <AnimatePresence mode="wait">
                   <m.div
@@ -277,7 +277,7 @@ export function ExperienceSection() {
                     </AnimatePresence>
                   </div>
                   {/* Player Controls (Decorative) */}
-                  <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+                  <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800 neu-flat rounded-xl">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="flex gap-1">

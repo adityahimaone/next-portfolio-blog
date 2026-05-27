@@ -66,8 +66,8 @@ export function Header() {
         className={cn(
           'fixed top-0 right-0 left-0 z-50 flex items-center justify-between border-b-[3px] px-6 shadow-xl transition-all duration-300 md:px-10',
           isScrolled
-            ? 'border-primary/50 h-14 bg-white/80 backdrop-blur-md md:h-16 dark:bg-zinc-900/80'
-            : 'border-primary dark:border-primary/50 h-16 bg-linear-to-b from-zinc-100 to-zinc-200 md:h-[84px] dark:from-zinc-900 dark:to-zinc-950',
+            ? 'border-primary/50 h-14 neu-raised bg-[#f0f0f3]/90 backdrop-blur-md md:h-16 dark:bg-zinc-900/90 rounded-b-2xl'
+            : 'border-primary dark:border-primary/50 h-16 neu-raised bg-[#f0f0f3] md:h-[84px] dark:bg-zinc-900 rounded-b-2xl',
         )}
       >
         {/* Left: Power Switch (Theme Toggle) */}

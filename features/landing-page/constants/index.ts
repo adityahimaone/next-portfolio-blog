@@ -209,8 +209,19 @@ export const MIXER_DATA: readonly MixerGroup[] = [
     channels: [
       { name: 'VS CODE', level: 99 },
       { name: 'FIGMA', level: 85 },
-      { name: 'GIT', level: 90 },
-      { name: 'MOTION', level: 90 },
+    { name: 'GIT', level: 90 },
+    { name: 'MOTION', level: 90 },
+    ],
+  },
+  {
+    id: 'daw',
+    label: 'DAW & PLUGINS',
+    type: 'knob',
+    channels: [
+      { name: 'ABLETON', level: 80 },
+      { name: 'LOGIC', level: 70 },
+      { name: 'FL ST', level: 60 },
+      { name: 'VST', level: 75 },
     ],
   },
 ] as const

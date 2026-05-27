@@ -26,7 +26,7 @@ export function Footer() {
   return (
     <footer
       ref={ref}
-      className="relative overflow-hidden border-t border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
+      className="relative overflow-hidden neu-raised rounded-t-3xl border-t border-zinc-200 bg-[#f0f0f3] dark:border-zinc-800 dark:bg-zinc-900 mt-8"
     >
       {/* Animated Background Pattern */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.02]">

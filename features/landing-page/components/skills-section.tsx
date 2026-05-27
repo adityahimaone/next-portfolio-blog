@@ -5,6 +5,7 @@ import { m, useMotionValue, animate } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
 import { Sliders, Music } from 'lucide-react'
+import { Oscilloscope } from '@/features/music/components/oscilloscope'
 
 import { MIXER_DATA } from '../constants'
 
@@ -182,7 +183,7 @@ export function SkillsSection() {
           </div>
 
           {/* The Mixer Board */}
-          <div className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-200 p-4 shadow-2xl dark:bg-zinc-900">
+          <div className="relative mx-auto max-w-6xl rounded-3xl neu-raised bg-[#f0f0f3] p-4 dark:bg-zinc-900">
             {/* Metallic Texture Overlay */}
             <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
 
@@ -267,8 +268,11 @@ export function SkillsSection() {
                     </button>
                   </div>
 
-                  <div className="hidden md:block">
+                  <div className="hidden md:flex md:items-end md:gap-4">
                     <VUMeter isOn={isOn} />
+                    <div className="hidden lg:block w-48">
+                      <Oscilloscope />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -336,6 +340,25 @@ export function SkillsSection() {
                     </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-8">
                       {MIXER_DATA[2].channels.map((skill) => (
+                        <Knob
+                          key={skill.name}
+                          value={isOn ? skill.level : 0}
+                          label={skill.name}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Section 4: DAW & Plugins */}
+                  <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner dark:border-zinc-800 dark:bg-zinc-900/50">
+                    <div className="mb-6 flex items-center justify-between">
+                      <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
+                        DAW: Plugins
+                      </h4>
+                      <div className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-8">
+                      {MIXER_DATA[3].channels.map((skill) => (
                         <Knob
                           key={skill.name}
                           value={isOn ? skill.level : 0}

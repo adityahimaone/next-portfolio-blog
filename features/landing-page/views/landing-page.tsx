@@ -24,7 +24,10 @@ const ContactSection = dynamic(() => import('../components/contact/contact-secti
 const ProjectsSection = dynamic(() => import('../components/projects-section').then((mod) => mod.ProjectsSection))
 const MusicMarquee = dynamic(() => import('../spotify/music-marquee').then((mod) => mod.MusicMarquee))
 
-import { SectionDivider } from '@/components/section-divider'
+import { TapeReelDivider } from '../dividers/tape-reel-divider'
+import { VinylDivider } from '../dividers/vinyl-divider'
+import { WaveformDivider } from '../dividers/waveform-divider'
+import { CassetteDivider } from '../dividers/cassette-divider'
 import { ChevronUp } from 'lucide-react'
 import { usePreloader } from '../hooks/use-preloader'
 
@@ -148,17 +151,17 @@ export default function LandingPage() {
 
               {/* Main Content Sections */}
               <div className="mx-auto w-full max-w-7xl space-y-2 py-20">
-                <SectionDivider />
+                <TapeReelDivider />
                 <section id="about" className="snap-start scroll-mt-0">
                   <AboutSection />
                 </section>
 
-                <SectionDivider />
+                <VinylDivider />
                 <section id="skills" className="snap-start scroll-mt-0">
                   <SkillsSection />
                 </section>
 
-                <SectionDivider />
+                <WaveformDivider />
                 <section id="experience" className="snap-start scroll-mt-0">
                   <ExperienceSection />
                 </section>
@@ -173,9 +176,9 @@ export default function LandingPage() {
                 <ProjectsSection />
               </section>
 
-              <div className="mb-5">
-                <SectionDivider />
-              </div>
+             <div className="mb-5">
+                <CassetteDivider />
+             </div>
 
               <section id="contact" className="snap-start">
                 <ContactSection />

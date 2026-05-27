@@ -9,7 +9,7 @@ import { Analytics } from '@vercel/analytics/next'
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#ffffff',
+  themeColor: '#1e2030',
 }
 
 export const metadata: Metadata = {
@@ -67,13 +67,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geist.variable} ${geistMono.variable} bg-white tracking-tight antialiased dark:bg-zinc-950`}
+        className={`${geist.variable} ${geistMono.variable} tracking-tight antialiased`}
+        style={{ background: 'var(--nm-bg)' }}
       >
         <ThemeProvider
           enableSystem={false}
           attribute="class"
           storageKey="theme"
-          defaultTheme="light"
+          defaultTheme="dark"
           themes={['light', 'dark']}
         >
           <AudioProvider>

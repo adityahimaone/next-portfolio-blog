@@ -13,7 +13,7 @@ import dynamic from 'next/dynamic'
 const loadFeatures = () => import('motion/react').then((res) => res.domMax)
 
 import { Preloader } from '../animations/preloader'
-import { Header } from '@/features/layout/components/header'
+import Header from '@/features/layout/components/header'
 import { Footer } from '@/features/layout/components/footer'
 import { HeroSection } from '../components/hero-section'
 
@@ -24,12 +24,9 @@ const ContactSection = dynamic(() => import('../components/contact/contact-secti
 const ProjectsSection = dynamic(() => import('../components/projects-section').then((mod) => mod.ProjectsSection))
 const MusicMarquee = dynamic(() => import('../spotify/music-marquee').then((mod) => mod.MusicMarquee))
 
-import { TapeReelDivider } from '../dividers/tape-reel-divider'
-import { VinylDivider } from '../dividers/vinyl-divider'
-import { WaveformDivider } from '../dividers/waveform-divider'
-import { CassetteDivider } from '../dividers/cassette-divider'
-import { SectionDivider } from '../dividers/section-divider'
 import { ChevronUp } from 'lucide-react'
+import { SectionConnector } from '@/features/landing-page/components/section-connector'
+import { SpectrumSidebar } from '@/components/spectrum-sidebar'
 import { usePreloader } from '../hooks/use-preloader'
 
 export default function LandingPage() {
@@ -136,11 +133,8 @@ export default function LandingPage() {
 
           {/* Main content */}
           <main className="relative">
-            <div className="snap-y snap-mandatory">
               {/* Hero Section */}
-              <section
-                className="relative h-screen snap-start overflow-hidden"
-              >
+              <section className="relative h-screen snap-start overflow-hidden">
                 <div className="relative">
                   <Header />
                   <HeroSection />
@@ -152,40 +146,30 @@ export default function LandingPage() {
 
               {/* Main Content Sections */}
               <div className="mx-auto w-full max-w-7xl space-y-2 py-20">
-                <TapeReelDivider />
                 <section id="about" className="snap-start scroll-mt-0">
                   <AboutSection />
                 </section>
 
-                <VinylDivider />
                 <section id="skills" className="snap-start scroll-mt-0">
                   <SkillsSection />
                 </section>
 
-                <WaveformDivider />
                 <section id="experience" className="snap-start scroll-mt-0">
                   <ExperienceSection />
                 </section>
 
-                <SectionDivider />
+                <section id="projects" className="snap-start scroll-mt-0">
+                  <ProjectsSection />
+                </section>
+
+                <section id="contact" className="snap-start">
+                  <ContactSection />
+                </section>
               </div>
-
-              <section
-                id="projects"
-                className="dark:bg-accent snap-start scroll-mt-0"
-              >
-                <ProjectsSection />
-              </section>
-
-             <div className="mb-5">
-                <CassetteDivider />
-             </div>
-
-              <section id="contact" className="snap-start">
-                <ContactSection />
-              </section>
-            </div>
           </main>
+
+          {/* Spectrum Sidebar */}
+          <SpectrumSidebar />
         </m.div>
 
         {/* Footer */}

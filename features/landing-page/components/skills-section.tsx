@@ -1,368 +1,277 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { m, useMotionValue, animate } from 'motion/react'
 import { cn } from '@/lib/utils'
-import { Screw } from '@/components/screw'
-import { Sliders, Music } from 'lucide-react'
-import { Oscilloscope } from '@/features/music/components/oscilloscope'
+import { Sliders } from 'lucide-react'
 
-import { MIXER_DATA } from '../constants'
+// --- Rack Screw component ---
+function RackScrew() {
+  return (
+    <div className="relative h-3 w-3 rounded-full" style={{ boxShadow: 'var(--nm-flat)' }}>
+      <div className="absolute inset-[30%] rounded-full bg-zinc-800/50" />
+      <div
+        className="absolute top-[35%] left-[35%] h-[30%] w-[30%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-zinc-600"
+        style={{ transform: 'rotate(45deg)' }}
+      />
+    </div>
+  )
+}
 
-// --- Components ---
+// --- KeyCap for languages ---
+function KeyCap({ label, color, level }: { label: string; color: string; level: number }) {
+  const [pressed, setPressed] = useState(false)
 
-// Screw component imported from @/components/screw
+  return (
+    <m.button
+      className="group relative flex h-12 w-12 flex-col items-center justify-center rounded-lg font-mono text-[10px] font-bold transition-all"
+      style={{
+        boxShadow: pressed ? 'var(--nm-inset)' : 'var(--nm-raised)',
+        color: pressed ? color : 'transparent',
+        WebkitTextStroke: pressed ? `0px` : `0.5px ${color}`,
+        border: pressed ? `1px solid ${color}30` : '1px solid transparent',
+      }}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      onMouseLeave={() => setPressed(false)}
+      animate={{
+        y: pressed ? 2 : 0,
+      }}
+      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+    >
+      {label}
+      <span className="mt-0.5 text-[7px] font-normal opacity-60">{level}%</span>
+    </m.button>
+  )
+}
 
-const Knob = ({ value, label }: { value: number; label: string }) => {
+// --- EQ Fader ---
+function EQFader({ label, value, color }: { label: string; value: number; color: string }) {
+  const maxTravel = 96
+  const initialY = -((value / 100) * maxTravel)
+  const y = useMotionValue(0)
+
+  useEffect(() => {
+    const controls = animate(y, initialY, {
+      duration: 1,
+      ease: 'easeOut',
+      delay: 0.3,
+    })
+    return () => controls.stop()
+  }, [initialY, y])
+
+  return (
+    <div className="flex touch-none flex-col items-center gap-2">
+      <div className="relative flex h-36 w-8 justify-center rounded py-2" style={{ boxShadow: 'var(--nm-inset)' }}>
+        {/* Track gradient */}
+        <div
+          className="absolute inset-0 rounded"
+          style={{
+            background: `linear-gradient(to top, transparent, ${color}40, ${color})`,
+            opacity: value / 100,
+          }}
+        />
+
+        {/* Fader Thumb */}
+        <m.div
+          className="absolute bottom-2 left-1/2 z-10 flex h-8 w-6 -translate-x-1/2 cursor-grab items-center justify-center rounded-sm active:cursor-grabbing"
+          style={{
+            y,
+            boxShadow: 'var(--nm-raised)',
+          }}
+          drag="y"
+          dragConstraints={{ top: -maxTravel, bottom: 0 }}
+          dragElastic={0}
+          dragMomentum={false}
+        >
+          <div className="h-3 w-full rounded-sm bg-zinc-800/50" />
+        </m.div>
+      </div>
+      <span className="text-[9px] font-mono font-bold tracking-wider text-zinc-500 uppercase">
+        {label}
+      </span>
+      <span className="text-[7px] font-mono text-zinc-600">{value}</span>
+    </div>
+  )
+}
+
+// --- Potentiometer (Knob) ---
+function Potentiometer({ label, value, color }: { label: string; value: number; color: string }) {
   const minDeg = -135
   const maxDeg = 135
   const startDeg = (value / 100) * 270 - 135
   const rotation = useMotionValue(minDeg)
 
   useEffect(() => {
-    const controls = animate(rotation, startDeg, {
-      duration: 1.5,
-      type: 'spring',
-      bounce: 0.2,
-      delay: 0.5,
-    })
-    return () => controls.stop()
-  }, [startDeg])
-
-  const handlePan = (_: any, info: { delta: { y: number } }) => {
-    const current = rotation.get()
-    // Drag up (negative y) -> increase rotation (positive delta)
-    const delta = -info.delta.y * 2
-    const newRot = Math.min(maxDeg, Math.max(minDeg, current + delta))
-    rotation.set(newRot)
-  }
+    animate(rotation, startDeg, { duration: 1, type: 'spring', bounce: 0.2, delay: 0.5 })
+  }, [startDeg, rotation])
 
   return (
-    <div className="flex touch-none flex-col items-center gap-3">
-      <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-zinc-700/50 bg-zinc-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.1)]">
-        {/* Ticks */}
-        {[...Array(11)].map((_, i) => {
-          const rot = (i / 10) * 270 - 135
-          return (
-            <div
-              key={i}
-              className="absolute h-full w-full"
-              style={{ transform: `rotate(${rot}deg)` }}
-            >
-              <div className="absolute top-1 left-1/2 h-1.5 w-0.5 -translate-x-1/2 bg-zinc-600" />
-            </div>
-          )
-        })}
-
-        {/* The Knob */}
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="relative flex h-14 w-14 items-center justify-center rounded-full" style={{ boxShadow: 'var(--nm-inset)' }}>
+        {/* Mercury Indicator */}
         <m.div
-          className="relative h-14 w-14 cursor-grab rounded-full border border-zinc-950 bg-linear-to-b from-zinc-700 to-zinc-900 shadow-[0_4px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] active:cursor-grabbing"
-          style={{ rotate: rotation }}
-          onPan={handlePan}
+          className="h-12 w-12 cursor-grab rounded-full active:cursor-grabbing"
+          style={{ rotate: rotation, boxShadow: 'var(--nm-raised)' }}
         >
-          {/* Indicator Line */}
-          <div className="bg-primary absolute top-1.5 left-1/2 h-4 w-1 -translate-x-1/2 rounded-full shadow-[0_0_5px_rgba(var(--primary),0.8)]" />
+          <div
+            className="absolute top-1.5 left-1/2 h-3 w-0.5 -translate-x-1/2 rounded-full"
+            style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }}
+          />
         </m.div>
+
+        {/* Center dot */}
+        <div className="absolute rounded-full h-2 w-2 bg-zinc-800" />
       </div>
-      <span className="text-[10px] font-bold tracking-widest text-zinc-500 select-none">
+      <span className="text-[9px] font-mono font-bold tracking-wider text-zinc-500 uppercase text-center">
         {label}
       </span>
     </div>
   )
 }
 
-const Fader = ({ value, label }: { value: number; label: string }) => {
-  // Track height 192px (h-48) - Padding 32px (py-4) - Cap 48px (h-12) = 112px travel
-  const maxTravel = 112
-  const initialY = -((value / 100) * maxTravel)
-  const y = useMotionValue(0)
+// --- Languages ---
+const LANGUAGES = [
+  { name: 'HTML', level: 90, color: '#ff6b35' },
+  { name: 'CSS', level: 85, color: '#2965f1' },
+  { name: 'JS', level: 85, color: '#f7df1e' },
+  { name: 'TS', level: 80, color: '#3178c6' },
+]
 
-  useEffect(() => {
-    const controls = animate(y, initialY, {
-      duration: 1.2,
-      ease: 'easeOut',
-      delay: 0.2,
-    })
-    return () => controls.stop()
-  }, [initialY])
+// --- Frameworks ---
+const FRAMEWORKS = [
+  { name: 'React', level: 90, color: 'var(--accent-cyan)' },
+  { name: 'Next', level: 85, color: 'var(--accent-amber)' },
+  { name: 'Remix', level: 70, color: 'var(--accent-green)' },
+  { name: 'jQuery', level: 65, color: 'var(--accent-red)' },
+]
 
-  return (
-    <div className="flex h-full touch-none flex-col items-center gap-3">
-      <div className="relative flex h-48 w-12 justify-center rounded-lg border border-zinc-800/50 bg-zinc-900/50 py-4 shadow-inner">
-        {/* Track Line */}
-        <div className="absolute top-4 bottom-4 w-1 rounded-full bg-zinc-950 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]" />
-
-        {/* Ticks */}
-        <div className="absolute top-4 bottom-4 left-2 flex flex-col justify-between py-1">
-          {[...Array(11)].map((_, i) => (
-            <div key={i} className="h-px w-1.5 bg-zinc-700" />
-          ))}
-        </div>
-
-        {/* The Fader Cap */}
-        <m.div
-          className="absolute bottom-4 left-1/2 z-10 flex h-12 w-8 -translate-x-1/2 cursor-grab items-center justify-center rounded border-t border-zinc-600 bg-linear-to-b from-zinc-700 to-zinc-800 shadow-[0_4px_6px_rgba(0,0,0,0.5)] active:cursor-grabbing"
-          style={{ y }}
-          drag="y"
-          dragConstraints={{ top: -maxTravel, bottom: 0 }}
-          dragElastic={0}
-          dragMomentum={false}
-        >
-          <div className="mb-1 h-0.5 w-full bg-zinc-950/50" />
-          <div className="h-0.5 w-full bg-zinc-950/50" />
-          <div className="mt-1 h-0.5 w-full bg-zinc-950/50" />
-
-          {/* LED on fader */}
-          <div className="bg-primary absolute top-1/2 left-1/2 h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_5px_rgba(var(--primary),0.5)]" />
-        </m.div>
-      </div>
-      <span className="text-[10px] font-bold tracking-widest text-zinc-500 select-none">
-        {label}
-      </span>
-    </div>
-  )
-}
-
-const VUMeter = ({ isOn }: { isOn: boolean }) => {
-  return (
-    <div className="flex h-32 items-end gap-1 rounded border border-zinc-800 bg-zinc-900/80 p-2 shadow-inner">
-      {[...Array(2)].map((_, ch) => (
-        <div key={ch} className="flex w-3 flex-col gap-0.5">
-          {[...Array(15)].map((_, i) => {
-            const isRed = i > 12
-            const isYellow = i > 9 && i <= 12
-            const colorClass = isRed
-              ? 'bg-red-500'
-              : isYellow
-                ? 'bg-yellow-500'
-                : 'bg-green-500'
-
-            return (
-              <m.div
-                key={i}
-                className={cn(
-                  'h-1.5 w-full rounded-[1px] opacity-20',
-                  colorClass,
-                )}
-                animate={isOn ? { opacity: [0.2, 1, 0.2] } : { opacity: 0.1 }}
-                transition={{
-                  duration: 0.5 + Math.random() * 0.5,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                  delay: Math.random() * 0.5,
-                }}
-              />
-            )
-          })}
-        </div>
-      ))}
-    </div>
-  )
-}
+// --- Tools ---
+const TOOLS = [
+  { name: 'VS Code', level: 90, color: 'var(--accent-cyan)' },
+  { name: 'Figma', level: 80, color: 'var(--accent-green)' },
+  { name: 'Git', level: 85, color: 'var(--accent-amber)' },
+  { name: 'Motion', level: 75, color: 'var(--accent-red)' },
+]
 
 export function SkillsSection() {
-  const [isOn, setIsOn] = useState(true)
-
   return (
-    <>
-      <section id="skills" className="overflow-hidden py-24">
-        <div className="container mx-auto px-4">
-          <div className="mb-16 flex flex-col items-center text-center">
-            <m.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-200/50 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400"
+    <section id="skills" className="relative py-24" style={{ background: 'var(--nm-bg)' }}>
+      <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="mb-16 flex flex-col items-center text-center">
+          <m.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-4 flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-mono tracking-wider text-zinc-500"
+            style={{ boxShadow: 'var(--nm-flat)' }}
+          >
+            <Sliders className="h-3 w-3 text-[var(--accent-amber)]" />
+            <span>AUDIO ENGINEERING</span>
+          </m.div>
+          <h2
+            className="text-4xl font-black tracking-tighter sm:text-5xl"
+            style={{ color: 'var(--accent-cyan)', textShadow: '0 0 20px var(--accent-cyan)' }}
+          >
+            Sonic Arsenal
+          </h2>
+          <span className="mt-2 font-mono text-[10px] tracking-[0.3em] text-zinc-600 uppercase">
+            UNIT-03
+          </span>
+        </div>
+
+        {/* Rack Frame */}
+        <div
+          className="relative mx-auto max-w-5xl rounded-3xl"
+          style={{ boxShadow: 'var(--nm-inset)', background: 'var(--nm-bg-alt)' }}
+        >
+          {/* Rack Screws */}
+          <RackScrew className="absolute top-3 left-3" />
+          <RackScrew className="absolute top-3 right-3" />
+          <RackScrew className="absolute bottom-3 left-3" />
+          <RackScrew className="absolute right-3 bottom-3" />
+
+          {/* Inner */}
+          <div className="p-6 md:p-10">
+            {/* 3-Column Rack Modules */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              {/* Module 1: CH 1 — LANGUAGES */}
+              <div
+                className="rounded-2xl p-5 overflow-hidden"
+                style={{ boxShadow: 'var(--nm-raised)' }}
+              >
+                {/* Colored top strip */}
+                <div className="mb-4 h-0.5 w-full bg-[var(--accent-cyan)]" />
+                <div className="mb-4">
+                  <h4 className="font-mono text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">
+                    CH 1 — LANGUAGES
+                  </h4>
+                  <div className="mt-1 h-px w-8 bg-zinc-700" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {LANGUAGES.map((lang) => (
+                    <KeyCap key={lang.name} label={lang.name} color={lang.color} level={lang.level} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Module 2: EQ — FRAMEWORKS */}
+              <div
+                className="rounded-2xl p-5 overflow-hidden"
+                style={{ boxShadow: 'var(--nm-raised)' }}
+              >
+                <div className="mb-4 h-0.5 w-full bg-[var(--accent-amber)]" />
+                <div className="mb-4">
+                  <h4 className="font-mono text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">
+                    EQ — FRAMEWORKS
+                  </h4>
+                  <div className="mt-1 h-px w-8 bg-zinc-700" />
+                </div>
+                <div className="flex justify-center gap-4">
+                  {FRAMEWORKS.map((fw) => (
+                    <EQFader key={fw.name} label={fw.name} value={fw.level} color={fw.color} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Module 3: FX — TOOLS */}
+              <div
+                className="rounded-2xl p-5 overflow-hidden"
+                style={{ boxShadow: 'var(--nm-raised)' }}
+              >
+                <div className="mb-4 h-0.5 w-full bg-[var(--accent-green)]" />
+                <div className="mb-4">
+                  <h4 className="font-mono text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">
+                    FX — TOOLS
+                  </h4>
+                  <div className="mt-1 h-px w-8 bg-zinc-700" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {TOOLS.map((tool) => (
+                    <Potentiometer
+                      key={tool.name}
+                      label={tool.name}
+                      value={tool.level}
+                      color={tool.color}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Rail */}
+            <div
+              className="mt-8 flex items-center justify-center py-3 rounded-lg"
+              style={{ boxShadow: 'var(--nm-inset)' }}
             >
-              <Sliders className="h-4 w-4" />
-              <span>AUDIO ENGINEERING</span>
-            </m.div>
-            <h2 className="text-4xl font-black tracking-tighter text-zinc-900 sm:text-5xl dark:text-white">
-              Sonic Arsenal
-            </h2>
-          </div>
-
-          {/* The Mixer Board */}
-          <div className="relative mx-auto max-w-6xl rounded-3xl neu-raised bg-[#f0f0f3] p-4 dark:bg-zinc-900">
-            {/* Metallic Texture Overlay */}
-            <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
-
-            {/* Inner Casing */}
-            <div className="relative rounded-2xl border border-zinc-400/50 bg-zinc-300 p-6 shadow-inner md:p-10 dark:border-zinc-800 dark:bg-zinc-950">
-              {/* Screws */}
-              <Screw className="absolute top-4 left-4" />
-              <Screw className="absolute top-4 right-4" />
-              <Screw className="absolute bottom-4 left-4" />
-              <Screw className="absolute right-4 bottom-4" />
-
-              {/* Top Panel: Branding & Power */}
-              <div className="mb-12 flex items-center justify-between border-b border-zinc-400/30 pb-6 dark:border-zinc-800">
-                <div className="flex items-center gap-4">
-                  <div className="hidden h-12 w-12 items-center justify-center rounded border border-zinc-700 bg-zinc-900 shadow-lg sm:flex">
-                    <Music className="text-primary h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black tracking-widest text-zinc-700 uppercase dark:text-zinc-300">
-                      MIX-MASTER <span className="text-primary">2025</span>
-                    </h3>
-                    <p className="font-mono text-xs text-zinc-500 uppercase">
-                      Professional Audio/Code Interface
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-3 rounded-xl border border-zinc-500 bg-zinc-400/50 p-2 px-3">
-                    {/* LED */}
-                    <div className="flex flex-col items-center gap-1">
-                      <div
-                        className={cn(
-                          'h-2 w-2 rounded-full transition-all duration-300',
-                          isOn
-                            ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]'
-                            : 'bg-red-900/30',
-                        )}
-                      />
-                      <span className="text-[8px] font-bold tracking-wider text-zinc-600">
-                        PWR
-                      </span>
-                    </div>
-
-                    {/* Separator */}
-                    <div className="h-8 w-px bg-zinc-800" />
-
-                    {/* Switch */}
-                    <button
-                      onClick={() => setIsOn(!isOn)}
-                      aria-label={isOn ? 'Turn Power Off' : 'Turn Power On'}
-                      className={cn(
-                        'relative flex h-12 w-8 cursor-pointer flex-col items-center justify-between overflow-hidden rounded border border-zinc-800 bg-zinc-950 py-1 shadow-[inset_0_0_5px_rgba(0,0,0,1)] transition-all',
-                      )}
-                    >
-                      {/* ON State (Top) */}
-                      <div
-                        className={cn(
-                          'flex h-4 w-6 items-center justify-center rounded-[1px] transition-all duration-200',
-                          isOn
-                            ? 'translate-y-0.5 bg-zinc-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
-                            : 'bg-zinc-900 opacity-50 shadow-inner',
-                        )}
-                      >
-                        <span className="text-[8px] font-bold text-zinc-400">
-                          |
-                        </span>
-                      </div>
-
-                      {/* OFF State (Bottom) */}
-                      <div
-                        className={cn(
-                          'flex h-4 w-6 items-center justify-center rounded-[1px] transition-all duration-200',
-                          !isOn
-                            ? '-translate-y-0.5 bg-zinc-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
-                            : 'bg-zinc-900 opacity-50 shadow-inner',
-                        )}
-                      >
-                        <span className="text-[8px] font-bold text-zinc-400">
-                          O
-                        </span>
-                      </div>
-                    </button>
-                  </div>
-
-                  <div className="hidden md:flex md:items-end md:gap-4">
-                    <VUMeter isOn={isOn} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Mixer Sections */}
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
-                {/* Section 1: Faders (Languages) */}
-                <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner lg:col-span-5 dark:border-zinc-800 dark:bg-zinc-900/50">
-                  <div className="mb-6 flex items-center justify-between">
-                    <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
-                      Channel 1: Languages
-                    </h4>
-                    <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                  </div>
-                  {/* Desktop */}
-                  <div className="hidden flex-wrap justify-between gap-2 sm:flex">
-                    {MIXER_DATA[0].channels.map((skill) => (
-                      <Fader
-                        key={skill.name}
-                        value={isOn ? skill.level : 0}
-                        label={skill.name}
-                      />
-                    ))}
-                  </div>
-                  {/* Mobile */}
-                  <div className="flex flex-wrap justify-between gap-2 sm:hidden">
-                    {MIXER_DATA[0].channels.slice(-4).map((skill) => (
-                      <Fader
-                        key={skill.name}
-                        value={isOn ? skill.level : 0}
-                        label={skill.name}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Section 2: Knobs (Frameworks & Tools) */}
-                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:col-span-7">
-                  {/* Frameworks */}
-                  <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <div className="mb-6 flex items-center justify-between">
-                      <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
-                        EQ: Frameworks
-                      </h4>
-                      <div className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-8">
-                      {MIXER_DATA[1].channels.map((skill) => (
-                        <Knob
-                          key={skill.name}
-                          value={isOn ? skill.level : 0}
-                          label={skill.name}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Tools */}
-                  <div className="rounded-xl border border-zinc-300 bg-zinc-200/50 p-6 shadow-inner dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <div className="mb-6 flex items-center justify-between">
-                      <h4 className="text-sm font-black tracking-widest text-zinc-500 uppercase">
-                        FX: Tools
-                      </h4>
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-8">
-                      {MIXER_DATA[2].channels.map((skill) => (
-                        <Knob
-                          key={skill.name}
-                          value={isOn ? skill.level : 0}
-                          label={skill.name}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Section 4: Oscilloscope Display */}
-                  <div className="md:col-span-2 rounded-xl border border-zinc-300 bg-zinc-200/50 p-4 shadow-inner dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <Oscilloscope />
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Label */}
-              <div className="mt-12 border-t border-zinc-400/30 pt-4 text-center dark:border-zinc-800">
-                <p className="font-mono text-[10px] tracking-[0.2em] text-zinc-500 uppercase">
-                  Designed & Engineered by One
-                </p>
-              </div>
+              <p className="font-mono text-[9px] tracking-[0.2em] text-zinc-600 uppercase">
+                Designed & Engineered by Adit — Mix-Master 2025
+              </p>
             </div>
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   )
 }

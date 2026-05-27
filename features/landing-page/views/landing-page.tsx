@@ -28,6 +28,7 @@ import { TapeReelDivider } from '../dividers/tape-reel-divider'
 import { VinylDivider } from '../dividers/vinyl-divider'
 import { WaveformDivider } from '../dividers/waveform-divider'
 import { CassetteDivider } from '../dividers/cassette-divider'
+import { SectionDivider } from '../dividers/section-divider'
 import { ChevronUp } from 'lucide-react'
 import { usePreloader } from '../hooks/use-preloader'
 

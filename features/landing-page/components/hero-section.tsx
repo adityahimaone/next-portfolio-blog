@@ -1,234 +1,221 @@
 'use client'
 
-import { useRef } from 'react'
-import { m as motion, useScroll, useTransform } from 'motion/react'
-import { Play, Pause, SkipForward } from 'lucide-react'
+import { useRef, useEffect, useState } from 'react'
+import { m, useScroll, useTransform } from 'motion/react'
+import { ArrowDown, Mail } from 'lucide-react'
 import { Magnetic } from '@/components/magnetic'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
-import { Syne } from 'next/font/google'
-
-import { useState, useEffect } from 'react'
-import { useAudioFrequency } from '@/features/mixtape/hooks/use-audio-frequency'
-import { ReactiveVisualizer } from '@/features/mixtape/components/reactive-visualizer'
-
-const syne = Syne({ weight: ['700', '800'], subsets: ['latin'] })
+import { OP1Device } from './hero/OP1Device'
+import { LCDMarquee } from './hero/LCDMarquee'
 
 export function HeroSection() {
   const [baseDelay, setBaseDelay] = useState(1)
+  const { isPlaying } = useAudio()
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // If preloader was already shown (skipped), we don't need a massive delay
-    // If it wasn't shown, it's running right now, so we need to wait for it
     if (sessionStorage.getItem('preloaderShown')) {
       setBaseDelay(0.1)
     }
   }, [])
-
-  const { isPlaying, togglePlay, currentTrack, audioRef } = useAudio()
-  const frequencyData = useAudioFrequency(audioRef.current)
-
-  const containerRef = useRef<HTMLDivElement>(null)
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end start'],
   })
 
-  const y = useTransform(scrollYProgress, [0, 1], [0, 150])
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9])
+  const deskY = useTransform(scrollYProgress, [0, 1], [0, 200])
+  const op1Y = useTransform(scrollYProgress, [0, 1], [0, 100])
+  const glowOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0])
+  const contentY = useTransform(scrollYProgress, [0, 1], [0, 80])
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
 
   return (
-    <section
-      ref={containerRef}
-      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-zinc-50 transition-colors dark:bg-zinc-950"
-    >
-      {/* Amp Cabinet Background (Grille) */}
-      <div className="absolute inset-0 z-0">
-        <div
-          className="absolute inset-0 bg-[radial-gradient(#000_1.5px,transparent_1.5px)] opacity-10 dark:bg-[radial-gradient(#333_1.5px,transparent_1.5px)] dark:opacity-50"
-          style={{ backgroundSize: '4px 4px' }}
-        />
-        <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay dark:opacity-20" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%)] dark:bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
-
-        {/* Dynamic Audio Visualizer Background (Extra Tall) */}
-        {false && isPlaying && (
-          <div className="absolute inset-x-0 bottom-0 z-10 h-[750px] opacity-70 blur-sm dark:opacity-50">
-            <ReactiveVisualizer frequencyData={frequencyData} />
-          </div>
-        )}
-      </div>
-
-      <motion.div
-        style={{ y, opacity, scale }}
-        className="relative z-20 container mx-auto mt-24 flex flex-col items-center px-4 text-center md:px-6"
+    <>
+      <section
+        ref={containerRef}
+        className="signal-chain-root relative flex min-h-screen w-full flex-col items-center justify-end overflow-hidden"
+        style={{ background: '#0D0B0A' }}
       >
-        {/* Content Wrapper */}
-        <div className="relative z-10 flex w-full max-w-4xl flex-col items-center">
-          {/* Top Label */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: baseDelay }}
-            className="mb-8 flex items-center gap-3 rounded-full border border-zinc-200 bg-white/40 px-4 py-1.5 text-sm font-medium text-zinc-700 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/40 dark:text-zinc-300"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
-            </span>
-            LIVE SESSION
-          </motion.div>
+        {/* ============ PARALLAX LAYER 0: Desk surface background ============ */}
+        <m.div
+          className="absolute inset-0 z-0"
+          style={{
+            y: deskY,
+            background: `
+              radial-gradient(ellipse at 50% 30%, #1A1513 0%, #0D0B0A 70%),
+              radial-gradient(ellipse at 30% 80%, rgba(0,180,216,0.04) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(255,85,0,0.04) 0%, transparent 50%)
+            `,
+          }}
+        />
 
-          {/* Brand Logo (The Name) */}
-          <div className={`mb-10 flex flex-col items-center ${syne.className}`}>
-            <motion.h1
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: baseDelay + 0.1 }}
-              className="text-center text-[13vw] leading-[0.85] font-extrabold tracking-tighter text-zinc-900 italic drop-shadow-sm md:text-[10vw] lg:text-[8vw] dark:text-white dark:drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]"
-            >
-              <span className="block bg-linear-to-b from-zinc-700 via-zinc-900 to-black bg-clip-text text-transparent dark:from-white dark:via-zinc-200 dark:to-zinc-400">
-                ADITYA
-              </span>
-            </motion.h1>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: baseDelay + 0.2 }}
-              className="text-primary/80 text-[5vw] font-bold tracking-[0.5em] md:text-[3vw] lg:text-[2.5vw]"
-            >
-              HIMAONE
-            </motion.h1>
-          </div>
-
-          {/* Subtitle / Description */}
-          <p className="animate-hero-desc mb-10 max-w-2xl text-center text-base font-light text-zinc-600 sm:text-lg md:text-xl dark:text-zinc-400">
-            Orchestrating code and rhythm into immersive digital experiences.
-            <br className="hidden sm:block" /> Frontend Developer & Audio
-            Enthusiast.
-          </p>
-
-          {/* Player Controls / CTA */}
-          {/* Player Controls / CTA - Hardware Style */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{
-              duration: 0.8,
-              delay: baseDelay + 0.8,
-              ease: [0.16, 1, 0.3, 1],
+        {/* Desk texture grid (studio desk surface) */}
+        <m.div
+          className="absolute bottom-0 left-0 w-full z-[1]"
+          style={{ y: deskY }}
+        >
+          <div
+            className="mx-auto w-full max-w-[960px] bg-repeat opacity-[0.03]"
+            style={{
+              height: '100px',
+              backgroundImage:
+                `linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px),` +
+                `linear-gradient(0deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
+              backgroundSize: '60px 60px',
             }}
-            className="relative flex w-full max-w-[90vw] items-center gap-4 rounded-lg border-t border-white/20 bg-zinc-200 p-2 shadow-2xl sm:max-w-lg sm:gap-6 sm:p-3 dark:border-white/5 dark:bg-zinc-900"
+          />
+        </m.div>
+
+        {/* ============ PARALLAX LAYER 1: Screen glow reflection ============ */}
+        <m.div
+          className="pointer-events-none absolute z-[2]"
+          style={{
+            top: '30%',
+            left: '50%',
+            width: '600px',
+            height: '400px',
+            transform: 'translate(-50%, -60%)',
+            opacity: glowOpacity,
+            background:
+              'radial-gradient(ellipse, rgba(0,180,216,0.15) 0%, rgba(0,180,216,0.05) 40%, transparent 70%)',
+            filter: 'blur(60px)',
+          }}
+        />
+
+        {/* ============ PARALLAX LAYER 2: OP-1 Device (centerpiece) ============ */}
+        <m.div
+          className="relative z-10 w-full px-4 pb-4 sm:pb-8"
+          style={{ y: op1Y }}
+        >
+          <OP1Device className="mx-auto" />
+
+          {/* ============ PARALLAX LAYER 3: CTA below device ============ */}
+          <m.div
+            className="mx-auto mt-6 flex flex-col items-center gap-3 sm:mt-8 sm:flex-row sm:justify-center sm:gap-4"
+            style={{ y: contentY, opacity: contentOpacity }}
           >
-            {/* Inset Shadow for depth */}
-            <div className="pointer-events-none absolute inset-0 rounded-lg shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_4px_10px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),inset_0_4px_10px_rgba(0,0,0,0.5)]" />
-
-            <Magnetic intensity={0.2}>
-              <button
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause Session' : 'Play Session'}
-                className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-zinc-100 to-zinc-300 shadow-[0_2px_5px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.1)] transition-all active:scale-95 active:shadow-inner sm:h-14 sm:w-14 dark:from-zinc-700 dark:to-zinc-800 dark:shadow-[0_2px_5px_rgba(0,0,0,0.5),0_0_0_1px_rgba(0,0,0,0.5)]"
-              >
-                <div className="bg-primary/5 absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
-                {isPlaying ? (
-                  <Pause
-                    fill="currentColor"
-                    className="text-zinc-700 dark:text-zinc-200"
-                  />
-                ) : (
-                  <Play
-                    fill="currentColor"
-                    className="ml-1 text-zinc-700 dark:text-zinc-200"
-                  />
-                )}
-                {/* LED Indicator on button */}
-                <div
-                  className={`absolute top-2 right-2 h-1.5 w-1.5 rounded-full transition-colors ${isPlaying ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.8)]' : 'bg-zinc-400 dark:bg-zinc-600'}`}
-                />
-              </button>
-            </Magnetic>
-
-            {/* LCD Display */}
-            <div className="flex min-w-0 flex-1 flex-col items-start gap-1 rounded border-b border-white/10 bg-zinc-800 p-2 shadow-[inset_0_2px_6px_rgba(0,0,0,0.8)] dark:bg-black">
-              <div className="flex w-full items-center justify-between px-1">
-                <span className="text-[7px] font-bold tracking-widest text-zinc-500 uppercase">
-                  STATUS: {isPlaying ? 'PLAYING' : 'STANDBY'}
-                </span>
-                <div className="flex gap-0.5">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-1 w-1 rounded-full ${isPlaying ? 'animate-pulse bg-red-500' : 'bg-zinc-700'}`}
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-3 overflow-hidden px-1">
-                <div className="flex h-3 shrink-0 items-end gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-[1px] bg-amber-500/80"
-                      animate={{
-                        height: isPlaying ? [2, 10, 5, 8, 2] : 2,
-                        opacity: isPlaying ? 1 : 0.5,
-                      }}
-                      transition={{
-                        duration: 0.4,
-                        repeat: Infinity,
-                        delay: i * 0.05,
-                        ease: 'easeInOut',
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="relative flex-1 overflow-hidden">
-                  <motion.div
-                    className="flex w-fit font-mono text-xs whitespace-nowrap text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)] sm:text-sm"
-                    animate={{ x: ['0%', '-50%'] }}
-                    transition={{
-                      repeat: Infinity,
-                      ease: 'linear',
-                      duration: Math.max(8, currentTrack.length * 0.2),
-                    }}
-                  >
-                    <span className="mr-8">{currentTrack}</span>
-                    <span className="mr-8">{currentTrack}</span>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-
-            <div className="h-8 w-px shrink-0 bg-zinc-300 dark:bg-zinc-800" />
-
-            <Magnetic intensity={0.2}>
+            {/* [▶ VIEW PORTFOLIO] */}
+            <Magnetic intensity={0.15}>
               <a
                 href="#projects"
-                className="flex h-10 shrink-0 items-center gap-2 rounded bg-zinc-300 px-3 text-xs font-bold text-zinc-700 shadow-[0_1px_0_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.1)] transition-transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-inner sm:px-4 dark:bg-zinc-800 dark:text-zinc-300 dark:shadow-[0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)]"
+                className="group flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold tracking-wider transition-all"
+                style={{
+                  background: '#FF5500',
+                  color: '#fff',
+                  fontFamily: 'var(--sc-font-mono)',
+                  boxShadow: '0 2px 12px rgba(255,85,0,0.4)',
+                }}
               >
-                <span className="hidden sm:inline">TRACKS</span>
-                <SkipForward size={14} />
+                <span className="text-base">▶</span>
+                <span>VIEW PORTFOLIO</span>
               </a>
             </Magnetic>
-          </motion.div>
 
-          {/* Decorative "New Release" Badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0, rotate: 0 }}
-            animate={{ opacity: 1, scale: 1, rotate: 12 }}
-            transition={{
-              delay: baseDelay + 0.2,
-              type: 'spring',
-              stiffness: 200,
+            {/* [● RECORD SESSION] */}
+            <Magnetic intensity={0.15}>
+              <a
+                href="#contact"
+                className="flex items-center gap-2 rounded-lg border px-5 py-2.5 text-sm font-bold tracking-wider transition-all hover:bg-white/5"
+                style={{
+                  borderColor: '#FF3344',
+                  color: '#FF3344',
+                  fontFamily: 'var(--sc-font-mono)',
+                }}
+              >
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ background: '#FF3344', boxShadow: '0 0 8px rgba(255,51,68,0.5)' }}
+                />
+                <span>RECORD SESSION</span>
+              </a>
+            </Magnetic>
+          </m.div>
+
+          {/* ============ Subtitle text ============ */}
+          <m.p
+            className="mx-auto mt-4 max-w-lg text-center text-xs leading-relaxed sm:text-sm"
+            style={{
+              color: '#8A8682',
+              fontFamily: 'var(--sc-font-body)',
+              opacity: contentOpacity,
             }}
-            className="absolute -top-4 -right-4 rotate-12 transform border-2 border-white/20 bg-red-600 px-4 py-1.5 text-xs font-black tracking-wider text-white uppercase shadow-lg md:top-10 md:-right-10"
           >
-            New Release
-          </motion.div>
-        </div>
-      </motion.div>
-    </section>
+            Orchestrating code and rhythm into immersive digital experiences.
+            <br className="hidden sm:block" />
+            Frontend Developer & Audio Enthusiast.
+          </m.p>
+        </m.div>
+
+        {/* ============ Floating music notes (parallax layer 4) ============ */}
+        <m.div
+          className="pointer-events-none fixed"
+          style={{
+            top: '25%',
+            right: '12%',
+            fontSize: '2rem',
+            opacity: useTransform(scrollYProgress, [0, 0.2], [0.12, 0]),
+            y: useTransform(scrollYProgress, [0, 1], [0, -60]),
+          }}
+        >
+          <span style={{ color: '#00B4D8' }}>♪</span>
+        </m.div>
+        <m.div
+          className="pointer-events-none fixed"
+          style={{
+            top: '40%',
+            left: '10%',
+            fontSize: '1.5rem',
+            opacity: useTransform(scrollYProgress, [0, 0.2], [0.1, 0]),
+            y: useTransform(scrollYProgress, [0, 1], [0, -40]),
+          }}
+        >
+          <span style={{ color: '#FF5500' }}>♫</span>
+        </m.div>
+        <m.div
+          className="pointer-events-none fixed"
+          style={{
+            bottom: '20%',
+            right: '20%',
+            fontSize: '1.8rem',
+            opacity: useTransform(scrollYProgress, [0, 0.2], [0.08, 0]),
+            y: useTransform(scrollYProgress, [0, 1], [0, -50]),
+          }}
+        >
+          <span style={{ color: '#00FF41' }}>♬</span>
+        </m.div>
+
+        {/* ============ Scroll indicator (bottom center) ============ */}
+        <m.div
+          className="pointer-events-none absolute bottom-28 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2"
+          style={{ opacity: contentOpacity }}
+        >
+          <span
+            className="text-[9px] font-bold tracking-[0.3em]"
+            style={{ color: '#555', fontFamily: 'var(--sc-font-mono)' }}
+          >
+            SCROLL
+          </span>
+          <m.div
+            className="h-6 w-4 rounded-full border"
+            style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+          >
+            <m.div
+              className="mx-auto mt-1 h-1.5 w-0.5 rounded-full"
+              style={{ background: '#00FF41' }}
+              animate={{ y: [0, 6, 0] }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+          </m.div>
+        </m.div>
+      </section>
+
+      {/* ============ LCD MARQUEE TICKER (below hero) ============ */}
+      <LCDMarquee />
+    </>
   )
 }

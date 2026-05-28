@@ -1,0 +1,225 @@
+/* ==============================================================
+   SIGNAL CHAIN — TE Field Series × Audio Hardware Design Tokens
+   Scoped under .signal-chain-root
+   ============================================================== */
+
+.signal-chain-root {
+  /* ─── Color Palette ─────────────────────────────────────── */
+  --sc-bg-aluminum: #D4CFCA;
+  --sc-bg-offwhite: #F0EDE8;
+  --sc-bg-desktop: #1A1513;
+  --sc-text-dark: #1A1A1A;
+  --sc-text-muted: #7A7572;
+  --sc-accent-orange: #FF5500;
+  --sc-accent-orange-dim: #CC4400;
+  --sc-led-green: #00FF41;
+  --sc-led-green-dim: #00AA2A;
+  --sc-screen-cyan: #00B4D8;
+  --sc-screen-cyan-dim: #007799;
+  --sc-led-red: #FF3344;
+  --sc-led-amber: #FFB000;
+  --sc-noise-bg: rgba(26, 26, 26, 0.03);
+  --sc-shadow-tight: 0 2px 8px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.15);
+  --sc-shadow-deep: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
+  --sc-radius-panel: 8px;
+  --sc-radius-knob: 50%;
+  --sc-border-thin: 1px solid rgba(255,255,255,0.08);
+
+  /* ─── Typography ────────────────────────────────────────── */
+  --sc-font-mono: 'JetBrains Mono', 'SF Mono', 'SFMono-Regular', ui-monospace, monospace;
+  --sc-font-body: 'Inter', 'DM Sans', system-ui, sans-serif;
+
+  /* ─── Device Colors ─────────────────────────────────────── */
+  --sc-op1-bg: #D4CFCA;
+  --sc-op1-screen-bg: #000000;
+  --sc-op1-screen-fg: #00FF41;
+  --sc-marshall-bg: #1A1A1A;
+  --sc-marshall-grill: #0D0D0D;
+  --sc-pioneer-bg: #222222;
+  --sc-pioneer-fader: #333333;
+  --sc-tx6-bg: #C0B8A8;
+  --sc-cdj-bg: #1A1A1A;
+  --sc-cdj-screen: #000033;
+  --sc-dap-bg: #2A2A2E;
+  --sc-dap-screen: #1A1A2E;
+  --sc-maschine-bg: #2A2A2E;
+  --sc-maschine-pad: #333340;
+  --sc-patchbay-bg: #222222;
+
+  /* ─── Texture overlays ──────────────────────────────────── */
+  background-color: var(--sc-bg-offwhite);
+  color: var(--sc-text-dark);
+  font-family: var(--sc-font-body);
+}
+
+/* ─── Dark mode overrides ──────────────────────────────── */
+.dark .signal-chain-root {
+  --sc-bg-aluminum: #2A2826;
+  --sc-bg-offwhite: #1E1C1A;
+  --sc-bg-desktop: #0D0B0A;
+  --sc-text-dark: #E8E4DF;
+  --sc-text-muted: #8A8682;
+  --sc-shadow-tight: 0 2px 8px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+  --sc-shadow-deep: 0 8px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);
+  --sc-noise-bg: rgba(255, 255, 255, 0.02);
+  background-color: var(--sc-bg-offwhite);
+  color: var(--sc-text-dark);
+}
+
+/* ─── Brushed aluminum texture ─────────────────────────── */
+.sc-brushed-metal {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 1px,
+    rgba(255,255,255,0.03) 1px,
+    rgba(255,255,255,0.03) 2px
+  );
+  background-size: 2px 100%;
+}
+
+/* ─── Screen scanline overlay ──────────────────────────── */
+.sc-scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.15) 2px,
+    rgba(0,0,0,0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── SVG noise filter ─────────────────────────────────── */
+.sc-noise {
+  position: relative;
+}
+.sc-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Knob base ─────────────────────────────────────────── */
+.sc-knob {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--sc-radius-knob);
+  border: 2px solid rgba(0,0,0,0.15);
+  background: radial-gradient(circle at 40% 35%, #E8E4DF, #B0ACA8 60%, #8A8682);
+  box-shadow:
+    inset 0 -2px 4px rgba(0,0,0,0.2),
+    inset 0 2px 4px rgba(255,255,255,0.3),
+    0 2px 6px rgba(0,0,0,0.15);
+  position: relative;
+  cursor: grab;
+}
+.sc-knob::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 2px;
+  height: 14px;
+  background: #1A1A1A;
+  border-radius: 1px;
+  transform: translateX(-50%) rotate(var(--knob-rotation, 0deg));
+  transform-origin: bottom center;
+}
+
+/* ─── LED indicator ─────────────────────────────────────── */
+.sc-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+.sc-led--green {
+  background: var(--sc-led-green);
+  box-shadow: 0 0 6px var(--sc-led-green-dim);
+}
+.sc-led--red {
+  background: var(--sc-led-red);
+  box-shadow: 0 0 6px rgba(255,51,68,0.5);
+}
+.sc-led--amber {
+  background: var(--sc-led-amber);
+  box-shadow: 0 0 6px rgba(255,176,0,0.5);
+}
+.sc-led--off {
+  background: rgba(0,0,0,0.1);
+  box-shadow: none;
+}
+
+/* ─── Panel / device faceplate ─────────────────────────── */
+.sc-panel {
+  border-radius: var(--sc-radius-panel);
+  border: var(--sc-border-thin);
+  box-shadow: var(--sc-shadow-tight);
+}
+
+/* ─── LCD / OLED screen ────────────────────────────────── */
+.sc-oled {
+  background: #000;
+  border: 2px solid rgba(0,0,0,0.3);
+  border-radius: 4px;
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.5);
+  font-family: var(--sc-font-mono);
+  position: relative;
+  overflow: hidden;
+}
+.sc-oled-text {
+  color: var(--sc-led-green);
+  text-shadow: 0 0 8px var(--sc-led-green-dim);
+}
+
+/* ─── Amber LCD ticker ──────────────────────────────────── */
+.sc-lcd-amber {
+  background: #1A1A0A;
+  color: #FFB000;
+  text-shadow: 0 0 6px rgba(255, 176, 0, 0.4);
+  font-family: var(--sc-font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+
+/* ─── Signal chain connectors ───────────────────────────── */
+.sc-patch-cable {
+  stroke: var(--sc-accent-orange);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+}
+
+/* ─── Reduced motion ───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .signal-chain-root *,
+  .signal-chain-root *::before,
+  .signal-chain-root *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Mobile ────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .signal-chain-root .sc-knob {
+    width: 32px;
+    height: 32px;
+  }
+  .signal-chain-root .sc-knob::after {
+    height: 10px;
+    top: 5px;
+  }
+}

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './signal-chain.css';
 @plugin '@tailwindcss/typography';
 @custom-variant dark (&:is(.dark *));
 /*

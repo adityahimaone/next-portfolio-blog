@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import {
   LazyMotion,
   m,
@@ -12,9 +12,8 @@ import dynamic from 'next/dynamic'
 
 const loadFeatures = () => import('motion/react').then((res) => res.domMax)
 
-import { Preloader } from '../animations/preloader'
-import { Header } from '@/features/layout/components/header'
-import { Footer } from '@/features/layout/components/footer'
+import { BootScreen } from '../components/boot-screen'
+import { TENavbar } from '../components/te-navbar'
 import { HeroSection } from '../components/hero-section'
 
 const AboutSection = dynamic(() => import('../components/about-section').then((mod) => mod.AboutSection))
@@ -24,9 +23,9 @@ const ContactSection = dynamic(() => import('../components/contact/contact-secti
 const ProjectsSection = dynamic(() => import('../components/projects-section').then((mod) => mod.ProjectsSection))
 const MusicMarquee = dynamic(() => import('../spotify/music-marquee').then((mod) => mod.MusicMarquee))
 
+import { Footer } from '@/features/layout/components/footer'
 import { SectionDivider } from '@/components/section-divider'
 import { ChevronUp } from 'lucide-react'
-import { usePreloader } from '../hooks/use-preloader'
 
 export default function LandingPage() {
   const { scrollYProgress } = useScroll()
@@ -36,7 +35,11 @@ export default function LandingPage() {
   })
   const mainRef = useRef<HTMLDivElement>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
-  const isLoading = usePreloader()
+  const [booted, setBooted] = useState(false)
+
+  const handleBootComplete = useCallback(() => {
+    setBooted(true)
+  }, [])
 
   // Opacity for floating elements based on scroll
   const floatingOpacity = useTransform(scrollYProgress, [0, 0.2], [0.2, 0])
@@ -47,12 +50,6 @@ export default function LandingPage() {
   }
 
   useEffect(() => {
-    // Preload any assets or initialize animations
-    const body = document.querySelector('body')
-    if (body) {
-      body.classList.add('cursor-glow')
-    }
-
     // Show scroll-to-top button after scrolling down
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 500)
@@ -65,133 +62,83 @@ export default function LandingPage() {
   return (
     <LazyMotion features={loadFeatures}>
       <>
-        <AnimatePresence mode="wait">
-          {isLoading && <Preloader />}
+        {/* Boot screen — OP-1 field startup sequence */}
+        <AnimatePresence>
+          {!booted && <BootScreen onComplete={handleBootComplete} />}
         </AnimatePresence>
 
         <m.div
           ref={mainRef}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          animate={{ opacity: booted ? 1 : 0 }}
+          transition={{ duration: 0.6 }}
           className="relative"
         >
-          {/* Music notes scattered in background */}
-          <m.div
-            className="pointer-events-none fixed top-1/3 right-[15%] text-5xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -30, 0],
-              rotate: [0, -15, 0],
-            }}
-            transition={{
-              duration: 7,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 1,
-            }}
-          >
-            <span className="text-secondary opacity-20 drop-shadow-md">♫</span>
-          </m.div>
+          {/* Main content — Signal Chain themed */}
+          <main className="signal-chain-root relative">
+            {/* Navigation — TE TP-7 styled transport controls */}
+            <TENavbar />
 
-          <m.div
-            className="pointer-events-none fixed bottom-1/4 left-1/4 text-6xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -25, 0],
-              rotate: [0, 20, 0],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 2,
-            }}
-          >
-            <span className="text-primary-light opacity-20 drop-shadow-md">
-              ♩
-            </span>
-          </m.div>
+            {/* Hero Section — OP-1 Field centerpiece */}
+            <section
+              id="hero"
+              className="relative h-dvh snap-start overflow-hidden"
+            >
+              <HeroSection />
+            </section>
 
-          <m.div
-            className="pointer-events-none fixed right-1/4 bottom-1/3 text-5xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -20, 0],
-              rotate: [0, -10, 0],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 3,
-            }}
-          >
-            <span className="text-accent opacity-20 drop-shadow-md">♬</span>
-          </m.div>
+            {/* LCD-style marquee ticker is now part of HeroSection */}
 
-          {/* Main content */}
-          <main className="relative">
-            <div className="snap-y snap-mandatory">
-              {/* Hero Section */}
-              <section
-                className="relative h-screen snap-start overflow-hidden"
-              >
-                <div className="relative">
-                  <Header />
-                  <HeroSection />
-                </div>
-              </section>
+            {/* About Section — FL Piano Roll timeline + Marshall Amp */}
+            <section id="about" className="snap-start scroll-mt-0">
+              <AboutSection />
+            </section>
 
-              {/* Music-themed marquee divider */}
-              <MusicMarquee speed="normal" direction="left" />
+            <SectionDivider />
 
-              {/* Main Content Sections */}
-              <div className="mx-auto w-full max-w-7xl space-y-2 py-20">
-                <SectionDivider />
-                <section id="about" className="snap-start scroll-mt-0">
-                  <AboutSection />
-                </section>
+            {/* Skills Section — DJ Mixer + TX6 */}
+            <section id="skills" className="snap-start scroll-mt-0">
+              <SkillsSection />
+            </section>
 
-                <SectionDivider />
-                <section id="skills" className="snap-start scroll-mt-0">
-                  <SkillsSection />
-                </section>
+            <SectionDivider />
 
-                <SectionDivider />
-                <section id="experience" className="snap-start scroll-mt-0">
-                  <ExperienceSection />
-                </section>
+            {/* Experience Section — Turntable vinyl record player */}
+            <section id="experience" className="snap-start scroll-mt-0">
+              <ExperienceSection />
+            </section>
 
-                <SectionDivider />
-              </div>
+            <SectionDivider />
 
-              <section
-                id="projects"
-                className="dark:bg-accent snap-start scroll-mt-0"
-              >
-                <ProjectsSection />
-              </section>
+            {/* Projects Section — DAP Digital Audio Player */}
+            <section
+              id="projects"
+              className="dark:bg-accent snap-start scroll-mt-0"
+            >
+              <ProjectsSection />
+            </section>
 
-              <div className="mb-5">
-                <SectionDivider />
-              </div>
+            <SectionDivider />
 
-              <section id="contact" className="snap-start">
-                <ContactSection />
-              </section>
-            </div>
+            {/* Contact Section — Maschine Mk3 pad grid */}
+            <section id="contact" className="snap-start">
+              <ContactSection />
+            </section>
           </main>
         </m.div>
 
-        {/* Footer */}
+        {/* Footer — Patch Bay style */}
         <Footer />
 
-        {/* Scroll to top button */}
+        {/* Scroll to top button — styled as TE hardware button */}
         <m.button
           onClick={handleScrollToTop}
           aria-label="Scroll to top"
-          className="fixed right-2 bottom-24 z-50 flex h-12 w-12 items-center justify-center rounded-lg border border-zinc-300 bg-zinc-200 shadow-[0_4px_0_rgb(161,161,170),0_5px_10px_rgba(0,0,0,0.2)] transition-all hover:bg-zinc-100 active:translate-y-1 active:shadow-none md:right-8 dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[0_4px_0_rgb(39,39,42),0_5px_10px_rgba(0,0,0,0.5)] dark:hover:bg-zinc-700"
+          className="fixed right-2 bottom-24 z-50 flex h-12 w-12 items-center justify-center rounded-lg border bg-zinc-800/90 backdrop-blur-sm transition-all hover:bg-zinc-700 active:translate-y-1 md:right-8"
+          style={{
+            borderColor: 'rgba(255,255,255,0.1)',
+            boxShadow: '0 4px 0 rgba(0,0,0,0.4), 0 5px 10px rgba(0,0,0,0.5)',
+          }}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{
             opacity: showScrollTop ? 1 : 0,
@@ -201,7 +148,7 @@ export default function LandingPage() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <ChevronUp size={24} className="text-zinc-600 dark:text-zinc-400" />
+          <ChevronUp size={24} style={{ color: '#D4CFCA' }} />
         </m.button>
       </>
     </LazyMotion>

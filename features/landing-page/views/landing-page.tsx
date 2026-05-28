@@ -22,6 +22,7 @@ const SkillsSection = dynamic(() => import('../components/skills-section').then(
 const ExperienceSection = dynamic(() => import('../components/experience-section').then((mod) => mod.ExperienceSection))
 const ContactSection = dynamic(() => import('../components/contact/contact-section').then((mod) => mod.ContactSection))
 const ProjectsSection = dynamic(() => import('../components/projects-section').then((mod) => mod.ProjectsSection))
+const DapSection = dynamic(() => import('../components/dap-section').then((mod) => mod.DapSection))
 const MusicMarquee = dynamic(() => import('../spotify/music-marquee').then((mod) => mod.MusicMarquee))
 
 import { SectionDivider } from '@/components/section-divider'
@@ -171,6 +172,14 @@ export default function LandingPage() {
                 className="dark:bg-accent snap-start scroll-mt-0"
               >
                 <ProjectsSection />
+              </section>
+
+              <div className="mb-5">
+                <SectionDivider />
+              </div>
+
+              <section id="dap" className="snap-start scroll-mt-0">
+                <DapSection />
               </section>
 
               <div className="mb-5">

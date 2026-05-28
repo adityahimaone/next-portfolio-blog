@@ -6,8 +6,6 @@ import {
   Briefcase,
   Calendar,
   MapPin,
-  Music,
-  ListMusic,
   Radio,
   ChevronRight,
 } from 'lucide-react'
@@ -31,7 +29,7 @@ export function ExperienceSection() {
               className="mb-4 flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
             >
               <Radio className="h-4 w-4" />
-              <span>CAREER DISCOGRAPHY</span>
+              <span>CAREER PATH</span>
             </m.div>
             <m.h2
               initial={{ opacity: 0, y: 20 }}
@@ -40,16 +38,16 @@ export function ExperienceSection() {
               transition={{ delay: 0.1 }}
               className="text-4xl font-bold tracking-tighter sm:text-5xl"
             >
-              The Collection
+              Experience
             </m.h2>
           </div>
 
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
-            {/* Left Column: Tracklist / Selector */}
+            {/* Left Column: Timeline Selector */}
             <div className="lg:col-span-5">
-              <div className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+              <div className="relative flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
                 <div className="mb-2 px-4 py-2 text-xs font-bold tracking-wider text-zinc-600 uppercase dark:text-zinc-400">
-                  Select a Track
+                  Select Role
                 </div>
                 {EXPERIENCES.map((exp) => (
                   <button
@@ -79,13 +77,9 @@ export function ExperienceSection() {
                           : 'border-transparent bg-zinc-50 text-zinc-600 group-hover:border-zinc-200 group-hover:bg-white group-hover:text-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400 dark:group-hover:bg-zinc-800 dark:group-hover:text-zinc-300',
                       )}
                     >
-                      {selectedId === exp.id ? (
-                        <Music className="h-5 w-5 animate-pulse" />
-                      ) : (
-                        <span className="font-mono text-sm font-bold">
-                          0{exp.id}
-                        </span>
-                      )}
+                      <span className="font-mono text-sm font-bold">
+                        0{exp.id}
+                      </span>
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -132,10 +126,10 @@ export function ExperienceSection() {
               </div>
             </div>
 
-            {/* Right Column: The Player / Details */}
+            {/* Right Column: Detail Card */}
             <div className="lg:col-span-7">
               <div className="relative h-full min-h-[500px] overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
-                {/* Background Ambience */}
+                {/* Background Accent */}
                 <AnimatePresence mode="wait">
                   <m.div
                     key={selectedJob.id}
@@ -149,8 +143,6 @@ export function ExperienceSection() {
                     )}
                   />
                 </AnimatePresence>
-
-                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-2 mix-blend-overlay" />
 
                 <div className="relative flex h-full flex-col p-5 sm:p-8 md:p-10">
                   {/* Header Area */}
@@ -179,33 +171,15 @@ export function ExperienceSection() {
                       </m.div>
                     </div>
 
-                    {/* Spinning Vinyl Animation */}
-                    <div className="hidden shrink-0 sm:block">
-                      <m.div
-                        key={selectedJob.id}
-                        initial={{ rotate: 0, scale: 0.8, opacity: 0 }}
-                        animate={{ rotate: 360, scale: 1, opacity: 1 }}
-                        transition={{
-                          rotate: {
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: 'linear',
-                          },
-                          scale: { duration: 0.4 },
-                          opacity: { duration: 0.4 },
-                        }}
-                        className="relative flex h-24 w-24 items-center justify-center rounded-full border-4 border-zinc-900 bg-zinc-950 shadow-xl dark:border-zinc-800"
-                      >
-                        <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
-                        <div
-                          className={cn(
-                            'h-8 w-8 rounded-full',
-                            selectedJob.color,
-                          )}
-                        />
-                      </m.div>
+                    {/* Period Badge */}
+                    <div className="shrink-0">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                        <Calendar className="h-3 w-3 text-zinc-600 dark:text-zinc-400" />
+                        {selectedJob.period}
+                      </span>
                     </div>
-                  </div>{' '}
+                  </div>
+
                   {/* Content Area */}
                   <div className="flex-1 pr-2">
                     <AnimatePresence mode="wait">
@@ -217,12 +191,6 @@ export function ExperienceSection() {
                         transition={{ duration: 0.3 }}
                         className="space-y-6"
                       >
-                        {/* Period Badge */}
-                        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                          <Calendar className="h-3 w-3 text-zinc-600 dark:text-zinc-400" />
-                          {selectedJob.period}
-                        </div>
-
                         {/* Description */}
                         <div className="prose prose-zinc dark:prose-invert max-w-none">
                           {selectedJob.isGroup ? (
@@ -276,7 +244,8 @@ export function ExperienceSection() {
                       </m.div>
                     </AnimatePresence>
                   </div>
-                  {/* Player Controls (Decorative) */}
+
+                  {/* Bottom Counter */}
                   <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -299,11 +268,10 @@ export function ExperienceSection() {
                           ))}
                         </div>
                         <span className="text-xs font-medium tracking-wider text-zinc-800 uppercase">
-                          Now Playing
+                          Role
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-zinc-800">
-                        <ListMusic className="h-4 w-4" />
                         <span className="text-xs">
                           {selectedId} / {EXPERIENCES.length}
                         </span>

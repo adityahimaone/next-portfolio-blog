@@ -56,6 +56,7 @@ export interface ProjectShowcaseItem {
   readonly url: string
   readonly genre?: string
   readonly year?: string
+  readonly tech?: readonly string[]
   readonly vinylColor: string
   readonly vinylIcon: LucideIcon
 }
@@ -226,6 +227,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     url: 'https://primarindo.niqcode.com/',
     genre: 'Corporate / Manufacturing',
     year: '2024',
+    tech: ['React', 'Next.js', 'Tailwind CSS'],
     vinylColor: 'from-blue-600 to-cyan-500',
     vinylIcon: Globe,
   },
@@ -238,6 +240,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     url: 'https://habit.adityahimaone.space/',
     genre: 'Utility / Productivity',
     year: '2026',
+    tech: ['React', 'Next.js', 'Tailwind CSS'],
     vinylColor: 'from-green-500 to-emerald-500',
     vinylIcon: Zap,
   },
@@ -250,6 +253,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     url: 'https://frontend-resources-rouge.vercel.app/',
     genre: 'Educational / Tools',
     year: '2023',
+    tech: ['React', 'Tailwind CSS'],
     vinylColor: 'from-yellow-500 to-orange-500',
     vinylIcon: Code,
   },
@@ -263,6 +267,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     url: 'https://seaphantom.com',
     genre: 'Web3 / NFT',
     year: '2022',
+    tech: ['React', 'Next.js', 'Tailwind CSS', 'Web3'],
     vinylColor: 'from-purple-600 to-pink-600',
     vinylIcon: Cpu,
   },
@@ -276,6 +281,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     url: 'https://auth.seaphantom.com/',
     genre: 'DeFi / Trading',
     year: '2022',
+    tech: ['React', 'Next.js', 'Tailwind CSS', 'Blockchain'],
     vinylColor: 'from-indigo-600 to-violet-600',
     vinylIcon: Database,
   },
@@ -289,6 +295,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     url: 'https://labgrownbeasts.com/',
     genre: 'Biotech / Corporate',
     year: '2022',
+    tech: ['React', 'Next.js', 'Tailwind CSS'],
     vinylColor: 'from-red-500 to-rose-500',
     vinylIcon: Layers,
   },

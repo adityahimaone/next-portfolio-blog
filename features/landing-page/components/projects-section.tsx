@@ -4,9 +4,12 @@ import { useState, useRef } from 'react'
 import { m, AnimatePresence, useInView } from 'motion/react'
 import Image from 'next/image'
 import {
+  Disc,
   X,
+  Play,
+  Music,
+  Mic2,
   ArrowUpRight,
-  Folder,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -33,8 +36,8 @@ export function ProjectsSection() {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               className="mb-4 flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
             >
-              <Folder className="h-4 w-4" />
-              <span>PROJECTS</span>
+              <Disc className="h-4 w-4" />
+              <span>TRACKS</span>
             </m.div>
             <m.h2
               initial={{ opacity: 0, y: 20 }}
@@ -42,84 +45,77 @@ export function ProjectsSection() {
               transition={{ delay: 0.1 }}
               className="text-4xl font-bold tracking-tighter sm:text-5xl"
             >
-              Featured Projects
+              Featured Releases
             </m.h2>
           </div>
 
-          {/* Cards */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
             {PROJECTS_SHOWCASE.map((project, index) => (
               <m.div
                 key={project.id}
                 initial={{ opacity: 0, y: 50 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: index * 0.1 }}
-                className="group relative"
+                className="group relative flex flex-col items-center"
+                onClick={() => setSelectedProject(project)}
               >
-                <button
-                  onClick={() => setSelectedProject(project)}
-                  className="relative flex w-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 active:translate-y-0 dark:border-zinc-800 dark:bg-zinc-900"
-                >
-                  {/* Image */}
-                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-                    <Image
-                      src={project.image}
-                      alt={project.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                    />
-                    {/* Badge */}
-                    <div className="absolute top-3 left-3">
-                      <span
-                        className={cn(
-                          'inline-block rounded-full px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur-md',
-                          'bg-gradient-to-r shadow-sm',
-                          project.vinylColor,
-                        )}
-                      >
-                        {project.genre}
-                      </span>
+                <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
+                  {/* Vinyl Record sliding out */}
+                  <div className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl transition-all duration-700 ease-out group-hover:translate-x-[50%] group-hover:rotate-360 group-active:translate-x-[50%] group-active:rotate-360">
+                    <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
+                    {/* Grooves */}
+                    <div className="absolute inset-[15%] rounded-full border border-zinc-800/40" />
+                    <div className="absolute inset-[25%] rounded-full border border-zinc-800/40" />
+                    <div className="absolute inset-[35%] rounded-full border border-zinc-800/40" />
+
+                    {/* Center Label */}
+                    <div
+                      className={cn(
+                        'flex h-1/3 w-1/3 items-center justify-center rounded-full bg-linear-to-br text-white shadow-inner',
+                        project.vinylColor,
+                      )}
+                    >
+                      {/* <project.vinylIcon className="w-5 h-5" /> */}
                     </div>
-                    {/* Year */}
-                    <div className="absolute top-3 right-3">
-                      <span className="inline-block rounded-full bg-black/40 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-sm">
-                        {project.year}
-                      </span>
-                    </div>
+                    {/* Center Hole */}
+                    <div className="absolute h-1.5 w-1.5 rounded-full bg-black" />
                   </div>
 
-                  {/* Info */}
-                  <div className="flex flex-col gap-3 p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                  {/* Album Cover (Card) */}
+                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm bg-zinc-100 shadow-2xl transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:bg-zinc-900">
+                    {/* Image Area */}
+                    <div className="relative h-[75%] w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
+                      <Image
+                        src={project.image}
+                        alt={project.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover object-top transition-transform duration-500 group-hover:scale-105 group-active:scale-105"
+                      />
+
+                      {/* Glare effect */}
+                      <div className="pointer-events-none absolute inset-0 bg-linear-to-tr from-white/20 to-transparent opacity-50" />
+                    </div>
+
+                    {/* Info Area (Footer) */}
+                    <div className="relative flex h-[25%] flex-col justify-center border-t border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-950">
+                      <h3 className="truncate text-lg font-bold text-zinc-900 dark:text-zinc-100">
                         {project.title}
                       </h3>
-                      <ArrowUpRight className="h-4 w-4 shrink-0 text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </div>
-                    <p className="line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
-                      {project.description}
-                    </p>
-                    {project.tech && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {project.tech.map((t) => (
-                          <span
-                            key={t}
-                            className="rounded-md bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
-                          >
-                            {t}
-                          </span>
-                        ))}
+                      <div className="mt-1 flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        <span className="truncate">{project.genre}</span>
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                        <span>{project.year}</span>
                       </div>
-                    )}
+                    </div>
                   </div>
-                </button>
+                </div>
               </m.div>
             ))}
           </div>
         </div>
 
-        {/* Modal */}
+        {/* Project Detail Modal (Liner Notes) */}
         <AnimatePresence>
           {selectedProject && (
             <m.div
@@ -134,9 +130,9 @@ export function ProjectsSection() {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative max-h-[90vh] w-[95vw] max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-zinc-900"
+                className="relative max-h-[90vh] w-[95vw] max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-zinc-900"
               >
-                {/* Close */}
+                {/* Close Button */}
                 <button
                   onClick={() => setSelectedProject(null)}
                   aria-label="Close project modal"
@@ -146,8 +142,8 @@ export function ProjectsSection() {
                 </button>
 
                 <div className="grid h-full grid-cols-1 md:grid-cols-2">
-                  {/* Left: Image */}
-                  <div className="relative h-48 bg-zinc-100 md:h-full dark:bg-zinc-800">
+                  {/* Left: Image Area */}
+                  <div className="relative h-48 bg-zinc-100 md:h-full dark:bg-zinc-800 lg:h-full">
                     <Image
                       src={selectedProject.image}
                       alt={selectedProject.title}
@@ -156,56 +152,65 @@ export function ProjectsSection() {
                       className="object-cover"
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
+
+                    {/* Floating Music Note */}
+                    <div className="absolute bottom-6 left-6">
+                      <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg">
+                        <Music className="h-6 w-6 animate-pulse" />
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Right: Content */}
-                  <div className="flex flex-col overflow-hidden p-6 md:p-8">
+                  {/* Right: Content Area */}
+                  <div className="flex flex-col p-6 md:p-8 overflow-hidden">
                     <div className="mb-4 md:mb-6">
-                      <div className="text-primary mb-2 text-sm font-medium">
-                        {selectedProject.genre}
+                      <div className="text-primary mb-2 flex items-center gap-2 text-sm font-medium">
+                        <Mic2 className="h-4 w-4" />
+                        <span>FEATURED TRACK</span>
                       </div>
-                      <h3 className="text-2xl leading-tight font-bold text-zinc-900 md:text-3xl dark:text-zinc-100">
+                      <h3 className="text-2xl md:text-3xl leading-tight font-bold text-zinc-900 dark:text-zinc-100">
                         {selectedProject.title}
                       </h3>
                       <div className="mt-2 flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
+                        <span>{selectedProject.genre}</span>
+                        <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
                         <span>{selectedProject.year}</span>
                       </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto pr-2">
-                      <p className="text-base leading-relaxed text-zinc-600 md:text-lg md:line-clamp-none line-clamp-4 dark:text-zinc-300">
+                      <p className="text-base md:text-lg leading-relaxed text-zinc-600 line-clamp-4 md:line-clamp-none dark:text-zinc-300">
                         {selectedProject.description}
                       </p>
 
-                      {/* Tech */}
-                      {selectedProject.tech && (
-                        <div className="mt-6 space-y-3">
-                          <h4 className="text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-zinc-100">
-                            Tech Stack
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedProject.tech.map((tech) => (
+                      <div className="mt-8 space-y-4">
+                        <h4 className="text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-zinc-100">
+                          Production Credits
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {['React', 'Next.js', 'Tailwind', 'TypeScript'].map(
+                            (tech) => (
                               <span
                                 key={tech}
                                 className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
                               >
                                 {tech}
                               </span>
-                            ))}
-                          </div>
+                            ),
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
 
-                    {/* CTA */}
-                    <div className="mt-6 border-t border-zinc-100 pt-6 dark:border-zinc-800">
+                    <div className="mt-8 border-t border-zinc-100 pt-6 dark:border-zinc-800">
                       <a
                         href={selectedProject.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="group flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 py-4 font-bold text-white transition-all hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
                       >
-                        <span>View Project</span>
+                        <Play className="h-5 w-5 fill-current" />
+                        <span>Listen to Track (Visit Site)</span>
                         <ArrowUpRight className="ml-auto h-5 w-5 opacity-50 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
                       </a>
                     </div>

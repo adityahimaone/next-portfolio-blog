@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AudioLines, Zap } from 'lucide-react'
+import { AudioLines } from 'lucide-react'
 import { NowPlayingResponse } from '@/types'
 import Image from 'next/image'
 import { m as motion } from 'motion/react'
@@ -14,7 +14,6 @@ export default function NowPlaying() {
   useEffect(() => {
     const fetchNowPlaying = async () => {
       try {
-        // Add timestamp to prevent browser caching
         const res = await fetch(`/api/now-playing?t=${Date.now()}`)
         if (res.ok) {
           const newData: NowPlayingResponse = await res.json()
@@ -28,151 +27,119 @@ export default function NowPlaying() {
     }
 
     fetchNowPlaying()
-    // Refresh every 10 seconds for a more responsive feel
     const interval = setInterval(fetchNowPlaying, 10000)
-
     return () => clearInterval(interval)
   }, [])
 
   const isPlaying = data?.isPlaying ?? false
 
   return (
-    <div className="relative w-full overflow-hidden rounded-lg border-4 border-zinc-800 bg-zinc-900 shadow-2xl">
-      {/* Screw details */}
-      <div className="absolute top-2 left-2 flex h-2 w-2 items-center justify-center rounded-full bg-zinc-700 shadow-[inset_0_1px_1px_rgba(0,0,0,1)]">
-        <div className="h-px w-1 rotate-45 bg-zinc-900" />
-      </div>
-      <div className="absolute top-2 right-2 flex h-2 w-2 items-center justify-center rounded-full bg-zinc-700 shadow-[inset_0_1px_1px_rgba(0,0,0,1)]">
-        <div className="h-px w-1 rotate-12 bg-zinc-900" />
-      </div>
-      <div className="absolute bottom-2 left-2 flex h-2 w-2 items-center justify-center rounded-full bg-zinc-700 shadow-[inset_0_1px_1px_rgba(0,0,0,1)]">
-        <div className="h-px w-1 -rotate-45 bg-zinc-900" />
-      </div>
-      <div className="absolute right-2 bottom-2 flex h-2 w-2 items-center justify-center rounded-full bg-zinc-700 shadow-[inset_0_1px_1px_rgba(0,0,0,1)]">
-        <div className="h-px w-1 rotate-90 bg-zinc-900" />
-      </div>
+    <div className="group relative w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl transition-all duration-500 hover:border-white/[0.12]">
+      {/* Ambient glow from album art */}
+      {isPlaying && data?.albumImageUrl && (
+        <div
+          className="pointer-events-none absolute inset-0 z-0 opacity-15 blur-3xl transition-opacity duration-700"
+          style={{
+            backgroundImage: `url(${data.albumImageUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+      )}
 
-      <div className="flex flex-col gap-4 bg-linear-to-b from-zinc-800 to-zinc-900 p-6">
-        {/* Header / Status */}
-        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-          <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                'h-2 w-2 rounded-full transition-colors duration-500',
-                isPlaying
-                  ? 'animate-pulse bg-green-500 shadow-[0_0_8px_#22c55e]'
-                  : 'bg-red-900',
-              )}
-            />
-            <span className="text-[10px] font-bold tracking-widest text-zinc-400">
-              STEREO RECEIVER
-            </span>
-          </div>
-          <Zap
-            size={14}
-            className={cn(
-              'text-zinc-600 transition-colors duration-500',
-              isPlaying && 'fill-amber-500 text-amber-500',
-            )}
-          />
+      <div className="relative z-10 flex gap-4 p-5">
+        {/* Album Art — rounded, polished */}
+        <div className="group/art relative h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-white/5 shadow-lg">
+          {isPlaying && data?.albumImageUrl ? (
+            <>
+              <Image
+                src={data.albumImageUrl}
+                alt="Album Art"
+                width={112}
+                height={112}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover/art:scale-105"
+              />
+              {/* Shine overlay */}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover/art:opacity-100" />
+            </>
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-white/5">
+              <div className="h-8 w-8 rounded-full border-2 border-white/10 border-t-white/30 animate-spin opacity-40" />
+            </div>
+          )}
         </div>
 
-        <div className="flex gap-4">
-          {/* Album Art / Cassette Window */}
-          <div className="group relative h-24 w-24 shrink-0 overflow-hidden rounded border-2 border-zinc-700 bg-black shadow-inner">
-            {isPlaying && data?.albumImageUrl ? (
-              <div className="h-full w-full">
-                <Image
-                  src={data.albumImageUrl}
-                  alt="Album Art"
-                  width={96}
-                  height={96}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-zinc-900">
-                <div className="h-16 w-16 animate-spin rounded-full border-4 border-zinc-800 border-t-zinc-600 opacity-20" />
-              </div>
-            )}
-            {/* Glare */}
-            <div className="pointer-events-none absolute inset-0 bg-linear-to-tr from-white/5 to-transparent" />
-          </div>
-
-          {/* LCD Display */}
-          <div className="relative flex flex-1 flex-col justify-between overflow-hidden rounded border-2 border-zinc-700 bg-zinc-950 p-3 shadow-[inset_0_2px_10px_rgba(0,0,0,1)]">
-            {/* Scanlines */}
-            <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.5)_50%)] bg-size-[100%_4px] opacity-30" />
-
-            <div className="relative z-20 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[8px] text-zinc-500">
-                  TRACK
-                </span>
-                <span className="font-mono text-[8px] text-zinc-500">
-                  {isPlaying ? '01' : '--'}
-                </span>
-              </div>
-              <div className="overflow-hidden">
-                <p className="truncate font-mono text-sm text-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.5)]">
-                  {isPlaying ? data?.title : 'NO SIGNAL'}
-                </p>
-              </div>
-              <p className="truncate font-mono text-xs text-amber-700">
-                {isPlaying ? data?.artist : 'WAITING FOR INPUT...'}
-              </p>
-            </div>
-
-            {/* Visualizer Bars (Fake) */}
-            <div className="relative z-20 mt-2 flex h-4 items-end gap-0.5">
-              {[...Array(15)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="flex-1 bg-amber-500/50"
-                  animate={{
-                    height: isPlaying
-                      ? [`${Math.random() * 100}%`, `${Math.random() * 100}%`]
-                      : '5%',
-                  }}
-                  transition={{
-                    duration: 0.2,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                    delay: i * 0.05,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Controls (Decorative) */}
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex gap-2">
-            {['RW', 'FF', 'STOP'].map((btn) => (
+        {/* Track Info + Visualizer */}
+        <div className="flex flex-1 flex-col justify-between min-w-0">
+          {/* Status + Title */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
               <div
-                key={btn}
-                className="flex h-6 cursor-pointer items-center justify-center rounded-sm border border-zinc-700 bg-zinc-800 px-2 shadow-sm transition-transform active:translate-y-px"
-              >
-                <span className="text-[8px] font-bold text-zinc-500">
-                  {btn}
-                </span>
-              </div>
+                className={cn(
+                  'h-1.5 w-1.5 rounded-full transition-all duration-500',
+                  isPlaying
+                    ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)] animate-pulse'
+                    : 'bg-zinc-500',
+                )}
+              />
+              <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-400">
+                {isPlaying ? 'Now Playing' : 'Paused'}
+              </span>
+            </div>
+            <p className="truncate text-sm font-semibold text-zinc-100">
+              {isPlaying ? data?.title : 'No Signal'}
+            </p>
+            <p className="truncate text-xs text-zinc-400">
+              {isPlaying ? data?.artist : 'Waiting for input...'}
+            </p>
+          </div>
+
+          {/* Visualizer Bars */}
+          <div className="mt-3 flex h-5 items-end gap-[3px]">
+            {[...Array(12)].map((_, i) => (
+              <motion.div
+                key={i}
+                className={cn(
+                  'flex-1 rounded-full',
+                  isPlaying
+                    ? 'bg-emerald-400/60'
+                    : 'bg-white/10',
+                )}
+                animate={{
+                  height: isPlaying
+                    ? [`${15 + Math.random() * 85}%`, `${15 + Math.random() * 85}%`]
+                    : '15%',
+                }}
+                transition={{
+                  duration: 0.35 + Math.random() * 0.15,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                  delay: i * 0.04,
+                }}
+              />
             ))}
           </div>
-          <a
-            href={data?.songUrl || '#'}
-            target="_blank"
-            className={cn(
-              'flex h-8 items-center justify-center rounded bg-zinc-200 px-4 shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-colors hover:bg-white',
-              !isPlaying && 'pointer-events-none opacity-50',
-            )}
-          >
-            <span className="flex items-center gap-2 text-[10px] font-black tracking-wider text-zinc-900">
-              <AudioLines size={12} /> SPOTIFY
-            </span>
-          </a>
         </div>
+      </div>
+
+      {/* Footer — Spotify link */}
+      <div className="relative z-10 flex items-center justify-between border-t border-white/[0.06] px-5 py-3">
+        <span className="text-[9px] font-medium uppercase tracking-[0.2em] text-zinc-500">
+          Spotify
+        </span>
+        <a
+          href={data?.songUrl || '#'}
+          target="_blank"
+          className={cn(
+            'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all duration-300',
+            isPlaying
+              ? 'bg-white/[0.08] text-zinc-200 hover:bg-white/[0.14] active:scale-95'
+              : 'pointer-events-none bg-white/[0.03] text-zinc-500 opacity-50',
+          )}
+        >
+          <AudioLines size={12} />
+          Open in Spotify
+        </a>
       </div>
     </div>
   )

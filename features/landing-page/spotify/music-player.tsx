@@ -58,72 +58,68 @@ export function MusicPlayer() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
           className="fixed right-2 bottom-8 z-50 md:right-8"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
           <motion.div
-            className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-zinc-200 p-1 shadow-[0_4px_0_rgb(161,161,170),0_5px_10px_rgba(0,0,0,0.2)] transition-all dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-[0_4px_0_rgb(39,39,42),0_5px_10px_rgba(0,0,0,0.5)]"
+            className={cn(
+              'flex items-center gap-2.5 rounded-2xl border p-1.5 transition-all duration-500',
+              'bg-white/[0.04] backdrop-blur-xl',
+              isPlaying
+                ? 'border-emerald-400/20 shadow-[0_0_15px_rgba(52,211,153,0.08)]'
+                : 'border-white/[0.08]',
+            )}
             layout
           >
             {/* Play/Pause Button */}
-            <div className="relative">
-              <button
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause music' : 'Play music'}
-                className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-md border-2 transition-all active:scale-95',
-                  isPlaying
-                    ? 'border-amber-500/50 bg-amber-500/10 text-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
-                    : 'border-zinc-400/50 bg-zinc-300/50 text-zinc-600 dark:border-zinc-600/50 dark:bg-zinc-800/50 dark:text-zinc-400',
-                )}
-              >
-                {isPlaying ? (
-                  <Pause size={18} fill="currentColor" aria-hidden="true" />
-                ) : (
-                  <Play
-                    size={18}
-                    fill="currentColor"
-                    className="ml-0.5"
-                    aria-hidden="true"
-                  />
-                )}
-              </button>
-              {/* Status LED */}
-              <div
-                className={cn(
-                  'absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border border-zinc-200 transition-colors dark:border-zinc-900',
-                  isPlaying
-                    ? 'bg-green-500 shadow-[0_0_5px_#22c55e]'
-                    : 'bg-red-900',
-                )}
-              />
-            </div>
+            <button
+              onClick={togglePlay}
+              aria-label={isPlaying ? 'Pause music' : 'Play music'}
+              className={cn(
+                'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 active:scale-90',
+                isPlaying
+                  ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-black shadow-[0_0_12px_rgba(52,211,153,0.3)]'
+                  : 'bg-white/[0.08] text-zinc-400 hover:bg-white/[0.12] hover:text-zinc-200',
+              )}
+            >
+              {isPlaying ? (
+                <Pause size={16} fill="currentColor" aria-hidden="true" />
+              ) : (
+                <Play
+                  size={16}
+                  fill="currentColor"
+                  className="ml-0.5"
+                  aria-hidden="true"
+                />
+              )}
+            </button>
 
+            {/* Expanded Controls */}
             <AnimatePresence>
               {isHovered && (
                 <motion.div
-                  className="flex items-center gap-3 overflow-hidden"
+                  className="flex items-center gap-2.5 overflow-hidden"
                   initial={{ scaleX: 0, opacity: 0, transformOrigin: 'left' }}
                   animate={{ scaleX: 1, opacity: 1, transformOrigin: 'left' }}
                   exit={{ scaleX: 0, opacity: 0, transformOrigin: 'left' }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
                 >
                   {/* Divider */}
-                  <div className="h-8 w-px bg-zinc-400 dark:bg-zinc-700" />
+                  <div className="h-6 w-px bg-white/[0.08]" />
 
                   {/* Volume Controls */}
                   <div className="flex items-center gap-2">
                     <button
                       onClick={toggleMute}
                       aria-label={isMuted ? 'Unmute volume' : 'Mute volume'}
-                      className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                      className="text-zinc-500 transition-colors hover:text-zinc-300"
                     >
                       {isMuted ? (
-                        <VolumeX size={16} aria-hidden="true" />
+                        <VolumeX size={14} aria-hidden="true" />
                       ) : (
-                        <Volume2 size={16} aria-hidden="true" />
+                        <Volume2 size={14} aria-hidden="true" />
                       )}
                     </button>
                     <Slider
@@ -136,20 +132,23 @@ export function MusicPlayer() {
                     />
                   </div>
 
-                  {/* Signal Indicator */}
-                  <div className="flex h-4 items-end gap-0.5">
-                    {[...Array(4)].map((_, i) => (
+                  {/* Visualizer */}
+                  <div className="flex h-4 items-end gap-[2px]">
+                    {[...Array(5)].map((_, i) => (
                       <motion.div
                         key={i}
-                        className="w-1 rounded-sm bg-amber-500/50"
+                        className={cn(
+                          'w-[3px] rounded-full',
+                          isPlaying ? 'bg-emerald-400/70' : 'bg-white/15',
+                        )}
                         animate={{
-                          height: isPlaying ? [4, 12, 6, 10, 4] : 4,
-                          opacity: isPlaying ? 1 : 0.3,
+                          height: isPlaying ? [4, 14, 8, 12, 4] : 4,
+                          opacity: isPlaying ? 1 : 0.4,
                         }}
                         transition={{
                           duration: 0.4,
                           repeat: Infinity,
-                          delay: i * 0.1,
+                          delay: i * 0.08,
                           repeatType: 'reverse',
                         }}
                       />

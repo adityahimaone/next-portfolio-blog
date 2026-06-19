@@ -22,25 +22,35 @@ interface ProjectCardProps {
 }
 
 function ProjectCard({ project, index, setSelectedProject }: ProjectCardProps) {
+  const vinylVariants = {
+    initial: { x: '0%', rotate: 0, opacity: 0 },
+    hover: {
+      x: '55%',
+      rotate: 360,
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 90,
+        damping: 15,
+      }
+    }
+  } as any
+
   return (
     <m.div
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
+      whileHover="hover"
       className="group relative flex flex-col items-center"
       onClick={() => setSelectedProject(project)}
     >
       <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
         {/* Vinyl Record sliding out */}
         <m.div
-          initial={{ x: 0, rotate: 0 }}
-          whileHover={{ x: '55%', rotate: 360 }}
-          transition={{
-            type: 'spring',
-            stiffness: 90,
-            damping: 15,
-          }}
+          variants={vinylVariants}
+          initial="initial"
           className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl"
         >
           <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />

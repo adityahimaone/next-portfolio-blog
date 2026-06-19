@@ -235,7 +235,7 @@ export function ExperienceSection() {
                         {/* Description */}
                         <div className="prose prose-zinc dark:prose-invert max-w-none">
                           {selectedJob.isGroup ? (
-                            <div className="relative h-[250px] w-full mt-4">
+                            <div className="relative h-[250px] w-full mt-10">
                               {selectedJob.items?.map((item, i) => {
                                 const itemsLength = selectedJob.items?.length || 0
                                 const diff = (i - activeSubIndex + itemsLength) % itemsLength
@@ -246,17 +246,17 @@ export function ExperienceSection() {
                                     key={i}
                                     style={{ transformOrigin: 'top center' }}
                                     animate={{
-                                      scale: isTop ? 1 : 1 - diff * 0.05,
-                                      y: diff * 16,
-                                      x: diff * 12,
-                                      rotate: isTop ? 0 : diff % 2 === 0 ? -1.5 : 1.5,
+                                      scale: isTop ? 1 : 1 - diff * 0.04,
+                                      y: isTop ? 0 : -diff * 28,
+                                      x: isTop ? 0 : diff * 8,
+                                      rotate: isTop ? 0 : diff % 2 === 0 ? -1 : 1,
                                       zIndex: 30 - diff,
-                                      opacity: 1 - diff * 0.2,
+                                      opacity: isTop ? 1 : 0.85 - diff * 0.1,
                                     }}
                                     transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                                     onClick={() => setActiveSubIndex(i)}
                                     className={cn(
-                                      "absolute top-0 inset-x-0 rounded-2xl border p-5 transition-shadow select-none",
+                                      "absolute top-8 inset-x-0 rounded-2xl border p-5 transition-shadow select-none",
                                       isTop 
                                         ? "cursor-default border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg" 
                                         : "cursor-pointer border-zinc-200/60 dark:border-zinc-850 bg-zinc-100/90 dark:bg-zinc-950 shadow-md hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700"

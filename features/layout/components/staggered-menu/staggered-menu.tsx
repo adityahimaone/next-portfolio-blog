@@ -256,9 +256,6 @@ export const StaggeredMenu = ({
                     aria-label={it.ariaLabel}
                     onClick={() => onClose()}
                   >
-                    <span className="sm-module-type">
-                      {idx % 2 === 0 ? 'SIGNAL PATH' : 'DSP MODULE'}
-                    </span>
                     <span className="sm-panel-itemLabel">{it.label}</span>
                     <div className="sm-meter" aria-hidden="true">
                       <div className="sm-meter-bar" />

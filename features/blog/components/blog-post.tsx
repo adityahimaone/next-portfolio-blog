@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, Suspense } from 'react'
-import { motion, useScroll, useSpring } from 'motion/react'
+import { motion, useScroll, useSpring, AnimatePresence } from 'motion/react'
 import type { BlogMeta } from '../lib/blog'
 import { BlogHeader } from './blog-header'
 import { TableOfContents } from './table-of-contents'
@@ -116,7 +116,16 @@ export function BlogPost({
   relatedPosts?: BlogMeta[]
 }) {
   const [isReaderMode, setIsReaderMode] = useState(false)
+  const [showNudge, setShowNudge] = useState(false)
   const { scrollYProgress } = useScroll()
+
+  useEffect(() => {
+    const nudgeShown = localStorage.getItem('kindleNudgeShown')
+    if (!nudgeShown) {
+      const timer = setTimeout(() => setShowNudge(true), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [])
 
   useEffect(() => {
     if (isReaderMode) {
@@ -138,7 +147,33 @@ export function BlogPost({
     <>
       {/* Floating Reader Mode Toggle inside a compact pod */}
       <div className="fixed bottom-8 left-4 z-40 flex items-center gap-3 rounded-full border border-zinc-200 bg-white/50 px-4 py-2.5 shadow-lg backdrop-blur-md md:left-8 dark:border-zinc-800 dark:bg-zinc-900/50">
-        <BookOpen size={16} className="text-zinc-600 dark:text-zinc-400" />
+        <AnimatePresence>
+          {showNudge && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="absolute bottom-14 left-0 mb-2 w-48 rounded-lg border border-zinc-200 bg-zinc-950 p-2.5 text-xs text-white shadow-xl dark:border-zinc-800"
+            >
+              <p className="font-semibold text-amber-400">Try Kindle Mode!</p>
+              <p className="text-[10px] text-zinc-400 mt-0.5 leading-normal">
+                Switch to E-Ink monochrome mode for comfortable reading.
+              </p>
+              <button
+                onClick={() => {
+                  setShowNudge(false)
+                  localStorage.setItem('kindleNudgeShown', 'true')
+                }}
+                className="mt-1.5 text-[10px] font-bold text-amber-500 hover:text-amber-300 transition-colors"
+              >
+                Got it
+              </button>
+              {/* Tooltip arrow */}
+              <div className="absolute -bottom-1 left-6 h-2 w-2 rotate-45 bg-zinc-950 border-r border-b border-zinc-200/20" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <BookOpen size={16} className="text-zinc-650 dark:text-zinc-400" />
         <span className="mr-1 text-xs font-semibold tracking-wide text-zinc-600 uppercase dark:text-zinc-400">
           Kindle
         </span>

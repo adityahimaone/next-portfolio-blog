@@ -1,14 +1,39 @@
 export type FeaturedProject = {
   name: string
   slug: string
-  githubSlug: string
+  githubSlug?: string
   description: string
   demo?: string
   image?: string
   tech: string[]
+  isPrivate?: boolean
 }
 
 export const FEATURED_PROJECTS: FeaturedProject[] = [
+  {
+    name: 'Hermes Agent',
+    slug: 'hermes-agent',
+    description:
+      'High-throughput AI agent orchestration infrastructure designed for autonomous task planning, long-lived workflows, and parallel subprocess executions with real-time stream updates.',
+    tech: ['Python', 'LangChain', 'Redis', 'Docker', 'WebSockets'],
+    isPrivate: true,
+  },
+  {
+    name: 'IDX Trading Toolchain',
+    slug: 'idx-trading-toolchain',
+    description:
+      'Advanced algorithmic trading framework and market analyzer tailored for the Indonesia Stock Exchange. Features automated technical indicator computation, historical backtesting, and automated alerts.',
+    tech: ['Python', 'Pandas', 'PostgreSQL', 'Grafana', 'Telegram API'],
+    isPrivate: true,
+  },
+  {
+    name: 'Enterprise HRIS Platform',
+    slug: 'fatiha-sakti-hris',
+    description:
+      'Full-scope Human Resource Information System built for PT Fatiha Sakti, Jakarta. Orchestrates employee profiles, monthly payroll generation, dynamic tax calculation, and automated leave approvals.',
+    tech: ['Next.js', 'React', 'TypeScript', 'Node.js', 'PostgreSQL'],
+    isPrivate: true,
+  },
   {
     name: 'Portfolio 2025',
     slug: 'portfolio-2025',
@@ -18,6 +43,14 @@ export const FEATURED_PROJECTS: FeaturedProject[] = [
     demo: 'https://adityahimaone.tech',
     image: '/images/projects/portfolio.png',
     tech: ['Next.js', 'React 19', 'Tailwind CSS v4', 'TypeScript', 'Motion'],
+  },
+  {
+    name: 'Campus-Connect',
+    slug: 'campus-connect',
+    description:
+      'A collaborative community platform for university students enabling peer-to-peer resource sharing, local event listings, and interactive course discussion forums.',
+    tech: ['React', 'Vite', 'Firebase', 'Tailwind CSS'],
+    isPrivate: true,
   },
   {
     name: 'Habbit Tracking',
@@ -53,4 +86,6 @@ export const FEATURED_PROJECTS: FeaturedProject[] = [
   },
 ]
 
-export const FEATURED_SLUGS = FEATURED_PROJECTS.map(p => p.githubSlug)
+export const FEATURED_SLUGS = FEATURED_PROJECTS
+  .map(p => p.githubSlug)
+  .filter((slug): slug is string => !!slug)

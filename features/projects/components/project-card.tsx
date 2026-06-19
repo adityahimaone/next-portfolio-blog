@@ -70,21 +70,27 @@ export const ProjectCard = memo(function ProjectCard({
 
         {/* Links */}
         <div className="mt-auto flex items-center gap-3 pt-4">
-          <a
-            href={`https://github.com/adityahimaone/${project.githubSlug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-sm text-zinc-600 transition-colors hover:text-primary dark:text-zinc-400 dark:hover:text-primary-light"
-          >
-            <Github size={16} />
-            Code
-          </a>
+          {project.githubSlug ? (
+            <a
+              href={`https://github.com/adityahimaone/${project.githubSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-sm text-zinc-650 transition-colors hover:text-primary dark:text-zinc-400 dark:hover:text-primary-light"
+            >
+              <Github size={16} />
+              Code
+            </a>
+          ) : (
+            <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-600 italic">
+              Proprietary Codebase
+            </span>
+          )}
           {project.demo && (
             <a
               href={project.demo}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm text-zinc-600 transition-colors hover:text-primary dark:text-zinc-400 dark:hover:text-primary-light"
+              className="flex items-center gap-1.5 text-sm text-zinc-650 transition-colors hover:text-primary dark:text-zinc-400 dark:hover:text-primary-light"
             >
               <ExternalLink size={16} />
               Live Demo

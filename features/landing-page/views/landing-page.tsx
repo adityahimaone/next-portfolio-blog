@@ -36,7 +36,7 @@ export default function LandingPage() {
   })
   const mainRef = useRef<HTMLDivElement>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
-  const isLoading = usePreloader()
+  const isLoading = usePreloader(2200)
 
   // Opacity for floating elements based on scroll
   const floatingOpacity = useTransform(scrollYProgress, [0, 0.2], [0.2, 0])

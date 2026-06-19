@@ -14,6 +14,7 @@ const loadingSteps = [
 ]
 
 export function Preloader() {
+  const [showSplash, setShowSplash] = useState(true)
   const [stepIndex, setStepIndex] = useState(0)
   const [progress, setProgress] = useState(0)
   const [shouldAnimate, setShouldAnimate] = useState(true)
@@ -29,6 +30,17 @@ export function Preloader() {
       }
     }
 
+    // Splash screen timing: show for 1000ms
+    const splashTimer = setTimeout(() => {
+      setShowSplash(false)
+    }, 1000)
+
+    return () => clearTimeout(splashTimer)
+  }, [])
+
+  useEffect(() => {
+    if (!shouldAnimate || showSplash) return
+
     // Animation timing adjusted for 1200ms maximum duration
     // Step changes: 5 steps, show each for ~240ms to fit within 1200ms
     const stepInterval = setInterval(() => {
@@ -41,7 +53,7 @@ export function Preloader() {
     }, 240)
 
     // Progress: aim for ~80% completion in 1200ms for smoother visual
-    // 3.33% every 50ms = 80% in 1200ms (24 intervals * 3.33% = 80%)
+    // 3.33% every 40ms = 100% in 1200ms
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
@@ -50,18 +62,19 @@ export function Preloader() {
         }
         return Math.min(prev + 3.33, 100)
       })
-    }, 50)
+    }, 40)
 
     return () => {
       clearInterval(stepInterval)
       clearInterval(progressInterval)
     }
-  }, [])
+  }, [shouldAnimate, showSplash])
 
   // If preloader should be skipped (return visit), render nothing
   if (!shouldAnimate) {
     return null
   }
+
 
   return (
     <motion.div
@@ -73,6 +86,34 @@ export function Preloader() {
       }}
       className="fixed inset-0 z-99999 flex flex-col items-center justify-center bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
     >
+      {/* Name + Role Splash Overlay */}
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div
+            key="splash-overlay"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-zinc-950 text-zinc-550"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
+              className="text-center px-6"
+            >
+              <h1 className="text-4xl md:text-6xl font-extrabold tracking-[0.25em] text-white uppercase mb-4">
+                ADITYA HIMAWAN
+              </h1>
+              <div className="h-[2px] w-20 bg-amber-500 mx-auto mb-4" />
+              <p className="text-xs md:text-sm tracking-[0.4em] uppercase text-zinc-400">
+                Frontend Developer
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background Texture */}
       <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(45deg,#e5e5e5_25%,transparent_25%,transparent_75%,#e5e5e5_75%,#e5e5e5),linear-gradient(45deg,#e5e5e5_25%,transparent_25%,transparent_75%,#e5e5e5_75%,#e5e5e5)] bg-[length:4px_4px] bg-[position:0_0,2px_2px] opacity-10 mix-blend-overlay dark:opacity-20" />
       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(39,50,129,0.05)_0%,transparent_70%)] dark:bg-[radial-gradient(circle_at_center,rgba(39,50,129,0.15)_0%,transparent_70%)]" />

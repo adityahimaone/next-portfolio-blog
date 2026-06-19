@@ -104,9 +104,8 @@ export function HeroSection() {
 
           {/* Subtitle / Description */}
           <p className="animate-hero-desc mb-10 max-w-2xl text-center text-base font-light text-zinc-600 sm:text-lg md:text-xl dark:text-zinc-400">
-            Orchestrating code and rhythm into immersive digital experiences.
-            <br className="hidden sm:block" /> Frontend Developer & Audio
-            Enthusiast.
+            Frontend developer building precise, performant interfaces.
+            <br className="hidden sm:block" /> Based in Jakarta. Next.js, TypeScript & Design Systems.
           </p>
 
           {/* Player Controls / CTA */}

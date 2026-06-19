@@ -16,6 +16,7 @@ import {
   Zap,
 } from 'lucide-react'
 import NowPlaying from '@/features/landing-page/spotify/now-playing'
+import { useAudioEngine } from '@/features/landing-page/spotify/use-audio-engine'
 
 // --- Types ---
 
@@ -198,59 +199,78 @@ const DetailWindow = ({
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm md:p-8"
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md md:p-8"
     onClick={onClose}
   >
     <m.div
-      initial={{ scale: 0.95, y: 20 }}
+      initial={{ scale: 0.95, y: 30 }}
       animate={{ scale: 1, y: 0 }}
-      exit={{ scale: 0.95, y: 20 }}
+      exit={{ scale: 0.95, y: 30 }}
       onClick={(e) => e.stopPropagation()}
-      className="relative flex h-full max-h-[500px] w-full max-w-5xl flex-col overflow-hidden rounded-xl border-2 border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-900"
+      className="relative flex h-full max-h-[580px] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-[0_20px_50px_rgba(0,0,0,0.9)] p-3"
     >
-      {/* VST Header */}
-      <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="flex items-center gap-4">
-          {/* Screws */}
-          <div className="flex gap-2">
-            <div className="h-2 w-2 rounded-full border border-zinc-300 bg-zinc-200 shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)] dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.5)]" />
-            <div className="h-2 w-2 rounded-full border border-zinc-300 bg-zinc-200 shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)] dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.5)]" />
+      {/* VST Chrome Header / Rack Handles */}
+      <div className="relative flex items-center justify-between border-b border-zinc-850 bg-zinc-950 px-6 py-4 rounded-t-lg">
+        {/* Left rack ears handle */}
+        <div className="absolute top-0 bottom-0 left-0 w-2.5 bg-gradient-to-r from-zinc-700 to-zinc-900 border-r border-zinc-800 flex flex-col justify-between py-2 items-center">
+          <div className="w-1.5 h-1.5 rounded-full bg-zinc-950 shadow-inner border border-zinc-800 text-[3px] text-zinc-650 flex items-center justify-center font-bold">x</div>
+          <div className="w-1.5 h-1.5 rounded-full bg-zinc-950 shadow-inner border border-zinc-800 text-[3px] text-zinc-650 flex items-center justify-center font-bold">x</div>
+        </div>
+
+        <div className="flex items-center gap-4 pl-3">
+          {/* Glowing LED */}
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+            <span className="font-mono text-[8px] font-black tracking-widest text-zinc-550">PARAMETRIC PROCESSOR</span>
           </div>
-          {/* LCD Title */}
-          <div className="rounded border border-blue-200 bg-blue-50 px-3 py-1 shadow-sm dark:border-blue-900/30 dark:bg-blue-950/30 dark:shadow-[inset_0_0_10px_rgba(59,130,246,0.1)]">
-            <span className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400 dark:drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]">
+
+          {/* VST Title LCD Display */}
+          <div className="rounded border border-emerald-900 bg-[#0d140e] px-4 py-1.5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)] font-mono flex items-center gap-3">
+            <span className="text-[7px] text-emerald-700 font-extrabold uppercase">Plugin State</span>
+            <span className="text-xs font-black text-emerald-400 tracking-wider">
               {clip.name.toUpperCase()}
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          {/* Fake Knobs */}
-          <div className="hidden gap-3 md:flex">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="relative flex h-8 w-8 items-center justify-center rounded-full border border-zinc-300 bg-zinc-100 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-lg"
-              >
-                <div
-                  className="absolute top-1 h-2 w-0.5 rounded-full bg-zinc-400 dark:bg-zinc-400"
-                  style={{ transform: `rotate(${i * 45}deg)` }}
-                />
+
+        <div className="flex items-center gap-6 pr-3">
+          {/* Status Dials */}
+          <div className="hidden items-center gap-4 md:flex">
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="relative w-6 h-6 rounded-full border border-zinc-850 bg-zinc-900 flex items-center justify-center">
+                <div className="absolute top-0.5 w-[1.5px] h-1.5 bg-zinc-550 rounded-full origin-bottom" style={{ transform: 'rotate(45deg)' }} />
               </div>
-            ))}
+              <span className="text-[6px] font-mono text-zinc-500 font-bold">DECAY</span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="relative w-6 h-6 rounded-full border border-zinc-850 bg-zinc-900 flex items-center justify-center">
+                <div className="absolute top-0.5 w-[1.5px] h-1.5 bg-zinc-550 rounded-full origin-bottom" style={{ transform: 'rotate(-45deg)' }} />
+              </div>
+              <span className="text-[6px] font-mono text-zinc-500 font-bold">THRESHOLD</span>
+            </div>
           </div>
-          <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800" />
+
+          <div className="h-6 w-px bg-zinc-800" />
+
+          {/* Satisfying Close trigger */}
           <button
             onClick={onClose}
             aria-label="Close clip detail"
-            className="rounded-full p-1 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+            className="rounded bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 p-1.5 text-zinc-400 transition-colors hover:text-white cursor-pointer active:scale-95 shadow-md"
           >
-            <X size={18} />
+            <X size={14} />
           </button>
+        </div>
+
+        {/* Right rack ears handle */}
+        <div className="absolute top-0 bottom-0 right-0 w-2.5 bg-gradient-to-l from-zinc-700 to-zinc-900 border-l border-zinc-800 flex flex-col justify-between py-2 items-center">
+          <div className="w-1.5 h-1.5 rounded-full bg-zinc-950 shadow-inner border border-zinc-800 text-[3px] text-zinc-650 flex items-center justify-center font-bold">x</div>
+          <div className="w-1.5 h-1.5 rounded-full bg-zinc-950 shadow-inner border border-zinc-800 text-[3px] text-zinc-650 flex items-center justify-center font-bold">x</div>
         </div>
       </div>
 
-      {/* Window Content */}
-      <div className="scrollbar-thin scrollbar-track-zinc-100 scrollbar-thumb-zinc-300 dark:scrollbar-track-zinc-900 dark:scrollbar-thumb-zinc-700 flex-1 overflow-y-auto bg-zinc-50 p-6 text-zinc-900 dark:bg-zinc-900/50 dark:text-zinc-300">
+      {/* Main Casing Body */}
+      <div className="scrollbar-thin scrollbar-track-zinc-950 scrollbar-thumb-zinc-800 flex-1 overflow-y-auto bg-zinc-950/60 p-6 sm:p-8 rounded-b-lg border-t border-zinc-900 text-zinc-300">
         {clip.content}
       </div>
     </m.div>
@@ -263,6 +283,37 @@ export function AboutSection() {
   const [hoveredClip, setHoveredClip] = useState<Clip | null>(null)
   const [mutedTracks, setMutedTracks] = useState<Set<string>>(new Set())
   const [soloedTrack, setSoloedTrack] = useState<string | null>(null)
+
+  const { toneRef, startAudio } = useAudioEngine()
+  const synthRef = useRef<any>(null)
+
+  const playHoverSound = async (clipType: string) => {
+    try {
+      const audioStarted = await startAudio()
+      if (!audioStarted) return
+      const Tone = toneRef.current
+      if (!Tone) return
+
+      if (!synthRef.current) {
+        synthRef.current = new Tone.MonoSynth({
+          oscillator: { type: 'sine' },
+          envelope: { attack: 0.02, decay: 0.1, sustain: 0.4, release: 0.3 },
+          filterEnvelope: { attack: 0.02, decay: 0.1, sustain: 0.4, release: 0.3 }
+        }).toDestination()
+        synthRef.current.volume.value = -18
+      }
+
+      let note = 'C4'
+      if (clipType === 'bio') note = 'C4'
+      else if (clipType === 'stack') note = 'E4'
+      else if (clipType === 'stats') note = 'G4'
+      else if (clipType === 'spotify') note = 'B4'
+
+      synthRef.current.triggerAttackRelease(note, '16n')
+    } catch (e) {
+      console.warn('Audio hover play failed:', e)
+    }
+  }
 
   // Playhead animation
   const playheadRef = useRef<HTMLDivElement>(null)
@@ -916,9 +967,12 @@ export function AboutSection() {
                               color={track.color}
                               isActive={activeClip?.id === clip.id}
                               onClick={() => setActiveClip(clip)}
-                              onHover={(isHovered) =>
+                              onHover={(isHovered) => {
                                 setHoveredClip(isHovered ? clip : null)
-                              }
+                                if (isHovered) {
+                                  playHoverSound(clip.type)
+                                }
+                              }}
                             />
                           ))}
                         </div>

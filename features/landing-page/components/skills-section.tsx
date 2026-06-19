@@ -12,7 +12,7 @@ import { MIXER_DATA } from '../constants'
 
 // Screw component imported from @/components/screw
 
-const Knob = ({ value, label }: { value: number; label: string }) => {
+const Knob = ({ value, label, onHover }: { value: number; label: string; onHover: (active: boolean) => void }) => {
   const minDeg = -135
   const maxDeg = 135
   const startDeg = (value / 100) * 270 - 135
@@ -30,15 +30,24 @@ const Knob = ({ value, label }: { value: number; label: string }) => {
 
   const handlePan = (_: any, info: { delta: { y: number } }) => {
     const current = rotation.get()
-    // Drag up (negative y) -> increase rotation (positive delta)
     const delta = -info.delta.y * 2
     const newRot = Math.min(maxDeg, Math.max(minDeg, current + delta))
     rotation.set(newRot)
+    onHover(true)
   }
 
   return (
-    <div className="flex touch-none flex-col items-center gap-3">
-      <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-zinc-700/50 bg-zinc-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.1)]">
+    <div 
+      className="flex touch-none flex-col items-center gap-3 relative group"
+      onMouseEnter={() => onHover(true)}
+      onMouseLeave={() => onHover(false)}
+    >
+      {/* Visual Tooltip overlay */}
+      <div className="absolute -top-8 scale-0 group-hover:scale-100 transition-all bg-zinc-950/90 text-zinc-100 text-[9px] px-2 py-1 rounded border border-zinc-700 pointer-events-none z-30 font-mono whitespace-nowrap shadow-md">
+        {label}: {value}%
+      </div>
+
+      <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-zinc-700/50 bg-zinc-850 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.1)]">
         {/* Ticks */}
         {[...Array(11)].map((_, i) => {
           const rot = (i / 10) * 270 - 135
@@ -48,14 +57,14 @@ const Knob = ({ value, label }: { value: number; label: string }) => {
               className="absolute h-full w-full"
               style={{ transform: `rotate(${rot}deg)` }}
             >
-              <div className="absolute top-1 left-1/2 h-1.5 w-0.5 -translate-x-1/2 bg-zinc-600" />
+              <div className="absolute top-1 left-1/2 h-1.5 w-0.5 -translate-x-1/2 bg-zinc-650" />
             </div>
           )
         })}
 
         {/* The Knob */}
         <m.div
-          className="relative h-14 w-14 cursor-grab rounded-full border border-zinc-950 bg-linear-to-b from-zinc-700 to-zinc-900 shadow-[0_4px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] active:cursor-grabbing"
+          className="relative h-14 w-14 cursor-grab rounded-full border border-zinc-950 bg-linear-to-b from-zinc-750 to-zinc-900 shadow-[0_4px_8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] active:cursor-grabbing"
           style={{ rotate: rotation }}
           onPan={handlePan}
         >
@@ -63,15 +72,14 @@ const Knob = ({ value, label }: { value: number; label: string }) => {
           <div className="bg-primary absolute top-1.5 left-1/2 h-4 w-1 -translate-x-1/2 rounded-full shadow-[0_0_5px_rgba(var(--primary),0.8)]" />
         </m.div>
       </div>
-      <span className="text-[10px] font-bold tracking-widest text-zinc-500 select-none">
+      <span className="text-[10px] font-bold tracking-widest text-zinc-500 select-none group-hover:text-zinc-300 transition-colors">
         {label}
       </span>
     </div>
   )
 }
 
-const Fader = ({ value, label }: { value: number; label: string }) => {
-  // Track height 192px (h-48) - Padding 32px (py-4) - Cap 48px (h-12) = 112px travel
+const Fader = ({ value, label, onHover }: { value: number; label: string; onHover: (active: boolean) => void }) => {
   const maxTravel = 112
   const initialY = -((value / 100) * maxTravel)
   const y = useMotionValue(0)
@@ -86,7 +94,16 @@ const Fader = ({ value, label }: { value: number; label: string }) => {
   }, [initialY])
 
   return (
-    <div className="flex h-full touch-none flex-col items-center gap-3">
+    <div 
+      className="flex h-full touch-none flex-col items-center gap-3 relative group"
+      onMouseEnter={() => onHover(true)}
+      onMouseLeave={() => onHover(false)}
+    >
+      {/* Visual Tooltip overlay */}
+      <div className="absolute -top-8 scale-0 group-hover:scale-100 transition-all bg-zinc-950/90 text-zinc-100 text-[9px] px-2 py-1 rounded border border-zinc-700 pointer-events-none z-30 font-mono whitespace-nowrap shadow-md">
+        {label}: {value}%
+      </div>
+
       <div className="relative flex h-48 w-12 justify-center rounded-lg border border-zinc-800/50 bg-zinc-900/50 py-4 shadow-inner">
         {/* Track Line */}
         <div className="absolute top-4 bottom-4 w-1 rounded-full bg-zinc-950 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]" />
@@ -100,12 +117,13 @@ const Fader = ({ value, label }: { value: number; label: string }) => {
 
         {/* The Fader Cap */}
         <m.div
-          className="absolute bottom-4 left-1/2 z-10 flex h-12 w-8 -translate-x-1/2 cursor-grab items-center justify-center rounded border-t border-zinc-600 bg-linear-to-b from-zinc-700 to-zinc-800 shadow-[0_4px_6px_rgba(0,0,0,0.5)] active:cursor-grabbing"
+          className="absolute bottom-4 left-1/2 z-10 flex h-12 w-8 -translate-x-1/2 cursor-grab items-center justify-center rounded border-t border-zinc-650 bg-linear-to-b from-zinc-750 to-zinc-850 shadow-[0_4px_6px_rgba(0,0,0,0.5)] active:cursor-grabbing"
           style={{ y }}
           drag="y"
           dragConstraints={{ top: -maxTravel, bottom: 0 }}
           dragElastic={0}
           dragMomentum={false}
+          onDrag={() => onHover(true)}
         >
           <div className="mb-1 h-0.5 w-full bg-zinc-950/50" />
           <div className="h-0.5 w-full bg-zinc-950/50" />
@@ -115,7 +133,7 @@ const Fader = ({ value, label }: { value: number; label: string }) => {
           <div className="bg-primary absolute top-1/2 left-1/2 h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_5px_rgba(var(--primary),0.5)]" />
         </m.div>
       </div>
-      <span className="text-[10px] font-bold tracking-widest text-zinc-500 select-none">
+      <span className="text-[10px] font-bold tracking-widest text-zinc-500 select-none group-hover:text-zinc-300 transition-colors">
         {label}
       </span>
     </div>
@@ -159,8 +177,29 @@ const VUMeter = ({ isOn }: { isOn: boolean }) => {
   )
 }
 
+const getSkillDesc = (name: string) => {
+  const descMap: Record<string, string> = {
+    'HTML': 'Semantic page layout, accessibility (ARIA), and SEO best practices.',
+    'CSS': 'Responsive layouts (Grid/Flexbox), custom animations, CSS variables, and modern styling.',
+    'JS': 'ES6+ core, asynchronous flow, DOM manipulation, and performance optimization.',
+    'TS': 'Strong typing, interfaces, generics, and compile-time verification.',
+    'GO': 'Backend microservices, concurrency with goroutines/channels, and API design.',
+    'SWIFT': 'iOS native development, UIKit/SwiftUI components, and core client-side patterns.',
+    'REACT': 'Component architecture, state management hooks, and virtual DOM optimization.',
+    'NEXT': 'Server-side rendering (SSR), static generation (SSG), App Router, and API routes.',
+    'REMIX': 'Web standards-based React framework with loaders, actions, and optimistic UI.',
+    'JQUERY': 'Legacy DOM management, cross-browser compatibility, and lightweight utility scripting.',
+    'VS CODE': 'Custom workspace configuration, keyboard shortcuts, and extension productivity.',
+    'FIGMA': 'High-fidelity UI designs, vector layouts, prototype creation, and design handoff.',
+    'GIT': 'Branching strategies, rebase operations, merge conflict resolution, and git flow.',
+    'MOTION': 'Framed/physics-based animations, layout transitions, and high-framerate gestures.'
+  }
+  return descMap[name] || 'Active programming skill parameter.'
+}
+
 export function SkillsSection() {
   const [isOn, setIsOn] = useState(true)
+  const [activeSkillInfo, setActiveSkillInfo] = useState<{ name: string; level: number } | null>(null)
 
   return (
     <>
@@ -197,8 +236,8 @@ export function SkillsSection() {
               <Screw className="absolute bottom-4 left-4" />
               <Screw className="absolute right-4 bottom-4" />
 
-              {/* Top Panel: Branding & Power */}
-              <div className="mb-12 flex items-center justify-between border-b border-zinc-400/30 pb-6 dark:border-zinc-800">
+              {/* Top Panel: Branding & Power & LCD Tooltip */}
+              <div className="mb-12 flex flex-col gap-6 border-b border-zinc-400/30 pb-6 md:flex-row md:items-center md:justify-between dark:border-zinc-800">
                 <div className="flex items-center gap-4">
                   <div className="hidden h-12 w-12 items-center justify-center rounded border border-zinc-700 bg-zinc-900 shadow-lg sm:flex">
                     <Music className="text-primary h-6 w-6" />
@@ -212,7 +251,30 @@ export function SkillsSection() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+
+                {/* Digital LCD Tooltip Screen (Inspector) */}
+                <div className="flex-1 max-w-md rounded-lg border border-zinc-400/60 bg-[#0b120d] p-3 font-mono text-[10px] text-emerald-400 shadow-inner flex flex-col justify-between h-16 dark:border-zinc-800">
+                  <div className="w-full">
+                    <span className="text-[7px] text-emerald-600 font-bold uppercase tracking-widest block mb-0.5">Console Signal Inspector</span>
+                    {activeSkillInfo && isOn ? (
+                      <div className="animate-pulse">
+                        <div className="flex justify-between font-bold text-xs">
+                          <span>{activeSkillInfo.name.toUpperCase()}</span>
+                          <span className="text-amber-400">{activeSkillInfo.level}% POWER</span>
+                        </div>
+                        <p className="text-[9px] text-emerald-500/80 mt-1 truncate">
+                          {getSkillDesc(activeSkillInfo.name)}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-emerald-700 mt-1 uppercase text-[8px] tracking-wide leading-tight">
+                        {isOn ? "SYSTEM READY. HOVER KNOBS & FADERS TO SCAN CHANNEL DATA." : "CONSOLE POWER OFFLINE. SWITCH POWER ON."}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 justify-end">
                   <div className="flex items-center gap-3 rounded-xl border border-zinc-500 bg-zinc-400/50 p-2 px-3">
                     {/* LED */}
                     <div className="flex flex-col items-center gap-1">
@@ -293,6 +355,7 @@ export function SkillsSection() {
                         key={skill.name}
                         value={isOn ? skill.level : 0}
                         label={skill.name}
+                        onHover={(active) => setActiveSkillInfo(active ? { name: skill.name, level: skill.level } : null)}
                       />
                     ))}
                   </div>
@@ -303,6 +366,7 @@ export function SkillsSection() {
                         key={skill.name}
                         value={isOn ? skill.level : 0}
                         label={skill.name}
+                        onHover={(active) => setActiveSkillInfo(active ? { name: skill.name, level: skill.level } : null)}
                       />
                     ))}
                   </div>
@@ -324,6 +388,7 @@ export function SkillsSection() {
                           key={skill.name}
                           value={isOn ? skill.level : 0}
                           label={skill.name}
+                          onHover={(active) => setActiveSkillInfo(active ? { name: skill.name, level: skill.level } : null)}
                         />
                       ))}
                     </div>
@@ -343,6 +408,7 @@ export function SkillsSection() {
                           key={skill.name}
                           value={isOn ? skill.level : 0}
                           label={skill.name}
+                          onHover={(active) => setActiveSkillInfo(active ? { name: skill.name, level: skill.level } : null)}
                         />
                       ))}
                     </div>

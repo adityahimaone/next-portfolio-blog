@@ -1,15 +1,13 @@
 'use client'
 
-import { useRef } from 'react'
-import { m as motion, useScroll, useTransform } from 'motion/react'
-import { Play, Pause, SkipForward } from 'lucide-react'
+import { useRef, useState, useEffect } from 'react'
+import { m as motion, AnimatePresence } from 'motion/react'
+import { Play, Pause, SkipForward, Radio, Settings, Disc, Volume2 } from 'lucide-react'
 import { Magnetic } from '@/components/magnetic'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import { Syne } from 'next/font/google'
-
-import { useState, useEffect } from 'react'
-import { useAudioFrequency } from '@/features/mixtape/hooks/use-audio-frequency'
-import { ReactiveVisualizer } from '@/features/mixtape/components/reactive-visualizer'
+import { OscilloscopeBackground } from '@/components/oscilloscope-background'
+import { cn } from '@/lib/utils'
 
 const syne = Syne({ weight: ['700', '800'], subsets: ['latin'] })
 
@@ -17,246 +15,213 @@ export function HeroSection() {
   const [baseDelay, setBaseDelay] = useState(1)
 
   useEffect(() => {
-    // If preloader was already shown (skipped), we don't need a massive delay
-    // If it wasn't shown, it's running right now, so we need to wait for it
     if (sessionStorage.getItem('preloaderShown')) {
       setBaseDelay(0.1)
     }
   }, [])
 
-  const { isPlaying, togglePlay, currentTrack, audioRef } = useAudio()
-  const frequencyData = useAudioFrequency(audioRef.current)
-
+  const { isPlaying, togglePlay, currentTrack } = useAudio()
   const containerRef = useRef<HTMLDivElement>(null)
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end start'],
-  })
-
-  const y = useTransform(scrollYProgress, [0, 1], [0, 150])
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9])
 
   return (
     <section
       ref={containerRef}
-      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-zinc-50 transition-colors dark:bg-zinc-950"
+      className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-zinc-50 dark:bg-[#08080a] py-20"
     >
-      {/* Amp Cabinet Background (Grille) */}
-      <div className="absolute inset-0 z-0">
-        <div
-          className="absolute inset-0 bg-[radial-gradient(#000_1.5px,transparent_1.5px)] opacity-10 dark:bg-[radial-gradient(#333_1.5px,transparent_1.5px)] dark:opacity-50"
-          style={{ backgroundSize: '4px 4px' }}
-        />
-        <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay dark:opacity-20" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%)] dark:bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
+      {/* Background Oscilloscope */}
+      <OscilloscopeBackground className="absolute inset-0 z-0 opacity-40 dark:opacity-60">
+        <div className="absolute inset-0 bg-radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.15)_100%) dark:bg-radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.65)_100%)" />
+        <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay" />
+      </OscilloscopeBackground>
 
-        {/* Ambient VU LED Wall Background */}
-        <div className="absolute inset-0 z-0 flex items-end justify-around opacity-[0.03] dark:opacity-[0.06] px-4 sm:px-10 pb-20 pointer-events-none select-none">
-          {[...Array(16)].map((_, colIdx) => (
-            <div key={colIdx} className="flex flex-col gap-0.5 w-3 sm:w-6 h-[80%] justify-end">
-              {[...Array(20)].map((_, ledIdx) => {
-                const isTop = ledIdx >= 16
-                const isMid = ledIdx >= 10 && ledIdx < 16
-                const color = isTop ? 'bg-red-500/80' : isMid ? 'bg-amber-500/80' : 'bg-green-500/80'
-                return (
-                  <motion.div
-                    key={ledIdx}
-                    className={`w-full h-1 sm:h-2 rounded-[1px] ${color}`}
-                    animate={{
-                      opacity: [0.1, 0.9, 0.1]
-                    }}
-                    transition={{
-                      duration: 0.8 + Math.random() * 1.2,
-                      repeat: Infinity,
-                      delay: colIdx * 0.1 + (20 - ledIdx) * 0.04,
-                      ease: 'easeInOut'
-                    }}
-                  />
-                )
-              })}
-            </div>
-          ))}
-        </div>
-
-        {/* Dynamic Audio Visualizer Background (Extra Tall) */}
-        {false && isPlaying && (
-          <div className="absolute inset-x-0 bottom-0 z-10 h-[750px] opacity-70 blur-sm dark:opacity-50">
-            <ReactiveVisualizer frequencyData={frequencyData} />
-          </div>
-        )}
-      </div>
-
-      <motion.div
-        style={{ y, opacity, scale }}
-        className="relative z-20 container mx-auto mt-24 flex flex-col items-center px-4 text-center md:px-6"
-      >
-        {/* Content Wrapper */}
-        <div className="relative z-10 flex w-full max-w-4xl flex-col items-center">
-          {/* Top Label */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: baseDelay }}
-            className="mb-8 flex items-center gap-3 rounded-full border border-zinc-200 bg-white/40 px-4 py-1.5 text-sm font-medium text-zinc-700 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/40 dark:text-zinc-300"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
-            </span>
-            LIVE SESSION
-          </motion.div>
-
-          {/* Brand Logo (The Name) */}
-          <div className={`mb-10 flex flex-col items-center ${syne.className}`}>
-            <motion.h1
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: baseDelay + 0.1 }}
-              className="text-center text-[13vw] leading-[0.85] font-extrabold tracking-tighter text-zinc-900 italic drop-shadow-sm md:text-[10vw] lg:text-[8vw] dark:text-white dark:drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]"
+      {/* Main Structural Asymmetric Layout (Hallmark Editorial Grid) */}
+      <div className="relative z-10 container mx-auto px-4 md:px-8 mt-16 max-w-7xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          {/* Left Column: Huge typography and System parameters */}
+          <div className="lg:col-span-7 flex flex-col items-start text-left space-y-6">
+            
+            {/* Session Indicator */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: baseDelay }}
+              className="flex items-center gap-2.5 rounded-full border border-zinc-200 bg-white/60 px-3.5 py-1 text-xs font-bold text-zinc-800 shadow-md backdrop-blur-md dark:border-white/10 dark:bg-black/60 dark:text-zinc-200"
             >
-              <span className="block bg-linear-to-b from-zinc-700 via-zinc-900 to-black bg-clip-text text-transparent dark:from-white dark:via-zinc-200 dark:to-zinc-400">
-                ADITYA
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
               </span>
-            </motion.h1>
-            <motion.h1
+              CONSOLE ONLINE // DECK_01
+            </motion.div>
+
+            {/* Massive Heading (Syne font) */}
+            <div className={syne.className}>
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: baseDelay + 0.1 }}
+                className="text-5xl sm:text-7xl lg:text-8xl font-extrabold tracking-tighter leading-none text-zinc-900 dark:text-white"
+              >
+                ADITYA
+              </motion.h1>
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: baseDelay + 0.2 }}
+                className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-[0.2em] leading-none text-blue-600 dark:text-blue-400 mt-2"
+              >
+                HIMAONE
+              </motion.h1>
+            </div>
+
+            {/* Descriptive subhead */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: baseDelay + 0.4 }}
+              className="text-lg sm:text-xl text-zinc-655 dark:text-zinc-400 font-medium max-w-xl leading-relaxed"
+            >
+              Orchestrating robust React architecture and interactive design patterns into premium digital instruments.
+            </motion.p>
+
+            {/* Tech Readouts / Knobs Matrix */}
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: baseDelay + 0.2 }}
-              className="text-primary/80 text-[5vw] font-bold tracking-[0.5em] md:text-[3vw] lg:text-[2.5vw]"
+              transition={{ duration: 0.8, delay: baseDelay + 0.6 }}
+              className="flex flex-wrap gap-4 pt-4"
             >
-              HIMAONE
-            </motion.h1>
+              {[
+                { label: 'ROLE', val: 'FRONTEND ENG.' },
+                { label: 'GENRE', val: 'INTERACTIVE UI' },
+                { label: 'STATUS', val: 'OPERATIONAL' },
+              ].map((spec) => (
+                <div
+                  key={spec.label}
+                  className="flex flex-col border-l-2 border-blue-500/50 bg-zinc-200/20 px-3.5 py-1.5 backdrop-blur-xs dark:bg-black/30"
+                >
+                  <span className="text-[9px] font-bold tracking-widest text-zinc-550 dark:text-zinc-500">{spec.label}</span>
+                  <span className="font-mono text-xs font-black text-zinc-900 dark:text-zinc-150">{spec.val}</span>
+                </div>
+              ))}
+            </motion.div>
           </div>
 
-          {/* Subtitle / Description */}
-          <p className="animate-hero-desc mb-10 max-w-2xl text-center text-base font-light text-zinc-600 sm:text-lg md:text-xl dark:text-zinc-400">
-            Orchestrating code and rhythm into immersive digital experiences.
-            <br className="hidden sm:block" /> Frontend Developer & Audio
-            Enthusiast.
-          </p>
+          {/* Right Column: VST Synthesizer Hardware Console */}
+          <div className="lg:col-span-5 flex justify-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: baseDelay + 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-w-md rounded-2xl border-2 border-zinc-400 bg-zinc-200/90 p-6 shadow-2xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90"
+            >
+              {/* Metal Corner Screws */}
+              <div className="absolute top-3 left-3 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/20" />
+              <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/20" />
+              <div className="absolute bottom-3 left-3 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/20" />
+              <div className="absolute bottom-3 right-3 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/20" />
 
-          {/* Player Controls / CTA */}
-          {/* Player Controls / CTA - Hardware Style */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{
-              duration: 0.8,
-              delay: baseDelay + 0.8,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            className="relative flex w-full max-w-[90vw] items-center gap-4 rounded-lg border-t border-white/20 bg-zinc-200 p-2 shadow-2xl sm:max-w-lg sm:gap-6 sm:p-3 dark:border-white/5 dark:bg-zinc-900"
-          >
-            {/* Inset Shadow for depth */}
-            <div className="pointer-events-none absolute inset-0 rounded-lg shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_4px_10px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),inset_0_4px_10px_rgba(0,0,0,0.5)]" />
-
-            <Magnetic intensity={0.2}>
-              <button
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause Session' : 'Play Session'}
-                className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-zinc-100 to-zinc-300 shadow-[0_2px_5px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.1)] transition-all active:scale-95 active:shadow-inner sm:h-14 sm:w-14 dark:from-zinc-700 dark:to-zinc-800 dark:shadow-[0_2px_5px_rgba(0,0,0,0.5),0_0_0_1px_rgba(0,0,0,0.5)]"
-              >
-                <div className="bg-primary/5 absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
-                {isPlaying ? (
-                  <Pause
-                    fill="currentColor"
-                    className="text-zinc-700 dark:text-zinc-200"
-                  />
-                ) : (
-                  <Play
-                    fill="currentColor"
-                    className="ml-1 text-zinc-700 dark:text-zinc-200"
-                  />
-                )}
-                {/* LED Indicator on button */}
-                <div
-                  className={`absolute top-2 right-2 h-1.5 w-1.5 rounded-full transition-colors ${isPlaying ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.8)]' : 'bg-zinc-400 dark:bg-zinc-600'}`}
-                />
-              </button>
-            </Magnetic>
-
-            {/* LCD Display */}
-            <div className="flex min-w-0 flex-1 flex-col items-start gap-1 rounded border-b border-white/10 bg-zinc-800 p-2 shadow-[inset_0_2px_6px_rgba(0,0,0,0.8)] dark:bg-black">
-              <div className="flex w-full items-center justify-between px-1">
-                <span className="text-[7px] font-bold tracking-widest text-zinc-500 uppercase">
-                  STATUS: {isPlaying ? 'PLAYING' : 'STANDBY'}
-                </span>
-                <div className="flex gap-0.5">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-1 w-1 rounded-full ${isPlaying ? 'animate-pulse bg-red-500' : 'bg-zinc-700'}`}
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    />
-                  ))}
+              <div className="flex flex-col gap-5">
+                
+                {/* Hardware header */}
+                <div className="flex justify-between items-center border-b border-zinc-350 dark:border-zinc-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Radio className="h-4 w-4 text-blue-500 animate-pulse" />
+                    <span className="font-mono text-[9px] font-bold text-zinc-600 dark:text-zinc-400 tracking-wider">
+                      RECEIVER MODEL DECK_01
+                    </span>
+                  </div>
+                  <Settings className="h-3.5 w-3.5 text-zinc-500 hover:rotate-90 transition-transform cursor-pointer" />
                 </div>
-              </div>
-              <div className="flex w-full items-center gap-3 overflow-hidden px-1">
-                <div className="flex h-3 shrink-0 items-end gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 rounded-[1px] bg-amber-500/80"
-                      animate={{
-                        height: isPlaying ? [2, 10, 5, 8, 2] : 2,
-                        opacity: isPlaying ? 1 : 0.5,
-                      }}
-                      transition={{
-                        duration: 0.4,
-                        repeat: Infinity,
-                        delay: i * 0.05,
-                        ease: 'easeInOut',
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="relative flex-1 overflow-hidden">
+
+                {/* Cassette Tape Spindle Reels */}
+                <div className="flex justify-center gap-8 bg-zinc-950 p-6 rounded-lg border-2 border-zinc-350 dark:border-zinc-850 shadow-inner relative overflow-hidden">
+                  <div className="absolute inset-0 bg-linear-to-b from-white/5 to-transparent pointer-events-none" />
+                  
+                  {/* Reel 1 */}
                   <motion.div
-                    className="flex w-fit font-mono text-xs whitespace-nowrap text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)] sm:text-sm"
-                    animate={{ x: ['0%', '-50%'] }}
-                    transition={{
-                      repeat: Infinity,
-                      ease: 'linear',
-                      duration: Math.max(8, currentTrack.length * 0.2),
-                    }}
+                    animate={isPlaying ? { rotate: 360 } : {}}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                    className="relative flex h-16 w-16 items-center justify-center rounded-full border-4 border-zinc-800 bg-black shadow-md shrink-0"
                   >
-                    <span className="mr-8">{currentTrack}</span>
-                    <span className="mr-8">{currentTrack}</span>
+                    <Disc className="h-10 w-10 text-zinc-650" />
+                    <div className="absolute h-2 w-2 rounded-full bg-zinc-300 dark:bg-zinc-900 border" />
+                  </motion.div>
+
+                  {/* Reel 2 */}
+                  <motion.div
+                    animate={isPlaying ? { rotate: 360 } : {}}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                    className="relative flex h-16 w-16 items-center justify-center rounded-full border-4 border-zinc-800 bg-black shadow-md shrink-0"
+                  >
+                    <Disc className="h-10 w-10 text-zinc-650" />
+                    <div className="absolute h-2 w-2 rounded-full bg-zinc-300 dark:bg-zinc-900 border" />
                   </motion.div>
                 </div>
+
+                {/* LCD Display */}
+                <div className="flex flex-col items-start gap-1.5 rounded border border-zinc-400 bg-zinc-900 p-3 shadow-inner dark:border-zinc-800 dark:bg-black">
+                  <div className="flex w-full items-center justify-between">
+                    <span className="font-mono text-[8px] font-black text-zinc-500 tracking-widest uppercase">
+                      STATUS: {isPlaying ? 'PLAYING' : 'STANDBY'}
+                    </span>
+                    <div className="flex gap-1">
+                      <div className={cn("h-1.5 w-1.5 rounded-full", isPlaying ? "bg-green-500 animate-pulse" : "bg-zinc-700")} />
+                      <div className={cn("h-1.5 w-1.5 rounded-full", isPlaying ? "bg-blue-500 animate-pulse" : "bg-zinc-700")} />
+                    </div>
+                  </div>
+
+                  {/* Track text */}
+                  <div className="w-full overflow-hidden border-t border-white/5 pt-1.5">
+                    <motion.p
+                      className="font-mono text-xs font-bold text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)] truncate text-left"
+                      animate={isPlaying ? { opacity: [0.8, 1, 0.8] } : {}}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      {currentTrack || 'NO SIGNAL // STANDBY'}
+                    </motion.p>
+                  </div>
+                </div>
+
+                {/* Deck Action buttons */}
+                <div className="flex items-center justify-between gap-4 pt-1">
+                  <Magnetic intensity={0.25}>
+                    <button
+                      onClick={togglePlay}
+                      className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-b from-zinc-100 to-zinc-300 shadow-md border border-zinc-400 dark:from-zinc-700 dark:to-zinc-800 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 cursor-pointer active:scale-95 transition-transform"
+                    >
+                      {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
+                    </button>
+                  </Magnetic>
+
+                  {/* Faux Equalizer Slider */}
+                  <div className="flex-1 flex items-center gap-3">
+                    <Volume2 className="h-4 w-4 text-zinc-500" />
+                    <div className="relative flex-1 h-6 flex items-center">
+                      <div className="w-full h-1 bg-zinc-400 dark:bg-zinc-850 rounded" />
+                      <div className="absolute h-1 bg-blue-500 rounded" style={{ width: isPlaying ? '75%' : '15%' }} />
+                      <div className="absolute h-4 w-2 rounded bg-zinc-100 border border-zinc-400 dark:bg-zinc-750 dark:border-zinc-650 cursor-pointer" style={{ left: isPlaying ? '75%' : '15%' }} />
+                    </div>
+                  </div>
+
+                  <Magnetic intensity={0.25}>
+                    <a
+                      href="#projects"
+                      className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-zinc-350 bg-zinc-300 px-4 text-[10px] font-black text-zinc-850 hover:bg-zinc-350 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-250 dark:hover:bg-zinc-750 transition-colors"
+                    >
+                      CATALOG
+                      <SkipForward size={12} />
+                    </a>
+                  </Magnetic>
+                </div>
+
               </div>
-            </div>
+            </motion.div>
+          </div>
 
-            <div className="h-8 w-px shrink-0 bg-zinc-300 dark:bg-zinc-800" />
-
-            <Magnetic intensity={0.2}>
-              <a
-                href="#projects"
-                className="flex h-10 shrink-0 items-center gap-2 rounded bg-zinc-300 px-3 text-xs font-bold text-zinc-700 shadow-[0_1px_0_rgba(255,255,255,0.5),0_2px_4px_rgba(0,0,0,0.1)] transition-transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-inner sm:px-4 dark:bg-zinc-800 dark:text-zinc-300 dark:shadow-[0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)]"
-              >
-                <span className="hidden sm:inline">TRACKS</span>
-                <SkipForward size={14} />
-              </a>
-            </Magnetic>
-          </motion.div>
-
-          {/* Decorative "New Release" Badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0, rotate: 0 }}
-            animate={{ opacity: 1, scale: 1, rotate: 12 }}
-            transition={{
-              delay: baseDelay + 0.2,
-              type: 'spring',
-              stiffness: 200,
-            }}
-            className="absolute -top-4 -right-4 rotate-12 transform border-2 border-white/20 bg-red-600 px-4 py-1.5 text-xs font-black tracking-wider text-white uppercase shadow-lg md:top-10 md:-right-10"
-          >
-            New Release
-          </motion.div>
         </div>
-      </motion.div>
+      </div>
     </section>
   )
 }

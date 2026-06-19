@@ -15,6 +15,7 @@ export function BootScreen({ onComplete }: { onComplete: () => void }) {
   const [stepIdx, setStepIdx] = useState(0)
   const [progress, setProgress] = useState(0)
   const [shouldSkip, setShouldSkip] = useState(true)
+  const [showSplash, setShowSplash] = useState(true)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -34,6 +35,14 @@ export function BootScreen({ onComplete }: { onComplete: () => void }) {
 
   useEffect(() => {
     if (shouldSkip) return
+    const timer = setTimeout(() => {
+      setShowSplash(false)
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [shouldSkip])
+
+  useEffect(() => {
+    if (shouldSkip || showSplash) return
     const stepTimer = setInterval(() => {
       setStepIdx((i) => {
         if (i >= BOOT_STEPS.length - 1) {
@@ -59,9 +68,40 @@ export function BootScreen({ onComplete }: { onComplete: () => void }) {
       clearInterval(stepTimer)
       clearInterval(progTimer)
     }
-  }, [shouldSkip, finish])
+  }, [shouldSkip, showSplash, finish])
 
   if (shouldSkip) return null
+
+  if (showSplash) {
+    return (
+      <m.div
+        key="splash"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[99999] flex flex-col items-center justify-center"
+        style={{ background: '#0D0B0A' }}
+      >
+        <m.h1
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="text-4xl font-extrabold tracking-tighter text-white sm:text-6xl md:text-7xl"
+          style={{ fontFamily: 'var(--sc-font-mono, monospace)' }}
+        >
+          ADITYA HIMAWAN
+        </m.h1>
+        <m.p
+          initial={{ y: 15, opacity: 0 }}
+          animate={{ y: 0, opacity: 0.6 }}
+          transition={{ delay: 0.3, duration: 0.6, ease: 'easeOut' }}
+          className="mt-4 font-mono text-sm tracking-[0.2em] text-zinc-400 uppercase sm:text-base"
+        >
+          Frontend Developer &amp; Systems Engineer
+        </m.p>
+      </m.div>
+    )
+  }
 
   const pct = `${Math.round(progress)}%`
 

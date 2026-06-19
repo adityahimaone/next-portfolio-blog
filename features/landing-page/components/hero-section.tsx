@@ -141,9 +141,9 @@ export function HeroSection() {
               opacity: contentOpacity,
             }}
           >
-            Orchestrating code and rhythm into immersive digital experiences.
+            Frontend developer building precise, performant interfaces.
             <br className="hidden sm:block" />
-            Frontend Developer & Audio Enthusiast.
+            Specializing in Next.js, TypeScript, and design systems. Based in Jakarta.
           </m.p>
         </m.div>
 

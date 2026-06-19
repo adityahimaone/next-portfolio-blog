@@ -179,6 +179,9 @@ export function SkillsSection() {
             <h2 className="text-4xl font-black tracking-tighter text-zinc-900 sm:text-5xl dark:text-white">
               Sonic Arsenal
             </h2>
+            <p className="mt-4 max-w-md text-sm text-zinc-500 dark:text-zinc-400">
+              Tech I reach for daily, organised how I'd set up a session.
+            </p>
           </div>
 
           {/* The Mixer Board */}

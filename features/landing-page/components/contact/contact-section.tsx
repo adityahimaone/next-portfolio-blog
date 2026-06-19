@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { m, AnimatePresence } from 'motion/react'
-import { Music, Radio, Square, Play, Pause, Volume2 } from 'lucide-react'
+import { Music, Radio, Square, Play, Pause, Volume2, Mail, Linkedin, Github, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
 import { useAudioEngine } from '@/features/landing-page/spotify/use-audio-engine'
@@ -498,8 +498,64 @@ export function ContactSection() {
               Launch Collaboration
             </m.h2>
             <p className="mt-4 max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
-              Hit a pad to start a loop. Stack multiple loops to build a beat.
+              Get in touch directly via email or professional socials.
             </p>
+          </div>
+
+          {/* Direct CTA Buttons */}
+          <div className="mx-auto mb-12 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4 px-4">
+            <a
+              href="mailto:adityahimaone@gmail.com"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white p-5 text-center transition-all hover:scale-105 hover:border-red-500 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <Mail className="h-6 w-6 text-red-500" />
+              <span className="font-mono text-xs font-bold tracking-wider text-zinc-700 dark:text-zinc-300">
+                EMAIL
+              </span>
+              <span className="text-[10px] text-zinc-400 truncate w-full">adityahimaone@gmail.com</span>
+            </a>
+            <a
+              href="https://linkedin.com/in/adityahimaone"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white p-5 text-center transition-all hover:scale-105 hover:border-blue-600 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <Linkedin className="h-6 w-6 text-blue-600" />
+              <span className="font-mono text-xs font-bold tracking-wider text-zinc-700 dark:text-zinc-300">
+                LINKEDIN
+              </span>
+              <span className="text-[10px] text-zinc-400">adityahimaone</span>
+            </a>
+            <a
+              href="https://github.com/adityahimaone"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white p-5 text-center transition-all hover:scale-105 hover:border-zinc-500 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <Github className="h-6 w-6 text-zinc-700 dark:text-zinc-300" />
+              <span className="font-mono text-xs font-bold tracking-wider text-zinc-700 dark:text-zinc-300">
+                GITHUB
+              </span>
+              <span className="text-[10px] text-zinc-400">adityahimaone</span>
+            </a>
+            <a
+              href="https://drive.google.com/file/d/13Ym0zbrZyi8oOkvUp0r9GBCM_Acsk2XM/view?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white p-5 text-center transition-all hover:scale-105 hover:border-amber-500 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
+            >
+              <FileText className="h-6 w-6 text-amber-500" />
+              <span className="font-mono text-xs font-bold tracking-wider text-zinc-700 dark:text-zinc-300">
+                RESUME
+              </span>
+              <span className="text-[10px] text-zinc-400">Download PDF</span>
+            </a>
+          </div>
+
+          <div className="mb-6 text-center">
+            <span className="text-xs font-bold tracking-[0.2em] text-zinc-500 uppercase dark:text-zinc-400">
+              Or play something while you wait:
+            </span>
           </div>
 
           {/* Launchpad Board */}

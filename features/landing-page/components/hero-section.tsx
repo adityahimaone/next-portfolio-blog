@@ -1,163 +1,137 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
-import { m as motion, useScroll, useTransform } from 'motion/react'
-import { Play, Pause, SkipForward } from 'lucide-react'
-import { Magnetic } from '@/components/magnetic'
-import { useAudio } from '@/features/landing-page/spotify/audio-context'
-import { Syne } from 'next/font/google'
-
-const syne = Syne({ weight: ['700', '800'], subsets: ['latin'] })
+import { useRef, useState } from 'react'
+import { m as motion, useMotionValue, useTransform, animate } from 'motion/react'
+import { ArrowDown } from 'lucide-react'
 
 export function HeroSection() {
-  const [baseDelay, setBaseDelay] = useState(1)
-
-  useEffect(() => {
-    if (sessionStorage.getItem('preloaderShown')) {
-      setBaseDelay(0.1)
-    }
-  }, [])
-
-  const { isPlaying, togglePlay, currentTrack } = useAudio()
   const containerRef = useRef<HTMLDivElement>(null)
+  
+  // Frequency scale tuner state (represents focus areas: Code, UI, systems, etc.)
+  const focusAreas = ['interface', 'systems', 'interaction', 'performance']
+  const [activeFocus, setActiveFocus] = useState(focusAreas[0])
+  const tunerVal = useMotionValue(0) // range 0 to 100
+  const needleLeft = useTransform(tunerVal, (v) => `${v}%`)
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end start'],
-  })
-
-  const y = useTransform(scrollYProgress, [0, 1], [0, 150])
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.95])
+  const handleTune = (index: number) => {
+    animate(tunerVal, index * 33.33, {
+      type: 'spring',
+      stiffness: 300,
+      damping: 25,
+    })
+    setActiveFocus(focusAreas[index])
+  }
 
   return (
     <section
       ref={containerRef}
-      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#f5f5f3] transition-colors dark:bg-[#121212]"
+      className="relative flex min-h-screen w-full flex-col justify-between overflow-hidden bg-[#f5f5f3] px-6 py-20 transition-colors dark:bg-[#121212] md:px-16"
     >
-      {/* Braun Vent Line Background Pattern */}
-      <div className="absolute inset-0 z-0 flex flex-col justify-between py-24 px-10 opacity-30 dark:opacity-10 pointer-events-none">
-        <div className="flex flex-col gap-2 w-full">
-          <div className="h-[1px] w-full bg-zinc-300 dark:bg-zinc-800" />
-          <div className="h-[1px] w-full bg-zinc-300 dark:bg-zinc-800" />
-          <div className="h-[1px] w-full bg-zinc-300 dark:bg-zinc-800" />
+      {/* Braun Grid Lines */}
+      <div className="absolute inset-0 z-0 pointer-events-none flex flex-col justify-between p-12 opacity-20 dark:opacity-10">
+        <div className="h-[1px] w-full bg-zinc-400 dark:bg-zinc-700" />
+        <div className="h-[1px] w-full bg-zinc-400 dark:bg-zinc-700" />
+      </div>
+
+      {/* Top section: System specs */}
+      <div className="relative z-10 flex w-full justify-between font-mono text-[9px] text-zinc-500 uppercase tracking-widest border-b border-[#e4e4e0] pb-4 dark:border-[#202020]">
+        <div className="flex gap-4">
+          <span>model: ah-2026</span>
+          <span className="text-[#d4d4d0]">|</span>
+          <span>loc: 7° 47' s, 110° 22' e</span>
         </div>
-        <div className="flex flex-col gap-2 w-full">
-          <div className="h-[1px] w-full bg-zinc-300 dark:bg-zinc-800" />
-          <div className="h-[1px] w-full bg-zinc-300 dark:bg-zinc-800" />
-          <div className="h-[1px] w-full bg-zinc-300 dark:bg-zinc-800" />
+        <div className="flex gap-2 items-center">
+          <div className="h-2 w-2 rounded-full bg-[#10b981] shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+          <span>calibrated</span>
         </div>
       </div>
 
-      <motion.div
-        style={{ y, opacity, scale }}
-        className="relative z-20 container mx-auto mt-16 flex flex-col items-center px-4 text-center md:px-6"
-      >
-        <div className="relative z-10 flex w-full max-w-4xl flex-col items-center">
-          {/* Status Label */}
-          <motion.div
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: baseDelay }}
-            className="mb-8 flex items-center gap-2 rounded bg-[#e8e8e4] border border-[#d4d4d0] px-3 py-1 font-mono text-[9px] font-bold text-zinc-600 tracking-wider dark:bg-[#1a1a1a] dark:border-[#27272a] dark:text-zinc-400"
-          >
-            <span className="relative flex h-1.5 w-1.5">
-              <span className={isPlaying ? 'absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f05523] opacity-75' : ''}></span>
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#f05523]"></span>
-            </span>
-            SYSTEM ONLINE
-          </motion.div>
+      {/* Middle section: Brand Typo */}
+      <div className="relative z-10 my-auto flex flex-col gap-6 md:gap-8 max-w-4xl">
+        <div className="flex flex-col">
+          <h1 className="font-sans text-[12vw] font-black leading-[0.85] tracking-tighter text-zinc-950 dark:text-white uppercase md:text-[8vw] lg:text-[7vw]">
+            aditya
+          </h1>
+          <h1 className="font-sans text-[12vw] font-black leading-[0.85] tracking-tighter text-[#f05523] uppercase md:text-[8vw] lg:text-[7vw]">
+            himaone
+          </h1>
+        </div>
 
-          {/* Logo / Brand Name */}
-          <div className={`mb-10 flex flex-col items-center ${syne.className}`}>
-            <motion.h1
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: baseDelay + 0.1 }}
-              className="text-center text-[12vw] leading-[0.9] font-extrabold tracking-tighter text-zinc-900 md:text-[8vw] lg:text-[7vw] dark:text-white"
-            >
-              <span className="block bg-linear-to-b from-zinc-800 to-black bg-clip-text text-transparent dark:from-white dark:to-zinc-300">
-                ADITYA
-              </span>
-            </motion.h1>
-            <motion.h1
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: baseDelay + 0.2 }}
-              className="text-[#f05523] text-[4vw] font-bold tracking-[0.6em] md:text-[2vw] lg:text-[1.8vw] mt-2 uppercase"
-            >
-              himaone
-            </motion.h1>
+        <p className="max-w-xl font-mono text-xs text-zinc-600 lowercase tracking-tight leading-relaxed dark:text-zinc-400">
+          architecting clean engineering & minimal layout grids. constructing premium digital systems with high performance and zero clutter.
+        </p>
+      </div>
+
+      {/* Bottom section: The Tuning Panel (Braun Regie style) */}
+      <div className="relative z-10 flex flex-col gap-6 border-t border-[#e4e4e0] pt-8 dark:border-[#202020]">
+        
+        {/* Labeled Tuning Scale */}
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between font-mono text-[8px] text-zinc-400 uppercase tracking-widest px-2">
+            <span>0.0hz / code</span>
+            <span>3.3hz / ui</span>
+            <span>6.6hz / ix</span>
+            <span>10.0hz / perf</span>
           </div>
 
-          {/* Subtitle */}
-          <p className="animate-hero-desc mb-12 max-w-xl text-center text-sm font-light text-zinc-600 sm:text-base dark:text-zinc-400 font-mono tracking-tight lowercase">
-            architecting clean code and minimal interfaces.
-            <br className="hidden sm:block" /> frontend developer & industrial design enthusiast.
-          </p>
-
-          {/* Braun T 3 Styled Control Panel */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.6,
-              delay: baseDelay + 0.5,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            className="relative flex w-full max-w-md flex-col gap-4 rounded border border-[#d4d4d0] bg-[#f4f4f0] p-4 shadow-lg dark:border-[#27272a] dark:bg-[#161616]"
-          >
-            {/* Metadata Section */}
-            <div className="flex items-center justify-between border-b border-[#e4e4e0] pb-2 dark:border-[#202020]">
-              <span className="font-mono text-[8px] font-bold text-zinc-500 uppercase tracking-widest">
-                audio status: {isPlaying ? 'playing' : 'standby'}
-              </span>
-              <span className="font-mono text-[8px] font-bold text-[#f05523] truncate max-w-[200px]">
-                {currentTrack.toLowerCase()}
-              </span>
+          {/* Tuner Slider Track */}
+          <div className="relative h-6 bg-[#eaeae6] border border-[#d4d4d0] rounded dark:bg-[#1a1a1a] dark:border-[#27272a] flex items-center">
+            
+            {/* Tick lines */}
+            <div className="absolute inset-0 flex justify-between px-4 pointer-events-none">
+              {[...Array(20)].map((_, i) => (
+                <div key={i} className={i % 5 === 0 ? 'h-3 w-[1.5px] bg-zinc-400 dark:bg-zinc-600' : 'h-1.5 w-[1px] bg-zinc-300 dark:bg-zinc-700'} />
+              ))}
             </div>
 
-            {/* Controls Row */}
-            <div className="flex items-center justify-between gap-4">
-              {/* Play Plunger Button */}
-              <button
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-                className={isPlaying
-                  ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded border border-[#c03d15] bg-[#f05523] text-white shadow-inner transition-all'
-                  : 'flex h-10 w-10 shrink-0 items-center justify-center rounded border border-[#b8b8b0] bg-[#e8e8e4] text-zinc-700 hover:bg-[#eaeae6] active:translate-y-[1px] dark:border-[#2c2c2c] dark:bg-[#202020] dark:text-zinc-300 dark:hover:bg-[#282828]'}
-              >
-                {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
-              </button>
-
-              {/* Progress Slider (Braun linear pointer design) */}
-              <div className="relative flex-1 h-2 flex items-center">
-                <div className="w-full h-[1px] bg-[#d8d8d0] dark:bg-[#2c2c2c]" />
-                <motion.div
-                  className="absolute h-4 w-1 bg-[#f05523]"
-                  animate={{
-                    left: isPlaying ? ['0%', '100%'] : '15%',
-                  }}
-                  transition={{
-                    duration: isPlaying ? 30 : 0.5,
-                    repeat: isPlaying ? Infinity : 0,
-                    ease: 'linear',
-                  }}
-                />
-              </div>
-
-              {/* Jump to work */}
-              <a
-                href="#projects"
-                className="flex h-10 shrink-0 items-center justify-center gap-1 rounded border border-[#b8b8b0] bg-[#e8e8e4] px-4 font-mono text-[9px] font-bold text-zinc-700 hover:bg-[#eaeae6] dark:border-[#2c2c2c] dark:bg-[#202020] dark:text-zinc-300 dark:hover:bg-[#282828]"
-              >
-                <span>tracks</span>
-                <SkipForward size={10} />
-              </a>
+            {/* Scale numbers */}
+            <div className="absolute inset-x-0 bottom-0.5 flex justify-between px-3 font-mono text-[7px] text-zinc-400 select-none pointer-events-none">
+              <span>0</span>
+              <span>1</span>
+              <span>2</span>
+              <span>3</span>
             </div>
-          </motion.div>
+
+            {/* Signal Orange indicator needle */}
+            <motion.div
+              className="absolute h-full w-[2px] bg-[#f05523] shadow-[0_0_8px_rgba(240,85,35,0.6)]"
+              style={{ left: needleLeft }}
+            />
+          </div>
         </div>
-      </motion.div>
+
+        {/* Tactical Push Selectors */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-1.5 border border-[#d4d4d0] bg-[#e8e8e4] p-0.5 rounded dark:border-[#27272a] dark:bg-[#1a1a1a]">
+            {focusAreas.map((area, i) => (
+              <button
+                key={area}
+                onClick={() => handleTune(i)}
+                className={cn(
+                  'px-4 py-1.5 font-mono text-[9px] font-bold uppercase rounded-sm border transition-all cursor-pointer select-none',
+                  activeFocus === area
+                    ? 'bg-white border-[#d4d4d0] text-[#f05523] shadow-sm dark:bg-[#2c2c2c] dark:border-[#3c3c3c]'
+                    : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                )}
+              >
+                {area}
+              </button>
+            ))}
+          </div>
+
+          {/* Call to action mechanical switch */}
+          <a
+            href="#about"
+            className="flex items-center gap-2 border border-[#d4d4d0] bg-white px-5 py-2.5 font-mono text-[9px] font-bold uppercase rounded shadow-sm text-zinc-700 hover:bg-[#f8f8f6] active:translate-y-[1px] dark:border-[#27272a] dark:bg-[#1a1a1a] dark:text-zinc-300"
+          >
+            <span>scroll details</span>
+            <ArrowDown size={10} className="text-[#f05523]" />
+          </a>
+        </div>
+      </div>
     </section>
   )
 }
+
+// Utility class wrapper check
+import { cn } from '@/lib/utils'

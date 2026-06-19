@@ -6,9 +6,9 @@ import {
   Briefcase,
   Calendar,
   MapPin,
-  ListMusic,
-  Radio,
+  Layers,
   ChevronRight,
+  Database,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EXPERIENCES } from '../constants'
@@ -30,8 +30,8 @@ export function ExperienceSection() {
               viewport={{ once: true }}
               className="mb-4 flex items-center gap-2 rounded bg-[#e8e8e4] border border-[#d4d4d0] px-3 py-1 font-mono text-[9px] font-bold text-zinc-600 uppercase tracking-widest dark:bg-[#1a1a1a] dark:border-[#27272a] dark:text-zinc-400"
             >
-              <Radio className="h-3 w-3" />
-              <span>career discography</span>
+              <Database className="h-3 w-3" />
+              <span>chronological indexes</span>
             </m.div>
             <m.h2
               initial={{ opacity: 0, y: 20 }}
@@ -40,7 +40,7 @@ export function ExperienceSection() {
               transition={{ delay: 0.1 }}
               className="font-sans text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl dark:text-white"
             >
-              The Collection
+              Career History
             </m.h2>
           </div>
 
@@ -49,7 +49,7 @@ export function ExperienceSection() {
             <div className="lg:col-span-5">
               <div className="flex flex-col gap-2 rounded border border-[#d4d4d0] bg-[#f4f4f0] p-3 dark:border-[#27272a] dark:bg-[#121212]">
                 <div className="mb-2 px-2 py-1 font-mono text-[9px] font-bold tracking-wider text-zinc-500 uppercase">
-                  select channel
+                  select index card
                 </div>
                 {EXPERIENCES.map((exp) => (
                   <button
@@ -209,12 +209,12 @@ export function ExperienceSection() {
                     <div className="flex items-center justify-between font-mono text-[9px] text-zinc-500 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 w-1.5 rounded-full bg-[#10b981] animate-pulse" />
-                        <span>deck calibration active</span>
+                        <span>index database calibrated</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <ListMusic className="h-3 w-3 text-[#f05523]" />
+                        <Layers className="h-3 w-3 text-[#f05523]" />
                         <span>
-                          track: {selectedId} / {EXPERIENCES.length}
+                          index: {selectedId} / {EXPERIENCES.length}
                         </span>
                       </div>
                     </div>

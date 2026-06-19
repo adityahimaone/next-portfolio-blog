@@ -57,7 +57,7 @@ export function ExperienceSection() {
                 <div className="mb-4 px-2 text-xs font-bold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
                   Select a Track
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-850 scrollbar-track-transparent">
+                <div className="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar">
                   {EXPERIENCES.map((exp) => (
                     <button
                       key={exp.id}
@@ -216,7 +216,7 @@ export function ExperienceSection() {
                   </div>
 
                   {/* Content Area */}
-                  <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+                  <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 no-scrollbar">
                     <AnimatePresence mode="wait">
                       <m.div
                         key={selectedJob.id}

@@ -3,112 +3,14 @@
 import { useState, useRef } from 'react'
 import { m, AnimatePresence, useInView } from 'motion/react'
 import Image from 'next/image'
-import {
-  Disc,
-  X,
-  Play,
-  Music,
-  Mic2,
-  ArrowUpRight,
-} from 'lucide-react'
+import { Disc, X, Play, Music, Mic2, ArrowUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 import { PROJECTS_SHOWCASE, type ProjectShowcaseItem } from '../constants'
 
-interface ProjectCardProps {
-  project: ProjectShowcaseItem
-  index: number
-  setSelectedProject: (project: ProjectShowcaseItem) => void
-}
-
-function ProjectCard({ project, index, setSelectedProject }: ProjectCardProps) {
-  const vinylVariants = {
-    initial: { x: '0%', rotate: 0, opacity: 0 },
-    hover: {
-      x: '55%',
-      rotate: 360,
-      opacity: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 90,
-        damping: 15,
-      }
-    }
-  } as any
-
-  return (
-    <m.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover="hover"
-      className="group relative flex flex-col items-center"
-      onClick={() => setSelectedProject(project)}
-    >
-      <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
-        {/* Vinyl Record sliding out */}
-        <m.div
-          variants={vinylVariants}
-          initial="initial"
-          className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl"
-        >
-          <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
-          {/* Grooves */}
-          <div className="absolute inset-[15%] rounded-full border border-zinc-800/40" />
-          <div className="absolute inset-[25%] rounded-full border border-zinc-800/40" />
-          <div className="absolute inset-[35%] rounded-full border border-zinc-800/40" />
-
-          {/* Center Label */}
-          <div
-            className={cn(
-              'flex h-1/3 w-1/3 items-center justify-center rounded-full bg-linear-to-br text-white shadow-inner',
-              project.vinylColor,
-            )}
-          >
-            {/* <project.vinylIcon className="w-5 h-5" /> */}
-          </div>
-          {/* Center Hole */}
-          <div className="absolute h-1.5 w-1.5 rounded-full bg-black" />
-        </m.div>
-
-        {/* Album Cover (Card) */}
-        <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm bg-zinc-100 shadow-2xl transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:bg-zinc-900">
-          {/* Image Area */}
-          <div className="relative h-[75%] w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
-            <Image
-              src={project.image}
-              alt={project.title}
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover object-top transition-transform duration-500 group-hover:scale-105 group-active:scale-105"
-            />
-
-            {/* Glare effect */}
-            <div className="pointer-events-none absolute inset-0 bg-linear-to-tr from-white/20 to-transparent opacity-50" />
-          </div>
-
-          {/* Info Area (Footer) */}
-          <div className="relative flex h-[25%] flex-col justify-center border-t border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-950">
-            <h3 className="truncate text-lg font-bold text-zinc-900 dark:text-zinc-100">
-              {project.title}
-            </h3>
-            <div className="mt-1 flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-              <span className="truncate">{project.genre}</span>
-              <span className="h-1 w-1 shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-              <span>{project.year}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </m.div>
-  )
-}
-
 export function ProjectsSection() {
-  const [selectedProject, setSelectedProject] = useState<ProjectShowcaseItem | null>(
-    null,
-  )
+  const [selectedProject, setSelectedProject] =
+    useState<ProjectShowcaseItem | null>(null)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
@@ -141,12 +43,66 @@ export function ProjectsSection() {
 
           <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
             {PROJECTS_SHOWCASE.map((project, index) => (
-              <ProjectCard
+              <m.div
                 key={project.id}
-                project={project}
-                index={index}
-                setSelectedProject={setSelectedProject}
-              />
+                initial={{ opacity: 0, y: 50 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: index * 0.1 }}
+                className="group relative flex flex-col items-center"
+                onClick={() => setSelectedProject(project)}
+              >
+                <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
+                  {/* Vinyl Record sliding out */}
+                  <div className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl transition-all duration-700 ease-out group-hover:translate-x-[50%] group-hover:rotate-360 group-active:translate-x-[50%] group-active:rotate-360">
+                    <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
+                    {/* Grooves */}
+                    <div className="absolute inset-[15%] rounded-full border border-zinc-800/40" />
+                    <div className="absolute inset-[25%] rounded-full border border-zinc-800/40" />
+                    <div className="absolute inset-[35%] rounded-full border border-zinc-800/40" />
+
+                    {/* Center Label */}
+                    <div
+                      className={cn(
+                        'flex h-1/3 w-1/3 items-center justify-center rounded-full bg-linear-to-br text-white shadow-inner',
+                        project.vinylColor,
+                      )}
+                    >
+                      {/* <project.vinylIcon className="w-5 h-5" /> */}
+                    </div>
+                    {/* Center Hole */}
+                    <div className="absolute h-1.5 w-1.5 rounded-full bg-black" />
+                  </div>
+
+                  {/* Album Cover (Card) */}
+                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm bg-zinc-100 shadow-2xl transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:bg-zinc-900">
+                    {/* Image Area */}
+                    <div className="relative h-[75%] w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
+                      <Image
+                        src={project.image}
+                        alt={project.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover object-top transition-transform duration-500 group-hover:scale-105 group-active:scale-105"
+                      />
+
+                      {/* Glare effect */}
+                      <div className="pointer-events-none absolute inset-0 bg-linear-to-tr from-white/20 to-transparent opacity-50" />
+                    </div>
+
+                    {/* Info Area (Footer) */}
+                    <div className="relative flex h-[25%] flex-col justify-center border-t border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-950">
+                      <h3 className="truncate text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                        {project.title}
+                      </h3>
+                      <div className="mt-1 flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        <span className="truncate">{project.genre}</span>
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                        <span>{project.year}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </m.div>
             ))}
           </div>
         </div>
@@ -179,7 +135,7 @@ export function ProjectsSection() {
 
                 <div className="grid h-full grid-cols-1 md:grid-cols-2">
                   {/* Left: Image Area */}
-                  <div className="relative h-48 bg-zinc-100 md:h-full dark:bg-zinc-800 lg:h-full">
+                  <div className="relative h-48 bg-zinc-100 md:h-full lg:h-full dark:bg-zinc-800">
                     <Image
                       src={selectedProject.image}
                       alt={selectedProject.title}
@@ -198,13 +154,13 @@ export function ProjectsSection() {
                   </div>
 
                   {/* Right: Content Area */}
-                  <div className="flex flex-col p-6 md:p-8 overflow-hidden">
+                  <div className="flex flex-col overflow-hidden p-6 md:p-8">
                     <div className="mb-4 md:mb-6">
                       <div className="text-primary mb-2 flex items-center gap-2 text-sm font-medium">
                         <Mic2 className="h-4 w-4" />
                         <span>FEATURED TRACK</span>
                       </div>
-                      <h3 className="text-2xl md:text-3xl leading-tight font-bold text-zinc-900 dark:text-zinc-100">
+                      <h3 className="text-2xl leading-tight font-bold text-zinc-900 md:text-3xl dark:text-zinc-100">
                         {selectedProject.title}
                       </h3>
                       <div className="mt-2 flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
@@ -215,7 +171,7 @@ export function ProjectsSection() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto pr-2">
-                      <p className="text-base md:text-lg leading-relaxed text-zinc-650 line-clamp-4 md:line-clamp-none dark:text-zinc-350">
+                      <p className="line-clamp-4 text-base leading-relaxed text-zinc-600 md:line-clamp-none md:text-lg dark:text-zinc-300">
                         {selectedProject.description}
                       </p>
 
@@ -228,7 +184,7 @@ export function ProjectsSection() {
                             (tech) => (
                               <span
                                 key={tech}
-                                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
                               >
                                 {tech}
                               </span>

@@ -161,7 +161,7 @@ const VUMeter = ({ isOn }: { isOn: boolean }) => {
 
 export function SkillsSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
-  const isSectionInView = useInView(sectionRef, { amount: 0.3 })
+  const isSectionInView = useInView(sectionRef, { amount: 0.3, once: true })
   const [isOn, setIsOn] = useState(false)
 
   useEffect(() => {

@@ -63,12 +63,19 @@ export function ProjectsSection() {
                   {/* Vinyl Record sliding out */}
                   <m.div
                     initial={{ x: 0, rotate: 0 }}
-                    animate={isInView ? { x: '45%', rotate: 180 } : { x: 0, rotate: 0 }}
+                    animate={
+                      isInView
+                        ? {
+                            x: ['0%', '45%', '45%', '0%'],
+                            rotate: [0, 180, 180, 0],
+                          }
+                        : { x: '0%', rotate: 0 }
+                    }
                     whileHover={{ x: '55%', rotate: 360 }}
                     transition={{
-                      type: 'spring',
-                      stiffness: 90,
-                      damping: 15,
+                      duration: 2.5,
+                      times: [0, 0.3, 0.7, 1],
+                      ease: 'easeInOut',
                       delay: isInView ? 0.3 + index * 0.25 : 0,
                     }}
                     className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl"

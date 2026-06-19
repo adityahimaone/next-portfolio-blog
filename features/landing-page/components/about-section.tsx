@@ -279,7 +279,7 @@ const DetailWindow = ({
 
 export function AboutSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
-  const isSectionInView = useInView(sectionRef, { amount: 0.3 })
+  const isSectionInView = useInView(sectionRef, { amount: 0.3, once: true })
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeClip, setActiveClip] = useState<Clip | null>(null)

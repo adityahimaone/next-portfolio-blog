@@ -10,7 +10,10 @@ import { functionalPads, dummyColors } from './data/pads'
 import { presets } from './data/presets'
 
 export function ContactSection() {
-  const [showLaunchpad, setShowLaunchpad] = useState(false)
+  const [formName, setFormName] = useState('')
+  const [formEmail, setFormEmail] = useState('')
+  const [formMessage, setFormMessage] = useState('')
+  const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success'>('idle')
   const [activePads, setActivePads] = useState<Set<string>>(new Set())
   const [loopingPads, setLoopingPads] = useState<Set<string>>(new Set())
   const [currentPreset, setCurrentPreset] = useState<string | null>(null)
@@ -474,6 +477,35 @@ export function ContactSection() {
       })}
     </div>
   ), [loopingPads, activePads, handlePadClick])
+  const handleSubmitForm = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formName || !formEmail || !formMessage) return
+
+    setFormStatus('sending')
+
+    // Simulate network delay
+    await new Promise((resolve) => setTimeout(resolve, 1200))
+
+    // Audio confirmation if tone is loaded
+    const audioStarted = await startAudio()
+    if (audioStarted && isLoaded) {
+      await initializeSynths()
+      const Tone = toneRef.current
+      if (Tone && isInitializedRef.current) {
+        const melody = synthsRef.current.melody
+        const bass = synthsRef.current.bass
+        const now = Tone.now()
+        // Synthesize nice celebratory arpeggio
+        melody.triggerAttackRelease("C4", "8n", now)
+        melody.triggerAttackRelease("E4", "8n", now + 0.1)
+        melody.triggerAttackRelease("G4", "8n", now + 0.2)
+        melody.triggerAttackRelease("C5", "4n", now + 0.3)
+        bass.triggerAttackRelease("C3", "2n", now)
+      }
+    }
+
+    setFormStatus('success')
+  }, [formName, formEmail, formMessage, startAudio, isLoaded, initializeSynths, toneRef])
 
   return (
     <>
@@ -484,7 +516,7 @@ export function ContactSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-200/50 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400"
+              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-200/50 px-4 py-1.5 text-sm font-medium text-zinc-650 dark:bg-zinc-800/50 dark:text-zinc-400"
             >
               <Radio className="h-4 w-4" />
               <span>SESSION BOOKING</span>
@@ -499,12 +531,342 @@ export function ContactSection() {
               Connect & Collaborate
             </m.h2>
             <p className="mt-4 max-w-2xl text-lg text-zinc-650 dark:text-zinc-400">
-              Let's build something together. Reach out directly or stack some loops while you're here.
+              Stack some loops to build a beat on the right, and transmit your message on the left.
             </p>
           </div>
 
-          {/* Primary Contact CTAs */}
-          <div className="mx-auto mb-12 max-w-4xl grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 px-4">
+          <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            {/* Left Column: Form Console (5/12 width) */}
+            <div className="relative lg:col-span-5 w-full rounded-3xl bg-zinc-200 p-4 shadow-2xl dark:bg-zinc-900 flex flex-col justify-between min-h-[500px]">
+              <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
+              
+              <div className="relative flex-1 rounded-2xl border border-zinc-400/50 bg-zinc-300 p-6 shadow-inner md:p-8 dark:border-zinc-800 dark:bg-zinc-950 flex flex-col justify-between">
+                <Screw className="absolute top-3 left-3 sm:top-4 sm:left-4" />
+                <Screw className="absolute top-3 right-3 sm:top-4 sm:right-4" />
+                <Screw className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4" />
+                <Screw className="absolute right-3 bottom-3 sm:right-4 sm:right-4" />
+
+                <div>
+                  {/* Branding Panel */}
+                  <div className="mb-6 flex items-center justify-between border-b border-zinc-400/30 pb-4 dark:border-zinc-800">
+                    <div className="flex flex-col">
+                      <span className="font-mono text-[9px] tracking-widest text-zinc-500">SYSTEM OUT</span>
+                      <h3 className="text-base font-black tracking-widest text-zinc-700 uppercase dark:text-zinc-300">
+                        TRANSMITTER <span className="text-amber-500">TX-1</span>
+                      </h3>
+                    </div>
+                    {/* Signal status LED */}
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[9px] text-zinc-500">SIGNAL</span>
+                      <div className={cn(
+                        "h-2.5 w-2.5 rounded-full shadow-[0_0_8px_currentColor]",
+                        formStatus === 'idle' ? 'bg-zinc-500 text-zinc-500/50' :
+                        formStatus === 'sending' ? 'bg-yellow-500 text-yellow-500/80 animate-pulse' :
+                        'bg-green-500 text-green-500/80 animate-pulse'
+                      )} />
+                    </div>
+                  </div>
+
+                  {/* Form Content */}
+                  {formStatus === 'success' ? (
+                    <m.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col items-center justify-center text-center py-10 px-2"
+                    >
+                      <div className="h-14 w-14 rounded-full bg-green-500/10 border border-green-500 flex items-center justify-center text-green-500 mb-5 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                        <Radio className="h-6 w-6 animate-pulse" />
+                      </div>
+                      <h4 className="text-lg font-bold text-zinc-800 dark:text-zinc-100 uppercase tracking-wider">
+                        TRANSMISSION SUCCESS
+                      </h4>
+                      <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400 max-w-xs leading-normal">
+                        Your message was successfully synthesized and transmitted. I'll review it and get back to you shortly.
+                      </p>
+                      <button
+                        onClick={() => {
+                          setFormStatus('idle')
+                          setFormName('')
+                          setFormEmail('')
+                          setFormMessage('')
+                        }}
+                        className="mt-6 rounded-lg border border-zinc-400 dark:border-zinc-700 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 px-5 py-2 text-xs font-mono font-bold uppercase tracking-widest text-zinc-700 dark:text-zinc-300 transition-all active:scale-95 shadow-md"
+                      >
+                        Reset Console
+                      </button>
+                    </m.div>
+                  ) : (
+                    <form onSubmit={handleSubmitForm} className="space-y-4">
+                      <div>
+                        <label className="block font-mono text-[9px] font-bold text-zinc-500 uppercase mb-1">
+                          [01] Sender Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={formName}
+                          onChange={(e) => setFormName(e.target.value)}
+                          placeholder="Your name"
+                          disabled={formStatus === 'sending'}
+                          className="w-full rounded-md border border-zinc-400 dark:border-zinc-800 bg-zinc-200 dark:bg-black p-2.5 font-mono text-xs text-zinc-800 dark:text-amber-500 placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-mono text-[9px] font-bold text-zinc-500 uppercase mb-1">
+                          [02] Return Frequency (Email)
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={formEmail}
+                          onChange={(e) => setFormEmail(e.target.value)}
+                          placeholder="Your email address"
+                          disabled={formStatus === 'sending'}
+                          className="w-full rounded-md border border-zinc-400 dark:border-zinc-800 bg-zinc-200 dark:bg-black p-2.5 font-mono text-xs text-zinc-800 dark:text-amber-500 placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-mono text-[9px] font-bold text-zinc-500 uppercase mb-1">
+                          [03] Transmission Payload (Message)
+                        </label>
+                        <textarea
+                          required
+                          rows={4}
+                          value={formMessage}
+                          onChange={(e) => setFormMessage(e.target.value)}
+                          placeholder="Type your message..."
+                          disabled={formStatus === 'sending'}
+                          className="w-full rounded-md border border-zinc-400 dark:border-zinc-800 bg-zinc-200 dark:bg-black p-2.5 font-mono text-xs text-zinc-800 dark:text-amber-500 placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition-colors resize-none"
+                        />
+                      </div>
+
+                      <div className="pt-2">
+                        <m.button
+                          type="submit"
+                          disabled={formStatus === 'sending'}
+                          whileTap={{ scale: 0.97 }}
+                          className={cn(
+                            "w-full rounded-xl py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-white transition-all shadow-lg flex items-center justify-center gap-2 border border-red-400/25",
+                            formStatus === 'sending' 
+                              ? "bg-red-700 opacity-60 cursor-not-allowed"
+                              : "bg-red-600 hover:bg-red-500 hover:scale-[1.01] shadow-[0_4px_15px_rgba(220,38,38,0.3)] active:bg-red-700"
+                          )}
+                        >
+                          <Radio className={cn("h-3.5 w-3.5", formStatus === 'sending' && "animate-spin")} />
+                          <span>{formStatus === 'sending' ? 'TRANSMITTING...' : 'TRANSMIT SIGNAL'}</span>
+                        </m.button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Launchpad Board (7/12 width) */}
+            <div className="relative lg:col-span-7 w-full rounded-3xl bg-zinc-800 p-2 shadow-2xl sm:p-4 dark:bg-zinc-950 flex flex-col justify-between">
+              <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
+
+              <div className="relative flex-1 rounded-2xl border border-zinc-700 bg-zinc-900 p-4 shadow-inner sm:p-6 md:p-8">
+                <Screw className="absolute top-2 left-2 sm:top-4 sm:left-4" />
+                <Screw className="absolute top-2 right-2 sm:top-4 sm:right-4" />
+                <Screw className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4" />
+                <Screw className="absolute right-2 bottom-2 sm:right-4 sm:bottom-4" />
+
+                {/* Top Panel */}
+                <div className="mb-4 flex items-center justify-between px-2 sm:mb-6">
+                  <div className="flex items-center gap-2">
+                    <div className={cn('h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2', isPlaying ? 'animate-pulse bg-red-500' : 'bg-zinc-600')} />
+                    <span className="font-mono text-[9px] tracking-widest text-zinc-500 sm:text-xs">REC</span>
+                  </div>
+                  <span className="text-[9px] font-black tracking-[0.3em] text-zinc-650 sm:text-xs dark:text-zinc-400">LAUNCHPAD PRO</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[9px] text-zinc-500">{transportTime}</span>
+                    <span className="text-[9px] text-zinc-605">{bpm}BPM</span>
+                  </div>
+                </div>
+
+                {/* Control Panel */}
+                <div className="mb-4 space-y-3 rounded-lg border border-zinc-700/50 bg-zinc-800/50 p-3">
+                  {/* Top row: Presets + Transport */}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[9px] font-bold text-zinc-500">SONG PRESETS:</span>
+
+                    <div className="flex items-center gap-2">
+                      {/* BPM */}
+                      <div className="hidden items-center gap-1.5 sm:flex">
+                        <span className="text-[8px] text-zinc-500">BPM</span>
+                        <input
+                          type="range"
+                          min={60}
+                          max={140}
+                          value={bpm}
+                          onChange={(e) => handleBpmChange(Number(e.target.value))}
+                          className="h-1 w-14 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
+                        />
+                      </div>
+
+                      {/* Volume */}
+                      <div className="hidden items-center gap-1.5 sm:flex">
+                        <Volume2 size={9} className="text-zinc-500" />
+                        <input
+                          type="range"
+                          min={-30}
+                          max={0}
+                          value={masterVol}
+                          onChange={(e) => setMasterVol(Number(e.target.value))}
+                          className="h-1 w-12 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
+                        />
+                      </div>
+
+                      {/* Transport */}
+                      {currentPreset && (
+                        <>
+                          <m.button
+                            whileTap={{ scale: 0.9 }}
+                            onClick={togglePause}
+                            className={cn(
+                              'flex h-7 w-7 items-center justify-center rounded border shadow-sm transition-colors',
+                              isPlaying
+                                ? 'border-amber-300 bg-amber-50 text-amber-600 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400'
+                                : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+                            )}
+                          >
+                            {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+                          </m.button>
+
+                          <m.button
+                            whileTap={{ scale: 0.9 }}
+                            onClick={stopAllPlayback}
+                            className="flex h-7 w-7 items-center justify-center rounded border border-red-300 bg-red-50 text-red-600 shadow-sm dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
+                          >
+                            <Square size={10} />
+                          </m.button>
+                        </>
+                      )}
+
+                      {!currentPreset && (
+                        <m.button
+                          whileTap={{ scale: 0.9 }}
+                          onClick={stopAllPlayback}
+                          disabled={loopingPads.size === 0}
+                          className={cn(
+                            'flex items-center gap-1 rounded border px-2.5 py-1 text-[9px] font-bold transition-all',
+                            loopingPads.size > 0
+                              ? 'border-red-500 bg-red-500/20 text-red-400 hover:scale-105 hover:bg-red-500/30'
+                              : 'cursor-not-allowed border-zinc-700 bg-zinc-900/50 text-zinc-600',
+                          )}
+                        >
+                          <Square className="h-2.5 w-2.5" />
+                          STOP ALL
+                        </m.button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Mobile BPM + Vol */}
+                  <div className="flex items-center gap-3 sm:hidden">
+                    <div className="flex items-center gap-1">
+                      <span className="text-[8px] text-zinc-500">BPM</span>
+                      <input
+                        type="range"
+                        min={60}
+                        max={140}
+                        value={bpm}
+                        onChange={(e) => handleBpmChange(Number(e.target.value))}
+                        className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Volume2 size={9} className="text-zinc-500" />
+                      <input
+                        type="range"
+                        min={-30}
+                        max={0}
+                        value={masterVol}
+                        onChange={(e) => setMasterVol(Number(e.target.value))}
+                        className="h-1 w-14 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Preset Buttons */}
+                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                    {presets.map((preset) => (
+                      <m.button
+                        key={preset.id}
+                        onClick={() => playPreset(preset.id)}
+                        aria-label={`Load preset ${preset.name}`}
+                        className={cn(
+                          'group relative overflow-hidden rounded-md border p-1.5 text-left transition-all hover:scale-105',
+                          currentPreset === preset.id
+                            ? 'border-green-500 bg-green-500/20'
+                            : 'border-zinc-600 bg-zinc-900 hover:border-zinc-500 hover:bg-zinc-800',
+                        )}
+                        whileTap={{ scale: 0.95 }}
+                        title={preset.description}
+                      >
+                        <div className="relative z-10">
+                          <div className="mb-0.5 flex items-center justify-between">
+                            <span className={cn('text-[9px] font-bold', currentPreset === preset.id ? 'text-green-400' : 'text-zinc-400 group-hover:text-zinc-300')}>
+                              {preset.name.toUpperCase()}
+                            </span>
+                            {currentPreset === preset.id && (
+                              <m.div className="h-1 w-1 rounded-full bg-green-500" animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1, repeat: Infinity }} />
+                            )}
+                          </div>
+                          <p className={cn('text-[7px]', currentPreset === preset.id ? 'text-green-500/80' : 'text-zinc-500 group-hover:text-zinc-400')}>
+                            {preset.description}
+                          </p>
+                        </div>
+                        {currentPreset === preset.id && (
+                          <m.div className="absolute inset-0 bg-green-500/10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+                        )}
+                      </m.button>
+                    ))}
+                  </div>
+
+                  {/* Now Playing */}
+                  <AnimatePresence>
+                    {currentPreset && (
+                      <m.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-1.5 rounded border border-green-500/30 bg-green-500/10 px-2 py-1"
+                      >
+                        <Music className="h-2.5 w-2.5 text-green-500" />
+                        <span className="text-[9px] font-medium text-green-400">
+                          Now Playing: {presets.find((p) => p.id === currentPreset)?.name}
+                          {isPaused && ' (PAUSED)'}
+                        </span>
+                      </m.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Desktop Grid */}
+                <div className="hidden md:block">
+                  <LaunchpadGrid items={desktopGrid} cols={8} rows={4} />
+                </div>
+                {/* Mobile Grid */}
+                <div className="md:hidden">
+                  <LaunchpadGrid items={mobileGrid} cols={4} rows={6} />
+                </div>
+
+                {/* Cable */}
+                <div className="-mt-0.5 flex justify-center">
+                  <div className="flex h-8 w-20 items-end justify-center rounded-b-xl border-x border-b border-zinc-700 bg-zinc-800 pb-1 shadow-lg sm:h-10 sm:w-28 sm:pb-1.5">
+                    <span className="font-mono text-[7px] text-zinc-500 sm:text-[9px]">USB-C</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Social Links Panel underneath the main interfaces */}
+          <div className="mx-auto mt-12 max-w-4xl grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 px-4">
             <a
               href="mailto:adityahimaone@gmail.com"
               className="flex flex-col items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-md hover:shadow-lg transition-all hover:-translate-y-1 hover:border-red-500 group"
@@ -544,230 +906,6 @@ export function ContactSection() {
               <span className="mt-1 font-bold text-zinc-800 dark:text-zinc-200 text-xs">Curriculum Vitae</span>
             </a>
           </div>
-
-          {/* Toggle for Launchpad */}
-          <div className="flex justify-center mb-12">
-            <m.button
-              onClick={() => setShowLaunchpad(!showLaunchpad)}
-              className="flex items-center gap-2.5 rounded-full border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-zinc-700 dark:text-zinc-300 shadow-md hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all hover:scale-105"
-              whileTap={{ scale: 0.95 }}
-            >
-              <Music className="h-4 w-4 text-amber-500" />
-              <span>{showLaunchpad ? 'Close Beat Machine' : '🎹 Open Beat Machine (Launchpad)'}</span>
-              {showLaunchpad ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </m.button>
-          </div>
-
-          {/* Launchpad Board */}
-          <AnimatePresence>
-            {showLaunchpad && (
-              <m.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-800 p-2 shadow-2xl sm:p-4 dark:bg-zinc-950">
-                  <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
-
-                  <div className="relative rounded-2xl border border-zinc-700 bg-zinc-900 p-4 shadow-inner sm:p-6 md:p-10">
-                    <Screw className="absolute top-2 left-2 sm:top-4 sm:left-4" />
-                    <Screw className="absolute top-2 right-2 sm:top-4 sm:right-4" />
-                    <Screw className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4" />
-                    <Screw className="absolute right-2 bottom-2 sm:right-4 sm:bottom-4" />
-
-                    {/* Top Panel */}
-                    <div className="mb-4 flex items-center justify-between px-2 sm:mb-8">
-                      <div className="flex items-center gap-2">
-                        <div className={cn('h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2', isPlaying ? 'animate-pulse bg-red-500' : 'bg-zinc-600')} />
-                        <span className="font-mono text-[10px] tracking-widest text-zinc-500 sm:text-xs">REC</span>
-                      </div>
-                      <span className="text-[10px] font-black tracking-[0.3em] text-zinc-650 sm:text-xs dark:text-zinc-400">LAUNCHPAD PRO</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-zinc-500">{transportTime}</span>
-                        <span className="text-[10px] text-zinc-605">{bpm}BPM</span>
-                      </div>
-                    </div>
-
-                    {/* Control Panel */}
-                    <div className="mb-4 space-y-3 rounded-lg border border-zinc-700/50 bg-zinc-800/50 p-3">
-                      {/* Top row: Presets + Transport */}
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-[10px] font-bold text-zinc-500">SONG PRESETS:</span>
-
-                        <div className="flex items-center gap-2">
-                          {/* BPM */}
-                          <div className="hidden items-center gap-1.5 sm:flex">
-                            <span className="text-[9px] text-zinc-500">BPM</span>
-                            <input
-                              type="range"
-                              min={60}
-                              max={140}
-                              value={bpm}
-                              onChange={(e) => handleBpmChange(Number(e.target.value))}
-                              className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
-                            />
-                          </div>
-
-                          {/* Volume */}
-                          <div className="hidden items-center gap-1.5 sm:flex">
-                            <Volume2 size={10} className="text-zinc-500" />
-                            <input
-                              type="range"
-                              min={-30}
-                              max={0}
-                              value={masterVol}
-                              onChange={(e) => setMasterVol(Number(e.target.value))}
-                              className="h-1 w-14 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
-                            />
-                          </div>
-
-                          {/* Transport */}
-                          {currentPreset && (
-                            <>
-                              <m.button
-                                whileTap={{ scale: 0.9 }}
-                                onClick={togglePause}
-                                className={cn(
-                                  'flex h-8 w-8 items-center justify-center rounded border shadow-sm transition-colors',
-                                  isPlaying
-                                    ? 'border-amber-300 bg-amber-50 text-amber-600 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400'
-                                    : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-                                )}
-                              >
-                                {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-                              </m.button>
-
-                              <m.button
-                                whileTap={{ scale: 0.9 }}
-                                onClick={stopAllPlayback}
-                                className="flex h-8 w-8 items-center justify-center rounded border border-red-300 bg-red-50 text-red-600 shadow-sm dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
-                              >
-                                <Square size={12} />
-                              </m.button>
-                            </>
-                          )}
-
-                          {!currentPreset && (
-                            <m.button
-                              whileTap={{ scale: 0.9 }}
-                              onClick={stopAllPlayback}
-                              disabled={loopingPads.size === 0}
-                              className={cn(
-                                'flex items-center gap-1.5 rounded border px-3 py-1.5 text-[10px] font-bold transition-all',
-                                loopingPads.size > 0
-                                  ? 'border-red-500 bg-red-500/20 text-red-400 hover:scale-105 hover:bg-red-500/30'
-                                  : 'cursor-not-allowed border-zinc-700 bg-zinc-900/50 text-zinc-600',
-                              )}
-                            >
-                              <Square className="h-3 w-3" />
-                              STOP ALL
-                            </m.button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Mobile BPM + Vol */}
-                      <div className="flex items-center gap-3 sm:hidden">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[9px] text-zinc-500">BPM</span>
-                          <input
-                            type="range"
-                            min={60}
-                            max={140}
-                            value={bpm}
-                            onChange={(e) => handleBpmChange(Number(e.target.value))}
-                            className="h-1 w-20 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
-                          />
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Volume2 size={10} className="text-zinc-500" />
-                          <input
-                            type="range"
-                            min={-30}
-                            max={0}
-                            value={masterVol}
-                            onChange={(e) => setMasterVol(Number(e.target.value))}
-                            className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Preset Buttons */}
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                        {presets.map((preset) => (
-                          <m.button
-                            key={preset.id}
-                            onClick={() => playPreset(preset.id)}
-                            aria-label={`Load preset ${preset.name}`}
-                            className={cn(
-                              'group relative overflow-hidden rounded-lg border p-2 text-left transition-all hover:scale-105',
-                              currentPreset === preset.id
-                                ? 'border-green-500 bg-green-500/20'
-                                : 'border-zinc-600 bg-zinc-900 hover:border-zinc-500 hover:bg-zinc-800',
-                            )}
-                            whileTap={{ scale: 0.95 }}
-                            title={preset.description}
-                          >
-                            <div className="relative z-10">
-                              <div className="mb-1 flex items-center justify-between">
-                                <span className={cn('text-[10px] font-bold', currentPreset === preset.id ? 'text-green-400' : 'text-zinc-400 group-hover:text-zinc-300')}>
-                                  {preset.name.toUpperCase()}
-                                </span>
-                                {currentPreset === preset.id && (
-                                  <m.div className="h-1.5 w-1.5 rounded-full bg-green-500" animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1, repeat: Infinity }} />
-                                )}
-                              </div>
-                              <p className={cn('text-[8px]', currentPreset === preset.id ? 'text-green-500/80' : 'text-zinc-500 group-hover:text-zinc-400')}>
-                                {preset.description}
-                              </p>
-                            </div>
-                            {currentPreset === preset.id && (
-                              <m.div className="absolute inset-0 bg-green-500/10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
-                            )}
-                          </m.button>
-                        ))}
-                      </div>
-
-                      {/* Now Playing */}
-                      <AnimatePresence>
-                        {currentPreset && (
-                          <m.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="flex items-center gap-2 rounded border border-green-500/30 bg-green-500/10 px-3 py-1.5"
-                          >
-                            <Music className="h-3 w-3 text-green-500" />
-                            <span className="text-[10px] font-medium text-green-400">
-                              Now Playing: {presets.find((p) => p.id === currentPreset)?.name}
-                              {isPaused && ' (PAUSED)'}
-                            </span>
-                          </m.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Desktop Grid */}
-                    <div className="hidden md:block">
-                      <LaunchpadGrid items={desktopGrid} cols={8} rows={4} />
-                    </div>
-                    {/* Mobile Grid */}
-                    <div className="md:hidden">
-                      <LaunchpadGrid items={mobileGrid} cols={4} rows={6} />
-                    </div>
-
-                    {/* Cable */}
-                    <div className="-mt-0.5 flex justify-center">
-                      <div className="flex h-8 w-24 items-end justify-center rounded-b-xl border-x border-b border-zinc-700 bg-zinc-800 pb-1 shadow-lg sm:h-12 sm:w-32 sm:pb-2">
-                        <span className="font-mono text-[8px] text-zinc-500 sm:text-[10px]">USB-C</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </m.div>
-            )}
-          </AnimatePresence>
         </div>
       </section>
     </>

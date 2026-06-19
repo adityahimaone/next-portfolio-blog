@@ -2,17 +2,21 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { m as motion, AnimatePresence } from 'motion/react'
-import { Play, Pause, SkipForward, Radio, Settings, Disc, Volume2 } from 'lucide-react'
+import { Play, Pause, SkipForward, Radio, Sliders, Volume2, Music, Sparkles } from 'lucide-react'
 import { Magnetic } from '@/components/magnetic'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import { Syne } from 'next/font/google'
-import { OscilloscopeBackground } from '@/components/oscilloscope-background'
+import { FlowingLinesBackground } from '@/components/flowing-lines-background'
 import { cn } from '@/lib/utils'
 
 const syne = Syne({ weight: ['700', '800'], subsets: ['latin'] })
 
 export function HeroSection() {
   const [baseDelay, setBaseDelay] = useState(1)
+  const [eqHigh, setEqHigh] = useState(80)
+  const [eqMid, setEqMid] = useState(65)
+  const [eqBass, setEqBass] = useState(90)
+  const [eqVolume, setEqVolume] = useState(75)
 
   useEffect(() => {
     if (sessionStorage.getItem('preloaderShown')) {
@@ -26,192 +30,182 @@ export function HeroSection() {
   return (
     <section
       ref={containerRef}
-      className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-zinc-50 dark:bg-[#08080a] py-20"
+      className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-zinc-50 dark:bg-[#09090b] py-24"
     >
-      {/* Background Oscilloscope */}
-      <OscilloscopeBackground className="absolute inset-0 z-0 opacity-40 dark:opacity-60">
-        <div className="absolute inset-0 bg-radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.15)_100%) dark:bg-radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.65)_100%)" />
-        <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay" />
-      </OscilloscopeBackground>
+      {/* Premium Flowing Lines Background */}
+      <FlowingLinesBackground className="absolute inset-0 z-0 opacity-50 dark:opacity-70" lineCount={12}>
+        <div className="absolute inset-0 bg-radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%) dark:bg-radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)" />
+        <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-8 mix-blend-overlay" />
+      </FlowingLinesBackground>
 
-      {/* Main Structural Asymmetric Layout (Hallmark Editorial Grid) */}
+      {/* Main Asymmetric Grid Layout */}
       <div className="relative z-10 container mx-auto px-4 md:px-8 mt-16 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
-          {/* Left Column: Huge typography and System parameters */}
+          {/* Left Column: Big Editorial Typography & Intro */}
           <div className="lg:col-span-7 flex flex-col items-start text-left space-y-6">
             
-            {/* Session Indicator */}
+            {/* Live Session Badge */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: baseDelay }}
-              className="flex items-center gap-2.5 rounded-full border border-zinc-200 bg-white/60 px-3.5 py-1 text-xs font-bold text-zinc-800 shadow-md backdrop-blur-md dark:border-white/10 dark:bg-black/60 dark:text-zinc-200"
+              className="flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/5 px-3 py-1 text-xs font-black text-blue-600 dark:text-blue-400 shadow-sm"
             >
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
-              </span>
-              CONSOLE ONLINE // DECK_01
+              <Music className="h-3.5 w-3.5 animate-pulse" />
+              PORTFOLIO MIXER STAGE
             </motion.div>
 
-            {/* Massive Heading (Syne font) */}
-            <div className={syne.className}>
+            {/* Editorial Name Header */}
+            <div className={cn(syne.className, "space-y-1")}>
               <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: baseDelay + 0.1 }}
-                className="text-5xl sm:text-7xl lg:text-8xl font-extrabold tracking-tighter leading-none text-zinc-900 dark:text-white"
+                className="text-6xl sm:text-8xl font-extrabold tracking-tighter leading-none text-zinc-900 dark:text-white"
               >
                 ADITYA
               </motion.h1>
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: baseDelay + 0.2 }}
-                className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-[0.2em] leading-none text-blue-600 dark:text-blue-400 mt-2"
+                className="flex items-baseline gap-2"
               >
-                HIMAONE
-              </motion.h1>
+                <span className="text-4xl sm:text-5xl font-light text-zinc-400 dark:text-zinc-650 tracking-widest font-mono">/</span>
+                <h1 className="text-5xl sm:text-7xl font-bold tracking-tight leading-none bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent italic dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400">
+                  HIMAONE
+                </h1>
+              </motion.div>
             </div>
 
-            {/* Descriptive subhead */}
+            {/* Premium Bio */}
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: baseDelay + 0.4 }}
-              className="text-lg sm:text-xl text-zinc-655 dark:text-zinc-400 font-medium max-w-xl leading-relaxed"
+              transition={{ duration: 0.8, delay: baseDelay + 0.3 }}
+              className="text-base sm:text-lg text-zinc-650 dark:text-zinc-400 font-medium max-w-xl leading-relaxed"
             >
-              Orchestrating robust React architecture and interactive design patterns into premium digital instruments.
+              Bridging robust Next.js server logic and high-fidelity client animations. Just as a producer structures rhythms, I assemble clean React architecture to create memorable digital user interfaces.
             </motion.p>
 
-            {/* Tech Readouts / Knobs Matrix */}
+            {/* Custom Interactive Quick Action */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: baseDelay + 0.6 }}
-              className="flex flex-wrap gap-4 pt-4"
+              transition={{ duration: 0.8, delay: baseDelay + 0.5 }}
+              className="flex flex-wrap gap-3 pt-2"
             >
               {[
-                { label: 'ROLE', val: 'FRONTEND ENG.' },
-                { label: 'GENRE', val: 'INTERACTIVE UI' },
-                { label: 'STATUS', val: 'OPERATIONAL' },
-              ].map((spec) => (
+                { label: 'STACK CORE', val: 'Next.js App Router' },
+                { label: 'DESIGN SYS', val: 'Tailwind + HSL' },
+                { label: 'ANIMATIONS', val: 'Motion / React Bits' },
+              ].map((item) => (
                 <div
-                  key={spec.label}
-                  className="flex flex-col border-l-2 border-blue-500/50 bg-zinc-200/20 px-3.5 py-1.5 backdrop-blur-xs dark:bg-black/30"
+                  key={item.label}
+                  className="rounded-lg border border-zinc-300 bg-white/40 px-4 py-2 backdrop-blur-md dark:border-zinc-800 dark:bg-black/40 shadow-xs text-left"
                 >
-                  <span className="text-[9px] font-bold tracking-widest text-zinc-550 dark:text-zinc-500">{spec.label}</span>
-                  <span className="font-mono text-xs font-black text-zinc-900 dark:text-zinc-150">{spec.val}</span>
+                  <div className="text-[9px] font-black tracking-widest text-zinc-500 uppercase">{item.label}</div>
+                  <div className="font-mono text-xs font-bold text-zinc-800 dark:text-zinc-200 mt-0.5">{item.val}</div>
                 </div>
               ))}
             </motion.div>
           </div>
 
-          {/* Right Column: VST Synthesizer Hardware Console */}
+          {/* Right Column: High-Fidelity Synthesizer / Studio Controller */}
           <div className="lg:col-span-5 flex justify-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 40 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: baseDelay + 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full max-w-md rounded-2xl border-2 border-zinc-400 bg-zinc-200/90 p-6 shadow-2xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90"
+              transition={{ duration: 0.8, delay: baseDelay + 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-w-md rounded-3xl border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-200 p-6 shadow-2xl backdrop-blur-md dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950"
             >
-              {/* Metal Corner Screws */}
-              <div className="absolute top-3 left-3 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/20" />
-              <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/20" />
-              <div className="absolute bottom-3 left-3 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/20" />
-              <div className="absolute bottom-3 right-3 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/20" />
+              {/* Rack mount details */}
+              <div className="absolute top-4 left-4 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/10" />
+              <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/10" />
+              <div className="absolute bottom-4 left-4 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/10" />
+              <div className="absolute bottom-4 right-4 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/10" />
 
-              <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-6">
                 
-                {/* Hardware header */}
-                <div className="flex justify-between items-center border-b border-zinc-350 dark:border-zinc-800 pb-2">
-                  <div className="flex items-center gap-2">
+                {/* Console header */}
+                <div className="flex items-center justify-between border-b border-zinc-350 dark:border-zinc-800 pb-2">
+                  <span className="font-mono text-[9px] font-black text-zinc-550 dark:text-zinc-450 tracking-wider flex items-center gap-1.5 uppercase">
                     <Radio className="h-4 w-4 text-blue-500 animate-pulse" />
-                    <span className="font-mono text-[9px] font-bold text-zinc-600 dark:text-zinc-400 tracking-wider">
-                      RECEIVER MODEL DECK_01
-                    </span>
-                  </div>
-                  <Settings className="h-3.5 w-3.5 text-zinc-500 hover:rotate-90 transition-transform cursor-pointer" />
+                    Eurorack Controller Deck
+                  </span>
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-ping" />
                 </div>
 
-                {/* Cassette Tape Spindle Reels */}
-                <div className="flex justify-center gap-8 bg-zinc-950 p-6 rounded-lg border-2 border-zinc-350 dark:border-zinc-850 shadow-inner relative overflow-hidden">
-                  <div className="absolute inset-0 bg-linear-to-b from-white/5 to-transparent pointer-events-none" />
+                {/* Synth Param Faders Matrix (Fully interactive local sliders) */}
+                <div className="rounded-2xl border border-zinc-300 bg-zinc-50 p-5 dark:border-zinc-850 dark:bg-black/40 shadow-inner flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[8px] font-black text-zinc-500 uppercase tracking-widest">Console EQ Parameters</span>
+                    <Sliders className="h-3.5 w-3.5 text-zinc-400" />
+                  </div>
                   
-                  {/* Reel 1 */}
-                  <motion.div
-                    animate={isPlaying ? { rotate: 360 } : {}}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                    className="relative flex h-16 w-16 items-center justify-center rounded-full border-4 border-zinc-800 bg-black shadow-md shrink-0"
-                  >
-                    <Disc className="h-10 w-10 text-zinc-650" />
-                    <div className="absolute h-2 w-2 rounded-full bg-zinc-300 dark:bg-zinc-900 border" />
-                  </motion.div>
-
-                  {/* Reel 2 */}
-                  <motion.div
-                    animate={isPlaying ? { rotate: 360 } : {}}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                    className="relative flex h-16 w-16 items-center justify-center rounded-full border-4 border-zinc-800 bg-black shadow-md shrink-0"
-                  >
-                    <Disc className="h-10 w-10 text-zinc-650" />
-                    <div className="absolute h-2 w-2 rounded-full bg-zinc-300 dark:bg-zinc-900 border" />
-                  </motion.div>
+                  {/* EQ Channels */}
+                  <div className="flex flex-col gap-3">
+                    {[
+                      { label: 'HIGH', val: eqHigh, setVal: setEqHigh, color: 'bg-blue-500' },
+                      { label: 'MID', val: eqMid, setVal: setEqMid, color: 'bg-indigo-500' },
+                      { label: 'BASS', val: eqBass, setVal: setEqBass, color: 'bg-purple-500' },
+                      { label: 'GAIN', val: eqVolume, setVal: setEqVolume, color: 'bg-emerald-500' },
+                    ].map((ch) => (
+                      <div key={ch.label} className="flex items-center gap-4">
+                        <span className="w-8 text-[10px] font-black text-zinc-500 font-mono tracking-wider">{ch.label}</span>
+                        <div className="relative flex-1 h-6 flex items-center">
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={ch.val}
+                            onChange={(e) => ch.setVal(Number(e.target.value))}
+                            className="w-full h-1 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                          />
+                        </div>
+                        <span className="w-8 font-mono text-[10px] font-bold text-right text-zinc-700 dark:text-zinc-300">{ch.val}%</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* LCD Display */}
-                <div className="flex flex-col items-start gap-1.5 rounded border border-zinc-400 bg-zinc-900 p-3 shadow-inner dark:border-zinc-800 dark:bg-black">
-                  <div className="flex w-full items-center justify-between">
-                    <span className="font-mono text-[8px] font-black text-zinc-500 tracking-widest uppercase">
-                      STATUS: {isPlaying ? 'PLAYING' : 'STANDBY'}
+                {/* Receiver / Track Display */}
+                <div className="flex flex-col gap-1.5 rounded-xl border border-zinc-300 bg-zinc-900 p-4 shadow-inner dark:border-zinc-800 dark:bg-black">
+                  <div className="flex justify-between items-center text-[8px] font-black text-zinc-500 font-mono tracking-widest">
+                    <span>RECEIVER STATUS: {isPlaying ? 'ACTIVE' : 'STANDBY'}</span>
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="h-2 w-2 text-amber-500" />
+                      44.1 KHZ
                     </span>
-                    <div className="flex gap-1">
-                      <div className={cn("h-1.5 w-1.5 rounded-full", isPlaying ? "bg-green-500 animate-pulse" : "bg-zinc-700")} />
-                      <div className={cn("h-1.5 w-1.5 rounded-full", isPlaying ? "bg-blue-500 animate-pulse" : "bg-zinc-700")} />
-                    </div>
                   </div>
-
-                  {/* Track text */}
-                  <div className="w-full overflow-hidden border-t border-white/5 pt-1.5">
-                    <motion.p
-                      className="font-mono text-xs font-bold text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)] truncate text-left"
-                      animate={isPlaying ? { opacity: [0.8, 1, 0.8] } : {}}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      {currentTrack || 'NO SIGNAL // STANDBY'}
-                    </motion.p>
+                  <div className="border-t border-white/5 pt-2">
+                    <p className="font-mono text-xs font-bold text-amber-500 tracking-wider truncate text-left shadow-[0_0_8px_rgba(245,158,11,0.5)]">
+                      {isPlaying ? currentTrack : 'SYSTEM GATE: STANDBY'}
+                    </p>
                   </div>
                 </div>
 
-                {/* Deck Action buttons */}
-                <div className="flex items-center justify-between gap-4 pt-1">
-                  <Magnetic intensity={0.25}>
+                {/* Transport Buttons / Catalog link */}
+                <div className="flex items-center justify-between gap-4">
+                  <Magnetic intensity={0.2}>
                     <button
                       onClick={togglePlay}
-                      className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-b from-zinc-100 to-zinc-300 shadow-md border border-zinc-400 dark:from-zinc-700 dark:to-zinc-800 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 cursor-pointer active:scale-95 transition-transform"
+                      className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-b from-zinc-100 to-zinc-350 shadow-md border border-zinc-400 text-zinc-800 dark:from-zinc-700 dark:to-zinc-800 dark:border-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-transform"
                     >
-                      {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
+                      {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-1" />}
                     </button>
                   </Magnetic>
 
-                  {/* Faux Equalizer Slider */}
-                  <div className="flex-1 flex items-center gap-3">
-                    <Volume2 className="h-4 w-4 text-zinc-500" />
-                    <div className="relative flex-1 h-6 flex items-center">
-                      <div className="w-full h-1 bg-zinc-400 dark:bg-zinc-850 rounded" />
-                      <div className="absolute h-1 bg-blue-500 rounded" style={{ width: isPlaying ? '75%' : '15%' }} />
-                      <div className="absolute h-4 w-2 rounded bg-zinc-100 border border-zinc-400 dark:bg-zinc-750 dark:border-zinc-650 cursor-pointer" style={{ left: isPlaying ? '75%' : '15%' }} />
-                    </div>
-                  </div>
+                  <div className="h-8 w-px bg-zinc-350 dark:bg-zinc-800" />
 
-                  <Magnetic intensity={0.25}>
+                  <Magnetic intensity={0.2}>
                     <a
                       href="#projects"
-                      className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-zinc-350 bg-zinc-300 px-4 text-[10px] font-black text-zinc-850 hover:bg-zinc-350 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-250 dark:hover:bg-zinc-750 transition-colors"
+                      className="flex-1 flex h-11 items-center justify-center gap-2 rounded-xl border border-zinc-350 bg-zinc-350 text-xs font-black text-zinc-850 hover:bg-zinc-400 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-750 transition-colors shadow-sm"
                     >
-                      CATALOG
-                      <SkipForward size={12} />
+                      EXPLORE RELEASES
+                      <SkipForward size={14} />
                     </a>
                   </Magnetic>
                 </div>

@@ -235,44 +235,62 @@ export function ExperienceSection() {
                         {/* Description */}
                         <div className="prose prose-zinc dark:prose-invert max-w-none">
                           {selectedJob.isGroup ? (
-                            <div className="flex h-full flex-col justify-between min-h-[220px]">
-                              <AnimatePresence mode="wait">
-                                <m.div
-                                  key={activeSubIndex}
-                                  initial={{ opacity: 0, x: 30 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  exit={{ opacity: 0, x: -30 }}
-                                  transition={{ duration: 0.2 }}
-                                  className="relative flex w-full items-start gap-3"
-                                >
-                                  {selectedJob.items && selectedJob.items[activeSubIndex] && (
-                                    <>
-                                      <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full mt-1">
-                                        <ChevronRight className="h-3.5 w-3.5" />
-                                      </div>
-                                      <div className="flex w-full flex-col">
-                                        <h4 className="mt-0 text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                                          {selectedJob.items[activeSubIndex].role}
-                                        </h4>
-                                        <div className="mb-2 flex w-full items-center justify-between text-xs text-zinc-500">
-                                          <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-                                            {selectedJob.items[activeSubIndex].company}
-                                          </span>
-                                          <span className="font-mono">
-                                            {selectedJob.items[activeSubIndex].period}
-                                          </span>
+                            <div className="flex h-full flex-col justify-between min-h-[300px]">
+                              {/* Stack Area */}
+                              <div className="relative h-[220px] w-full mt-4">
+                                {selectedJob.items?.map((item, i) => {
+                                  const itemsLength = selectedJob.items?.length || 0
+                                  const diff = (i - activeSubIndex + itemsLength) % itemsLength
+                                  const isTop = diff === 0
+                                  
+                                  return (
+                                    <m.div
+                                      key={i}
+                                      style={{ transformOrigin: 'top center' }}
+                                      animate={{
+                                        scale: isTop ? 1 : 1 - diff * 0.05,
+                                        y: diff * 12,
+                                        rotate: isTop ? 0 : diff % 2 === 0 ? -1.5 : 1.5,
+                                        zIndex: 30 - diff,
+                                        opacity: 1 - diff * 0.25,
+                                      }}
+                                      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                                      onClick={() => isTop ? null : setActiveSubIndex(i)}
+                                      className={cn(
+                                        "absolute top-0 inset-x-0 rounded-2xl border bg-white p-5 transition-shadow select-none",
+                                        isTop 
+                                          ? "cursor-default border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg" 
+                                          : "cursor-pointer border-zinc-200/60 dark:border-zinc-800/60 bg-zinc-50/90 dark:bg-zinc-900/90 shadow-md hover:shadow-lg"
+                                      )}
+                                    >
+                                      <div className="flex w-full items-start gap-3">
+                                        <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full mt-1">
+                                          <ChevronRight className="h-3.5 w-3.5" />
                                         </div>
-                                        <p className="my-0! text-base leading-relaxed text-zinc-800 dark:text-zinc-200">
-                                          {selectedJob.items[activeSubIndex].description}
-                                        </p>
+                                        <div className="flex w-full flex-col text-left">
+                                          <h4 className="mt-0 text-base font-bold text-zinc-900 dark:text-zinc-100">
+                                            {item.role}
+                                          </h4>
+                                          <div className="mb-2 flex w-full items-center justify-between text-xs text-zinc-500">
+                                            <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                                              {item.company}
+                                            </span>
+                                            <span className="font-mono">
+                                              {item.period}
+                                            </span>
+                                          </div>
+                                          <p className="my-0! text-xs leading-relaxed text-zinc-650 dark:text-zinc-300">
+                                            {item.description}
+                                          </p>
+                                        </div>
                                       </div>
-                                    </>
-                                  )}
-                                </m.div>
-                              </AnimatePresence>
+                                    </m.div>
+                                  )
+                                })}
+                              </div>
 
-                              {/* CD Player Skip controls */}
-                              <div className="mt-6 flex items-center justify-center gap-4 border-t border-zinc-200/50 pt-4 dark:border-zinc-800/40">
+                              {/* CD Player Skip style Pagination Controls */}
+                              <div className="mt-4 flex items-center justify-center gap-4 border-t border-zinc-200/50 pt-3 dark:border-zinc-800/40">
                                 <button
                                   disabled={activeSubIndex === 0}
                                   onClick={() => setActiveSubIndex((prev) => Math.max(0, prev - 1))}
@@ -302,7 +320,7 @@ export function ExperienceSection() {
                                   disabled={selectedJob.items ? activeSubIndex === selectedJob.items.length - 1 : true}
                                   onClick={() => setActiveSubIndex((prev) => Math.min((selectedJob.items?.length || 1) - 1, prev + 1))}
                                   className={cn(
-                                    "flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400 dark:hover:bg-zinc-800",
+                                    "flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none dark:border-zinc-800 dark:bg-zinc-900/55 dark:text-zinc-400 dark:hover:bg-zinc-800",
                                     "active:scale-95"
                                   )}
                                   title="Next Course"

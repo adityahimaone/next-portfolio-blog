@@ -23,25 +23,49 @@ interface ProjectCardProps {
 }
 
 function ProjectCard({ project, index, isInView, setSelectedProject }: ProjectCardProps) {
-  const controls = useAnimation()
-  const [introActive, setIntroActive] = useState(true)
+  const [variant, setVariant] = useState('initial')
 
   useEffect(() => {
     if (isInView) {
-      controls.start({
-        x: ['0%', '45%', '45%', '0%'],
-        rotate: [0, 180, 180, 0],
-        transition: {
-          duration: 2.5,
-          times: [0, 0.3, 0.7, 1],
-          ease: 'easeInOut',
-          delay: 0.3 + index * 0.25,
-        }
-      }).then(() => {
-        setIntroActive(false)
-      })
+      setVariant('intro')
+      const timer = setTimeout(() => {
+        setVariant('idle')
+      }, 4500)
+      return () => clearTimeout(timer)
     }
-  }, [isInView, controls, index])
+  }, [isInView])
+
+  const vinylVariants = {
+    initial: { x: '0%', rotate: 0 },
+    intro: {
+      x: ['0%', '45%', '45%', '0%'],
+      rotate: [0, 180, 180, 0],
+      transition: {
+        duration: 2.5,
+        times: [0, 0.3, 0.7, 1],
+        ease: 'easeInOut',
+        delay: 0.3 + index * 0.25,
+      }
+    },
+    idle: {
+      x: '0%',
+      rotate: 0,
+      transition: {
+        type: 'spring',
+        stiffness: 90,
+        damping: 15,
+      }
+    },
+    hover: {
+      x: '55%',
+      rotate: 360,
+      transition: {
+        type: 'spring',
+        stiffness: 90,
+        damping: 15,
+      }
+    }
+  }
 
   return (
     <m.div
@@ -54,18 +78,9 @@ function ProjectCard({ project, index, isInView, setSelectedProject }: ProjectCa
       <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
         {/* Vinyl Record sliding out */}
         <m.div
-          initial={{ x: 0, rotate: 0 }}
-          animate={introActive ? controls : undefined}
-          whileHover={introActive ? undefined : { x: '55%', rotate: 360 }}
-          transition={
-            introActive
-              ? undefined
-              : {
-                  type: 'spring',
-                  stiffness: 90,
-                  damping: 15,
-                }
-          }
+          variants={vinylVariants as any}
+          animate={variant}
+          whileHover={variant === 'idle' ? 'hover' : undefined}
           className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl"
         >
           <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />

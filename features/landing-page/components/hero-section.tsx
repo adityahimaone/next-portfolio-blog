@@ -1,22 +1,109 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { m as motion, AnimatePresence } from 'motion/react'
-import { Play, Pause, SkipForward, Radio, Sliders, Volume2, Music, Sparkles } from 'lucide-react'
+import { m as motion, useScroll, useTransform, useSpring } from 'motion/react'
+import { Play, Pause, SkipForward } from 'lucide-react'
 import { Magnetic } from '@/components/magnetic'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
-import { Syne } from 'next/font/google'
-import { FlowingLinesBackground } from '@/components/flowing-lines-background'
 import { cn } from '@/lib/utils'
 
-const syne = Syne({ weight: ['700', '800'], subsets: ['latin'] })
+// --- 1. EqBackground Component (Pure CSS GPU-driven EQ) ---
+const EQ_VARIANTS = ['variant-a', 'variant-b', 'variant-c', 'variant-d', 'variant-e']
+
+function EqBackground() {
+  const bars = Array.from({ length: 60 }, (_, i) => ({
+    variant: EQ_VARIANTS[i % 5],
+    delay: `${(i * 0.04).toFixed(2)}s`,
+    opacity: 0.12 + (i % 3) * 0.04,
+  }))
+
+  const secondaryBars = Array.from({ length: 30 }, (_, i) => ({
+    variant: EQ_VARIANTS[(i * 2) % 5],
+    delay: `${(i * 0.08).toFixed(2)}s`,
+    opacity: 0.04,
+  }))
+
+  return (
+    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+      {/* Primary Cyan EQ Bars */}
+      <div className="absolute bottom-0 inset-x-0 h-48 flex items-end justify-between px-2 gap-[3px]">
+        {bars.map((bar, i) => (
+          <div
+            key={`bar-p-${i}`}
+            className={cn(
+              'flex-1 w-[2px] bg-cyan-400 dark:bg-cyan-500 rounded-t origin-bottom',
+              bar.variant === 'variant-a' && 'animate-[eq-a_0.8s_ease-in-out_infinite_alternate]',
+              bar.variant === 'variant-b' && 'animate-[eq-b_1.1s_ease-in-out_infinite_alternate]',
+              bar.variant === 'variant-c' && 'animate-[eq-c_0.75s_ease-in-out_infinite_alternate]',
+              bar.variant === 'variant-d' && 'animate-[eq-d_1.3s_ease-in-out_infinite_alternate]',
+              bar.variant === 'variant-e' && 'animate-[eq-e_0.95s_ease-in-out_infinite_alternate]'
+            )}
+            style={{
+              animationDelay: bar.delay,
+              opacity: bar.opacity,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Background/Depth EQ Bars */}
+      <div className="absolute bottom-0 inset-x-0 h-72 flex items-end justify-around px-8 gap-3 blur-xs">
+        {secondaryBars.map((bar, i) => (
+          <div
+            key={`bar-s-${i}`}
+            className={cn(
+              'w-[4px] bg-cyan-400 dark:bg-cyan-600 rounded-t origin-bottom',
+              bar.variant === 'variant-a' && 'animate-[eq-a_1.4s_ease-in-out_infinite_alternate]',
+              bar.variant === 'variant-b' && 'animate-[eq-b_1.8s_ease-in-out_infinite_alternate]',
+              bar.variant === 'variant-c' && 'animate-[eq-c_1.2s_ease-in-out_infinite_alternate]',
+              bar.variant === 'variant-d' && 'animate-[eq-d_2.1s_ease-in-out_infinite_alternate]',
+              bar.variant === 'variant-e' && 'animate-[eq-e_1.6s_ease-in-out_infinite_alternate]'
+            )}
+            style={{
+              animationDelay: bar.delay,
+              opacity: bar.opacity,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// --- 2. AlbumArt Component (CSS-conic gradient) ---
+function AlbumArt({ isPlaying }: { isPlaying: boolean }) {
+  return (
+    <div className="relative group h-32 w-32 shrink-0 md:h-36 md:w-36 overflow-hidden rounded-xl border border-white/10 shadow-2xl transition-transform duration-300 hover:scale-105 active:scale-95">
+      
+      {/* Conic Gradient Rotator */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'conic-gradient(from var(--hue-rotate, 0deg), #22D3EE 0deg, #0F1118 90deg, #F59E0B 180deg, #0F1118 270deg, #22D3EE 360deg)',
+          animation: `album-spin ${isPlaying ? '20s' : '60s'} linear infinite`,
+          boxShadow: isPlaying ? 'inset 0 0 20px rgba(34,211,238,0.4)' : 'none',
+        }}
+      />
+
+      {/* Bevel Corner Overlay via clip path */}
+      <div className="absolute inset-0 border border-white/20 rounded-xl" />
+
+      {/* Grid Scanlines Overlay */}
+      <div className="absolute inset-0 scanlines opacity-40 pointer-events-none" />
+
+      {/* Inner vinyl grooves detail */}
+      <div className="absolute inset-2 rounded-full border border-white/5 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(0,0,0,0.85)_100%)] opacity-80" />
+      <div className="absolute inset-8 rounded-full border border-white/10" />
+      <div className="absolute inset-12 rounded-full border border-white/15 bg-black/40 flex items-center justify-center">
+        {/* Glowing peak center */}
+        <div className={cn("h-3 w-3 rounded-full transition-colors", isPlaying ? "bg-amber-500 shadow-[0_0_8px_#f59e0b]" : "bg-zinc-700")} />
+      </div>
+    </div>
+  )
+}
 
 export function HeroSection() {
   const [baseDelay, setBaseDelay] = useState(1)
-  const [eqHigh, setEqHigh] = useState(80)
-  const [eqMid, setEqMid] = useState(65)
-  const [eqBass, setEqBass] = useState(90)
-  const [eqVolume, setEqVolume] = useState(75)
 
   useEffect(() => {
     if (sessionStorage.getItem('preloaderShown')) {
@@ -27,195 +114,144 @@ export function HeroSection() {
   const { isPlaying, togglePlay, currentTrack } = useAudio()
   const containerRef = useRef<HTMLDivElement>(null)
 
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start start', 'end start'],
+  })
+
+  // Parallax effects
+  const y = useTransform(scrollYProgress, [0, 1], [0, 120])
+  const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.95])
+
+  // Progress bar scroll mapping
+  const scrollSpring = useSpring(scrollYProgress, { stiffness: 100, damping: 30 })
+
   return (
     <section
       ref={containerRef}
-      className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-zinc-50 dark:bg-[#09090b] py-24"
+      className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#05060A] py-20 select-none"
     >
-      {/* Premium Flowing Lines Background */}
-      <FlowingLinesBackground className="absolute inset-0 z-0 opacity-50 dark:opacity-70" lineCount={12}>
-        <div className="absolute inset-0 bg-radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%) dark:bg-radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)" />
-        <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-8 mix-blend-overlay" />
-      </FlowingLinesBackground>
+      {/* Background EQ Columns */}
+      <EqBackground />
 
-      {/* Main Asymmetric Grid Layout */}
-      <div className="relative z-10 container mx-auto px-4 md:px-8 mt-16 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      {/* Subtle orbs glow */}
+      <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
+
+      {/* Main Container */}
+      <motion.div
+        style={{ y, opacity, scale }}
+        className="relative z-10 container mx-auto px-4 md:px-8 mt-12 flex justify-center max-w-5xl"
+      >
+        {/* DAP "Now Playing" Display Card */}
+        <div className="w-full rounded-2xl border border-white/[0.06] bg-[#0F1118]/85 p-6 md:p-8 shadow-[0_24px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-xl">
           
-          {/* Left Column: Big Editorial Typography & Intro */}
-          <div className="lg:col-span-7 flex flex-col items-start text-left space-y-6">
-            
-            {/* Live Session Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: baseDelay }}
-              className="flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/5 px-3 py-1 text-xs font-black text-blue-600 dark:text-blue-400 shadow-sm"
-            >
-              <Music className="h-3.5 w-3.5 animate-pulse" />
-              PORTFOLIO MIXER STAGE
-            </motion.div>
-
-            {/* Editorial Name Header */}
-            <div className={cn(syne.className, "space-y-1")}>
-              <motion.h1
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: baseDelay + 0.1 }}
-                className="text-6xl sm:text-8xl font-extrabold tracking-tighter leading-none text-zinc-900 dark:text-white"
-              >
-                ADITYA
-              </motion.h1>
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: baseDelay + 0.2 }}
-                className="flex items-baseline gap-2"
-              >
-                <span className="text-4xl sm:text-5xl font-light text-zinc-400 dark:text-zinc-650 tracking-widest font-mono">/</span>
-                <h1 className="text-5xl sm:text-7xl font-bold tracking-tight leading-none bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent italic dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400">
-                  HIMAONE
-                </h1>
-              </motion.div>
+          {/* Card Header Rails */}
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-4 mb-6 font-mono text-[9px] text-[#94A3B8] tracking-[0.2em] uppercase">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
+              </span>
+              <span>Input Stage: active</span>
             </div>
-
-            {/* Premium Bio */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: baseDelay + 0.3 }}
-              className="text-base sm:text-lg text-zinc-650 dark:text-zinc-400 font-medium max-w-xl leading-relaxed"
-            >
-              Bridging robust Next.js server logic and high-fidelity client animations. Just as a producer structures rhythms, I assemble clean React architecture to create memorable digital user interfaces.
-            </motion.p>
-
-            {/* Custom Interactive Quick Action */}
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: baseDelay + 0.5 }}
-              className="flex flex-wrap gap-3 pt-2"
-            >
-              {[
-                { label: 'STACK CORE', val: 'Next.js App Router' },
-                { label: 'DESIGN SYS', val: 'Tailwind + HSL' },
-                { label: 'ANIMATIONS', val: 'Motion / React Bits' },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-lg border border-zinc-300 bg-white/40 px-4 py-2 backdrop-blur-md dark:border-zinc-800 dark:bg-black/40 shadow-xs text-left"
-                >
-                  <div className="text-[9px] font-black tracking-widest text-zinc-500 uppercase">{item.label}</div>
-                  <div className="font-mono text-xs font-bold text-zinc-800 dark:text-zinc-200 mt-0.5">{item.val}</div>
-                </div>
-              ))}
-            </motion.div>
+            <span>[AH-SP3000]</span>
           </div>
 
-          {/* Right Column: High-Fidelity Synthesizer / Studio Controller */}
-          <div className="lg:col-span-5 flex justify-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 40 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: baseDelay + 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full max-w-md rounded-3xl border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-200 p-6 shadow-2xl backdrop-blur-md dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950"
-            >
-              {/* Rack mount details */}
-              <div className="absolute top-4 left-4 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/10" />
-              <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/10" />
-              <div className="absolute bottom-4 left-4 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/10" />
-              <div className="absolute bottom-4 right-4 h-2 w-2 rounded-full bg-zinc-450 dark:bg-zinc-700 shadow-inner border border-black/10" />
+          {/* Main Info Body Block */}
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 mb-8 text-left">
+            
+            {/* Left: Conic Album Artwork */}
+            <AlbumArt isPlaying={isPlaying} />
 
-              <div className="flex flex-col gap-6">
-                
-                {/* Console header */}
-                <div className="flex items-center justify-between border-b border-zinc-350 dark:border-zinc-800 pb-2">
-                  <span className="font-mono text-[9px] font-black text-zinc-550 dark:text-zinc-450 tracking-wider flex items-center gap-1.5 uppercase">
-                    <Radio className="h-4 w-4 text-blue-500 animate-pulse" />
-                    Eurorack Controller Deck
-                  </span>
-                  <div className="h-2 w-2 rounded-full bg-green-500 animate-ping" />
-                </div>
-
-                {/* Synth Param Faders Matrix (Fully interactive local sliders) */}
-                <div className="rounded-2xl border border-zinc-300 bg-zinc-50 p-5 dark:border-zinc-850 dark:bg-black/40 shadow-inner flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[8px] font-black text-zinc-500 uppercase tracking-widest">Console EQ Parameters</span>
-                    <Sliders className="h-3.5 w-3.5 text-zinc-400" />
-                  </div>
-                  
-                  {/* EQ Channels */}
-                  <div className="flex flex-col gap-3">
-                    {[
-                      { label: 'HIGH', val: eqHigh, setVal: setEqHigh, color: 'bg-blue-500' },
-                      { label: 'MID', val: eqMid, setVal: setEqMid, color: 'bg-indigo-500' },
-                      { label: 'BASS', val: eqBass, setVal: setEqBass, color: 'bg-purple-500' },
-                      { label: 'GAIN', val: eqVolume, setVal: setEqVolume, color: 'bg-emerald-500' },
-                    ].map((ch) => (
-                      <div key={ch.label} className="flex items-center gap-4">
-                        <span className="w-8 text-[10px] font-black text-zinc-500 font-mono tracking-wider">{ch.label}</span>
-                        <div className="relative flex-1 h-6 flex items-center">
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={ch.val}
-                            onChange={(e) => ch.setVal(Number(e.target.value))}
-                            className="w-full h-1 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                          />
-                        </div>
-                        <span className="w-8 font-mono text-[10px] font-bold text-right text-zinc-700 dark:text-zinc-300">{ch.val}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Receiver / Track Display */}
-                <div className="flex flex-col gap-1.5 rounded-xl border border-zinc-300 bg-zinc-900 p-4 shadow-inner dark:border-zinc-800 dark:bg-black">
-                  <div className="flex justify-between items-center text-[8px] font-black text-zinc-500 font-mono tracking-widest">
-                    <span>RECEIVER STATUS: {isPlaying ? 'ACTIVE' : 'STANDBY'}</span>
-                    <span className="flex items-center gap-1">
-                      <Sparkles className="h-2 w-2 text-amber-500" />
-                      44.1 KHZ
-                    </span>
-                  </div>
-                  <div className="border-t border-white/5 pt-2">
-                    <p className="font-mono text-xs font-bold text-amber-500 tracking-wider truncate text-left shadow-[0_0_8px_rgba(245,158,11,0.5)]">
-                      {isPlaying ? currentTrack : 'SYSTEM GATE: STANDBY'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Transport Buttons / Catalog link */}
-                <div className="flex items-center justify-between gap-4">
-                  <Magnetic intensity={0.2}>
-                    <button
-                      onClick={togglePlay}
-                      className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-b from-zinc-100 to-zinc-350 shadow-md border border-zinc-400 text-zinc-800 dark:from-zinc-700 dark:to-zinc-800 dark:border-zinc-700 dark:text-zinc-200 cursor-pointer active:scale-95 transition-transform"
-                    >
-                      {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-1" />}
-                    </button>
-                  </Magnetic>
-
-                  <div className="h-8 w-px bg-zinc-350 dark:bg-zinc-800" />
-
-                  <Magnetic intensity={0.2}>
-                    <a
-                      href="#projects"
-                      className="flex-1 flex h-11 items-center justify-center gap-2 rounded-xl border border-zinc-350 bg-zinc-350 text-xs font-black text-zinc-850 hover:bg-zinc-400 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-750 transition-colors shadow-sm"
-                    >
-                      EXPLORE RELEASES
-                      <SkipForward size={14} />
-                    </a>
-                  </Magnetic>
-                </div>
-
+            {/* Right: Space Grotesk Names & JetBrains Mono Metadata */}
+            <div className="flex-1 flex flex-col justify-between h-full min-w-0">
+              <div>
+                <span className="font-mono text-[9px] tracking-widest text-[#94A3B8]/60 uppercase">Now Playing</span>
+                <h1 className="font-sans font-black text-5xl md:text-6xl tracking-tighter text-[#E2E8F0] mt-1 font-[family-name:var(--font-space-grotesk)]">
+                  ADITYA
+                </h1>
+                <h2 className="font-sans font-normal text-3xl md:text-4xl tracking-[0.18em] text-[#22D3EE] font-[family-name:var(--font-space-grotesk)] leading-tight uppercase">
+                  HIMAONE
+                </h2>
               </div>
-            </motion.div>
+
+              {/* Monospace Metadata console grid */}
+              <div className="grid grid-cols-1 gap-y-1.5 mt-6 border-t border-white/[0.04] pt-4 font-mono text-[10px] tracking-wide">
+                <div className="flex items-baseline">
+                  <span className="w-24 text-[#3D4A5C] font-bold">FREQUENCY  :</span>
+                  <span className="text-[#94A3B8] font-bold">FULL-STACK FRONTEND</span>
+                </div>
+                <div className="flex items-baseline">
+                  <span className="w-24 text-[#3D4A5C] font-bold">SAMPLE RATE:</span>
+                  <span className="text-[#94A3B8]">NEXT.JS · REACT · TS</span>
+                </div>
+                <div className="flex items-baseline">
+                  <span className="w-24 text-[#3D4A5C] font-bold">BITRATE    :</span>
+                  <span className="text-[#94A3B8]">2021 – PRESENT · JAKARTA</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dynamic Scroll Progress Bar */}
+          <div className="flex flex-col gap-1.5 mb-8">
+            <div className="relative w-full h-1 bg-[#161B26] rounded-full overflow-hidden">
+              <motion.div
+                className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-[#22D3EE] to-cyan-500 rounded-full"
+                style={{ width: useTransform(scrollSpring, [0, 1], ['0%', '100%']) }}
+              />
+            </div>
+            <div className="flex justify-between font-mono text-[8px] text-[#3D4A5C] tracking-widest font-black uppercase">
+              <span>00:00 [INTRO]</span>
+              <span>SCROLL INDEX TO LOAD</span>
+              <span>06:42 [OUTRO]</span>
+            </div>
+          </div>
+
+          {/* Controller buttons (Cyan and Amber colors) */}
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            
+            {/* Play trigger button */}
+            <Magnetic intensity={0.2}>
+              <button
+                onClick={togglePlay}
+                className="w-full sm:w-auto min-w-[140px] flex items-center justify-center gap-2.5 rounded-lg border border-[#22D3EE] bg-transparent py-3 text-xs font-bold tracking-widest text-[#22D3EE] hover:bg-[#22D3EE]/10 cursor-pointer shadow-[0_0_12px_rgba(34,211,238,0.1)] hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all font-mono uppercase"
+              >
+                {isPlaying ? (
+                  <>
+                    <Pause size={13} fill="currentColor" />
+                    PAUSE OUT
+                  </>
+                ) : (
+                  <>
+                    <Play size={13} fill="currentColor" className="ml-0.5" />
+                    PLAY PATH
+                  </>
+                )}
+              </button>
+            </Magnetic>
+
+            {/* Skip tracks project redirection */}
+            <Magnetic intensity={0.2}>
+              <a
+                href="#projects"
+                className="w-full sm:w-auto min-w-[140px] flex items-center justify-center gap-2.5 rounded-lg bg-[#F59E0B] py-3 text-xs font-bold tracking-widest text-[#05060A] hover:brightness-110 cursor-pointer shadow-[0_0_10px_rgba(245,158,11,0.2)] hover:shadow-[0_0_16px_rgba(245,158,11,0.4)] transition-all font-mono uppercase"
+              >
+                SKIP TRACKS
+                <SkipForward size={13} className="stroke-[2.5]" />
+              </a>
+            </Magnetic>
+
+            {/* Inactive details track status */}
+            <div className="hidden sm:block ml-auto font-mono text-[9px] text-[#3D4A5C] font-bold tracking-widest uppercase">
+              DE-EMPHASIS: AUTO // DAC: RESISTOR_LADDER
+            </div>
           </div>
 
         </div>
-      </div>
+      </motion.div>
     </section>
   )
 }

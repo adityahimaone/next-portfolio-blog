@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { m, AnimatePresence, useInView, useAnimation } from 'motion/react'
+import { useState, useRef } from 'react'
+import { m, AnimatePresence, useInView } from 'motion/react'
 import Image from 'next/image'
 import {
   Disc,
@@ -18,69 +18,29 @@ import { PROJECTS_SHOWCASE, type ProjectShowcaseItem } from '../constants'
 interface ProjectCardProps {
   project: ProjectShowcaseItem
   index: number
-  isInView: boolean
   setSelectedProject: (project: ProjectShowcaseItem) => void
 }
 
-function ProjectCard({ project, index, isInView, setSelectedProject }: ProjectCardProps) {
-  const [variant, setVariant] = useState('initial')
-
-  useEffect(() => {
-    if (isInView) {
-      setVariant('intro')
-      const timer = setTimeout(() => {
-        setVariant('idle')
-      }, 4500)
-      return () => clearTimeout(timer)
-    }
-  }, [isInView])
-
-  const vinylVariants = {
-    initial: { x: '0%', rotate: 0 },
-    intro: {
-      x: ['0%', '45%', '45%', '0%'],
-      rotate: [0, 180, 180, 0],
-      transition: {
-        duration: 2.5,
-        times: [0, 0.3, 0.7, 1],
-        ease: 'easeInOut',
-        delay: 0.3 + index * 0.25,
-      }
-    },
-    idle: {
-      x: '0%',
-      rotate: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 90,
-        damping: 15,
-      }
-    },
-    hover: {
-      x: '55%',
-      rotate: 360,
-      transition: {
-        type: 'spring',
-        stiffness: 90,
-        damping: 15,
-      }
-    }
-  }
-
+function ProjectCard({ project, index, setSelectedProject }: ProjectCardProps) {
   return (
     <m.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay: index * 0.1 }}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
       className="group relative flex flex-col items-center"
       onClick={() => setSelectedProject(project)}
     >
       <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
         {/* Vinyl Record sliding out */}
         <m.div
-          variants={vinylVariants as any}
-          animate={variant}
-          whileHover={variant === 'idle' ? 'hover' : undefined}
+          initial={{ x: 0, rotate: 0 }}
+          whileHover={{ x: '55%', rotate: 360 }}
+          transition={{
+            type: 'spring',
+            stiffness: 90,
+            damping: 15,
+          }}
           className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl"
         >
           <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
@@ -175,7 +135,6 @@ export function ProjectsSection() {
                 key={project.id}
                 project={project}
                 index={index}
-                isInView={isInView}
                 setSelectedProject={setSelectedProject}
               />
             ))}
@@ -246,7 +205,7 @@ export function ProjectsSection() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto pr-2">
-                      <p className="text-base md:text-lg leading-relaxed text-zinc-600 line-clamp-4 md:line-clamp-none dark:text-zinc-300">
+                      <p className="text-base md:text-lg leading-relaxed text-zinc-650 line-clamp-4 md:line-clamp-none dark:text-zinc-350">
                         {selectedProject.description}
                       </p>
 

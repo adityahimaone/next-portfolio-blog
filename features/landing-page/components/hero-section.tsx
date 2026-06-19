@@ -255,52 +255,6 @@ export function HeroSection() {
           >
             New Release
           </motion.div>
-
-          {/* Minimalist White Outline Piano Keyboard */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: baseDelay + 1 }}
-            className="mt-12 flex justify-center border-t border-zinc-200/10 pt-8 w-full max-w-md"
-          >
-            <div className="relative flex rounded-lg border border-zinc-350 bg-zinc-950/20 p-2 dark:border-white/10 dark:bg-black/20">
-              {/* White Keys */}
-              {[...Array(7)].map((_, i) => (
-                <motion.button
-                  key={i}
-                  whileTap={{ scaleY: 0.95, backgroundColor: 'rgba(255,255,255,0.05)' }}
-                  className="w-8 h-24 border-r last:border-0 border-zinc-300/40 dark:border-white/10 bg-transparent hover:bg-zinc-200/10 transition-colors"
-                />
-              ))}
-              {/* Black Keys */}
-              {[0, 1, 3, 4, 5].map((idx) => (
-                <motion.button
-                  key={idx}
-                  whileTap={{ scaleY: 0.92 }}
-                  className="absolute w-5 h-14 bg-zinc-900 border border-zinc-300/20 dark:bg-zinc-100 dark:border-zinc-800"
-                  style={{ left: `${20 + idx * 32}px` }}
-                />
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Outline Cassette Tape decoration */}
-          <div className="absolute top-20 right-10 hidden xl:block opacity-20 dark:opacity-40 pointer-events-none select-none">
-            <motion.div
-              animate={{ y: [0, -10, 0], rotate: [0, 2, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-48 h-32 border-2 border-dashed border-zinc-800 dark:border-white rounded-xl flex flex-col justify-between p-3"
-            >
-              {/* Cassette Details */}
-              <div className="w-full h-8 border border-zinc-800 dark:border-white rounded-md flex justify-around items-center">
-                <div className="w-4 h-4 rounded-full border border-zinc-800 dark:border-white animate-spin [animation-duration:8s]" />
-                <div className="w-4 h-4 rounded-full border border-zinc-800 dark:border-white animate-spin [animation-duration:8s]" />
-              </div>
-              <div className="w-full text-center font-mono text-[9px] font-bold text-zinc-800 dark:text-white">
-                TAPE DECK // A-SIDE
-              </div>
-            </motion.div>
-          </div>
         </div>
       </motion.div>
     </section>

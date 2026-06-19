@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import {
   Briefcase,
@@ -16,8 +16,14 @@ import { EXPERIENCES } from '../constants'
 
 export function ExperienceSection() {
   const [selectedId, setSelectedId] = useState(EXPERIENCES[0].id)
+  const [activeSubIndex, setActiveSubIndex] = useState(0)
+
   const selectedJob =
     EXPERIENCES.find((e) => e.id === selectedId) || EXPERIENCES[0]
+
+  useEffect(() => {
+    setActiveSubIndex(0)
+  }, [selectedId])
 
   return (
     <>
@@ -229,31 +235,81 @@ export function ExperienceSection() {
                         {/* Description */}
                         <div className="prose prose-zinc dark:prose-invert max-w-none">
                           {selectedJob.isGroup ? (
-                            <div className="space-y-4">
-                              {selectedJob.items?.map((item, i) => (
-                                <div
-                                  key={i}
+                            <div className="flex h-full flex-col justify-between min-h-[220px]">
+                              <AnimatePresence mode="wait">
+                                <m.div
+                                  key={activeSubIndex}
+                                  initial={{ opacity: 0, x: 30 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  exit={{ opacity: 0, x: -30 }}
+                                  transition={{ duration: 0.2 }}
                                   className="relative flex w-full items-start gap-3"
                                 >
-                                  <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
-                                    <ChevronRight className="h-3.5 w-3.5" />
-                                  </div>
-                                  <div className="flex w-full flex-col">
-                                    <h4 className="mt-0 text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                                      {item.role}
-                                    </h4>
-                                    <div className="mb-2 flex w-full items-center justify-between text-xs text-zinc-800">
-                                      <span className="font-medium">
-                                        {item.company}
-                                      </span>
-                                      <span>{item.period}</span>
-                                    </div>
-                                    <p className="my-0! text-base leading-relaxed text-zinc-900 dark:text-zinc-200">
-                                      {item.description}
-                                    </p>
-                                  </div>
+                                  {selectedJob.items && selectedJob.items[activeSubIndex] && (
+                                    <>
+                                      <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full mt-1">
+                                        <ChevronRight className="h-3.5 w-3.5" />
+                                      </div>
+                                      <div className="flex w-full flex-col">
+                                        <h4 className="mt-0 text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                                          {selectedJob.items[activeSubIndex].role}
+                                        </h4>
+                                        <div className="mb-2 flex w-full items-center justify-between text-xs text-zinc-500">
+                                          <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                                            {selectedJob.items[activeSubIndex].company}
+                                          </span>
+                                          <span className="font-mono">
+                                            {selectedJob.items[activeSubIndex].period}
+                                          </span>
+                                        </div>
+                                        <p className="my-0! text-base leading-relaxed text-zinc-800 dark:text-zinc-200">
+                                          {selectedJob.items[activeSubIndex].description}
+                                        </p>
+                                      </div>
+                                    </>
+                                  )}
+                                </m.div>
+                              </AnimatePresence>
+
+                              {/* CD Player Skip controls */}
+                              <div className="mt-6 flex items-center justify-center gap-4 border-t border-zinc-200/50 pt-4 dark:border-zinc-800/40">
+                                <button
+                                  disabled={activeSubIndex === 0}
+                                  onClick={() => setActiveSubIndex((prev) => Math.max(0, prev - 1))}
+                                  className={cn(
+                                    "flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800",
+                                    "active:scale-95"
+                                  )}
+                                  title="Previous Course"
+                                >
+                                  &larr;
+                                </button>
+                                <div className="flex gap-1.5">
+                                  {selectedJob.items?.map((_, idx) => (
+                                    <button
+                                      key={idx}
+                                      onClick={() => setActiveSubIndex(idx)}
+                                      className={cn(
+                                        "h-2 w-2 rounded-full transition-all duration-300",
+                                        activeSubIndex === idx
+                                          ? "bg-primary w-4"
+                                          : "bg-zinc-300 dark:bg-zinc-700"
+                                      )}
+                                    />
+                                  ))}
                                 </div>
-                              ))}
+                                <button
+                                  disabled={selectedJob.items ? activeSubIndex === selectedJob.items.length - 1 : true}
+                                  onClick={() => setActiveSubIndex((prev) => Math.min((selectedJob.items?.length || 1) - 1, prev + 1))}
+                                  className={cn(
+                                    "flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400 dark:hover:bg-zinc-800",
+                                    "active:scale-95"
+                                  )}
+                                  title="Next Course"
+                                >
+                                  &rarr;
+                                </button>
+                              </div>
                             </div>
                           ) : (
                             <ul className="space-y-4">

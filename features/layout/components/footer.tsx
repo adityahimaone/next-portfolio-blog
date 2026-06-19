@@ -11,6 +11,10 @@ import {
   Play,
   Volume2,
   Radio,
+  SkipBack,
+  SkipForward,
+  RotateCcw,
+  SlidersHorizontal,
 } from 'lucide-react'
 import { Screw } from '@/components/screw'
 import { SOCIAL_LINKS, FOOTER_NAVIGATION, TECH_STACK } from '../constants'
@@ -18,157 +22,218 @@ import { SOCIAL_LINKS, FOOTER_NAVIGATION, TECH_STACK } from '../constants'
 export function Footer() {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
-  const [hoveredSocial, setHoveredSocial] = useState<string | null>(null)
+  const [isPlaying, setIsPlaying] = useState(true)
 
   const currentYear = new Date().getFullYear()
 
   return (
     <footer
       ref={ref}
-      className="relative overflow-hidden bg-zinc-50 py-16 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-900"
+      className="relative overflow-hidden bg-zinc-900 py-16 dark:bg-black border-t border-zinc-800"
     >
       <div className="container mx-auto px-4">
-        {/* Braun Audio Console Casing Panel */}
-        <div className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-200 p-8 shadow-2xl dark:bg-zinc-900 border border-zinc-350 dark:border-zinc-800">
-          {/* Metallic Texture Overlay */}
-          <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
+        {/* DAW DAP Controller Panel */}
+        <div className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-950 p-6 sm:p-8 shadow-2xl border border-zinc-800 flex flex-col gap-8">
           
+          {/* Subtle Grid and Pattern */}
+          <div className="absolute inset-0 rounded-3xl bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size-[20px_20px] pointer-events-none" />
+          <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
+
+          {/* Top Board Rails */}
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-4 font-mono text-[9px] text-zinc-500 tracking-[0.2em] uppercase">
+            <span>DAW SECTION : FOOTER</span>
+            <div className="flex gap-2">
+              <span className="text-zinc-600">•</span>
+              <span>STEREO OUT</span>
+              <span className="text-zinc-600">•</span>
+              <span className="text-green-500 animate-pulse font-bold">ONLINE</span>
+            </div>
+          </div>
+
           {/* Screws */}
-          <Screw className="absolute top-4 left-4" />
-          <Screw className="absolute top-4 right-4" />
-          <Screw className="absolute bottom-4 left-4" />
-          <Screw className="absolute right-4 bottom-4" />
+          <Screw className="absolute top-3 left-3 opacity-60" />
+          <Screw className="absolute top-3 right-3 opacity-60" />
+          <Screw className="absolute bottom-3 left-3 opacity-60" />
+          <Screw className="absolute right-3 bottom-3 opacity-60" />
 
-          {/* Inner Plate */}
-          <div className="relative rounded-2xl border border-zinc-300 bg-zinc-300/40 p-6 md:p-10 dark:border-zinc-800 dark:bg-zinc-950/40">
+          {/* Main Controls Deck */}
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-center">
             
-            {/* Grid layout */}
-            <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
-              
-              {/* Brand & Specifications */}
-              <div className="lg:col-span-5 flex flex-col gap-6">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-900 shadow-md dark:bg-zinc-800">
-                      <Radio className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-black tracking-widest text-zinc-800 dark:text-zinc-200 uppercase">
-                        ADITYAHIMAONE
-                      </h3>
-                      <p className="font-mono text-[10px] text-zinc-500 uppercase">
-                        Master Output System v2.6
-                      </p>
-                    </div>
-                  </div>
+            {/* Left: Track Information / Waveform */}
+            <div className="lg:col-span-4 flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded bg-zinc-900 border border-zinc-800 shadow-md">
+                  <Radio className={`h-5 w-5 ${isPlaying ? 'text-primary animate-pulse' : 'text-zinc-600'}`} />
                 </div>
-
-                <p className="text-sm font-medium leading-relaxed text-zinc-600 dark:text-zinc-400">
-                  Blending clean code and layout aesthetics to craft premium visual systems.
-                  Built using professional design principles.
-                </p>
-
-                {/* Status Indicator */}
-                <div className="inline-flex w-fit items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-4 py-2">
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75"></span>
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
-                  </span>
-                  <span className="font-mono text-[10px] font-bold text-green-600 dark:text-green-400 uppercase">
-                    SYS-OK // OPEN FOR PROJECTS
-                  </span>
+                <div className="min-w-0">
+                  <h3 className="truncate font-mono text-sm font-bold text-zinc-100 tracking-wider">
+                    ADITYAHIMAONE.EXE
+                  </h3>
+                  <p className="font-mono text-[9px] text-zinc-500 uppercase">
+                    Master Fader Out // 44.1 kHz 24-bit
+                  </p>
                 </div>
               </div>
 
-              {/* Input Sockets (Socials) */}
-              <div className="lg:col-span-4 flex flex-col justify-start">
-                <h4 className="mb-4 font-mono text-xs font-bold tracking-wider text-zinc-500 uppercase">
-                  I/O Sockets (Social Connections)
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  {SOCIAL_LINKS.map((link) => (
-                    <a
-                      key={link.name}
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex flex-col gap-1.5 rounded-xl border border-zinc-350 bg-zinc-300/30 p-3 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900/30 dark:hover:bg-zinc-800/80 transition-all"
-                      onMouseEnter={() => setHoveredSocial(link.name)}
-                      onMouseLeave={() => setHoveredSocial(null)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase">
-                          {link.name}
-                        </span>
-                        {/* Audio Socket Visual Indicator */}
-                        <div className="relative flex h-5 w-5 items-center justify-center rounded-full border border-zinc-400 bg-zinc-900/80 shadow-inner dark:border-zinc-700">
-                          <div className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${hoveredSocial === link.name ? 'bg-primary shadow-[0_0_8px_rgba(var(--primary),0.8)]' : 'bg-zinc-700'}`} />
-                        </div>
-                      </div>
-                      <span className="truncate text-xs font-semibold text-zinc-900 dark:text-zinc-200">
-                        {link.label}
-                      </span>
-                    </a>
-                  ))}
-                </div>
+              {/* Decorative Audio Waveform */}
+              <div className="h-10 flex items-end gap-[2px] bg-zinc-900/50 rounded border border-zinc-900 px-3 py-1.5 overflow-hidden">
+                {[...Array(32)].map((_, i) => {
+                  const heights = [20, 45, 30, 60, 25, 75, 40, 90, 35, 50, 70, 40, 20, 50, 85, 30, 40, 60, 20, 80, 50, 30, 70, 90, 40, 25, 60, 35, 55, 45, 30, 15]
+                  return (
+                    <motion.div
+                      key={i}
+                      className="flex-1 bg-zinc-700 rounded-t-[1px]"
+                      animate={isPlaying ? {
+                        height: [`${heights[i] * 0.3}%`, `${heights[i]}%`, `${heights[i] * 0.3}%`]
+                      } : { height: '10%' }}
+                      transition={{
+                        duration: 1.2 + (i % 3) * 0.2,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: i * 0.02
+                      }}
+                    />
+                  )
+                })}
               </div>
-
-              {/* Navigation & Audio Specs */}
-              <div className="lg:col-span-3 grid grid-cols-2 gap-6 lg:flex lg:flex-col lg:gap-6">
-                <div>
-                  <h4 className="mb-3 font-mono text-xs font-bold tracking-wider text-zinc-500 uppercase">
-                    Navigation
-                  </h4>
-                  <ul className="space-y-2">
-                    {FOOTER_NAVIGATION.map((item) => (
-                      <li key={item.name}>
-                        <a
-                          href={item.href}
-                          className="flex items-center gap-1.5 text-xs font-bold text-zinc-600 hover:text-primary dark:text-zinc-400 dark:hover:text-white transition-colors"
-                        >
-                          <Play className="h-2.5 w-2.5 shrink-0 text-zinc-400" />
-                          {item.name.toUpperCase()}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="mb-3 font-mono text-xs font-bold tracking-wider text-zinc-500 uppercase">
-                    Tech Specs
-                  </h4>
-                  <div className="flex flex-wrap gap-1.5">
-                    {TECH_STACK.map((tech) => (
-                      <span
-                        key={tech}
-                        className="rounded-md border border-zinc-350 bg-zinc-300/40 px-2 py-0.5 font-mono text-[9px] font-bold text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-300"
-                      >
-                        {tech.toUpperCase()}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
             </div>
 
-            {/* Bottom Status / Footer metadata */}
-            <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-zinc-300 pt-6 text-xs text-zinc-500 md:flex-row dark:border-zinc-800 dark:text-zinc-400 font-mono">
-              <div className="flex items-center gap-2">
-                <Volume2 className="h-3.5 w-3.5 text-zinc-400" />
-                <span>
-                  © {currentYear} ADITYAHIMAONE // DESIGNED IN INDONESIA
-                </span>
+            {/* Middle: DAP Tape Deck Transport Controls */}
+            <div className="lg:col-span-4 flex flex-col items-center gap-4">
+              {/* Transport Control Buttons */}
+              <div className="flex items-center gap-4 rounded-full bg-zinc-900 border border-zinc-800 p-2 shadow-inner">
+                <button
+                  onClick={() => setIsPlaying(false)}
+                  className="p-2 rounded-full text-zinc-400 hover:text-zinc-200 transition-colors hover:bg-zinc-800"
+                  title="Stop"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+                <button
+                  className="p-2 rounded-full text-zinc-400 hover:text-zinc-200 transition-colors hover:bg-zinc-800"
+                  title="Previous Track"
+                >
+                  <SkipBack className="h-4 w-4" />
+                </button>
+                
+                {/* Master Play Switch */}
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  className={`p-3.5 rounded-full shadow-lg border transition-all duration-300 ${
+                    isPlaying 
+                      ? 'bg-primary border-primary/20 text-white shadow-primary/30 scale-105' 
+                      : 'bg-zinc-800 border-zinc-700 text-zinc-400'
+                  }`}
+                  title={isPlaying ? 'Pause' : 'Play'}
+                >
+                  <Play className={`h-5 w-5 ${isPlaying ? 'fill-white' : ''}`} />
+                </button>
+
+                <button
+                  className="p-2 rounded-full text-zinc-400 hover:text-zinc-200 transition-colors hover:bg-zinc-800"
+                  title="Next Track"
+                >
+                  <SkipForward className="h-4 w-4" />
+                </button>
+                <div className="h-8 w-px bg-zinc-800" />
+                <div className="px-2 flex items-center gap-1.5">
+                  <Volume2 className="h-4 w-4 text-zinc-500" />
+                  <span className="font-mono text-[9px] text-zinc-400 font-bold">0dB</span>
+                </div>
               </div>
-              <div className="flex items-center gap-4 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase">
-                <span>IMPACT ENGINE 1.0</span>
-                <span>•</span>
-                <span>LINE OUT: 20Hz - 20kHz</span>
+
+              {/* Labeled Controls Grid */}
+              <div className="flex gap-4 font-mono text-[8px] text-zinc-500 font-bold tracking-widest uppercase">
+                <span className={isPlaying ? 'text-primary animate-pulse' : ''}>• L-PLAY</span>
+                <span>• R-SYNC</span>
+                <span>• AUTO-GAIN</span>
+              </div>
+            </div>
+
+            {/* Right: Sockets Mixer (Social Channels) */}
+            <div className="lg:col-span-4 flex flex-col gap-3">
+              <span className="font-mono text-[9px] font-bold text-zinc-500 tracking-wider uppercase">
+                Mixer Outputs (Connect)
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {SOCIAL_LINKS.map((link) => (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between rounded border border-zinc-800/80 bg-zinc-900/40 p-2.5 hover:bg-zinc-900 hover:border-zinc-700 transition-all font-mono"
+                  >
+                    <div className="min-w-0">
+                      <span className="block text-[8px] text-zinc-500 uppercase tracking-widest">
+                        {link.name}
+                      </span>
+                      <span className="block text-xs font-semibold text-zinc-300 truncate">
+                        {link.label}
+                      </span>
+                    </div>
+                    {/* Glowing LED Socket */}
+                    <div className="h-4 w-4 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0">
+                      <div className={`h-2 w-2 rounded-full transition-all duration-300 ${isPlaying ? 'bg-green-500/80 shadow-[0_0_6px_rgba(34,197,94,0.8)]' : 'bg-zinc-800'}`} />
+                    </div>
+                  </a>
+                ))}
               </div>
             </div>
 
           </div>
+
+          {/* Sub Navigation and Technical Info Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-zinc-800/80 pt-6">
+            
+            {/* Nav Items */}
+            <div className="flex flex-col gap-2">
+              <span className="font-mono text-[9px] font-bold text-zinc-500 uppercase tracking-wider">
+                Index Navigation
+              </span>
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                {FOOTER_NAVIGATION.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="text-xs font-bold text-zinc-400 hover:text-zinc-200 transition-colors"
+                  >
+                    {item.name.toUpperCase()}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Tech Stack */}
+            <div className="flex flex-col gap-2 md:col-span-2">
+              <span className="font-mono text-[9px] font-bold text-zinc-500 uppercase tracking-wider">
+                Engine Architecture Tech Stack
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {TECH_STACK.map((tech) => (
+                  <span
+                    key={tech}
+                    className="rounded bg-zinc-900 border border-zinc-800/50 px-2 py-0.5 font-mono text-[9px] font-bold text-zinc-400 uppercase tracking-tight"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Bottom Metatags Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between border-t border-zinc-800/50 pt-6 text-[10px] text-zinc-650 font-mono gap-4">
+            <span>
+              © {currentYear} ADITYAHIMAONE // ALL SYSTEMS OPERATIONAL
+            </span>
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span>STEREO CH. / HIGH-PASS FILTERS ON</span>
+            </div>
+          </div>
+
         </div>
       </div>
     </footer>

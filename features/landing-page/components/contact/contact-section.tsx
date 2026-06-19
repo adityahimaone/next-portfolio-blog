@@ -82,29 +82,44 @@ export function ContactSection() {
       })
 
       const delayBetweenPads = 35 // speed of wave sweep in ms
+      const sweepDuration = sortedPads.length * delayBetweenPads + 250 // total sweep time
 
-      sortedPads.forEach((pad, index) => {
-        const timeoutId = setTimeout(() => {
-          setSequentialLitPadIds((prev) => {
-            const next = new Set(prev)
-            next.add(pad.id)
-            return next
-          })
-
-          // Turn off glow after 250ms
-          const offTimeoutId = setTimeout(() => {
+      const triggerSingleSweep = (sweepIndex: number) => {
+        sortedPads.forEach((pad, index) => {
+          const timeoutId = setTimeout(() => {
             setSequentialLitPadIds((prev) => {
               const next = new Set(prev)
-              next.delete(pad.id)
+              next.add(pad.id)
               return next
             })
-          }, 250)
-          
-          activeTimeoutsRef.current.set(`sweep-off-${pad.id}`, offTimeoutId)
-        }, index * delayBetweenPads)
 
-        activeTimeoutsRef.current.set(`sweep-${pad.id}`, timeoutId)
-      })
+            // Turn off glow after 250ms
+            const offTimeoutId = setTimeout(() => {
+              setSequentialLitPadIds((prev) => {
+                const next = new Set(prev)
+                next.delete(pad.id)
+                return next
+              })
+            }, 250)
+            
+            activeTimeoutsRef.current.set(`sweep-off-${sweepIndex}-${pad.id}`, offTimeoutId)
+          }, index * delayBetweenPads)
+
+          activeTimeoutsRef.current.set(`sweep-${sweepIndex}-${pad.id}`, timeoutId)
+        })
+      }
+
+      // Initial delay of 800ms, then run 3 times spaced out by sweepDuration + pause
+      const initialDelay = 800
+      const repeatInterval = sweepDuration + 300 // pause between sweeps
+
+      for (let i = 0; i < 3; i++) {
+        const runTimeoutId = setTimeout(() => {
+          triggerSingleSweep(i)
+        }, initialDelay + i * repeatInterval)
+        
+        activeTimeoutsRef.current.set(`sweep-run-${i}`, runTimeoutId)
+      }
     }
   }, [isSectionInView, desktopGrid, mobileGrid])
 

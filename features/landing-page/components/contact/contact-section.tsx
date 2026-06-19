@@ -460,6 +460,17 @@ export function ContactSection() {
 
   // ─── Handle Pad Click ───────────────────────────────────────────
   const handlePadClick = useCallback(async (pad: any) => {
+    // Flash immediately
+    setActivePads((prev) => new Set(prev).add(pad.id))
+    const t = setTimeout(() => {
+      setActivePads((prev) => {
+        const n = new Set(prev)
+        n.delete(pad.id)
+        return n
+      })
+    }, 150)
+    activeTimeoutsRef.current.set(`click-${pad.id}`, t)
+
     // Toggle loop for all pads
     await togglePadLoop(pad)
 
@@ -529,7 +540,7 @@ export function ContactSection() {
 
   return (
     <>
-      <section id="contact" className="overflow-hidden py-24">
+      <section ref={sectionRef} id="contact" className="overflow-hidden py-24">
         <div className="container mx-auto px-4">
           <div className="mb-16 flex flex-col items-center text-center">
             <m.div

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { m, AnimatePresence, useInView } from 'motion/react'
 import Image from 'next/image'
 import {
@@ -21,6 +21,17 @@ export function ProjectsSection() {
   )
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
+  const [introFinished, setIntroFinished] = useState(false)
+
+  // Set introFinished to true after the staggered vinyl animation completes
+  useEffect(() => {
+    if (isInView) {
+      const timer = setTimeout(() => {
+        setIntroFinished(true)
+      }, 4500)
+      return () => clearTimeout(timer)
+    }
+  }, [isInView])
 
   return (
     <>
@@ -64,20 +75,30 @@ export function ProjectsSection() {
                   <m.div
                     initial={{ x: 0, rotate: 0 }}
                     animate={
-                      isInView
-                        ? {
-                            x: ['0%', '45%', '45%', '0%'],
-                            rotate: [0, 180, 180, 0],
-                          }
-                        : { x: '0%', rotate: 0 }
+                      introFinished
+                        ? { x: '0%', rotate: 0 }
+                        : isInView
+                          ? {
+                              x: ['0%', '45%', '45%', '0%'],
+                              rotate: [0, 180, 180, 0],
+                            }
+                          : { x: '0%', rotate: 0 }
                     }
                     whileHover={{ x: '55%', rotate: 360 }}
-                    transition={{
-                      duration: 2.5,
-                      times: [0, 0.3, 0.7, 1],
-                      ease: 'easeInOut',
-                      delay: isInView ? 0.3 + index * 0.25 : 0,
-                    }}
+                    transition={
+                      introFinished
+                        ? {
+                            type: 'spring',
+                            stiffness: 90,
+                            damping: 15,
+                          }
+                        : {
+                            duration: 2.5,
+                            times: [0, 0.3, 0.7, 1],
+                            ease: 'easeInOut',
+                            delay: isInView ? 0.3 + index * 0.25 : 0,
+                          }
+                    }
                     className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl"
                   >
                     <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />

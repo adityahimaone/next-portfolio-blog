@@ -8,16 +8,15 @@ import {
   Linkedin,
   Music,
   Mail,
-  ArrowUpRight,
-  Disc3,
   Play,
   Volume2,
   Radio,
 } from 'lucide-react'
+import { Screw } from '@/components/screw'
 import { SOCIAL_LINKS, FOOTER_NAVIGATION, TECH_STACK } from '../constants'
 
 export function Footer() {
-  const ref = useRef(null)
+  const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
   const [hoveredSocial, setHoveredSocial] = useState<string | null>(null)
 
@@ -26,269 +25,151 @@ export function Footer() {
   return (
     <footer
       ref={ref}
-      className="relative overflow-hidden border-t border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
+      className="relative overflow-hidden bg-zinc-50 py-16 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-900"
     >
-      {/* Animated Background Pattern */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.02]">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[40px_40px]" />
-      </div>
+      <div className="container mx-auto px-4">
+        {/* Braun Audio Console Casing Panel */}
+        <div className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-200 p-8 shadow-2xl dark:bg-zinc-900 border border-zinc-350 dark:border-zinc-800">
+          {/* Metallic Texture Overlay */}
+          <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
+          
+          {/* Screws */}
+          <Screw className="absolute top-4 left-4" />
+          <Screw className="absolute top-4 right-4" />
+          <Screw className="absolute bottom-4 left-4" />
+          <Screw className="absolute right-4 bottom-4" />
 
-      {/* Vinyl Record Decoration */}
-      <div className="pointer-events-none absolute -top-32 right-0 opacity-5">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-        >
-          <Disc3 className="h-64 w-64 text-zinc-900 dark:text-white" />
-        </motion.div>
-      </div>
-
-      <div className="relative container mx-auto px-4 pt-24 pb-8">
-        {/* Main Content Grid */}
-        <div className="mb-16 grid grid-cols-1 gap-12 lg:grid-cols-12">
-          {/* Brand Section - Takes up more space */}
-          <div className="flex flex-col gap-6 lg:col-span-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.1 }}
-            >
-              <Link
-                href="/"
-                className="group inline-flex items-center gap-3"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              >
-                <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900 to-zinc-700 shadow-lg transition-transform group-hover:scale-105 dark:from-white dark:to-zinc-300">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: 'linear',
-                    }}
-                  >
-                    <Radio className="h-6 w-6 text-white dark:text-zinc-900" />
-                  </motion.div>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xl font-black tracking-tighter text-zinc-900 dark:text-white">
-                    adityahimaone
-                  </span>
-                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                    Frontend Developer
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.2 }}
-              className="max-w-md text-sm leading-relaxed text-zinc-600 dark:text-zinc-400"
-            >
-              Mixing code and creativity to produce{' '}
-              <span className="font-semibold text-zinc-900 dark:text-white">
-                pixel-perfect interfaces
-              </span>{' '}
-              with seamless user experiences. Always exploring the intersection
-              of design, engineering, and innovation.
-            </motion.p>
-
-            {/* Status Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.3 }}
-              className="inline-flex w-fit items-center gap-2 rounded-full border border-green-200 bg-green-50 px-4 py-2 dark:border-green-900 dark:bg-green-950"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
-              </span>
-              <span className="text-xs font-semibold text-green-700 dark:text-green-400">
-                Available for Projects
-              </span>
-            </motion.div>
-          </div>
-
-          {/* Social Links - Vinyl Style */}
-          <div className="lg:col-span-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.2 }}
-            >
-              <h3 className="mb-6 text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-white">
-                Connect
-              </h3>
-              <div className="flex flex-wrap gap-x-5 gap-y-3">
-                {SOCIAL_LINKS.map((link, idx) => (
-                  <motion.a
-                    key={link.name}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Visit my ${link.name} profile`}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                    transition={{ delay: 0.3 + idx * 0.05 }}
-                    onMouseEnter={() => setHoveredSocial(link.name)}
-                    onMouseLeave={() => setHoveredSocial(null)}
-                    className="group perspective-1000 relative"
-                  >
-                    <div className="relative h-14 w-14 cursor-pointer">
-                      {/* Vinyl Record - appears on hover */}
-                      <motion.div
-                        initial={{ x: 0, rotate: 0, opacity: 0 }}
-                        animate={{
-                          x: hoveredSocial === link.name ? '60%' : 0,
-                          rotate: hoveredSocial === link.name ? 360 : 0,
-                          opacity: hoveredSocial === link.name ? 1 : 0,
-                        }}
-                        transition={{ duration: 0.5, ease: 'easeOut' }}
-                        className="absolute inset-0 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl"
-                      >
-                        <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
-                        {/* Grooves */}
-                        <div className="absolute inset-[20%] rounded-full border border-zinc-800/40" />
-                        <div className="absolute inset-[30%] rounded-full border border-zinc-800/40" />
-                        {/* Center */}
-                        <div
-                          className={`flex h-[40%] w-[40%] items-center justify-center rounded-full bg-linear-to-br text-white shadow-inner ${link.color}`}
-                        >
-                          <div className="h-3 w-3 rounded-full bg-white opacity-20" />
-                        </div>
-                      </motion.div>
-
-                      {/* Icon Card */}
-                      <motion.div
-                        initial={{ x: 0 }}
-                        animate={{
-                          x: hoveredSocial === link.name ? '-10%' : 0,
-                        }}
-                        transition={{ duration: 0.5, ease: 'easeOut' }}
-                        className={`relative z-10 flex h-14 w-14 items-center justify-center rounded-xl bg-linear-to-br text-white shadow-lg transition-all hover:shadow-xl ${link.color}`}
-                      >
-                        {link.name.toLowerCase().includes('git') ? (
-                          <Github className="h-6 w-6" />
-                        ) : link.name.toLowerCase().includes('link') ? (
-                          <Linkedin className="h-6 w-6" />
-                        ) : link.name.toLowerCase().includes('spot') ? (
-                          <Music className="h-6 w-6" />
-                        ) : link.name.toLowerCase().includes('mail') ||
-                          link.name.toLowerCase().includes('email') ? (
-                          <Mail className="h-6 w-6" />
-                        ) : (
-                          <span className="text-xs font-bold">
-                            {link.name.substring(0, 2).toUpperCase()}
-                          </span>
-                        )}
-                      </motion.div>
+          {/* Inner Plate */}
+          <div className="relative rounded-2xl border border-zinc-300 bg-zinc-300/40 p-6 md:p-10 dark:border-zinc-800 dark:bg-zinc-950/40">
+            
+            {/* Grid layout */}
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+              
+              {/* Brand & Specifications */}
+              <div className="lg:col-span-5 flex flex-col gap-6">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-900 shadow-md dark:bg-zinc-800">
+                      <Radio className="h-5 w-5 text-primary" />
                     </div>
-                  </motion.a>
-                ))}
-              </div>
-            </motion.div>
-          </div>
+                    <div>
+                      <h3 className="text-lg font-black tracking-widest text-zinc-800 dark:text-zinc-200 uppercase">
+                        ADITYAHIMAONE
+                      </h3>
+                      <p className="font-mono text-[10px] text-zinc-500 uppercase">
+                        Master Output System v2.6
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-          {/* Navigation Links */}
-          <div className="lg:col-span-2">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.3 }}
-            >
-              <h3 className="mb-6 text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-white">
-                Navigation
-              </h3>
-              <ul className="space-y-3">
-                {FOOTER_NAVIGATION.map((item, idx) => (
-                  <motion.li
-                    key={item.name}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={isInView ? { opacity: 1, x: 0 } : {}}
-                    transition={{ delay: 0.4 + idx * 0.05 }}
-                  >
-                    <Link
-                      href={item.href}
-                      className="group flex items-center gap-2 text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+                <p className="text-sm font-medium leading-relaxed text-zinc-600 dark:text-zinc-400">
+                  Blending clean code and layout aesthetics to craft premium visual systems.
+                  Built using professional design principles.
+                </p>
+
+                {/* Status Indicator */}
+                <div className="inline-flex w-fit items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-4 py-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+                  </span>
+                  <span className="font-mono text-[10px] font-bold text-green-600 dark:text-green-400 uppercase">
+                    SYS-OK // OPEN FOR PROJECTS
+                  </span>
+                </div>
+              </div>
+
+              {/* Input Sockets (Socials) */}
+              <div className="lg:col-span-4 flex flex-col justify-start">
+                <h4 className="mb-4 font-mono text-xs font-bold tracking-wider text-zinc-500 uppercase">
+                  I/O Sockets (Social Connections)
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  {SOCIAL_LINKS.map((link) => (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex flex-col gap-1.5 rounded-xl border border-zinc-350 bg-zinc-300/30 p-3 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900/30 dark:hover:bg-zinc-800/80 transition-all"
+                      onMouseEnter={() => setHoveredSocial(link.name)}
+                      onMouseLeave={() => setHoveredSocial(null)}
                     >
-                      <span className="h-px w-0 bg-zinc-900 transition-all group-hover:w-4 dark:bg-white" />
-                      {item.name}
-                    </Link>
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.div>
-          </div>
-
-          {/* Tech Stack */}
-          <div className="lg:col-span-2">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.4 }}
-            >
-              <h3 className="mb-6 text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-white">
-                Tech Stack
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {TECH_STACK.map((tech, idx) => (
-                  <motion.span
-                    key={tech}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                    transition={{ delay: 0.5 + idx * 0.05 }}
-                    className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-zinc-300 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-800"
-                  >
-                    {tech}
-                  </motion.span>
-                ))}
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase">
+                          {link.name}
+                        </span>
+                        {/* Audio Socket Visual Indicator */}
+                        <div className="relative flex h-5 w-5 items-center justify-center rounded-full border border-zinc-400 bg-zinc-900/80 shadow-inner dark:border-zinc-700">
+                          <div className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${hoveredSocial === link.name ? 'bg-primary shadow-[0_0_8px_rgba(var(--primary),0.8)]' : 'bg-zinc-700'}`} />
+                        </div>
+                      </div>
+                      <span className="truncate text-xs font-semibold text-zinc-900 dark:text-zinc-200">
+                        {link.label}
+                      </span>
+                    </a>
+                  ))}
+                </div>
               </div>
-            </motion.div>
+
+              {/* Navigation & Audio Specs */}
+              <div className="lg:col-span-3 grid grid-cols-2 gap-6 lg:flex lg:flex-col lg:gap-6">
+                <div>
+                  <h4 className="mb-3 font-mono text-xs font-bold tracking-wider text-zinc-500 uppercase">
+                    Navigation
+                  </h4>
+                  <ul className="space-y-2">
+                    {FOOTER_NAVIGATION.map((item) => (
+                      <li key={item.name}>
+                        <a
+                          href={item.href}
+                          className="flex items-center gap-1.5 text-xs font-bold text-zinc-600 hover:text-primary dark:text-zinc-400 dark:hover:text-white transition-colors"
+                        >
+                          <Play className="h-2.5 w-2.5 shrink-0 text-zinc-400" />
+                          {item.name.toUpperCase()}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="mb-3 font-mono text-xs font-bold tracking-wider text-zinc-500 uppercase">
+                    Tech Specs
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {TECH_STACK.map((tech) => (
+                      <span
+                        key={tech}
+                        className="rounded-md border border-zinc-350 bg-zinc-300/40 px-2 py-0.5 font-mono text-[9px] font-bold text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-300"
+                      >
+                        {tech.toUpperCase()}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Bottom Status / Footer metadata */}
+            <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-zinc-300 pt-6 text-xs text-zinc-500 md:flex-row dark:border-zinc-800 dark:text-zinc-400 font-mono">
+              <div className="flex items-center gap-2">
+                <Volume2 className="h-3.5 w-3.5 text-zinc-400" />
+                <span>
+                  © {currentYear} ADITYAHIMAONE // DESIGNED IN INDONESIA
+                </span>
+              </div>
+              <div className="flex items-center gap-4 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase">
+                <span>IMPACT ENGINE 1.0</span>
+                <span>•</span>
+                <span>LINE OUT: 20Hz - 20kHz</span>
+              </div>
+            </div>
+
           </div>
         </div>
-
-        {/* Bottom Bar */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.6 }}
-          className="flex flex-col items-center justify-between gap-4 border-t border-zinc-200 pt-8 text-xs text-zinc-500 md:flex-row dark:border-zinc-800 dark:text-zinc-400"
-        >
-          <div className="flex items-center gap-2">
-            <Volume2 className="h-3 w-3" />
-            <span>
-              © {currentYear} adityahimaone. All rights reserved. Designed &
-              Developed with passion.
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Link
-              href="#"
-              className="transition-colors hover:text-zinc-900 dark:hover:text-white"
-            >
-              Privacy
-            </Link>
-            <span>•</span>
-            <Link
-              href="#"
-              className="transition-colors hover:text-zinc-900 dark:hover:text-white"
-            >
-              Terms
-            </Link>
-            <span>•</span>
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="flex items-center gap-1 transition-colors hover:text-zinc-900 dark:hover:text-white"
-            >
-              <Play className="h-3 w-3" />
-              Back to Top
-            </button>
-          </div>
-        </motion.div>
       </div>
     </footer>
   )

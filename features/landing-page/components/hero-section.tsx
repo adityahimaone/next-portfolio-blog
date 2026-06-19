@@ -52,6 +52,34 @@ export function HeroSection() {
         <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay dark:opacity-20" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%)] dark:bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
 
+        {/* Ambient VU LED Wall Background */}
+        <div className="absolute inset-0 z-0 flex items-end justify-around opacity-[0.03] dark:opacity-[0.06] px-4 sm:px-10 pb-20 pointer-events-none select-none">
+          {[...Array(16)].map((_, colIdx) => (
+            <div key={colIdx} className="flex flex-col gap-0.5 w-3 sm:w-6 h-[80%] justify-end">
+              {[...Array(20)].map((_, ledIdx) => {
+                const isTop = ledIdx >= 16
+                const isMid = ledIdx >= 10 && ledIdx < 16
+                const color = isTop ? 'bg-red-500/80' : isMid ? 'bg-amber-500/80' : 'bg-green-500/80'
+                return (
+                  <motion.div
+                    key={ledIdx}
+                    className={`w-full h-1 sm:h-2 rounded-[1px] ${color}`}
+                    animate={{
+                      opacity: [0.1, 0.9, 0.1]
+                    }}
+                    transition={{
+                      duration: 0.8 + Math.random() * 1.2,
+                      repeat: Infinity,
+                      delay: colIdx * 0.1 + (20 - ledIdx) * 0.04,
+                      ease: 'easeInOut'
+                    }}
+                  />
+                )
+              })}
+            </div>
+          ))}
+        </div>
+
         {/* Dynamic Audio Visualizer Background (Extra Tall) */}
         {false && isPlaying && (
           <div className="absolute inset-x-0 bottom-0 z-10 h-[750px] opacity-70 blur-sm dark:opacity-50">

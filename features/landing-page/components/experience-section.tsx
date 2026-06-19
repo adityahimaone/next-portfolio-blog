@@ -47,88 +47,90 @@ export function ExperienceSection() {
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
             {/* Left Column: Tracklist / Selector */}
             <div className="lg:col-span-5">
-              <div className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-                <div className="mb-2 px-4 py-2 text-xs font-bold tracking-wider text-zinc-600 uppercase dark:text-zinc-400">
+              <div className="flex h-[500px] flex-col rounded-3xl border border-zinc-200 bg-white p-4 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950/50">
+                <div className="mb-4 px-2 text-xs font-bold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
                   Select a Track
                 </div>
-                {EXPERIENCES.map((exp) => (
-                  <button
-                    key={exp.id}
-                    onClick={() => setSelectedId(exp.id)}
-                    className={cn(
-                      'group relative flex w-full items-center gap-4 rounded-xl p-4 text-left transition-all',
-                      selectedId === exp.id
-                        ? 'bg-zinc-100 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-800 dark:ring-zinc-700'
-                        : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50',
-                    )}
-                  >
-                    {/* Active Indicator */}
-                    {selectedId === exp.id && (
-                      <m.div
-                        layoutId="active-indicator"
-                        className="bg-primary absolute top-1/2 left-0 h-12 w-1 -translate-y-1/2 rounded-r-full"
-                      />
-                    )}
-
-                    {/* Icon / Number */}
-                    <div
+                <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-850 scrollbar-track-transparent">
+                  {EXPERIENCES.map((exp) => (
+                    <button
+                      key={exp.id}
+                      onClick={() => setSelectedId(exp.id)}
                       className={cn(
-                        'flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-colors',
+                        'group relative flex w-full items-center gap-4 rounded-2xl p-4 text-left transition-all',
                         selectedId === exp.id
-                          ? 'text-primary border-zinc-200 bg-white shadow-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-white'
-                          : 'border-transparent bg-zinc-50 text-zinc-600 group-hover:border-zinc-200 group-hover:bg-white group-hover:text-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400 dark:group-hover:bg-zinc-800 dark:group-hover:text-zinc-300',
+                          ? 'bg-zinc-100 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-800 dark:ring-zinc-700'
+                          : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50',
                       )}
                     >
-                      {selectedId === exp.id ? (
-                        <Music className="h-5 w-5 animate-pulse" />
-                      ) : (
-                        <span className="font-mono text-sm font-bold">
-                          0{exp.id}
-                        </span>
+                      {/* Active Indicator */}
+                      {selectedId === exp.id && (
+                        <m.div
+                          layoutId="active-indicator"
+                          className="bg-primary absolute top-1/2 left-0 h-12 w-1 -translate-y-1/2 rounded-r-full"
+                        />
                       )}
-                    </div>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-0.5 flex items-center justify-between gap-2">
-                        <h3
-                          className={cn(
-                            'truncate text-sm font-bold transition-colors',
-                            selectedId === exp.id
-                              ? 'text-zinc-900 dark:text-zinc-100'
-                              : 'text-zinc-700 dark:text-zinc-300',
-                          )}
-                        >
-                          {exp.role}
-                        </h3>
-                        <span
-                          className={cn(
-                            'hidden rounded-full border px-1.5 py-0.5 text-[10px] font-medium sm:inline-block',
-                            selectedId === exp.id
-                              ? 'border-zinc-200 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400'
-                              : 'border-transparent bg-transparent text-zinc-500',
-                          )}
-                        >
-                          {exp.type}
-                        </span>
+                      {/* Icon / Number */}
+                      <div
+                        className={cn(
+                          'flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-colors',
+                          selectedId === exp.id
+                            ? 'text-primary border-zinc-200 bg-white shadow-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-white'
+                            : 'border-transparent bg-zinc-50 text-zinc-600 group-hover:border-zinc-200 group-hover:bg-white group-hover:text-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400 dark:group-hover:bg-zinc-800 dark:group-hover:text-zinc-300',
+                        )}
+                      >
+                        {selectedId === exp.id ? (
+                          <Music className="h-5 w-5 animate-pulse" />
+                        ) : (
+                          <span className="font-mono text-sm font-bold">
+                            0{exp.id}
+                          </span>
+                        )}
                       </div>
 
-                      <p className="mb-2 truncate text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                        {exp.company}
-                      </p>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-0.5 flex items-center justify-between gap-2">
+                          <h3
+                            className={cn(
+                              'truncate text-sm font-bold transition-colors',
+                              selectedId === exp.id
+                                ? 'text-zinc-900 dark:text-zinc-100'
+                                : 'text-zinc-700 dark:text-zinc-300',
+                            )}
+                          >
+                            {exp.role}
+                          </h3>
+                          <span
+                            className={cn(
+                              'hidden rounded-full border px-1.5 py-0.5 text-[10px] font-medium sm:inline-block',
+                              selectedId === exp.id
+                                ? 'border-zinc-200 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400'
+                                : 'border-transparent bg-transparent text-zinc-500',
+                            )}
+                          >
+                            {exp.type}
+                          </span>
+                        </div>
 
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-zinc-600 dark:text-zinc-400">
-                        <span className="flex items-center gap-1 truncate">
-                          <Calendar className="h-3 w-3 shrink-0" />
-                          {exp.period}
-                        </span>
-                        <span className="flex items-center gap-1 truncate">
-                          <MapPin className="h-3 w-3 shrink-0" />
-                          {exp.location}
-                        </span>
+                        <p className="mb-2 truncate text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                          {exp.company}
+                        </p>
+
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-zinc-600 dark:text-zinc-400">
+                          <span className="flex items-center gap-1 truncate">
+                            <Calendar className="h-3 w-3 shrink-0" />
+                            {exp.period}
+                          </span>
+                          <span className="flex items-center gap-1 truncate">
+                            <MapPin className="h-3 w-3 shrink-0" />
+                            {exp.location}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

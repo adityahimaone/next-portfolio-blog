@@ -64,230 +64,144 @@ export function Header() {
     <>
       <header
         className={cn(
-          'fixed top-0 right-0 left-0 z-50 flex items-center justify-between border-b-[3px] px-6 shadow-xl transition-all duration-300 md:px-10',
+          'fixed top-0 right-0 left-0 z-50 flex items-center justify-between border-b px-6 transition-all duration-300 md:px-10',
           isScrolled
-            ? 'border-primary/50 h-14 bg-white/80 backdrop-blur-md md:h-16 dark:bg-zinc-900/80'
-            : 'border-primary dark:border-primary/50 h-16 bg-linear-to-b from-zinc-100 to-zinc-200 md:h-[84px] dark:from-zinc-900 dark:to-zinc-950',
+            ? 'h-14 bg-[#f4f4f0]/95 border-[#d4d4d0] shadow-sm backdrop-blur-md dark:bg-[#121212]/95 dark:border-[#27272a]'
+            : 'h-16 bg-[#f5f5f3] border-[#e4e4e0] dark:bg-[#161616] dark:border-[#202020]',
         )}
       >
-        {/* Left: Power Switch (Theme Toggle) */}
-        <div className="flex items-start gap-4 md:gap-6">
+        {/* Left: Classic Braun Plunger Power Switch (Theme Toggle) */}
+        <div className="flex items-center gap-4">
           <div className="flex flex-col items-center gap-1">
             <button
               onClick={toggleTheme}
-              className="relative h-8 w-14 cursor-pointer rounded-md bg-zinc-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] transition-colors dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800"
+              className={cn(
+                'relative h-7 w-7 rounded-full transition-all duration-200 border cursor-pointer',
+                mounted && theme === 'dark'
+                  ? 'bg-[#f05523] border-[#c03d15] shadow-[inset_0_2px_4px_rgba(0,0,0,0.4),0_1px_1px_rgba(255,255,255,0.1)]'
+                  : 'bg-[#d8d8d0] border-[#b8b8b0] shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.5)] active:translate-y-[1px] active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]'
+              )}
               aria-label="Toggle Theme"
             >
-              <div className="absolute inset-0 flex items-center justify-between px-2">
-                <Sun size={12} className={cn("transition-opacity duration-300", mounted && theme === 'dark' ? 'opacity-30 text-zinc-600' : 'opacity-100 text-[#273281]')} />
-                <Moon size={12} className={cn("transition-opacity duration-300", mounted && theme === 'dark' ? 'opacity-100 text-[#f8fafc]' : 'opacity-30 text-zinc-600')} />
-              </div>
-              <motion.div
-                className="absolute top-1 bottom-1 w-6 bg-primary rounded shadow-lg flex flex-col items-center justify-center gap-1 border border-white/10 dark:bg-[#3a4699]"
-                initial={false}
-                animate={{
-                  x: mounted && theme === 'dark' ? 28 : 2,
-                }}
-                transition={{ type: 'spring', stiffness: 450, damping: 30 }}
-              >
-                {/* Grip lines for mixer feel */}
-                <div className="h-0.5 w-3 bg-white/30 rounded-full" />
-                <div className="h-0.5 w-3 bg-white/30 rounded-full" />
-                <div className="h-0.5 w-3 bg-white/30 rounded-full" />
-              </motion.div>
+              <div className="absolute inset-1.5 rounded-full bg-black/5 dark:bg-white/10" />
             </button>
-            <span className="text-[8px] font-bold tracking-widest text-zinc-600 md:text-[10px] dark:text-zinc-400">
-              POWER
+            <span className="font-mono text-[7px] font-bold tracking-wider text-zinc-500 uppercase">
+              power
             </span>
           </div>
-          <div className="relative mt-2 h-4 w-4 md:h-5 md:w-5">
+          
+          {/* Signal Indicator Light */}
+          <div className="flex flex-col items-center gap-1">
             <div
               className={cn(
-                'absolute inset-0 rounded-full transition-all duration-700',
+                'h-2.5 w-2.5 rounded-full border transition-all duration-500',
                 mounted && theme === 'dark'
-                  ? 'animate-pulse bg-red-600 shadow-[0_0_12px_rgba(239,68,68,0.9)]'
-                  : 'bg-zinc-400 shadow-inner',
+                  ? 'bg-[#39ff14] border-[#22cc00] shadow-[0_0_8px_rgba(57,255,20,0.8)]'
+                  : 'bg-[#4caf50] border-[#388e3c] shadow-[0_0_6px_rgba(76,175,80,0.5)]',
               )}
             />
-            <div className="absolute top-1 left-1 h-1 w-1 rounded-full bg-white/50 md:top-1.5 md:left-1.5 md:h-1.5 md:w-1.5" />
+            <span className="font-mono text-[7px] font-bold tracking-wider text-zinc-500 uppercase">
+              status
+            </span>
           </div>
         </div>
 
-        {/* Center: Navigation (Desktop) */}
-        <nav className="hidden items-center gap-4 lg:flex xl:gap-8">
-          {/* Section / Scroll Links as Knobs */}
-          {scrollLinks.length > 0 && (
-            <div className="flex items-center gap-4 xl:gap-8">
-              {scrollLinks.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="group flex flex-col items-center gap-1.5"
-                  onMouseEnter={() => setActiveKnob(item.name)}
-                  onMouseLeave={() => setActiveKnob(null)}
-                >
-                  <div
-                    className={cn(
-                      'group-hover:border-primary relative transform cursor-pointer rounded-full border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all group-hover:rotate-45 dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
-                      isScrolled ? 'h-8 w-8' : 'h-10 w-10',
-                    )}
-                  >
-                    <div className="absolute top-1 left-1/2 h-3 w-0.5 -translate-x-1/2 bg-zinc-400 dark:bg-zinc-500" />
-                    {/* Indicator Dot */}
-                    <div className="bg-primary absolute top-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
-                  </div>
-                  <span
-                    className={cn(
-                      'text-[10px] font-bold tracking-widest transition-colors',
-                      activeKnob === item.name
-                        ? 'text-primary'
-                        : 'text-zinc-600 dark:text-zinc-400',
-                    )}
-                  >
-                    {item.name}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
+        {/* Center: Navigation (Desktop) - Inspired by Braun Selector Keys */}
+        <nav className="hidden items-center gap-1 border border-[#d4d4d0] bg-[#e8e8e4] p-0.5 rounded dark:border-[#27272a] dark:bg-[#1a1a1a] lg:flex">
+          {/* Section / Scroll Links */}
+          {scrollLinks.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                'relative px-4 py-1.5 text-[11px] font-mono tracking-tight font-medium uppercase border-r border-[#d4d4d0]/60 last:border-r-0 transition-all select-none',
+                activeKnob === item.name || pathname === item.href
+                  ? 'bg-[#f4f4f0] text-zinc-900 shadow-inner dark:bg-[#2a2a2a] dark:text-white'
+                  : 'text-zinc-600 hover:bg-[#f0f0ec] dark:text-zinc-400 dark:hover:bg-[#202020]'
+              )}
+              onMouseEnter={() => setActiveKnob(item.name)}
+              onMouseLeave={() => setActiveKnob(null)}
+            >
+              <div className="flex items-center gap-2">
+                <span>{item.name.toLowerCase()}</span>
+                {/* Micro indicator dot */}
+                {(activeKnob === item.name || pathname === item.href) && (
+                  <div className="h-1.5 w-1.5 rounded-full bg-[#f05523]" />
+                )}
+              </div>
+            </Link>
+          ))}
 
-          {/* Page Links as Push Buttons (Grouped) */}
+          {/* Page Links (Grouped Selector Keys) */}
           {pageLinks.length > 0 && (
-            <div className="flex items-center gap-4 border-l-2 border-zinc-300 pl-4 xl:gap-6 xl:pl-8 dark:border-zinc-700">
-              {pageLinks.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="group flex flex-col items-center gap-1.5"
-                  onMouseEnter={() => setActiveKnob(item.name)}
-                  onMouseLeave={() => setActiveKnob(null)}
-                >
-                  <div
+            <div className="flex items-center border-l-2 border-[#d4d4d0] dark:border-[#2c2c2c]">
+              {pageLinks.map((item) => {
+                const isActive = (pathname.startsWith(item.href) && item.href !== '/') || pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
                     className={cn(
-                      'relative flex transform cursor-pointer flex-col items-center justify-end rounded-md border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all group-hover:-translate-y-0.5 group-active:translate-y-1 group-active:shadow-inner dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
-                      isScrolled ? 'h-8 w-8 pb-1' : 'h-10 w-10 pb-1.5',
+                      'relative px-4 py-1.5 text-[11px] font-mono tracking-tight font-medium uppercase border-r border-[#d4d4d0]/60 last:border-r-0 transition-all select-none',
+                      isActive
+                        ? 'bg-[#f4f4f0] text-zinc-900 shadow-inner dark:bg-[#2a2a2a] dark:text-white'
+                        : 'text-zinc-600 hover:bg-[#f0f0ec] dark:text-zinc-400 dark:hover:bg-[#202020]'
                     )}
+                    onMouseEnter={() => setActiveKnob(item.name)}
+                    onMouseLeave={() => setActiveKnob(null)}
                   >
-                    {/* LED indicating 'page link' */}
-                    <div
-                      className={cn(
-                        'h-1.5 w-5 rounded-full transition-colors',
-                        (pathname.startsWith(item.href) && item.href !== '/') ||
-                          pathname === item.href
-                          ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'
-                          : 'bg-red-800/40 group-hover:bg-red-600/60',
+                    <div className="flex items-center gap-2">
+                      <span>{item.name.toLowerCase()}</span>
+                      {isActive && (
+                        <div className="h-1.5 w-1.5 rounded-full bg-[#f05523]" />
                       )}
-                    />
-                  </div>
-                  <span
-                    className={cn(
-                      'text-[10px] font-bold tracking-widest transition-colors',
-                      activeKnob === item.name ||
-                        (pathname.startsWith(item.href) && item.href !== '/') ||
-                        pathname === item.href
-                        ? 'text-primary'
-                        : 'text-zinc-600 dark:text-zinc-400',
-                    )}
-                  >
-                    {item.name}
-                  </span>
-                </Link>
-              ))}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </nav>
 
-        {/* Mobile Nav Toggle */}
+        {/* Mobile Nav Toggle - Simplified button */}
         <div className="flex flex-col items-center gap-1 lg:hidden">
           <button
             ref={toggleButtonRef}
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
-              'relative transform cursor-pointer rounded-full border-2 border-zinc-300 bg-linear-to-b from-zinc-100 to-zinc-300 shadow-lg transition-all dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900',
-              isScrolled ? 'h-9 w-9' : 'h-11 w-11',
-              isOpen ? 'border-primary rotate-135' : 'rotate-0',
+              'relative flex h-8 w-8 items-center justify-center rounded border border-[#d4d4d0] bg-[#e8e8e4] transition-all active:scale-95 dark:border-[#27272a] dark:bg-[#1a1a1a]',
+              isOpen && 'bg-[#f4f4f0] shadow-inner dark:bg-[#2a2a2a]'
             )}
             aria-label="Toggle Menu"
           >
-            <div className="absolute top-1 left-1/2 h-3 w-0.5 -translate-x-1/2 bg-zinc-400 dark:bg-zinc-500" />
-            <div
-              className={cn(
-                'bg-primary absolute top-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full transition-opacity',
-                isOpen ? 'opacity-100' : 'opacity-0',
-              )}
-            />
+            <div className="flex flex-col gap-1">
+              <span className={cn('h-0.5 w-4 bg-zinc-600 transition-all dark:bg-zinc-300', isOpen && 'rotate-45 translate-y-1.5')} />
+              <span className={cn('h-0.5 w-4 bg-zinc-600 transition-all dark:bg-zinc-300', isOpen && 'opacity-0')} />
+              <span className={cn('h-0.5 w-4 bg-zinc-600 transition-all dark:bg-zinc-300', isOpen && '-rotate-45 -translate-y-1.5')} />
+            </div>
           </button>
-          <span className="text-[8px] font-bold tracking-widest text-zinc-600 md:text-[10px] dark:text-zinc-400">
-            MENU
-          </span>
         </div>
 
-        {/* Right: Input Jack */}
-        <div className="hidden flex-col items-center gap-1.5 md:flex">
-          <div className="relative z-50">
-            <button
-              onClick={() => setIsPlugged(!isPlugged)}
-              className={cn(
-                'flex cursor-pointer items-center justify-center rounded-full border-2 border-zinc-300 bg-zinc-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all active:scale-95 dark:border-zinc-700 dark:bg-zinc-800',
-                isScrolled ? 'h-7 w-7' : 'h-9 w-9',
-                isPlugged && 'shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]',
-              )}
-              aria-label="Input Jack"
-            >
-              <div
-                className={cn(
-                  'rounded-full bg-black/90 shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)]',
-                  isScrolled ? 'h-3 w-3' : 'h-4 w-4',
-                )}
-              />
-            </button>
-
-            {/* Cable Animation */}
-            <AnimatePresence>
-              {isPlugged && (
-                <motion.div
-                  initial={{ y: 100, opacity: 0 }}
-                  animate={{ y: 10, opacity: 1 }}
-                  exit={{ y: 100, opacity: 0 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                  className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2"
-                >
-                  <div className="flex flex-col items-center">
-                    {/* Gold Connector Body (Sleeve) */}
-                    <div className="h-4 w-3 rounded-t-sm border-b border-amber-700/30 bg-linear-to-r from-amber-200 via-amber-400 to-amber-600 shadow-sm" />
-
-                    {/* Insulator Ring */}
-                    <div className="h-0.5 w-3 bg-black" />
-
-                    {/* Handle / Grip */}
-                    <div className="flex h-10 w-4 flex-col items-center justify-between rounded-b-md border-t border-white/10 bg-linear-to-r from-zinc-700 via-zinc-800 to-zinc-900 py-1 shadow-xl">
-                      <div className="h-px w-full bg-black/30" />
-                      <div className="h-px w-full bg-black/30" />
-                      <div className="h-px w-full bg-black/30" />
-                    </div>
-
-                    {/* Strain Relief */}
-                    <div className="-mt-1 h-4 w-2.5 rounded-b-full bg-zinc-900" />
-
-                    {/* Cable */}
-                    <div className="relative h-0 w-0">
-                      <svg className="pointer-events-none absolute top-0 left-0 h-[500px] w-[500px] overflow-visible drop-shadow-2xl">
-                        <path
-                          d="M 0 0 C 0 80, 40 150, 500 300"
-                          fill="none"
-                          stroke="#18181b"
-                          strokeWidth="6"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-          <span className="text-[8px] font-bold tracking-widest text-zinc-600 md:text-[10px] dark:text-zinc-400">
-            INPUT
+        {/* Right: Tactile Toggle Switch (Simplified connection) */}
+        <div className="hidden flex-col items-center gap-1 md:flex">
+          <button
+            onClick={() => setIsPlugged(!isPlugged)}
+            className={cn(
+              'relative h-8 w-14 rounded-full border p-1 transition-colors cursor-pointer',
+              isPlugged
+                ? 'bg-[#f05523] border-[#c03d15]'
+                : 'bg-[#d8d8d0] border-[#b8b8b0] dark:bg-[#222] dark:border-[#333]'
+            )}
+            aria-label="Toggle Input Switch"
+          >
+            <motion.div
+              className="h-5 w-5 rounded-full bg-white shadow-md dark:bg-zinc-300"
+              animate={{ x: isPlugged ? 22 : 0 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            />
+          </button>
+          <span className="font-mono text-[7px] font-bold tracking-wider text-zinc-500 uppercase">
+            {isPlugged ? 'mono' : 'stereo'}
           </span>
         </div>
       </header>
@@ -298,9 +212,9 @@ export function Header() {
         onClose={() => setIsOpen(false)}
         items={menuItems}
         colors={
-          theme === 'dark' ? ['#f59e0b', '#3a4699', '#1e2866'] : ['#273281', '#3d468b', '#e2e8f0']
+          theme === 'dark' ? ['#f05523', '#2a2a2a', '#121212'] : ['#f05523', '#ecebe6', '#f4f4f0']
         }
-        accentColor={theme === 'dark' ? '#f59e0b' : '#273281'}
+        accentColor="#f05523"
       />
     </>
   )

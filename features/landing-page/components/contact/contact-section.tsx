@@ -434,40 +434,35 @@ export function ContactSection() {
             onClick={() => handlePadClick(pad)}
             aria-label={pad.type === 'functional' && 'label' in pad ? `Pad ${(pad as any).label}` : `Pad ${pad.id}`}
             className={cn(
-              'group relative flex flex-col items-center justify-center overflow-hidden rounded-md border-b-4 border-zinc-950 bg-zinc-800 transition-all duration-100 active:translate-y-1 active:scale-95 active:border-b-0 sm:rounded-lg',
-              pad.type === 'functional' ? 'z-10' : 'z-0',
+              'group relative flex flex-col items-center justify-center overflow-hidden rounded border transition-all duration-100 cursor-pointer',
+              pad.type === 'functional' ? 'z-10 shadow-sm' : 'z-0 border-dashed opacity-40',
+              isLooping || isActive
+                ? 'bg-[#eaeae6] border-zinc-500 dark:bg-[#222] dark:border-zinc-400'
+                : 'bg-[#f8f8f6] border-[#d4d4d0] hover:bg-[#eaeae6] dark:bg-[#161616] dark:border-[#27272a] dark:hover:bg-[#202020]'
             )}
             style={{ gridColumn: `span ${pad.w}`, gridRow: `span ${pad.h}` }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
           >
-            {/* Glow — persistent when looping, brief on active */}
-            <div className={cn('absolute inset-0 z-0 transition-opacity duration-150', pad.color, isLooping ? 'opacity-80' : isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-60')} />
+            {/* Minimal orange tint on active */}
+            {(isLooping || isActive) && (
+              <div className="absolute inset-0 bg-[#f05523]/5 pointer-events-none" />
+            )}
 
             {/* Content */}
             {pad.type === 'functional' && 'icon' in pad && (
               <div className="relative z-10 flex flex-col items-center gap-1 sm:gap-2">
-                <pad.icon className={cn('h-5 w-5 transition-colors duration-200 sm:h-8 sm:w-8', isLooping || isActive ? 'text-white' : 'text-zinc-500')} />
+                <pad.icon className={cn('h-5 w-5 transition-colors duration-200 sm:h-7 sm:w-7', isLooping || isActive ? 'text-[#f05523]' : 'text-zinc-500')} />
                 <div className="hidden flex-col items-center sm:flex">
-                    <span className={cn('text-[10px] font-bold tracking-wider transition-colors duration-200 sm:text-xs', isLooping || isActive ? 'text-white' : 'text-zinc-400')}>
-                    {(pad as any).label}
+                  <span className={cn('font-mono text-[9px] font-bold uppercase transition-colors duration-200', isLooping || isActive ? 'text-zinc-950 dark:text-white' : 'text-zinc-500')}>
+                    {(pad as any).label.toLowerCase()}
                   </span>
-                  {(pad as any).subLabel && (
-                    <span className={cn('font-mono text-[8px] transition-colors duration-200 sm:text-[10px]', isLooping || isActive ? 'text-white/80' : 'text-zinc-600')}>
-                      {(pad as any).subLabel}
-                    </span>
-                  )}
                 </div>
               </div>
             )}
 
-            {/* LED — pulse when looping */}
-            <div className={cn('absolute top-1 right-1 h-1.5 w-1.5 rounded-full transition-colors duration-200 sm:top-2 sm:right-2', isLooping ? 'animate-pulse bg-white' : isActive ? 'bg-white' : 'bg-zinc-900')} />
-
-            {/* Loop indicator */}
-            {isLooping && (
-              <div className="absolute bottom-1 left-1 h-1 w-1 rounded-full bg-white/50 sm:bottom-2 sm:left-2" />
-            )}
+            {/* Micro signal LED */}
+            <div className={cn('absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full transition-colors duration-200', isLooping ? 'bg-[#f05523] animate-pulse shadow-[0_0_4px_rgba(240,85,35,0.8)]' : isActive ? 'bg-[#f05523]' : 'bg-[#d8d8d0] dark:bg-zinc-800')} />
           </m.button>
         )
       })}
@@ -476,147 +471,75 @@ export function ContactSection() {
 
   return (
     <>
-      <section id="contact" className="overflow-hidden py-24">
+      <section id="contact" className="overflow-hidden py-24 bg-[#f5f5f3] dark:bg-[#121212]">
         <div className="container mx-auto px-4">
           <div className="mb-16 flex flex-col items-center text-center">
             <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-200/50 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400"
+              className="mb-4 flex items-center gap-2 rounded bg-[#e8e8e4] border border-[#d4d4d0] px-3 py-1 font-mono text-[9px] font-bold text-zinc-600 uppercase tracking-widest dark:bg-[#1a1a1a] dark:border-[#27272a] dark:text-zinc-400"
             >
-              <Radio className="h-4 w-4" />
-              <span>SESSION BOOKING</span>
+              <Radio className="h-3 w-3" />
+              <span>collaboration console</span>
             </m.div>
             <m.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-4xl font-black tracking-tighter text-zinc-900 sm:text-5xl dark:text-white"
+              className="font-sans text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl dark:text-white"
             >
               Launch Collaboration
             </m.h2>
-            <p className="mt-4 max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
-              Hit a pad to start a loop. Stack multiple loops to build a beat.
+            <p className="mt-4 max-w-xl font-mono text-xs text-zinc-500 lowercase tracking-tight">
+              click a pad to trigger a module loop. combine signals to calibrate a beat.
             </p>
           </div>
 
-          {/* Launchpad Board */}
-          <div className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-800 p-2 shadow-2xl sm:p-4 dark:bg-zinc-950">
-            <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
+          {/* Braun Control Case */}
+          <div className="relative mx-auto max-w-5xl rounded-lg border border-[#d4d4d0] bg-[#f4f4f0] p-6 shadow-xl dark:border-[#27272a] dark:bg-[#121212]">
+            <Screw className="absolute top-4 left-4" />
+            <Screw className="absolute top-4 right-4" />
+            <Screw className="absolute bottom-4 left-4" />
+            <Screw className="absolute right-4 bottom-4" />
 
-            <div className="relative rounded-2xl border border-zinc-700 bg-zinc-900 p-4 shadow-inner sm:p-6 md:p-10">
-              <Screw className="absolute top-2 left-2 sm:top-4 sm:left-4" />
-              <Screw className="absolute top-2 right-2 sm:top-4 sm:right-4" />
-              <Screw className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4" />
-              <Screw className="absolute right-2 bottom-2 sm:right-4 sm:bottom-4" />
-
-              {/* Top Panel */}
-              <div className="mb-4 flex items-center justify-between px-2 sm:mb-8">
-                <div className="flex items-center gap-2">
-                  <div className={cn('h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2', isPlaying ? 'animate-pulse bg-red-500' : 'bg-zinc-600')} />
-                  <span className="font-mono text-[10px] tracking-widest text-zinc-500 sm:text-xs">REC</span>
-                </div>
-                <span className="text-[10px] font-black tracking-[0.3em] text-zinc-600 sm:text-xs dark:text-zinc-400">LAUNCHPAD PRO</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] text-zinc-500">{transportTime}</span>
-                  <span className="text-[10px] text-zinc-600">{bpm}BPM</span>
-                </div>
+            {/* Top Status Panel */}
+            <div className="mb-6 flex items-center justify-between border-b border-[#e4e4e0] pb-4 px-2 dark:border-[#202020]">
+              <div className="flex items-center gap-2">
+                <div className={cn('h-1.5 w-1.5 rounded-full', isPlaying ? 'bg-[#f05523] animate-ping' : 'bg-zinc-400')} />
+                <span className="font-mono text-[9px] font-bold text-zinc-500 uppercase">rec mode</span>
               </div>
+              <span className="font-mono text-[9px] font-bold tracking-[0.2em] text-zinc-800 uppercase dark:text-zinc-300">launchpad console / model-02</span>
+              <div className="flex items-center gap-3 font-mono text-[9px] text-zinc-500">
+                <span>{transportTime}</span>
+                <span className="text-[#d4d4d0]">|</span>
+                <span>{bpm} bpm</span>
+              </div>
+            </div>
 
-              {/* Control Panel */}
-              <div className="mb-4 space-y-3 rounded-lg border border-zinc-700/50 bg-zinc-800/50 p-3">
-                {/* Top row: Presets + Transport */}
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[10px] font-bold text-zinc-500">SONG PRESETS:</span>
+            {/* Controls panel */}
+            <div className="mb-6 space-y-4 rounded border border-[#d4d4d0] bg-[#eaeae6] p-4 dark:border-[#202020] dark:bg-[#181818]">
+              {/* Presets and System Volume */}
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <span className="font-mono text-[10px] font-bold text-zinc-500 uppercase">system presets</span>
 
-                  <div className="flex items-center gap-2">
-                    {/* BPM */}
-                    <div className="hidden items-center gap-1.5 sm:flex">
-                      <span className="text-[9px] text-zinc-500">BPM</span>
-                      <input
-                        type="range"
-                        min={60}
-                        max={140}
-                        value={bpm}
-                        onChange={(e) => handleBpmChange(Number(e.target.value))}
-                        className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
-                      />
-                    </div>
-
-                    {/* Volume */}
-                    <div className="hidden items-center gap-1.5 sm:flex">
-                      <Volume2 size={10} className="text-zinc-500" />
-                      <input
-                        type="range"
-                        min={-30}
-                        max={0}
-                        value={masterVol}
-                        onChange={(e) => setMasterVol(Number(e.target.value))}
-                        className="h-1 w-14 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
-                      />
-                    </div>
-
-                    {/* Transport */}
-                    {currentPreset && (
-                      <>
-                        <m.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={togglePause}
-                          className={cn(
-                            'flex h-8 w-8 items-center justify-center rounded border shadow-sm transition-colors',
-                            isPlaying
-                              ? 'border-amber-300 bg-amber-50 text-amber-600 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400'
-                              : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-                          )}
-                        >
-                          {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-                        </m.button>
-
-                        <m.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={stopAllPlayback}
-                          className="flex h-8 w-8 items-center justify-center rounded border border-red-300 bg-red-50 text-red-600 shadow-sm dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
-                        >
-                          <Square size={12} />
-                        </m.button>
-                      </>
-                    )}
-
-                    {!currentPreset && (
-                      <m.button
-                        whileTap={{ scale: 0.9 }}
-                        onClick={stopAllPlayback}
-                        disabled={loopingPads.size === 0}
-                        className={cn(
-                          'flex items-center gap-1.5 rounded border px-3 py-1.5 text-[10px] font-bold transition-all',
-                          loopingPads.size > 0
-                            ? 'border-red-500 bg-red-500/20 text-red-400 hover:scale-105 hover:bg-red-500/30'
-                            : 'cursor-not-allowed border-zinc-700 bg-zinc-900/50 text-zinc-600',
-                        )}
-                      >
-                        <Square className="h-3 w-3" />
-                        STOP ALL
-                      </m.button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Mobile BPM + Vol */}
-                <div className="flex items-center gap-3 sm:hidden">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] text-zinc-500">BPM</span>
+                <div className="flex items-center gap-4">
+                  {/* BPM slider */}
+                  <div className="hidden items-center gap-2 sm:flex">
+                    <span className="font-mono text-[9px] text-zinc-500 uppercase">bpm</span>
                     <input
                       type="range"
                       min={60}
                       max={140}
                       value={bpm}
                       onChange={(e) => handleBpmChange(Number(e.target.value))}
-                      className="h-1 w-20 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
+                      className="h-1 cursor-pointer appearance-none rounded bg-[#d8d8d0] dark:bg-[#2c2c2c] accent-[#f05523] w-20"
                     />
                   </div>
-                  <div className="flex items-center gap-1.5">
+
+                  {/* Volume slider */}
+                  <div className="hidden items-center gap-2 sm:flex">
                     <Volume2 size={10} className="text-zinc-500" />
                     <input
                       type="range"
@@ -624,80 +547,115 @@ export function ContactSection() {
                       max={0}
                       value={masterVol}
                       onChange={(e) => setMasterVol(Number(e.target.value))}
-                      className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-zinc-600 accent-primary"
+                      className="h-1 cursor-pointer appearance-none rounded bg-[#d8d8d0] dark:bg-[#2c2c2c] accent-[#f05523] w-20"
                     />
                   </div>
-                </div>
 
-                {/* Preset Buttons */}
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {presets.map((preset) => (
-                    <m.button
-                      key={preset.id}
-                      onClick={() => playPreset(preset.id)}
-                      aria-label={`Load preset ${preset.name}`}
-                      className={cn(
-                        'group relative overflow-hidden rounded-lg border p-2 text-left transition-all hover:scale-105',
-                        currentPreset === preset.id
-                          ? 'border-green-500 bg-green-500/20'
-                          : 'border-zinc-600 bg-zinc-900 hover:border-zinc-500 hover:bg-zinc-800',
-                      )}
-                      whileTap={{ scale: 0.95 }}
-                      title={preset.description}
-                    >
-                      <div className="relative z-10">
-                        <div className="mb-1 flex items-center justify-between">
-                          <span className={cn('text-[10px] font-bold', currentPreset === preset.id ? 'text-green-400' : 'text-zinc-400 group-hover:text-zinc-300')}>
-                            {preset.name.toUpperCase()}
-                          </span>
-                          {currentPreset === preset.id && (
-                            <m.div className="h-1.5 w-1.5 rounded-full bg-green-500" animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1, repeat: Infinity }} />
+                  {/* Playhead controllers */}
+                  <div className="flex items-center gap-2">
+                    {currentPreset ? (
+                      <>
+                        <button
+                          onClick={togglePause}
+                          className={cn(
+                            'flex h-7 w-7 cursor-pointer items-center justify-center rounded border transition-all shadow-sm',
+                            isPlaying
+                              ? 'bg-[#f05523] border-[#c03d15] text-white shadow-inner'
+                              : 'bg-white border-[#d4d4d0] text-zinc-700 dark:bg-[#202020] dark:border-[#2c2c2c] dark:text-zinc-300'
                           )}
-                        </div>
-                        <p className={cn('text-[8px]', currentPreset === preset.id ? 'text-green-500/80' : 'text-zinc-500 group-hover:text-zinc-400')}>
-                          {preset.description}
-                        </p>
+                        >
+                          {isPlaying ? <Pause size={10} /> : <Play size={10} />}
+                        </button>
+
+                        <button
+                          onClick={stopAllPlayback}
+                          className="flex h-7 w-7 cursor-pointer items-center justify-center rounded border border-[#d4d4d0] bg-white text-zinc-600 hover:bg-[#f4f4f0] active:scale-95 dark:border-[#27272a] dark:bg-[#1a1a1a] dark:text-zinc-400"
+                        >
+                          <Square size={8} />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={stopAllPlayback}
+                        disabled={loopingPads.size === 0}
+                        className={cn(
+                          'flex items-center gap-1.5 rounded border px-3 py-1.5 font-mono text-[9px] font-bold transition-all cursor-pointer',
+                          loopingPads.size > 0
+                            ? 'border-[#c03d15] bg-[#f05523] text-white shadow-sm'
+                            : 'cursor-not-allowed border-[#d4d4d0] bg-[#f8f8f6] text-zinc-400 dark:border-[#27272a] dark:bg-[#161616]'
+                        )}
+                      >
+                        <Square className="h-2.5 w-2.5" />
+                        <span>stop signals</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Presets Grid */}
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {presets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={() => playPreset(preset.id)}
+                    aria-label={`Load preset ${preset.name}`}
+                    className={cn(
+                      'group relative overflow-hidden rounded border p-2.5 text-left transition-all cursor-pointer',
+                      currentPreset === preset.id
+                        ? 'border-[#f05523] bg-[#eaeae6] dark:bg-[#222]'
+                        : 'border-[#d4d4d0] bg-[#f8f8f6] hover:bg-[#eaeae6] dark:border-[#27272a] dark:bg-[#161616] dark:hover:bg-[#202020]'
+                    )}
+                  >
+                    <div className="relative z-10 flex flex-col justify-between h-full">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className={cn('font-mono text-[9px] font-bold uppercase', currentPreset === preset.id ? 'text-[#f05523]' : 'text-zinc-600 dark:text-zinc-400')}>
+                          {preset.name.toLowerCase()}
+                        </span>
+                        {currentPreset === preset.id && (
+                          <div className="h-1.5 w-1.5 rounded-full bg-[#f05523]" />
+                        )}
                       </div>
-                      {currentPreset === preset.id && (
-                        <m.div className="absolute inset-0 bg-green-500/10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
-                      )}
-                    </m.button>
-                  ))}
-                </div>
-
-                {/* Now Playing */}
-                <AnimatePresence>
-                  {currentPreset && (
-                    <m.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="flex items-center gap-2 rounded border border-green-500/30 bg-green-500/10 px-3 py-1.5"
-                    >
-                      <Music className="h-3 w-3 text-green-500" />
-                      <span className="text-[10px] font-medium text-green-400">
-                        Now Playing: {presets.find((p) => p.id === currentPreset)?.name}
-                        {isPaused && ' (PAUSED)'}
-                      </span>
-                    </m.div>
-                  )}
-                </AnimatePresence>
+                      <p className="font-mono text-[8px] text-zinc-500 lowercase leading-tight">
+                        {preset.description}
+                      </p>
+                    </div>
+                  </button>
+                ))}
               </div>
 
-              {/* Desktop Grid */}
-              <div className="hidden md:block">
-                <LaunchpadGrid items={desktopGrid} cols={8} rows={4} />
-              </div>
-              {/* Mobile Grid */}
-              <div className="md:hidden">
-                <LaunchpadGrid items={mobileGrid} cols={4} rows={6} />
-              </div>
+              {/* Status display */}
+              <AnimatePresence>
+                {currentPreset && (
+                  <m.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="flex items-center gap-2 rounded border border-[#d4d4d0] bg-white px-3 py-1.5 dark:border-[#2c2c2c] dark:bg-[#1a1a1a]"
+                  >
+                    <Music className="h-3 w-3 text-[#f05523]" />
+                    <span className="font-mono text-[9px] font-bold text-zinc-600 uppercase dark:text-zinc-400">
+                      active calibration: {presets.find((p) => p.id === currentPreset)?.name.toLowerCase()}
+                      {isPaused && ' (suspended)'}
+                    </span>
+                  </m.div>
+                )}
+              </AnimatePresence>
+            </div>
 
-              {/* Cable */}
-              <div className="-mt-0.5 flex justify-center">
-                <div className="flex h-8 w-24 items-end justify-center rounded-b-xl border-x border-b border-zinc-700 bg-zinc-800 pb-1 shadow-lg sm:h-12 sm:w-32 sm:pb-2">
-                  <span className="font-mono text-[8px] text-zinc-500 sm:text-[10px]">USB-C</span>
-                </div>
+            {/* Desktop Launchpad */}
+            <div className="hidden md:block">
+              <LaunchpadGrid items={desktopGrid} cols={8} rows={4} />
+            </div>
+            {/* Mobile Launchpad */}
+            <div className="md:hidden">
+              <LaunchpadGrid items={mobileGrid} cols={4} rows={6} />
+            </div>
+
+            {/* Bottom socket (USB port decoration) */}
+            <div className="-mt-0.5 flex justify-center">
+              <div className="flex h-8 w-24 items-end justify-center rounded-b border-x border-b border-[#d4d4d0] bg-[#f8f8f6] pb-1 shadow-sm sm:h-10 sm:w-28 sm:pb-2 dark:border-[#27272a] dark:bg-[#161616]">
+                <span className="font-mono text-[7px] font-bold tracking-wider text-zinc-500 uppercase">system-c</span>
               </div>
             </div>
           </div>

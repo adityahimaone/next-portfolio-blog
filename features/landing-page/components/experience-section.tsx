@@ -134,7 +134,7 @@ export function ExperienceSection() {
 
             {/* Right Column: The Player / Details */}
             <div className="lg:col-span-7">
-              <div className="relative h-full min-h-[500px] overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
+              <div className="relative flex h-[500px] flex-col overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
                 {/* Background Ambience */}
                 <AnimatePresence mode="wait">
                   <m.div
@@ -152,9 +152,9 @@ export function ExperienceSection() {
 
                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-2 mix-blend-overlay" />
 
-                <div className="relative flex h-full flex-col p-5 sm:p-8 md:p-10">
+                <div className="relative flex h-full flex-col p-6 sm:p-8">
                   {/* Header Area */}
-                  <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="mb-4 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <m.div
                         key={selectedJob.company}
@@ -162,17 +162,17 @@ export function ExperienceSection() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <h3 className="text-3xl font-bold text-zinc-950 dark:text-zinc-50">
+                        <h3 className="text-2xl font-bold text-zinc-950 dark:text-zinc-50">
                           {selectedJob.role}
                         </h3>
-                        <div className="mt-2 flex flex-wrap items-center gap-3 text-zinc-700 dark:text-zinc-400">
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-zinc-700 dark:text-zinc-400">
                           <span className="text-primary flex items-center gap-1.5 font-medium">
-                            <Briefcase className="h-4 w-4" />
+                            <Briefcase className="h-3.5 w-3.5" />
                             {selectedJob.company}
                           </span>
                           <span className="hidden h-1 w-1 rounded-full bg-zinc-800 sm:block dark:bg-zinc-700" />
-                          <span className="flex items-center gap-1.5 text-sm">
-                            <MapPin className="h-3.5 w-3.5" />
+                          <span className="flex items-center gap-1.5">
+                            <MapPin className="h-3 w-3" />
                             {selectedJob.location}
                           </span>
                         </div>
@@ -194,20 +194,21 @@ export function ExperienceSection() {
                           scale: { duration: 0.4 },
                           opacity: { duration: 0.4 },
                         }}
-                        className="relative flex h-24 w-24 items-center justify-center rounded-full border-4 border-zinc-900 bg-zinc-950 shadow-xl dark:border-zinc-800"
+                        className="relative flex h-16 w-16 items-center justify-center rounded-full border-4 border-zinc-900 bg-zinc-950 shadow-xl dark:border-zinc-800"
                       >
                         <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
                         <div
-                          className={cn(
-                            'h-8 w-8 rounded-full',
-                            selectedJob.color,
-                          )}
+                           className={cn(
+                             'h-6 w-6 rounded-full',
+                             selectedJob.color,
+                           )}
                         />
                       </m.div>
                     </div>
-                  </div>{' '}
+                  </div>
+
                   {/* Content Area */}
-                  <div className="flex-1 pr-2">
+                  <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-800 scrollbar-track-transparent">
                     <AnimatePresence mode="wait">
                       <m.div
                         key={selectedJob.id}
@@ -215,7 +216,7 @@ export function ExperienceSection() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.3 }}
-                        className="space-y-6"
+                        className="space-y-4"
                       >
                         {/* Period Badge */}
                         <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium shadow-sm dark:border-zinc-800 dark:bg-zinc-900">

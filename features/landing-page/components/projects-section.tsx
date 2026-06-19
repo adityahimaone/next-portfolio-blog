@@ -61,7 +61,18 @@ export function ProjectsSection() {
               >
                 <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
                   {/* Vinyl Record sliding out */}
-                  <div className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl transition-all duration-700 ease-out group-hover:translate-x-[50%] group-hover:rotate-360 group-active:translate-x-[50%] group-active:rotate-360">
+                  <m.div
+                    initial={{ x: 0, rotate: 0 }}
+                    animate={isInView ? { x: '45%', rotate: 180 } : { x: 0, rotate: 0 }}
+                    whileHover={{ x: '55%', rotate: 360 }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 90,
+                      damping: 15,
+                      delay: isInView ? 0.3 + index * 0.25 : 0,
+                    }}
+                    className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl"
+                  >
                     <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
                     {/* Grooves */}
                     <div className="absolute inset-[15%] rounded-full border border-zinc-800/40" />
@@ -79,7 +90,7 @@ export function ProjectsSection() {
                     </div>
                     {/* Center Hole */}
                     <div className="absolute h-1.5 w-1.5 rounded-full bg-black" />
-                  </div>
+                  </m.div>
 
                   {/* Album Cover (Card) */}
                   <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm bg-zinc-100 shadow-2xl transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:bg-zinc-900">

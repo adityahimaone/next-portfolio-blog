@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
-import { m, useMotionValue, animate } from 'motion/react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
+import { m, useMotionValue, animate, useInView } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
 import { Sliders, Music } from 'lucide-react'
@@ -160,11 +160,19 @@ const VUMeter = ({ isOn }: { isOn: boolean }) => {
 }
 
 export function SkillsSection() {
-  const [isOn, setIsOn] = useState(true)
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const isSectionInView = useInView(sectionRef, { amount: 0.3 })
+  const [isOn, setIsOn] = useState(false)
+
+  useEffect(() => {
+    if (isSectionInView) {
+      setIsOn(true)
+    }
+  }, [isSectionInView])
 
   return (
     <>
-      <section id="skills" className="overflow-hidden py-24">
+      <section ref={sectionRef} id="skills" className="overflow-hidden py-24">
         <div className="container mx-auto px-4">
           <div className="mb-16 flex flex-col items-center text-center">
             <m.div

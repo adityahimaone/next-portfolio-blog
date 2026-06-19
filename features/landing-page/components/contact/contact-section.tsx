@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { m, AnimatePresence } from 'motion/react'
+import { m, AnimatePresence, useInView } from 'motion/react'
 import { Music, Radio, Square, Play, Pause, Volume2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
@@ -10,6 +10,10 @@ import { functionalPads, dummyColors } from './data/pads'
 import { presets } from './data/presets'
 
 export function ContactSection() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const isSectionInView = useInView(sectionRef, { once: true, margin: '-100px' })
+  const [sequentialLitPadIds, setSequentialLitPadIds] = useState<Set<string>>(new Set())
+
   const [activePads, setActivePads] = useState<Set<string>>(new Set())
   const [loopingPads, setLoopingPads] = useState<Set<string>>(new Set())
   const [currentPreset, setCurrentPreset] = useState<string | null>(null)

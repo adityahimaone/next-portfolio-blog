@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { m, AnimatePresence } from 'motion/react'
+import { m, AnimatePresence, useInView } from 'motion/react'
 import { cn } from '@/lib/utils'
 import {
   Play,
@@ -198,66 +198,89 @@ const DetailWindow = ({
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm md:p-8"
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm md:p-8"
     onClick={onClose}
   >
     <m.div
-      initial={{ scale: 0.95, y: 20 }}
+      initial={{ scale: 0.95, y: 30 }}
       animate={{ scale: 1, y: 0 }}
-      exit={{ scale: 0.95, y: 20 }}
+      exit={{ scale: 0.95, y: 30 }}
       onClick={(e) => e.stopPropagation()}
-      className="relative flex h-full max-h-[500px] w-full max-w-5xl flex-col overflow-hidden rounded-xl border-2 border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-900"
+      className="relative flex h-[85vh] max-h-[600px] w-full max-w-5xl flex-col overflow-hidden rounded-lg border-[3px] border-zinc-700 bg-zinc-200 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
     >
-      {/* VST Header */}
-      <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="flex items-center gap-4">
-          {/* Screws */}
-          <div className="flex gap-2">
-            <div className="h-2 w-2 rounded-full border border-zinc-300 bg-zinc-200 shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)] dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.5)]" />
-            <div className="h-2 w-2 rounded-full border border-zinc-300 bg-zinc-200 shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)] dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[inset_0_1px_1px_rgba(0,0,0,0.5)]" />
-          </div>
-          {/* LCD Title */}
-          <div className="rounded border border-blue-200 bg-blue-50 px-3 py-1 shadow-sm dark:border-blue-900/30 dark:bg-blue-950/30 dark:shadow-[inset_0_0_10px_rgba(59,130,246,0.1)]">
-            <span className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400 dark:drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]">
-              {clip.name.toUpperCase()}
+      {/* Outer Metal Bezel Overlay */}
+      <div className="absolute inset-0 pointer-events-none border border-white/20 rounded z-30" />
+
+      {/* VST Studio Hardware Header */}
+      <div className="relative flex items-center justify-between border-b-2 border-zinc-400 bg-linear-to-b from-zinc-300 to-zinc-400 px-6 py-4 dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950 z-10">
+        
+        {/* Left rack ear mount hole */}
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+          <div className="h-2 w-2 rounded-full bg-zinc-600 shadow-inner border border-black/30" />
+        </div>
+
+        <div className="flex items-center gap-4 pl-2">
+          {/* LCD Status Screen */}
+          <div className="relative overflow-hidden rounded border border-amber-500/30 bg-black/90 px-4 py-1.5 shadow-[inset_0_2px_8px_rgba(0,0,0,1)]">
+            <span className="font-mono text-xs font-bold text-amber-500 tracking-wider shadow-[0_0_8px_rgba(245,158,11,0.5)]">
+              {clip.name.toUpperCase()} // STATUS: ONLINE
             </span>
+            <div className="absolute inset-0 bg-linear-to-b from-amber-500/5 to-transparent pointer-events-none" />
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          {/* Fake Knobs */}
-          <div className="hidden gap-3 md:flex">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="relative flex h-8 w-8 items-center justify-center rounded-full border border-zinc-300 bg-zinc-100 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-lg"
-              >
-                <div
-                  className="absolute top-1 h-2 w-0.5 rounded-full bg-zinc-400 dark:bg-zinc-400"
-                  style={{ transform: `rotate(${i * 45}deg)` }}
-                />
+
+        {/* Center: Vent Grills */}
+        <div className="hidden items-center gap-1 opacity-40 lg:flex">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-8 w-1 rounded-full bg-zinc-600 dark:bg-zinc-800" />
+          ))}
+        </div>
+
+        {/* Right controls */}
+        <div className="flex items-center gap-6">
+          {/* Control Dials */}
+          <div className="hidden items-center gap-4 md:flex">
+            {['PARAM 1', 'PARAM 2'].map((label, i) => (
+              <div key={label} className="flex flex-col items-center">
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-zinc-500 bg-linear-to-b from-zinc-200 to-zinc-400 shadow-md dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900">
+                  <div className="absolute h-4 w-0.5 bg-zinc-850 dark:bg-zinc-300 top-0.5 rounded-full" style={{ transform: `rotate(${45 + (i * 90)}deg)`, transformOrigin: '50% 100%' }} />
+                </div>
+                <span className="text-[7px] font-bold text-zinc-600 dark:text-zinc-400 mt-1">{label}</span>
               </div>
             ))}
           </div>
-          <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800" />
+
+          <div className="h-8 w-px bg-zinc-400 dark:bg-zinc-800" />
+          
           <button
             onClick={onClose}
             aria-label="Close clip detail"
-            className="rounded-full p-1 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+            className="group flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-red-900/30 bg-linear-to-b from-red-500 to-red-700 text-white shadow-md hover:brightness-110 active:scale-95"
           >
-            <X size={18} />
+            <X size={14} className="stroke-[2.5]" />
           </button>
+        </div>
+
+        {/* Right rack ear mount hole */}
+        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+          <div className="h-2 w-2 rounded-full bg-zinc-600 shadow-inner border border-black/30" />
         </div>
       </div>
 
-      {/* Window Content */}
-      <div className="scrollbar-thin scrollbar-track-zinc-100 scrollbar-thumb-zinc-300 dark:scrollbar-track-zinc-900 dark:scrollbar-thumb-zinc-700 flex-1 overflow-y-auto bg-zinc-50 p-6 text-zinc-900 dark:bg-zinc-900/50 dark:text-zinc-300">
-        {clip.content}
+      {/* Outboard Processor Interior (Content Display) */}
+      <div className="scrollbar-thin scrollbar-track-zinc-200 scrollbar-thumb-zinc-400 dark:scrollbar-track-zinc-900 dark:scrollbar-thumb-zinc-800 flex-1 overflow-y-auto bg-zinc-50 p-6 text-zinc-900 dark:bg-[#18181b] dark:text-zinc-300">
+        <div className="relative p-6 rounded-lg border border-zinc-350 bg-white/50 shadow-inner dark:border-zinc-800/80 dark:bg-black/30">
+          {clip.content}
+        </div>
       </div>
     </m.div>
   </m.div>
 )
 
 export function AboutSection() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const isSectionInView = useInView(sectionRef, { amount: 0.3 })
+
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeClip, setActiveClip] = useState<Clip | null>(null)
   const [hoveredClip, setHoveredClip] = useState<Clip | null>(null)
@@ -268,6 +291,22 @@ export function AboutSection() {
   const playheadRef = useRef<HTMLDivElement>(null)
   const progressRef = useRef(0)
   const lastTimestampRef = useRef<number>(0)
+
+  const handleStop = () => {
+    setIsPlaying(false)
+    progressRef.current = 0
+    if (playheadRef.current) {
+      playheadRef.current.style.left = '0%'
+    }
+  }
+
+  useEffect(() => {
+    if (isSectionInView) {
+      setIsPlaying(true)
+    } else {
+      handleStop()
+    }
+  }, [isSectionInView])
 
   useEffect(() => {
     let animationFrame: number
@@ -300,13 +339,7 @@ export function AboutSection() {
     return () => cancelAnimationFrame(animationFrame)
   }, [isPlaying])
 
-  const handleStop = () => {
-    setIsPlaying(false)
-    progressRef.current = 0
-    if (playheadRef.current) {
-      playheadRef.current.style.left = '0%'
-    }
-  }
+
 
   const toggleMute = (id: string) => {
     const newMuted = new Set(mutedTracks)
@@ -778,7 +811,7 @@ export function AboutSection() {
 
   return (
     <>
-      <section id="about" className="bg-white py-24 dark:bg-zinc-950">
+      <section ref={sectionRef} id="about" className="bg-white py-24 dark:bg-zinc-950">
         <div className="container mx-auto px-4 md:px-6">
           <div className="mb-12 flex flex-col items-center text-center">
             <m.div

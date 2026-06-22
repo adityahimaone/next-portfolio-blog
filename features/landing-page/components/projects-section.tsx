@@ -3,22 +3,14 @@
 import { useState, useRef } from 'react'
 import { m, AnimatePresence, useInView } from 'motion/react'
 import Image from 'next/image'
-import {
-  Disc,
-  X,
-  Play,
-  Music,
-  Mic2,
-  ArrowUpRight,
-} from 'lucide-react'
+import { Disc, X, Play, Music, Mic2, ArrowUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 import { PROJECTS_SHOWCASE, type ProjectShowcaseItem } from '../constants'
 
 export function ProjectsSection() {
-  const [selectedProject, setSelectedProject] = useState<ProjectShowcaseItem | null>(
-    null,
-  )
+  const [selectedProject, setSelectedProject] =
+    useState<ProjectShowcaseItem | null>(null)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
@@ -143,7 +135,7 @@ export function ProjectsSection() {
 
                 <div className="grid h-full grid-cols-1 md:grid-cols-2">
                   {/* Left: Image Area */}
-                  <div className="relative h-48 bg-zinc-100 md:h-full dark:bg-zinc-800 lg:h-full">
+                  <div className="relative h-48 bg-zinc-100 md:h-full lg:h-full dark:bg-zinc-800">
                     <Image
                       src={selectedProject.image}
                       alt={selectedProject.title}
@@ -162,13 +154,13 @@ export function ProjectsSection() {
                   </div>
 
                   {/* Right: Content Area */}
-                  <div className="flex flex-col p-6 md:p-8 overflow-hidden">
+                  <div className="flex flex-col overflow-hidden p-6 md:p-8">
                     <div className="mb-4 md:mb-6">
                       <div className="text-primary mb-2 flex items-center gap-2 text-sm font-medium">
                         <Mic2 className="h-4 w-4" />
                         <span>FEATURED TRACK</span>
                       </div>
-                      <h3 className="text-2xl md:text-3xl leading-tight font-bold text-zinc-900 dark:text-zinc-100">
+                      <h3 className="text-2xl leading-tight font-bold text-zinc-900 md:text-3xl dark:text-zinc-100">
                         {selectedProject.title}
                       </h3>
                       <div className="mt-2 flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
@@ -179,7 +171,7 @@ export function ProjectsSection() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto pr-2">
-                      <p className="text-base md:text-lg leading-relaxed text-zinc-600 line-clamp-4 md:line-clamp-none dark:text-zinc-300">
+                      <p className="line-clamp-4 text-base leading-relaxed text-zinc-600 md:line-clamp-none md:text-lg dark:text-zinc-300">
                         {selectedProject.description}
                       </p>
 

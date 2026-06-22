@@ -27,6 +27,8 @@ const MusicMarquee = dynamic(() => import('../spotify/music-marquee').then((mod)
 import { SectionDivider } from '@/components/section-divider'
 import { ChevronUp } from 'lucide-react'
 import { usePreloader } from '../hooks/use-preloader'
+import { useTheme } from 'next-themes'
+import { cn } from '@/lib/utils'
 
 export default function LandingPage() {
   const { scrollYProgress } = useScroll()
@@ -37,6 +39,8 @@ export default function LandingPage() {
   const mainRef = useRef<HTMLDivElement>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const isLoading = usePreloader()
+  const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   // Opacity for floating elements based on scroll
   const floatingOpacity = useTransform(scrollYProgress, [0, 0.2], [0.2, 0])
@@ -47,6 +51,7 @@ export default function LandingPage() {
   }
 
   useEffect(() => {
+    setMounted(true)
     // Preload any assets or initialize animations
     const body = document.querySelector('body')
     if (body) {
@@ -76,6 +81,15 @@ export default function LandingPage() {
           transition={{ duration: 0.5 }}
           className="relative"
         >
+          {/* Blueprint grid background overlay */}
+          <div
+            className={cn(
+              'pointer-events-none fixed inset-0 opacity-100 transition-opacity duration-700 z-0',
+              mounted && theme === 'light'
+                ? 'bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:64px_64px]'
+                : 'bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:64px_64px]',
+            )}
+          />
           {/* Music notes scattered in background */}
           <m.div
             className="pointer-events-none fixed top-1/3 right-[15%] text-5xl"

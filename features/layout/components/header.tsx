@@ -11,6 +11,8 @@ import useClickOutside from '@/hooks/use-click-outside'
 import { HOMEPAGE_NAV_ITEMS, SUBPAGE_NAV_ITEMS, SOCIAL_LINKS } from '../constants'
 import { useScrollState } from '../hooks/use-scroll-state'
 import { StaggeredMenu } from './staggered-menu/staggered-menu'
+import { useAudio } from '@/features/landing-page/spotify/audio-context'
+
 
 export function Header() {
   const pathname = usePathname()
@@ -42,6 +44,10 @@ export function Header() {
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const toggleButtonRef = useRef<HTMLButtonElement>(null)
 
+  // Turntable global controls
+  const { isPlaying, togglePlay, playbackRate, setPlaybackRate } = useAudio()
+
+
   useClickOutside(mobileMenuRef, (e) => {
     if (
       isOpen &&
@@ -64,12 +70,22 @@ export function Header() {
     <>
       <header
         className={cn(
-          'fixed top-0 right-0 left-0 z-50 flex items-center justify-between border-b-[3px] px-6 shadow-xl transition-all duration-300 md:px-10',
+          'fixed top-0 right-0 left-0 z-50 flex items-center justify-between border-b px-6 shadow-xl transition-all duration-300 md:px-10 overflow-hidden',
           isScrolled
-            ? 'border-primary/50 h-14 bg-white/80 backdrop-blur-md md:h-16 dark:bg-zinc-900/80'
-            : 'border-primary dark:border-primary/50 h-16 bg-linear-to-b from-zinc-100 to-zinc-200 md:h-[84px] dark:from-zinc-900 dark:to-zinc-950',
+            ? 'border-zinc-200/50 dark:border-white/5 h-14 bg-white/45 dark:bg-black/45 backdrop-blur-md'
+            : 'border-zinc-300/30 dark:border-white/5 h-16 bg-white/35 dark:bg-black/35 backdrop-blur-lg',
         )}
       >
+        {/* PCB Copper lines background detail */}
+        <div className="absolute inset-0 pointer-events-none opacity-5 dark:opacity-[0.03] z-0">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 0 20 H 400 L 450 60 H 1000 M 200 0 V 84 L 230 114" stroke="currentColor" strokeWidth="1.5" fill="none" />
+            <path d="M 600 84 V 40 L 620 20 H 800" stroke="currentColor" strokeWidth="1.5" fill="none" />
+            <circle cx="450" cy="60" r="3" fill="currentColor" />
+            <circle cx="620" cy="20" r="3" fill="currentColor" />
+          </svg>
+        </div>
+
         {/* Left: Power Switch (Theme Toggle) */}
         <div className="flex items-start gap-4 md:gap-6">
           <div className="flex flex-col items-center gap-1">
@@ -105,12 +121,13 @@ export function Header() {
               className={cn(
                 'absolute inset-0 rounded-full transition-all duration-700',
                 mounted && theme === 'dark'
-                  ? 'animate-pulse bg-red-600 shadow-[0_0_12px_rgba(239,68,68,0.9)]'
+                  ? 'animate-pulse bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.9)]'
                   : 'bg-zinc-400 shadow-inner',
               )}
             />
             <div className="absolute top-1 left-1 h-1 w-1 rounded-full bg-white/50 md:top-1.5 md:left-1.5 md:h-1.5 md:w-1.5" />
           </div>
+
         </div>
 
         {/* Center: Navigation (Desktop) */}
@@ -220,6 +237,63 @@ export function Header() {
           <span className="text-[8px] font-bold tracking-widest text-zinc-600 md:text-[10px] dark:text-zinc-400">
             MENU
           </span>
+        </div>
+
+        {/* Center-Right: DJ Control Platter Strip (Technics SL-1200 style controls) */}
+        <div className="hidden xl:flex items-center gap-6 border-r border-zinc-200/50 dark:border-white/5 pr-6 z-10 select-none">
+          {/* Start/Stop Button */}
+          <button
+            onClick={togglePlay}
+            className={cn(
+              "h-8 px-3 rounded font-mono text-[9px] font-black border transition-all active:scale-95 shadow-sm flex items-center gap-2 cursor-pointer uppercase tracking-wider select-none",
+              isPlaying
+                ? "bg-green-500/10 border-green-500 text-green-500 shadow-[0_0_8px_rgba(34,197,94,0.3)]"
+                : "bg-white/40 dark:bg-black/40 border-zinc-300 dark:border-white/10 text-zinc-500 dark:text-zinc-400"
+            )}
+          >
+            <div className={cn("h-1.5 w-1.5 rounded-full", isPlaying ? "bg-green-500 animate-pulse" : "bg-zinc-400")} />
+            START/STOP
+          </button>
+
+          {/* RPM speed LEDs */}
+          <div className="flex gap-1.5 items-center">
+            <div className={cn(
+              "w-1.5 h-1.5 rounded-full transition-colors",
+              playbackRate < 1.1 ? "bg-amber-500 shadow-[0_0_4px_#f59e0b]" : "bg-zinc-500"
+            )} />
+            <span className="font-mono text-[8px] font-bold text-zinc-500">33</span>
+            <div className={cn(
+              "w-1.5 h-1.5 rounded-full transition-colors",
+              playbackRate >= 1.1 ? "bg-amber-500 shadow-[0_0_4px_#f59e0b]" : "bg-zinc-500"
+            )} />
+            <span className="font-mono text-[8px] font-bold text-zinc-500">45</span>
+          </div>
+
+          {/* Pitch Control slider */}
+          <div className="flex items-center gap-2.5">
+            <span className="font-mono text-[8px] font-extrabold text-zinc-500 uppercase tracking-widest">PITCH</span>
+            <div className="relative w-24 h-4 flex items-center justify-center">
+              <div className="absolute w-full h-1 bg-zinc-300 dark:bg-zinc-950 rounded-full shadow-inner border border-zinc-400/10" />
+              <input
+                type="range"
+                min="80"
+                max="120"
+                value={Math.round(playbackRate * 100)}
+                onChange={(e) => setPlaybackRate(Number(e.target.value) / 100)}
+                className="absolute w-full h-4 opacity-0 cursor-ew-resize z-20"
+              />
+              {/* Silver visual handle track */}
+              <div
+                className="absolute w-3.5 h-2.5 bg-gradient-to-b from-zinc-200 to-zinc-400 dark:from-zinc-700 dark:to-zinc-800 border border-zinc-400 dark:border-zinc-600 rounded shadow-sm pointer-events-none z-10"
+                style={{ left: `calc(${((playbackRate - 0.8) / 0.4) * 100}% - 7px)` }}
+              >
+                <div className="w-0.5 h-full bg-amber-500 mx-auto" />
+              </div>
+            </div>
+            <span className="font-mono text-[8px] font-bold text-zinc-500 w-8 text-right">
+              {playbackRate >= 1.0 ? `+${Math.round((playbackRate - 1.0)*100)}%` : `-${Math.round((1.0 - playbackRate)*100)}%`}
+            </span>
+          </div>
         </div>
 
         {/* Right: Input Jack */}

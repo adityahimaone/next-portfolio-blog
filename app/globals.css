@@ -630,3 +630,51 @@
 .animate-hero-desc {
   animation: hero-desc-in 0.6s ease 0.2s both;
 }
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Houdini property for conic-gradient animation */
+@property --hue-rotate {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* EQ bar keyframes */
+@keyframes eq-a { 0% { transform: scaleY(0.1); } 100% { transform: scaleY(0.9); } }
+@keyframes eq-b { 0% { transform: scaleY(0.3); } 100% { transform: scaleY(0.7); } }
+@keyframes eq-c { 0% { transform: scaleY(0.05); } 100% { transform: scaleY(1.0); } }
+@keyframes eq-d { 0% { transform: scaleY(0.4); } 100% { transform: scaleY(0.6); } }
+@keyframes eq-e { 0% { transform: scaleY(0.15); } 100% { transform: scaleY(0.85); } }
+
+/* Album art spin */
+@keyframes album-spin {
+  to { --hue-rotate: 360deg; }
+}
+
+/* Scan-line texture (static) */
+.scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+}
+
+

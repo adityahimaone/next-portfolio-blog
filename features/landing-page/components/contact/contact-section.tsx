@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { m, AnimatePresence } from 'motion/react'
+import { m, AnimatePresence, useInView } from 'motion/react'
 import { Music, Radio, Square, Play, Pause, Volume2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
@@ -10,6 +10,10 @@ import { functionalPads, dummyColors } from './data/pads'
 import { presets } from './data/presets'
 
 export function ContactSection() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const isSectionInView = useInView(sectionRef, { once: true, margin: '-100px' })
+  const [sequentialLitPadIds, setSequentialLitPadIds] = useState<Set<string>>(new Set())
+
   const [activePads, setActivePads] = useState<Set<string>>(new Set())
   const [loopingPads, setLoopingPads] = useState<Set<string>>(new Set())
   const [currentPreset, setCurrentPreset] = useState<string | null>(null)
@@ -20,6 +24,104 @@ export function ContactSection() {
   const [masterVol, setMasterVol] = useState(-6)
 
   const { toneRef, startAudio, isLoaded } = useAudioEngine()
+
+  // ─── Generate Grid ──────────────────────────────────────────────
+  const { desktopGrid, mobileGrid } = useMemo(() => {
+    const generateGridItems = (rows: number, cols: number, isMobile: boolean) => {
+      const items: any[] = []
+      const occupied = new Set<string>()
+
+      functionalPads.forEach((pad) => {
+        const config = isMobile ? pad.mobile : pad
+        for (let i = 0; i < config.w; i++) {
+          for (let j = 0; j < config.h; j++) {
+            occupied.add(`${config.x + i},${config.y + j}`)
+          }
+        }
+      })
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          if (occupied.has(`${x},${y}`)) {
+            const pad = functionalPads.find((p) => {
+              const config = isMobile ? p.mobile : p
+              return x >= config.x && x < config.x + config.w && y >= config.y && y < config.y + config.h
+            })
+            if (pad && (isMobile ? pad.mobile.x === x && pad.mobile.y === y : pad.x === x && pad.y === y)) {
+              items.push({ 
+                ...pad, 
+                type: 'functional', 
+                x: isMobile ? pad.mobile.x : pad.x,
+                y: isMobile ? pad.mobile.y : pad.y,
+                w: isMobile ? pad.mobile.w : pad.w, 
+                h: isMobile ? pad.mobile.h : pad.h 
+              })
+            }
+          } else {
+            items.push({ id: `dummy-${x}-${y}`, x, y, w: 1, h: 1, type: 'dummy', color: dummyColors[(x + y) % dummyColors.length] })
+          }
+        }
+      }
+      return items
+    }
+    return { desktopGrid: generateGridItems(4, 8, false), mobileGrid: generateGridItems(6, 4, true) }
+  }, [])
+
+  useEffect(() => {
+    if (isSectionInView) {
+      const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false
+      const allPads = isMobile ? mobileGrid : desktopGrid
+
+      // Sort pads by top-left diagonal distance (x + y)
+      const sortedPads = [...allPads].sort((a, b) => {
+        const ax = a.x ?? 0
+        const ay = a.y ?? 0
+        const bx = b.x ?? 0
+        const by = b.y ?? 0
+        return (ax + ay) - (bx + by)
+      })
+
+      const delayBetweenPads = 35 // speed of wave sweep in ms
+      const sweepDuration = sortedPads.length * delayBetweenPads + 250 // total sweep time
+
+      const triggerSingleSweep = (sweepIndex: number) => {
+        sortedPads.forEach((pad, index) => {
+          const timeoutId = setTimeout(() => {
+            setSequentialLitPadIds((prev) => {
+              const next = new Set(prev)
+              next.add(pad.id)
+              return next
+            })
+
+            // Turn off glow after 250ms
+            const offTimeoutId = setTimeout(() => {
+              setSequentialLitPadIds((prev) => {
+                const next = new Set(prev)
+                next.delete(pad.id)
+                return next
+              })
+            }, 250)
+            
+            activeTimeoutsRef.current.set(`sweep-off-${sweepIndex}-${pad.id}`, offTimeoutId)
+          }, index * delayBetweenPads)
+
+          activeTimeoutsRef.current.set(`sweep-${sweepIndex}-${pad.id}`, timeoutId)
+        })
+      }
+
+      // Initial delay of 800ms, then run 3 times spaced out by sweepDuration + pause
+      const initialDelay = 800
+      const repeatInterval = sweepDuration + 300 // pause between sweeps
+
+      for (let i = 0; i < 3; i++) {
+        const runTimeoutId = setTimeout(() => {
+          triggerSingleSweep(i)
+        }, initialDelay + i * repeatInterval)
+        
+        activeTimeoutsRef.current.set(`sweep-run-${i}`, runTimeoutId)
+      }
+    }
+  }, [isSectionInView, desktopGrid, mobileGrid])
 
   const synthsRef = useRef<Record<string, any>>({})
   const padLoopsRef = useRef<Map<string, any>>(new Map())
@@ -373,6 +475,17 @@ export function ContactSection() {
 
   // ─── Handle Pad Click ───────────────────────────────────────────
   const handlePadClick = useCallback(async (pad: any) => {
+    // Flash immediately
+    setActivePads((prev) => new Set(prev).add(pad.id))
+    const t = setTimeout(() => {
+      setActivePads((prev) => {
+        const n = new Set(prev)
+        n.delete(pad.id)
+        return n
+      })
+    }, 150)
+    activeTimeoutsRef.current.set(`click-${pad.id}`, t)
+
     // Toggle loop for all pads
     await togglePadLoop(pad)
 
@@ -384,41 +497,6 @@ export function ContactSection() {
     }
   }, [togglePadLoop])
 
-  // ─── Generate Grid ──────────────────────────────────────────────
-  const { desktopGrid, mobileGrid } = useMemo(() => {
-    const generateGridItems = (rows: number, cols: number, isMobile: boolean) => {
-      const items: any[] = []
-      const occupied = new Set<string>()
-
-      functionalPads.forEach((pad) => {
-        const config = isMobile ? pad.mobile : pad
-        for (let i = 0; i < config.w; i++) {
-          for (let j = 0; j < config.h; j++) {
-            occupied.add(`${config.x + i},${config.y + j}`)
-          }
-        }
-      })
-
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-          if (occupied.has(`${x},${y}`)) {
-            const pad = functionalPads.find((p) => {
-              const config = isMobile ? p.mobile : p
-              return x >= config.x && x < config.x + config.w && y >= config.y && y < config.y + config.h
-            })
-            if (pad && (isMobile ? pad.mobile.x === x && pad.mobile.y === y : pad.x === x && pad.y === y)) {
-              items.push({ ...pad, type: 'functional', w: isMobile ? pad.mobile.w : pad.w, h: isMobile ? pad.mobile.h : pad.h })
-            }
-          } else {
-            items.push({ id: `dummy-${x}-${y}`, x, y, w: 1, h: 1, type: 'dummy', color: dummyColors[(x + y) % dummyColors.length] })
-          }
-        }
-      }
-      return items
-    }
-    return { desktopGrid: generateGridItems(4, 8, false), mobileGrid: generateGridItems(6, 4, true) }
-  }, [])
-
   // ─── Launchpad Grid Component ───────────────────────────────────
   const LaunchpadGrid = useCallback(({ items, cols, rows }: { items: any[]; cols: number; rows: number }) => (
     <div
@@ -428,6 +506,7 @@ export function ContactSection() {
       {items.map((pad) => {
         const isLooping = loopingPads.has(pad.id)
         const isActive = activePads.has(pad.id)
+        const isSweeping = sequentialLitPadIds.has(pad.id)
         return (
           <m.button
             key={pad.id}
@@ -441,19 +520,19 @@ export function ContactSection() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            {/* Glow — persistent when looping, brief on active */}
-            <div className={cn('absolute inset-0 z-0 transition-opacity duration-150', pad.color, isLooping ? 'opacity-80' : isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-60')} />
+            {/* Glow — persistent when looping, brief on active, or sweeping */}
+            <div className={cn('absolute inset-0 z-0 transition-opacity duration-150', pad.color, isLooping ? 'opacity-80' : (isActive || isSweeping) ? 'opacity-100' : 'opacity-0 group-hover:opacity-60')} />
 
             {/* Content */}
             {pad.type === 'functional' && 'icon' in pad && (
               <div className="relative z-10 flex flex-col items-center gap-1 sm:gap-2">
-                <pad.icon className={cn('h-5 w-5 transition-colors duration-200 sm:h-8 sm:w-8', isLooping || isActive ? 'text-white' : 'text-zinc-500')} />
+                <pad.icon className={cn('h-5 w-5 transition-colors duration-200 sm:h-8 sm:w-8', isLooping || isActive || isSweeping ? 'text-white' : 'text-zinc-500')} />
                 <div className="hidden flex-col items-center sm:flex">
-                    <span className={cn('text-[10px] font-bold tracking-wider transition-colors duration-200 sm:text-xs', isLooping || isActive ? 'text-white' : 'text-zinc-400')}>
+                    <span className={cn('text-[10px] font-bold tracking-wider transition-colors duration-200 sm:text-xs', isLooping || isActive || isSweeping ? 'text-white' : 'text-zinc-400')}>
                     {(pad as any).label}
                   </span>
                   {(pad as any).subLabel && (
-                    <span className={cn('font-mono text-[8px] transition-colors duration-200 sm:text-[10px]', isLooping || isActive ? 'text-white/80' : 'text-zinc-600')}>
+                    <span className={cn('font-mono text-[8px] transition-colors duration-200 sm:text-[10px]', isLooping || isActive || isSweeping ? 'text-white/80' : 'text-zinc-600')}>
                       {(pad as any).subLabel}
                     </span>
                   )}
@@ -461,8 +540,8 @@ export function ContactSection() {
               </div>
             )}
 
-            {/* LED — pulse when looping */}
-            <div className={cn('absolute top-1 right-1 h-1.5 w-1.5 rounded-full transition-colors duration-200 sm:top-2 sm:right-2', isLooping ? 'animate-pulse bg-white' : isActive ? 'bg-white' : 'bg-zinc-900')} />
+            {/* LED — pulse when looping or sweeping */}
+            <div className={cn('absolute top-1 right-1 h-1.5 w-1.5 rounded-full transition-colors duration-200 sm:top-2 sm:right-2', isLooping ? 'animate-pulse bg-white' : (isActive || isSweeping) ? 'bg-white' : 'bg-zinc-900')} />
 
             {/* Loop indicator */}
             {isLooping && (
@@ -472,11 +551,11 @@ export function ContactSection() {
         )
       })}
     </div>
-  ), [loopingPads, activePads, handlePadClick])
+  ), [loopingPads, activePads, sequentialLitPadIds, handlePadClick])
 
   return (
     <>
-      <section id="contact" className="overflow-hidden py-24">
+      <section ref={sectionRef} id="contact" className="overflow-hidden py-24">
         <div className="container mx-auto px-4">
           <div className="mb-16 flex flex-col items-center text-center">
             <m.div

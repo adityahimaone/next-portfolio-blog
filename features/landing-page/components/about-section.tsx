@@ -41,18 +41,18 @@ interface Track {
 // --- Synth / VST Custom Redesign Components ---
 
 const SynthKnob = ({ label, value, degree = 0 }: { label: string; value: string; degree?: number }) => (
-  <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-zinc-200 bg-white/60 dark:border-zinc-800 dark:bg-black/45 shadow-sm">
-    <div className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-zinc-350 bg-gradient-to-b from-zinc-100 to-zinc-300 dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900 shadow-md">
+  <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-[#272727] bg-[#0d0d0d] shadow-sm">
+    <div className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#272727] bg-gradient-to-b from-[#0d0d0d] to-black shadow-md">
       {/* Outer indicator notch */}
       <div
-        className="absolute h-4 w-1 bg-blue-500 dark:bg-blue-400 top-0.5 rounded-full"
+        className="absolute h-4 w-1 bg-[#af50ff] top-0.5 rounded-full"
         style={{ transform: `rotate(${degree}deg)`, transformOrigin: '50% 100%' }}
       />
       {/* Inner dial cap */}
-      <div className="h-8 w-8 rounded-full border border-zinc-300 bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-950 shadow-inner" />
+      <div className="h-8 w-8 rounded-full border border-[#272727] bg-[#090909] shadow-inner" />
     </div>
-    <span className="text-[10px] font-bold tracking-wider text-zinc-500 dark:text-zinc-400 uppercase">{label}</span>
-    <span className="font-mono text-xs font-black text-zinc-900 dark:text-zinc-100">{value}</span>
+    <span className="text-[10px] font-bold tracking-wider text-[#828384] uppercase">{label}</span>
+    <span className="font-mono text-xs font-black text-[#f7f9fa]">{value}</span>
   </div>
 )
 
@@ -62,30 +62,30 @@ const PatchSocket = ({ label, active = false }: { label: string; active?: boolea
       className={cn(
         'relative flex h-10 w-10 items-center justify-center rounded-full border-2 shadow-inner transition-colors',
         active
-          ? 'border-blue-500 bg-zinc-100 dark:border-blue-400 dark:bg-zinc-900'
-          : 'border-zinc-300 bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-950'
+          ? 'border-[#af50ff] bg-[#0d0d0d]'
+          : 'border-[#272727] bg-[#090909]'
       )}
     >
       {/* Core plug hole */}
-      <div className="h-5 w-5 rounded-full bg-zinc-900 dark:bg-black border border-white/10" />
+      <div className="h-5 w-5 rounded-full bg-black border border-[#272727]" />
       {active && (
-        <div className="absolute h-2.5 w-2.5 rounded-full bg-blue-500 dark:bg-blue-400 animate-ping" />
+        <div className="absolute h-2.5 w-2.5 rounded-full bg-[#af50ff] animate-ping" />
       )}
     </div>
-    <span className="text-[9px] font-bold tracking-widest text-zinc-500 dark:text-zinc-400 uppercase">{label}</span>
+    <span className="text-[9px] font-bold tracking-widest text-[#828384] uppercase">{label}</span>
   </div>
 )
 
 const MixerFader = ({ label, value, colorClass }: { label: string; value: number; colorClass: string }) => (
   <div className="flex items-center gap-4 py-2">
-    <span className="w-24 text-left text-xs font-bold text-zinc-600 dark:text-zinc-400 truncate">{label}</span>
+    <span className="w-24 text-left text-xs font-bold text-[#828384] truncate">{label}</span>
     <div className="relative flex-1 h-8 flex items-center">
       {/* Track line */}
-      <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded border-b border-white/5" />
+      <div className="w-full h-1.5 bg-[#0d0d0d] rounded border-b border-[#272727]" />
       {/* Vertical ticks */}
-      <div className="absolute inset-x-0 h-4 flex justify-between pointer-events-none opacity-40">
+      <div className="absolute inset-0 h-4 flex justify-between pointer-events-none opacity-40">
         {[...Array(9)].map((_, idx) => (
-          <div key={idx} className="w-px h-2.5 bg-zinc-450 dark:bg-zinc-650" />
+          <div key={idx} className="w-px h-2.5 bg-[#6b6b6b]" />
         ))}
       </div>
       {/* Active Fill Track */}
@@ -95,24 +95,24 @@ const MixerFader = ({ label, value, colorClass }: { label: string; value: number
       />
       {/* Metallic sliding handle */}
       <div
-        className="absolute h-6 w-3 -ml-1.5 rounded border border-zinc-400 bg-gradient-to-b from-zinc-100 to-zinc-355 shadow-md dark:border-zinc-700 dark:from-zinc-700 dark:to-zinc-850 cursor-pointer hover:brightness-110 flex flex-col justify-between py-1"
+        className="absolute h-6 w-3 -ml-1.5 rounded border border-[#272727] bg-gradient-to-b from-[#0d0d0d] to-[#1a1a1a] shadow-md cursor-pointer hover:brightness-110 flex flex-col justify-between py-1"
         style={{ left: `${value}%` }}
       >
-        <div className="h-0.5 w-full bg-zinc-650 dark:bg-zinc-400" />
-        <div className="h-0.5 w-full bg-zinc-650 dark:bg-zinc-400" />
+        <div className="h-0.5 w-full bg-[#828384]" />
+        <div className="h-0.5 w-full bg-[#828384]" />
       </div>
     </div>
-    <span className="w-10 font-mono text-xs font-black text-right text-zinc-800 dark:text-zinc-200">{value}%</span>
+    <span className="w-10 font-mono text-xs font-black text-right text-[#f7f9fa]">{value}%</span>
   </div>
 )
 
 const TimeRuler = () => (
-  <div className="flex h-8 min-w-[800px] border-b border-zinc-200 bg-zinc-50/50 font-mono text-[10px] text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50">
+  <div className="flex h-8 min-w-[800px] border-b border-[#272727] bg-[#0d0d0d]/50 font-mono text-[10px] text-[#828384]">
     <div className="flex flex-1">
       {[...Array(12)].map((_, i) => (
         <div
           key={i}
-          className="flex flex-1 items-end justify-start border-r border-zinc-200/50 px-1 pb-1 dark:border-zinc-800/50"
+          className="flex flex-1 items-end justify-start border-r border-[#272727]/50 px-1 pb-1"
         >
           {i + 1}
         </div>
@@ -134,7 +134,7 @@ const TrackHeader = ({
   onMute: () => void
   onSolo: () => void
 }) => (
-  <div className="flex h-24 w-14 shrink-0 flex-col justify-between border-r border-b border-zinc-200 bg-zinc-50 p-2 md:w-32 dark:border-zinc-800 dark:bg-zinc-900">
+  <div className="flex h-24 w-14 shrink-0 flex-col justify-between border-r border-b border-[#272727] bg-[#0d0d0d] p-2 md:w-32">
     <div className="flex items-center gap-2">
       <div
         className={cn(
@@ -145,7 +145,7 @@ const TrackHeader = ({
       >
         <track.icon size={14} />
       </div>
-      <span className="hidden truncate text-xs font-bold text-zinc-600 md:block dark:text-zinc-400">
+      <span className="hidden truncate text-xs font-bold text-[#828384] md:block">
         {track.name}
       </span>
     </div>
@@ -162,8 +162,8 @@ const TrackHeader = ({
         className={cn(
           'flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold transition-colors',
           muted
-            ? 'bg-blue-500 text-white'
-            : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700',
+            ? 'bg-[#af50ff] text-white'
+            : 'bg-[#0d0d0d] text-[#6b6b6b] hover:bg-[#1a1a1a]',
         )}
       >
         M
@@ -180,7 +180,7 @@ const TrackHeader = ({
           'flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold transition-colors',
           soloed
             ? 'bg-yellow-500 text-black'
-            : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700',
+            : 'bg-[#0d0d0d] text-[#6b6b6b] hover:bg-[#1a1a1a]',
         )}
       >
         S
@@ -212,8 +212,8 @@ const ClipBlock = ({
       className={cn(
         'group relative flex h-20 items-center overflow-hidden rounded-md border border-l-4 transition-all hover:brightness-110',
         color.replace('text-', 'border-l-').replace('bg-', 'bg-opacity-20'),
-        'border-zinc-200 bg-white dark:border-zinc-700/50 dark:bg-zinc-800',
-        isActive ? 'ring-2 ring-blue-500/20 dark:ring-white/20' : '',
+        'border-[#272727] bg-[#0d0d0d]',
+        isActive ? 'ring-2 ring-[#af50ff]/20' : '',
       )}
       style={{
         gridColumn: `${clip.start} / span ${clip.duration}`,
@@ -234,18 +234,18 @@ const ClipBlock = ({
 
       <div className="relative z-10 flex w-full items-center justify-between px-3">
         <div className="flex flex-col items-start gap-1 overflow-hidden">
-          <span className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[10px] text-zinc-600 dark:bg-black/30 dark:text-zinc-300">
+          <span className="rounded bg-[#0d0d0d] px-1.5 py-0.5 font-mono text-[10px] text-[#828384]">
             {clip.name}
           </span>
           {clip.subtitle && (
-            <span className="truncate text-xs font-bold text-zinc-700 dark:text-zinc-200">
+            <span className="truncate text-xs font-bold text-[#f7f9fa]">
               {clip.subtitle}
             </span>
           )}
         </div>
         <Maximize2
           size={12}
-          className="text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100"
+          className="text-[#6b6b6b] opacity-0 transition-opacity group-hover:opacity-100"
         />
       </div>
     </m.button>
@@ -277,7 +277,7 @@ const DetailWindow = ({
       <div className="absolute inset-0 pointer-events-none border border-white/20 rounded z-30" />
 
       {/* VST Studio Hardware Header */}
-      <div className="relative flex items-center justify-between border-b-2 border-zinc-400 bg-gradient-to-b from-zinc-300 to-zinc-400 px-6 py-4 dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950 z-10">
+      <div className="relative flex items-center justify-between border-b-2 border-[#272727] bg-gradient-to-b from-[#0d0d0d] to-[#090909] px-6 py-4 z-10">
         
         {/* Left rack ear mount hole */}
         <div className="absolute left-2 top-1/2 -translate-y-1/2 flex flex-col gap-2">
@@ -297,7 +297,7 @@ const DetailWindow = ({
         {/* Center: Vent Grills */}
         <div className="hidden items-center gap-1 opacity-40 lg:flex">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-8 w-1 rounded-full bg-zinc-600 dark:bg-zinc-800" />
+            <div key={i} className="h-8 w-1 rounded-full bg-[#272727]" />
           ))}
         </div>
 
@@ -307,15 +307,15 @@ const DetailWindow = ({
           <div className="hidden items-center gap-4 md:flex">
             {['PARAM 1', 'PARAM 2'].map((label, i) => (
               <div key={label} className="flex flex-col items-center">
-                <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-zinc-500 bg-gradient-to-b from-zinc-200 to-zinc-400 shadow-md dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900">
-                  <div className="absolute h-4 w-0.5 bg-zinc-850 dark:bg-zinc-300 top-0.5 rounded-full" style={{ transform: `rotate(${45 + (i * 90)}deg)`, transformOrigin: '50% 100%' }} />
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[#272727] bg-gradient-to-b from-[#0d0d0d] to-black shadow-md">
+                  <div className="absolute h-4 w-0.5 bg-[#828384] top-0.5 rounded-full" style={{ transform: `rotate(${45 + (i * 90)}deg)`, transformOrigin: '50% 100%' }} />
                 </div>
-                <span className="text-[7px] font-bold text-zinc-600 dark:text-zinc-400 mt-1">{label}</span>
+                <span className="text-[7px] font-bold text-[#6b6b6b] mt-1">{label}</span>
               </div>
             ))}
           </div>
 
-          <div className="h-8 w-px bg-zinc-400 dark:bg-zinc-800" />
+          <div className="h-8 w-px bg-[#272727]" />
           
           <button
             onClick={onClose}
@@ -333,8 +333,8 @@ const DetailWindow = ({
       </div>
 
       {/* Outboard Processor Interior (Content Display) */}
-      <div className="scrollbar-none no-scrollbar flex-1 overflow-y-auto bg-zinc-50 p-4 md:p-6 text-zinc-900 dark:bg-[#121214] dark:text-zinc-300">
-        <div className="relative p-4 md:p-6 rounded-lg border border-zinc-350 bg-white/50 shadow-inner dark:border-zinc-800/80 dark:bg-black/30 overflow-x-hidden no-scrollbar">
+      <div className="scrollbar-none no-scrollbar flex-1 overflow-y-auto bg-[#0d0d0d] p-4 md:p-6 text-[#f7f9fa]">
+        <div className="relative p-4 md:p-6 rounded-lg border border-[#272727] bg-black/30 shadow-inner overflow-x-hidden no-scrollbar">
           {clip.content}
         </div>
       </div>
@@ -434,23 +434,23 @@ export function AboutSection() {
           content: (
             <div className="mx-auto max-w-4xl">
               {/* Profile Synth Header */}
-              <div className="mb-8 flex items-center justify-between border-b-2 border-zinc-200 pb-4 dark:border-zinc-800">
+              <div className="mb-8 flex items-center justify-between border-b-2 border-[#272727] pb-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-lg border-2 border-blue-500/20 bg-blue-500/10 dark:border-blue-400/25 dark:bg-blue-400/10">
-                    <User size={28} className="text-blue-500 dark:text-blue-400 animate-pulse" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-lg border-2 border-[#af50ff]/20 bg-[#af50ff]/10">
+                    <User size={28} className="text-[#af50ff] animate-pulse" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white">
+                    <h1 className="text-3xl font-black tracking-tighter text-[#f7f9fa]">
                       ADITYA HIMAONE
                     </h1>
-                    <p className="text-xs tracking-widest text-blue-500 dark:text-blue-400 uppercase font-black">
+                    <p className="text-xs tracking-widest text-[#af50ff] uppercase font-black">
                       Frontend Engineer / Jakarta Selatan
                     </p>
                   </div>
                 </div>
                 <div className="hidden text-right sm:block">
-                  <div className="text-[10px] font-bold text-zinc-550 dark:text-zinc-500">SYSTEM PROFILE MODEL</div>
-                  <div className="font-mono text-xl font-black text-zinc-800 dark:text-zinc-200">
+                  <div className="text-[10px] font-bold text-[#6b6b6b]">SYSTEM PROFILE MODEL</div>
+                  <div className="font-mono text-xl font-black text-[#f7f9fa]">
                     AH-2026-MKIV
                   </div>
                 </div>
@@ -460,7 +460,7 @@ export function AboutSection() {
                 {/* Left: Synth Spec Sheet */}
                 <div className="lg:col-span-3 space-y-6">
                   <div>
-                    <h3 className="mb-4 flex items-center gap-2 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                    <h3 className="mb-4 flex items-center gap-2 text-xs font-black text-[#828384] uppercase tracking-widest">
                       <div className="h-2 w-2 rounded-full bg-blue-500" />
                       Parameter Dial Matrix
                     </h3>
@@ -475,16 +475,16 @@ export function AboutSection() {
                   </div>
 
                   <div>
-                    <h3 className="mb-3 flex items-center gap-2 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                    <h3 className="mb-3 flex items-center gap-2 text-xs font-black text-[#828384] uppercase tracking-widest">
                       <div className="h-2 w-2 rounded-full bg-amber-500" />
                       System Bios
                     </h3>
-                    <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                    <p className="text-sm leading-relaxed text-[#828384]">
                       Passionate developer bridging the gap between engineering logic
                       and creative design. Just as a producer layers sounds to create
                       a song, I layer code to build immersive digital experiences.
                     </p>
-                    <p className="mt-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                    <p className="mt-3 text-sm leading-relaxed text-[#828384]">
                       Specialized in building high-performance web applications with
                       a focus on interaction design, animation, and accessibility.
                       Currently pushing pixels at Jakarta Selatan while exploring
@@ -494,17 +494,16 @@ export function AboutSection() {
 
                   {/* Signal Flow Patchbay */}
                   <div>
-                    <h3 className="mb-4 flex items-center gap-2 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                    <h3 className="mb-4 flex items-center gap-2 text-xs font-black text-[#828384] uppercase tracking-widest">
                       <div className="h-2 w-2 rounded-full bg-green-500" />
                       Signal Flow Patchbay
                     </h3>
-                    <div className="relative rounded-xl border border-zinc-350 bg-zinc-100 p-5 dark:border-zinc-800 dark:bg-zinc-950/80 shadow-inner">
-                      {/* Connection Cable Graphic */}
-                      <svg className="absolute inset-0 h-full w-full pointer-events-none opacity-40 dark:opacity-80" xmlns="http://www.w3.org/2000/svg">
+                    <div className="relative rounded-xl border border-[#272727] bg-[#0d0d0d] p-5 shadow-inner">
+                      <svg className="absolute inset-0 h-full w-full pointer-events-none opacity-40" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 45 40 Q 120 70 200 40 T 350 40" fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="5,5" className="animate-[dash_2s_linear_infinite]" />
                         <path d="M 200 40 Q 280 75 350 40" fill="none" stroke="#22c55e" strokeWidth="2" />
                       </svg>
-                      
+
                       <style>{`
                         @keyframes dash {
                           to {
@@ -524,8 +523,8 @@ export function AboutSection() {
 
                 {/* Right: Console Modules & Status */}
                 <div className="lg:col-span-2 space-y-6">
-                  <div className="rounded-xl border border-zinc-300 bg-zinc-100/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/50">
-                    <h3 className="mb-4 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                  <div className="rounded-xl border border-[#272727] bg-[#0d0d0d]/50 p-5">
+                    <h3 className="mb-4 text-xs font-black text-[#828384] uppercase tracking-widest">
                       Channel Strip EQ
                     </h3>
                     <div className="space-y-1.5">
@@ -542,16 +541,16 @@ export function AboutSection() {
                   <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
                     <div className="mb-3 flex items-center gap-2">
                       <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                      <span className="text-xs font-black tracking-widest text-emerald-600 dark:text-emerald-400">
+                      <span className="text-xs font-black tracking-widest text-emerald-400">
                         SYSTEM OPERATIONAL
                       </span>
                     </div>
-                    <p className="text-xs leading-relaxed text-zinc-650 dark:text-zinc-450">
+                    <p className="text-xs leading-relaxed text-[#828384]">
                       Currently available for senior frontend roles, UI engineering contracts, and creative technology partnerships.
                     </p>
                     <div className="mt-4 flex flex-wrap gap-1.5">
                       {['REMOTE', 'HYBRID', 'CONTRACT'].map((tag) => (
-                        <span key={tag} className="rounded bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black text-emerald-600 dark:text-emerald-400">
+                        <span key={tag} className="rounded bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black text-emerald-400">
                           {tag}
                         </span>
                       ))}
@@ -559,8 +558,8 @@ export function AboutSection() {
                   </div>
 
                   {/* I/O Port Pins */}
-                  <div className="rounded-xl border border-zinc-300 p-5 dark:border-zinc-800">
-                    <h3 className="mb-3 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                  <div className="rounded-xl border border-[#272727] p-5">
+                    <h3 className="mb-3 text-xs font-black text-[#828384] uppercase tracking-widest">
                       I/O Terminals
                     </h3>
                     <div className="space-y-3">
@@ -570,8 +569,8 @@ export function AboutSection() {
                         { label: 'LINKEDIN', value: 'adityahimaone' },
                       ].map((link) => (
                         <div key={link.label} className="flex justify-between items-center text-xs">
-                          <span className="text-[10px] font-black text-zinc-500">{link.label}</span>
-                          <span className="font-mono text-zinc-850 dark:text-zinc-200 font-bold bg-zinc-200 dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-350 dark:border-zinc-800">{link.value}</span>
+                          <span className="text-[10px] font-black text-[#6b6b6b]">{link.label}</span>
+                          <span className="font-mono text-[#f7f9fa] font-bold bg-[#090909] px-1.5 py-0.5 rounded border border-[#272727]">{link.value}</span>
                         </div>
                       ))}
                     </div>
@@ -600,9 +599,9 @@ export function AboutSection() {
           content: (
             <div className="mx-auto max-w-4xl">
               {/* Header */}
-              <div className="mb-8 flex items-center justify-between border-b-2 border-zinc-200 pb-4 dark:border-zinc-800">
+              <div className="mb-8 flex items-center justify-between border-b-2 border-[#272727] pb-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg border-2 border-green-500/20 bg-green-500/10 dark:border-green-400/25 dark:bg-green-400/10">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg border-2 border-green-500/20 bg-green-500/10">
                     <Activity size={24} className="text-green-500 dark:text-green-400 animate-pulse" />
                   </div>
                   <div>
@@ -613,10 +612,6 @@ export function AboutSection() {
                       Real-time Performance Data
                     </p>
                   </div>
-                </div>
-                <div className="hidden items-center gap-2 sm:flex">
-                  <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
-                  <span className="font-mono text-xs font-bold text-zinc-500">LIVE FEED</span>
                 </div>
               </div>
 
@@ -632,15 +627,15 @@ export function AboutSection() {
                     ].map((stat) => (
                       <div
                         key={stat.label}
-                        className="flex flex-col items-center rounded-xl border border-zinc-400/40 bg-zinc-950 p-4 shadow-inner relative overflow-hidden"
+                        className="flex flex-col items-center rounded-xl border border-[#272727] bg-black p-4 shadow-inner relative overflow-hidden"
                       >
                         {/* Glow Filter */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black to-zinc-950 pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black to-black pointer-events-none" />
                         <span className={cn('text-3xl font-black relative z-10 font-mono tracking-widest', stat.color, 'drop-shadow-[0_0_6px_currentColor]')}>
                           {stat.value}
                           <span className="text-base font-bold select-none">{stat.suffix}</span>
                         </span>
-                        <span className="mt-2 text-[9px] font-bold tracking-wider text-zinc-500 uppercase relative z-10">
+                        <span className="mt-2 text-[9px] font-bold tracking-wider text-[#6b6b6b] uppercase relative z-10">
                           {stat.label}
                         </span>
                       </div>
@@ -648,8 +643,8 @@ export function AboutSection() {
                   </div>
 
                   {/* Faders Console for Expertise */}
-                  <div className="rounded-xl border border-zinc-300 bg-zinc-100/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/50">
-                    <h3 className="mb-4 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                  <div className="rounded-xl border border-[#272727] bg-[#0d0d0d]/50 p-5">
+                    <h3 className="mb-4 text-xs font-black text-[#828384] uppercase tracking-widest">
                       Fader Deck Expertise
                     </h3>
                     <div className="space-y-1">
@@ -662,8 +657,8 @@ export function AboutSection() {
                   </div>
 
                   {/* Step Sequencer Output History */}
-                  <div className="rounded-xl border border-zinc-300 bg-zinc-100/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/50">
-                    <h3 className="mb-4 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                  <div className="rounded-xl border border-[#272727] bg-[#0d0d0d]/50 p-5">
+                    <h3 className="mb-4 text-xs font-black text-[#828384] uppercase tracking-widest">
                       Step Sequencer Activity
                     </h3>
                     <div className="flex gap-2 items-center">
@@ -675,7 +670,7 @@ export function AboutSection() {
                         { step: '05', val: 9, label: "'26" },
                       ].map((item, idx) => (
                         <div key={idx} className="flex-1 flex flex-col items-center gap-2">
-                          <div className="w-full flex flex-col gap-1 border border-zinc-300 dark:border-zinc-850 rounded p-1 bg-white/60 dark:bg-black/30 shadow-inner">
+                          <div className="w-full flex flex-col gap-1 border border-[#272727] rounded p-1 bg-black/30 shadow-inner">
                             {[...Array(10)].map((_, tickIdx) => {
                               const isActive = 10 - tickIdx <= item.val
                               return (
@@ -685,13 +680,13 @@ export function AboutSection() {
                                     'h-2 w-full rounded-sm transition-all duration-300',
                                     isActive
                                       ? 'bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.7)]'
-                                      : 'bg-zinc-200 dark:bg-zinc-800'
+                                      : 'bg-[#0d0d0d]'
                                   )}
                                 />
                               )
                             })}
                           </div>
-                          <span className="font-mono text-[9px] font-black text-zinc-500">{item.label}</span>
+                          <span className="font-mono text-[9px] font-black text-[#6b6b6b]">{item.label}</span>
                         </div>
                       ))}
                     </div>
@@ -709,20 +704,20 @@ export function AboutSection() {
                     ].map((item) => (
                       <div
                         key={item.label}
-                        className="flex flex-col rounded-xl border border-zinc-300 bg-white p-4 dark:border-zinc-850 dark:bg-zinc-950 shadow-sm"
+                        className="flex flex-col rounded-xl border border-[#272727] bg-[#090909] p-4 shadow-sm"
                       >
                         <span className="text-xl select-none">{item.icon}</span>
-                        <span className="mt-2 text-2xl font-black text-zinc-900 dark:text-zinc-100">
+                        <span className="mt-2 text-2xl font-black text-[#f7f9fa]">
                           {item.value}
                         </span>
-                        <span className="text-[10px] font-bold text-zinc-500 tracking-wide uppercase">{item.label}</span>
+                        <span className="text-[10px] font-bold text-[#6b6b6b] tracking-wide uppercase">{item.label}</span>
                       </div>
                     ))}
                   </div>
 
                   {/* Operational Status Log */}
                   <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
-                    <h3 className="mb-3 flex items-center gap-2 text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">
+                    <h3 className="mb-3 flex items-center gap-2 text-xs font-black text-amber-400 uppercase tracking-widest">
                       <div className="h-2 w-2 animate-pulse rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b]" />
                       Active Threads
                     </h3>
@@ -735,7 +730,7 @@ export function AboutSection() {
                       ].map((item, i) => (
                         <div key={i} className="flex items-start gap-2">
                           <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
-                          <span className="text-xs text-zinc-650 dark:text-zinc-350">
+                          <span className="text-xs text-[#828384]">
                             {item}
                           </span>
                         </div>
@@ -744,11 +739,11 @@ export function AboutSection() {
                   </div>
 
                   {/* Philosophy Quotes Card */}
-                  <div className="rounded-xl border border-zinc-300 bg-zinc-100/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/50">
-                    <h3 className="mb-3 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                  <div className="rounded-xl border border-[#272727] bg-[#0d0d0d]/50 p-5">
+                    <h3 className="mb-3 text-xs font-black text-[#828384] uppercase tracking-widest">
                       Console Credo
                     </h3>
-                    <blockquote className="border-l-4 border-blue-500 pl-3 text-sm italic text-zinc-700 dark:text-zinc-350">
+                    <blockquote className="border-l-4 border-[#af50ff] pl-3 text-sm italic text-[#828384]">
                       "Every interface is an instrument. The user should feel
                       like they're playing, not working."
                     </blockquote>
@@ -756,7 +751,7 @@ export function AboutSection() {
                       {['Pixel Perfect', 'Accessible', 'Acoustic UI', 'Delightful'].map((tag) => (
                         <span
                           key={tag}
-                          className="rounded border border-zinc-300 bg-white px-2 py-0.5 text-[9px] font-bold text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 uppercase"
+                          className="rounded border border-[#272727] bg-[#090909] px-2 py-0.5 text-[9px] font-bold text-[#828384] uppercase"
                         >
                           {tag}
                         </span>
@@ -786,13 +781,13 @@ export function AboutSection() {
           type: 'spotify',
           content: (
             <div className="flex h-full flex-col items-center justify-center py-4">
-              <div className="relative w-full max-w-md rounded-xl bg-zinc-950 p-6 shadow-2xl border-2 border-zinc-800/80">
+              <div className="relative w-full max-w-md rounded-xl bg-[#090909] p-6 shadow-2xl border-2 border-[#272727]">
                 {/* Rack Mounting Handles */}
-                <div className="absolute top-0 bottom-0 -left-4 flex w-4 flex-col items-center justify-between rounded-l border-r border-black bg-zinc-900 py-6">
+                <div className="absolute top-0 bottom-0 -left-4 flex w-4 flex-col items-center justify-between rounded-l border-r border-black bg-[#090909] py-6">
                   <div className="h-3 w-1.5 rounded bg-black shadow-inner" />
                   <div className="h-3 w-1.5 rounded bg-black shadow-inner" />
                 </div>
-                <div className="absolute top-0 -right-4 bottom-0 flex w-4 flex-col items-center justify-between rounded-r border-l border-black bg-zinc-900 py-6">
+                <div className="absolute top-0 -right-4 bottom-0 flex w-4 flex-col items-center justify-between rounded-r border-l border-black bg-[#090909] py-6">
                   <div className="h-3 w-1.5 rounded bg-black shadow-inner" />
                   <div className="h-3 w-1.5 rounded bg-black shadow-inner" />
                 </div>
@@ -807,7 +802,7 @@ export function AboutSection() {
                 <NowPlaying />
 
                 <div className="mt-6 border-t border-white/5 pt-4 text-center">
-                  <p className="font-mono text-[10px] text-zinc-550 leading-relaxed italic">
+                  <p className="font-mono text-[10px] text-[#828384] leading-relaxed italic">
                     "Music is the hidden arithmetic of the soul, which does not
                     know that it is counting."
                   </p>

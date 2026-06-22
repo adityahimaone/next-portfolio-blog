@@ -513,7 +513,7 @@ export function ContactSection() {
             onClick={() => handlePadClick(pad)}
             aria-label={pad.type === 'functional' && 'label' in pad ? `Pad ${(pad as any).label}` : `Pad ${pad.id}`}
             className={cn(
-              'group relative flex flex-col items-center justify-center overflow-hidden rounded-md border-b-4 border-zinc-950 bg-zinc-800 transition-all duration-100 active:translate-y-1 active:scale-95 active:border-b-0 sm:rounded-lg',
+              'group relative flex flex-col items-center justify-center overflow-hidden rounded-md border-b-4 border-[#0d0d0d] bg-[#0a0a0a] transition-all duration-100 active:translate-y-1 active:scale-95 active:border-b-0 sm:rounded-lg',
               pad.type === 'functional' ? 'z-10' : 'z-0',
             )}
             style={{ gridColumn: `span ${pad.w}`, gridRow: `span ${pad.h}` }}
@@ -555,14 +555,14 @@ export function ContactSection() {
 
   return (
     <>
-      <section ref={sectionRef} id="contact" className="overflow-hidden py-24">
+      <section ref={sectionRef} id="contact" className="overflow-hidden bg-[#090909] py-24">
         <div className="container mx-auto px-4">
           <div className="mb-16 flex flex-col items-center text-center">
             <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-200/50 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400"
+              className="mb-4 flex items-center gap-2 rounded-full border border-zinc-300/20 bg-white/5 px-4 py-1.5 text-sm font-medium text-zinc-400"
             >
               <Radio className="h-4 w-4" />
               <span>SESSION BOOKING</span>
@@ -572,20 +572,20 @@ export function ContactSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-4xl font-black tracking-tighter text-zinc-900 sm:text-5xl dark:text-white"
+              className="text-4xl font-black tracking-tighter text-[#f7f9fa] sm:text-5xl"
             >
               Launch Collaboration
             </m.h2>
-            <p className="mt-4 max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
+            <p className="mt-4 max-w-2xl text-lg text-zinc-400">
               Hit a pad to start a loop. Stack multiple loops to build a beat.
             </p>
           </div>
 
           {/* Launchpad Board */}
-          <div className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-800 p-2 shadow-2xl sm:p-4 dark:bg-zinc-950">
+          <div className="glass-void relative mx-auto max-w-6xl border border-[#272727] p-2 shadow-2xl sm:p-4">
             <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
 
-            <div className="relative rounded-2xl border border-zinc-700 bg-zinc-900 p-4 shadow-inner sm:p-6 md:p-10">
+            <div className="relative rounded-2xl border border-[#272727] bg-[#0d0d0d] p-4 shadow-inner sm:p-6 md:p-10">
               <Screw className="absolute top-2 left-2 sm:top-4 sm:left-4" />
               <Screw className="absolute top-2 right-2 sm:top-4 sm:right-4" />
               <Screw className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4" />
@@ -594,7 +594,7 @@ export function ContactSection() {
               {/* Top Panel */}
               <div className="mb-4 flex items-center justify-between px-2 sm:mb-8">
                 <div className="flex items-center gap-2">
-                  <div className={cn('h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2', isPlaying ? 'animate-pulse bg-red-500' : 'bg-zinc-600')} />
+                  <div className={cn('h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2', isPlaying ? 'animate-pulse bg-red-500' : 'bg-zinc-700')} />
                   <span className="font-mono text-[10px] tracking-widest text-zinc-500 sm:text-xs">REC</span>
                 </div>
                 <span className="text-[10px] font-black tracking-[0.3em] text-zinc-600 sm:text-xs dark:text-zinc-400">LAUNCHPAD PRO</span>
@@ -605,7 +605,7 @@ export function ContactSection() {
               </div>
 
               {/* Control Panel */}
-              <div className="mb-4 space-y-3 rounded-lg border border-zinc-700/50 bg-zinc-800/50 p-3">
+              <div className="mb-4 space-y-3 rounded-lg border border-[#272727] bg-white/[0.02] p-3">
                 {/* Top row: Presets + Transport */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-[10px] font-bold text-zinc-500">SONG PRESETS:</span>
@@ -646,8 +646,8 @@ export function ContactSection() {
                           className={cn(
                             'flex h-8 w-8 items-center justify-center rounded border shadow-sm transition-colors',
                             isPlaying
-                              ? 'border-amber-300 bg-amber-50 text-amber-600 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400'
-                              : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+                              ? 'border-[#af50ff]/50 bg-[#af50ff]/15 text-[#af50ff]'
+                              : 'border-[#272727] bg-white/5 text-zinc-300',
                           )}
                         >
                           {isPlaying ? <Pause size={14} /> : <Play size={14} />}
@@ -656,7 +656,7 @@ export function ContactSection() {
                         <m.button
                           whileTap={{ scale: 0.9 }}
                           onClick={stopAllPlayback}
-                          className="flex h-8 w-8 items-center justify-center rounded border border-red-300 bg-red-50 text-red-600 shadow-sm dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
+                          className="flex h-8 w-8 items-center justify-center rounded border border-red-500/40 bg-red-500/10 text-red-400 shadow-sm"
                         >
                           <Square size={12} />
                         </m.button>
@@ -718,27 +718,27 @@ export function ContactSection() {
                       className={cn(
                         'group relative overflow-hidden rounded-lg border p-2 text-left transition-all hover:scale-105',
                         currentPreset === preset.id
-                          ? 'border-green-500 bg-green-500/20'
-                          : 'border-zinc-600 bg-zinc-900 hover:border-zinc-500 hover:bg-zinc-800',
+                          ? 'border-[#af50ff]/50 bg-[#af50ff]/10'
+                          : 'border-[#272727] bg-[#0a0a0a] hover:border-white/15 hover:bg-white/5',
                       )}
                       whileTap={{ scale: 0.95 }}
                       title={preset.description}
                     >
                       <div className="relative z-10">
                         <div className="mb-1 flex items-center justify-between">
-                          <span className={cn('text-[10px] font-bold', currentPreset === preset.id ? 'text-green-400' : 'text-zinc-400 group-hover:text-zinc-300')}>
+                          <span className={cn('text-[10px] font-bold', currentPreset === preset.id ? 'text-[#af50ff]' : 'text-zinc-400 group-hover:text-zinc-200')}>
                             {preset.name.toUpperCase()}
                           </span>
                           {currentPreset === preset.id && (
-                            <m.div className="h-1.5 w-1.5 rounded-full bg-green-500" animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1, repeat: Infinity }} />
+                            <m.div className="h-1.5 w-1.5 rounded-full bg-[#af50ff]" animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1, repeat: Infinity }} />
                           )}
                         </div>
-                        <p className={cn('text-[8px]', currentPreset === preset.id ? 'text-green-500/80' : 'text-zinc-500 group-hover:text-zinc-400')}>
+                        <p className={cn('text-[8px]', currentPreset === preset.id ? 'text-[#af50ff]/80' : 'text-zinc-500 group-hover:text-zinc-400')}>
                           {preset.description}
                         </p>
                       </div>
                       {currentPreset === preset.id && (
-                        <m.div className="absolute inset-0 bg-green-500/10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+                        <m.div className="absolute inset-0 bg-[#af50ff]/5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
                       )}
                     </m.button>
                   ))}
@@ -751,10 +751,10 @@ export function ContactSection() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="flex items-center gap-2 rounded border border-green-500/30 bg-green-500/10 px-3 py-1.5"
+                      className="flex items-center gap-2 rounded border border-[#af50ff]/30 bg-[#af50ff]/10 px-3 py-1.5"
                     >
-                      <Music className="h-3 w-3 text-green-500" />
-                      <span className="text-[10px] font-medium text-green-400">
+                      <Music className="h-3 w-3 text-[#af50ff]" />
+                      <span className="text-[10px] font-medium text-[#c470ff]">
                         Now Playing: {presets.find((p) => p.id === currentPreset)?.name}
                         {isPaused && ' (PAUSED)'}
                       </span>
@@ -774,7 +774,7 @@ export function ContactSection() {
 
               {/* Cable */}
               <div className="-mt-0.5 flex justify-center">
-                <div className="flex h-8 w-24 items-end justify-center rounded-b-xl border-x border-b border-zinc-700 bg-zinc-800 pb-1 shadow-lg sm:h-12 sm:w-32 sm:pb-2">
+                <div className="flex h-8 w-24 items-end justify-center rounded-b-xl border-x border-b border-[#272727] bg-[#0d0d0d] pb-1 shadow-lg sm:h-12 sm:w-32 sm:pb-2">
                   <span className="font-mono text-[8px] text-zinc-500 sm:text-[10px]">USB-C</span>
                 </div>
               </div>

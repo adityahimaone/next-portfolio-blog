@@ -263,7 +263,7 @@ const DetailWindow = ({
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm md:p-8"
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-[#090909]/90 p-4 backdrop-blur-md md:p-8"
     onClick={onClose}
   >
     <m.div
@@ -271,7 +271,7 @@ const DetailWindow = ({
       animate={{ scale: 1, y: 0 }}
       exit={{ scale: 0.95, y: 30 }}
       onClick={(e) => e.stopPropagation()}
-      className="relative flex h-[85vh] max-h-[650px] w-full max-w-5xl flex-col overflow-hidden rounded-lg border-[3px] border-zinc-700 bg-zinc-200 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+      className="glass-void relative flex h-[85vh] max-h-[650px] w-full max-w-5xl flex-col overflow-hidden border border-[#272727] shadow-2xl"
     >
       {/* Outer Metal Bezel Overlay */}
       <div className="absolute inset-0 pointer-events-none border border-white/20 rounded z-30" />
@@ -822,27 +822,27 @@ export function AboutSection() {
 
   return (
     <>
-      <section ref={sectionRef} id="about" className="bg-white py-24 dark:bg-zinc-950">
+      <section ref={sectionRef} id="about" className="bg-[#090909] py-24">
         <div className="container mx-auto px-4 md:px-6">
           <div className="mb-12 flex flex-col items-center text-center">
             <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400"
+              className="mb-4 flex items-center gap-2 rounded-full border border-zinc-300/20 bg-white/5 px-4 py-1.5 text-sm font-medium text-zinc-400"
             >
               <Layers className="h-4 w-4" />
               <span>ARRANGEMENT VIEW</span>
             </m.div>
-            <h2 className="text-4xl font-bold tracking-tighter text-zinc-900 sm:text-5xl dark:text-white">
+            <h2 className="text-4xl font-bold tracking-tighter text-[#f7f9fa] sm:text-5xl">
               The Workflow
             </h2>
           </div>
 
           {/* DAW Interface */}
-          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="glass-void relative mx-auto max-w-6xl overflow-hidden border border-[#272727] shadow-2xl">
             {/* Toolbar */}
-            <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-2 dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="flex items-center justify-between border-b border-[#272727] bg-[#0d0d0d] px-4 py-2">
               <div className="flex items-center gap-4">
                 <div className="flex gap-2">
                   <button
@@ -851,8 +851,8 @@ export function AboutSection() {
                     className={cn(
                       'flex h-8 w-8 items-center justify-center rounded transition-colors',
                       isPlaying
-                        ? 'bg-green-500 text-black'
-                        : 'bg-zinc-200 text-zinc-600 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700',
+                        ? 'bg-[#af50ff] text-white'
+                        : 'bg-white/5 text-zinc-400 hover:bg-white/10',
                     )}
                   >
                     {isPlaying ? (
@@ -864,13 +864,13 @@ export function AboutSection() {
                   <button
                     onClick={handleStop}
                     aria-label="Stop Timeline"
-                    className="flex h-8 w-8 items-center justify-center rounded bg-zinc-200 text-zinc-600 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                    className="flex h-8 w-8 items-center justify-center rounded bg-white/5 text-zinc-400 hover:bg-white/10"
                   >
                     <Square size={16} fill="currentColor" />
                   </button>
                 </div>
 
-                <div className="hidden items-center gap-4 rounded bg-white px-3 py-1 font-mono text-xs text-green-700 md:flex dark:bg-zinc-950 dark:text-green-400">
+                <div className="hidden items-center gap-4 rounded bg-black/40 px-3 py-1 font-mono text-xs text-[#af50ff] md:flex">
                   <span>
                     00:0{isPlaying ? Math.floor(Date.now() / 1000) % 10 : '0'}
                     :00
@@ -891,8 +891,8 @@ export function AboutSection() {
             {/* Main Workspace */}
             <div className="relative flex h-[400px]">
               {/* Track Headers (Left) */}
-              <div className="relative z-20 flex flex-col border-r border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
-                <div className="h-8 border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900" />{' '}
+              <div className="relative z-20 flex flex-col border-r border-[#272727] bg-[#0d0d0d]">
+                <div className="h-8 border-b border-[#272727] bg-[#0d0d0d]" />{' '}
                 {/* Ruler Spacer */}
                 {tracks.map((track) => (
                   <TrackHeader
@@ -907,21 +907,13 @@ export function AboutSection() {
               </div>
 
               {/* Timeline (Right) */}
-              <div className="relative flex-1 overflow-x-auto overflow-y-hidden bg-zinc-50 dark:bg-zinc-950">
+              <div className="relative flex-1 overflow-x-auto overflow-y-hidden bg-[#090909]">
                 <div className="relative h-full min-w-[800px]">
                   <TimeRuler />
 
                   {/* Grid Background */}
                   <div
                     className="pointer-events-none absolute inset-0 top-8"
-                    style={{
-                      backgroundImage:
-                        'linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px)',
-                      backgroundSize: '8.33% 100%',
-                    }}
-                  />
-                  <div
-                    className="pointer-events-none absolute inset-0 top-8 hidden dark:block"
                     style={{
                       backgroundImage:
                         'linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
@@ -949,7 +941,7 @@ export function AboutSection() {
                         <div
                           key={track.id}
                           className={cn(
-                            'relative grid grid-cols-12 gap-1 border-b border-zinc-200/50 p-1 transition-opacity dark:border-zinc-800/50',
+                            'relative grid grid-cols-12 gap-1 border-b border-[#272727]/50 p-1 transition-opacity',
                             isVisible ? 'opacity-100' : 'opacity-20 grayscale',
                           )}
                         >
@@ -974,8 +966,8 @@ export function AboutSection() {
             </div>
 
             {/* Info Bar */}
-            <div className="flex h-8 items-center border-t border-zinc-200 bg-zinc-100 px-4 text-xs text-zinc-650 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-450">
-              <span className="mr-2 font-bold text-blue-600 dark:text-blue-400">
+            <div className="flex h-8 items-center border-t border-[#272727] bg-[#0d0d0d] px-4 text-xs text-zinc-400">
+              <span className="mr-2 font-bold text-[#af50ff]">
                 INFO
               </span>
               {hoveredClip

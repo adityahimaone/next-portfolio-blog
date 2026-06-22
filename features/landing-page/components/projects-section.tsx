@@ -18,7 +18,7 @@ export function ProjectsSection() {
     <>
       <section
         id="projects"
-        className="overflow-hidden py-24 2xl:overflow-visible"
+        className="overflow-hidden bg-[#090909] py-24 2xl:overflow-visible"
         ref={ref}
       >
         <div className="container mx-auto px-4 md:px-6">
@@ -26,7 +26,7 @@ export function ProjectsSection() {
             <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+              className="mb-4 flex items-center gap-2 rounded-full border border-zinc-300/20 bg-white/5 px-4 py-1.5 text-sm font-medium text-zinc-400"
             >
               <Disc className="h-4 w-4" />
               <span>TRACKS</span>
@@ -35,7 +35,7 @@ export function ProjectsSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.1 }}
-              className="text-4xl font-bold tracking-tighter sm:text-5xl"
+              className="text-4xl font-bold tracking-tighter text-[#f7f9fa] sm:text-5xl"
             >
               Featured Releases
             </m.h2>
@@ -74,7 +74,7 @@ export function ProjectsSection() {
                   </div>
 
                   {/* Album Cover (Card) */}
-                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm bg-zinc-100 shadow-2xl transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:bg-zinc-900">
+                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm bg-[#0d0d0d] shadow-2xl transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2">
                     {/* Image Area */}
                     <div className="relative h-[75%] w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
                       <Image
@@ -90,13 +90,13 @@ export function ProjectsSection() {
                     </div>
 
                     {/* Info Area (Footer) */}
-                    <div className="relative flex h-[25%] flex-col justify-center border-t border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-950">
-                      <h3 className="truncate text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                    <div className="relative flex h-[25%] flex-col justify-center border-t border-[#272727] bg-[#090909] px-5 py-3">
+                      <h3 className="truncate text-lg font-bold text-[#f7f9fa]">
                         {project.title}
                       </h3>
-                      <div className="mt-1 flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                      <div className="mt-1 flex items-center gap-2 text-xs font-medium text-zinc-400">
                         <span className="truncate">{project.genre}</span>
-                        <span className="h-1 w-1 shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-zinc-600" />
                         <span>{project.year}</span>
                       </div>
                     </div>
@@ -122,13 +122,13 @@ export function ProjectsSection() {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative max-h-[90vh] w-[95vw] max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-zinc-900"
+                className="glass-void relative max-h-[90vh] w-[95vw] max-w-4xl overflow-hidden border border-[#272727] shadow-2xl"
               >
                 {/* Close Button */}
                 <button
                   onClick={() => setSelectedProject(null)}
                   aria-label="Close project modal"
-                  className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/10 text-zinc-900 backdrop-blur-md transition-colors hover:bg-black/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
+                  className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-[#272727] bg-white/5 text-zinc-300 backdrop-blur-md transition-colors hover:border-[#af50ff]/40 hover:bg-white/10"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -154,29 +154,29 @@ export function ProjectsSection() {
                   </div>
 
                   {/* Right: Content Area */}
-                  <div className="flex flex-col overflow-hidden p-6 md:p-8">
+                  <div className="flex flex-col overflow-hidden bg-[#090909] p-6 md:p-8">
                     <div className="mb-4 md:mb-6">
-                      <div className="text-primary mb-2 flex items-center gap-2 text-sm font-medium">
+                      <div className="text-[#af50ff] mb-2 flex items-center gap-2 text-sm font-medium">
                         <Mic2 className="h-4 w-4" />
                         <span>FEATURED TRACK</span>
                       </div>
-                      <h3 className="text-2xl leading-tight font-bold text-zinc-900 md:text-3xl dark:text-zinc-100">
+                      <h3 className="text-2xl leading-tight font-bold text-[#f7f9fa] md:text-3xl">
                         {selectedProject.title}
                       </h3>
-                      <div className="mt-2 flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
+                      <div className="mt-2 flex items-center gap-4 text-sm text-zinc-400">
                         <span>{selectedProject.genre}</span>
-                        <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                        <span className="h-1 w-1 rounded-full bg-zinc-600" />
                         <span>{selectedProject.year}</span>
                       </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto pr-2">
-                      <p className="line-clamp-4 text-base leading-relaxed text-zinc-600 md:line-clamp-none md:text-lg dark:text-zinc-300">
+                      <p className="line-clamp-4 text-base leading-relaxed text-zinc-400 md:line-clamp-none md:text-lg">
                         {selectedProject.description}
                       </p>
 
                       <div className="mt-8 space-y-4">
-                        <h4 className="text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-zinc-100">
+                        <h4 className="text-sm font-bold tracking-wider text-zinc-200 uppercase">
                           Production Credits
                         </h4>
                         <div className="flex flex-wrap gap-2">
@@ -184,7 +184,7 @@ export function ProjectsSection() {
                             (tech) => (
                               <span
                                 key={tech}
-                                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                                className="rounded-full border border-[#272727] bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300"
                               >
                                 {tech}
                               </span>
@@ -194,12 +194,12 @@ export function ProjectsSection() {
                       </div>
                     </div>
 
-                    <div className="mt-8 border-t border-zinc-100 pt-6 dark:border-zinc-800">
+                    <div className="mt-8 border-t border-[#272727] pt-6">
                       <a
                         href={selectedProject.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 py-4 font-bold text-white transition-all hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+                        className="group flex w-full items-center justify-center gap-2 rounded-xl border border-[#af50ff]/40 bg-[#af50ff]/10 px-6 py-4 font-bold text-[#af50ff] transition-all hover:bg-[#af50ff]/20 active:scale-95"
                       >
                         <Play className="h-5 w-5 fill-current" />
                         <span>Listen to Track (Visit Site)</span>

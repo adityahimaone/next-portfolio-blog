@@ -25,9 +25,10 @@
   }
 
   body {
-    @apply bg-white text-zinc-800 dark:bg-zinc-950 dark:text-zinc-100;
+    @apply bg-white text-zinc-800 dark:bg-[#090909] dark:text-[#f7f9fa];
     margin: 0;
     transition: background-color 0.5s ease, color 0.5s ease;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }
 
   ::selection {
@@ -44,10 +45,10 @@
     -webkit-text-fill-color: #ffffff !important;
   }
 
-  /* Music-themed section headings */
   .section-heading {
-    @apply text-3xl font-bold tracking-tight text-zinc-900 md:text-4xl lg:text-5xl dark:text-white;
+    @apply text-3xl font-bold text-zinc-900 md:text-4xl lg:text-5xl dark:text-[#f0f0f0];
     line-height: 1.1;
+    letter-spacing: -0.03em;
   }
 
   /* Add focus styles for accessibility */
@@ -232,6 +233,67 @@
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   }
 
+  /* Dope.security: Ghost Button */
+  .btn-ghost-void {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: 9999px;
+    border: 1px solid #475467;
+    background: transparent;
+    color: #f7f9fa;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .btn-ghost-void:hover {
+    border-color: #af50ff;
+    box-shadow: 0 0 12px rgba(175, 80, 255, 0.4);
+  }
+
+  /* Dope.security: Outlined feature row */
+  .feature-row {
+    width: 100%;
+    border: 1px solid #f0f0f0;
+    border-radius: 19.2px;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #090909;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .dark .feature-row {
+    border-color: #272727;
+    background: #0d0d0d;
+  }
+  .feature-row:hover {
+    border-color: #af50ff;
+    background: rgba(175, 80, 255, 0.04);
+  }
+
+  /* Dope.security: Glass panel (boarding pass) */
+  .glass-void {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 19.2px;
+  }
+
+  /* Orchid radial ambient glow */
+  .orchid-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle closest-corner at 10% 50%, rgba(108, 75, 214, 0.35), rgba(0,0,0,0) 55%);
+    pointer-events: none;
+  }
+
   /* Music bars for header */
   .music-bar {
     @apply from-primary to-secondary bg-gradient-to-t;
@@ -378,114 +440,134 @@
 }
 
 :root {
-  /* Base colors */
-  --background: #ffffff;
-  --foreground: #18181b;
+  /* Light mode (simplified — dope.security is dark-native) */
+  --background: #fafafa;
+  --foreground: #1a1a1a;
   --card: #ffffff;
-  --card-foreground: #18181b;
+  --card-foreground: #1a1a1a;
   --popover: #ffffff;
-  --popover-foreground: #18181b;
+  --popover-foreground: #1a1a1a;
 
-  /* Primary colors - Deep navy blue */
-  --primary: #273281;
-  --primary-light: #3a4699;
-  --primary-dark: #1e2866;
-  --primary-foreground: #f8fafc;
+  --primary: #af50ff;
+  --primary-light: #c470ff;
+  --primary-dark: #8b30cc;
+  --primary-foreground: #ffffff;
 
-  /* Secondary colors - Lighter blue */
-  --secondary: #3d468b;
-  --secondary-light: #505aa3;
-  --secondary-dark: #333b74;
-  --secondary-foreground: #f8fafc;
+  --secondary: #7f56d9;
+  --secondary-light: #9b78e3;
+  --secondary-dark: #6341b0;
+  --secondary-foreground: #ffffff;
 
-  /* Accent colors - Golden amber */
-  --accent: #e6a817;
-  --accent-light: #f2bc36;
-  --accent-dark: #cc920a;
-  --accent-foreground: #18181b;
+  --accent: #7f56d9;
+  --accent-light: #9b78e3;
+  --accent-dark: #6341b0;
+  --accent-foreground: #ffffff;
 
-  /* UI colors */
   --muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  --muted-foreground: #6b6b6b;
   --destructive: #ef4444;
   --destructive-foreground: #fef2f2;
   --border: #e4e4e7;
   --input: #e4e4e7;
-  --ring: #273281;
+  --ring: #af50ff;
 
-  /* Chart colors */
-  --chart-1: #273281;
-  --chart-2: #3d468b;
-  --chart-3: #e6a817;
-  --chart-4: #3a4699;
-  --chart-5: #505aa3;
+  --chart-1: #af50ff;
+  --chart-2: #7f56d9;
+  --chart-3: #c470ff;
+  --chart-4: #9b78e3;
+  --chart-5: #6341b0;
 
-  /* Border radius */
-  --radius: 0.625rem;
+  --radius: 0.75rem;
 
-  /* Sidebar colors */
-  --sidebar: #f8fafc;
-  --sidebar-foreground: #18181b;
-  --sidebar-primary: #273281;
-  --sidebar-primary-foreground: #f8fafc;
-  --sidebar-accent: #e6a817;
-  --sidebar-accent-foreground: #18181b;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #af50ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #7f56d9;
+  --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #e4e4e7;
-  --sidebar-ring: #273281;
+  --sidebar-ring: #af50ff;
+
+  /* Dope.security custom tokens */
+  --color-void: #fafafa;
+  --color-bone-white: #1a1a1a;
+  --color-ash: #2a2a2a;
+  --color-slate: #6b6b6b;
+  --color-graphite: #454545;
+  --color-smoke: #828384;
+  --color-iris: #af50ff;
+  --color-plum: #7f56d9;
+  --color-aubergine: #271635;
+  --color-storm-gray: #475467;
+  --color-lavender-wash: #e1bdff;
+  --color-vinyl-DEFAULT: #191f47;
+  --color-vinyl-groove: #2b335e;
+  --color-vinyl-label: #fef3c7;
 }
 
 .dark {
-  /* Base colors */
-  --background: #18181b;
-  --foreground: #f8fafc;
-  --card: #18181b;
-  --card-foreground: #f8fafc;
-  --popover: #18181b;
-  --popover-foreground: #f8fafc;
+  /* Void canvas — the infinite dark */
+  --background: #090909;
+  --foreground: #f7f9fa;
+  --card: #111111;
+  --card-foreground: #f7f9fa;
+  --popover: #111111;
+  --popover-foreground: #f7f9fa;
 
-  /* Primary colors - Lighter in dark mode */
-  --primary: #3a4699;
-  --primary-light: #505aa3;
-  --primary-dark: #273281;
-  --primary-foreground: #f8fafc;
+  /* Violet accent — the single chromatic note */
+  --primary: #af50ff;
+  --primary-light: #c470ff;
+  --primary-dark: #8b30cc;
+  --primary-foreground: #ffffff;
 
-  /* Secondary colors - Lighter in dark mode */
-  --secondary: #505aa3;
-  --secondary-light: #6571bd;
-  --secondary-dark: #3d468b;
-  --secondary-foreground: #f8fafc;
+  --secondary: #7f56d9;
+  --secondary-light: #9b78e3;
+  --secondary-dark: #6341b0;
+  --secondary-foreground: #ffffff;
 
-  /* Accent colors - Brighter in dark mode */
-  --accent: #f2bc36;
-  --accent-light: #f7cd5c;
-  --accent-dark: #e6a817;
-  --accent-foreground: #18181b;
+  --accent: #7f56d9;
+  --accent-light: #9b78e3;
+  --accent-dark: #6341b0;
+  --accent-foreground: #ffffff;
 
-  /* UI colors */
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
+  --muted: #1a1a1a;
+  --muted-foreground: #828384;
   --destructive: #7f1d1d;
   --destructive-foreground: #ef4444;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #3a4699;
+  --border: #272727;
+  --input: #272727;
+  --ring: #af50ff;
 
-  /* Chart colors */
-  --chart-1: #3a4699;
-  --chart-2: #505aa3;
-  --chart-3: #f2bc36;
-  --chart-4: #6571bd;
-  --chart-5: #f7cd5c;
+  --chart-1: #af50ff;
+  --chart-2: #7f56d9;
+  --chart-3: #c470ff;
+  --chart-4: #9b78e3;
+  --chart-5: #6341b0;
 
-  /* Sidebar colors */
-  --sidebar: #27272a;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #3a4699;
-  --sidebar-primary-foreground: #f8fafc;
-  --sidebar-accent: #f2bc36;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #3f3f46;
-  --sidebar-ring: #505aa3;
+  --sidebar: #111111;
+  --sidebar-foreground: #f7f9fa;
+  --sidebar-primary: #af50ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #7f56d9;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #272727;
+  --sidebar-ring: #af50ff;
+
+  /* Dope.security custom tokens */
+  --color-void: #090909;
+  --color-bone-white: #f7f9fa;
+  --color-ash: #f0f0f0;
+  --color-slate: #6b6b6b;
+  --color-graphite: #454545;
+  --color-smoke: #828384;
+  --color-iris: #af50ff;
+  --color-plum: #7f56d9;
+  --color-aubergine: #271635;
+  --color-storm-gray: #475467;
+  --color-lavender-wash: #e1bdff;
+  --color-vinyl-DEFAULT: #191f47;
+  --color-vinyl-groove: #2b335e;
+  --color-vinyl-label: #fef3c7;
 }
 
 @theme inline {

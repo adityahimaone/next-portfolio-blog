@@ -69,10 +69,8 @@ function InteractiveKnob({
     <div className="flex flex-col items-center gap-0.5 select-none shrink-0">
       <div
         className={cn(
-          'relative flex h-8 w-8 cursor-grab items-center justify-center rounded-full border shadow-sm active:cursor-grabbing transition-colors duration-300',
-          resolvedTheme === 'dark'
-            ? 'border-zinc-700 bg-zinc-800 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)]'
-            : 'border-zinc-300 bg-zinc-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]'
+          'relative flex h-8 w-8 cursor-grab items-center justify-center rounded-full border shadow-sm active:cursor-grabbing transition-all duration-300',
+          'border-[#475467] bg-[#111]',
         )}
         onMouseDown={(e) => {
           e.preventDefault()
@@ -80,18 +78,15 @@ function InteractiveKnob({
         }}
       >
         <div
-          className="absolute h-2 w-0.5 rounded-full bg-amber-500"
+          className="absolute h-2 w-0.5 rounded-full bg-[#af50ff]"
           style={{
             transform: `rotate(${angle}deg) translateY(-6px)`,
             transformOrigin: 'center 8px',
           }}
         />
-        <div className={cn(
-          "h-1.5 w-1.5 rounded-full shadow-inner",
-          resolvedTheme === 'dark' ? "bg-zinc-900" : "bg-zinc-300"
-        )} />
+        <div className="h-1.5 w-1.5 rounded-full bg-[#272727] shadow-inner" />
       </div>
-      <span className="font-mono text-[7px] text-zinc-500 uppercase tracking-widest">
+      <span className="font-mono text-[7px] text-[#6b6b6b] uppercase tracking-widest">
         {label}: {Math.round(value)}
       </span>
     </div>
@@ -110,15 +105,14 @@ function CanvasWaveform({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [mounted, setMounted] = useState(false)
-  const isDarkMode = !mounted || resolvedTheme === 'dark'
 
   const colors = useMemo(
     () => ({
-      primary: isDarkMode ? 'rgba(39, 50, 129, 0.4)' : 'rgba(39, 50, 129, 0.2)',
-      secondary: isDarkMode ? 'rgba(61, 70, 139, 0.4)' : 'rgba(61, 70, 139, 0.2)',
-      accent: isDarkMode ? 'rgba(230, 168, 23, 0.4)' : 'rgba(230, 168, 23, 0.2)',
+      primary: 'rgba(175, 80, 255, 0.25)',
+      secondary: 'rgba(127, 86, 217, 0.25)',
+      accent: 'rgba(175, 80, 255, 0.15)',
     }),
-    [isDarkMode],
+    [],
   )
 
   useEffect(() => {
@@ -167,11 +161,11 @@ function CanvasWaveform({
 
     const resizeCanvas = () => {
       const dpr = window.devicePixelRatio || 1
-      canvas.width = window.innerWidth * dpr
-      canvas.height = window.innerHeight * dpr
-      canvas.style.width = `${window.innerWidth}px`
-      canvas.style.height = `${window.innerHeight}px`
-      ctx.scale(dpr, dpr)
+      canvas!.width = window.innerWidth * dpr
+      canvas!.height = window.innerHeight * dpr
+      canvas!.style.width = `${window.innerWidth}px`
+      canvas!.style.height = `${window.innerHeight}px`
+      ctx!.scale(dpr, dpr)
       initLines()
     }
 
@@ -228,7 +222,7 @@ function CanvasWaveform({
     }
   }, [mounted, colors, isPlaying, playbackRate])
 
-  return <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-60 dark:opacity-40" />
+  return <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-60" />
 }
 
 export function HeroSection() {
@@ -261,18 +255,30 @@ export function HeroSection() {
       ref={containerRef}
       className={cn(
         "relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden transition-colors duration-500 py-24 select-none",
-        resolvedThemeStr === 'dark' ? 'bg-zinc-950 text-zinc-100' : 'bg-zinc-50 text-zinc-800'
+        "bg-[#090909] text-[#f7f9fa]"
       )}
     >
-      {/* Background Grille Texture & Active Soundwave Lines */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      {/* Orchid radial glow background */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute -top-64 -left-64 w-[600px] h-[600px] rounded-full opacity-40"
+          style={{
+            background: 'radial-gradient(circle closest-corner at 10% 50%, rgba(108,75,214,0.35), rgba(0,0,0,0) 55%)',
+          }}
+        />
+        <div
+          className="absolute -bottom-64 -right-64 w-[500px] h-[500px] rounded-full opacity-25"
+          style={{
+            background: 'radial-gradient(circle closest-corner at 90% 50%, rgba(175,80,255,0.2), rgba(0,0,0,0) 55%)',
+          }}
+        />
         {/* Subtle hardware grille dots */}
         <div
-          className="absolute inset-0 bg-[radial-gradient(#000_1.5px,transparent_1.5px)] opacity-5 dark:bg-[radial-gradient(#333_1.5px,transparent_1.5px)] dark:opacity-20"
+          className="absolute inset-0 bg-[radial-gradient(#333_1.5px,transparent_1.5px)] opacity-20"
           style={{ backgroundSize: '6px 6px' }}
         />
         {/* Noise overlay */}
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 mix-blend-overlay dark:opacity-[0.08]" />
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.08] mix-blend-overlay" />
 
         {/* Audio React Waves */}
         <CanvasWaveform
@@ -292,65 +298,74 @@ export function HeroSection() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: baseDelay }}
-          className={cn(
-            "mb-8 flex items-center gap-3 rounded-full border px-4 py-1.5 text-xs font-semibold tracking-wider shadow-md backdrop-blur-md",
-            resolvedThemeStr === 'dark'
-              ? 'border-white/10 bg-black/40 text-zinc-300 shadow-black/40'
-              : 'border-zinc-200 bg-white/40 text-zinc-700 shadow-zinc-200/50'
-          )}
+          className="mb-8 flex items-center gap-3 rounded-full border border-[#475467] bg-[#111] px-4 py-1.5 text-xs font-semibold tracking-wider text-[#828384]"
         >
           <span className="relative flex h-2 w-2">
             <span className={cn(
               "absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping",
-              isPlaying ? "bg-green-500" : "bg-amber-500"
+              isPlaying ? "bg-[#af50ff]" : "bg-[#6b6b6b]"
             )} />
             <span className={cn(
               "relative inline-flex h-2 w-2 rounded-full",
-              isPlaying ? "bg-green-500" : "bg-amber-500"
+              isPlaying ? "bg-[#af50ff]" : "bg-[#6b6b6b]"
             )} />
           </span>
           {isPlaying ? "LIVE AUDIO STREAMING" : "CONSOLE STANDBY"}
         </motion.div>
 
-        {/* Master Name Display Logo */}
-        <div className={`mb-8 flex flex-col items-center ${syne.className}`}>
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: baseDelay + 0.1 }}
-            className="text-center text-[13vw] leading-[0.85] font-extrabold tracking-tighter italic drop-shadow-sm md:text-[10vw] lg:text-[8.5vw]"
-          >
-            <span className="block bg-linear-to-b from-zinc-700 via-zinc-900 to-black dark:from-white dark:via-zinc-200 dark:to-zinc-400 bg-clip-text text-transparent">
-              ADITYA
-            </span>
-          </motion.h1>
-          <motion.h1
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: baseDelay + 0.2 }}
-            className="text-amber-500 dark:text-amber-400 text-[5.5vw] font-bold tracking-[0.55em] md:text-[3vw] lg:text-[2.2vw]"
-          >
-            HIMAONE
-          </motion.h1>
-        </div>
+        {/* Headline: two-line stack */}
+        <motion.h1
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: baseDelay + 0.1 }}
+          className="text-center"
+        >
+          <span className="block font-serif italic text-[#f7f9fa] text-6xl md:text-8xl font-light">
+            Frontend
+          </span>
+          <span className="block font-bold text-[#f7f9fa] text-6xl md:text-8xl tracking-tight">
+            Developer.
+          </span>
+        </motion.h1>
 
-        {/* Subtitle */}
-        <p className="animate-hero-desc mb-10 max-w-2xl text-center text-sm md:text-base font-light text-zinc-500 dark:text-zinc-400 tracking-wide">
+        {/* Subtext */}
+        <motion.p
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: baseDelay + 0.2 }}
+          className="mt-4 mb-10 max-w-2xl text-center text-sm md:text-base font-medium text-[#828384] tracking-wide"
+        >
           Orchestrating code and soundwaves into premium digital environments.
           <br className="hidden sm:block" /> Full-Stack Frontend Architect & Music Technologist.
-        </p>
+        </motion.p>
+
+        {/* CTA buttons — ghost void pill style */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: baseDelay + 0.3 }}
+          className="flex gap-4 mb-12"
+        >
+          <a
+            href="#projects"
+            className="btn-ghost-void text-xs"
+          >
+            View Projects
+          </a>
+          <a
+            href="#contact"
+            className="btn-ghost-void text-xs"
+          >
+            Get in Touch
+          </a>
+        </motion.div>
 
         {/* Floating Horizontal Glassmorphic Player Card */}
         <motion.div
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: baseDelay + 0.4 }}
-          className={cn(
-            "relative flex flex-col md:flex-row items-center gap-4 w-full max-w-2xl px-4 py-3 rounded-2xl border backdrop-blur-md shadow-2xl transition-all duration-500 select-none z-30",
-            resolvedThemeStr === 'dark'
-              ? "bg-black/35 border-white/5 shadow-black/80"
-              : "bg-white/35 border-zinc-200/50 shadow-zinc-400/10"
-          )}
+          className="glass-void relative flex flex-col md:flex-row items-center gap-4 w-full max-w-2xl px-4 py-3 transition-all duration-500 select-none z-30"
         >
           {/* Play/Pause Button */}
           <Magnetic intensity={0.15}>
@@ -359,23 +374,21 @@ export function HeroSection() {
               className={cn(
                 "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full shadow-md active:scale-95 transition-all border cursor-pointer select-none",
                 isPlaying
-                  ? "bg-green-500/15 border-green-500 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
-                  : resolvedThemeStr === 'dark'
-                    ? "bg-zinc-800 border-zinc-700 text-zinc-300"
-                    : "bg-zinc-100 border-zinc-200 text-zinc-700"
+                  ? "bg-[#af50ff]/15 border-[#af50ff] text-[#af50ff] shadow-[0_0_10px_rgba(175,80,255,0.3)]"
+                  : "bg-[#111] border-[#475467] text-[#828384]"
               )}
             >
               {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
               <div className={cn(
                 "absolute top-1 right-1 h-1.5 w-1.5 rounded-full",
-                isPlaying ? "bg-green-500 animate-pulse" : "bg-zinc-400"
+                isPlaying ? "bg-[#af50ff] animate-pulse" : "bg-[#475467]"
               )} />
             </button>
           </Magnetic>
 
           {/* LCD Track Screen & Waveform */}
-          <div className="flex-1 flex flex-col justify-between bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 font-mono text-[9px] text-green-500 shadow-inner h-11 min-w-0 select-none">
-            <div className="flex justify-between items-center text-[7px] opacity-60">
+          <div className="flex-1 flex flex-col justify-between bg-[#000] border border-[#272727] rounded px-2.5 py-1.5 font-mono text-[9px] text-[#af50ff] shadow-inner h-11 min-w-0 select-none">
+            <div className="flex justify-between items-center text-[7px] opacity-60 text-[#6b6b6b]">
               <span>SYSTEM STREAMING</span>
               <span>BPM: {Math.round(playbackRate * 128)}</span>
             </div>
@@ -386,7 +399,7 @@ export function HeroSection() {
                 {[...Array(6)].map((_, i) => (
                   <motion.div
                     key={i}
-                    className="w-0.5 bg-green-500"
+                    className="w-0.5 bg-[#af50ff]"
                     animate={{
                       height: isPlaying ? [1, 10, 4, 8, 1] : 1,
                     }}
@@ -402,7 +415,7 @@ export function HeroSection() {
               {/* Scrolling text */}
               <div className="relative flex-1 overflow-hidden">
                 <motion.div
-                  className="flex w-fit font-mono whitespace-nowrap text-green-400"
+                  className="flex w-fit font-mono whitespace-nowrap text-[#af50ff]"
                   animate={{ x: ['0%', '-50%'] }}
                   transition={{
                     repeat: Infinity,
@@ -428,13 +441,10 @@ export function HeroSection() {
           />
 
           {/* Horizontal Pitch control fader */}
-          <div className="flex items-center gap-2 select-none shrink-0 border-l border-zinc-300/30 dark:border-zinc-800/40 pl-3">
-            <span className="font-mono text-[7px] text-zinc-500 uppercase tracking-widest">Pitch</span>
+          <div className="flex items-center gap-2 select-none shrink-0 border-l border-[#272727] pl-3">
+            <span className="font-mono text-[7px] text-[#6b6b6b] uppercase tracking-widest">Pitch</span>
             <div className="relative w-20 h-4 flex items-center justify-center">
-              <div className={cn(
-                "absolute w-full h-1 rounded-full shadow-inner border",
-                resolvedThemeStr === 'dark' ? "bg-zinc-950 border-zinc-800" : "bg-zinc-200 border-zinc-300"
-              )} />
+              <div className="absolute w-full h-1 rounded-full shadow-inner border border-[#272727] bg-[#000]" />
               <input
                 type="range"
                 min="80"
@@ -444,13 +454,10 @@ export function HeroSection() {
                 className="absolute w-full h-4 opacity-0 cursor-ew-resize z-20"
               />
               <div
-                className={cn(
-                  "absolute w-3.5 h-2.5 rounded shadow-sm pointer-events-none z-10 border",
-                  resolvedThemeStr === 'dark' ? "bg-zinc-700 border-zinc-600" : "bg-zinc-300 border-zinc-400"
-                )}
+                className="absolute w-3.5 h-2.5 rounded shadow-sm pointer-events-none z-10 border border-[#475467] bg-[#1a1a1a]"
                 style={{ left: `calc(${((playbackRate - 0.8) / 0.4) * 100}% - 7px)` }}
               >
-                <div className="w-0.5 h-full bg-amber-500 mx-auto" />
+                <div className="w-0.5 h-full bg-[#af50ff] mx-auto" />
               </div>
             </div>
           </div>
@@ -461,9 +468,7 @@ export function HeroSection() {
               href="#projects"
               className={cn(
                 "flex h-9 w-9 shrink-0 items-center justify-center rounded-full shadow-md active:scale-95 transition-all border cursor-pointer",
-                resolvedThemeStr === 'dark'
-                  ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:text-white"
-                  : "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-black"
+                "bg-[#111] border-[#475467] text-[#828384] hover:text-[#f7f9fa]"
               )}
             >
               <SkipForward size={12} />

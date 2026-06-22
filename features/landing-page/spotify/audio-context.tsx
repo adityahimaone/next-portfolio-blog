@@ -15,6 +15,8 @@ interface AudioContextType {
   toggleMute: () => void
   volume: number
   setVolume: (volume: number) => void
+  playbackRate: number
+  setPlaybackRate: (rate: number) => void
   currentTrack: string
   audioRef: React.RefObject<HTMLAudioElement | null>
 }
@@ -25,6 +27,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [volume, setVolume] = useState(0.5)
+  const [playbackRate, setPlaybackRate] = useState(1.0)
   const [currentTrack, setCurrentTrack] = useState('The Portfolio Mix')
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioSource = '/music/edge-of-desire-sunrise-mix.weba'
@@ -35,6 +38,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     audio.preload = 'none'
     audio.loop = true
     audio.volume = volume
+    audio.playbackRate = playbackRate
 
     const handleEnded = () => setIsPlaying(false)
     audio.addEventListener('ended', handleEnded)
@@ -51,6 +55,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       audioRef.current.volume = isMuted ? 0 : volume
     }
   }, [volume, isMuted])
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackRate
+    }
+  }, [playbackRate])
 
   const togglePlay = () => {
     if (!audioRef.current) return
@@ -87,6 +97,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         toggleMute,
         volume,
         setVolume,
+        playbackRate,
+        setPlaybackRate,
         currentTrack,
         audioRef,
       }}
@@ -103,3 +115,4 @@ export function useAudio() {
   }
   return context
 }
+

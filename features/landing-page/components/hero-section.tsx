@@ -70,7 +70,7 @@ function InteractiveKnob({
       <div
         className={cn(
           'relative flex h-8 w-8 cursor-grab items-center justify-center rounded-full border shadow-sm active:cursor-grabbing transition-all duration-300',
-          'border-[#475467] bg-[#111]',
+          'border-[#272727] bg-[#111]',
         )}
         onMouseDown={(e) => {
           e.preventDefault()
@@ -298,7 +298,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: baseDelay }}
-          className="mb-8 flex items-center gap-3 rounded-full border border-[#475467] bg-[#111] px-4 py-1.5 text-xs font-semibold tracking-wider text-[#828384]"
+          className="mb-8 flex items-center gap-3 rounded-full border border-[#272727] bg-[#111] px-4 py-1.5 text-xs font-semibold tracking-wider text-[#828384]"
         >
           <span className="relative flex h-2 w-2">
             <span className={cn(
@@ -375,13 +375,13 @@ export function HeroSection() {
                 "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full shadow-md active:scale-95 transition-all border cursor-pointer select-none",
                 isPlaying
                   ? "bg-[#af50ff]/15 border-[#af50ff] text-[#af50ff] shadow-[0_0_10px_rgba(175,80,255,0.3)]"
-                  : "bg-[#111] border-[#475467] text-[#828384]"
+                  : "bg-[#0d0d0d] border-[#272727] text-[#828384]"
               )}
             >
               {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
               <div className={cn(
                 "absolute top-1 right-1 h-1.5 w-1.5 rounded-full",
-                isPlaying ? "bg-[#af50ff] animate-pulse" : "bg-[#475467]"
+                isPlaying ? "bg-[#af50ff] animate-pulse" : "bg-[#272727]"
               )} />
             </button>
           </Magnetic>
@@ -454,7 +454,7 @@ export function HeroSection() {
                 className="absolute w-full h-4 opacity-0 cursor-ew-resize z-20"
               />
               <div
-                className="absolute w-3.5 h-2.5 rounded shadow-sm pointer-events-none z-10 border border-[#475467] bg-[#1a1a1a]"
+                className="absolute w-3.5 h-2.5 rounded shadow-sm pointer-events-none z-10 border border-[#272727] bg-[#0d0d0d]"
                 style={{ left: `calc(${((playbackRate - 0.8) / 0.4) * 100}% - 7px)` }}
               >
                 <div className="w-0.5 h-full bg-[#af50ff] mx-auto" />
@@ -468,7 +468,7 @@ export function HeroSection() {
               href="#projects"
               className={cn(
                 "flex h-9 w-9 shrink-0 items-center justify-center rounded-full shadow-md active:scale-95 transition-all border cursor-pointer",
-                "bg-[#111] border-[#475467] text-[#828384] hover:text-[#f7f9fa]"
+                "bg-[#0d0d0d] border-[#272727] text-[#828384] hover:text-[#f7f9fa]"
               )}
             >
               <SkipForward size={12} />

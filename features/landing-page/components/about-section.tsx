@@ -40,69 +40,107 @@ interface Track {
 
 // --- Synth / VST Custom Redesign Components ---
 
-const SynthKnob = ({ label, value, degree = 0 }: { label: string; value: string; degree?: number }) => (
-  <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-zinc-200 bg-white/60 dark:border-zinc-800 dark:bg-black/45 shadow-sm">
-    <div className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-zinc-350 bg-gradient-to-b from-zinc-100 to-zinc-300 dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900 shadow-md">
+const SynthKnob = ({
+  label,
+  value,
+  degree = 0,
+}: {
+  label: string
+  value: string
+  degree?: number
+}) => (
+  <div className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-200 bg-white/60 p-3 shadow-sm dark:border-zinc-800 dark:bg-black/45">
+    <div className="border-zinc-350 relative flex h-14 w-14 items-center justify-center rounded-full border-2 bg-gradient-to-b from-zinc-100 to-zinc-300 shadow-md dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900">
       {/* Outer indicator notch */}
       <div
-        className="absolute h-4 w-1 bg-blue-500 dark:bg-blue-400 top-0.5 rounded-full"
-        style={{ transform: `rotate(${degree}deg)`, transformOrigin: '50% 100%' }}
+        className="absolute top-0.5 h-4 w-1 rounded-full bg-blue-500 dark:bg-blue-400"
+        style={{
+          transform: `rotate(${degree}deg)`,
+          transformOrigin: '50% 100%',
+        }}
       />
       {/* Inner dial cap */}
-      <div className="h-8 w-8 rounded-full border border-zinc-300 bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-950 shadow-inner" />
+      <div className="h-8 w-8 rounded-full border border-zinc-300 bg-zinc-200 shadow-inner dark:border-zinc-800 dark:bg-zinc-950" />
     </div>
-    <span className="text-[10px] font-bold tracking-wider text-zinc-500 dark:text-zinc-400 uppercase">{label}</span>
-    <span className="font-mono text-xs font-black text-zinc-900 dark:text-zinc-100">{value}</span>
+    <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
+      {label}
+    </span>
+    <span className="font-mono text-xs font-black text-zinc-900 dark:text-zinc-100">
+      {value}
+    </span>
   </div>
 )
 
-const PatchSocket = ({ label, active = false }: { label: string; active?: boolean }) => (
+const PatchSocket = ({
+  label,
+  active = false,
+}: {
+  label: string
+  active?: boolean
+}) => (
   <div className="flex flex-col items-center gap-1">
     <div
       className={cn(
         'relative flex h-10 w-10 items-center justify-center rounded-full border-2 shadow-inner transition-colors',
         active
           ? 'border-blue-500 bg-zinc-100 dark:border-blue-400 dark:bg-zinc-900'
-          : 'border-zinc-300 bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-950'
+          : 'border-zinc-300 bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-950',
       )}
     >
       {/* Core plug hole */}
-      <div className="h-5 w-5 rounded-full bg-zinc-900 dark:bg-black border border-white/10" />
+      <div className="h-5 w-5 rounded-full border border-white/10 bg-zinc-900 dark:bg-black" />
       {active && (
-        <div className="absolute h-2.5 w-2.5 rounded-full bg-blue-500 dark:bg-blue-400 animate-ping" />
+        <div className="absolute h-2.5 w-2.5 animate-ping rounded-full bg-blue-500 dark:bg-blue-400" />
       )}
     </div>
-    <span className="text-[9px] font-bold tracking-widest text-zinc-500 dark:text-zinc-400 uppercase">{label}</span>
+    <span className="text-[9px] font-bold tracking-widest text-zinc-500 uppercase dark:text-zinc-400">
+      {label}
+    </span>
   </div>
 )
 
-const MixerFader = ({ label, value, colorClass }: { label: string; value: number; colorClass: string }) => (
+const MixerFader = ({
+  label,
+  value,
+  colorClass,
+}: {
+  label: string
+  value: number
+  colorClass: string
+}) => (
   <div className="flex items-center gap-4 py-2">
-    <span className="w-24 text-left text-xs font-bold text-zinc-600 dark:text-zinc-400 truncate">{label}</span>
-    <div className="relative flex-1 h-8 flex items-center">
+    <span className="w-24 truncate text-left text-xs font-bold text-zinc-600 dark:text-zinc-400">
+      {label}
+    </span>
+    <div className="relative flex h-8 flex-1 items-center">
       {/* Track line */}
-      <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded border-b border-white/5" />
+      <div className="h-1.5 w-full rounded border-b border-white/5 bg-zinc-200 dark:bg-zinc-800" />
       {/* Vertical ticks */}
-      <div className="absolute inset-x-0 h-4 flex justify-between pointer-events-none opacity-40">
+      <div className="pointer-events-none absolute inset-x-0 flex h-4 justify-between opacity-40">
         {[...Array(9)].map((_, idx) => (
-          <div key={idx} className="w-px h-2.5 bg-zinc-450 dark:bg-zinc-650" />
+          <div key={idx} className="bg-zinc-450 dark:bg-zinc-650 h-2.5 w-px" />
         ))}
       </div>
       {/* Active Fill Track */}
       <div
-        className={cn('absolute h-1.5 rounded transition-all duration-500', colorClass)}
+        className={cn(
+          'absolute h-1.5 rounded transition-all duration-500',
+          colorClass,
+        )}
         style={{ width: `${value}%` }}
       />
       {/* Metallic sliding handle */}
       <div
-        className="absolute h-6 w-3 -ml-1.5 rounded border border-zinc-400 bg-gradient-to-b from-zinc-100 to-zinc-355 shadow-md dark:border-zinc-700 dark:from-zinc-700 dark:to-zinc-850 cursor-pointer hover:brightness-110 flex flex-col justify-between py-1"
+        className="to-zinc-355 dark:to-zinc-850 absolute -ml-1.5 flex h-6 w-3 cursor-pointer flex-col justify-between rounded border border-zinc-400 bg-gradient-to-b from-zinc-100 py-1 shadow-md hover:brightness-110 dark:border-zinc-700 dark:from-zinc-700"
         style={{ left: `${value}%` }}
       >
-        <div className="h-0.5 w-full bg-zinc-650 dark:bg-zinc-400" />
-        <div className="h-0.5 w-full bg-zinc-650 dark:bg-zinc-400" />
+        <div className="bg-zinc-650 h-0.5 w-full dark:bg-zinc-400" />
+        <div className="bg-zinc-650 h-0.5 w-full dark:bg-zinc-400" />
       </div>
     </div>
-    <span className="w-10 font-mono text-xs font-black text-right text-zinc-800 dark:text-zinc-200">{value}%</span>
+    <span className="w-10 text-right font-mono text-xs font-black text-zinc-800 dark:text-zinc-200">
+      {value}%
+    </span>
   </div>
 )
 
@@ -274,30 +312,32 @@ const DetailWindow = ({
       className="relative flex h-[85vh] max-h-[650px] w-full max-w-5xl flex-col overflow-hidden rounded-lg border-[3px] border-zinc-700 bg-zinc-200 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
     >
       {/* Outer Metal Bezel Overlay */}
-      <div className="absolute inset-0 pointer-events-none border border-white/20 rounded z-30" />
+      <div className="pointer-events-none absolute inset-0 z-30 rounded border border-white/20" />
 
       {/* VST Studio Hardware Header */}
-      <div className="relative flex items-center justify-between border-b-2 border-zinc-400 bg-gradient-to-b from-zinc-300 to-zinc-400 px-6 py-4 dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950 z-10">
-        
+      <div className="relative z-10 flex items-center justify-between border-b-2 border-zinc-400 bg-gradient-to-b from-zinc-300 to-zinc-400 px-6 py-4 dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950">
         {/* Left rack ear mount hole */}
-        <div className="absolute left-2 top-1/2 -translate-y-1/2 flex flex-col gap-2">
-          <div className="h-2 w-2 rounded-full bg-zinc-600 shadow-inner border border-black/30" />
+        <div className="absolute top-1/2 left-2 flex -translate-y-1/2 flex-col gap-2">
+          <div className="h-2 w-2 rounded-full border border-black/30 bg-zinc-600 shadow-inner" />
         </div>
 
         <div className="flex items-center gap-4 pl-2">
           {/* LCD Status Screen */}
           <div className="relative overflow-hidden rounded border border-amber-500/30 bg-black/90 px-4 py-1.5 shadow-[inset_0_2px_8px_rgba(0,0,0,1)]">
-            <span className="font-mono text-xs font-bold text-amber-500 tracking-wider shadow-[0_0_8px_rgba(245,158,11,0.5)]">
+            <span className="font-mono text-xs font-bold tracking-wider text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]">
               {clip.name.toUpperCase()} // STATUS: ONLINE
             </span>
-            <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent" />
           </div>
         </div>
 
         {/* Center: Vent Grills */}
         <div className="hidden items-center gap-1 opacity-40 lg:flex">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-8 w-1 rounded-full bg-zinc-600 dark:bg-zinc-800" />
+            <div
+              key={i}
+              className="h-8 w-1 rounded-full bg-zinc-600 dark:bg-zinc-800"
+            />
           ))}
         </div>
 
@@ -308,15 +348,23 @@ const DetailWindow = ({
             {['PARAM 1', 'PARAM 2'].map((label, i) => (
               <div key={label} className="flex flex-col items-center">
                 <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-zinc-500 bg-gradient-to-b from-zinc-200 to-zinc-400 shadow-md dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900">
-                  <div className="absolute h-4 w-0.5 bg-zinc-850 dark:bg-zinc-300 top-0.5 rounded-full" style={{ transform: `rotate(${45 + (i * 90)}deg)`, transformOrigin: '50% 100%' }} />
+                  <div
+                    className="bg-zinc-850 absolute top-0.5 h-4 w-0.5 rounded-full dark:bg-zinc-300"
+                    style={{
+                      transform: `rotate(${45 + i * 90}deg)`,
+                      transformOrigin: '50% 100%',
+                    }}
+                  />
                 </div>
-                <span className="text-[7px] font-bold text-zinc-600 dark:text-zinc-400 mt-1">{label}</span>
+                <span className="mt-1 text-[7px] font-bold text-zinc-600 dark:text-zinc-400">
+                  {label}
+                </span>
               </div>
             ))}
           </div>
 
           <div className="h-8 w-px bg-zinc-400 dark:bg-zinc-800" />
-          
+
           <button
             onClick={onClose}
             aria-label="Close clip detail"
@@ -327,14 +375,14 @@ const DetailWindow = ({
         </div>
 
         {/* Right rack ear mount hole */}
-        <div className="absolute right-2 top-1/2 -translate-y-1/2">
-          <div className="h-2 w-2 rounded-full bg-zinc-600 shadow-inner border border-black/30" />
+        <div className="absolute top-1/2 right-2 -translate-y-1/2">
+          <div className="h-2 w-2 rounded-full border border-black/30 bg-zinc-600 shadow-inner" />
         </div>
       </div>
 
       {/* Outboard Processor Interior (Content Display) */}
-      <div className="scrollbar-none no-scrollbar flex-1 overflow-y-auto bg-zinc-50 p-4 md:p-6 text-zinc-900 dark:bg-[#121214] dark:text-zinc-300">
-        <div className="relative p-4 md:p-6 rounded-lg border border-zinc-350 bg-white/50 shadow-inner dark:border-zinc-800/80 dark:bg-black/30 overflow-x-hidden no-scrollbar">
+      <div className="scrollbar-none no-scrollbar flex-1 overflow-y-auto bg-zinc-50 p-4 text-zinc-900 md:p-6 dark:bg-[#121214] dark:text-zinc-300">
+        <div className="border-zinc-350 no-scrollbar relative overflow-x-hidden rounded-lg border bg-white/50 p-4 shadow-inner md:p-6 dark:border-zinc-800/80 dark:bg-black/30">
           {clip.content}
         </div>
       </div>
@@ -437,19 +485,24 @@ export function AboutSection() {
               <div className="mb-8 flex items-center justify-between border-b-2 border-zinc-200 pb-4 dark:border-zinc-800">
                 <div className="flex items-center gap-4">
                   <div className="flex h-14 w-14 items-center justify-center rounded-lg border-2 border-blue-500/20 bg-blue-500/10 dark:border-blue-400/25 dark:bg-blue-400/10">
-                    <User size={28} className="text-blue-500 dark:text-blue-400 animate-pulse" />
+                    <User
+                      size={28}
+                      className="animate-pulse text-blue-500 dark:text-blue-400"
+                    />
                   </div>
                   <div>
                     <h1 className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white">
                       ADITYA HIMAONE
                     </h1>
-                    <p className="text-xs tracking-widest text-blue-500 dark:text-blue-400 uppercase font-black">
+                    <p className="text-xs font-black tracking-widest text-blue-500 uppercase dark:text-blue-400">
                       Frontend Engineer / Jakarta Selatan
                     </p>
                   </div>
                 </div>
                 <div className="hidden text-right sm:block">
-                  <div className="text-[10px] font-bold text-zinc-550 dark:text-zinc-500">SYSTEM PROFILE MODEL</div>
+                  <div className="text-zinc-550 text-[10px] font-bold dark:text-zinc-500">
+                    SYSTEM PROFILE MODEL
+                  </div>
                   <div className="font-mono text-xl font-black text-zinc-800 dark:text-zinc-200">
                     AH-2026-MKIV
                   </div>
@@ -458,53 +511,86 @@ export function AboutSection() {
 
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
                 {/* Left: Synth Spec Sheet */}
-                <div className="lg:col-span-3 space-y-6">
+                <div className="space-y-6 lg:col-span-3">
                   <div>
-                    <h3 className="mb-4 flex items-center gap-2 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                    <h3 className="text-zinc-550 mb-4 flex items-center gap-2 text-xs font-black tracking-widest uppercase dark:text-zinc-400">
                       <div className="h-2 w-2 rounded-full bg-blue-500" />
                       Parameter Dial Matrix
                     </h3>
                     <div className="grid grid-cols-3 gap-3">
                       <SynthKnob label="Role" value="Frontend" degree={280} />
                       <SynthKnob label="Location" value="Jakarta" degree={90} />
-                      <SynthKnob label="Experience" value="4+ Years" degree={340} />
-                      <SynthKnob label="Focus" value="React / Next" degree={320} />
-                      <SynthKnob label="Stack Engine" value="App Router" degree={180} />
-                      <SynthKnob label="Availability" value="Ready" degree={45} />
+                      <SynthKnob
+                        label="Experience"
+                        value="4+ Years"
+                        degree={340}
+                      />
+                      <SynthKnob
+                        label="Focus"
+                        value="React / Next"
+                        degree={320}
+                      />
+                      <SynthKnob
+                        label="Stack Engine"
+                        value="App Router"
+                        degree={180}
+                      />
+                      <SynthKnob
+                        label="Availability"
+                        value="Ready"
+                        degree={45}
+                      />
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="mb-3 flex items-center gap-2 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                    <h3 className="text-zinc-550 mb-3 flex items-center gap-2 text-xs font-black tracking-widest uppercase dark:text-zinc-400">
                       <div className="h-2 w-2 rounded-full bg-amber-500" />
                       System Bios
                     </h3>
                     <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-                      Passionate developer bridging the gap between engineering logic
-                      and creative design. Just as a producer layers sounds to create
-                      a song, I layer code to build immersive digital experiences.
+                      Passionate developer bridging the gap between engineering
+                      logic and creative design. Just as a producer layers
+                      sounds to create a song, I layer code to build immersive
+                      digital experiences.
                     </p>
                     <p className="mt-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-                      Specialized in building high-performance web applications with
-                      a focus on interaction design, animation, and accessibility.
-                      Currently pushing pixels at Jakarta Selatan while exploring
-                      the intersection of audio synthesis and code architecture.
+                      Specialized in building high-performance web applications
+                      with a focus on interaction design, animation, and
+                      accessibility. Currently pushing pixels at Jakarta Selatan
+                      while exploring the intersection of audio synthesis and
+                      code architecture.
                     </p>
                   </div>
 
                   {/* Signal Flow Patchbay */}
                   <div>
-                    <h3 className="mb-4 flex items-center gap-2 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                    <h3 className="text-zinc-550 mb-4 flex items-center gap-2 text-xs font-black tracking-widest uppercase dark:text-zinc-400">
                       <div className="h-2 w-2 rounded-full bg-green-500" />
                       Signal Flow Patchbay
                     </h3>
-                    <div className="relative rounded-xl border border-zinc-350 bg-zinc-100 p-5 dark:border-zinc-800 dark:bg-zinc-950/80 shadow-inner">
+                    <div className="border-zinc-350 relative rounded-xl border bg-zinc-100 p-5 shadow-inner dark:border-zinc-800 dark:bg-zinc-950/80">
                       {/* Connection Cable Graphic */}
-                      <svg className="absolute inset-0 h-full w-full pointer-events-none opacity-40 dark:opacity-80" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 45 40 Q 120 70 200 40 T 350 40" fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="5,5" className="animate-[dash_2s_linear_infinite]" />
-                        <path d="M 200 40 Q 280 75 350 40" fill="none" stroke="#22c55e" strokeWidth="2" />
+                      <svg
+                        className="pointer-events-none absolute inset-0 h-full w-full opacity-40 dark:opacity-80"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M 45 40 Q 120 70 200 40 T 350 40"
+                          fill="none"
+                          stroke="#3b82f6"
+                          strokeWidth="3"
+                          strokeDasharray="5,5"
+                          className="animate-[dash_2s_linear_infinite]"
+                        />
+                        <path
+                          d="M 200 40 Q 280 75 350 40"
+                          fill="none"
+                          stroke="#22c55e"
+                          strokeWidth="2"
+                        />
                       </svg>
-                      
+
                       <style>{`
                         @keyframes dash {
                           to {
@@ -513,7 +599,7 @@ export function AboutSection() {
                         }
                       `}</style>
 
-                      <div className="flex justify-between items-center relative z-10">
+                      <div className="relative z-10 flex items-center justify-between">
                         <PatchSocket label="Source (Me)" active={true} />
                         <PatchSocket label="Logic (React)" active={true} />
                         <PatchSocket label="Output (UI)" active={true} />
@@ -523,18 +609,42 @@ export function AboutSection() {
                 </div>
 
                 {/* Right: Console Modules & Status */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-6 lg:col-span-2">
                   <div className="rounded-xl border border-zinc-300 bg-zinc-100/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/50">
-                    <h3 className="mb-4 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                    <h3 className="text-zinc-550 mb-4 text-xs font-black tracking-widest uppercase dark:text-zinc-400">
                       Channel Strip EQ
                     </h3>
                     <div className="space-y-1.5">
-                      <MixerFader label="React" value={95} colorClass="bg-blue-500" />
-                      <MixerFader label="TypeScript" value={90} colorClass="bg-indigo-500" />
-                      <MixerFader label="Next.js" value={92} colorClass="bg-emerald-500" />
-                      <MixerFader label="Tailwind CSS" value={95} colorClass="bg-cyan-500" />
-                      <MixerFader label="Node.js" value={80} colorClass="bg-amber-500" />
-                      <MixerFader label="Motion" value={85} colorClass="bg-purple-500" />
+                      <MixerFader
+                        label="React"
+                        value={95}
+                        colorClass="bg-blue-500"
+                      />
+                      <MixerFader
+                        label="TypeScript"
+                        value={90}
+                        colorClass="bg-indigo-500"
+                      />
+                      <MixerFader
+                        label="Next.js"
+                        value={92}
+                        colorClass="bg-emerald-500"
+                      />
+                      <MixerFader
+                        label="Tailwind CSS"
+                        value={95}
+                        colorClass="bg-cyan-500"
+                      />
+                      <MixerFader
+                        label="Node.js"
+                        value={80}
+                        colorClass="bg-amber-500"
+                      />
+                      <MixerFader
+                        label="Motion"
+                        value={85}
+                        colorClass="bg-purple-500"
+                      />
                     </div>
                   </div>
 
@@ -546,12 +656,17 @@ export function AboutSection() {
                         SYSTEM OPERATIONAL
                       </span>
                     </div>
-                    <p className="text-xs leading-relaxed text-zinc-650 dark:text-zinc-450">
-                      Currently available for senior frontend roles, UI engineering contracts, and creative technology partnerships.
+                    <p className="text-zinc-650 dark:text-zinc-450 text-xs leading-relaxed">
+                      Currently available for senior frontend roles, UI
+                      engineering contracts, and creative technology
+                      partnerships.
                     </p>
                     <div className="mt-4 flex flex-wrap gap-1.5">
                       {['REMOTE', 'HYBRID', 'CONTRACT'].map((tag) => (
-                        <span key={tag} className="rounded bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black text-emerald-600 dark:text-emerald-400">
+                        <span
+                          key={tag}
+                          className="rounded bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black text-emerald-600 dark:text-emerald-400"
+                        >
                           {tag}
                         </span>
                       ))}
@@ -560,7 +675,7 @@ export function AboutSection() {
 
                   {/* I/O Port Pins */}
                   <div className="rounded-xl border border-zinc-300 p-5 dark:border-zinc-800">
-                    <h3 className="mb-3 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                    <h3 className="text-zinc-550 mb-3 text-xs font-black tracking-widest uppercase dark:text-zinc-400">
                       I/O Terminals
                     </h3>
                     <div className="space-y-3">
@@ -569,9 +684,16 @@ export function AboutSection() {
                         { label: 'GITHUB', value: 'adityahimaone' },
                         { label: 'LINKEDIN', value: 'adityahimaone' },
                       ].map((link) => (
-                        <div key={link.label} className="flex justify-between items-center text-xs">
-                          <span className="text-[10px] font-black text-zinc-500">{link.label}</span>
-                          <span className="font-mono text-zinc-850 dark:text-zinc-200 font-bold bg-zinc-200 dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-350 dark:border-zinc-800">{link.value}</span>
+                        <div
+                          key={link.label}
+                          className="flex items-center justify-between text-xs"
+                        >
+                          <span className="text-[10px] font-black text-zinc-500">
+                            {link.label}
+                          </span>
+                          <span className="text-zinc-850 border-zinc-350 rounded border bg-zinc-200 px-1.5 py-0.5 font-mono font-bold dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+                            {link.value}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -603,20 +725,25 @@ export function AboutSection() {
               <div className="mb-8 flex items-center justify-between border-b-2 border-zinc-200 pb-4 dark:border-zinc-800">
                 <div className="flex items-center gap-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg border-2 border-green-500/20 bg-green-500/10 dark:border-green-400/25 dark:bg-green-400/10">
-                    <Activity size={24} className="text-green-500 dark:text-green-400 animate-pulse" />
+                    <Activity
+                      size={24}
+                      className="animate-pulse text-green-500 dark:text-green-400"
+                    />
                   </div>
                   <div>
                     <h1 className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white">
                       METRICS
                     </h1>
-                    <p className="text-xs tracking-widest text-green-500 dark:text-green-400 uppercase font-black">
+                    <p className="text-xs font-black tracking-widest text-green-500 uppercase dark:text-green-400">
                       Real-time Performance Data
                     </p>
                   </div>
                 </div>
                 <div className="hidden items-center gap-2 sm:flex">
                   <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
-                  <span className="font-mono text-xs font-bold text-zinc-500">LIVE FEED</span>
+                  <span className="font-mono text-xs font-bold text-zinc-500">
+                    LIVE FEED
+                  </span>
                 </div>
               </div>
 
@@ -626,21 +753,44 @@ export function AboutSection() {
                   {/* Digital Nixie Tube Display */}
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { label: 'Years Exp', value: '04', suffix: 'Y', color: 'text-amber-500' },
-                      { label: 'Projects', value: '20', suffix: '+', color: 'text-emerald-500' },
-                      { label: 'Commit', value: '99', suffix: '%', color: 'text-rose-500' },
+                      {
+                        label: 'Years Exp',
+                        value: '04',
+                        suffix: 'Y',
+                        color: 'text-amber-500',
+                      },
+                      {
+                        label: 'Projects',
+                        value: '20',
+                        suffix: '+',
+                        color: 'text-emerald-500',
+                      },
+                      {
+                        label: 'Commit',
+                        value: '99',
+                        suffix: '%',
+                        color: 'text-rose-500',
+                      },
                     ].map((stat) => (
                       <div
                         key={stat.label}
-                        className="flex flex-col items-center rounded-xl border border-zinc-400/40 bg-zinc-950 p-4 shadow-inner relative overflow-hidden"
+                        className="relative flex flex-col items-center overflow-hidden rounded-xl border border-zinc-400/40 bg-zinc-950 p-4 shadow-inner"
                       >
                         {/* Glow Filter */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black to-zinc-950 pointer-events-none" />
-                        <span className={cn('text-3xl font-black relative z-10 font-mono tracking-widest', stat.color, 'drop-shadow-[0_0_6px_currentColor]')}>
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black to-zinc-950" />
+                        <span
+                          className={cn(
+                            'relative z-10 font-mono text-3xl font-black tracking-widest',
+                            stat.color,
+                            'drop-shadow-[0_0_6px_currentColor]',
+                          )}
+                        >
                           {stat.value}
-                          <span className="text-base font-bold select-none">{stat.suffix}</span>
+                          <span className="text-base font-bold select-none">
+                            {stat.suffix}
+                          </span>
                         </span>
-                        <span className="mt-2 text-[9px] font-bold tracking-wider text-zinc-500 uppercase relative z-10">
+                        <span className="relative z-10 mt-2 text-[9px] font-bold tracking-wider text-zinc-500 uppercase">
                           {stat.label}
                         </span>
                       </div>
@@ -649,24 +799,44 @@ export function AboutSection() {
 
                   {/* Faders Console for Expertise */}
                   <div className="rounded-xl border border-zinc-300 bg-zinc-100/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/50">
-                    <h3 className="mb-4 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                    <h3 className="text-zinc-550 mb-4 text-xs font-black tracking-widest uppercase dark:text-zinc-400">
                       Fader Deck Expertise
                     </h3>
                     <div className="space-y-1">
-                      <MixerFader label="Frontend Core" value={95} colorClass="bg-blue-500" />
-                      <MixerFader label="UI/UX & Sound" value={85} colorClass="bg-purple-500" />
-                      <MixerFader label="Fluid Animations" value={90} colorClass="bg-pink-500" />
-                      <MixerFader label="Node API Sync" value={75} colorClass="bg-amber-500" />
-                      <MixerFader label="System Ops" value={65} colorClass="bg-emerald-500" />
+                      <MixerFader
+                        label="Frontend Core"
+                        value={95}
+                        colorClass="bg-blue-500"
+                      />
+                      <MixerFader
+                        label="UI/UX & Sound"
+                        value={85}
+                        colorClass="bg-purple-500"
+                      />
+                      <MixerFader
+                        label="Fluid Animations"
+                        value={90}
+                        colorClass="bg-pink-500"
+                      />
+                      <MixerFader
+                        label="Node API Sync"
+                        value={75}
+                        colorClass="bg-amber-500"
+                      />
+                      <MixerFader
+                        label="System Ops"
+                        value={65}
+                        colorClass="bg-emerald-500"
+                      />
                     </div>
                   </div>
 
                   {/* Step Sequencer Output History */}
                   <div className="rounded-xl border border-zinc-300 bg-zinc-100/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/50">
-                    <h3 className="mb-4 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                    <h3 className="text-zinc-550 mb-4 text-xs font-black tracking-widest uppercase dark:text-zinc-400">
                       Step Sequencer Activity
                     </h3>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex items-center gap-2">
                       {[
                         { step: '01', val: 3, label: "'22" },
                         { step: '02', val: 5, label: "'23" },
@@ -674,8 +844,11 @@ export function AboutSection() {
                         { step: '04', val: 6, label: "'25" },
                         { step: '05', val: 9, label: "'26" },
                       ].map((item, idx) => (
-                        <div key={idx} className="flex-1 flex flex-col items-center gap-2">
-                          <div className="w-full flex flex-col gap-1 border border-zinc-300 dark:border-zinc-850 rounded p-1 bg-white/60 dark:bg-black/30 shadow-inner">
+                        <div
+                          key={idx}
+                          className="flex flex-1 flex-col items-center gap-2"
+                        >
+                          <div className="dark:border-zinc-850 flex w-full flex-col gap-1 rounded border border-zinc-300 bg-white/60 p-1 shadow-inner dark:bg-black/30">
                             {[...Array(10)].map((_, tickIdx) => {
                               const isActive = 10 - tickIdx <= item.val
                               return (
@@ -685,13 +858,15 @@ export function AboutSection() {
                                     'h-2 w-full rounded-sm transition-all duration-300',
                                     isActive
                                       ? 'bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.7)]'
-                                      : 'bg-zinc-200 dark:bg-zinc-800'
+                                      : 'bg-zinc-200 dark:bg-zinc-800',
                                   )}
                                 />
                               )
                             })}
                           </div>
-                          <span className="font-mono text-[9px] font-black text-zinc-500">{item.label}</span>
+                          <span className="font-mono text-[9px] font-black text-zinc-500">
+                            {item.label}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -709,20 +884,22 @@ export function AboutSection() {
                     ].map((item) => (
                       <div
                         key={item.label}
-                        className="flex flex-col rounded-xl border border-zinc-300 bg-white p-4 dark:border-zinc-850 dark:bg-zinc-950 shadow-sm"
+                        className="dark:border-zinc-850 flex flex-col rounded-xl border border-zinc-300 bg-white p-4 shadow-sm dark:bg-zinc-950"
                       >
                         <span className="text-xl select-none">{item.icon}</span>
                         <span className="mt-2 text-2xl font-black text-zinc-900 dark:text-zinc-100">
                           {item.value}
                         </span>
-                        <span className="text-[10px] font-bold text-zinc-500 tracking-wide uppercase">{item.label}</span>
+                        <span className="text-[10px] font-bold tracking-wide text-zinc-500 uppercase">
+                          {item.label}
+                        </span>
                       </div>
                     ))}
                   </div>
 
                   {/* Operational Status Log */}
                   <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
-                    <h3 className="mb-3 flex items-center gap-2 text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">
+                    <h3 className="mb-3 flex items-center gap-2 text-xs font-black tracking-widest text-amber-700 uppercase dark:text-amber-400">
                       <div className="h-2 w-2 animate-pulse rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b]" />
                       Active Threads
                     </h3>
@@ -735,7 +912,7 @@ export function AboutSection() {
                       ].map((item, i) => (
                         <div key={i} className="flex items-start gap-2">
                           <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
-                          <span className="text-xs text-zinc-650 dark:text-zinc-350">
+                          <span className="text-zinc-650 dark:text-zinc-350 text-xs">
                             {item}
                           </span>
                         </div>
@@ -745,18 +922,23 @@ export function AboutSection() {
 
                   {/* Philosophy Quotes Card */}
                   <div className="rounded-xl border border-zinc-300 bg-zinc-100/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/50">
-                    <h3 className="mb-3 text-xs font-black text-zinc-550 dark:text-zinc-400 uppercase tracking-widest">
+                    <h3 className="text-zinc-550 mb-3 text-xs font-black tracking-widest uppercase dark:text-zinc-400">
                       Console Credo
                     </h3>
-                    <blockquote className="border-l-4 border-blue-500 pl-3 text-sm italic text-zinc-700 dark:text-zinc-350">
+                    <blockquote className="dark:text-zinc-350 border-l-4 border-blue-500 pl-3 text-sm text-zinc-700 italic">
                       "Every interface is an instrument. The user should feel
                       like they're playing, not working."
                     </blockquote>
                     <div className="mt-4 flex flex-wrap gap-1.5">
-                      {['Pixel Perfect', 'Accessible', 'Acoustic UI', 'Delightful'].map((tag) => (
+                      {[
+                        'Pixel Perfect',
+                        'Accessible',
+                        'Acoustic UI',
+                        'Delightful',
+                      ].map((tag) => (
                         <span
                           key={tag}
-                          className="rounded border border-zinc-300 bg-white px-2 py-0.5 text-[9px] font-bold text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 uppercase"
+                          className="rounded border border-zinc-300 bg-white px-2 py-0.5 text-[9px] font-bold text-zinc-600 uppercase dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400"
                         >
                           {tag}
                         </span>
@@ -785,18 +967,8 @@ export function AboutSection() {
           duration: 5,
           type: 'spotify',
           content: (
-            <div className="flex h-full flex-col items-center justify-center py-4">
-              <div className="relative w-full max-w-md rounded-xl bg-zinc-950 p-6 shadow-2xl border-2 border-zinc-800/80">
-                {/* Rack Mounting Handles */}
-                <div className="absolute top-0 bottom-0 -left-4 flex w-4 flex-col items-center justify-between rounded-l border-r border-black bg-zinc-900 py-6">
-                  <div className="h-3 w-1.5 rounded bg-black shadow-inner" />
-                  <div className="h-3 w-1.5 rounded bg-black shadow-inner" />
-                </div>
-                <div className="absolute top-0 -right-4 bottom-0 flex w-4 flex-col items-center justify-between rounded-r border-l border-black bg-zinc-900 py-6">
-                  <div className="h-3 w-1.5 rounded bg-black shadow-inner" />
-                  <div className="h-3 w-1.5 rounded bg-black shadow-inner" />
-                </div>
-
+            <div className="flex h-full flex-col items-center justify-center">
+              <div className="relative w-full rounded-xl border-2 border-zinc-800/80 bg-zinc-950 p-6 shadow-2xl">
                 <div className="mb-6 flex items-center justify-center gap-3 text-amber-500">
                   <Zap className="animate-pulse" size={18} />
                   <span className="font-mono text-xs font-black tracking-widest uppercase">
@@ -807,7 +979,7 @@ export function AboutSection() {
                 <NowPlaying />
 
                 <div className="mt-6 border-t border-white/5 pt-4 text-center">
-                  <p className="font-mono text-[10px] text-zinc-550 leading-relaxed italic">
+                  <p className="text-zinc-550 font-mono text-[10px] leading-relaxed italic">
                     "Music is the hidden arithmetic of the soul, which does not
                     know that it is counting."
                   </p>
@@ -822,7 +994,7 @@ export function AboutSection() {
 
   return (
     <>
-      <section ref={sectionRef} id="about" className="bg-white py-24 dark:bg-zinc-950">
+      <section ref={sectionRef} id="about" className="py-24">
         <div className="container mx-auto px-4 md:px-6">
           <div className="mb-12 flex flex-col items-center text-center">
             <m.div
@@ -884,7 +1056,7 @@ export function AboutSection() {
 
               <div className="flex gap-2">
                 <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-                <span className="text-xs font-bold text-zinc-550">REC</span>
+                <span className="text-zinc-550 text-xs font-bold">REC</span>
               </div>
             </div>
 
@@ -974,7 +1146,7 @@ export function AboutSection() {
             </div>
 
             {/* Info Bar */}
-            <div className="flex h-8 items-center border-t border-zinc-200 bg-zinc-100 px-4 text-xs text-zinc-650 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-450">
+            <div className="text-zinc-650 dark:text-zinc-450 flex h-8 items-center border-t border-zinc-200 bg-zinc-100 px-4 text-xs dark:border-zinc-800 dark:bg-zinc-950">
               <span className="mr-2 font-bold text-blue-600 dark:text-blue-400">
                 INFO
               </span>

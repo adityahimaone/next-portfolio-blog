@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect, useMemo } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { m as motion, useScroll, useTransform } from 'motion/react'
 import { Play, Pause, SkipForward } from 'lucide-react'
 import { Magnetic } from '@/components/magnetic'
@@ -8,10 +8,13 @@ import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import { useTheme } from 'next-themes'
 import { Syne } from 'next/font/google'
 import { cn } from '@/lib/utils'
+import { Screw } from '@/components/screw'
+import { SpectrumAnalyzer } from '@/components/spectrum-analyzer'
+import { LCDDisplay } from '@/components/lcd-display'
 
 const syne = Syne({ weight: ['700', '800'], subsets: ['latin'] })
 
-// --- 1. InteractiveKnob Component (Draggable circular dial) ---
+// --- InteractiveKnob Component (Draggable circular dial) ---
 interface InteractiveKnobProps {
   label: string
   value: number
@@ -66,13 +69,13 @@ function InteractiveKnob({
   const angle = -135 + (percentage / 100) * 270
 
   return (
-    <div className="flex flex-col items-center gap-0.5 select-none shrink-0">
+    <div className="flex flex-col items-center gap-1 select-none shrink-0">
       <div
         className={cn(
-          'relative flex h-8 w-8 cursor-grab items-center justify-center rounded-full border shadow-sm active:cursor-grabbing transition-colors duration-300',
+          'relative flex h-10 w-10 cursor-grab items-center justify-center rounded-full border shadow-sm active:cursor-grabbing transition-colors duration-300',
           resolvedTheme === 'dark'
-            ? 'border-zinc-700 bg-zinc-800 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)]'
-            : 'border-zinc-300 bg-zinc-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]'
+            ? 'border-zinc-700 bg-zinc-800 shadow-[inset_0_1px_3px_rgba(255,255,255,0.08)]'
+            : 'border-zinc-300 bg-zinc-200 shadow-[inset_0_1px_3px_rgba(0,0,0,0.12)]'
         )}
         onMouseDown={(e) => {
           e.preventDefault()
@@ -81,161 +84,29 @@ function InteractiveKnob({
       >
         {/* Pointer line */}
         <div
-          className="absolute h-2 w-0.5 rounded-full bg-amber-500"
+          className="absolute h-2.5 w-0.5 rounded-full bg-amber-500"
           style={{
-            transform: `rotate(${angle}deg) translateY(-6px)`,
-            transformOrigin: 'center 8px',
+            transform: `rotate(${angle}deg) translateY(-8px)`,
+            transformOrigin: 'center 10px',
           }}
         />
         {/* Central dial cap */}
         <div className={cn(
-          "h-1.5 w-1.5 rounded-full shadow-inner",
+          "h-2 w-2 rounded-full shadow-inner",
           resolvedTheme === 'dark' ? "bg-zinc-900" : "bg-zinc-300"
         )} />
       </div>
-      <span className="font-mono text-[7px] text-zinc-500 uppercase tracking-widest">
-        {label}: {Math.round(value)}
+      <span className="font-mono text-[8px] text-zinc-500 uppercase tracking-widest">
+        {label}
+      </span>
+      <span className="font-mono text-[7px] text-zinc-400">
+        {Math.round(value)}
       </span>
     </div>
   )
 }
 
-// --- 2. Interactive Canvas Waveform Stage (Full-Width lines) ---
-function CanvasWaveform({
-  isPlaying,
-  playbackRate,
-  resolvedTheme,
-}: {
-  isPlaying: boolean
-  playbackRate: number
-  resolvedTheme: string
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [mounted, setMounted] = useState(false)
-  const isDarkMode = !mounted || resolvedTheme === 'dark'
-
-  const colors = useMemo(
-    () => ({
-      primary: isDarkMode ? 'rgba(39, 50, 129, 0.4)' : 'rgba(39, 50, 129, 0.2)',
-      secondary: isDarkMode ? 'rgba(61, 70, 139, 0.4)' : 'rgba(61, 70, 139, 0.2)',
-      accent: isDarkMode ? 'rgba(230, 168, 23, 0.4)' : 'rgba(230, 168, 23, 0.2)',
-    }),
-    [isDarkMode],
-  )
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    const lineCount = 10
-    const lines: {
-      phase: number
-      speed: number
-      amplitude: number
-      frequency: number
-      color: string
-      yOffset: number
-    }[] = []
-
-    const initLines = () => {
-      const height = canvas.height
-      lines.length = 0
-
-      for (let i = 0; i < lineCount; i++) {
-        lines.push({
-          phase: Math.random() * Math.PI * 2,
-          speed: 0.0008 + Math.random() * 0.0012,
-          amplitude: 15 + Math.random() * 45,
-          frequency: 0.0008 + Math.random() * 0.0012,
-          color:
-            i % 3 === 0
-              ? colors.primary
-              : i % 3 === 1
-                ? colors.secondary
-                : colors.accent,
-          yOffset: (height / lineCount) * i + (Math.random() * 30 - 15),
-        })
-      }
-    }
-
-    const resizeCanvas = () => {
-      const dpr = window.devicePixelRatio || 1
-      canvas.width = window.innerWidth * dpr
-      canvas.height = window.innerHeight * dpr
-      canvas.style.width = `${window.innerWidth}px`
-      canvas.style.height = `${window.innerHeight}px`
-      ctx.scale(dpr, dpr)
-      initLines()
-    }
-
-    window.addEventListener('resize', resizeCanvas)
-    resizeCanvas()
-
-    let time = 0
-    let animationFrameId: number
-
-    const render = () => {
-      if (!ctx || !canvas) return
-
-      const width = canvas.width / (window.devicePixelRatio || 1)
-      const height = canvas.height / (window.devicePixelRatio || 1)
-
-      ctx.clearRect(0, 0, width, height)
-
-      // Time advances faster when playing
-      time += isPlaying ? 2.2 * playbackRate : 0.8
-
-      lines.forEach((line) => {
-        ctx.beginPath()
-
-        // Modify wave dimensions based on audio playing status
-        const ampFactor = isPlaying ? 1.6 : 0.5
-        const currentAmp = line.amplitude * ampFactor
-
-        for (let x = 0; x <= width; x += 15) {
-          const y =
-            line.yOffset +
-            Math.sin(x * line.frequency + time * line.speed + line.phase) * currentAmp +
-            Math.sin(x * line.frequency * 1.8 + time * line.speed * 1.3) * (currentAmp * 0.4)
-
-          if (x === 0) ctx.moveTo(x, y)
-          else ctx.lineTo(x, y)
-        }
-
-        ctx.strokeStyle = line.color
-        ctx.lineWidth = 1.5
-
-        // Glowing filter
-        ctx.shadowBlur = isPlaying ? 8 : 2
-        ctx.shadowColor = line.color
-
-        ctx.stroke()
-        ctx.shadowBlur = 0
-      })
-
-      animationFrameId = requestAnimationFrame(render)
-    }
-
-    render()
-
-    return () => {
-      window.removeEventListener('resize', resizeCanvas)
-      cancelAnimationFrame(animationFrameId)
-    }
-  }, [mounted, colors, isPlaying, playbackRate])
-
-  return <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-60 dark:opacity-40" />
-}
-
+// --- HeroSection ---
 export function HeroSection() {
   const [baseDelay, setBaseDelay] = useState(1)
   const { resolvedTheme } = useTheme()
@@ -246,7 +117,15 @@ export function HeroSection() {
     }
   }, [])
 
-  const { isPlaying, togglePlay, currentTrack, volume, setVolume, playbackRate, setPlaybackRate, audioRef } = useAudio()
+  const {
+    isPlaying,
+    togglePlay,
+    currentTrack,
+    volume,
+    setVolume,
+    playbackRate,
+    setPlaybackRate,
+  } = useAudio()
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -255,228 +134,385 @@ export function HeroSection() {
     offset: ['start start', 'end start'],
   })
 
-  // Parallax shifts
+  // Parallax transforms
   const y = useTransform(scrollYProgress, [0, 1], [0, 150])
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9])
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92])
 
   const resolvedThemeStr = resolvedTheme || 'dark'
+  const isDark = resolvedThemeStr === 'dark'
+
+  // Knob states for EQ cluster
+  const [gain, setGain] = useState(65)
+  const [bass, setBass] = useState(50)
+  const [treble, setTreble] = useState(55)
+  const [output, setOutput] = useState(80)
 
   return (
     <section
       ref={containerRef}
-      className={cn(
-        "relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden transition-colors duration-500 py-24 select-none",
-        resolvedThemeStr === 'dark' ? 'bg-zinc-950 text-zinc-100' : 'bg-zinc-50 text-zinc-800'
-      )}
+      className="relative min-h-screen w-full overflow-hidden select-none chassis-panel chassis-texture"
     >
-      {/* Background Grille Texture & Active Soundwave Lines */}
+      {/* Background layers */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        {/* Subtle hardware grille dots */}
+        {/* Grille dot pattern */}
         <div
-          className="absolute inset-0 bg-[radial-gradient(#000_1.5px,transparent_1.5px)] opacity-5 dark:bg-[radial-gradient(#333_1.5px,transparent_1.5px)] dark:opacity-20"
+          className={cn(
+            "absolute inset-0",
+            isDark
+              ? "bg-[radial-gradient(#333_1px,transparent_1px)] opacity-[0.08]"
+              : "bg-[radial-gradient(#000_1px,transparent_1px)] opacity-[0.03]"
+          )}
           style={{ backgroundSize: '6px 6px' }}
         />
         {/* Noise overlay */}
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 mix-blend-overlay dark:opacity-[0.08]" />
-        
-        {/* Audio React Waves */}
-        <CanvasWaveform
-          isPlaying={isPlaying}
-          playbackRate={playbackRate}
-          resolvedTheme={resolvedThemeStr}
-        />
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.04] mix-blend-overlay" />
       </div>
 
-      {/* Main Content Layout */}
+      {/* Main Content */}
       <motion.div
         style={{ y, opacity, scale }}
-        className="relative z-20 container mx-auto mt-20 flex flex-col items-center px-4 text-center md:px-6 w-full max-w-4xl"
+        className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-24 mt-16"
       >
-        {/* Top Glowing Indicator */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: baseDelay }}
-          className={cn(
-            "mb-8 flex items-center gap-3 rounded-full border px-4 py-1.5 text-xs font-semibold tracking-wider shadow-md backdrop-blur-md",
-            resolvedThemeStr === 'dark'
-              ? 'border-white/10 bg-black/40 text-zinc-300 shadow-black/40'
-              : 'border-zinc-200 bg-white/40 text-zinc-700 shadow-zinc-200/50'
-          )}
-        >
-          <span className="relative flex h-2 w-2">
-            <span className={cn(
-              "absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping",
-              isPlaying ? "bg-green-500" : "bg-amber-500"
-            )} />
-            <span className={cn(
-              "relative inline-flex h-2 w-2 rounded-full",
-              isPlaying ? "bg-green-500" : "bg-amber-500"
-            )} />
-          </span>
-          {isPlaying ? "LIVE AUDIO STREAMING" : "CONSOLE STANDBY"}
-        </motion.div>
+        {/* Asymmetric Grid: LEFT ~5/12, RIGHT ~7/12 */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 
-        {/* Master Name Display Logo */}
-        <div className={`mb-8 flex flex-col items-center ${syne.className}`}>
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: baseDelay + 0.1 }}
-            className="text-center text-[13vw] leading-[0.85] font-extrabold tracking-tighter italic drop-shadow-sm md:text-[10vw] lg:text-[8.5vw]"
-          >
-            <span className="block bg-linear-to-b from-zinc-700 via-zinc-900 to-black dark:from-white dark:via-zinc-200 dark:to-zinc-400 bg-clip-text text-transparent">
-              ADITYA
-            </span>
-          </motion.h1>
-          <motion.h1
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: baseDelay + 0.2 }}
-            className="text-amber-500 dark:text-amber-400 text-[5.5vw] font-bold tracking-[0.55em] md:text-[3vw] lg:text-[2.2vw]"
-          >
-            HIMAONE
-          </motion.h1>
-        </div>
+          {/* ===== LEFT COLUMN ===== */}
+          <div className="lg:col-span-5 flex flex-col gap-5 order-2 lg:order-1">
 
-        {/* Subtitle */}
-        <p className="animate-hero-desc mb-10 max-w-2xl text-center text-sm md:text-base font-light text-zinc-500 dark:text-zinc-400 tracking-wide">
-          Orchestrating code and soundwaves into premium digital environments.
-          <br className="hidden sm:block" /> Full-Stack Frontend Architect & Music Technologist.
-        </p>
-
-        {/* Floating Horizontal Glassmorphic Player Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 25 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: baseDelay + 0.4 }}
-          className={cn(
-            "relative flex flex-col md:flex-row items-center gap-4 w-full max-w-2xl px-4 py-3 rounded-2xl border backdrop-blur-md shadow-2xl transition-all duration-500 select-none z-30",
-            resolvedThemeStr === 'dark'
-              ? "bg-black/35 border-white/5 shadow-black/80"
-              : "bg-white/35 border-zinc-200/50 shadow-zinc-400/10"
-          )}
-        >
-          {/* Play/Pause Button */}
-          <Magnetic intensity={0.15}>
-            <button
-              onClick={togglePlay}
+            {/* 1. Spectrum Analyzer Panel */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: baseDelay + 0.1, ease: 'easeOut' }}
               className={cn(
-                "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full shadow-md active:scale-95 transition-all border cursor-pointer select-none",
-                isPlaying
-                  ? "bg-green-500/15 border-green-500 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
-                  : resolvedThemeStr === 'dark'
-                    ? "bg-zinc-800 border-zinc-700 text-zinc-300"
-                    : "bg-zinc-100 border-zinc-200 text-zinc-700"
+                "relative rounded-lg border p-3 shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)]",
+                isDark
+                  ? "bg-zinc-900/80 border-zinc-800"
+                  : "bg-zinc-100/90 border-zinc-300"
               )}
             >
-              {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
-              <div className={cn(
-                "absolute top-1 right-1 h-1.5 w-1.5 rounded-full",
-                isPlaying ? "bg-green-500 animate-pulse" : "bg-zinc-400"
-              )} />
-            </button>
-          </Magnetic>
+              {/* Screws */}
+              <div className="absolute top-2 left-2">
+                <Screw className="text-[var(--screw-color)]" />
+              </div>
+              <div className="absolute top-2 right-2">
+                <Screw className="text-[var(--screw-color)]" />
+              </div>
 
-          {/* LCD Track Screen & Waveform */}
-          <div className="flex-1 flex flex-col justify-between bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 font-mono text-[9px] text-green-500 shadow-inner h-11 min-w-0 select-none">
-            <div className="flex justify-between items-center text-[7px] opacity-60">
-              <span>SYSTEM STREAMING</span>
-              <span>BPM: {Math.round(playbackRate * 128)}</span>
-            </div>
-            
-            <div className="flex items-center gap-2 overflow-hidden">
-              {/* Mini CSS Equalizer Waveform */}
-              <div className="flex gap-0.5 items-end h-3.5 shrink-0">
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="w-0.5 bg-green-500"
-                    animate={{
-                      height: isPlaying ? [1, 10, 4, 8, 1] : 1,
-                    }}
-                    transition={{
-                      duration: 0.55,
-                      repeat: Infinity,
-                      delay: i * 0.05,
-                    }}
-                  />
+              {/* Panel label */}
+              <div className="text-center mb-2 mt-1">
+                <span className="font-mono text-[9px] tracking-[0.25em] uppercase text-zinc-500">
+                  Spectrum · Analyzer
+                </span>
+              </div>
+
+              {/* Spectrum Analyzer */}
+              <div className="h-20 md:h-24">
+                <SpectrumAnalyzer isPlaying={isPlaying} barCount={24} />
+              </div>
+            </motion.div>
+
+            {/* 2. Status Readout Panel */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: baseDelay + 0.25, ease: 'easeOut' }}
+              className={cn(
+                "rounded-lg border p-3",
+                isDark
+                  ? "bg-zinc-950/80 border-zinc-800"
+                  : "bg-zinc-100 border-zinc-300"
+              )}
+            >
+              <div className="space-y-1.5 font-mono text-[10px] tracking-wider">
+                {[
+                  { label: 'SAMPLE RATE', value: '192kHz' },
+                  { label: 'BIT DEPTH', value: '24-bit' },
+                  { label: 'BUFFER', value: '256 smp' },
+                  { label: 'LATENCY', value: '2.4ms' },
+                ].map((item) => (
+                  <div key={item.label} className="flex justify-between items-center">
+                    <span className={isDark ? "text-zinc-600" : "text-zinc-400"}>
+                      {item.label}
+                    </span>
+                    <span className={isDark ? "text-zinc-300" : "text-zinc-700"}>
+                      {item.value}
+                    </span>
+                  </div>
                 ))}
-              </div>
-              
-              {/* Scrolling text */}
-              <div className="relative flex-1 overflow-hidden">
-                <motion.div
-                  className="flex w-fit font-mono whitespace-nowrap text-green-400"
-                  animate={{ x: ['0%', '-50%'] }}
-                  transition={{
-                    repeat: Infinity,
-                    ease: 'linear',
-                    duration: 10,
-                  }}
-                >
-                  <span className="mr-8">{currentTrack}</span>
-                  <span className="mr-8">{currentTrack}</span>
-                </motion.div>
-              </div>
-            </div>
-          </div>
 
-          {/* Draggable Circular Volume Knob */}
-          <InteractiveKnob
-            label="VOL"
-            value={Math.round(volume * 100)}
-            min={0}
-            max={100}
-            onChange={(val) => setVolume(val / 100)}
-            resolvedTheme={resolvedThemeStr}
-          />
-
-          {/* Horizontal Pitch control fader */}
-          <div className="flex items-center gap-2 select-none shrink-0 border-l border-zinc-300/30 dark:border-zinc-800/40 pl-3">
-            <span className="font-mono text-[7px] text-zinc-500 uppercase tracking-widest">Pitch</span>
-            <div className="relative w-20 h-4 flex items-center justify-center">
-              <div className={cn(
-                "absolute w-full h-1 rounded-full shadow-inner border",
-                resolvedThemeStr === 'dark' ? "bg-zinc-950 border-zinc-800" : "bg-zinc-200 border-zinc-300"
-              )} />
-              <input
-                type="range"
-                min="80"
-                max="120"
-                value={Math.round(playbackRate * 100)}
-                onChange={(e) => setPlaybackRate(Number(e.target.value) / 100)}
-                className="absolute w-full h-4 opacity-0 cursor-ew-resize z-20"
-              />
-              {/* Visual slider handle */}
-              <div
-                className={cn(
-                  "absolute w-3.5 h-2.5 rounded shadow-sm pointer-events-none z-10 border",
-                  resolvedThemeStr === 'dark' ? "bg-zinc-700 border-zinc-600" : "bg-zinc-300 border-zinc-400"
-                )}
-                style={{ left: `calc(${((playbackRate - 0.8) / 0.4) * 100}% - 7px)` }}
-              >
-                <div className="w-0.5 h-full bg-amber-500 mx-auto" />
+                {/* LED Status */}
+                <div className={cn(
+                  "flex items-center gap-2 pt-2 mt-2 border-t",
+                  isDark ? "border-zinc-800" : "border-zinc-300"
+                )}>
+                  <div
+                    className={cn(
+                      "h-2 w-2 rounded-full",
+                      isPlaying
+                        ? "bg-green-500 led-pulse text-green-500"
+                        : "bg-amber-500 text-amber-500"
+                    )}
+                  />
+                  <span className={cn(
+                    "text-[9px] tracking-widest uppercase",
+                    isPlaying ? "text-green-500" : "text-amber-500"
+                  )}>
+                    {isPlaying ? '● LIVE' : '○ STANDBY'}
+                  </span>
+                </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
 
-          {/* Directly Skip Projects Key */}
-          <Magnetic intensity={0.15}>
-            <a
-              href="#projects"
+            {/* 3. Knob Cluster - Channel EQ (hidden on mobile) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: baseDelay + 0.4, ease: 'easeOut' }}
               className={cn(
-                "flex h-9 w-9 shrink-0 items-center justify-center rounded-full shadow-md active:scale-95 transition-all border cursor-pointer",
-                resolvedThemeStr === 'dark'
-                  ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:text-white"
-                  : "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-black"
+                "hidden md:block rounded-lg border p-4",
+                isDark
+                  ? "bg-zinc-900/60 border-zinc-800"
+                  : "bg-zinc-100/80 border-zinc-300"
               )}
             >
-              <SkipForward size={12} />
-            </a>
-          </Magnetic>
-        </motion.div>
+              <span className="block font-mono text-[9px] tracking-[0.25em] uppercase text-zinc-500 mb-4 text-center">
+                Channel EQ
+              </span>
+              <div className="grid grid-cols-2 gap-4 place-items-center">
+                <InteractiveKnob
+                  label="GAIN"
+                  value={gain}
+                  min={0}
+                  max={100}
+                  onChange={setGain}
+                  resolvedTheme={resolvedThemeStr}
+                />
+                <InteractiveKnob
+                  label="BASS"
+                  value={bass}
+                  min={0}
+                  max={100}
+                  onChange={setBass}
+                  resolvedTheme={resolvedThemeStr}
+                />
+                <InteractiveKnob
+                  label="TREBLE"
+                  value={treble}
+                  min={0}
+                  max={100}
+                  onChange={setTreble}
+                  resolvedTheme={resolvedThemeStr}
+                />
+                <InteractiveKnob
+                  label="OUTPUT"
+                  value={output}
+                  min={0}
+                  max={100}
+                  onChange={setOutput}
+                  resolvedTheme={resolvedThemeStr}
+                />
+              </div>
+            </motion.div>
+          </div>
+
+          {/* ===== RIGHT COLUMN ===== */}
+          <div className="lg:col-span-7 flex flex-col gap-5 order-1 lg:order-2">
+
+            {/* 1. Main LCD Display (centerpiece) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: baseDelay, ease: 'easeOut' }}
+            >
+              <LCDDisplay variant="green" label="MASTER OUTPUT">
+                {/* Top bar */}
+                <div className="flex justify-between items-center mb-3">
+                  <span className="font-mono text-[9px] tracking-widest opacity-50">
+                    CH01 · MASTER
+                  </span>
+                  <span className="font-mono text-[9px] tracking-widest opacity-50">
+                    {isPlaying ? '▶ REC' : '■ IDLE'}
+                  </span>
+                </div>
+
+                {/* Main name */}
+                <div className={cn("flex flex-col items-center text-center", syne.className)}>
+                  <h1
+                    className="text-[12vw] md:text-[8vw] lg:text-[6vw] font-extrabold tracking-tighter leading-[0.85]"
+                    style={{ color: 'var(--lcd-text)' }}
+                  >
+                    ADITYA
+                  </h1>
+                  <h2
+                    className="text-[4vw] md:text-[2.5vw] lg:text-[1.8vw] font-bold tracking-[0.3em] mt-1"
+                    style={{ color: 'var(--accent-knob)' }}
+                  >
+                    HIMAWAN
+                  </h2>
+                </div>
+
+                {/* Role */}
+                <p className="text-center font-mono text-[10px] md:text-xs tracking-wider opacity-60 mt-3">
+                  Frontend Developer · Music Technologist
+                </p>
+
+                {/* Animated sine wave */}
+                <svg className="w-full h-6 mt-4" viewBox="0 0 400 30" preserveAspectRatio="none">
+                  <path
+                    d="M0,15 Q25,5 50,15 Q75,25 100,15 Q125,5 150,15 Q175,25 200,15 Q225,5 250,15 Q275,25 300,15 Q325,5 350,15 Q375,25 400,15"
+                    fill="none"
+                    stroke="var(--lcd-text)"
+                    strokeWidth="1.5"
+                    opacity="0.4"
+                    className="[animation:lcd-wave_3s_ease-in-out_infinite]"
+                  />
+                </svg>
+
+                {/* Bottom status */}
+                <div className="flex justify-between items-center mt-2 font-mono text-[8px] tracking-wider opacity-40">
+                  <span>
+                    {isPlaying ? `NOW PLAYING: ${currentTrack}` : 'STANDBY MODE'}
+                  </span>
+                  <span>BPM: {Math.round(playbackRate * 128)}</span>
+                </div>
+              </LCDDisplay>
+            </motion.div>
+
+            {/* 2. Transport Controls Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: baseDelay + 0.2, ease: 'easeOut' }}
+              className={cn(
+                "flex flex-wrap md:flex-nowrap items-center gap-3 rounded-lg border p-3",
+                isDark
+                  ? "bg-zinc-900/70 border-zinc-800"
+                  : "bg-zinc-100/90 border-zinc-300"
+              )}
+            >
+              {/* Play/Pause */}
+              <Magnetic intensity={0.15}>
+                <button
+                  onClick={togglePlay}
+                  className={cn(
+                    "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full shadow-md active:scale-95 transition-all border cursor-pointer",
+                    isPlaying
+                      ? "bg-green-500/15 border-green-500 text-green-500 shadow-[0_0_12px_rgba(34,197,94,0.3)]"
+                      : isDark
+                        ? "bg-zinc-800 border-zinc-700 text-zinc-300"
+                        : "bg-zinc-200 border-zinc-300 text-zinc-600"
+                  )}
+                >
+                  {isPlaying
+                    ? <Pause size={14} fill="currentColor" />
+                    : <Play size={14} fill="currentColor" className="ml-0.5" />
+                  }
+                </button>
+              </Magnetic>
+
+              {/* Scrolling track name LCD readout */}
+              <div className={cn(
+                "flex-1 min-w-0 h-9 flex items-center rounded border px-2 font-mono text-[9px] overflow-hidden",
+                "bg-zinc-950 border-zinc-800 text-green-400"
+              )}>
+                <div className="flex gap-0.5 items-end h-3 shrink-0 mr-2">
+                  {[...Array(4)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="w-0.5 bg-green-500"
+                      animate={{
+                        height: isPlaying ? [1, 8, 3, 6, 1] : 1,
+                      }}
+                      transition={{
+                        duration: 0.5,
+                        repeat: Infinity,
+                        delay: i * 0.06,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="relative flex-1 overflow-hidden">
+                  <motion.div
+                    className="flex w-fit whitespace-nowrap"
+                    animate={{ x: ['0%', '-50%'] }}
+                    transition={{
+                      repeat: Infinity,
+                      ease: 'linear',
+                      duration: 12,
+                    }}
+                  >
+                    <span className="mr-8">{currentTrack}</span>
+                    <span className="mr-8">{currentTrack}</span>
+                  </motion.div>
+                </div>
+              </div>
+
+              {/* Volume Knob */}
+              <InteractiveKnob
+                label="VOL"
+                value={Math.round(volume * 100)}
+                min={0}
+                max={100}
+                onChange={(val) => setVolume(val / 100)}
+                resolvedTheme={resolvedThemeStr}
+              />
+
+              {/* Vertical separator */}
+              <div className={cn(
+                "hidden md:block w-px h-8",
+                isDark ? "bg-zinc-700" : "bg-zinc-300"
+              )} />
+
+              {/* Pitch fader */}
+              <div className="flex items-center gap-2 select-none shrink-0">
+                <span className="font-mono text-[7px] text-zinc-500 uppercase tracking-widest">
+                  Pitch
+                </span>
+                <div className="relative w-20 h-4 flex items-center justify-center">
+                  <div className={cn(
+                    "absolute w-full h-1 rounded-full shadow-inner border",
+                    isDark ? "bg-zinc-950 border-zinc-800" : "bg-zinc-200 border-zinc-300"
+                  )} />
+                  <input
+                    type="range"
+                    min="80"
+                    max="120"
+                    value={Math.round(playbackRate * 100)}
+                    onChange={(e) => setPlaybackRate(Number(e.target.value) / 100)}
+                    className="absolute w-full h-4 opacity-0 cursor-ew-resize z-20"
+                  />
+                  {/* Visual slider handle */}
+                  <div
+                    className={cn(
+                      "absolute w-3.5 h-2.5 rounded shadow-sm pointer-events-none z-10 border",
+                      isDark ? "bg-zinc-700 border-zinc-600" : "bg-zinc-300 border-zinc-400"
+                    )}
+                    style={{ left: `calc(${((playbackRate - 0.8) / 0.4) * 100}% - 7px)` }}
+                  >
+                    <div className="w-0.5 h-full bg-amber-500 mx-auto" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Skip button */}
+              <Magnetic intensity={0.15}>
+                <a
+                  href="#projects"
+                  className={cn(
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full shadow-sm active:scale-95 transition-all border cursor-pointer",
+                    isDark
+                      ? "bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white"
+                      : "bg-zinc-200 border-zinc-300 text-zinc-500 hover:text-black"
+                  )}
+                >
+                  <SkipForward size={11} />
+                </a>
+              </Magnetic>
+            </motion.div>
+          </div>
+        </div>
       </motion.div>
     </section>
   )

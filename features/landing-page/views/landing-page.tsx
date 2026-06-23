@@ -4,7 +4,6 @@ import {
   LazyMotion,
   m,
   useScroll,
-  useTransform,
   useSpring,
   AnimatePresence,
 } from 'motion/react'
@@ -16,6 +15,7 @@ import { Preloader } from '../animations/preloader'
 import { Header } from '@/features/layout/components/header'
 import { Footer } from '@/features/layout/components/footer'
 import { HeroSection } from '../components/hero-section'
+import { StudioBackground } from '@/components/studio-background'
 
 const AboutSection = dynamic(() => import('../components/about-section').then((mod) => mod.AboutSection))
 const SkillsSection = dynamic(() => import('../components/skills-section').then((mod) => mod.SkillsSection))
@@ -42,8 +42,7 @@ export default function LandingPage() {
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  // Opacity for floating elements based on scroll
-  const floatingOpacity = useTransform(scrollYProgress, [0, 0.2], [0.2, 0])
+
 
   // Handle scroll to top
   const handleScrollToTop = () => {
@@ -81,68 +80,7 @@ export default function LandingPage() {
           transition={{ duration: 0.5 }}
           className="relative"
         >
-          {/* Blueprint grid background overlay */}
-          <div
-            className={cn(
-              'pointer-events-none fixed inset-0 opacity-100 transition-opacity duration-700 z-0',
-              mounted && theme === 'light'
-                ? 'bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:64px_64px]'
-                : 'bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:64px_64px]',
-            )}
-          />
-          {/* Music notes scattered in background */}
-          <m.div
-            className="pointer-events-none fixed top-1/3 right-[15%] text-5xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -30, 0],
-              rotate: [0, -15, 0],
-            }}
-            transition={{
-              duration: 7,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 1,
-            }}
-          >
-            <span className="text-secondary opacity-20 drop-shadow-md">♫</span>
-          </m.div>
-
-          <m.div
-            className="pointer-events-none fixed bottom-1/4 left-1/4 text-6xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -25, 0],
-              rotate: [0, 20, 0],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 2,
-            }}
-          >
-            <span className="text-primary-light opacity-20 drop-shadow-md">
-              ♩
-            </span>
-          </m.div>
-
-          <m.div
-            className="pointer-events-none fixed right-1/4 bottom-1/3 text-5xl"
-            style={{ opacity: floatingOpacity }}
-            animate={{
-              y: [0, -20, 0],
-              rotate: [0, -10, 0],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              delay: 3,
-            }}
-          >
-            <span className="text-accent opacity-20 drop-shadow-md">♬</span>
-          </m.div>
+          <StudioBackground />
 
           {/* Main content */}
           <main className="relative">

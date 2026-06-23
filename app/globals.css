@@ -288,6 +288,50 @@
       transform: scaleY(1);
     }
   }
+
+  /* Mixing console chassis panel */
+  .chassis-panel {
+    background: linear-gradient(
+      180deg,
+      rgba(244, 244, 245, 0.92) 0%,
+      rgba(228, 228, 231, 0.88) 100%
+    );
+  }
+
+  :is(.dark .chassis-panel) {
+    background: linear-gradient(
+      180deg,
+      rgba(24, 24, 27, 0.92) 0%,
+      rgba(9, 9, 11, 0.88) 100%
+    );
+  }
+
+  /* Brushed metal texture overlay */
+  .chassis-texture::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(161, 161, 170, 0.3) 1px,
+      rgba(161, 161, 170, 0.3) 2px
+    );
+  }
+
+  :is(.dark .chassis-texture)::before {
+    opacity: 0.04;
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(255, 255, 255, 0.08) 1px,
+      rgba(255, 255, 255, 0.08) 2px
+    );
+  }
 }
 
 @layer utilities {
@@ -432,6 +476,20 @@
   --sidebar-accent-foreground: #18181b;
   --sidebar-border: #e4e4e7;
   --sidebar-ring: #273281;
+
+  /* Studio Console Theme */
+  --chassis-bg: hsl(220, 8%, 92%);
+  --chassis-border: hsl(220, 5%, 75%);
+  --chassis-surface: hsl(220, 6%, 88%);
+  --lcd-bg: hsl(160, 30%, 8%);
+  --lcd-text: hsl(145, 80%, 55%);
+  --lcd-dim: hsl(145, 50%, 25%);
+  --led-active: hsl(0, 85%, 55%);
+  --led-standby: hsl(45, 95%, 55%);
+  --led-glow: 0 0 6px hsl(45, 95%, 55%);
+  --accent-knob: hsl(35, 90%, 55%);
+  --panel-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --screw-color: hsl(220, 5%, 70%);
 }
 
 .dark {
@@ -486,6 +544,20 @@
   --sidebar-accent-foreground: #18181b;
   --sidebar-border: #3f3f46;
   --sidebar-ring: #505aa3;
+
+  /* Studio Console Theme - Dark */
+  --chassis-bg: hsl(230, 12%, 10%);
+  --chassis-border: hsl(230, 8%, 20%);
+  --chassis-surface: hsl(230, 10%, 14%);
+  --lcd-bg: hsl(160, 40%, 5%);
+  --lcd-text: hsl(145, 90%, 60%);
+  --lcd-dim: hsl(145, 60%, 20%);
+  --led-active: hsl(0, 90%, 50%);
+  --led-standby: hsl(45, 100%, 60%);
+  --led-glow: 0 0 12px hsl(45, 100%, 60%);
+  --accent-knob: hsl(35, 95%, 60%);
+  --panel-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --screw-color: hsl(230, 5%, 30%);
 }
 
 @theme inline {
@@ -606,6 +678,8 @@
     rgba(255, 255, 255, 0.05) 10px,
     rgba(255, 255, 255, 0.05) 20px
   );
+
+  --animate-led-pulse: led-pulse 2s ease-in-out infinite;
 }
 @layer base {
   * {
@@ -677,4 +751,120 @@
   );
 }
 
+/* === Channel Strip Console Hero === */
+:root {
+  --screw-color: #a1a1aa;
+  --lcd-text: #4ade80;
+  --accent-knob: #f59e0b;
+  --chassis-bg: #fafafa;
+  --chassis-border: #e4e4e7;
+}
 
+.dark {
+  --screw-color: #71717a;
+  --lcd-text: #4ade80;
+  --accent-knob: #fbbf24;
+  --chassis-bg: #0a0a0a;
+  --chassis-border: #27272a;
+}
+
+.chassis-panel {
+  background-color: var(--chassis-bg);
+  border-color: var(--chassis-border);
+}
+
+.chassis-texture {
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 50%, rgba(0,0,0,0.02) 100%);
+}
+
+@keyframes lcd-wave {
+  0%, 100% {
+    transform: translateX(0px);
+    opacity: 0.4;
+  }
+  25% {
+    transform: translateX(-3px);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateX(0px);
+    opacity: 0.3;
+  }
+  75% {
+    transform: translateX(3px);
+    opacity: 0.6;
+  }
+}
+
+@keyframes led-pulse {
+  0%, 100% {
+    box-shadow: 0 0 3px currentColor, 0 0 6px currentColor;
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
+    opacity: 0.8;
+  }
+}
+
+.led-pulse {
+  animation: led-pulse 2s ease-in-out infinite;
+}
+/* Studio Console - Spectrum Analyzer Bars */
+@keyframes spectrum-bar-1 { 0%, 100% { transform: scaleY(0.15); } 25% { transform: scaleY(0.8); } 50% { transform: scaleY(0.4); } 75% { transform: scaleY(0.95); } }
+@keyframes spectrum-bar-2 { 0%, 100% { transform: scaleY(0.3); } 30% { transform: scaleY(0.95); } 60% { transform: scaleY(0.2); } 80% { transform: scaleY(0.7); } }
+@keyframes spectrum-bar-3 { 0%, 100% { transform: scaleY(0.5); } 20% { transform: scaleY(0.1); } 45% { transform: scaleY(0.9); } 70% { transform: scaleY(0.35); } }
+@keyframes spectrum-bar-4 { 0%, 100% { transform: scaleY(0.2); } 35% { transform: scaleY(0.75); } 55% { transform: scaleY(0.15); } 85% { transform: scaleY(0.85); } }
+@keyframes spectrum-bar-5 { 0%, 100% { transform: scaleY(0.4); } 15% { transform: scaleY(0.9); } 40% { transform: scaleY(0.25); } 65% { transform: scaleY(0.7); } }
+
+/* LCD scanline flicker */
+@keyframes lcd-flicker {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.06; }
+}
+
+/* LED pulse glow */
+@keyframes led-pulse {
+  0%, 100% { box-shadow: var(--led-glow); }
+  50% { box-shadow: 0 0 2px transparent; }
+}
+
+.lcd-screen {
+  background-color: var(--lcd-bg);
+  color: var(--lcd-text);
+  position: relative;
+  overflow: hidden;
+}
+
+.lcd-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
+  pointer-events: none;
+  animation: lcd-flicker 4s ease-in-out infinite;
+}
+
+.chassis-panel {
+  background-color: var(--chassis-bg);
+  border-color: var(--chassis-border);
+  box-shadow: var(--panel-shadow);
+}
+
+.chassis-texture {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(255,255,255,0.03) 1px,
+      rgba(255,255,255,0.03) 2px
+    );
+}

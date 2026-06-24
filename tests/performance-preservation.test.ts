@@ -62,9 +62,9 @@ describe('Preservation Property Tests - Functionality Preservation', () => {
 
   // Property 2: Blog functionality preservation
   // Tests that blog posts can be loaded and have required metadata
-  it('should preserve blog functionality - posts load with metadata', () => {
+  it('should preserve blog functionality - posts load with metadata', async () => {
     // Get all blog posts from the current codebase
-    const posts = getAllPosts()
+    const posts = await getAllPosts()
 
     // Verify posts exist and have required properties
     expect(posts.length).toBeGreaterThan(0)
@@ -241,9 +241,9 @@ describe('Preservation Property Tests - Functionality Preservation', () => {
 
   // Property 7: MDX content rendering preservation
   // Tests that blog posts with MDX content render correctly
-  it('should preserve MDX content rendering', () => {
+  it('should preserve MDX content rendering', async () => {
     // Get all blog posts
-    const posts = getAllPosts()
+    const posts = await getAllPosts()
 
     // Verify each post has content
     posts.forEach((post) => {

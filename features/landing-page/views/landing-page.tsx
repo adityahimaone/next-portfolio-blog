@@ -12,9 +12,9 @@ import dynamic from 'next/dynamic'
 const loadFeatures = () => import('motion/react').then((res) => res.domMax)
 
 import { Preloader } from '../animations/preloader'
-import { Header } from '@/features/layout/components/header'
+import { HeaderV2 } from '@/features/layout/components/header-v2'
 import { Footer } from '@/features/layout/components/footer'
-import { HeroSection } from '../components/hero-section'
+import { HeroSectionV2 } from '../components/hero/hero-section'
 import { StudioBackground } from '@/components/studio-background'
 
 const AboutSection = dynamic(() => import('../components/about-section').then((mod) => mod.AboutSection))
@@ -90,8 +90,8 @@ export default function LandingPage() {
                 className="relative h-screen snap-start overflow-hidden"
               >
                 <div className="relative">
-                  <Header />
-                  <HeroSection />
+                  <HeaderV2 />
+                  <HeroSectionV2 />
                 </div>
               </section>
 

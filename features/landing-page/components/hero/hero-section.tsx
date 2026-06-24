@@ -10,7 +10,6 @@ import { HeroWaveform } from './hero-waveform'
 import { HeroEqBars } from './hero-eq-bars'
 import { HeroTransport } from './hero-transport'
 import { StatusBadge } from './status-badge'
-import { HeroControlRail } from './hero-control-rail'
 import { Screw } from '@/components/screw'
 
 export function HeroSectionV2() {
@@ -95,9 +94,6 @@ export function HeroSectionV2() {
           role="Frontend Developer · Sound Designer"
           baseDelay={baseDelay}
         />
-
-        {/* Sleek Horizontal Control Rail directly below name */}
-        <HeroControlRail />
       </motion.div>
 
       {/* Layer 3: Waveform IN FRONT of text (subtle overlay) */}

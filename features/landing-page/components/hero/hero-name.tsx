@@ -14,9 +14,9 @@ export function HeroName({ name, subtitle, role, baseDelay = 0 }: HeroNameProps)
   const characters = name.split('')
 
   return (
-    <div className="relative z-20 flex flex-col items-center justify-center select-none px-4">
+    <div className="relative z-20 flex flex-col items-center lg:items-start select-none px-4">
       <motion.h1
-        className="flex overflow-hidden"
+        className="flex overflow-hidden justify-center lg:justify-start"
         initial="hidden"
         animate="visible"
         variants={{
@@ -33,8 +33,8 @@ export function HeroName({ name, subtitle, role, baseDelay = 0 }: HeroNameProps)
           <motion.span
             key={`${char}-${i}`}
             className={cn(
-              'inline-block font-[family-name:var(--font-space-grotesk)] font-extrabold tracking-[-0.03em] leading-[0.85]',
-              'text-[clamp(4rem,18vw,16rem)]',
+              'inline-block font-[family-name:var(--font-syne)] font-[800] tracking-[-0.04em] leading-[0.85] uppercase',
+              'text-[clamp(3rem,12vw,6.5rem)] lg:text-[clamp(4.2rem,7.5vw,7.8rem)] xl:text-[clamp(5rem,8vw,10rem)]',
               'text-zinc-900 dark:text-zinc-50',
             )}
             variants={{

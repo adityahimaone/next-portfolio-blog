@@ -10,6 +10,7 @@ import { HeroWaveform } from './hero-waveform'
 import { HeroEqBars } from './hero-eq-bars'
 import { HeroTransport } from './hero-transport'
 import { StatusBadge } from './status-badge'
+import { HeroConsoleDeck } from './hero-console-deck'
 
 export function HeroSectionV2() {
   const [baseDelay, setBaseDelay] = useState(1)
@@ -38,7 +39,7 @@ export function HeroSectionV2() {
   return (
     <section
       ref={containerRef}
-      className="relative h-screen w-full overflow-hidden select-none"
+      className="relative min-h-screen lg:h-screen w-full overflow-hidden select-none pb-20 lg:pb-0"
     >
       {/* Layer 0: Background pattern */}
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -59,42 +60,40 @@ export function HeroSectionV2() {
       {/* Layer 1: Waveform BEHIND text */}
       <HeroWaveform layer="behind" />
 
-      {/* Layer 2: Main content (name + badges) */}
+      {/* Layer 2: Main content (name + badges + console deck) */}
       <motion.div
         style={{ y, opacity, scale }}
-        className="relative z-20 flex h-full flex-col items-center justify-center"
+        className="relative z-20 flex min-h-screen lg:h-full w-full items-center justify-center pt-24 pb-12 lg:py-0"
       >
-        {/* Floating status badges */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: baseDelay + 0.7 }}
-          className="pointer-events-none"
-        >
-          <StatusBadge
-            label="Online"
-            color="green"
-            className="absolute top-[18%] left-[5%] md:left-[8%]"
-          />
-          <StatusBadge
-            label={`BPM ${bpm}`}
-            color="amber"
-            className="absolute top-[14%] right-[15%] md:right-[18%]"
-          />
-          <StatusBadge
-            label="48kHz"
-            color="cyan"
-            className="absolute top-[14%] right-[3%] md:right-[8%]"
-          />
-        </motion.div>
+        <div className="w-full max-w-6xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-between gap-10 md:gap-14">
+          {/* Left Column: Name & Details */}
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left relative w-full lg:w-auto">
+            {/* Status Badges anchored relative to name container */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: baseDelay + 0.7 }}
+              className="flex flex-wrap gap-2 mb-6 justify-center lg:justify-start pointer-events-none"
+            >
+              <StatusBadge label="Online" color="green" />
+              <StatusBadge label={`BPM ${bpm}`} color="amber" />
+              <StatusBadge label="48kHz" color="cyan" />
+            </motion.div>
 
-        {/* The Name */}
-        <HeroName
-          name="ADITYA"
-          subtitle="HIMAWAN"
-          role="Frontend Developer · Sound Designer"
-          baseDelay={baseDelay}
-        />
+            {/* The Name */}
+            <HeroName
+              name="ADITYA"
+              subtitle="HIMAWAN"
+              role="Frontend Developer · Sound Designer"
+              baseDelay={baseDelay}
+            />
+          </div>
+
+          {/* Right Column: Interactive Hardware Console Deck */}
+          <div className="flex justify-center w-full lg:w-auto relative z-30">
+            <HeroConsoleDeck />
+          </div>
+        </div>
       </motion.div>
 
       {/* Layer 3: Waveform IN FRONT of text (subtle overlay) */}

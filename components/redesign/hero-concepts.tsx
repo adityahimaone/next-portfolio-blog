@@ -12,7 +12,8 @@ import { Magnetic } from '@/components/magnetic'
 // 1. WaveformHero (Oscilloscope / Waveform Identity)
 // ----------------------------------------------------
 export function WaveformHero() {
-  const { isPlaying, togglePlay, analyserNode } = useAudio()
+  const { isPlaying, togglePlay } = useAudio()
+  const analyserNode = null
 
   return (
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-zinc-950 px-4 text-center">

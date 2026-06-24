@@ -10,13 +10,19 @@ interface HeroNameProps {
   baseDelay?: number
 }
 
-export function HeroName({ name, subtitle, role, baseDelay = 0 }: HeroNameProps) {
+export function HeroName({
+  name,
+  subtitle,
+  role,
+  baseDelay = 0,
+}: HeroNameProps) {
   const characters = name.split('')
 
   return (
-    <div className="relative z-20 flex flex-col items-center select-none px-4">
+    <div className="relative z-20 flex flex-col items-center px-4 text-center select-none">
+      {/* Massive Geometric Syne Headline */}
       <motion.h1
-        className="flex overflow-hidden justify-center"
+        className="flex justify-center overflow-hidden"
         initial="hidden"
         animate="visible"
         variants={{
@@ -24,7 +30,7 @@ export function HeroName({ name, subtitle, role, baseDelay = 0 }: HeroNameProps)
           visible: {
             transition: {
               staggerChildren: 0.04,
-              delayChildren: baseDelay,
+              delayChildren: baseDelay + 0.1,
             },
           },
         }}
@@ -33,9 +39,9 @@ export function HeroName({ name, subtitle, role, baseDelay = 0 }: HeroNameProps)
           <motion.span
             key={`${char}-${i}`}
             className={cn(
-              'inline-block font-[family-name:var(--font-syne)] font-[800] tracking-[-0.04em] leading-[0.85] uppercase',
+              'inline-block font-[family-name:var(--font-syne)] leading-[0.85] font-extrabold tracking-tighter uppercase',
               'text-[clamp(3.5rem,14vw,8.5rem)] lg:text-[clamp(5.5rem,11vw,12.5rem)]',
-              'text-zinc-900 dark:text-zinc-50',
+              'text-foreground',
             )}
             variants={{
               hidden: { opacity: 0, y: 60, filter: 'blur(8px)' },
@@ -56,10 +62,14 @@ export function HeroName({ name, subtitle, role, baseDelay = 0 }: HeroNameProps)
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: baseDelay + 0.35, ease: [0.22, 1, 0.36, 1] }}
+          transition={{
+            duration: 0.7,
+            delay: baseDelay + 0.4,
+            ease: [0.22, 1, 0.36, 1],
+          }}
           className={cn(
-            'mt-2 font-[family-name:var(--font-jetbrains-mono)] text-[clamp(0.75rem,2vw,1.5rem)] font-medium tracking-[0.35em] uppercase',
-            'text-amber-600 dark:text-amber-400',
+            'mt-3 font-[family-name:var(--font-syne)] text-[clamp(0.75rem,2.2vw,1.6rem)] font-bold tracking-[0.3em] uppercase',
+            'text-primary',
           )}
         >
           {subtitle}
@@ -70,10 +80,14 @@ export function HeroName({ name, subtitle, role, baseDelay = 0 }: HeroNameProps)
         <motion.p
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: baseDelay + 0.55, ease: [0.22, 1, 0.36, 1] }}
+          transition={{
+            duration: 0.7,
+            delay: baseDelay + 0.6,
+            ease: [0.22, 1, 0.36, 1],
+          }}
           className={cn(
-            'mt-4 font-[family-name:var(--font-jetbrains-mono)] text-[clamp(0.6rem,1vw,0.85rem)] tracking-[0.2em] uppercase',
-            'text-zinc-500 dark:text-zinc-500',
+            'mt-5 font-[family-name:var(--font-whyte-inktrap-mono)] text-[clamp(0.6rem,1vw,0.8rem)] font-medium tracking-[0.15em] uppercase',
+            'text-slate dark:text-ash/60',
           )}
         >
           {role}

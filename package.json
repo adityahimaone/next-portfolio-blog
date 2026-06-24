@@ -59,6 +59,7 @@
     "eslint": "9",
     "eslint-config-next": "15.1.1",
     "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-mdx": "^3.8.1",
     "eslint-plugin-prettier": "5.5.4",
     "fast-check": "^4.7.0",
     "jest": "^30.3.0",

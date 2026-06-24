@@ -21,7 +21,7 @@ function writeViews(views: Record<string, number>) {
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params
   const views = readViews()
@@ -33,7 +33,7 @@ export async function POST(
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params
   const views = readViews()

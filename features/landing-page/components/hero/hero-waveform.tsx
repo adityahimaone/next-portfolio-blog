@@ -61,11 +61,11 @@ export function HeroWaveform({ className, layer = 'behind' }: HeroWaveformProps)
       ctx.lineTo(x, y)
     }
     ctx.strokeStyle = isDark
-      ? `hsla(185, 85%, 55%, ${0.5 * frontOpacity})`
-      : `hsla(15, 70%, 65%, ${0.35 * frontOpacity})`
+      ? `rgba(175, 80, 255, ${0.5 * frontOpacity})`
+      : `rgba(127, 86, 217, ${0.35 * frontOpacity})`
     ctx.lineWidth = 2
     if (isDark && layer === 'behind') {
-      ctx.shadowColor = 'hsla(185, 85%, 55%, 0.3)'
+      ctx.shadowColor = 'rgba(175, 80, 255, 0.35)'
       ctx.shadowBlur = 12
     }
     ctx.stroke()
@@ -83,11 +83,11 @@ export function HeroWaveform({ className, layer = 'behind' }: HeroWaveformProps)
       ctx.lineTo(x, y)
     }
     ctx.strokeStyle = isDark
-      ? `hsla(38, 95%, 55%, ${0.4 * frontOpacity})`
-      : `hsla(240, 50%, 65%, ${0.25 * frontOpacity})`
+      ? `rgba(225, 189, 255, ${0.4 * frontOpacity})`
+      : `rgba(175, 80, 255, ${0.25 * frontOpacity})`
     ctx.lineWidth = 1.5
     if (isDark && layer === 'behind') {
-      ctx.shadowColor = 'hsla(38, 95%, 55%, 0.2)'
+      ctx.shadowColor = 'rgba(225, 189, 255, 0.25)'
       ctx.shadowBlur = 10
     }
     ctx.stroke()

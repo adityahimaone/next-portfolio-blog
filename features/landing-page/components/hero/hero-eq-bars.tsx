@@ -29,8 +29,8 @@ export function HeroEqBars({ barCount = 40, className }: HeroEqBarsProps) {
             className={cn(
               styles.eqBar,
               'w-[3px] rounded-t-sm md:w-[4px]',
-              'bg-gradient-to-t from-amber-500/60 via-amber-400/40 to-cyan-400/30',
-              'dark:from-amber-500/40 dark:via-amber-400/25 dark:to-cyan-400/20',
+              'bg-linear-to-t from-iris/60 via-plum/40 to-lavender-wash/20',
+              'dark:from-iris/40 dark:via-plum/25 dark:to-lavender-wash/10',
             )}
             style={{
               height: `${maxHeight}px`,

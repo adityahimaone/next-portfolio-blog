@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 
 export async function generateStaticParams() {
   const posts = await getAllPosts()
-  return posts.map(p => ({ slug: p.slug }))
+  return posts.map((p) => ({ slug: p.slug }))
 }
 
 export async function generateMetadata({
@@ -42,5 +42,7 @@ export default async function Page({
   const { slug } = await params
   const { meta, content } = getPost(slug)
   const relatedPosts = await getRelatedPosts(slug, 3)
-  return <BlogPostPage meta={meta} content={content} relatedPosts={relatedPosts} />
+  return (
+    <BlogPostPage meta={meta} content={content} relatedPosts={relatedPosts} />
+  )
 }

@@ -6,8 +6,10 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get('error')
 
   // Get credentials from query (passed during setup) or env
-  const clientId = searchParams.get('client_id') || process.env.SPOTIFY_CLIENT_ID
-  const clientSecret = searchParams.get('client_secret') || process.env.SPOTIFY_CLIENT_SECRET
+  const clientId =
+    searchParams.get('client_id') || process.env.SPOTIFY_CLIENT_ID
+  const clientSecret =
+    searchParams.get('client_secret') || process.env.SPOTIFY_CLIENT_SECRET
 
   // Check if user denied authorization
   if (error) {
@@ -60,7 +62,7 @@ export async function GET(request: NextRequest) {
         </body>
       </html>
       `,
-      { headers: { 'Content-Type': 'text/html' } }
+      { headers: { 'Content-Type': 'text/html' } },
     )
   }
 
@@ -84,7 +86,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json()
 
     if (data.error) {
-       return NextResponse.json(data, { status: 400 })
+      return NextResponse.json(data, { status: 400 })
     }
 
     // Return HTML response with the credentials to display
@@ -127,7 +129,7 @@ SPOTIFY_REFRESH_TOKEN=${data.refresh_token}
         </body>
       </html>
       `,
-      { headers: { 'Content-Type': 'text/html' } }
+      { headers: { 'Content-Type': 'text/html' } },
     )
   } catch (error) {
     console.error('Error getting refresh token:', error)

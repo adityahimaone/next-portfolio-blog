@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { m, AnimatePresence, useInView } from 'motion/react'
 import Image from 'next/image'
 import { Disc, X, Play, Music, Mic2, ArrowUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTheme } from 'next-themes'
 
 import { PROJECTS_SHOWCASE, type ProjectShowcaseItem } from '../constants'
 
@@ -13,15 +14,112 @@ export function ProjectsSection() {
     useState<ProjectShowcaseItem | null>(null)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
+  const { resolvedTheme } = useTheme()
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let animationId: number
+    const isDark = resolvedTheme === 'dark'
+
+    const resizeCanvas = () => {
+      const dpr = window.devicePixelRatio || 1
+      const width = canvas.parentElement?.clientWidth || window.innerWidth
+      const height = canvas.parentElement?.clientHeight || window.innerHeight
+      canvas.width = width * dpr
+      canvas.height = height * dpr
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
+      ctx.scale(dpr, dpr)
+    }
+
+    resizeCanvas()
+    window.addEventListener('resize', resizeCanvas)
+
+    let time = 0
+
+    // Concentric grooves / equalizers
+    const rings = Array.from({ length: 6 }, (_, i) => ({
+      baseRadius: 100 + i * 110,
+      speed: 0.002 - i * 0.0002,
+      phase: i * (Math.PI / 4),
+    }))
+
+    const render = () => {
+      const width = canvas.width / (window.devicePixelRatio || 1)
+      const height = canvas.height / (window.devicePixelRatio || 1)
+      const centerX = width * 0.5
+      const centerY = height * 0.5
+
+      ctx.clearRect(0, 0, width, height)
+      time += 0.01
+
+      // Draw grooves and orbiting particles
+      rings.forEach((ring, i) => {
+        const pulse = Math.sin(time * 1.2 + ring.phase) * 20
+        const currentRadius = Math.max(0, ring.baseRadius + pulse)
+
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, currentRadius, 0, Math.PI * 2)
+        ctx.strokeStyle = isDark
+          ? `rgba(175, 80, 255, ${Math.max(0.01, 0.06 - i * 0.008)})`
+          : `rgba(127, 86, 217, ${Math.max(0.005, 0.02 - i * 0.003)})`
+        ctx.lineWidth = 1.2
+        ctx.stroke()
+
+        // Tiny particles revolving
+        const particleCount = 2 + (i % 2)
+        for (let j = 0; j < particleCount; j++) {
+          const angle =
+            time * (0.2 + i * 0.05) + j * ((Math.PI * 2) / particleCount)
+          const px = centerX + Math.cos(angle) * currentRadius
+          const py = centerY + Math.sin(angle) * currentRadius
+
+          ctx.beginPath()
+          ctx.arc(px, py, 1.8, 0, Math.PI * 2)
+          ctx.fillStyle = isDark
+            ? 'rgba(225, 189, 255, 0.2)'
+            : 'rgba(127, 86, 217, 0.08)'
+          ctx.fill()
+        }
+      })
+
+      animationId = requestAnimationFrame(render)
+    }
+
+    render()
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas)
+      cancelAnimationFrame(animationId)
+    }
+  }, [mounted, resolvedTheme])
 
   return (
     <>
       <section
         id="projects"
-        className="overflow-hidden py-24 2xl:overflow-visible"
+        className="relative overflow-hidden py-24 2xl:overflow-visible"
         ref={ref}
       >
-        <div className="container mx-auto px-4 md:px-6">
+        {/* Dynamic Sound Wave Concentric Canvas Backdrop */}
+        <canvas
+          ref={canvasRef}
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-80 dark:opacity-100"
+        />
+        <div className="relative z-10 container mx-auto px-4 md:px-6">
           <div className="mb-16 flex flex-col items-center text-center">
             <m.div
               initial={{ opacity: 0, y: 20 }}

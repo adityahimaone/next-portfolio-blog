@@ -27,7 +27,9 @@
   body {
     @apply bg-white text-zinc-800 dark:bg-zinc-950 dark:text-zinc-100;
     margin: 0;
-    transition: background-color 0.5s ease, color 0.5s ease;
+    transition:
+      background-color 0.5s ease,
+      color 0.5s ease;
   }
 
   ::selection {
@@ -422,142 +424,163 @@
 }
 
 :root {
-  /* Base colors */
-  --background: #ffffff;
-  --foreground: #18181b;
+  /* Colors from design.md */
+  --color-void: #090909;
+  --color-bone-white: #f7f9fa;
+  --color-ash: #f0f0f0;
+  --color-slate: #6b6b6b;
+  --color-graphite: #454545;
+  --color-smoke: #828384;
+  --color-iron: #333333;
+  --color-cinder: #423738;
+  --color-iris: #af50ff;
+  --color-plum: #7f56d9;
+  --color-aubergine: #271635;
+  --color-storm-gray: #475467;
+  --color-lavender-wash: #e1bdff;
+
+  --gradient-orchid-radial: radial-gradient(
+    circle closest-corner at 10% 50%,
+    rgb(108, 75, 214),
+    rgba(0, 0, 0, 0) 55%
+  );
+  --gradient-amethyst-band: linear-gradient(
+    90deg,
+    rgb(64, 24, 96),
+    rgb(72, 35, 180) 50%,
+    rgb(99, 78, 120)
+  );
+
+  /* Map Semantic theme colors for LIGHT MODE */
+  --background: #f7f9fa; /* Bone white base for light mode */
+  --foreground: #090909; /* Void base for light mode text */
   --card: #ffffff;
-  --card-foreground: #18181b;
+  --card-foreground: #090909;
   --popover: #ffffff;
-  --popover-foreground: #18181b;
+  --popover-foreground: #090909;
 
-  /* Primary colors - Deep navy blue */
-  --primary: #273281;
-  --primary-light: #3a4699;
-  --primary-dark: #1e2866;
-  --primary-foreground: #f8fafc;
+  --primary: #7f56d9; /* Plum as primary in light mode for better contrast */
+  --primary-light: #af50ff;
+  --primary-dark: #271635;
+  --primary-foreground: #ffffff;
 
-  /* Secondary colors - Lighter blue */
-  --secondary: #3d468b;
-  --secondary-light: #505aa3;
-  --secondary-dark: #333b74;
-  --secondary-foreground: #f8fafc;
+  --secondary: #271635;
+  --secondary-light: #7f56d9;
+  --secondary-dark: #090909;
+  --secondary-foreground: #ffffff;
 
-  /* Accent colors - Golden amber */
-  --accent: #e6a817;
-  --accent-light: #f2bc36;
-  --accent-dark: #cc920a;
-  --accent-foreground: #18181b;
+  --accent: #af50ff;
+  --accent-light: #e1bdff;
+  --accent-dark: #7f56d9;
+  --accent-foreground: #ffffff;
 
-  /* UI colors */
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --destructive: #ef4444;
-  --destructive-foreground: #fef2f2;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #273281;
+  --muted: #f0f0f0; /* Ash */
+  --muted-foreground: #6b6b6b; /* Slate */
+  --border: #e4e7e8;
+  --input: #e4e7e8;
+  --ring: #7f56d9;
+
+  /* Font mapping fallbacks */
+  --font-whyte-inktrap: var(--font-inter);
+  --font-whyte-inktrap-mono: var(--font-jetbrains-mono);
+  --font-grandslang: var(--font-cormorant-garamond);
+  --font-syne: var(--font-syne);
 
   /* Chart colors */
-  --chart-1: #273281;
-  --chart-2: #3d468b;
-  --chart-3: #e6a817;
-  --chart-4: #3a4699;
-  --chart-5: #505aa3;
+  --chart-1: #7f56d9;
+  --chart-2: #271635;
+  --chart-3: #af50ff;
+  --chart-4: #6b6b6b;
+  --chart-5: #828384;
 
   /* Border radius */
   --radius: 0.625rem;
 
   /* Sidebar colors */
-  --sidebar: #f8fafc;
-  --sidebar-foreground: #18181b;
-  --sidebar-primary: #273281;
-  --sidebar-primary-foreground: #f8fafc;
-  --sidebar-accent: #e6a817;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #e4e4e7;
-  --sidebar-ring: #273281;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #090909;
+  --sidebar-primary: #7f56d9;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f0f0f0;
+  --sidebar-accent-foreground: #090909;
+  --sidebar-border: #e4e7e8;
+  --sidebar-ring: #7f56d9;
 
-  /* Studio Console Theme */
-  --chassis-bg: hsl(220, 8%, 92%);
-  --chassis-border: hsl(220, 5%, 75%);
-  --chassis-surface: hsl(220, 6%, 88%);
-  --lcd-bg: hsl(160, 30%, 8%);
-  --lcd-text: hsl(145, 80%, 55%);
-  --lcd-dim: hsl(145, 50%, 25%);
-  --led-active: hsl(0, 85%, 55%);
-  --led-standby: hsl(45, 95%, 55%);
-  --led-glow: 0 0 6px hsl(45, 95%, 55%);
-  --accent-knob: hsl(35, 90%, 55%);
-  --panel-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --screw-color: hsl(220, 5%, 70%);
+  /* Studio Console Theme (Light mode version of brand console) */
+  --chassis-bg: #f0f0f0; /* Ash */
+  --chassis-border: #cbd5e1;
+  --chassis-surface: #ffffff;
+  --lcd-bg: #271635; /* Deep Aubergine */
+  --lcd-text: #af50ff; /* Iris glow text */
+  --lcd-dim: #7f56d9;
+  --led-active: #af50ff;
+  --led-standby: #7f56d9;
+  --led-glow: 0 0 6px rgba(175, 80, 255, 0.4);
+  --accent-knob: #7f56d9;
+  --panel-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --screw-color: #6b6b6b;
 }
 
 .dark {
-  /* Base colors */
-  --background: #18181b;
-  --foreground: #f8fafc;
-  --card: #18181b;
-  --card-foreground: #f8fafc;
-  --popover: #18181b;
-  --popover-foreground: #f8fafc;
+  /* Map Semantic theme colors for DARK MODE */
+  --background: #090909; /* Void base for dark mode */
+  --foreground: #f7f9fa; /* Bone white base for dark mode text */
+  --card: #111111;
+  --card-foreground: #f7f9fa;
+  --popover: #111111;
+  --popover-foreground: #f7f9fa;
 
-  /* Primary colors - Lighter in dark mode */
-  --primary: #3a4699;
-  --primary-light: #505aa3;
-  --primary-dark: #273281;
-  --primary-foreground: #f8fafc;
+  --primary: #af50ff; /* Iris as primary in dark mode (vivid violet) */
+  --primary-light: #e1bdff;
+  --primary-dark: #7f56d9;
+  --primary-foreground: #090909;
 
-  /* Secondary colors - Lighter in dark mode */
-  --secondary: #505aa3;
-  --secondary-light: #6571bd;
-  --secondary-dark: #3d468b;
-  --secondary-foreground: #f8fafc;
+  --secondary: #7f56d9; /* Plum as secondary */
+  --secondary-light: #af50ff;
+  --secondary-dark: #271635;
+  --secondary-foreground: #f7f9fa;
 
-  /* Accent colors - Brighter in dark mode */
-  --accent: #f2bc36;
-  --accent-light: #f7cd5c;
-  --accent-dark: #e6a817;
-  --accent-foreground: #18181b;
+  --accent: #af50ff;
+  --accent-light: #e1bdff;
+  --accent-dark: #271635;
+  --accent-foreground: #090909;
 
-  /* UI colors */
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --destructive: #7f1d1d;
-  --destructive-foreground: #ef4444;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #3a4699;
+  --muted: #423738; /* Cinder */
+  --muted-foreground: #828384; /* Smoke */
+  --border: #454545; /* Graphite */
+  --input: #333333; /* Iron */
+  --ring: #af50ff;
 
   /* Chart colors */
-  --chart-1: #3a4699;
-  --chart-2: #505aa3;
-  --chart-3: #f2bc36;
-  --chart-4: #6571bd;
-  --chart-5: #f7cd5c;
+  --chart-1: #af50ff;
+  --chart-2: #7f56d9;
+  --chart-3: #e1bdff;
+  --chart-4: #828384;
+  --chart-5: #454545;
 
   /* Sidebar colors */
-  --sidebar: #27272a;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #3a4699;
-  --sidebar-primary-foreground: #f8fafc;
-  --sidebar-accent: #f2bc36;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #3f3f46;
-  --sidebar-ring: #505aa3;
+  --sidebar: #111111;
+  --sidebar-foreground: #f7f9fa;
+  --sidebar-primary: #af50ff;
+  --sidebar-primary-foreground: #090909;
+  --sidebar-accent: #423738;
+  --sidebar-accent-foreground: #f7f9fa;
+  --sidebar-border: #454545;
+  --sidebar-ring: #af50ff;
 
-  /* Studio Console Theme - Dark */
-  --chassis-bg: hsl(230, 12%, 10%);
-  --chassis-border: hsl(230, 8%, 20%);
-  --chassis-surface: hsl(230, 10%, 14%);
-  --lcd-bg: hsl(160, 40%, 5%);
-  --lcd-text: hsl(145, 90%, 60%);
-  --lcd-dim: hsl(145, 60%, 20%);
-  --led-active: hsl(0, 90%, 50%);
-  --led-standby: hsl(45, 100%, 60%);
-  --led-glow: 0 0 12px hsl(45, 100%, 60%);
-  --accent-knob: hsl(35, 95%, 60%);
-  --panel-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-  --screw-color: hsl(230, 5%, 30%);
+  /* Studio Console Theme (Dark mode brand console) */
+  --chassis-bg: #090909; /* Void base */
+  --chassis-border: #454545; /* Graphite */
+  --chassis-surface: #423738; /* Cinder */
+  --lcd-bg: #271635; /* Aubergine */
+  --lcd-text: #af50ff; /* Iris glow text */
+  --lcd-dim: #7f56d9;
+  --led-active: #af50ff;
+  --led-standby: #7f56d9;
+  --led-glow: 0 0 12px rgba(175, 80, 255, 0.7);
+  --accent-knob: #af50ff;
+  --panel-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+  --screw-color: #6b6b6b;
 }
 
 @theme inline {
@@ -596,6 +619,27 @@
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Dope Security Brand Colors */
+  --color-void: var(--color-void);
+  --color-bone-white: var(--color-bone-white);
+  --color-ash: var(--color-ash);
+  --color-slate: var(--color-slate);
+  --color-graphite: var(--color-graphite);
+  --color-smoke: var(--color-smoke);
+  --color-iron: var(--color-iron);
+  --color-cinder: var(--color-cinder);
+  --color-iris: var(--color-iris);
+  --color-plum: var(--color-plum);
+  --color-aubergine: var(--color-aubergine);
+  --color-storm-gray: var(--color-storm-gray);
+  --color-lavender-wash: var(--color-lavender-wash);
+
+  /* Typography Pairing */
+  --font-whyte-inktrap: var(--font-whyte-inktrap);
+  --font-whyte-inktrap-mono: var(--font-whyte-inktrap-mono);
+  --font-grandslang: var(--font-grandslang);
+  --font-syne: var(--font-syne);
 
   /* Migrated from tailwind.config.js */
   --color-primary-light: var(--primary-light);
@@ -729,15 +773,52 @@
 }
 
 /* EQ bar keyframes */
-@keyframes eq-a { 0% { transform: scaleY(0.1); } 100% { transform: scaleY(0.9); } }
-@keyframes eq-b { 0% { transform: scaleY(0.3); } 100% { transform: scaleY(0.7); } }
-@keyframes eq-c { 0% { transform: scaleY(0.05); } 100% { transform: scaleY(1.0); } }
-@keyframes eq-d { 0% { transform: scaleY(0.4); } 100% { transform: scaleY(0.6); } }
-@keyframes eq-e { 0% { transform: scaleY(0.15); } 100% { transform: scaleY(0.85); } }
+@keyframes eq-a {
+  0% {
+    transform: scaleY(0.1);
+  }
+  100% {
+    transform: scaleY(0.9);
+  }
+}
+@keyframes eq-b {
+  0% {
+    transform: scaleY(0.3);
+  }
+  100% {
+    transform: scaleY(0.7);
+  }
+}
+@keyframes eq-c {
+  0% {
+    transform: scaleY(0.05);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+@keyframes eq-d {
+  0% {
+    transform: scaleY(0.4);
+  }
+  100% {
+    transform: scaleY(0.6);
+  }
+}
+@keyframes eq-e {
+  0% {
+    transform: scaleY(0.15);
+  }
+  100% {
+    transform: scaleY(0.85);
+  }
+}
 
 /* Album art spin */
 @keyframes album-spin {
-  to { --hue-rotate: 360deg; }
+  to {
+    --hue-rotate: 360deg;
+  }
 }
 
 /* Scan-line texture (static) */
@@ -774,12 +855,17 @@
 }
 
 .chassis-texture {
-  background-image:
-    linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 50%, rgba(0,0,0,0.02) 100%);
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.02) 100%
+  );
 }
 
 @keyframes lcd-wave {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0px);
     opacity: 0.4;
   }
@@ -798,12 +884,17 @@
 }
 
 @keyframes led-pulse {
-  0%, 100% {
-    box-shadow: 0 0 3px currentColor, 0 0 6px currentColor;
+  0%,
+  100% {
+    box-shadow:
+      0 0 3px currentColor,
+      0 0 6px currentColor;
     opacity: 1;
   }
   50% {
-    box-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
+    box-shadow:
+      0 0 6px currentColor,
+      0 0 12px currentColor;
     opacity: 0.8;
   }
 }
@@ -812,22 +903,102 @@
   animation: led-pulse 2s ease-in-out infinite;
 }
 /* Studio Console - Spectrum Analyzer Bars */
-@keyframes spectrum-bar-1 { 0%, 100% { transform: scaleY(0.15); } 25% { transform: scaleY(0.8); } 50% { transform: scaleY(0.4); } 75% { transform: scaleY(0.95); } }
-@keyframes spectrum-bar-2 { 0%, 100% { transform: scaleY(0.3); } 30% { transform: scaleY(0.95); } 60% { transform: scaleY(0.2); } 80% { transform: scaleY(0.7); } }
-@keyframes spectrum-bar-3 { 0%, 100% { transform: scaleY(0.5); } 20% { transform: scaleY(0.1); } 45% { transform: scaleY(0.9); } 70% { transform: scaleY(0.35); } }
-@keyframes spectrum-bar-4 { 0%, 100% { transform: scaleY(0.2); } 35% { transform: scaleY(0.75); } 55% { transform: scaleY(0.15); } 85% { transform: scaleY(0.85); } }
-@keyframes spectrum-bar-5 { 0%, 100% { transform: scaleY(0.4); } 15% { transform: scaleY(0.9); } 40% { transform: scaleY(0.25); } 65% { transform: scaleY(0.7); } }
+@keyframes spectrum-bar-1 {
+  0%,
+  100% {
+    transform: scaleY(0.15);
+  }
+  25% {
+    transform: scaleY(0.8);
+  }
+  50% {
+    transform: scaleY(0.4);
+  }
+  75% {
+    transform: scaleY(0.95);
+  }
+}
+@keyframes spectrum-bar-2 {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  30% {
+    transform: scaleY(0.95);
+  }
+  60% {
+    transform: scaleY(0.2);
+  }
+  80% {
+    transform: scaleY(0.7);
+  }
+}
+@keyframes spectrum-bar-3 {
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+  20% {
+    transform: scaleY(0.1);
+  }
+  45% {
+    transform: scaleY(0.9);
+  }
+  70% {
+    transform: scaleY(0.35);
+  }
+}
+@keyframes spectrum-bar-4 {
+  0%,
+  100% {
+    transform: scaleY(0.2);
+  }
+  35% {
+    transform: scaleY(0.75);
+  }
+  55% {
+    transform: scaleY(0.15);
+  }
+  85% {
+    transform: scaleY(0.85);
+  }
+}
+@keyframes spectrum-bar-5 {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  15% {
+    transform: scaleY(0.9);
+  }
+  40% {
+    transform: scaleY(0.25);
+  }
+  65% {
+    transform: scaleY(0.7);
+  }
+}
 
 /* LCD scanline flicker */
 @keyframes lcd-flicker {
-  0%, 100% { opacity: 0.03; }
-  50% { opacity: 0.06; }
+  0%,
+  100% {
+    opacity: 0.03;
+  }
+  50% {
+    opacity: 0.06;
+  }
 }
 
 /* LED pulse glow */
 @keyframes led-pulse {
-  0%, 100% { box-shadow: var(--led-glow); }
-  50% { box-shadow: 0 0 2px transparent; }
+  0%,
+  100% {
+    box-shadow: var(--led-glow);
+  }
+  50% {
+    box-shadow: 0 0 2px transparent;
+  }
 }
 
 .lcd-screen {
@@ -859,12 +1030,11 @@
 }
 
 .chassis-texture {
-  background-image:
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 1px,
-      rgba(255,255,255,0.03) 1px,
-      rgba(255,255,255,0.03) 2px
-    );
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 1px,
+    rgba(255, 255, 255, 0.03) 1px,
+    rgba(255, 255, 255, 0.03) 2px
+  );
 }

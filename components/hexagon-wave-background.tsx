@@ -130,7 +130,7 @@ export function HexagonWaveBackground({
           // Wave effect
           const wave = Math.sin(time + x * 0.01 + y * 0.01)
 
-          let stroke = colors.stroke
+          const stroke = colors.stroke
           let fill = undefined
           let size = r * 0.9
 

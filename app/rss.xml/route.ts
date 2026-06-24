@@ -15,7 +15,13 @@ export async function GET() {
     <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml" />
     ${posts
       .map(
-        (post: { title: string; slug: string; date: string; description: string; tags: string[] }) => `
+        (post: {
+          title: string
+          slug: string
+          date: string
+          description: string
+          tags: string[]
+        }) => `
     <item>
       <title>${escapeXml(post.title)}</title>
       <link>${siteUrl}/blog/${post.slug}</link>

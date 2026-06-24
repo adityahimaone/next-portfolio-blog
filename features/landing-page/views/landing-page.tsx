@@ -1,12 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import {
-  LazyMotion,
-  m,
-  useScroll,
-  useSpring,
-  AnimatePresence,
-} from 'motion/react'
+import { LazyMotion, m, AnimatePresence } from 'motion/react'
 import dynamic from 'next/dynamic'
 
 const loadFeatures = () => import('motion/react').then((res) => res.domMax)
@@ -17,32 +11,37 @@ import { Footer } from '@/features/layout/components/footer'
 import { HeroSectionV2 } from '../components/hero/hero-section'
 import { StudioBackground } from '@/components/studio-background'
 
-const AboutSection = dynamic(() => import('../components/about-section').then((mod) => mod.AboutSection))
-const SkillsSection = dynamic(() => import('../components/skills-section').then((mod) => mod.SkillsSection))
-const ExperienceSection = dynamic(() => import('../components/experience-section').then((mod) => mod.ExperienceSection))
-const ContactSection = dynamic(() => import('../components/contact/contact-section').then((mod) => mod.ContactSection))
-const ProjectsSection = dynamic(() => import('../components/projects-section').then((mod) => mod.ProjectsSection))
-const MusicMarquee = dynamic(() => import('../spotify/music-marquee').then((mod) => mod.MusicMarquee))
+const AboutSection = dynamic(() =>
+  import('../components/about-section').then((mod) => mod.AboutSection),
+)
+const SkillsSection = dynamic(() =>
+  import('../components/skills-section').then((mod) => mod.SkillsSection),
+)
+const ExperienceSection = dynamic(() =>
+  import('../components/experience-section').then(
+    (mod) => mod.ExperienceSection,
+  ),
+)
+const ContactSection = dynamic(() =>
+  import('../components/contact/contact-section').then(
+    (mod) => mod.ContactSection,
+  ),
+)
+const ProjectsSection = dynamic(() =>
+  import('../components/projects-section').then((mod) => mod.ProjectsSection),
+)
+const MusicMarquee = dynamic(() =>
+  import('../spotify/music-marquee').then((mod) => mod.MusicMarquee),
+)
 
 import { SectionDivider } from '@/components/section-divider'
 import { ChevronUp } from 'lucide-react'
 import { usePreloader } from '../hooks/use-preloader'
-import { useTheme } from 'next-themes'
-import { cn } from '@/lib/utils'
 
 export default function LandingPage() {
-  const { scrollYProgress } = useScroll()
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-  })
   const mainRef = useRef<HTMLDivElement>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const isLoading = usePreloader()
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-
 
   // Handle scroll to top
   const handleScrollToTop = () => {
@@ -50,7 +49,6 @@ export default function LandingPage() {
   }
 
   useEffect(() => {
-    setMounted(true)
     // Preload any assets or initialize animations
     const body = document.querySelector('body')
     if (body) {
@@ -86,9 +84,7 @@ export default function LandingPage() {
           <main className="relative">
             <div className="snap-y snap-mandatory">
               {/* Hero Section */}
-              <section
-                className="relative h-screen snap-start overflow-hidden"
-              >
+              <section className="relative h-screen snap-start overflow-hidden">
                 <div className="relative">
                   <HeaderV2 />
                   <HeroSectionV2 />
@@ -120,7 +116,7 @@ export default function LandingPage() {
 
               <section
                 id="projects"
-                className="dark:bg-accent snap-start scroll-mt-0"
+                className="dark:bg-void border-graphite/10 dark:border-graphite/35 snap-start scroll-mt-0 border-y"
               >
                 <ProjectsSection />
               </section>

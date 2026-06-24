@@ -46,15 +46,11 @@ function ComponentSection({
           </h2>
           <p className="text-xs text-zinc-500">{description}</p>
         </div>
-        <code className="ml-auto hidden rounded border border-zinc-200 bg-zinc-100 px-2 py-1 font-mono text-[10px] text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 sm:block">
+        <code className="ml-auto hidden rounded border border-zinc-200 bg-zinc-100 px-2 py-1 font-mono text-[10px] text-zinc-600 sm:block dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
           {code}
         </code>
       </div>
-      {narrow ? (
-        <div className="mx-auto max-w-lg">{children}</div>
-      ) : (
-        children
-      )}
+      {narrow ? <div className="mx-auto max-w-lg">{children}</div> : children}
     </section>
   )
 }
@@ -63,7 +59,7 @@ export default function UIPage() {
   return (
     <main className="min-h-screen bg-white dark:bg-zinc-950">
       {/* Hero */}
-      <div className="border-b border-zinc-200 bg-zinc-50/50 px-4 py-12 dark:border-zinc-800 dark:bg-zinc-900/30 sm:px-6 sm:py-16">
+      <div className="border-b border-zinc-200 bg-zinc-50/50 px-4 py-12 sm:px-6 sm:py-16 dark:border-zinc-800 dark:bg-zinc-900/30">
         <div className="mx-auto max-w-5xl">
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
@@ -73,8 +69,8 @@ export default function UIPage() {
             UI Components
           </h1>
           <p className="mt-3 max-w-lg text-sm text-zinc-500 dark:text-zinc-400">
-            A collection of interactive music components built with React, Tone.js,
-            and Canvas. Attach, detach, and compose them anywhere.
+            A collection of interactive music components built with React,
+            Tone.js, and Canvas. Attach, detach, and compose them anywhere.
           </p>
         </div>
       </div>
@@ -128,8 +124,9 @@ export default function UIPage() {
                 Audio-Reactive Background
               </h3>
               <p className="mt-2 max-w-sm text-sm text-zinc-600 dark:text-zinc-400">
-                Click the MIC button in the top-right corner and make some noise.
-                The background will react to your microphone input in real-time.
+                Click the MIC button in the top-right corner and make some
+                noise. The background will react to your microphone input in
+                real-time.
               </p>
             </div>
           </AudioReactiveBg>
@@ -218,8 +215,9 @@ export default function UIPage() {
             <div className="rounded border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950">
               <code className="block font-mono text-xs text-zinc-700 dark:text-zinc-300">
                 import{' '}
-                {'{ StepSequencer, SpectrumAnalyzer, BeatPad, VinylRecordPlayer, ... }'}
-                {' '}
+                {
+                  '{ StepSequencer, SpectrumAnalyzer, BeatPad, VinylRecordPlayer, ... }'
+                }{' '}
                 from &quot;@/features/music&quot;
               </code>
             </div>

@@ -13,7 +13,6 @@ export function initCursorGlow() {
   // Notes that will be created randomly
   const musicNotes = ['♪', '♫', '♬', '♩', '♭']
   let lastPos = { x: 0, y: 0 }
-  let isMoving = false
   let noteTimeout: number | null = null
 
   function createMusicNote(x: number, y: number) {
@@ -75,7 +74,6 @@ export function initCursorGlow() {
     const distance = Math.hypot(e.clientX - lastPos.x, e.clientY - lastPos.y)
     if (distance > 8) {
       // Only consider significant movements
-      isMoving = true
       lastPos = { x: e.clientX, y: e.clientY }
 
       // Create music note with some randomization
@@ -86,7 +84,7 @@ export function initCursorGlow() {
       // Reset the timeout that tracks if we're still moving
       if (noteTimeout) clearTimeout(noteTimeout)
       noteTimeout = window.setTimeout(() => {
-        isMoving = false
+        // Timeout reset
       }, 100)
     }
   }

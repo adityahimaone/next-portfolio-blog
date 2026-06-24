@@ -7,13 +7,11 @@ import { useTheme } from 'next-themes'
 interface RetroGridBackgroundProps {
   className?: string
   children?: React.ReactNode
-  angle?: number
 }
 
 export function RetroGridBackground({
   className,
   children,
-  angle = 60,
 }: RetroGridBackgroundProps) {
   const { resolvedTheme } = useTheme()
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -82,7 +80,6 @@ export function RetroGridBackground({
 
       // Draw Vertical Lines (Perspective)
       const centerX = width / 2
-      const fov = 300
       const numLines = 40
       const spacing = width / 10
 
@@ -98,7 +95,6 @@ export function RetroGridBackground({
 
       // Draw Horizontal Lines (Moving)
       // We simulate movement by changing the Z offset
-      const speed = 0.002
       const gridHeight = height - horizon
 
       // Draw lines based on perspective formula: y = horizon + h / z

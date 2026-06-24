@@ -16,7 +16,11 @@ interface BarState {
   speed: number
 }
 
-export function SpectrumAnalyzer({ isPlaying, barCount = 24, className }: SpectrumAnalyzerProps) {
+export function SpectrumAnalyzer({
+  isPlaying,
+  barCount = 24,
+  className,
+}: SpectrumAnalyzerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const barsRef = useRef<BarState[]>([])
   const animFrameRef = useRef<number>(0)
@@ -46,7 +50,8 @@ export function SpectrumAnalyzer({ isPlaying, barCount = 24, className }: Spectr
       if (playing) {
         // Playing: random heights 20%–100%, with spectral shaping
         // Center bars tend higher for a more natural look
-        const centerBias = 1 - Math.abs(i - bars.length / 2) / (bars.length / 2) * 0.3
+        const centerBias =
+          1 - (Math.abs(i - bars.length / 2) / (bars.length / 2)) * 0.3
         bars[i].target = (0.2 + Math.random() * 0.8) * centerBias
       } else {
         // Idle: subtle breathing between 10%–15%
@@ -55,83 +60,91 @@ export function SpectrumAnalyzer({ isPlaying, barCount = 24, className }: Spectr
     }
   }, [])
 
-  const drawBars = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    const bars = barsRef.current
-    const gap = 2
-    const totalGaps = (bars.length - 1) * gap
-    const barWidth = (width - totalGaps) / bars.length
-    const mainAreaHeight = height * 0.65 // Top 65% for main bars
-    const reflectionGap = 2 // Tiny gap between bars and reflection
+  const drawBars = useCallback(
+    (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+      const bars = barsRef.current
+      const gap = 2
+      const totalGaps = (bars.length - 1) * gap
+      const barWidth = (width - totalGaps) / bars.length
+      const mainAreaHeight = height * 0.65 // Top 65% for main bars
+      const reflectionGap = 2 // Tiny gap between bars and reflection
 
-    ctx.clearRect(0, 0, width, height)
+      ctx.clearRect(0, 0, width, height)
 
-    // Enable shadow for glow effect on main bars
-    ctx.shadowColor = 'rgba(74, 222, 128, 0.4)'
-    ctx.shadowBlur = 6
-    ctx.shadowOffsetX = 0
-    ctx.shadowOffsetY = 0
+      // Enable shadow for glow effect on main bars
+      ctx.shadowColor = 'rgba(74, 222, 128, 0.4)'
+      ctx.shadowBlur = 6
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
 
-    for (let i = 0; i < bars.length; i++) {
-      const x = i * (barWidth + gap)
-      const barHeight = bars[i].current * mainAreaHeight
-      const y = mainAreaHeight - barHeight
-      const radius = Math.min(barWidth / 2, 3) // Rounded top cap
+      for (let i = 0; i < bars.length; i++) {
+        const x = i * (barWidth + gap)
+        const barHeight = bars[i].current * mainAreaHeight
+        const y = mainAreaHeight - barHeight
+        const radius = Math.min(barWidth / 2, 3) // Rounded top cap
 
-      // --- Main bar ---
-      // Gradient for each bar: brighter at top, slightly darker at base
-      const grad = ctx.createLinearGradient(x, y, x, mainAreaHeight)
-      grad.addColorStop(0, 'rgba(74, 222, 128, 0.95)')
-      grad.addColorStop(0.5, 'rgba(74, 222, 128, 0.8)')
-      grad.addColorStop(1, 'rgba(34, 180, 90, 0.7)')
-      ctx.fillStyle = grad
+        // --- Main bar ---
+        // Gradient for each bar: brighter at top, slightly darker at base
+        const grad = ctx.createLinearGradient(x, y, x, mainAreaHeight)
+        grad.addColorStop(0, 'rgba(74, 222, 128, 0.95)')
+        grad.addColorStop(0.5, 'rgba(74, 222, 128, 0.8)')
+        grad.addColorStop(1, 'rgba(34, 180, 90, 0.7)')
+        ctx.fillStyle = grad
 
-      // Draw bar with rounded top
-      if (barHeight > radius * 2) {
-        ctx.beginPath()
-        ctx.moveTo(x, mainAreaHeight)
-        ctx.lineTo(x, y + radius)
-        ctx.arcTo(x, y, x + radius, y, radius)
-        ctx.arcTo(x + barWidth, y, x + barWidth, y + radius, radius)
-        ctx.lineTo(x + barWidth, mainAreaHeight)
-        ctx.closePath()
-        ctx.fill()
-      } else if (barHeight > 0) {
-        ctx.fillRect(x, y, barWidth, barHeight)
+        // Draw bar with rounded top
+        if (barHeight > radius * 2) {
+          ctx.beginPath()
+          ctx.moveTo(x, mainAreaHeight)
+          ctx.lineTo(x, y + radius)
+          ctx.arcTo(x, y, x + radius, y, radius)
+          ctx.arcTo(x + barWidth, y, x + barWidth, y + radius, radius)
+          ctx.lineTo(x + barWidth, mainAreaHeight)
+          ctx.closePath()
+          ctx.fill()
+        } else if (barHeight > 0) {
+          ctx.fillRect(x, y, barWidth, barHeight)
+        }
+
+        // --- Bright tip highlight ---
+        if (barHeight > 4) {
+          ctx.fillStyle = 'rgba(180, 255, 200, 0.6)'
+          const tipH = Math.min(2, barHeight * 0.08)
+          ctx.fillRect(x + 1, y, barWidth - 2, tipH)
+        }
       }
 
-      // --- Bright tip highlight ---
-      if (barHeight > 4) {
-        ctx.fillStyle = 'rgba(180, 255, 200, 0.6)'
-        const tipH = Math.min(2, barHeight * 0.08)
-        ctx.fillRect(x + 1, y, barWidth - 2, tipH)
+      // Disable shadow for reflection
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+
+      // --- Reflection (mirrored, faded) ---
+      for (let i = 0; i < bars.length; i++) {
+        const x = i * (barWidth + gap)
+        const barHeight = bars[i].current * mainAreaHeight * 0.5 // Half height
+        const reflectionY = mainAreaHeight + reflectionGap
+
+        // Gradient: fades out toward bottom
+        const grad = ctx.createLinearGradient(
+          x,
+          reflectionY,
+          x,
+          reflectionY + barHeight,
+        )
+        grad.addColorStop(0, 'rgba(74, 222, 128, 0.25)')
+        grad.addColorStop(1, 'rgba(74, 222, 128, 0.0)')
+        ctx.fillStyle = grad
+
+        if (barHeight > 0) {
+          ctx.fillRect(x, reflectionY, barWidth, barHeight)
+        }
       }
-    }
 
-    // Disable shadow for reflection
-    ctx.shadowColor = 'transparent'
-    ctx.shadowBlur = 0
-
-    // --- Reflection (mirrored, faded) ---
-    for (let i = 0; i < bars.length; i++) {
-      const x = i * (barWidth + gap)
-      const barHeight = bars[i].current * mainAreaHeight * 0.5 // Half height
-      const reflectionY = mainAreaHeight + reflectionGap
-
-      // Gradient: fades out toward bottom
-      const grad = ctx.createLinearGradient(x, reflectionY, x, reflectionY + barHeight)
-      grad.addColorStop(0, 'rgba(74, 222, 128, 0.25)')
-      grad.addColorStop(1, 'rgba(74, 222, 128, 0.0)')
-      ctx.fillStyle = grad
-
-      if (barHeight > 0) {
-        ctx.fillRect(x, reflectionY, barWidth, barHeight)
-      }
-    }
-
-    // Subtle horizontal line at boundary for a "surface" feel
-    ctx.fillStyle = 'rgba(74, 222, 128, 0.12)'
-    ctx.fillRect(0, mainAreaHeight, width, 1)
-  }, [])
+      // Subtle horizontal line at boundary for a "surface" feel
+      ctx.fillStyle = 'rgba(74, 222, 128, 0.12)'
+      ctx.fillRect(0, mainAreaHeight, width, 1)
+    },
+    [],
+  )
 
   // Main animation loop
   useEffect(() => {
@@ -221,7 +234,7 @@ export function SpectrumAnalyzer({ isPlaying, barCount = 24, className }: Spectr
     <div className={cn('relative w-full', className)} style={{ height: 80 }}>
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 h-full w-full"
         aria-hidden="true"
       />
     </div>

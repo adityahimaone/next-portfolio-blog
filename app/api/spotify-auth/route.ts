@@ -7,10 +7,10 @@ const scope = 'user-read-currently-playing user-read-playback-state'
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const queryClientId = searchParams.get('client_id')
-  
+
   const client_id = queryClientId || process.env.SPOTIFY_CLIENT_ID
-  
-  // Spotify no longer allows 'localhost' in redirect URIs. 
+
+  // Spotify no longer allows 'localhost' in redirect URIs.
   // We must use '127.0.0.1' for local development.
   const origin = request.nextUrl.origin.replace('localhost', '127.0.0.1')
   const redirect_uri = `${origin}/api/callback`

@@ -16,7 +16,7 @@ export function HeroSectionV2() {
   const [baseDelay, setBaseDelay] = useState(1)
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
-  const { isPlaying, playbackRate } = useAudio()
+  const { playbackRate } = useAudio()
   const containerRef = useRef<HTMLDivElement>(null)
 
   const { scrollYProgress } = useScroll({
@@ -42,24 +42,24 @@ export function HeroSectionV2() {
       className="relative h-screen w-full overflow-hidden select-none"
     >
       {/* Viewport Mounting Screws (Concept 1 Synth Faceplate Frame) */}
-      <Screw className="absolute top-20 left-4 z-40 opacity-60 text-zinc-400 dark:text-zinc-650 hover:rotate-12 transition-transform duration-300" />
-      <Screw className="absolute top-20 right-4 z-40 opacity-60 text-zinc-400 dark:text-zinc-650 hover:-rotate-12 transition-transform duration-300" />
-      <Screw className="absolute bottom-16 left-4 z-40 opacity-60 text-zinc-400 dark:text-zinc-650 hover:-rotate-12 transition-transform duration-300" />
-      <Screw className="absolute bottom-16 right-4 z-40 opacity-60 text-zinc-400 dark:text-zinc-650 hover:rotate-12 transition-transform duration-300" />
+      <Screw className="text-slate/50 dark:text-graphite absolute top-20 left-4 z-40 opacity-60 transition-transform duration-300 hover:rotate-12" />
+      <Screw className="text-slate/50 dark:text-graphite absolute top-20 right-4 z-40 opacity-60 transition-transform duration-300 hover:-rotate-12" />
+      <Screw className="text-slate/50 dark:text-graphite absolute bottom-16 left-4 z-40 opacity-60 transition-transform duration-300 hover:-rotate-12" />
+      <Screw className="text-slate/50 dark:text-graphite absolute right-4 bottom-16 z-40 opacity-60 transition-transform duration-300 hover:rotate-12" />
 
       {/* Horizontal Chassis Faceplate Seams */}
-      <div className="absolute top-16 left-0 right-0 border-b border-zinc-200/50 dark:border-zinc-850/50 z-30 pointer-events-none" />
-      <div className="absolute bottom-12.5 left-0 right-0 border-t border-zinc-200/50 dark:border-zinc-850/50 z-30 pointer-events-none" />
+      <div className="border-graphite/15 dark:border-graphite/40 pointer-events-none absolute top-16 right-0 left-0 z-30 border-b" />
+      <div className="border-graphite/15 dark:border-graphite/40 pointer-events-none absolute right-0 bottom-12.5 left-0 z-30 border-t" />
 
       {/* Layer 0: Background pattern */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      <div className="pointer-events-none absolute inset-0 z-0">
         {/* Grid / dot pattern */}
         <div
           className={cn(
             'absolute inset-0',
             isDark
-              ? 'bg-[radial-gradient(circle,_rgba(255,255,255,0.06)_1px,_transparent_1px)]'
-              : 'bg-[radial-gradient(circle,_rgba(0,0,0,0.06)_1px,_transparent_1px)]',
+              ? 'bg-[radial-gradient(circle,_var(--color-iris)_1px,_transparent_1px)] opacity-[0.05]'
+              : 'bg-[radial-gradient(circle,_var(--color-plum)_1px,_transparent_1px)] opacity-[0.04]',
           )}
           style={{ backgroundSize: '24px 24px' }}
         />
@@ -73,18 +73,18 @@ export function HeroSectionV2() {
       {/* Layer 2: Centered main content */}
       <motion.div
         style={{ y, opacity, scale }}
-        className="relative z-20 flex h-full w-full items-center justify-center flex-col"
+        className="relative z-20 flex h-full w-full flex-col items-center justify-center"
       >
         {/* Status Badges Row above typography */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: baseDelay + 0.7 }}
-          className="flex flex-wrap gap-2.5 mb-6 justify-center pointer-events-none"
+          className="pointer-events-none mb-6 flex flex-wrap justify-center gap-2.5"
         >
-          <StatusBadge label="Online" color="green" />
-          <StatusBadge label={`BPM ${bpm}`} color="amber" />
-          <StatusBadge label="48kHz" color="cyan" />
+          <StatusBadge label="Online" />
+          <StatusBadge label={`BPM ${bpm}`} />
+          <StatusBadge label="48kHz" />
         </motion.div>
 
         {/* Massive Centered Name */}
@@ -112,7 +112,11 @@ export function HeroSectionV2() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: baseDelay + 0.9, ease: [0.22, 1, 0.36, 1] }}
+        transition={{
+          duration: 0.7,
+          delay: baseDelay + 0.9,
+          ease: [0.22, 1, 0.36, 1],
+        }}
       >
         <HeroTransport />
       </motion.div>

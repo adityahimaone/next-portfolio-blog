@@ -8,7 +8,11 @@ export const size = {
 
 export const contentType = 'image/png'
 
-export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
+export default async function Image({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
   const { slug } = await params
   const { meta } = getPost(slug)
 
@@ -76,7 +80,9 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         >
           {meta.title}
         </h1>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' as const }}>
+        <div
+          style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' as const }}
+        >
           {meta.tags.slice(0, 4).map((tag) => (
             <span
               key={tag}

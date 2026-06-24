@@ -80,7 +80,7 @@ export default function ContactPage() {
       {/* DAW-style visual element */}
       <div className="relative mb-8 w-full max-w-2xl">
         {/* Waveform visualization */}
-        <div className="flex items-center justify-center gap-[2px] h-16 opacity-40">
+        <div className="flex h-16 items-center justify-center gap-[2px] opacity-40">
           {Array.from({ length: 60 }).map((_, i) => {
             const height = Math.sin((i / 60) * Math.PI * 6) * 30 + 20
             return (
@@ -94,7 +94,7 @@ export default function ContactPage() {
         </div>
 
         {/* Playhead */}
-        <div className="absolute top-0 left-1/2 h-full w-[2px] -translate-x-1/2 bg-zinc-400 dark:bg-zinc-600 opacity-50" />
+        <div className="absolute top-0 left-1/2 h-full w-[2px] -translate-x-1/2 bg-zinc-400 opacity-50 dark:bg-zinc-600" />
       </div>
 
       {/* Title */}

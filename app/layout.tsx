@@ -1,5 +1,14 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono, Space_Grotesk, JetBrains_Mono, Syne, Orbitron } from 'next/font/google'
+import {
+  Geist,
+  Geist_Mono,
+  Space_Grotesk,
+  JetBrains_Mono,
+  Syne,
+  Orbitron,
+  Inter,
+  Cormorant_Garamond,
+} from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from 'next-themes'
 import { AudioProvider } from '@/features/landing-page/spotify/audio-context'
@@ -83,6 +92,20 @@ const orbitron = Orbitron({
   display: 'swap',
 })
 
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin'],
+  display: 'swap',
+})
+
+const cormorantGaramond = Cormorant_Garamond({
+  variable: '--font-cormorant-garamond',
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+})
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -91,7 +114,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geist.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${syne.variable} ${orbitron.variable} bg-white tracking-tight antialiased dark:bg-zinc-950`}
+        className={`${geist.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${syne.variable} ${orbitron.variable} ${inter.variable} ${cormorantGaramond.variable} bg-white tracking-tight antialiased dark:bg-zinc-950`}
       >
         <ThemeProvider
           enableSystem={false}

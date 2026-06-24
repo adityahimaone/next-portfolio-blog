@@ -39,7 +39,10 @@ export function WaveformVisualizer({
       // Handle resize internally if canvas dimensions change
       const dpr = window.devicePixelRatio || 1
       const rect = canvas.getBoundingClientRect()
-      if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+      if (
+        canvas.width !== rect.width * dpr ||
+        canvas.height !== rect.height * dpr
+      ) {
         canvas.width = rect.width * dpr
         canvas.height = rect.height * dpr
         ctx.scale(dpr, dpr)

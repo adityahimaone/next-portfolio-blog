@@ -2,7 +2,18 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, useMotionValue } from 'motion/react'
-import { Sliders, PhoneCall, Radio, Send, ArrowRight, Music, Mail, Linkedin, Github, Instagram } from 'lucide-react'
+import {
+  Sliders,
+  PhoneCall,
+  Radio,
+  Send,
+  ArrowRight,
+  Music,
+  Mail,
+  Linkedin,
+  Github,
+  Instagram,
+} from 'lucide-react'
 import { Screw } from '@/components/screw'
 
 // ----------------------------------------------------
@@ -37,57 +48,74 @@ export function DjBoothContact() {
   }
 
   return (
-    <div className="w-full py-16 px-4 flex flex-col items-center">
-      <div className="w-full max-w-3xl rounded-3xl border-4 border-zinc-700 bg-zinc-800 p-6 shadow-2xl relative">
-        <h3 className="font-mono text-xs font-bold text-zinc-400 tracking-widest text-center mb-6 uppercase">
+    <div className="flex w-full flex-col items-center px-4 py-16">
+      <div className="relative w-full max-w-3xl rounded-3xl border-4 border-zinc-700 bg-zinc-800 p-6 shadow-2xl">
+        <h3 className="mb-6 text-center font-mono text-xs font-bold tracking-widest text-zinc-400 uppercase">
           DJ BOOTH COLLABORATION DESK
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
           {/* Left Deck: Info */}
-          <div className="bg-zinc-950 border border-zinc-850 rounded-2xl p-5 flex flex-col gap-4 text-left font-mono text-xs">
-            <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest border-b border-zinc-855 pb-2">DECK A: TALENT</span>
+          <div className="border-zinc-850 flex flex-col gap-4 rounded-2xl border bg-zinc-950 p-5 text-left font-mono text-xs">
+            <span className="border-zinc-855 border-b pb-2 text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
+              DECK A: TALENT
+            </span>
             <div className="space-y-2 text-zinc-300">
-              <div><span className="text-zinc-500 font-bold">ARTIST:</span> Aditya Himawan</div>
-              <div><span className="text-zinc-500 font-bold">EMAIL :</span> adityahimaone@gmail.com</div>
-              <div><span className="text-zinc-500 font-bold">STATUS:</span> ACCEPTING OFFERS</div>
+              <div>
+                <span className="font-bold text-zinc-500">ARTIST:</span> Aditya
+                Himawan
+              </div>
+              <div>
+                <span className="font-bold text-zinc-500">EMAIL :</span>{' '}
+                adityahimaone@gmail.com
+              </div>
+              <div>
+                <span className="font-bold text-zinc-500">STATUS:</span>{' '}
+                ACCEPTING OFFERS
+              </div>
             </div>
             {/* Spinning Vinyl plate decoration */}
             <div className="flex justify-center py-4">
-              <div className="h-28 w-28 rounded-full bg-zinc-900 border-4 border-zinc-800 flex items-center justify-center animate-spin">
-                <div className="h-10 w-10 rounded-full bg-zinc-800 border border-zinc-700" />
+              <div className="flex h-28 w-28 animate-spin items-center justify-center rounded-full border-4 border-zinc-800 bg-zinc-900">
+                <div className="h-10 w-10 rounded-full border border-zinc-700 bg-zinc-800" />
               </div>
             </div>
           </div>
 
           {/* Right Deck: Contact Form */}
-          <div className="bg-zinc-950 border border-zinc-855 rounded-2xl p-5 flex flex-col gap-4 text-left font-mono text-xs">
-            <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest border-b border-zinc-855 pb-2">DECK B: YOUR BRIEF</span>
-            
+          <div className="border-zinc-855 flex flex-col gap-4 rounded-2xl border bg-zinc-950 p-5 text-left font-mono text-xs">
+            <span className="border-zinc-855 border-b pb-2 text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
+              DECK B: YOUR BRIEF
+            </span>
+
             {status === 'submitted' ? (
-              <div className="py-10 text-center space-y-2">
-                <span className="text-emerald-400 font-bold text-sm block">MESSAGE DISPATCHED!</span>
-                <span className="text-zinc-500">Crossfader engaged. We are live.</span>
+              <div className="space-y-2 py-10 text-center">
+                <span className="block text-sm font-bold text-emerald-400">
+                  MESSAGE DISPATCHED!
+                </span>
+                <span className="text-zinc-500">
+                  Crossfader engaged. We are live.
+                </span>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-zinc-500 font-bold">EMAIL:</label>
+                  <label className="font-bold text-zinc-500">EMAIL:</label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-zinc-100 outline-none focus:border-zinc-700"
+                    className="w-full rounded border border-zinc-800 bg-zinc-900 p-2 text-zinc-100 outline-none focus:border-zinc-700"
                     placeholder="you@domain.com"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-zinc-500 font-bold">BRIEF NOTE:</label>
+                  <label className="font-bold text-zinc-500">BRIEF NOTE:</label>
                   <textarea
                     rows={3}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-zinc-100 outline-none focus:border-zinc-700 resize-none"
+                    className="w-full resize-none rounded border border-zinc-800 bg-zinc-900 p-2 text-zinc-100 outline-none focus:border-zinc-700"
                     placeholder="Hello Aditya, let's mix a project..."
                   />
                 </div>
@@ -98,13 +126,13 @@ export function DjBoothContact() {
 
         {/* Crossfader control console */}
         {status !== 'submitted' && (
-          <div className="mt-8 pt-6 border-t border-zinc-700 flex flex-col items-center gap-3">
-            <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest font-black">
+          <div className="mt-8 flex flex-col items-center gap-3 border-t border-zinc-700 pt-6">
+            <span className="font-mono text-[9px] font-black tracking-widest text-zinc-500 uppercase">
               DRAG CROSSFADER TO THE RIGHT TO TRANSMIT BRIEF
             </span>
 
-            <div className="relative w-44 h-8 bg-zinc-950 rounded-full flex items-center px-1 shadow-inner border border-zinc-855">
-              <div className="absolute inset-0 flex justify-between px-4 items-center text-[9px] text-zinc-650 pointer-events-none">
+            <div className="border-zinc-855 relative flex h-8 w-44 items-center rounded-full border bg-zinc-950 px-1 shadow-inner">
+              <div className="text-zinc-650 pointer-events-none absolute inset-0 flex items-center justify-between px-4 text-[9px]">
                 <span>A</span>
                 <span>B</span>
               </div>
@@ -115,13 +143,13 @@ export function DjBoothContact() {
                 dragMomentum={false}
                 onDragEnd={handleDragEnd}
                 style={{ x }}
-                className="h-6 w-10 rounded-lg bg-zinc-200 border border-zinc-400 cursor-grab active:cursor-grabbing flex items-center justify-center shadow-md relative z-10"
+                className="relative z-10 flex h-6 w-10 cursor-grab items-center justify-center rounded-lg border border-zinc-400 bg-zinc-200 shadow-md active:cursor-grabbing"
               >
-                <div className="h-4 w-0.5 bg-zinc-550" />
+                <div className="bg-zinc-550 h-4 w-0.5" />
               </motion.div>
             </div>
 
-            <div className="text-[9px] font-mono text-amber-500 tracking-wider">
+            <div className="font-mono text-[9px] tracking-wider text-amber-500">
               {statusText}
             </div>
           </div>
@@ -169,57 +197,76 @@ export function RadioCallInContact() {
   }
 
   return (
-    <div className="w-full py-16 px-4 flex flex-col items-center">
-      <div className="w-full max-w-md rounded-2xl border-4 border-zinc-950 bg-zinc-900 p-6 shadow-2xl relative text-left">
-        
+    <div className="flex w-full flex-col items-center px-4 py-16">
+      <div className="relative w-full max-w-md rounded-2xl border-4 border-zinc-950 bg-zinc-900 p-6 text-left shadow-2xl">
         {/* LCD monitor */}
-        <div className="rounded bg-black border border-zinc-800 p-4 text-amber-500 font-mono text-xs mb-6 shadow-inner space-y-1">
-          <div className="flex justify-between border-b border-zinc-900 pb-1 text-[8px] text-zinc-500 uppercase tracking-widest font-black">
+        <div className="mb-6 space-y-1 rounded border border-zinc-800 bg-black p-4 font-mono text-xs text-amber-500 shadow-inner">
+          <div className="flex justify-between border-b border-zinc-900 pb-1 text-[8px] font-black tracking-widest text-zinc-500 uppercase">
             <span>TRANSMITTER STATS</span>
-            <span className="animate-pulse text-red-500 font-black">LIVE TRANSMIT</span>
+            <span className="animate-pulse font-black text-red-500">
+              LIVE TRANSMIT
+            </span>
           </div>
           <div>FREQ: 88.5 FM // ANTENNA: SAT_LINK</div>
-          <div>CALLER STATUS: {submitted ? 'DISPATCHED' : 'WAITING FOR TONE'}</div>
+          <div>
+            CALLER STATUS: {submitted ? 'DISPATCHED' : 'WAITING FOR TONE'}
+          </div>
         </div>
 
         {submitted ? (
-          <div className="py-8 text-center font-mono text-xs space-y-2 text-zinc-300">
-            <span className="text-amber-500 font-bold text-sm block uppercase tracking-widest">BEEEEP... MESSAGE SENT!</span>
-            <span className="text-zinc-500 text-[10px]">Your message is now on the frequency path. Aditya will call you back.</span>
+          <div className="space-y-2 py-8 text-center font-mono text-xs text-zinc-300">
+            <span className="block text-sm font-bold tracking-widest text-amber-500 uppercase">
+              BEEEEP... MESSAGE SENT!
+            </span>
+            <span className="text-[10px] text-zinc-500">
+              Your message is now on the frequency path. Aditya will call you
+              back.
+            </span>
             <button
-              onClick={() => { setSubmitted(false); setCallerName(''); setMessage('') }}
-              className="mt-4 px-4 py-1.5 rounded bg-zinc-800 text-zinc-400 font-bold hover:bg-zinc-750 uppercase cursor-pointer"
+              onClick={() => {
+                setSubmitted(false)
+                setCallerName('')
+                setMessage('')
+              }}
+              className="hover:bg-zinc-750 mt-4 cursor-pointer rounded bg-zinc-800 px-4 py-1.5 font-bold text-zinc-400 uppercase"
             >
               Reset Transmitter
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 font-mono text-xs text-zinc-300">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4 font-mono text-xs text-zinc-300"
+          >
             <div className="space-y-1">
-              <label className="text-zinc-500 font-bold uppercase">CALLER ID (NAME):</label>
+              <label className="font-bold text-zinc-500 uppercase">
+                CALLER ID (NAME):
+              </label>
               <input
                 type="text"
                 value={callerName}
                 onChange={(e) => setCallerName(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-850 rounded p-2.5 text-zinc-100 outline-none focus:border-zinc-700"
+                className="border-zinc-850 w-full rounded border bg-zinc-950 p-2.5 text-zinc-100 outline-none focus:border-zinc-700"
                 placeholder="Caller name..."
                 required
               />
             </div>
             <div className="space-y-1">
-              <label className="text-zinc-500 font-bold uppercase">TRANSMIT BRIEF (MESSAGE):</label>
+              <label className="font-bold text-zinc-500 uppercase">
+                TRANSMIT BRIEF (MESSAGE):
+              </label>
               <textarea
                 rows={3}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-850 rounded p-2.5 text-zinc-100 outline-none focus:border-zinc-700 resize-none"
+                className="border-zinc-850 w-full resize-none rounded border bg-zinc-950 p-2.5 text-zinc-100 outline-none focus:border-zinc-700"
                 placeholder="Leave your message after the tone..."
                 required
               />
             </div>
             <button
               type="submit"
-              className="w-full bg-amber-500 text-black py-3 rounded font-black tracking-widest hover:brightness-110 active:translate-y-px transition-all uppercase flex items-center justify-center gap-2 cursor-pointer"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded bg-amber-500 py-3 font-black tracking-widest text-black uppercase transition-all hover:brightness-110 active:translate-y-px"
             >
               <Send size={12} /> ENGAGE TRANSMITTER
             </button>
@@ -235,10 +282,30 @@ export function RadioCallInContact() {
 // ----------------------------------------------------
 export function MixingBoardContact() {
   const channels = [
-    { label: 'EMAIL', icon: Mail, url: 'mailto:adityahimaone@gmail.com', desc: 'Direct Inbox' },
-    { label: 'LINKEDIN', icon: Linkedin, url: 'https://linkedin.com/in/adityahimaone', desc: 'Professional Mix' },
-    { label: 'GITHUB', icon: Github, url: 'https://github.com/adityahimaone', desc: 'Code Output' },
-    { label: 'INSTAGRAM', icon: Instagram, url: 'https://instagram.com/adityahimaone', desc: 'Frequency Social' },
+    {
+      label: 'EMAIL',
+      icon: Mail,
+      url: 'mailto:adityahimaone@gmail.com',
+      desc: 'Direct Inbox',
+    },
+    {
+      label: 'LINKEDIN',
+      icon: Linkedin,
+      url: 'https://linkedin.com/in/adityahimaone',
+      desc: 'Professional Mix',
+    },
+    {
+      label: 'GITHUB',
+      icon: Github,
+      url: 'https://github.com/adityahimaone',
+      desc: 'Code Output',
+    },
+    {
+      label: 'INSTAGRAM',
+      icon: Instagram,
+      url: 'https://instagram.com/adityahimaone',
+      desc: 'Frequency Social',
+    },
   ]
 
   const [activeChannel, setActiveChannel] = useState<string | null>(null)
@@ -263,24 +330,32 @@ export function MixingBoardContact() {
   }
 
   return (
-    <div className="w-full py-16 px-4 flex flex-col items-center">
-      <div className="w-full max-w-3xl rounded-3xl border-4 border-zinc-700 bg-zinc-800 p-6 shadow-2xl relative">
+    <div className="flex w-full flex-col items-center px-4 py-16">
+      <div className="relative w-full max-w-3xl rounded-3xl border-4 border-zinc-700 bg-zinc-800 p-6 shadow-2xl">
         {/* Frame screws */}
-        <div className="absolute top-2 left-2"><Screw /></div>
-        <div className="absolute top-2 right-2"><Screw /></div>
-        <div className="absolute bottom-2 left-2"><Screw /></div>
-        <div className="absolute bottom-2 right-2"><Screw /></div>
+        <div className="absolute top-2 left-2">
+          <Screw />
+        </div>
+        <div className="absolute top-2 right-2">
+          <Screw />
+        </div>
+        <div className="absolute bottom-2 left-2">
+          <Screw />
+        </div>
+        <div className="absolute right-2 bottom-2">
+          <Screw />
+        </div>
 
-        <h3 className="font-mono text-xs font-bold text-zinc-400 tracking-widest text-center mb-10 uppercase">
+        <h3 className="mb-10 text-center font-mono text-xs font-bold tracking-widest text-zinc-400 uppercase">
           MIXER CONNECT CHANNELS
         </h3>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pb-6">
+        <div className="grid grid-cols-2 gap-6 pb-6 md:grid-cols-4">
           {channels.map((chan) => {
             return (
               <div
                 key={chan.label}
-                className="rounded-xl border border-zinc-900 bg-zinc-950 p-4 flex flex-col items-center gap-6 relative"
+                className="relative flex flex-col items-center gap-6 rounded-xl border border-zinc-900 bg-zinc-950 p-4"
               >
                 {/* Active Indicator LED */}
                 <div
@@ -288,34 +363,40 @@ export function MixingBoardContact() {
                 />
 
                 {/* Tactile Fader Track */}
-                <div className="relative h-36 w-8 bg-zinc-900 rounded-full border border-zinc-800/80 flex items-center justify-center py-4">
+                <div className="relative flex h-36 w-8 items-center justify-center rounded-full border border-zinc-800/80 bg-zinc-900 py-4">
                   {/* Slider middle slot */}
-                  <div className="absolute top-4 bottom-4 w-1 bg-black/60 rounded-full" />
-                  
+                  <div className="absolute top-4 bottom-4 w-1 rounded-full bg-black/60" />
+
                   {/* Sliding Handle knob */}
                   <motion.div
                     drag="y"
                     dragConstraints={{ top: -110, bottom: 0 }}
                     dragElastic={0}
                     dragMomentum={false}
-                    onDrag={(e, info) => handleDrag(chan.label, info.offset.y, chan.url)} // Local coordinate calculation
-                    className="absolute bottom-4 h-8 w-6 rounded border-t border-zinc-400 bg-linear-to-b from-zinc-200 to-zinc-400 shadow-md cursor-grab active:cursor-grabbing flex flex-col justify-between py-1 px-0.5 active:bg-zinc-300 z-10"
+                    onDrag={(e, info) =>
+                      handleDrag(chan.label, info.offset.y, chan.url)
+                    } // Local coordinate calculation
+                    className="absolute bottom-4 z-10 flex h-8 w-6 cursor-grab flex-col justify-between rounded border-t border-zinc-400 bg-linear-to-b from-zinc-200 to-zinc-400 px-0.5 py-1 shadow-md active:cursor-grabbing active:bg-zinc-300"
                   >
-                    <div className="h-0.5 w-full bg-zinc-650" />
-                    <div className="h-0.5 w-full bg-zinc-650" />
+                    <div className="bg-zinc-650 h-0.5 w-full" />
+                    <div className="bg-zinc-650 h-0.5 w-full" />
                   </motion.div>
                 </div>
 
                 <div className="flex flex-col items-center gap-1">
-                  <span className="font-mono text-[10px] font-black text-zinc-400 uppercase tracking-widest">{chan.label}</span>
-                  <span className="text-[8px] text-zinc-650 uppercase font-mono">{chan.desc}</span>
+                  <span className="font-mono text-[10px] font-black tracking-widest text-zinc-400 uppercase">
+                    {chan.label}
+                  </span>
+                  <span className="text-zinc-650 font-mono text-[8px] uppercase">
+                    {chan.desc}
+                  </span>
                 </div>
               </div>
             )
           })}
         </div>
 
-        <div className="mt-4 text-[9px] font-mono text-zinc-500 text-center uppercase tracking-widest">
+        <div className="mt-4 text-center font-mono text-[9px] tracking-widest text-zinc-500 uppercase">
           DRAG FADER UP TO ACTIVATE CHANNEL LOG & REDIRECT
         </div>
       </div>

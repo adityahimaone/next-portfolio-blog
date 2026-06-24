@@ -15,16 +15,16 @@ export default function MixPage() {
   return (
     <div className="relative min-h-screen bg-zinc-950">
       <Header />
-      
+
       <main className="pt-20">
         {/* Hero Section */}
         <section id="hero">
           <WaveformHero />
         </section>
 
-        <div className="mx-auto w-full max-w-7xl space-y-2 py-10 px-4">
+        <div className="mx-auto w-full max-w-7xl space-y-2 px-4 py-10">
           <SectionDivider />
-          
+
           {/* About Section */}
           <section id="about" className="scroll-mt-20">
             <StudioSessionAbout />

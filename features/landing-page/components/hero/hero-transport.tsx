@@ -18,7 +18,9 @@ export function HeroTransport() {
     if (!isPlaying) return
     if (startTimeRef.current === null) startTimeRef.current = Date.now()
     const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000)
-    const frames = Math.floor(((Date.now() - startTimeRef.current) % 1000) / (1000 / 30))
+    const frames = Math.floor(
+      ((Date.now() - startTimeRef.current) % 1000) / (1000 / 30),
+    )
     setTimecode({
       h: Math.floor(elapsed / 3600),
       m: Math.floor((elapsed % 3600) / 60),
@@ -44,27 +46,41 @@ export function HeroTransport() {
   return (
     <div
       className={cn(
-        'absolute bottom-0 left-0 right-0 z-30 flex items-center justify-center gap-6 border-t px-6 py-2.5 backdrop-blur-md',
-        'border-zinc-200/40 bg-white/50 dark:border-zinc-800/40 dark:bg-zinc-950/50',
+        'absolute right-0 bottom-0 left-0 z-30 flex items-center justify-center gap-6 border-t px-6 py-2.5 backdrop-blur-md',
+        'border-graphite/15 bg-bone-white/60 dark:border-graphite/40 dark:bg-void/60',
       )}
     >
       <div className="flex items-center gap-2">
         <button
           onClick={togglePlay}
           className={cn(
-            'flex h-7 w-7 items-center justify-center rounded-md border transition-all active:scale-95 cursor-pointer',
+            'flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border transition-all active:scale-95',
             isPlaying
-              ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-500'
+              ? 'border-primary/50 bg-primary/10 text-primary shadow-[0_0_8px_rgba(175,80,255,0.3)]'
               : isDark
-                ? 'border-zinc-700 bg-zinc-800/80 text-zinc-400 hover:text-zinc-200'
-                : 'border-zinc-300 bg-zinc-100/80 text-zinc-500 hover:text-zinc-800',
+                ? 'border-graphite bg-void text-smoke hover:text-bone-white hover:border-iris/50'
+                : 'border-graphite/25 bg-bone-white text-slate hover:text-foreground hover:border-plum/50',
           )}
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? (
             <svg width="10" height="10" viewBox="0 0 10 10">
-              <rect x="1" y="1" width="3" height="8" fill="currentColor" rx="0.5" />
-              <rect x="6" y="1" width="3" height="8" fill="currentColor" rx="0.5" />
+              <rect
+                x="1"
+                y="1"
+                width="3"
+                height="8"
+                fill="currentColor"
+                rx="0.5"
+              />
+              <rect
+                x="6"
+                y="1"
+                width="3"
+                height="8"
+                fill="currentColor"
+                rx="0.5"
+              />
             </svg>
           ) : (
             <svg width="10" height="10" viewBox="0 0 10 10">
@@ -74,40 +90,75 @@ export function HeroTransport() {
         </button>
         <button
           className={cn(
-            'flex h-7 w-7 items-center justify-center rounded-md border transition-all cursor-pointer',
-            isDark ? 'border-zinc-700 bg-zinc-800/80 text-zinc-500' : 'border-zinc-300 bg-zinc-100/80 text-zinc-400',
+            'flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border transition-all',
+            isDark
+              ? 'border-graphite bg-void text-smoke hover:text-bone-white'
+              : 'border-graphite/25 bg-bone-white text-slate hover:text-foreground',
           )}
           aria-label="Stop"
         >
           <svg width="10" height="10" viewBox="0 0 10 10">
-            <rect x="2" y="2" width="6" height="6" fill="currentColor" rx="0.5" />
+            <rect
+              x="2"
+              y="2"
+              width="6"
+              height="6"
+              fill="currentColor"
+              rx="0.5"
+            />
           </svg>
         </button>
         <button
           className={cn(
-            'flex h-7 w-7 items-center justify-center rounded-md border transition-all cursor-pointer',
-            isDark ? 'border-zinc-700 bg-zinc-800/80' : 'border-zinc-300 bg-zinc-100/80',
+            'flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border transition-all',
+            isDark
+              ? 'border-graphite bg-void'
+              : 'border-graphite/25 bg-bone-white',
           )}
           aria-label="Record"
         >
-          <div className="h-2.5 w-2.5 rounded-full bg-rose-500" />
+          <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
         </button>
       </div>
 
-      <div className="font-[family-name:var(--font-jetbrains-mono)] text-sm tabular-nums tracking-wider">
-        <span className="text-zinc-700 dark:text-zinc-300">{pad(timecode.h)}</span>
-        <span className={cn(styles.colonBlink, 'text-zinc-400 dark:text-zinc-600')}>:</span>
-        <span className="text-zinc-700 dark:text-zinc-300">{pad(timecode.m)}</span>
-        <span className={cn(styles.colonBlink, 'text-zinc-400 dark:text-zinc-600')}>:</span>
-        <span className="text-zinc-700 dark:text-zinc-300">{pad(timecode.s)}</span>
-        <span className={cn(styles.colonBlink, 'text-zinc-400 dark:text-zinc-600')}>:</span>
-        <span className="text-zinc-500 dark:text-zinc-500">{pad(timecode.f)}</span>
+      <div className="font-[family-name:var(--font-whyte-inktrap-mono)] text-sm tracking-wider tabular-nums">
+        <span className="text-slate dark:text-ash">{pad(timecode.h)}</span>
+        <span
+          className={cn(styles.colonBlink, 'text-slate/40 dark:text-graphite')}
+        >
+          :
+        </span>
+        <span className="text-slate dark:text-ash">{pad(timecode.m)}</span>
+        <span
+          className={cn(styles.colonBlink, 'text-slate/40 dark:text-graphite')}
+        >
+          :
+        </span>
+        <span className="text-slate dark:text-ash">{pad(timecode.s)}</span>
+        <span
+          className={cn(styles.colonBlink, 'text-slate/40 dark:text-graphite')}
+        >
+          :
+        </span>
+        <span className="text-slate/65 dark:text-slate">{pad(timecode.f)}</span>
       </div>
 
-      <div className={cn(styles.scrollHint, 'flex items-center gap-1.5 text-zinc-400 dark:text-zinc-600')}>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-widest uppercase">scroll</span>
+      <div
+        className={cn(
+          styles.scrollHint,
+          'text-slate/50 dark:text-graphite flex items-center gap-1.5',
+        )}
+      >
+        <span className="font-[family-name:var(--font-whyte-inktrap-mono)] text-[10px] tracking-widest uppercase">
+          scroll
+        </span>
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M2 4L5 7L8 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <path
+            d="M2 4L5 7L8 4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
         </svg>
       </div>
     </div>

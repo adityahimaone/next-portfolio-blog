@@ -1,0 +1,56 @@
+@keyframes eqBounce {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes ledPulse {
+  0%, 100% { box-shadow: 0 0 4px currentColor, 0 0 8px currentColor; opacity: 1; }
+  50% { box-shadow: 0 0 2px currentColor, 0 0 4px currentColor; opacity: 0.7; }
+}
+
+@keyframes waveBar {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes scrollBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+@keyframes colonBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.eqBar {
+  transform-origin: bottom;
+  animation: eqBounce 1.2s ease-in-out infinite alternate;
+}
+
+.ledPulse {
+  animation: ledPulse 2s ease-in-out infinite;
+}
+
+.waveBar {
+  transform-origin: bottom;
+  animation: waveBar 0.8s ease-in-out infinite;
+}
+
+.scrollHint {
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+
+.colonBlink {
+  animation: colonBlink 1s step-end infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eqBar,
+  .ledPulse,
+  .waveBar,
+  .scrollHint,
+  .colonBlink {
+    animation: none;
+  }
+}

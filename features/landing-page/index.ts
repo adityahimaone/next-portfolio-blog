@@ -2,6 +2,7 @@ export { default as LandingPage } from './views/landing-page'
 
 // Landing page sections
 export { HeroSection } from './components/hero-section'
+export { HeroSectionV2 } from './components/hero/hero-section'
 export { AboutSection } from './components/about-section'
 export { SkillsSection } from './components/skills-section'
 export { ExperienceSection } from './components/experience-section'

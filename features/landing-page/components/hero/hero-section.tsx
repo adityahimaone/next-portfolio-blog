@@ -10,7 +10,8 @@ import { HeroWaveform } from './hero-waveform'
 import { HeroEqBars } from './hero-eq-bars'
 import { HeroTransport } from './hero-transport'
 import { StatusBadge } from './status-badge'
-import { HeroConsoleDeck } from './hero-console-deck'
+import { HeroControlRail } from './hero-control-rail'
+import { Screw } from '@/components/screw'
 
 export function HeroSectionV2() {
   const [baseDelay, setBaseDelay] = useState(1)
@@ -39,8 +40,18 @@ export function HeroSectionV2() {
   return (
     <section
       ref={containerRef}
-      className="relative min-h-screen lg:h-screen w-full overflow-hidden select-none pb-20 lg:pb-0"
+      className="relative h-screen w-full overflow-hidden select-none"
     >
+      {/* Viewport Mounting Screws (Concept 1 Synth Faceplate Frame) */}
+      <Screw className="absolute top-20 left-4 z-40 opacity-60 text-zinc-400 dark:text-zinc-650 hover:rotate-12 transition-transform duration-300" />
+      <Screw className="absolute top-20 right-4 z-40 opacity-60 text-zinc-400 dark:text-zinc-650 hover:-rotate-12 transition-transform duration-300" />
+      <Screw className="absolute bottom-16 left-4 z-40 opacity-60 text-zinc-400 dark:text-zinc-650 hover:-rotate-12 transition-transform duration-300" />
+      <Screw className="absolute bottom-16 right-4 z-40 opacity-60 text-zinc-400 dark:text-zinc-650 hover:rotate-12 transition-transform duration-300" />
+
+      {/* Horizontal Chassis Faceplate Seams */}
+      <div className="absolute top-16 left-0 right-0 border-b border-zinc-200/50 dark:border-zinc-850/50 z-30 pointer-events-none" />
+      <div className="absolute bottom-12.5 left-0 right-0 border-t border-zinc-200/50 dark:border-zinc-850/50 z-30 pointer-events-none" />
+
       {/* Layer 0: Background pattern */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         {/* Grid / dot pattern */}
@@ -60,40 +71,33 @@ export function HeroSectionV2() {
       {/* Layer 1: Waveform BEHIND text */}
       <HeroWaveform layer="behind" />
 
-      {/* Layer 2: Main content (name + badges + console deck) */}
+      {/* Layer 2: Centered main content */}
       <motion.div
         style={{ y, opacity, scale }}
-        className="relative z-20 flex min-h-screen lg:h-full w-full items-center justify-center pt-24 pb-12 lg:py-0"
+        className="relative z-20 flex h-full w-full items-center justify-center flex-col"
       >
-        <div className="w-full max-w-6xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-between gap-10 md:gap-14">
-          {/* Left Column: Name & Details */}
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-left relative w-full lg:w-auto">
-            {/* Status Badges anchored relative to name container */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: baseDelay + 0.7 }}
-              className="flex flex-wrap gap-2 mb-6 justify-center lg:justify-start pointer-events-none"
-            >
-              <StatusBadge label="Online" color="green" />
-              <StatusBadge label={`BPM ${bpm}`} color="amber" />
-              <StatusBadge label="48kHz" color="cyan" />
-            </motion.div>
+        {/* Status Badges Row above typography */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: baseDelay + 0.7 }}
+          className="flex flex-wrap gap-2.5 mb-6 justify-center pointer-events-none"
+        >
+          <StatusBadge label="Online" color="green" />
+          <StatusBadge label={`BPM ${bpm}`} color="amber" />
+          <StatusBadge label="48kHz" color="cyan" />
+        </motion.div>
 
-            {/* The Name */}
-            <HeroName
-              name="ADITYA"
-              subtitle="HIMAWAN"
-              role="Frontend Developer · Sound Designer"
-              baseDelay={baseDelay}
-            />
-          </div>
+        {/* Massive Centered Name */}
+        <HeroName
+          name="ADITYA"
+          subtitle="HIMAWAN"
+          role="Frontend Developer · Sound Designer"
+          baseDelay={baseDelay}
+        />
 
-          {/* Right Column: Interactive Hardware Console Deck */}
-          <div className="flex justify-center w-full lg:w-auto relative z-30">
-            <HeroConsoleDeck />
-          </div>
-        </div>
+        {/* Sleek Horizontal Control Rail directly below name */}
+        <HeroControlRail />
       </motion.div>
 
       {/* Layer 3: Waveform IN FRONT of text (subtle overlay) */}

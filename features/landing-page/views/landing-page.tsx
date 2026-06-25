@@ -36,6 +36,7 @@ const MusicMarquee = dynamic(() =>
 
 import { ParallaxSection } from '@/components/parallax-section'
 import { CableConnector } from '@/components/cable-connector'
+import { Screw } from '@/components/screw'
 import { ChevronUp } from 'lucide-react'
 import { usePreloader } from '../hooks/use-preloader'
 
@@ -108,82 +109,121 @@ export default function LandingPage() {
 
               {/* Main Content Sections */}
               <div className="mx-auto w-full max-w-7xl py-20">
-                <CableConnector color="#C84B4B" fromLabel="HERO" toLabel="ABOUT" disabled={isMobile} />
+                <CableConnector color="#C84B4B" fromLabel="HERO" toLabel="ABOUT" sway="left" disabled={isMobile} />
                 <ParallaxSection
                   id="about"
-                  className="snap-start scroll-mt-0"
+                  className="snap-start scroll-mt-0 px-6 sm:px-10"
                   disabled={isMobile}
                   bgSpeed={0.12}
                   backgroundLayer={
-                    <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]">
-                      <div className="h-full w-full bg-[radial-gradient(circle,currentColor_1px,transparent_1px)] bg-[size:24px_24px]" />
+                    <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.08] select-none pointer-events-none">
+                      {/* DAW playlist arrangement lanes */}
+                      <div className="h-full w-full border-t border-b border-black/10 dark:border-white/10 flex flex-col justify-between">
+                        {['TRACK 01: ARRANGEMENT VIEW', 'TRACK 02: ANALOG SYNTH', 'TRACK 03: FM BASS', 'TRACK 04: DRUM SEQUENCER'].map((track, i) => (
+                          <div key={i} className="flex-1 border-b border-black/10 dark:border-white/10 p-4 font-mono text-[9px] tracking-wider text-black dark:text-white flex justify-between items-center">
+                            <span>{track}</span>
+                            <span className="opacity-40">M S R 🟢</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   }
                 >
                   <AboutSection />
                 </ParallaxSection>
 
-                <CableConnector color="#C9A447" fromLabel="ABOUT" toLabel="SKILLS" disabled={isMobile} />
+                <CableConnector color="#C9A447" fromLabel="ABOUT" toLabel="SKILLS" sway="right" disabled={isMobile} />
                 <ParallaxSection
                   id="skills"
-                  className="snap-start scroll-mt-0"
+                  className="snap-start scroll-mt-0 px-6 sm:px-10"
                   disabled={isMobile}
                   bgSpeed={0.18}
                   backgroundLayer={
-                    <div className="absolute inset-0">
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-48 w-[500px] rounded-full bg-amber-500/10 dark:bg-amber-500/15 blur-3xl" />
+                    <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06] select-none pointer-events-none">
+                      {/* MIDI grid matrix dots */}
+                      <div className="h-full w-full bg-[radial-gradient(circle,currentColor_1px,transparent_1px)] bg-[size:16px_16px]" />
+                    </div>
+                  }
+                  midLayer={
+                    <div className="absolute inset-0 select-none pointer-events-none">
+                      {/* Warm hardware panel glow & channel assignment */}
+                      <div className="absolute bottom-0 left-1/4 h-36 w-72 rounded-full bg-amber-500/8 dark:bg-amber-500/12 blur-3xl" />
+                      <div className="absolute top-12 right-12 font-mono text-[9px] font-bold text-black/20 dark:text-white/15 tracking-widest">
+                        MIDI DEVICE CHANNEL: 10
+                      </div>
                     </div>
                   }
                 >
                   <SkillsSection />
                 </ParallaxSection>
 
-                <CableConnector color="#7ABB5E" fromLabel="SKILLS" toLabel="EXP" disabled={isMobile} />
+                <CableConnector color="#7ABB5E" fromLabel="SKILLS" toLabel="EXP" sway="left" disabled={isMobile} />
                 <ParallaxSection
                   id="experience"
-                  className="snap-start scroll-mt-0"
+                  className="snap-start scroll-mt-0 px-10 sm:px-16"
                   disabled={isMobile}
                   bgSpeed={0.1}
                   backgroundLayer={
-                    <div className="absolute inset-0">
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full border border-black/[0.03] dark:border-white/[0.04]" />
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[350px] w-[350px] rounded-full border border-black/[0.03] dark:border-white/[0.04]" />
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[200px] w-[200px] rounded-full border border-black/[0.03] dark:border-white/[0.04]" />
+                    <div className="absolute inset-y-0 left-0 right-0 flex justify-between pointer-events-none opacity-45 dark:opacity-65 select-none z-0">
+                      {/* Left Rack Rail */}
+                      <div className="w-6 h-full bg-zinc-300/40 dark:bg-zinc-900/40 border-r border-black/15 dark:border-white/5 flex flex-col justify-around items-center py-10 shadow-inner backdrop-blur-xs">
+                        <Screw />
+                        <Screw />
+                        <Screw />
+                      </div>
+                      {/* Right Rack Rail */}
+                      <div className="w-6 h-full bg-zinc-300/40 dark:bg-zinc-900/40 border-l border-black/15 dark:border-white/5 flex flex-col justify-around items-center py-10 shadow-inner backdrop-blur-xs">
+                        <Screw />
+                        <Screw />
+                        <Screw />
+                      </div>
                     </div>
                   }
                 >
                   <ExperienceSection />
                 </ParallaxSection>
 
-                <CableConnector color="#4A9EC9" fromLabel="EXP" toLabel="WORK" disabled={isMobile} />
+                <CableConnector color="#4A9EC9" fromLabel="EXP" toLabel="WORK" sway="right" disabled={isMobile} />
               </div>
 
               <ParallaxSection
                 id="projects"
-                className="dark:bg-void border-graphite/10 dark:border-graphite/35 snap-start scroll-mt-0 border-y"
+                className="dark:bg-void border-graphite/10 dark:border-graphite/35 snap-start scroll-mt-0 border-y px-6 sm:px-10"
                 disabled={isMobile}
                 bgSpeed={0.2}
                 backgroundLayer={
-                  <div className="absolute inset-0">
-                    <div className="absolute top-20 right-20 h-60 w-60 rounded-full bg-blue-500/10 dark:bg-blue-500/15 blur-3xl" />
-                    <div className="absolute bottom-20 left-20 h-40 w-40 rounded-full bg-purple-500/8 dark:bg-purple-500/12 blur-3xl" />
+                  <div className="absolute inset-0 select-none pointer-events-none">
+                    {/* Deep neon studio glow and circular record markings */}
+                    <div className="absolute top-20 right-20 h-64 w-64 rounded-full bg-blue-500/8 dark:bg-blue-500/12 blur-3xl" />
+                    <div className="absolute bottom-20 left-20 h-48 w-48 rounded-full bg-purple-500/6 dark:bg-purple-500/10 blur-3xl" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 h-4/5 border border-dashed border-black/[0.03] dark:border-white/[0.04] rounded-full" />
                   </div>
                 }
               >
                 <ProjectsSection />
               </ParallaxSection>
 
-              <CableConnector color="#8A5FC9" fromLabel="WORK" toLabel="CONTACT" disabled={isMobile} />
+              <CableConnector color="#8A5FC9" fromLabel="WORK" toLabel="CONTACT" sway="left" disabled={isMobile} />
 
               <ParallaxSection
                 id="contact"
-                className="snap-start"
+                className="snap-start px-6 sm:px-10"
                 disabled={isMobile}
                 bgSpeed={0.1}
                 edgeFade={false}
                 backgroundLayer={
-                  <div className="absolute inset-0">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-purple-500/8 dark:bg-purple-500/15 blur-3xl" />
+                  <div className="absolute inset-0 select-none pointer-events-none">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-purple-500/6 dark:bg-purple-500/12 blur-3xl" />
+                  </div>
+                }
+                midLayer={
+                  <div className="absolute inset-y-0 left-6 sm:left-12 flex flex-col justify-between py-16 font-mono text-[7px] font-bold text-black/15 dark:text-white/10 pointer-events-none select-none">
+                    <span>LEVEL MAX —</span>
+                    <span>+3 dB —</span>
+                    <span>0 dB —</span>
+                    <span>-6 dB —</span>
+                    <span>-18 dB —</span>
+                    <span>-inf —</span>
                   </div>
                 }
               >

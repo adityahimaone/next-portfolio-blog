@@ -34,13 +34,15 @@ const MusicMarquee = dynamic(() =>
   import('../spotify/music-marquee').then((mod) => mod.MusicMarquee),
 )
 
-import { SectionDivider } from '@/components/section-divider'
+import { ParallaxSection } from '@/components/parallax-section'
+import { CableConnector } from '@/components/cable-connector'
 import { ChevronUp } from 'lucide-react'
 import { usePreloader } from '../hooks/use-preloader'
 
 export default function LandingPage() {
   const mainRef = useRef<HTMLDivElement>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const isLoading = usePreloader()
 
   // Handle scroll to top
@@ -61,7 +63,17 @@ export default function LandingPage() {
     }
 
     window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+
+    // Mobile media query check
+    const mql = window.matchMedia('(max-width: 768px)')
+    setIsMobile(mql.matches)
+    const handleMobileChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mql.addEventListener('change', handleMobileChange)
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      mql.removeEventListener('change', handleMobileChange)
+    }
   }, [])
 
   return (
@@ -95,39 +107,88 @@ export default function LandingPage() {
               <MusicMarquee speed="normal" direction="left" />
 
               {/* Main Content Sections */}
-              <div className="mx-auto w-full max-w-7xl space-y-2 py-20">
-                <SectionDivider />
-                <section id="about" className="snap-start scroll-mt-0">
+              <div className="mx-auto w-full max-w-7xl py-20">
+                <CableConnector color="#C84B4B" fromLabel="HERO" toLabel="ABOUT" disabled={isMobile} />
+                <ParallaxSection
+                  id="about"
+                  className="snap-start scroll-mt-0"
+                  disabled={isMobile}
+                  bgSpeed={0.12}
+                  backgroundLayer={
+                    <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]">
+                      <div className="h-full w-full bg-[radial-gradient(circle,currentColor_1px,transparent_1px)] bg-[size:24px_24px]" />
+                    </div>
+                  }
+                >
                   <AboutSection />
-                </section>
+                </ParallaxSection>
 
-                <SectionDivider />
-                <section id="skills" className="snap-start scroll-mt-0">
+                <CableConnector color="#C9A447" fromLabel="ABOUT" toLabel="SKILLS" disabled={isMobile} />
+                <ParallaxSection
+                  id="skills"
+                  className="snap-start scroll-mt-0"
+                  disabled={isMobile}
+                  bgSpeed={0.18}
+                  backgroundLayer={
+                    <div className="absolute inset-0">
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-48 w-[500px] rounded-full bg-amber-500/10 dark:bg-amber-500/15 blur-3xl" />
+                    </div>
+                  }
+                >
                   <SkillsSection />
-                </section>
+                </ParallaxSection>
 
-                <SectionDivider />
-                <section id="experience" className="snap-start scroll-mt-0">
+                <CableConnector color="#7ABB5E" fromLabel="SKILLS" toLabel="EXP" disabled={isMobile} />
+                <ParallaxSection
+                  id="experience"
+                  className="snap-start scroll-mt-0"
+                  disabled={isMobile}
+                  bgSpeed={0.1}
+                  backgroundLayer={
+                    <div className="absolute inset-0">
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full border border-black/[0.03] dark:border-white/[0.04]" />
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[350px] w-[350px] rounded-full border border-black/[0.03] dark:border-white/[0.04]" />
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[200px] w-[200px] rounded-full border border-black/[0.03] dark:border-white/[0.04]" />
+                    </div>
+                  }
+                >
                   <ExperienceSection />
-                </section>
+                </ParallaxSection>
 
-                <SectionDivider />
+                <CableConnector color="#4A9EC9" fromLabel="EXP" toLabel="WORK" disabled={isMobile} />
               </div>
 
-              <section
+              <ParallaxSection
                 id="projects"
                 className="dark:bg-void border-graphite/10 dark:border-graphite/35 snap-start scroll-mt-0 border-y"
+                disabled={isMobile}
+                bgSpeed={0.2}
+                backgroundLayer={
+                  <div className="absolute inset-0">
+                    <div className="absolute top-20 right-20 h-60 w-60 rounded-full bg-blue-500/10 dark:bg-blue-500/15 blur-3xl" />
+                    <div className="absolute bottom-20 left-20 h-40 w-40 rounded-full bg-purple-500/8 dark:bg-purple-500/12 blur-3xl" />
+                  </div>
+                }
               >
                 <ProjectsSection />
-              </section>
+              </ParallaxSection>
 
-              <div className="mb-5">
-                <SectionDivider />
-              </div>
+              <CableConnector color="#8A5FC9" fromLabel="WORK" toLabel="CONTACT" disabled={isMobile} />
 
-              <section id="contact" className="snap-start">
+              <ParallaxSection
+                id="contact"
+                className="snap-start"
+                disabled={isMobile}
+                bgSpeed={0.1}
+                edgeFade={false}
+                backgroundLayer={
+                  <div className="absolute inset-0">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-purple-500/8 dark:bg-purple-500/15 blur-3xl" />
+                  </div>
+                }
+              >
                 <ContactSection />
-              </section>
+              </ParallaxSection>
             </div>
           </main>
         </m.div>

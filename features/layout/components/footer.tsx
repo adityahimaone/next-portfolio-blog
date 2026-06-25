@@ -4,76 +4,125 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Activity, Cable } from 'lucide-react'
 import { Screw } from '@/components/screw'
+import { cn } from '@/lib/utils'
 import { SOCIAL_LINKS, FOOTER_NAVIGATION } from '../constants'
+
+const NAV_COLORS: Record<string, string> = {
+  HOME:     '#C84B4B',
+  BLOG:     '#C95FAA',
+  PROJECTS: '#5FC9C9',
+  MIXTAPE:  '#C9A447',
+}
+
+const SOCIAL_COLORS: Record<string, string> = {
+  GitHub: '#A855F7',   // Violet
+  LinkedIn: '#0077b5', // LinkedIn Blue
+  Spotify: '#1DB954',  // Spotify Green
+  Email: '#EF4444',    // Red
+}
 
 export function Footer() {
   const [hoveredJack, setHoveredJack] = useState<string | null>(null)
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-bone-white dark:bg-void border-graphite/15 dark:border-graphite/45 text-foreground dark:text-ash relative overflow-hidden border-t py-12 transition-colors duration-500">
+    <footer className={cn(
+      'relative overflow-hidden py-14 transition-all duration-300 border-t',
+      'border-black/20 dark:border-black/50 bg-[var(--daw-chassis)] dark:bg-[var(--daw-chassis)]',
+      'before:pointer-events-none before:absolute before:inset-0 before:bg-[repeating-linear-gradient(0deg,transparent,transparent_3px,rgba(0,0,0,0.01)_3px,rgba(0,0,0,0.01)_4px)]'
+    )}>
       {/* Subtle Grid Pattern */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(175,80,255,0.012)_1px,transparent_1px),linear-gradient(to_bottom,rgba(175,80,255,0.012)_1px,transparent_1px)] bg-[size:32px_32px] opacity-40 dark:opacity-100" />
       <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-2 mix-blend-overlay" />
 
       {/* Viewport Mounting Screws (Matches Hero & Header Ears) */}
-      <Screw className="text-slate/50 dark:text-graphite absolute top-4 left-4 opacity-40 dark:opacity-50" />
-      <Screw className="text-slate/50 dark:text-graphite absolute top-4 right-4 opacity-40 dark:opacity-50" />
-      <Screw className="text-slate/50 dark:text-graphite absolute bottom-4 left-4 opacity-40 dark:opacity-50" />
-      <Screw className="text-slate/50 dark:text-graphite absolute right-4 bottom-4 opacity-40 dark:opacity-50" />
+      <Screw className="absolute top-4 left-4 hover:rotate-12 transition-transform opacity-60" />
+      <Screw className="absolute top-4 right-4 hover:-rotate-12 transition-transform opacity-60" />
+      <Screw className="absolute bottom-4 left-4 hover:-rotate-12 transition-transform opacity-60" />
+      <Screw className="absolute right-4 bottom-4 hover:rotate-12 transition-transform opacity-60" />
 
-      {/* Top chassis seam */}
-      <div className="bg-graphite/10 dark:bg-graphite/35 absolute inset-x-0 top-0 h-[1px]" />
-
-      <div className="relative container mx-auto flex flex-col gap-8 px-6 md:px-12">
+      <div className="relative container mx-auto flex flex-col gap-10 px-6 md:px-12">
         {/* Main Simplified Layout Grid */}
         <div className="grid grid-cols-1 items-center gap-8 pt-4 md:grid-cols-12">
-          {/* Left Block: Logo / Branding (Matches Header Logo) */}
-          <div className="flex flex-col items-start gap-1.5 md:col-span-4">
+          
+          {/* Left Block: Logo / Branding (Matches Header LCD Readout) */}
+          <div className="flex flex-col items-start gap-1.5 md:col-span-4 select-none">
             <Link href="/" className="group flex items-center gap-2.5">
-              <div className="h-2 w-2 rounded-full border border-black/10 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
-              <div className="flex flex-col">
-                <span className="text-foreground dark:text-bone-white font-[family-name:var(--font-whyte-inktrap-mono)] text-[11px] font-bold tracking-[0.25em] uppercase">
-                  ADIT.SYS
-                </span>
-                <span className="text-slate dark:text-graphite -mt-0.5 font-[family-name:var(--font-whyte-inktrap-mono)] text-[6.5px] tracking-wider uppercase">
-                  CORE MODULES ACTIVE
+              <div className="flex flex-col items-start gap-1">
+                <div
+                  className={cn(
+                    'px-3.5 py-1.5 rounded-[3px]',
+                    'bg-[#0A0A0C]',
+                    'border border-black/40',
+                    'shadow-[inset_0_1.5px_4px_rgba(0,0,0,0.85)]',
+                    'flex items-center gap-2'
+                  )}
+                >
+                  <span
+                    className="font-mono text-[10px] font-bold tracking-widest uppercase"
+                    style={{
+                      color: '#22C55E',
+                      textShadow: '0 0 6px #22C55E',
+                    }}
+                  >
+                    ADIT.SYS
+                  </span>
+                  <Activity className="h-3 w-3 text-emerald-500 animate-pulse" />
+                </div>
+                <span className="font-mono text-[6.5px] tracking-widest text-black/45 dark:text-white/20 uppercase mt-0.5 ml-0.5">
+                  CORE MODULES ACTIVE // JAKARTA, ID
                 </span>
               </div>
             </Link>
-            <span className="text-slate dark:text-graphite font-[family-name:var(--font-whyte-inktrap-mono)] text-[9px] tracking-widest uppercase">
-              OUTPUT ROUTER // JAKARTA, ID
-            </span>
           </div>
 
-          {/* Center Block: Simplified Sub-navigation */}
-          <div className="flex flex-col items-center justify-center gap-2 md:col-span-4">
-            <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 font-[family-name:var(--font-whyte-inktrap-mono)] text-[10px] tracking-widest uppercase">
-              {FOOTER_NAVIGATION.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="text-slate hover:text-primary dark:text-ash/60 dark:hover:text-bone-white transition-colors"
-                >
-                  {item.name}
-                </Link>
-              ))}
+          {/* Center Block: Channel Strip Sub-navigation */}
+          <div className="flex flex-col items-center justify-center gap-2.5 md:col-span-4">
+            <div className="flex flex-wrap justify-center gap-2">
+              {FOOTER_NAVIGATION.map((item) => {
+                const color = NAV_COLORS[item.name.toUpperCase()] ?? '#C9A447'
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      'relative flex flex-col items-center justify-between px-3.5 py-2 rounded-[3px]',
+                      'border border-black/15 dark:border-white/5 bg-[var(--daw-chassis-raised)] dark:bg-[var(--daw-chassis-raised)]',
+                      'shadow-[0_2px_0_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.06)] cursor-pointer select-none transition-all active:scale-95',
+                      'hover:border-black/25 dark:hover:border-white/15 hover:bg-black/5 dark:hover:bg-white/5'
+                    )}
+                  >
+                    {/* LED dot at top */}
+                    <div
+                      className="h-1.5 w-1.5 rounded-full mb-1.5 transition-all duration-300"
+                      style={{
+                        background: color,
+                        boxShadow: `0 0 5px ${color}, 0 0 8px ${color}`,
+                      }}
+                    />
+                    {/* Label */}
+                    <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-black/60 dark:text-white/45 group-hover:text-white">
+                      {item.name}
+                    </span>
+                  </Link>
+                )
+              })}
             </div>
-            <div className="text-slate/40 dark:text-graphite/70 mt-1 flex items-center gap-1 font-[family-name:var(--font-whyte-inktrap-mono)] text-[8px] tracking-widest uppercase">
-              <Activity className="text-primary h-2.5 w-2.5 animate-pulse" />
+            <div className="text-black/40 dark:text-white/20 flex items-center gap-1 font-mono text-[7px] tracking-widest uppercase">
               SYS.SYNC LEVEL OUT: +0.2dB
             </div>
           </div>
 
-          {/* Right Block: Simplified Patchbay Sockets */}
-          <div className="flex flex-col items-start gap-2.5 md:col-span-4 md:items-end">
-            <span className="text-slate dark:text-graphite/80 flex items-center gap-1.5 font-[family-name:var(--font-whyte-inktrap-mono)] text-[9px] font-bold tracking-widest uppercase">
-              <Cable className="text-primary h-3 w-3" />
+          {/* Right Block: Social Links Recessed Jack Sockets */}
+          <div className="flex flex-col items-start gap-3 md:col-span-4 md:items-end">
+            <span className="text-black/50 dark:text-white/30 flex items-center gap-1.5 font-mono text-[8px] font-bold tracking-widest uppercase">
+              <Cable className="h-3 w-3" />
               PATCH OUT CHANNELS
             </span>
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               {SOCIAL_LINKS.map((link) => {
                 const isHovered = hoveredJack === link.name
+                const ledColor = SOCIAL_COLORS[link.name] ?? '#C9A447'
 
                 return (
                   <a
@@ -86,28 +135,27 @@ export function Footer() {
                     className="group flex cursor-pointer flex-col items-center gap-1.5 select-none"
                     title={link.label}
                   >
-                    {/* Simplified socket socket */}
+                    {/* Recessed jack socket */}
                     <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
+                      className={cn(
+                        'flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all duration-200',
                         isHovered
-                          ? 'border-primary bg-primary/10 shadow-[0_0_8px_rgba(175,80,255,0.25)]'
-                          : 'border-graphite/20 bg-ash/30 dark:border-graphite/45 dark:bg-void/40'
-                      }`}
+                          ? 'border-white/30 bg-[var(--daw-chassis-deep)] shadow-[0_0_8px_rgba(255,255,255,0.15)]'
+                          : 'border-black/25 dark:border-white/10 bg-[var(--daw-chassis-deep)]'
+                      )}
                     >
-                      <div className="bg-void border-graphite/35 relative flex h-4.5 w-4.5 items-center justify-center rounded-full border-2">
-                        <div className="h-2 w-2 rounded-full bg-black shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)]" />
-                        {/* Mini LED indicator above socket */}
+                      {/* Inner contact hole */}
+                      <div className="h-3 w-3 rounded-full bg-black/90 shadow-inner flex items-center justify-center">
                         <div
-                          className={`absolute h-1 w-1 rounded-full transition-colors duration-200 ${
-                            isHovered
-                              ? 'bg-primary shadow-[0_0_4px_#af50ff]'
-                              : 'bg-graphite/35'
-                          }`}
-                          style={{ top: '-1.5px', right: '-1.5px' }}
+                          className={cn(
+                            'h-1 w-1 rounded-full transition-all duration-300',
+                            isHovered ? 'shadow-[0_0_4px_currentColor]' : 'bg-transparent'
+                          )}
+                          style={{ color: ledColor, backgroundColor: isHovered ? ledColor : 'transparent' }}
                         />
                       </div>
                     </div>
-                    <span className="text-slate dark:text-ash/50 group-hover:text-primary font-[family-name:var(--font-whyte-inktrap-mono)] text-[7.5px] font-bold tracking-widest uppercase transition-colors">
+                    <span className="font-mono text-[7px] font-bold tracking-widest text-black/40 dark:text-white/20 group-hover:text-white transition-colors uppercase">
                       {link.name.substring(0, 3)}
                     </span>
                   </a>
@@ -118,13 +166,15 @@ export function Footer() {
         </div>
 
         {/* Bottom Coordinates & Direct Link Strip (Matches Hero) */}
-        <div className="border-graphite/10 dark:border-graphite/35 text-slate dark:text-graphite flex flex-col items-center justify-between gap-3 border-t pt-5 font-[family-name:var(--font-whyte-inktrap)] text-[10px] font-medium select-none sm:flex-row">
-          <span>
-            + Fly Direct | © {currentYear} ADITYAHIMAONE · SYSTEM ACTIVE
-          </span>
-          <div className="flex items-center gap-2 font-[family-name:var(--font-whyte-inktrap-mono)] text-[9.5px] tracking-wider uppercase">
+        <div className="border-t border-black/10 dark:border-white/5 text-black/40 dark:text-white/30 flex flex-col items-center justify-between gap-3 pt-5 font-mono text-[8px] font-medium tracking-widest uppercase select-none sm:flex-row">
+          <div className="flex items-center gap-1.5">
+            <span>© {currentYear} ADITYAHIMAONE</span>
+            <span className="h-1 w-1 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981]" />
+            <span>SYSTEM ACTIVE</span>
+          </div>
+          <div className="flex items-center gap-2">
             <span>6.2088° S, 106.8456° E</span>
-            <span className="text-primary animate-pulse font-bold">❤️</span>
+            <span className="text-red-500 animate-pulse font-bold">❤️</span>
           </div>
         </div>
       </div>

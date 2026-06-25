@@ -14,6 +14,7 @@ export function MusicPlayer() {
     useAudio()
   const [isVisible, setIsVisible] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const [showScrollTop, setShowScrollTop] = useState(false)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
@@ -32,6 +33,14 @@ export function MusicPlayer() {
       setIsVisible(true)
     }, 3000)
     return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 500)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   const handleVolumeChange = (newValue: number[]) => {
@@ -55,11 +64,17 @@ export function MusicPlayer() {
       {shouldRenderPlayer && (
         <motion.div
           ref={containerRef}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.5 }}
-          className="fixed right-2 bottom-8 z-50 md:right-8"
+          initial={{ opacity: 0, scale: 0.8, y: 50 }}
+          animate={{
+            opacity: showScrollTop ? 1 : 0,
+            scale: showScrollTop ? 1 : 0.8,
+            y: showScrollTop ? 0 : 50,
+          }}
+          transition={{ duration: 0.4 }}
+          className={cn(
+            'fixed right-2 z-50 md:right-8 bottom-24',
+            !showScrollTop && 'pointer-events-none',
+          )}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >

@@ -1,0 +1,86 @@
+/* ──────────────── FADER IDLE FLOAT ────────────────────────── */
+@keyframes faderFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+/* ──────────────── VU METER BAR ────────────────────────────── */
+@keyframes vuPulse {
+  0%, 100% { height: var(--vu-min, 8px); }
+  50%       { height: var(--vu-max, 28px); }
+}
+
+/* ──────────────── DISPLAY BOOT SCAN ───────────────────────── */
+@keyframes displayBoot {
+  0%   { opacity: 0; transform: scaleX(0); transform-origin: left; }
+  40%  { opacity: 1; transform: scaleX(1); }
+  100% { opacity: 1; transform: scaleX(1); }
+}
+
+/* ──────────────── LETTER BLOOM ────────────────────────────── */
+@keyframes letterBloom {
+  0%   { opacity: 0; filter: brightness(0) blur(4px); }
+  60%  { opacity: 1; filter: brightness(2) blur(1px); }
+  100% { opacity: 1; filter: brightness(1) blur(0px); }
+}
+
+/* ──────────────── SELECT LED BLINK ────────────────────────── */
+@keyframes selectBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+/* ──────────────── MASTER KNOB IDLE DRIFT ──────────────────── */
+@keyframes knobDrift {
+  0%, 100% { transform: rotate(var(--knob-base, -140deg)); }
+  50%       { transform: rotate(calc(var(--knob-base, -140deg) + 4deg)); }
+}
+
+/* ──────────────── PHOSPHOR FLICKER (subtle) ───────────────── */
+@keyframes phosphorFlicker {
+  0%, 98%, 100% { opacity: 1; }
+  99%            { opacity: 0.88; }
+}
+
+/* ── Classes ── */
+
+.faderCap {
+  animation: faderFloat var(--float-dur, 2.4s) ease-in-out infinite;
+}
+
+.vuBar {
+  animation: vuPulse var(--vu-dur, 1.2s) ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+.displayCell {
+  animation: displayBoot 0.35s ease-out forwards;
+}
+
+.ledChar {
+  animation: letterBloom 0.5s ease-out forwards;
+}
+
+.selectLed {
+  animation: selectBlink 2s ease-in-out infinite;
+}
+
+.masterKnob {
+  animation: knobDrift 6s ease-in-out infinite;
+}
+
+.displayPhosphor {
+  animation: phosphorFlicker 8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faderCap,
+  .vuBar,
+  .displayCell,
+  .ledChar,
+  .selectLed,
+  .masterKnob,
+  .displayPhosphor {
+    animation: none;
+  }
+}

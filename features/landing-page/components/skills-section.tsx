@@ -105,6 +105,7 @@ export function SkillsSection() {
   const [activeKey, setActiveKey] = useState<string | null>(null)
   const [padActive, setPadActive] = useState<number | null>(null)
   const [bootScanIndex, setBootScanIndex] = useState<number | null>(null)
+  const [showMeterBridge, setShowMeterBridge] = useState(true)
 
   // Central channel levels state synchronized across controls and visualizer
   const [channelLevels, setChannelLevels] = useState<Record<string, number>>(() => {
@@ -124,7 +125,7 @@ export function SkillsSection() {
         const timer = setTimeout(() => {
           setIsOn(true)
           setActiveMessage('SYSTEM ON: BOOTING...')
-          setTimeout(() => setActiveMessage('MIDI CONTROL 25 v1.0'), 400)
+          setTimeout(() => setActiveMessage('MIDI CONTROL v1.0'), 400)
           setTimeout(() => setActiveMessage('MIDI KEYBOARD READY'), 800)
         }, 800)
         return () => clearTimeout(timer)
@@ -229,7 +230,7 @@ export function SkillsSection() {
               {/* Device Branding */}
               <div>
                 <h3 className="text-lg font-black tracking-widest text-black/60 dark:text-white/60 uppercase">
-                  MIDI-CONTROL <span className="text-[#C9A447] font-bold">25</span>
+                  MIDI-CONTROL
                 </h3>
                 <p className="font-mono text-[9px] text-black/40 dark:text-white/30 uppercase tracking-widest mt-0.5">
                   Interactive Skills & Synthesizer Interface
@@ -303,7 +304,7 @@ export function SkillsSection() {
 
             {/* METER BRIDGE: Stripe Audio Visualizer */}
             <div className="mb-8 rounded-lg border border-black/30 dark:border-white/10 bg-zinc-950/40 p-4 shadow-inner">
-              <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center justify-between">
                 <span className="font-mono text-[8px] font-black tracking-widest text-black/50 dark:text-white/40 uppercase flex items-center gap-2">
                   <span>METER BRIDGE — SPECTRUM ANALYZER (14-CH)</span>
                   <span className={cn(
@@ -311,34 +312,70 @@ export function SkillsSection() {
                     isOn ? "bg-amber-500 shadow-[0_0_4px_#f59e0b]" : "bg-zinc-800"
                   )} />
                 </span>
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-1">
-                    <div className="h-1.5 w-2 bg-green-500 rounded-[1px] opacity-80" />
-                    <span className="font-mono text-[6px] text-black/40 dark:text-white/30">SIG</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="h-1.5 w-2 bg-yellow-500 rounded-[1px] opacity-80" />
-                    <span className="font-mono text-[6px] text-black/40 dark:text-white/30">MID</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="h-1.5 w-2 bg-red-500 rounded-[1px] opacity-80" />
-                    <span className="font-mono text-[6px] text-black/40 dark:text-white/30">CLIP</span>
+                <div className="flex items-center gap-3">
+                  {/* Hide/Show Toggle */}
+                  <button
+                    onClick={() => setShowMeterBridge(!showMeterBridge)}
+                    disabled={!isOn}
+                    className={cn(
+                      "px-2 py-0.5 rounded-[3px] font-mono text-[7px] font-bold uppercase transition-all duration-150 flex items-center gap-1 border shadow-[0_1px_2px_rgba(0,0,0,0.15)]",
+                      !isOn
+                        ? "opacity-30 cursor-not-allowed border-zinc-700/50 bg-zinc-800/20 text-zinc-500"
+                        : showMeterBridge
+                          ? "bg-zinc-950 border-black/80 text-amber-400 shadow-inner"
+                          : "bg-zinc-200 dark:bg-zinc-800/40 border-black/20 dark:border-white/10 text-black/60 dark:text-white/60 hover:bg-zinc-300 dark:hover:bg-zinc-800/80"
+                    )}
+                  >
+                    <span className={cn(
+                      "h-1.5 w-1.5 rounded-full transition-all duration-200",
+                      isOn && showMeterBridge ? "bg-amber-400 shadow-[0_0_4px_#f59e0b]" : "bg-zinc-500/50"
+                    )} />
+                    {showMeterBridge ? "HIDE" : "SHOW"}
+                  </button>
+
+                  <div className="h-4 w-px bg-black/10 dark:bg-white/10" />
+
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-1">
+                      <div className="h-1.5 w-2 bg-green-500 rounded-[1px] opacity-80" />
+                      <span className="font-mono text-[6px] text-black/40 dark:text-white/30">SIG</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-1.5 w-2 bg-yellow-500 rounded-[1px] opacity-80" />
+                      <span className="font-mono text-[6px] text-black/40 dark:text-white/30">MID</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-1.5 w-2 bg-red-500 rounded-[1px] opacity-80" />
+                      <span className="font-mono text-[6px] text-black/40 dark:text-white/30">CLIP</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Audio Stripe Columns Container */}
-              <div className="flex h-32 items-end justify-between gap-1.5 rounded border border-black/50 bg-[#0E0F12] p-3 shadow-inner overflow-x-auto no-scrollbar">
-                {allSkills.map((skill, idx) => (
-                  <VisualizerColumn
-                    key={skill.name}
-                    name={skill.name}
-                    level={channelLevels[skill.name] ?? skill.level}
-                    index={idx}
-                    isOn={isOn}
-                  />
-                ))}
-              </div>
+              <AnimatePresence initial={false}>
+                {showMeterBridge && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    className="overflow-hidden pt-3"
+                  >
+                    <div className="flex h-32 items-end justify-between gap-1.5 rounded border border-black/50 bg-[#0E0F12] p-3 shadow-inner overflow-x-auto no-scrollbar">
+                      {allSkills.map((skill, idx) => (
+                        <VisualizerColumn
+                          key={skill.name}
+                          name={skill.name}
+                          level={channelLevels[skill.name] ?? skill.level}
+                          index={idx}
+                          isOn={isOn}
+                        />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* CONTROLLER SECTION: Pads, Knobs, Faders */}

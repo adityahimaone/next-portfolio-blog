@@ -1038,3 +1038,80 @@
     rgba(255, 255, 255, 0.03) 2px
   );
 }
+
+/* ─── DAW Controller Design Tokens ───────────────────────────── */
+:root {
+  --daw-chassis: #D6D7DC;
+  --daw-chassis-mid: #C8C9CE;
+  --daw-chassis-raised: #E0E1E6;
+  --daw-chassis-deep: #A8A9AE;
+  --daw-fader-cap: #9B9CA4;
+  --daw-fader-rail: #B8B9BE;
+  --daw-display-bg: #0A0A0C;
+  --daw-display-glass: rgba(0,0,0,0.82);
+  --daw-screw: #A0A1A8;
+  --daw-gold: #C9A447;
+  --daw-led-green: #16A34A;
+  --daw-led-red: #DC2626;
+  --daw-led-amber: #D97706;
+  --daw-led-blue: #2563EB;
+  --daw-led-off: rgba(0,0,0,0.12);
+  --daw-btn-shadow: rgba(0,0,0,0.18);
+}
+
+.dark {
+  --daw-chassis: #1C1D22;
+  --daw-chassis-mid: #25262D;
+  --daw-chassis-raised: #2E3038;
+  --daw-chassis-deep: #0F1014;
+  --daw-fader-cap: #6B6C74;
+  --daw-fader-rail: #12131A;
+  --daw-display-bg: #050507;
+  --daw-display-glass: rgba(0,0,0,0.92);
+  --daw-screw: #3A3B44;
+  --daw-led-green: #22C55E;
+  --daw-led-red: #EF4444;
+  --daw-led-amber: #F59E0B;
+  --daw-led-blue: #3B82F6;
+  --daw-led-off: rgba(255,255,255,0.05);
+  --daw-btn-shadow: rgba(0,0,0,0.5);
+}
+
+/* DAW panel surface — replaces chassis-panel for hero */
+.daw-panel {
+  background: linear-gradient(
+    180deg,
+    var(--daw-chassis) 0%,
+    var(--daw-chassis-mid) 100%
+  );
+}
+
+/* Brushed horizontal lines texture for faceplate */
+.daw-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(255,255,255,0.015) 3px,
+    rgba(255,255,255,0.015) 4px
+  );
+  opacity: 1;
+  border-radius: inherit;
+}
+
+/* LED glow utility */
+.led-glow {
+  box-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
+}
+
+.led-text-glow {
+  text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
+}
+
+/* Hide overflow scrollbar (channel strip) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

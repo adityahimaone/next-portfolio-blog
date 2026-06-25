@@ -6,9 +6,9 @@ import dynamic from 'next/dynamic'
 const loadFeatures = () => import('motion/react').then((res) => res.domMax)
 
 import { Preloader } from '../animations/preloader'
-import { HeaderV2 } from '@/features/layout/components/header-v2'
+import { HeaderDaw } from '@/features/layout'
 import { Footer } from '@/features/layout/components/footer'
-import { HeroSectionV2 } from '../components/hero/hero-section'
+import { DawHero } from '../components/hero'
 import { StudioBackground } from '@/components/studio-background'
 
 const AboutSection = dynamic(() =>
@@ -86,8 +86,8 @@ export default function LandingPage() {
               {/* Hero Section */}
               <section className="relative h-screen snap-start overflow-hidden">
                 <div className="relative">
-                  <HeaderV2 />
-                  <HeroSectionV2 />
+                  <HeaderDaw />
+                  <DawHero />
                 </div>
               </section>
 
@@ -139,7 +139,7 @@ export default function LandingPage() {
         <m.button
           onClick={handleScrollToTop}
           aria-label="Scroll to top"
-          className="fixed right-2 bottom-24 z-50 flex h-12 w-12 items-center justify-center rounded-lg border border-zinc-300 bg-zinc-200 shadow-[0_4px_0_rgb(161,161,170),0_5px_10px_rgba(0,0,0,0.2)] transition-all hover:bg-zinc-100 active:translate-y-1 active:shadow-none md:right-8 dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[0_4px_0_rgb(39,39,42),0_5px_10px_rgba(0,0,0,0.5)] dark:hover:bg-zinc-700"
+          className="fixed right-2 bottom-8 z-50 flex h-12 w-12 items-center justify-center rounded-lg border border-zinc-300 bg-zinc-200 shadow-[0_4px_0_rgb(161,161,170),0_5px_10px_rgba(0,0,0,0.2)] transition-all hover:bg-zinc-100 active:translate-y-1 active:shadow-none md:right-8 dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-[0_4px_0_rgb(39,39,42),0_5px_10px_rgba(0,0,0,0.5)] dark:hover:bg-zinc-700"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{
             opacity: showScrollTop ? 1 : 0,

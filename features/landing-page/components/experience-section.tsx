@@ -1,356 +1,392 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { m, AnimatePresence } from 'motion/react'
-import {
-  Briefcase,
-  Calendar,
-  MapPin,
-  Music,
-  ListMusic,
-  Radio,
-  ChevronRight,
-} from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import { AnimatePresence, m, useReducedMotion } from 'motion/react'
+import { ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EXPERIENCES } from '../constants'
 
+const CASSETTE_THEMES = [
+  { label: '#f46d0c', dark: '#c94c15', ink: '#20211e', accent: '#fff0bd' },
+  { label: '#5f8f9c', dark: '#35616c', ink: '#172526', accent: '#d9f0ed' },
+  { label: '#8a9b58', dark: '#596837', ink: '#222916', accent: '#ebf2c9' },
+  { label: '#b66d85', dark: '#7d4058', ink: '#2b1920', accent: '#ffe3eb' },
+] as const
+
 export function ExperienceSection() {
-  const [selectedId, setSelectedId] = useState(EXPERIENCES[0].id)
+  const [selectedIndex, setSelectedIndex] = useState(0)
   const [activeSubIndex, setActiveSubIndex] = useState(0)
+  const shouldReduceMotion = useReducedMotion()
+  const selectedJob = EXPERIENCES[selectedIndex]
+  const selectedCourse = selectedJob.items?.[activeSubIndex]
+  const selectedDetails = selectedCourse
+    ? [selectedCourse.description]
+    : (selectedJob.description ?? [])
+  const previousIndex =
+    (selectedIndex - 1 + EXPERIENCES.length) % EXPERIENCES.length
+  const nextIndex = (selectedIndex + 1) % EXPERIENCES.length
 
-  const selectedJob =
-    EXPERIENCES.find((e) => e.id === selectedId) || EXPERIENCES[0]
-
-  useEffect(() => {
+  const selectExperience = (index: number) => {
+    setSelectedIndex(index)
     setActiveSubIndex(0)
-  }, [selectedId])
+  }
+
+  const moveCarousel = (direction: -1 | 1) => {
+    selectExperience(
+      (selectedIndex + direction + EXPERIENCES.length) % EXPERIENCES.length,
+    )
+  }
 
   return (
-    <>
-      <section id="experience" className="py-24">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="mb-12 flex flex-col items-center text-center">
-            <m.div
-              initial={{ opacity: 0, y: 20 }}
+    <section
+      id="experience"
+      className="relative overflow-hidden py-16 lg:py-18"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(201,164,71,0.13),transparent_42%),linear-gradient(180deg,rgba(244,241,230,0.24),transparent_72%)] dark:bg-[radial-gradient(ellipse_at_50%_34%,rgba(224,183,90,0.1),transparent_43%),radial-gradient(ellipse_at_4%_76%,rgba(122,187,94,0.055),transparent_28%)]" />
+      <div className="relative container mx-auto px-4 md:px-6">
+        <div className="mb-8 flex items-end justify-between gap-5 sm:mb-10">
+          <div>
+            <m.p
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+              className="font-mono text-[9px] font-bold tracking-[0.28em] text-[#8d6827] uppercase dark:text-[#e0b75a]"
             >
-              <Radio className="h-4 w-4" />
-              <span>CAREER DISCOGRAPHY</span>
-            </m.div>
+              Career archive / side a
+            </m.p>
             <m.h2
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="text-4xl font-bold tracking-tighter sm:text-5xl"
+              transition={{ delay: 0.06 }}
+              className="mt-2 text-4xl font-black tracking-tighter sm:text-5xl"
             >
-              The Collection
+              The Work Mixtape
             </m.h2>
           </div>
+          <p className="hidden max-w-48 text-right font-mono text-[8px] font-bold tracking-[0.12em] text-black/40 uppercase sm:block dark:text-white/35">
+            Select a tape to hear a chapter.
+          </p>
+        </div>
 
-          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
-            {/* Left Column: Tracklist / Selector */}
-            <div className="lg:col-span-5">
-              <div className="flex h-[500px] flex-col rounded-3xl border border-zinc-200 bg-white p-4 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950/50">
-                <div className="mb-4 px-2 text-xs font-bold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
-                  Select a Track
+        <div className="relative mx-auto max-w-6xl">
+          <div className="pointer-events-none absolute top-[34%] right-[15%] left-[15%] h-24 rounded-full bg-[#a97b29]/15 blur-3xl dark:bg-[#e0b75a]/15" />
+          <div className="relative flex h-[270px] items-center justify-center sm:h-[355px] lg:h-[390px]">
+            <Cassette
+              experience={EXPERIENCES[previousIndex]}
+              index={previousIndex}
+              position="previous"
+              selectedIndex={selectedIndex}
+              reduceMotion={shouldReduceMotion}
+              onSelect={() => selectExperience(previousIndex)}
+            />
+            <Cassette
+              experience={EXPERIENCES[selectedIndex]}
+              index={selectedIndex}
+              position="active"
+              selectedIndex={selectedIndex}
+              reduceMotion={shouldReduceMotion}
+              onSelect={() => selectExperience(selectedIndex)}
+            />
+            <Cassette
+              experience={EXPERIENCES[nextIndex]}
+              index={nextIndex}
+              position="next"
+              selectedIndex={selectedIndex}
+              reduceMotion={shouldReduceMotion}
+              onSelect={() => selectExperience(nextIndex)}
+            />
+          </div>
+
+          <div className="relative mx-auto mt-1 max-w-3xl border-t border-black/15 pt-5 dark:border-white/10">
+            <AnimatePresence mode="wait" initial={false}>
+              <m.div
+                key={`${selectedJob.id}-${activeSubIndex}`}
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -6 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end"
+              >
+                <div>
+                  <p className="font-mono text-[8px] font-bold tracking-[0.18em] text-[#8d6827] uppercase dark:text-[#e0b75a]">
+                    Track {String(selectedIndex + 1).padStart(2, '0')} /{' '}
+                    {selectedJob.type} /{' '}
+                    {selectedCourse?.period ?? selectedJob.period}
+                  </p>
+                  <h3 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+                    {selectedCourse?.role ?? selectedJob.role}
+                  </h3>
+                  <p className="mt-2 flex items-center gap-1.5 font-mono text-[9px] font-bold tracking-wider text-black/55 uppercase dark:text-white/50">
+                    <MapPin className="h-3.5 w-3.5 text-[#587f49] dark:text-[#7abb5e]" />
+                    {selectedJob.location}
+                  </p>
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar">
-                  {EXPERIENCES.map((exp) => (
-                    <button
-                      key={exp.id}
-                      onClick={() => setSelectedId(exp.id)}
-                      className={cn(
-                        'group relative flex w-full items-center gap-4 rounded-2xl p-4 text-left transition-all',
-                        selectedId === exp.id
-                          ? 'bg-zinc-100 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-800 dark:ring-zinc-700'
-                          : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50',
-                      )}
-                    >
-                      {/* Active Indicator */}
-                      {selectedId === exp.id && (
-                        <m.div
-                          layoutId="active-indicator"
-                          className="bg-primary absolute top-1/2 left-0 h-12 w-1 -translate-y-1/2 rounded-r-full"
-                        />
-                      )}
+                <p className="max-w-md text-sm leading-relaxed text-black/60 sm:text-right dark:text-white/60">
+                  {selectedDetails[0]}
+                </p>
+              </m.div>
+            </AnimatePresence>
 
-                      {/* Icon / Number */}
-                      <div
-                        className={cn(
-                          'flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-colors',
-                          selectedId === exp.id
-                            ? 'text-primary border-zinc-200 bg-white shadow-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-white'
-                            : 'border-transparent bg-zinc-50 text-zinc-600 group-hover:border-zinc-200 group-hover:bg-white group-hover:text-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400 dark:group-hover:bg-zinc-800 dark:group-hover:text-zinc-300',
-                        )}
-                      >
-                        {selectedId === exp.id ? (
-                          <Music className="h-5 w-5 animate-pulse" />
-                        ) : (
-                          <span className="font-mono text-sm font-bold">
-                            0{exp.id}
-                          </span>
-                        )}
-                      </div>
+            {selectedJob.isGroup && (
+              <CourseSelector
+                items={selectedJob.items ?? []}
+                activeIndex={activeSubIndex}
+                onChange={setActiveSubIndex}
+              />
+            )}
+          </div>
 
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-0.5 flex items-center justify-between gap-2">
-                          <h3
-                            className={cn(
-                              'truncate text-sm font-bold transition-colors',
-                              selectedId === exp.id
-                                ? 'text-zinc-900 dark:text-zinc-100'
-                                : 'text-zinc-700 dark:text-zinc-300',
-                            )}
-                          >
-                            {exp.role}
-                          </h3>
-                          <span
-                            className={cn(
-                              'hidden rounded-full border px-1.5 py-0.5 text-[10px] font-medium sm:inline-block',
-                              selectedId === exp.id
-                                ? 'border-zinc-200 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400'
-                                : 'border-transparent bg-transparent text-zinc-500',
-                            )}
-                          >
-                            {exp.type}
-                          </span>
-                        </div>
-
-                        <p className="mb-2 truncate text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                          {exp.company}
-                        </p>
-
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-zinc-600 dark:text-zinc-400">
-                          <span className="flex items-center gap-1 truncate">
-                            <Calendar className="h-3 w-3 shrink-0" />
-                            {exp.period}
-                          </span>
-                          <span className="flex items-center gap-1 truncate">
-                            <MapPin className="h-3 w-3 shrink-0" />
-                            {exp.location}
-                          </span>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <div className="relative mx-auto mt-5 flex max-w-3xl items-center justify-between border-t border-black/15 pt-3 font-mono text-[7px] font-bold tracking-[0.14em] text-black/45 uppercase dark:border-white/10 dark:text-white/35">
+            <span>4 tapes / unlimited loop</span>
+            <div className="flex items-center gap-2">
+              <CarouselButton
+                label="Previous tape"
+                onClick={() => moveCarousel(-1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </CarouselButton>
+              <span className="grid h-7 min-w-10 place-items-center border border-black/15 bg-[#d8d7cd] px-2 text-[#6b582b] dark:border-white/10 dark:bg-[#2d332f] dark:text-[#e0b75a]">
+                {String(selectedIndex + 1).padStart(2, '0')}
+              </span>
+              <CarouselButton label="Next tape" onClick={() => moveCarousel(1)}>
+                <ChevronRight className="h-4 w-4" />
+              </CarouselButton>
             </div>
-
-            {/* Right Column: The Player / Details */}
-            <div className="lg:col-span-7">
-              <div className="relative flex h-[500px] flex-col overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
-                {/* Background Ambience */}
-                <AnimatePresence mode="wait">
-                  <m.div
-                    key={selectedJob.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className={cn(
-                      'absolute inset-0 opacity-5 blur-3xl',
-                      selectedJob.color,
-                    )}
-                  />
-                </AnimatePresence>
-
-                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-2 mix-blend-overlay" />
-
-                <div className="relative flex h-full flex-col p-6 sm:p-8">
-                  {/* Header Area */}
-                  <div className="mb-4 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <m.div
-                        key={selectedJob.company}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <h3 className="text-2xl font-bold text-zinc-950 dark:text-zinc-50">
-                          {selectedJob.role}
-                        </h3>
-                        <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-zinc-700 dark:text-zinc-400">
-                          <span className="text-primary flex items-center gap-1.5 font-medium">
-                            <Briefcase className="h-3.5 w-3.5" />
-                            {selectedJob.company}
-                          </span>
-                          <span className="hidden h-1 w-1 rounded-full bg-zinc-800 sm:block dark:bg-zinc-700" />
-                          <span className="flex items-center gap-1.5">
-                            <MapPin className="h-3 w-3" />
-                            {selectedJob.location}
-                          </span>
-                        </div>
-                      </m.div>
-                    </div>
-
-                    {/* Spinning Vinyl Animation */}
-                    <div className="hidden shrink-0 sm:block">
-                      <m.div
-                        key={selectedJob.id}
-                        initial={{ rotate: 0, scale: 0.8, opacity: 0 }}
-                        animate={{ rotate: 360, scale: 1, opacity: 1 }}
-                        transition={{
-                          rotate: {
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: 'linear',
-                          },
-                          scale: { duration: 0.4 },
-                          opacity: { duration: 0.4 },
-                        }}
-                        className="relative flex h-16 w-16 items-center justify-center rounded-full border-4 border-zinc-900 bg-zinc-950 shadow-xl dark:border-zinc-800"
-                      >
-                        <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
-                        <div
-                           className={cn(
-                             'h-6 w-6 rounded-full',
-                             selectedJob.color,
-                           )}
-                        />
-                      </m.div>
-                    </div>
-                  </div>
-
-                  {/* Content Area */}
-                  <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 no-scrollbar">
-                    <AnimatePresence mode="wait">
-                      <m.div
-                        key={selectedJob.id}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-4"
-                      >
-                        {/* Period Badge */}
-                        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                          <Calendar className="h-3 w-3 text-zinc-600 dark:text-zinc-400" />
-                          {selectedJob.period}
-                        </div>
-
-                        {/* Description */}
-                        <div className="prose prose-zinc dark:prose-invert max-w-none">
-                          {selectedJob.isGroup ? (
-                            <div className="relative h-[250px] w-full mt-10">
-                              {selectedJob.items?.map((item, i) => {
-                                const itemsLength = selectedJob.items?.length || 0
-                                const diff = (i - activeSubIndex + itemsLength) % itemsLength
-                                const isTop = diff === 0
-                                
-                                return (
-                                  <m.div
-                                    key={i}
-                                    style={{ transformOrigin: 'top center' }}
-                                    animate={{
-                                      scale: isTop ? 1 : 1 - diff * 0.04,
-                                      y: isTop ? 0 : -diff * 28,
-                                      x: isTop ? 0 : diff * 8,
-                                      rotate: isTop ? 0 : diff % 2 === 0 ? -1 : 1,
-                                      zIndex: 30 - diff,
-                                      opacity: isTop ? 1 : 0.85 - diff * 0.1,
-                                    }}
-                                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                                    onClick={() => setActiveSubIndex(i)}
-                                    className={cn(
-                                      "absolute top-8 inset-x-0 rounded-2xl border p-5 transition-shadow select-none",
-                                      isTop 
-                                        ? "cursor-default border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg" 
-                                        : "cursor-pointer border-zinc-200/60 dark:border-zinc-850 bg-zinc-100/90 dark:bg-zinc-950 shadow-md hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700"
-                                    )}
-                                  >
-                                    <div className="flex w-full items-start gap-3">
-                                      <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full mt-1">
-                                        <ChevronRight className="h-3.5 w-3.5" />
-                                      </div>
-                                      <div className="flex w-full flex-col text-left">
-                                        <h4 className="mt-0 text-base font-bold text-zinc-900 dark:text-zinc-100">
-                                          {item.role}
-                                        </h4>
-                                        <div className="mb-2 flex w-full items-center justify-between text-xs text-zinc-500">
-                                          <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-                                            {item.company}
-                                          </span>
-                                          <span className="font-mono">
-                                            {item.period}
-                                          </span>
-                                        </div>
-                                        <p className="my-0! text-xs leading-relaxed text-zinc-650 dark:text-zinc-350">
-                                          {item.description}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </m.div>
-                                )
-                              })}
-                            </div>
-                          ) : (
-                            <ul className="space-y-4">
-                              {selectedJob.description?.map((item, i) => (
-                                <m.li
-                                  key={i}
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: i * 0.1 }}
-                                  className="flex items-start gap-3"
-                                >
-                                  <div className="bg-primary/10 text-primary mt-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
-                                    <ChevronRight className="h-3.5 w-3.5" />
-                                  </div>
-                                  <span className="mt-1.5 text-base font-medium text-zinc-900 dark:text-zinc-200">
-                                    {item}
-                                  </span>
-                                </m.li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      </m.div>
-                    </AnimatePresence>
-                  </div>
-                  {/* Player Controls (Decorative) */}
-                  <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex gap-1">
-                          {[...Array(3)].map((_, i) => (
-                            <m.div
-                              key={i}
-                              className="bg-primary w-1 rounded-full"
-                              style={{
-                                height: '8px',
-                                transformOrigin: 'bottom',
-                              }}
-                              animate={{ scaleY: [1, 2, 1] }}
-                              transition={{
-                                duration: 0.8,
-                                repeat: Infinity,
-                                delay: i * 0.2,
-                              }}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs font-medium tracking-wider text-zinc-800 uppercase">
-                          Now Playing
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-zinc-800">
-                        <ListMusic className="h-4 w-4" />
-                        <span className="text-xs">
-                          {selectedId} / {EXPERIENCES.length}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <span className="text-[#587f49] dark:text-[#7abb5e]">
+              playback ready
+            </span>
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
+  )
+}
+
+function Cassette({
+  experience,
+  index,
+  position,
+  selectedIndex,
+  reduceMotion,
+  onSelect,
+}: {
+  experience: (typeof EXPERIENCES)[number]
+  index: number
+  position: 'previous' | 'active' | 'next'
+  selectedIndex: number
+  reduceMotion: boolean | null
+  onSelect: () => void
+}) {
+  const theme = CASSETTE_THEMES[index]
+  const isActive = position === 'active'
+  const positionClass = {
+    previous:
+      'left-[-16%] z-10 -rotate-[7deg] opacity-70 sm:left-[-7%] lg:left-[3%]',
+    active: 'left-1/2 z-20 -translate-x-1/2',
+    next: 'right-[-16%] z-10 rotate-[7deg] opacity-70 sm:right-[-7%] lg:right-[3%]',
+  }[position]
+
+  return (
+    <m.button
+      type="button"
+      onClick={onSelect}
+      aria-label={`Select ${experience.company}`}
+      aria-pressed={isActive}
+      initial={false}
+      animate={{
+        scale: isActive ? 1 : 0.64,
+        y: isActive ? 0 : 8,
+        opacity: isActive ? 1 : 0.72,
+      }}
+      transition={
+        reduceMotion
+          ? { duration: 0 }
+          : { type: 'spring', stiffness: 260, damping: 28, mass: 0.75 }
+      }
+      className={cn(
+        'absolute top-1/2 w-[78%] max-w-[520px] -translate-y-1/2 cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-[#e0b75a] focus-visible:ring-offset-4 focus-visible:ring-offset-transparent',
+        positionClass,
+      )}
+    >
+      <div className="relative aspect-[1.58/1] overflow-hidden rounded-[5%] border-[6px] border-[#b5b6a4] bg-[#d5d4bd] p-[4%] shadow-[0_14px_0_rgba(56,59,52,0.22),0_22px_30px_rgba(20,24,22,0.2),inset_0_1px_rgba(255,255,255,0.9)] dark:border-[#737b72] dark:bg-[#b7b6a4] dark:shadow-[0_14px_0_rgba(0,0,0,0.45),0_22px_32px_rgba(0,0,0,0.4),inset_0_1px_rgba(255,255,255,0.35)]">
+        <ScrewDot className="top-[4%] left-[4%]" />
+        <ScrewDot className="top-[4%] right-[4%]" />
+        <ScrewDot className="bottom-[4%] left-[4%]" />
+        <ScrewDot className="right-[4%] bottom-[4%]" />
+        <div className="relative h-[64%] overflow-hidden rounded-[2%] border-2 border-[#eeeddd] bg-[#f4f1df] p-[3%] shadow-[inset_0_0_0_2px_rgba(107,111,98,0.3)]">
+          <div className="absolute top-[11%] right-[3%] left-[3%] h-px bg-[#929386]/55" />
+          <div className="absolute top-[20%] right-[3%] left-[3%] h-px bg-[#929386]/55" />
+          <div className="absolute top-[29%] right-[3%] left-[3%] h-px bg-[#929386]/55" />
+          <div
+            className="absolute right-[3%] bottom-0 left-[3%] h-[47%]"
+            style={{ backgroundColor: theme.label }}
+          />
+          <div className="absolute right-[5%] bottom-[5%] left-[5%] flex items-end justify-between">
+            <div
+              className="leading-[0.76] font-black"
+              style={{ color: theme.ink }}
+            >
+              <span className="block text-[clamp(1.4rem,4vw,3rem)]">A</span>
+              <span className="text-[clamp(0.6rem,1.7vw,1.05rem)]">SIDE</span>
+            </div>
+            <div
+              className="mb-[1%] text-right font-mono text-[clamp(0.35rem,1.1vw,0.6rem)] leading-tight font-bold"
+              style={{ color: theme.ink }}
+            >
+              <span className="block">NOISE</span>
+              <span className="block">REDUCTION</span>
+              <span className="mt-1 block border-t border-current pt-1">
+                ■ IN
+              </span>
+              <span className="block">□ OUT</span>
+            </div>
+          </div>
+          <div className="absolute top-[38%] left-1/2 z-10 grid h-[41%] w-[52%] -translate-x-1/2 grid-cols-[1fr_0.9fr_1fr] items-center gap-[6%] rounded-full border-2 border-[#c0c1ae] bg-[#d9d9c8] px-[4%] shadow-[inset_0_2px_4px_rgba(63,66,58,0.24)]">
+            <CassetteWheel
+              direction={-1}
+              selectedIndex={selectedIndex}
+              active={isActive}
+              reduceMotion={reduceMotion}
+            />
+            <div className="h-[52%] rounded-[8%] border border-[#3d3e38] bg-[#2c302d] shadow-[inset_0_2px_4px_rgba(0,0,0,0.7)]">
+              <div
+                className="mx-auto h-full w-[28%]"
+                style={{
+                  background: `linear-gradient(90deg, ${theme.dark}, #302b27 26%, #302b27 74%, ${theme.dark})`,
+                }}
+              />
+            </div>
+            <CassetteWheel
+              direction={1}
+              selectedIndex={selectedIndex}
+              active={isActive}
+              reduceMotion={reduceMotion}
+            />
+          </div>
+          <div
+            className="absolute right-[4%] bottom-[4%] left-[4%] z-20 flex items-end justify-between"
+            style={{ color: theme.ink }}
+          >
+            <span className="text-[clamp(0.7rem,2.15vw,1.4rem)] font-black italic">
+              STEREO CASSETTE
+            </span>
+            <span className="font-mono text-[clamp(0.35rem,1vw,0.6rem)] font-bold">
+              2X30 MIN
+            </span>
+          </div>
+        </div>
+        <div className="absolute right-[16%] bottom-[6%] left-[16%] h-[19%] border-x-2 border-t-2 border-[#b8b9a8] [clip-path:polygon(5%_0,95%_0,100%_100%,0_100%)]" />
+        <div className="absolute right-[28%] bottom-[7.5%] left-[28%] flex justify-between">
+          <span className="h-3 w-3 rounded-full border border-[#44463f] bg-[#77786c]" />
+          <span className="h-3 w-3 rounded-full border border-[#44463f] bg-[#77786c]" />
+        </div>
+      </div>
+      <span
+        className={cn(
+          'pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 font-mono text-[8px] font-bold tracking-[0.16em] whitespace-nowrap uppercase transition-opacity',
+          isActive
+            ? 'text-[#8d6827] opacity-100 dark:text-[#e0b75a]'
+            : 'text-black/35 opacity-0 dark:text-white/30',
+        )}
+      >
+        {experience.company}
+      </span>
+    </m.button>
+  )
+}
+
+function CassetteWheel({
+  direction,
+  selectedIndex,
+  active,
+  reduceMotion,
+}: {
+  direction: -1 | 1
+  selectedIndex: number
+  active: boolean
+  reduceMotion: boolean | null
+}) {
+  return (
+    <m.span
+      animate={{
+        rotate: reduceMotion
+          ? 0
+          : direction * (selectedIndex * 48 + (active ? 16 : 0)),
+      }}
+      transition={{ type: 'spring', stiffness: 220, damping: 24 }}
+      className="grid aspect-square w-full place-items-center rounded-full border-[3px] border-[#a8aa97] bg-[#eef0df] shadow-[inset_0_1px_rgba(255,255,255,0.9),0_1px_2px_rgba(55,58,50,0.26)]"
+    >
+      <span className="h-[43%] w-[43%] bg-[#a4a692] [clip-path:polygon(50%_0,66%_27%,93%_21%,78%_50%,93%_79%,66%_73%,50%_100%,34%_73%,7%_79%,22%_50%,7%_21%,34%_27%)]" />
+      <span className="absolute h-[22%] w-[22%] rounded-full bg-[#f6f5e7]" />
+    </m.span>
+  )
+}
+
+function ScrewDot({ className }: { className: string }) {
+  return (
+    <span
+      className={cn(
+        'absolute z-20 h-[6%] min-h-2 w-[4%] min-w-2 rounded-full border border-[#6b6d64] bg-[#929386] shadow-[inset_0_1px_rgba(255,255,255,0.65)]',
+        className,
+      )}
+    >
+      <span className="absolute top-1/2 right-[15%] left-[15%] h-px -translate-y-1/2 bg-[#474942]" />
+    </span>
+  )
+}
+
+function CourseSelector({
+  items,
+  activeIndex,
+  onChange,
+}: {
+  items: readonly { readonly company: string }[]
+  activeIndex: number
+  onChange: (index: number) => void
+}) {
+  return (
+    <div className="mt-4 flex flex-wrap gap-2 border-t border-dashed border-black/20 pt-3 dark:border-white/15">
+      <span className="mr-1 py-1 font-mono text-[7px] font-bold tracking-[0.14em] text-black/40 uppercase dark:text-white/35">
+        Bonus tracks
+      </span>
+      {items.map((item, index) => (
+        <button
+          key={item.company}
+          type="button"
+          onClick={() => onChange(index)}
+          aria-pressed={index === activeIndex}
+          className={cn(
+            'border-b-2 px-2 py-1 font-mono text-[7px] font-bold tracking-wider uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8d6827]',
+            index === activeIndex
+              ? 'border-[#8d6827] text-[#705518] dark:border-[#e0b75a] dark:text-[#e0b75a]'
+              : 'border-transparent text-black/40 hover:text-black/70 dark:text-white/35 dark:hover:text-white/70',
+          )}
+        >
+          {item.company}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function CarouselButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className="grid h-7 w-8 place-items-center border border-black/25 bg-[#d8d7cd] text-[#303531] shadow-[inset_0_1px_rgba(255,255,255,0.5),0_1px_0_rgba(0,0,0,0.2)] transition-[transform,background-color] hover:bg-[#c5c7bd] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e0b75a] active:translate-y-px active:shadow-none dark:border-white/10 dark:bg-[#3a403e] dark:text-white/60 dark:shadow-[inset_0_1px_rgba(255,255,255,0.12),0_2px_0_rgba(0,0,0,0.38)] dark:hover:bg-[#4b514e]"
+    >
+      {children}
+    </button>
   )
 }

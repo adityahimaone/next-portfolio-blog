@@ -42,7 +42,7 @@ export function ExperienceSection() {
       id="experience"
       className="relative overflow-hidden py-16 lg:py-18"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(201,164,71,0.13),transparent_42%),linear-gradient(180deg,rgba(244,241,230,0.24),transparent_72%)] dark:bg-[radial-gradient(ellipse_at_50%_34%,rgba(224,183,90,0.1),transparent_43%),radial-gradient(ellipse_at_4%_76%,rgba(122,187,94,0.055),transparent_28%)]" />
+      {/*<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(201,164,71,0.13),transparent_42%),linear-gradient(180deg,rgba(244,241,230,0.24),transparent_72%)] dark:bg-[radial-gradient(ellipse_at_50%_34%,rgba(224,183,90,0.1),transparent_43%),radial-gradient(ellipse_at_4%_76%,rgba(122,187,94,0.055),transparent_28%)]" />*/}
       <div className="relative container mx-auto px-4 md:px-6">
         <div className="mb-8 flex items-end justify-between gap-5 sm:mb-10">
           <div>

@@ -1,8 +1,5 @@
 'use client'
 
-import { m as motion } from 'motion/react'
-import { useTheme } from 'next-themes'
-import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 interface MusicMarqueeProps {
@@ -11,152 +8,90 @@ interface MusicMarqueeProps {
   direction?: 'left' | 'right'
 }
 
+const signalPhrases = [
+  'DIGITAL / ANALOG / INTERFACE',
+  'CREATIVE DEVELOPER',
+  'JAKARTA, ID',
+  'SYSTEM 001',
+  'CODE IN RHYTHM',
+  'FRONTEND SIGNAL CHAIN',
+]
+
+const speedMap = {
+  slow: '60s',
+  normal: '40s',
+  fast: '25s',
+}
+
 export function MusicMarquee({
   className,
   speed = 'normal',
   direction = 'left',
 }: MusicMarqueeProps) {
-  const [mounted, setMounted] = useState(false)
-  const { resolvedTheme } = useTheme()
-  const isDarkMode = !mounted || resolvedTheme === 'dark'
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Music-related phrases for the marquee
-  const musicPhrases = [
-    'WHERE CODE MEETS RHYTHM',
-    'DEVELOPING WITH MUSICAL PRECISION',
-    'HARMONIZING TECHNOLOGY & CREATIVITY',
-    'CODING TO THE BEAT',
-    'FRONTEND SYMPHONIES',
-    'DIGITAL COMPOSITIONS',
-    'ORCHESTRATING WEB EXPERIENCES',
-    'PROGRAMMING IN HARMONY',
-    'FULL STACK MELODIES',
-    'THE ART OF TECHNICAL COMPOSITION',
-  ]
-
-  // Different speeds for the animation
-  const speedMap = {
-    slow: '60s',
-    normal: '40s',
-    fast: '25s',
-  }
-
-  // Music symbols to display
-  const symbols = ['♩', '♪', '♫', '♬', '♭', '♯', '𝄞']
+  const animationClass =
+    direction === 'left' ? 'animate-marquee' : 'animate-marquee-reverse'
 
   return (
-    <div
+    <section
+      aria-label="Creative developer signal"
       className={cn(
-        'relative w-full overflow-hidden border-y py-4',
-        isDarkMode
-          ? 'border-zinc-800 bg-zinc-900/50'
-          : 'border-zinc-200 bg-zinc-50/50',
+        'relative isolate overflow-hidden border-y border-[#d6ad45]/25 bg-[#16191b] py-3 text-[#f1eee5] shadow-[inset_0_1px_rgba(255,255,255,0.08),0_8px_24px_rgba(0,0,0,0.18)]',
         className,
       )}
     >
-      {/* Blurred background gradient */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div
-          className={cn(
-            'absolute inset-0 opacity-20 blur-xl',
-            isDarkMode ? 'bg-primary/10' : 'bg-primary/5',
-          )}
-        />
-        {/* Music symbols floating in background */}
-        {symbols.map((symbol, index) => (
-          <motion.div
-            key={index}
-            className={cn(
-              'absolute text-2xl md:text-3xl lg:text-4xl',
-              isDarkMode ? 'text-primary/30' : 'text-primary/20',
-            )}
-            initial={{
-              x: Math.random() * 100,
-              y: Math.random() * 60 + 10,
-            }}
-            animate={{
-              y: [
-                Math.random() * 60 + 10,
-                Math.random() * 60 + 10,
-                Math.random() * 60 + 10,
-              ],
-              opacity: [0.2, 0.5, 0.2],
-              rotate: [0, Math.random() * 20 - 10, 0],
-            }}
-            transition={{
-              duration: 5 + Math.random() * 7,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              ease: 'easeInOut',
-            }}
-            style={{
-              left: `${index * (100 / symbols.length)}%`,
-            }}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent_0,transparent_3px,rgba(255,255,255,0.025)_4px)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-linear-to-r from-[#16191b] to-transparent"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-linear-to-l from-[#16191b] to-transparent"
+      />
+
+      <div className="relative z-10 mx-auto flex max-w-7xl items-center gap-3 px-4 sm:px-6">
+        <div className="hidden shrink-0 items-center gap-2 border-r border-white/10 pr-3 sm:flex">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#7abb5e] shadow-[0_0_7px_#7abb5e]" />
+          <span className="font-mono text-[8px] font-bold tracking-[0.2em] text-white/45">
+            LIVE BUS
+          </span>
+        </div>
+
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <div
+            className={cn('flex w-max whitespace-nowrap', animationClass)}
+            style={{ animationDuration: speedMap[speed] }}
           >
-            {symbol}
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Double marquee for infinite scroll effect */}
-      <div className="relative z-10 flex w-full">
-        <div
-          className={cn(
-            'animate-marquee flex whitespace-nowrap',
-            direction === 'left'
-              ? 'animate-marquee'
-              : 'animate-marquee-reverse',
-          )}
-          style={{
-            animationDuration: speedMap[speed],
-          }}
-        >
-          {musicPhrases.map((phrase, index) => (
-            <div key={index} className="mx-4 flex items-center">
-              <span
-                className={cn(
-                  'text-xl font-bold tracking-wider',
-                  isDarkMode ? 'text-zinc-100' : 'text-zinc-800',
-                )}
-              >
-                {phrase}
-              </span>
-              <span className="text-primary mx-6 text-xl">•</span>
-            </div>
-          ))}
+            {[0, 1].map((copy) => (
+              <div key={copy} className="flex items-center">
+                {signalPhrases.map((phrase) => (
+                  <div key={`${copy}-${phrase}`} className="mx-5 flex items-center gap-5">
+                    <span className="font-mono text-[10px] font-bold tracking-[0.24em] text-[#f1eee5]/80 sm:text-[11px]">
+                      {phrase}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="h-1 w-1 rounded-full bg-[#e0b75a] shadow-[0_0_6px_#e0b75a]"
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Duplicate for seamless loop */}
-        <div
-          className={cn(
-            'animate-marquee flex whitespace-nowrap',
-            direction === 'left'
-              ? 'animate-marquee'
-              : 'animate-marquee-reverse',
-          )}
-          style={{
-            animationDuration: speedMap[speed],
-          }}
-        >
-          {musicPhrases.map((phrase, index) => (
-            <div key={index} className="mx-4 flex items-center">
-              <span
-                className={cn(
-                  'text-xl font-bold tracking-wider',
-                  isDarkMode ? 'text-zinc-100' : 'text-zinc-800',
-                )}
-              >
-                {phrase}
-              </span>
-              <span className="text-primary mx-6 text-xl">•</span>
-            </div>
-          ))}
+        <div className="hidden shrink-0 items-center gap-2 border-l border-white/10 pl-3 md:flex">
+          <span className="font-mono text-[8px] tracking-[0.18em] text-white/35">
+            120 BPM
+          </span>
+          <span className="h-1 w-8 overflow-hidden rounded-full bg-white/10">
+            <span className="block h-full w-2/3 bg-[#e0b75a] shadow-[0_0_6px_#e0b75a]" />
+          </span>
         </div>
       </div>
-    </div>
+    </section>
   )
 }

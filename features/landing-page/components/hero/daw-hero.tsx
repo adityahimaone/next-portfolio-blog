@@ -196,7 +196,7 @@ export function DawHero() {
           <span className="block pl-[0.1em] text-[#e0b75a]">HIMAONE</span>
         </h1>
         <p className="mt-6 bg-[#101212]/70 px-3 py-1.5 font-mono text-[8px] font-bold tracking-[0.25em] text-white/80 backdrop-blur-sm sm:text-[10px]">
-          CREATIVE DEVELOPER · JAKARTA, ID
+          FRONTEND DEVELOPER · JAKARTA, ID
         </p>
       </motion.div>
 

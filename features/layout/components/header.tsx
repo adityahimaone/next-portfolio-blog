@@ -88,26 +88,40 @@ export function Header() {
         <div className="flex items-center gap-3 md:gap-4 md:pl-5">
           <div className="flex flex-col items-center gap-1">
             <button
+              type="button"
               onClick={toggleTheme}
-              className="relative h-8 w-14 cursor-pointer rounded-md bg-zinc-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] transition-colors dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800"
-              aria-label="Toggle Theme"
+              className="relative h-8 w-14 cursor-pointer overflow-hidden rounded-md border border-zinc-300 bg-zinc-200 p-0 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] transition-colors dark:border-zinc-800 dark:bg-zinc-900"
+              aria-label="Toggle theme"
+              aria-pressed={mounted && theme === 'dark'}
             >
-              <div className="absolute inset-0 flex items-center justify-between px-2">
-                <Sun size={12} className={cn("transition-opacity duration-300", mounted && theme === 'dark' ? 'opacity-30 text-zinc-600' : 'opacity-100 text-[#273281]')} />
-                <Moon size={12} className={cn("transition-opacity duration-300", mounted && theme === 'dark' ? 'opacity-100 text-[#f8fafc]' : 'opacity-30 text-zinc-600')} />
+              <div className="pointer-events-none absolute inset-y-0 right-2 left-2 flex items-center justify-between">
+                {mounted && theme === 'dark' ? (
+                  <Sun size={12} className="text-zinc-600" aria-hidden="true" />
+                ) : (
+                  <span />
+                )}
+                {mounted && theme !== 'dark' ? (
+                  <Moon size={12} className="text-zinc-600" aria-hidden="true" />
+                ) : (
+                  <span />
+                )}
               </div>
               <motion.div
-                className="absolute top-1 bottom-1 w-6 bg-primary rounded shadow-lg flex flex-col items-center justify-center gap-1 border border-white/10 dark:bg-[#3a4699]"
+                className="bg-primary absolute top-1 bottom-1 left-0.5 z-10 flex w-6 items-center justify-center rounded border border-white/10 shadow-lg dark:bg-[#3a4699]"
                 initial={false}
                 animate={{
-                  x: mounted && theme === 'dark' ? 28 : 2,
+                  x: mounted && theme === 'dark' ? 28 : 0,
                 }}
-                transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+                transition={{
+                  duration: 0.2,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
               >
-                {/* Grip lines for mixer feel */}
-                <div className="h-0.5 w-3 bg-white/30 rounded-full" />
-                <div className="h-0.5 w-3 bg-white/30 rounded-full" />
-                <div className="h-0.5 w-3 bg-white/30 rounded-full" />
+                {mounted && theme === 'dark' ? (
+                  <Moon size={12} className="text-white" aria-hidden="true" />
+                ) : (
+                  <Sun size={12} className="text-white" aria-hidden="true" />
+                )}
               </motion.div>
             </button>
             <span className="text-[8px] font-bold tracking-widest text-zinc-600 md:text-[10px] dark:text-zinc-400">

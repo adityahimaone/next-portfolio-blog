@@ -1,11 +1,12 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { LazyMotion, m, AnimatePresence } from 'motion/react'
+import { LazyMotion, m } from 'motion/react'
 import dynamic from 'next/dynamic'
 
 const loadFeatures = () => import('motion/react').then((res) => res.domMax)
 
-import { Preloader } from '../animations/preloader'
+// Preloader intentionally disabled; keep the component available for reactivation.
+// import { Preloader } from '../animations/preloader'
 import { HeaderDaw } from '@/features/layout'
 import { Footer } from '@/features/layout/components/footer'
 import { DawHero } from '../components/hero'
@@ -36,12 +37,12 @@ const MusicMarquee = dynamic(() =>
 
 import { StudioSignalConnector } from '@/components/studio-signal-connector'
 import { ChevronUp } from 'lucide-react'
-import { usePreloader } from '../hooks/use-preloader'
+// import { usePreloader } from '../hooks/use-preloader'
 
 export default function LandingPage() {
   const mainRef = useRef<HTMLDivElement>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
-  const isLoading = usePreloader()
+
 
   // Handle scroll to top
   const handleScrollToTop = () => {
@@ -67,9 +68,11 @@ export default function LandingPage() {
   return (
     <LazyMotion features={loadFeatures}>
       <>
+        {/* Preloader disabled to let the hero render immediately.
         <AnimatePresence mode="wait">
           {isLoading && <Preloader />}
         </AnimatePresence>
+        */}
 
         <m.div
           ref={mainRef}

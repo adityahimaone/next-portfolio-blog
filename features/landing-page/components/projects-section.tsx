@@ -47,9 +47,13 @@ export function ProjectsSection() {
             {PROJECTS_SHOWCASE.map((project, index) => (
               <m.div
                 key={project.id}
-                initial={{ opacity: 0, y: 50 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: index * 0.1 }}
+                initial={{ opacity: 0, y: 50, scale: 0.96 }}
+                animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+                transition={{
+                  delay: index * 0.1,
+                  duration: 0.7,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
                 className="group relative flex flex-col items-center"
                 onClick={() => setSelectedProject(project)}
               >
@@ -80,7 +84,11 @@ export function ProjectsSection() {
                   </div>
 
                   {/* Album Cover (Card) */}
-                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm border border-black/10 bg-zinc-100 shadow-[0_18px_35px_rgba(25,30,28,0.22)] transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:border-[#69766e]/50 dark:bg-[#222827] dark:shadow-[0_20px_42px_rgba(0,0,0,0.58)]">
+                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm border border-black/10 bg-zinc-100/95 shadow-[0_18px_35px_rgba(25,30,28,0.22)] backdrop-blur-sm transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:border-[#69766e]/50 dark:bg-[#222827]/95 dark:shadow-[0_20px_42px_rgba(0,0,0,0.58)]">
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1/2 bg-linear-to-b from-white/25 to-transparent opacity-70 mix-blend-screen"
+                    />
                     {/* Image Area */}
                     <div className="relative h-[75%] w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
                       <Image

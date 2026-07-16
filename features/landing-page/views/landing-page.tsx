@@ -1,6 +1,14 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
-import { LazyMotion, m } from 'motion/react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  LazyMotion,
+  m,
+  useInView,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from 'motion/react'
 import dynamic from 'next/dynamic'
 
 const loadFeatures = () => import('motion/react').then((res) => res.domMax)
@@ -39,10 +47,91 @@ import { StudioSignalConnector } from '@/components/studio-signal-connector'
 import { ChevronUp } from 'lucide-react'
 // import { usePreloader } from '../hooks/use-preloader'
 
+interface ScrollParallaxSectionProps {
+  children: ReactNode
+  depth: number
+  index: number
+}
+
+function ScrollParallaxSection({
+  children,
+  depth,
+  index,
+}: ScrollParallaxSectionProps) {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const shouldReduceMotion = useReducedMotion()
+  const isInView = useInView(sectionRef, { amount: 0.12, once: true })
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  })
+  const rawY = useTransform(
+    scrollYProgress,
+    [0, 0.2, 0.5, 0.8, 1],
+    shouldReduceMotion
+      ? [0, 0, 0, 0, 0]
+      : [depth, depth * 0.35, 0, -depth * 0.35, -depth],
+  )
+  const rawScale = useTransform(
+    scrollYProgress,
+    [0, 0.2, 0.5, 0.8, 1],
+    shouldReduceMotion ? [1, 1, 1, 1, 1] : [0.965, 0.985, 1, 0.985, 0.965],
+  )
+  const rawOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.16, 0.5, 0.84, 1],
+    shouldReduceMotion ? [1, 1, 1, 1, 1] : [0.42, 0.78, 1, 0.78, 0.42],
+  )
+  const y = useSpring(rawY, { stiffness: 120, damping: 24, mass: 0.7 })
+  const scale = useSpring(rawScale, {
+    stiffness: 140,
+    damping: 26,
+    mass: 0.7,
+  })
+  const opacity = useSpring(rawOpacity, {
+    stiffness: 150,
+    damping: 28,
+    mass: 0.6,
+  })
+
+  return (
+    <div
+      ref={sectionRef}
+      className="scroll-mt-20 px-2 py-3 sm:px-4 sm:py-5 lg:px-6"
+      data-section-visible={isInView}
+    >
+      <m.div
+        style={{ y, scale, opacity }}
+        className="relative will-change-transform"
+      >
+        <m.div
+          initial={
+            shouldReduceMotion
+              ? { opacity: 1, y: 0, scale: 1 }
+              : { opacity: 0, y: 28, scale: 0.985 }
+          }
+          animate={
+            isInView || shouldReduceMotion
+              ? { opacity: 1, y: 0, scale: 1 }
+              : { opacity: 0, y: 28, scale: 0.985 }
+          }
+          transition={{
+            duration: 0.72,
+            delay: index * 0.045,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="relative"
+        >
+          {children}
+        </m.div>
+      </m.div>
+    </div>
+  )
+}
+
 export default function LandingPage() {
   const mainRef = useRef<HTMLDivElement>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
-
 
   // Handle scroll to top
   const handleScrollToTop = () => {
@@ -85,7 +174,7 @@ export default function LandingPage() {
 
           {/* Main content */}
           <main className="relative">
-            <div className="snap-y snap-mandatory">
+            <div>
               {/* Hero Section */}
               <section className="relative h-screen snap-start overflow-hidden">
                 <div className="relative">
@@ -105,9 +194,9 @@ export default function LandingPage() {
                   story="signal enters the system"
                   stage="cable"
                 />
-                <section id="about" className="snap-start scroll-mt-0">
+                <ScrollParallaxSection depth={42} index={0}>
                   <AboutSection />
-                </section>
+                </ScrollParallaxSection>
 
                 <StudioSignalConnector
                   from="IDENTITY OUT"
@@ -115,9 +204,9 @@ export default function LandingPage() {
                   story="profile maps to controls"
                   stage="midi"
                 />
-                <section id="skills" className="snap-start scroll-mt-0">
+                <ScrollParallaxSection depth={34} index={1}>
                   <SkillsSection />
-                </section>
+                </ScrollParallaxSection>
 
                 <StudioSignalConnector
                   from="MIDI OUT"
@@ -125,9 +214,9 @@ export default function LandingPage() {
                   story="skills become applied work"
                   stage="automation"
                 />
-                <section id="experience" className="snap-start scroll-mt-0">
+                <ScrollParallaxSection depth={46} index={2}>
                   <ExperienceSection />
-                </section>
+                </ScrollParallaxSection>
 
                 <StudioSignalConnector
                   from="WORK BUS"
@@ -137,9 +226,9 @@ export default function LandingPage() {
                 />
               </div>
 
-              <section id="projects" className="snap-start scroll-mt-0">
+              <ScrollParallaxSection depth={40} index={3}>
                 <ProjectsSection />
-              </section>
+              </ScrollParallaxSection>
 
               <div className="mx-auto mb-5 w-full max-w-7xl">
                 <StudioSignalConnector
@@ -150,9 +239,9 @@ export default function LandingPage() {
                 />
               </div>
 
-              <section id="contact" className="snap-start">
+              <ScrollParallaxSection depth={30} index={4}>
                 <ContactSection />
-              </section>
+              </ScrollParallaxSection>
             </div>
           </main>
         </m.div>

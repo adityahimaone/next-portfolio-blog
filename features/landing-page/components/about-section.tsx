@@ -1012,7 +1012,20 @@ export function AboutSection() {
           </div>
 
           {/* DAW Interface */}
-          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950">
+          <m.div
+            initial={{ opacity: 0, y: isSectionInView ? 0 : 42, scale: 0.97 }}
+            animate={
+              isSectionInView
+                ? { opacity: 1, y: 0, scale: 1 }
+                : { opacity: 0, y: 42, scale: 0.97 }
+            }
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="relative mx-auto max-w-6xl overflow-hidden rounded-xl border border-zinc-200/80 bg-white/95 shadow-2xl backdrop-blur-sm dark:border-zinc-800/80 dark:bg-zinc-950/95"
+          >
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-8 top-0 z-30 h-px bg-linear-to-r from-transparent via-white/70 to-transparent dark:via-white/20"
+            />
             {/* Toolbar */}
             <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-2 dark:border-zinc-800 dark:bg-zinc-900">
               <div className="flex items-center gap-4">
@@ -1154,7 +1167,7 @@ export function AboutSection() {
                 ? hoveredClip.description
                 : 'Hover over a clip to view details. Click to expand.'}
             </div>
-          </div>
+          </m.div>
         </div>
 
         <AnimatePresence>

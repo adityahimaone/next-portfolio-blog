@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { m, AnimatePresence, useInView } from 'motion/react'
 import Image from 'next/image'
 import { Disc, X, Play, Music, Mic2, ArrowUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useTheme } from 'next-themes'
 
 import { PROJECTS_SHOWCASE, type ProjectShowcaseItem } from '../constants'
 
@@ -14,111 +13,16 @@ export function ProjectsSection() {
     useState<ProjectShowcaseItem | null>(null)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
-  const { resolvedTheme } = useTheme()
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    let animationId: number
-    const isDark = resolvedTheme === 'dark'
-
-    const resizeCanvas = () => {
-      const dpr = window.devicePixelRatio || 1
-      const width = canvas.parentElement?.clientWidth || window.innerWidth
-      const height = canvas.parentElement?.clientHeight || window.innerHeight
-      canvas.width = width * dpr
-      canvas.height = height * dpr
-      canvas.style.width = `${width}px`
-      canvas.style.height = `${height}px`
-      ctx.scale(dpr, dpr)
-    }
-
-    resizeCanvas()
-    window.addEventListener('resize', resizeCanvas)
-
-    let time = 0
-
-    // Concentric grooves / equalizers
-    const rings = Array.from({ length: 6 }, (_, i) => ({
-      baseRadius: 100 + i * 110,
-      speed: 0.002 - i * 0.0002,
-      phase: i * (Math.PI / 4),
-    }))
-
-    const render = () => {
-      const width = canvas.width / (window.devicePixelRatio || 1)
-      const height = canvas.height / (window.devicePixelRatio || 1)
-      const centerX = width * 0.5
-      const centerY = height * 0.5
-
-      ctx.clearRect(0, 0, width, height)
-      time += 0.01
-
-      // Draw grooves and orbiting particles
-      rings.forEach((ring, i) => {
-        const pulse = Math.sin(time * 1.2 + ring.phase) * 20
-        const currentRadius = Math.max(0, ring.baseRadius + pulse)
-
-        ctx.beginPath()
-        ctx.arc(centerX, centerY, currentRadius, 0, Math.PI * 2)
-        ctx.strokeStyle = isDark
-          ? `rgba(224, 183, 90, ${Math.max(0.01, 0.06 - i * 0.008)})`
-          : `rgba(201, 164, 71, ${Math.max(0.005, 0.025 - i * 0.003)})`
-        ctx.lineWidth = 1.2
-        ctx.stroke()
-
-        // Tiny particles revolving
-        const particleCount = 2 + (i % 2)
-        for (let j = 0; j < particleCount; j++) {
-          const angle =
-            time * (0.2 + i * 0.05) + j * ((Math.PI * 2) / particleCount)
-          const px = centerX + Math.cos(angle) * currentRadius
-          const py = centerY + Math.sin(angle) * currentRadius
-
-          ctx.beginPath()
-          ctx.arc(px, py, 1.8, 0, Math.PI * 2)
-          ctx.fillStyle = isDark
-            ? 'rgba(224, 183, 90, 0.2)'
-            : 'rgba(122, 187, 94, 0.1)'
-          ctx.fill()
-        }
-      })
-
-      animationId = requestAnimationFrame(render)
-    }
-
-    render()
-
-    return () => {
-      window.removeEventListener('resize', resizeCanvas)
-      cancelAnimationFrame(animationId)
-    }
-  }, [mounted, resolvedTheme])
 
   return (
     <>
       <section
         id="projects"
-        className="relative overflow-hidden py-24 2xl:overflow-visible"
+        className="relative overflow-hidden bg-[radial-gradient(ellipse_at_50%_32%,rgba(201,164,71,0.07),transparent_46%),linear-gradient(180deg,rgba(244,241,230,0.4),transparent_55%)] py-24 2xl:overflow-visible dark:bg-[radial-gradient(ellipse_at_50%_32%,rgba(224,183,90,0.075),transparent_42%),radial-gradient(ellipse_at_6%_92%,rgba(122,187,94,0.035),transparent_30%),linear-gradient(180deg,#1c211f_0%,#141817_74%)]"
         ref={ref}
       >
-        {/* Dynamic Sound Wave Concentric Canvas Backdrop */}
-        <canvas
-          ref={canvasRef}
-          className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-80 dark:opacity-100"
-        />
+        {/* Static groove field: the records own the circular motion, not the page background. */}
+        <div className="pointer-events-none absolute inset-0 bg-[repeating-radial-gradient(circle_at_50%_30%,transparent_0,transparent_74px,rgba(201,164,71,0.05)_75px,transparent_76px)] opacity-45 dark:bg-[repeating-radial-gradient(circle_at_50%_30%,transparent_0,transparent_74px,rgba(224,183,90,0.08)_75px,transparent_76px)] dark:opacity-70" />
         <div className="relative z-10 container mx-auto px-4 md:px-6">
           <div className="mb-16 flex flex-col items-center text-center">
             <m.div
@@ -150,13 +54,17 @@ export function ProjectsSection() {
                 onClick={() => setSelectedProject(project)}
               >
                 <div className="perspective-1000 relative w-full max-w-[300px] cursor-pointer">
-                  {/* Vinyl Record sliding out */}
-                  <div className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full bg-zinc-950 shadow-xl transition-all duration-700 ease-out group-hover:translate-x-[50%] group-hover:rotate-360 group-active:translate-x-[50%] group-active:rotate-360">
-                    <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(255,255,255,0.1)_30deg,transparent_60deg)]" />
+                  {/* A controlled reflection separates the black platter from the dark page surface. */}
+                  <div className="pointer-events-none absolute -inset-5 rounded-[2rem] bg-[radial-gradient(circle_at_72%_38%,rgba(201,164,71,0.17),transparent_42%)] opacity-60 blur-2xl transition-opacity duration-300 group-hover:opacity-100 dark:bg-[radial-gradient(circle_at_72%_38%,rgba(224,183,90,0.2),transparent_42%)]" />
+
+                  {/* Vinyl Record / DJ platter sliding out */}
+                  <div className="absolute top-1 right-1 bottom-1 left-1 flex items-center justify-center rounded-full border border-[#747b76]/55 bg-[#202522] shadow-[0_0_0_5px_rgba(20,24,23,0.13),0_14px_26px_rgba(15,18,17,0.3),inset_0_0_20px_rgba(255,255,255,0.08)] transition-all duration-700 ease-out group-hover:translate-x-[50%] group-hover:rotate-360 group-active:translate-x-[50%] group-active:rotate-360 dark:border-[#a3aea6]/55 dark:bg-[#111514] dark:shadow-[0_0_0_5px_rgba(224,183,90,0.08),0_18px_34px_rgba(0,0,0,0.65),inset_0_0_24px_rgba(255,255,255,0.1)]">
+                    <div className="absolute inset-0 rounded-full bg-[conic-gradient(transparent_0deg,rgba(201,164,71,0.34)_28deg,transparent_58deg)] dark:bg-[conic-gradient(transparent_0deg,rgba(224,183,90,0.48)_28deg,transparent_58deg)]" />
+                    <div className="absolute inset-[2px] rounded-full border border-white/20 dark:border-[#dce4da]/25" />
                     {/* Grooves */}
-                    <div className="absolute inset-[15%] rounded-full border border-zinc-800/40" />
-                    <div className="absolute inset-[25%] rounded-full border border-zinc-800/40" />
-                    <div className="absolute inset-[35%] rounded-full border border-zinc-800/40" />
+                    <div className="absolute inset-[15%] rounded-full border border-[#667069]/35 dark:border-[#b4c0b6]/25" />
+                    <div className="absolute inset-[25%] rounded-full border border-[#667069]/35 dark:border-[#b4c0b6]/25" />
+                    <div className="absolute inset-[35%] rounded-full border border-[#667069]/35 dark:border-[#b4c0b6]/25" />
 
                     {/* Center Label */}
                     <div
@@ -172,7 +80,7 @@ export function ProjectsSection() {
                   </div>
 
                   {/* Album Cover (Card) */}
-                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm bg-zinc-100 shadow-2xl transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:bg-zinc-900">
+                  <div className="relative z-10 flex aspect-square flex-col overflow-hidden rounded-sm border border-black/10 bg-zinc-100 shadow-[0_18px_35px_rgba(25,30,28,0.22)] transition-transform duration-300 group-hover:-translate-x-2 group-active:-translate-x-2 dark:border-[#69766e]/50 dark:bg-[#222827] dark:shadow-[0_20px_42px_rgba(0,0,0,0.58)]">
                     {/* Image Area */}
                     <div className="relative h-[75%] w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
                       <Image

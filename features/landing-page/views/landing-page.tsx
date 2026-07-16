@@ -34,7 +34,7 @@ const MusicMarquee = dynamic(() =>
   import('../spotify/music-marquee').then((mod) => mod.MusicMarquee),
 )
 
-import { SectionDivider } from '@/components/section-divider'
+import { StudioSignalConnector } from '@/components/studio-signal-connector'
 import { ChevronUp } from 'lucide-react'
 import { usePreloader } from '../hooks/use-preloader'
 
@@ -96,33 +96,55 @@ export default function LandingPage() {
 
               {/* Main Content Sections */}
               <div className="mx-auto w-full max-w-7xl space-y-2 py-20">
-                <SectionDivider />
+                <StudioSignalConnector
+                  from="HERO OUT"
+                  to="IDENTITY IN"
+                  story="signal enters the system"
+                  stage="cable"
+                />
                 <section id="about" className="snap-start scroll-mt-0">
                   <AboutSection />
                 </section>
 
-                <SectionDivider />
+                <StudioSignalConnector
+                  from="IDENTITY OUT"
+                  to="MIDI IN"
+                  story="profile maps to controls"
+                  stage="midi"
+                />
                 <section id="skills" className="snap-start scroll-mt-0">
                   <SkillsSection />
                 </section>
 
-                <SectionDivider />
+                <StudioSignalConnector
+                  from="MIDI OUT"
+                  to="WORK BUS"
+                  story="skills become applied work"
+                  stage="automation"
+                />
                 <section id="experience" className="snap-start scroll-mt-0">
                   <ExperienceSection />
                 </section>
 
-                <SectionDivider />
+                <StudioSignalConnector
+                  from="WORK BUS"
+                  to="RELEASE DECK"
+                  story="work is cut into grooves"
+                  stage="groove"
+                />
               </div>
 
-              <section
-                id="projects"
-                className="dark:bg-void border-graphite/10 dark:border-graphite/35 snap-start scroll-mt-0 border-y"
-              >
+              <section id="projects" className="snap-start scroll-mt-0">
                 <ProjectsSection />
               </section>
 
-              <div className="mb-5">
-                <SectionDivider />
+              <div className="mx-auto mb-5 w-full max-w-7xl">
+                <StudioSignalConnector
+                  from="RELEASE OUT"
+                  to="PATCH IN"
+                  story="the next collaboration is ready"
+                  stage="xlr"
+                />
               </div>
 
               <section id="contact" className="snap-start">

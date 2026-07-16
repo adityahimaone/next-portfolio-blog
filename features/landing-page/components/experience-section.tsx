@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
-import { AnimatePresence, m, useReducedMotion } from 'motion/react'
+import { useRef, useState, type ReactNode } from 'react'
+import { AnimatePresence, m, useInView, useReducedMotion } from 'motion/react'
 import { ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EXPERIENCES } from '../constants'
@@ -17,6 +17,8 @@ export function ExperienceSection() {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [activeSubIndex, setActiveSubIndex] = useState(0)
   const shouldReduceMotion = useReducedMotion()
+  const stageRef = useRef<HTMLDivElement>(null)
+  const isStageInView = useInView(stageRef, { once: true, amount: 0.2 })
   const selectedJob = EXPERIENCES[selectedIndex]
   const selectedCourse = selectedJob.items?.[activeSubIndex]
   const selectedDetails = selectedCourse
@@ -69,7 +71,21 @@ export function ExperienceSection() {
           </p>
         </div>
 
-        <div className="relative mx-auto max-w-6xl">
+        <m.div
+          ref={stageRef}
+          initial={
+            shouldReduceMotion
+              ? { opacity: 1, y: 0, scale: 1 }
+              : { opacity: 0, y: 36, scale: 0.97 }
+          }
+          animate={
+            isStageInView || shouldReduceMotion
+              ? { opacity: 1, y: 0, scale: 1 }
+              : { opacity: 0, y: 36, scale: 0.97 }
+          }
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="relative mx-auto max-w-6xl"
+        >
           <div className="pointer-events-none absolute top-[34%] right-[15%] left-[15%] h-24 rounded-full bg-[#a97b29]/15 blur-3xl dark:bg-[#e0b75a]/15" />
           <div
             role="group"
@@ -155,7 +171,7 @@ export function ExperienceSection() {
               playback ready
             </span>
           </div>
-        </div>
+        </m.div>
       </div>
     </section>
   )
@@ -247,6 +263,10 @@ function Cassette({
         className="pointer-events-auto w-[78%] max-w-[520px] cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-[#e0b75a] focus-visible:ring-offset-4 focus-visible:ring-offset-transparent"
       >
         <div className="relative aspect-[1.58/1] overflow-hidden rounded-[5%] border-[6px] border-[#b5b6a4] bg-[#d5d4bd] p-[4%] shadow-[0_14px_0_rgba(56,59,52,0.22),0_22px_30px_rgba(20,24,22,0.2),inset_0_1px_rgba(255,255,255,0.9)] dark:border-[#737b72] dark:bg-[#b7b6a4] dark:shadow-[0_14px_0_rgba(0,0,0,0.45),0_22px_32px_rgba(0,0,0,0.4),inset_0_1px_rgba(255,255,255,0.35)]">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-2 top-0 z-30 h-1/3 bg-linear-to-b from-white/30 to-transparent opacity-70 mix-blend-screen"
+          />
           <ScrewDot className="top-[4%] left-[4%]" />
           <ScrewDot className="top-[4%] right-[4%]" />
           <ScrewDot className="bottom-[4%] left-[4%]" />

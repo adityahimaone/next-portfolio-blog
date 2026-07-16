@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { m as motion } from 'motion/react'
-import { useInView } from 'motion/react'
+import { m as motion, useInView, useReducedMotion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Screw } from '@/components/screw'
 import { Keyboard } from 'lucide-react'
@@ -152,6 +151,7 @@ function playPadHit(freq: number) {
 export function SkillsSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
   const isSectionInView = useInView(sectionRef, { amount: 0.25 })
+  const shouldReduceMotion = useReducedMotion()
   const [isOn, setIsOn] = useState(false)
   const [activeMessage, setActiveMessage] = useState<string>('SYSTEM OFF')
   const [activeKey, setActiveKey] = useState<string | null>(null)
@@ -265,7 +265,24 @@ export function SkillsSection() {
         </div>
 
         {/* MIDI Keyboard Chassis */}
-        <div className="relative mx-auto max-w-5xl rounded-2xl border border-black/10 bg-[var(--daw-chassis)] p-4 shadow-2xl transition-all duration-300 dark:border-black/50 dark:bg-[var(--daw-chassis)]">
+        <motion.div
+          initial={
+            shouldReduceMotion
+              ? { opacity: 1, y: 0, scale: 1 }
+              : { opacity: 0, y: 42, scale: 0.97 }
+          }
+          animate={
+            isSectionInView || shouldReduceMotion
+              ? { opacity: 1, y: 0, scale: 1 }
+              : { opacity: 0, y: 42, scale: 0.97 }
+          }
+          transition={{ duration: 0.82, ease: [0.22, 1, 0.36, 1] }}
+          className="relative mx-auto max-w-5xl overflow-hidden rounded-2xl border border-black/10 bg-[var(--daw-chassis)] p-4 shadow-2xl transition-all duration-300 dark:border-black/50 dark:bg-[var(--daw-chassis)]"
+        >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-12 top-0 z-30 h-px bg-linear-to-r from-transparent via-white/45 to-transparent"
+          />
           {/* Chassis screws */}
           <Screw className="absolute top-8 left-8 transition-transform hover:rotate-12" />
           <Screw className="absolute top-8 right-8 transition-transform hover:-rotate-12" />
@@ -276,7 +293,22 @@ export function SkillsSection() {
           <div className="pointer-events-none absolute top-14 right-0 left-0 border-b border-black/15 dark:border-black/35" />
 
           {/* Faceplate body */}
-          <div className="relative rounded-xl border border-black/20 bg-zinc-300/40 p-6 pt-12 shadow-inner md:p-8 md:pt-14 dark:bg-black/15">
+          <motion.div
+            initial={
+              shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }
+            }
+            animate={
+              isSectionInView || shouldReduceMotion
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: 16 }
+            }
+            transition={{
+              delay: 0.12,
+              duration: 0.6,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="relative rounded-xl border border-black/20 bg-zinc-300/40 p-6 pt-12 shadow-inner backdrop-blur-[1px] md:p-8 md:pt-14 dark:bg-black/15"
+          >
             {/* TOP PANEL: Branding, LCD, Controls */}
             <div className="mb-8 flex flex-col gap-6 border-b border-black/10 pb-6 md:flex-row md:items-center md:justify-between dark:border-white/5">
               {/* Device Branding */}
@@ -519,8 +551,8 @@ export function SkillsSection() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   )

@@ -1,7 +1,13 @@
 'use client'
 
 import { useRef } from 'react'
-import { m, useInView, useReducedMotion } from 'motion/react'
+import {
+  m,
+  useInView,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from 'motion/react'
 
 type SignalStage = 'cable' | 'midi' | 'automation' | 'groove' | 'xlr'
 
@@ -36,15 +42,35 @@ export function StudioSignalConnector({
   const isInView = useInView(ref, { once: true, amount: 0.45 })
   const shouldReduceMotion = useReducedMotion()
   const active = shouldReduceMotion || isInView
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start end', 'end start'],
+  })
+  const y = useTransform(
+    scrollYProgress,
+    [0, 0.5, 1],
+    shouldReduceMotion ? [0, 0, 0] : [10, 0, -10],
+  )
+  const signalScale = useTransform(
+    scrollYProgress,
+    [0, 0.5, 1],
+    shouldReduceMotion ? [1, 1, 1] : [0.18, 1, 0.18],
+  )
 
   return (
-    <div
+    <m.div
       ref={ref}
-      className="relative mx-auto flex w-full max-w-5xl items-center justify-center px-4 py-5 sm:py-7"
+      style={{ y }}
+      className="relative mx-auto flex w-full max-w-5xl items-center justify-center px-4 py-5 will-change-transform sm:py-7"
       aria-label={`${from} to ${to}: ${story}`}
     >
       <div className="relative h-24 w-full max-w-3xl overflow-hidden sm:h-28">
         <div className="pointer-events-none absolute top-1/2 right-0 left-0 h-px bg-black/10 dark:bg-white/[0.07]" />
+        <m.span
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 right-0 left-0 h-px origin-left bg-[#e0b75a]/70 shadow-[0_0_7px_rgba(224,183,90,0.45)]"
+          style={{ scaleX: signalScale }}
+        />
         <StageGraphic active={active} stage={stage} />
 
         <div className="bg-background pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 pr-2 font-mono text-[7px] font-bold tracking-[0.18em] text-black/45 dark:text-white/40">
@@ -61,7 +87,7 @@ export function StudioSignalConnector({
           {story}
         </div>
       </div>
-    </div>
+    </m.div>
   )
 }
 

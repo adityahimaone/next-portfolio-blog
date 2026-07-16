@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { useAudio } from './audio-context'
 
 interface MusicMarqueeProps {
   className?: string
@@ -28,8 +29,12 @@ export function MusicMarquee({
   speed = 'normal',
   direction = 'left',
 }: MusicMarqueeProps) {
+  const { isPlaying, currentTrack } = useAudio()
   const animationClass =
     direction === 'left' ? 'animate-marquee' : 'animate-marquee-reverse'
+  const marqueePhrases = isPlaying
+    ? [currentTrack, ...signalPhrases]
+    : signalPhrases
 
   return (
     <section
@@ -67,8 +72,11 @@ export function MusicMarquee({
           >
             {[0, 1].map((copy) => (
               <div key={copy} className="flex items-center">
-                {signalPhrases.map((phrase) => (
-                  <div key={`${copy}-${phrase}`} className="mx-5 flex items-center gap-5">
+                {marqueePhrases.map((phrase) => (
+                  <div
+                    key={`${copy}-${phrase}`}
+                    className="mx-5 flex items-center gap-5"
+                  >
                     <span className="font-mono text-[10px] font-bold tracking-[0.24em] text-[#f1eee5]/80 sm:text-[11px]">
                       {phrase}
                     </span>

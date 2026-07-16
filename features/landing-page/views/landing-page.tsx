@@ -192,7 +192,6 @@ export default function LandingPage() {
                   from="HERO OUT"
                   to="IDENTITY IN"
                   story="signal enters the system"
-                  stage="cable"
                 />
                 <ScrollParallaxSection depth={42} index={0}>
                   <AboutSection />
@@ -202,7 +201,6 @@ export default function LandingPage() {
                   from="IDENTITY OUT"
                   to="MIDI IN"
                   story="profile maps to controls"
-                  stage="midi"
                 />
                 <ScrollParallaxSection depth={34} index={1}>
                   <SkillsSection />
@@ -212,7 +210,6 @@ export default function LandingPage() {
                   from="MIDI OUT"
                   to="WORK BUS"
                   story="skills become applied work"
-                  stage="automation"
                 />
                 <ScrollParallaxSection depth={46} index={2}>
                   <ExperienceSection />
@@ -222,7 +219,6 @@ export default function LandingPage() {
                   from="WORK BUS"
                   to="RELEASE DECK"
                   story="work is cut into grooves"
-                  stage="groove"
                 />
               </div>
 
@@ -235,7 +231,6 @@ export default function LandingPage() {
                   from="RELEASE OUT"
                   to="PATCH IN"
                   story="the next collaboration is ready"
-                  stage="xlr"
                 />
               </div>
 

@@ -25,7 +25,7 @@
   }
 
   body {
-    @apply bg-white text-zinc-800 dark:bg-zinc-950 dark:text-zinc-100;
+    @apply bg-background text-foreground;
     margin: 0;
     transition:
       background-color 0.5s ease,
@@ -433,52 +433,53 @@
   --color-smoke: #828384;
   --color-iron: #333333;
   --color-cinder: #423738;
-  --color-iris: #af50ff;
-  --color-plum: #7f56d9;
-  --color-aubergine: #271635;
-  --color-storm-gray: #475467;
-  --color-lavender-wash: #e1bdff;
+  /* Legacy aliases retain the existing utility API while using the hardware palette. */
+  --color-iris: #e0b75a;
+  --color-plum: #c9a447;
+  --color-aubergine: #17201e;
+  --color-storm-gray: #4d5651;
+  --color-lavender-wash: #ead084;
 
   --gradient-orchid-radial: radial-gradient(
     circle closest-corner at 10% 50%,
-    rgb(108, 75, 214),
+    rgb(201, 164, 71),
     rgba(0, 0, 0, 0) 55%
   );
   --gradient-amethyst-band: linear-gradient(
     90deg,
-    rgb(64, 24, 96),
-    rgb(72, 35, 180) 50%,
-    rgb(99, 78, 120)
+    rgb(35, 54, 48),
+    rgb(122, 187, 94) 50%,
+    rgb(201, 164, 71)
   );
 
-  /* Map Semantic theme colors for LIGHT MODE */
-  --background: #f7f9fa; /* Bone white base for light mode */
-  --foreground: #090909; /* Void base for light mode text */
-  --card: #ffffff;
-  --card-foreground: #090909;
-  --popover: #ffffff;
-  --popover-foreground: #090909;
+  /* Shared hardware palette — warm aluminium, amber status lamps, and moss LEDs. */
+  --background: #e7e6dd;
+  --foreground: #1a1d1c;
+  --card: #f4f1e6;
+  --card-foreground: #1a1d1c;
+  --popover: #f4f1e6;
+  --popover-foreground: #1a1d1c;
 
-  --primary: #7f56d9; /* Plum as primary in light mode for better contrast */
-  --primary-light: #af50ff;
-  --primary-dark: #271635;
-  --primary-foreground: #ffffff;
+  --primary: #9a692d;
+  --primary-light: #c9a447;
+  --primary-dark: #68451f;
+  --primary-foreground: #fffdf6;
 
-  --secondary: #271635;
-  --secondary-light: #7f56d9;
-  --secondary-dark: #090909;
-  --secondary-foreground: #ffffff;
+  --secondary: #36564d;
+  --secondary-light: #7abb5e;
+  --secondary-dark: #223d35;
+  --secondary-foreground: #fffdf6;
 
-  --accent: #af50ff;
-  --accent-light: #e1bdff;
-  --accent-dark: #7f56d9;
-  --accent-foreground: #ffffff;
+  --accent: #c9a447;
+  --accent-light: #ead084;
+  --accent-dark: #8d6827;
+  --accent-foreground: #1a1d1c;
 
-  --muted: #f0f0f0; /* Ash */
-  --muted-foreground: #6b6b6b; /* Slate */
-  --border: #e4e7e8;
-  --input: #e4e7e8;
-  --ring: #7f56d9;
+  --muted: #d7d6cc;
+  --muted-foreground: #5e625c;
+  --border: #bbbcb1;
+  --input: #c9c9be;
+  --ring: #9a692d;
 
   /* Font mapping fallbacks */
   --font-whyte-inktrap: var(--font-inter);
@@ -487,100 +488,100 @@
   --font-syne: var(--font-syne);
 
   /* Chart colors */
-  --chart-1: #7f56d9;
-  --chart-2: #271635;
-  --chart-3: #af50ff;
-  --chart-4: #6b6b6b;
-  --chart-5: #828384;
+  --chart-1: #9a692d;
+  --chart-2: #36564d;
+  --chart-3: #c9a447;
+  --chart-4: #7abb5e;
+  --chart-5: #5e625c;
 
   /* Border radius */
   --radius: 0.625rem;
 
   /* Sidebar colors */
-  --sidebar: #ffffff;
-  --sidebar-foreground: #090909;
-  --sidebar-primary: #7f56d9;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f0f0f0;
-  --sidebar-accent-foreground: #090909;
-  --sidebar-border: #e4e7e8;
-  --sidebar-ring: #7f56d9;
+  --sidebar: #f4f1e6;
+  --sidebar-foreground: #1a1d1c;
+  --sidebar-primary: #9a692d;
+  --sidebar-primary-foreground: #fffdf6;
+  --sidebar-accent: #d7d6cc;
+  --sidebar-accent-foreground: #1a1d1c;
+  --sidebar-border: #bbbcb1;
+  --sidebar-ring: #9a692d;
 
-  /* Studio Console Theme (Light mode version of brand console) */
-  --chassis-bg: #f0f0f0; /* Ash */
-  --chassis-border: #cbd5e1;
-  --chassis-surface: #ffffff;
-  --lcd-bg: #271635; /* Deep Aubergine */
-  --lcd-text: #af50ff; /* Iris glow text */
-  --lcd-dim: #7f56d9;
-  --led-active: #af50ff;
-  --led-standby: #7f56d9;
-  --led-glow: 0 0 6px rgba(175, 80, 255, 0.4);
-  --accent-knob: #7f56d9;
-  --panel-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --screw-color: #6b6b6b;
+  /* Studio Console Theme */
+  --chassis-bg: #d7d6cc;
+  --chassis-border: #aeb0a6;
+  --chassis-surface: #f4f1e6;
+  --lcd-bg: #17201e;
+  --lcd-text: #7abb5e;
+  --lcd-dim: #587f49;
+  --led-active: #c9a447;
+  --led-standby: #7abb5e;
+  --led-glow: 0 0 6px rgba(201, 164, 71, 0.45);
+  --accent-knob: #c9a447;
+  --panel-shadow: 0 5px 16px rgba(42, 45, 42, 0.13);
+  --screw-color: #666b65;
 }
 
 .dark {
-  /* Map Semantic theme colors for DARK MODE */
-  --background: #090909; /* Void base for dark mode */
-  --foreground: #f7f9fa; /* Bone white base for dark mode text */
-  --card: #111111;
-  --card-foreground: #f7f9fa;
-  --popover: #111111;
-  --popover-foreground: #f7f9fa;
+  /* Dark mode keeps the hero's charcoal equipment wall as the page foundation. */
+  --background: #16191b;
+  --foreground: #f1eee5;
+  --card: #222827;
+  --card-foreground: #f1eee5;
+  --popover: #222827;
+  --popover-foreground: #f1eee5;
 
-  --primary: #af50ff; /* Iris as primary in dark mode (vivid violet) */
-  --primary-light: #e1bdff;
-  --primary-dark: #7f56d9;
-  --primary-foreground: #090909;
+  --primary: #e0b75a;
+  --primary-light: #f0d98e;
+  --primary-dark: #a87a2d;
+  --primary-foreground: #16191b;
 
-  --secondary: #7f56d9; /* Plum as secondary */
-  --secondary-light: #af50ff;
-  --secondary-dark: #271635;
-  --secondary-foreground: #f7f9fa;
+  --secondary: #7abb5e;
+  --secondary-light: #a0d18a;
+  --secondary-dark: #456f38;
+  --secondary-foreground: #101312;
 
-  --accent: #af50ff;
-  --accent-light: #e1bdff;
-  --accent-dark: #271635;
-  --accent-foreground: #090909;
+  --accent: #c9a447;
+  --accent-light: #ead084;
+  --accent-dark: #8d6827;
+  --accent-foreground: #16191b;
 
-  --muted: #423738; /* Cinder */
-  --muted-foreground: #828384; /* Smoke */
-  --border: #454545; /* Graphite */
-  --input: #333333; /* Iron */
-  --ring: #af50ff;
+  --muted: #2b3230;
+  --muted-foreground: #aeb5aa;
+  --border: #444d49;
+  --input: #343c39;
+  --ring: #e0b75a;
 
   /* Chart colors */
-  --chart-1: #af50ff;
-  --chart-2: #7f56d9;
-  --chart-3: #e1bdff;
-  --chart-4: #828384;
-  --chart-5: #454545;
+  --chart-1: #e0b75a;
+  --chart-2: #7abb5e;
+  --chart-3: #c9a447;
+  --chart-4: #aeb5aa;
+  --chart-5: #444d49;
 
   /* Sidebar colors */
-  --sidebar: #111111;
-  --sidebar-foreground: #f7f9fa;
-  --sidebar-primary: #af50ff;
-  --sidebar-primary-foreground: #090909;
-  --sidebar-accent: #423738;
-  --sidebar-accent-foreground: #f7f9fa;
-  --sidebar-border: #454545;
-  --sidebar-ring: #af50ff;
+  --sidebar: #222827;
+  --sidebar-foreground: #f1eee5;
+  --sidebar-primary: #e0b75a;
+  --sidebar-primary-foreground: #16191b;
+  --sidebar-accent: #2b3230;
+  --sidebar-accent-foreground: #f1eee5;
+  --sidebar-border: #444d49;
+  --sidebar-ring: #e0b75a;
 
-  /* Studio Console Theme (Dark mode brand console) */
-  --chassis-bg: #090909; /* Void base */
-  --chassis-border: #454545; /* Graphite */
-  --chassis-surface: #423738; /* Cinder */
-  --lcd-bg: #271635; /* Aubergine */
-  --lcd-text: #af50ff; /* Iris glow text */
-  --lcd-dim: #7f56d9;
-  --led-active: #af50ff;
-  --led-standby: #7f56d9;
-  --led-glow: 0 0 12px rgba(175, 80, 255, 0.7);
-  --accent-knob: #af50ff;
-  --panel-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-  --screw-color: #6b6b6b;
+  /* Studio Console Theme */
+  --chassis-bg: #16191b;
+  --chassis-border: #444d49;
+  --chassis-surface: #222827;
+  --lcd-bg: #0d1110;
+  --lcd-text: #7abb5e;
+  --lcd-dim: #587f49;
+  --led-active: #e0b75a;
+  --led-standby: #7abb5e;
+  --led-glow: 0 0 10px rgba(224, 183, 90, 0.6);
+  --accent-knob: #e0b75a;
+  --panel-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+  --screw-color: #6c7470;
 }
 
 @theme inline {
@@ -1041,40 +1042,40 @@
 
 /* ─── DAW Controller Design Tokens ───────────────────────────── */
 :root {
-  --daw-chassis: #D6D7DC;
-  --daw-chassis-mid: #C8C9CE;
-  --daw-chassis-raised: #E0E1E6;
-  --daw-chassis-deep: #A8A9AE;
-  --daw-fader-cap: #9B9CA4;
-  --daw-fader-rail: #B8B9BE;
-  --daw-display-bg: #0A0A0C;
-  --daw-display-glass: rgba(0,0,0,0.82);
-  --daw-screw: #A0A1A8;
-  --daw-gold: #C9A447;
-  --daw-led-green: #16A34A;
-  --daw-led-red: #DC2626;
-  --daw-led-amber: #D97706;
-  --daw-led-blue: #2563EB;
-  --daw-led-off: rgba(0,0,0,0.12);
-  --daw-btn-shadow: rgba(0,0,0,0.18);
+  --daw-chassis: #d7d6cc;
+  --daw-chassis-mid: #c5c5ba;
+  --daw-chassis-raised: #ece9dc;
+  --daw-chassis-deep: #a6a89f;
+  --daw-fader-cap: #8b8f88;
+  --daw-fader-rail: #b5b7ad;
+  --daw-display-bg: #17201e;
+  --daw-display-glass: rgba(10, 15, 14, 0.84);
+  --daw-screw: #7f837b;
+  --daw-gold: #c9a447;
+  --daw-led-green: #5d9a4b;
+  --daw-led-red: #c84b4b;
+  --daw-led-amber: #b77b28;
+  --daw-led-blue: #5d9a4b;
+  --daw-led-off: rgba(24, 29, 28, 0.16);
+  --daw-btn-shadow: rgba(29, 34, 31, 0.2);
 }
 
 .dark {
-  --daw-chassis: #1C1D22;
-  --daw-chassis-mid: #25262D;
-  --daw-chassis-raised: #2E3038;
-  --daw-chassis-deep: #0F1014;
-  --daw-fader-cap: #6B6C74;
-  --daw-fader-rail: #12131A;
-  --daw-display-bg: #050507;
-  --daw-display-glass: rgba(0,0,0,0.92);
-  --daw-screw: #3A3B44;
-  --daw-led-green: #22C55E;
-  --daw-led-red: #EF4444;
-  --daw-led-amber: #F59E0B;
-  --daw-led-blue: #3B82F6;
-  --daw-led-off: rgba(255,255,255,0.05);
-  --daw-btn-shadow: rgba(0,0,0,0.5);
+  --daw-chassis: #16191b;
+  --daw-chassis-mid: #222827;
+  --daw-chassis-raised: #2d3532;
+  --daw-chassis-deep: #0d1110;
+  --daw-fader-cap: #68716c;
+  --daw-fader-rail: #151b19;
+  --daw-display-bg: #080b0a;
+  --daw-display-glass: rgba(0, 0, 0, 0.92);
+  --daw-screw: #48514d;
+  --daw-led-green: #7abb5e;
+  --daw-led-red: #d25555;
+  --daw-led-amber: #e0b75a;
+  --daw-led-blue: #7abb5e;
+  --daw-led-off: rgba(241, 238, 229, 0.06);
+  --daw-btn-shadow: rgba(0, 0, 0, 0.55);
 }
 
 /* DAW panel surface — replaces chassis-panel for hero */
@@ -1096,8 +1097,8 @@
     0deg,
     transparent,
     transparent 3px,
-    rgba(255,255,255,0.015) 3px,
-    rgba(255,255,255,0.015) 4px
+    rgba(255, 255, 255, 0.015) 3px,
+    rgba(255, 255, 255, 0.015) 4px
   );
   opacity: 1;
   border-radius: inherit;
@@ -1105,13 +1106,22 @@
 
 /* LED glow utility */
 .led-glow {
-  box-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
+  box-shadow:
+    0 0 6px currentColor,
+    0 0 12px currentColor;
 }
 
 .led-text-glow {
-  text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
+  text-shadow:
+    0 0 6px currentColor,
+    0 0 14px currentColor;
 }
 
 /* Hide overflow scrollbar (channel strip) */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

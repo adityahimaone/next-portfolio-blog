@@ -9,7 +9,10 @@ interface HeroWaveformProps {
   layer?: 'behind' | 'front'
 }
 
-export function HeroWaveform({ className, layer = 'behind' }: HeroWaveformProps) {
+export function HeroWaveform({
+  className,
+  layer = 'behind',
+}: HeroWaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number>(0)
   const { resolvedTheme } = useTheme()
@@ -61,11 +64,11 @@ export function HeroWaveform({ className, layer = 'behind' }: HeroWaveformProps)
       ctx.lineTo(x, y)
     }
     ctx.strokeStyle = isDark
-      ? `rgba(175, 80, 255, ${0.5 * frontOpacity})`
-      : `rgba(127, 86, 217, ${0.35 * frontOpacity})`
+      ? `rgba(224, 183, 90, ${0.5 * frontOpacity})`
+      : `rgba(154, 105, 45, ${0.35 * frontOpacity})`
     ctx.lineWidth = 2
     if (isDark && layer === 'behind') {
-      ctx.shadowColor = 'rgba(175, 80, 255, 0.35)'
+      ctx.shadowColor = 'rgba(224, 183, 90, 0.35)'
       ctx.shadowBlur = 12
     }
     ctx.stroke()
@@ -83,11 +86,11 @@ export function HeroWaveform({ className, layer = 'behind' }: HeroWaveformProps)
       ctx.lineTo(x, y)
     }
     ctx.strokeStyle = isDark
-      ? `rgba(225, 189, 255, ${0.4 * frontOpacity})`
-      : `rgba(175, 80, 255, ${0.25 * frontOpacity})`
+      ? `rgba(122, 187, 94, ${0.4 * frontOpacity})`
+      : `rgba(201, 164, 71, ${0.25 * frontOpacity})`
     ctx.lineWidth = 1.5
     if (isDark && layer === 'behind') {
-      ctx.shadowColor = 'rgba(225, 189, 255, 0.25)'
+      ctx.shadowColor = 'rgba(122, 187, 94, 0.25)'
       ctx.shadowBlur = 10
     }
     ctx.stroke()
@@ -97,7 +100,9 @@ export function HeroWaveform({ className, layer = 'behind' }: HeroWaveformProps)
   }, [isDark, layer])
 
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
     if (prefersReducedMotion) {
       timeRef.current = 0
       lastFrameTime.current = 0
@@ -118,7 +123,7 @@ export function HeroWaveform({ className, layer = 'behind' }: HeroWaveformProps)
     <canvas
       ref={canvasRef}
       className={cn(
-        'absolute inset-0 h-full w-full pointer-events-none',
+        'pointer-events-none absolute inset-0 h-full w-full',
         layer === 'behind' ? 'z-[1]' : 'z-[3]',
         className,
       )}

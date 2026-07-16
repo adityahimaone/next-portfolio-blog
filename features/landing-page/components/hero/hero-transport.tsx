@@ -56,7 +56,7 @@ export function HeroTransport() {
           className={cn(
             'flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border transition-all active:scale-95',
             isPlaying
-              ? 'border-primary/50 bg-primary/10 text-primary shadow-[0_0_8px_rgba(175,80,255,0.3)]'
+              ? 'border-primary/50 bg-primary/10 text-primary shadow-[0_0_8px_rgba(224,183,90,0.3)]'
               : isDark
                 ? 'border-graphite bg-void text-smoke hover:text-bone-white hover:border-iris/50'
                 : 'border-graphite/25 bg-bone-white text-slate hover:text-foreground hover:border-plum/50',

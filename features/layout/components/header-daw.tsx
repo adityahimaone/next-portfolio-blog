@@ -1,328 +1,375 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { m as motion, AnimatePresence } from 'motion/react'
+import { m as motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { Sun, Moon } from 'lucide-react'
 import useClickOutside from '@/hooks/use-click-outside'
-import { HOMEPAGE_NAV_ITEMS, SUBPAGE_NAV_ITEMS, SOCIAL_LINKS } from '../constants'
+import { HOMEPAGE_NAV_ITEMS, SUBPAGE_NAV_ITEMS } from '../constants'
 import { useScrollState } from '../hooks/use-scroll-state'
 import { StaggeredMenu } from './staggered-menu/staggered-menu'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import { Screw } from '@/components/screw'
 
-// Map nav item names to channel colors (Console 1 style)
 const NAV_COLORS: Record<string, string> = {
-  HOME:     '#C84B4B',
-  ABOUT:    '#D4864A',
-  SKILLS:   '#C9A447',
-  EXP:      '#7ABB5E',
-  WORK:     '#4A9EC9',
-  CONTACT:  '#8A5FC9',
-  BLOG:     '#C95FAA',
+  HOME: '#D6AD45',
+  ABOUT: '#D4864A',
+  SKILLS: '#C9A447',
+  EXP: '#7ABB5E',
+  WORK: '#4A9EC9',
+  CONTACT: '#8A5FC9',
+  BLOG: '#C95FAA',
   PROJECTS: '#5FC9C9',
-  MIXTAPE:  '#C9A447',
+  MIXTAPE: '#C9A447',
 }
 
 export function HeaderDaw() {
   const pathname = usePathname()
   const isHomepage = pathname === '/'
   const navItems = isHomepage ? HOMEPAGE_NAV_ITEMS : SUBPAGE_NAV_ITEMS
-
-  const menuItems = navItems.map((item) => ({ label: item.name, link: item.href }))
-  const socialMenuItems = SOCIAL_LINKS.map((link) => ({ label: link.name, link: link.href }))
+  const menuItems = navItems.map((item) => ({
+    label: item.name,
+    link: item.href,
+  }))
 
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [hoveredNav, setHoveredNav] = useState<string | null>(null)
-  const isScrolled = useScrollState()
   const [isPlugged, setIsPlugged] = useState(false)
+  const isScrolled = useScrollState()
+  const shouldReduceMotion = useReducedMotion()
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const toggleButtonRef = useRef<HTMLButtonElement>(null)
   const { isPlaying, togglePlay, playbackRate } = useAudio()
 
-  useClickOutside(mobileMenuRef, (e) => {
-    if (isOpen && toggleButtonRef.current && !toggleButtonRef.current.contains(e.target as Node)) {
+  useClickOutside(mobileMenuRef, (event) => {
+    if (
+      isOpen &&
+      toggleButtonRef.current &&
+      !toggleButtonRef.current.contains(event.target as Node)
+    ) {
       setIsOpen(false)
     }
   })
-  useEffect(() => { setMounted(true) }, [])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
   const bpm = Math.round(playbackRate * 120)
+  const activeName =
+    navItems.find(
+      (item) => item.href === pathname || pathname.startsWith(item.href + '/'),
+    )?.name ?? 'HOME'
 
-  // Current section display (mini LCD readout)
-  const activeName = navItems.find(
-    (item) => item.href === pathname || pathname.startsWith(item.href + '/'),
-  )?.name ?? 'HOME'
+  const controlClassName =
+    'relative isolate flex items-center justify-center border border-white/10 bg-[#1c2020]/85 text-white/65 shadow-[inset_0_1px_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.28)] transition-[transform,border-color,background-color,box-shadow] duration-150 ease-out hover:border-[#d6ad45]/45 hover:bg-[#292d2d]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e0b75a]/75 focus-visible:ring-offset-2 focus-visible:ring-offset-[#101212] active:translate-y-px active:scale-[0.97] motion-reduce:transition-none'
 
   return (
     <>
       <header
         className={cn(
-          // DAW chassis — same color as hero faceplate
-          'fixed top-0 right-0 left-0 z-50 flex items-center justify-between px-4 md:px-6 overflow-hidden',
-          'border-b transition-all duration-300',
-          'bg-[var(--daw-chassis)] dark:bg-[var(--daw-chassis)]',
+          'fixed top-2 right-2 left-2 z-50 overflow-hidden rounded-md border border-white/10 bg-[#121516]/84 text-white shadow-[0_12px_30px_rgba(0,0,0,0.28),inset_0_1px_rgba(255,255,255,0.08)] backdrop-blur-xl transition-[height,box-shadow] duration-200 ease-out motion-reduce:transition-none md:top-3 md:right-4 md:left-4',
           isScrolled
-            ? 'h-14 border-black/20 dark:border-black/50 backdrop-blur-md'
-            : 'h-16 border-black/10 dark:border-black/40 backdrop-blur-lg',
-          // Brushed texture  
-          'before:pointer-events-none before:absolute before:inset-0 before:bg-[repeating-linear-gradient(0deg,transparent,transparent_3px,rgba(0,0,0,0.01)_3px,rgba(0,0,0,0.01)_4px)]',
+            ? 'h-12 shadow-[0_9px_22px_rgba(0,0,0,0.34),inset_0_1px_rgba(255,255,255,0.08)]'
+            : 'h-14',
         )}
       >
-        {/* Rack screws */}
-        <Screw className="absolute left-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
-        <Screw className="absolute right-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
+        {/* Brushed faceplate and edge lighting are decorative only. */}
+        <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent_0,transparent_3px,rgba(255,255,255,0.025)_4px),linear-gradient(90deg,rgba(224,183,90,0.08),transparent_18%,transparent_82%,rgba(122,187,94,0.06))]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/15" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-black/70" />
 
-        {/* ══ LEFT: Power Switch + LED ══ */}
-        <div className="flex items-center gap-3 md:gap-4 md:pl-6">
-          {/* Theme toggle — horizontal fader style */}
-          <div className="flex flex-col items-center gap-0.5">
+        <Screw className="pointer-events-none absolute top-1/2 left-2 z-10 hidden -translate-y-1/2 scale-75 opacity-65 md:flex" />
+        <Screw className="pointer-events-none absolute top-1/2 right-2 z-10 hidden -translate-y-1/2 scale-75 opacity-65 md:flex" />
+
+        <div className="relative z-10 grid h-full grid-cols-[auto_1fr_auto] items-center gap-2 px-2 sm:gap-3 sm:px-3 md:px-7">
+          {/* Power / theme bay */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden h-5 w-px bg-white/10 sm:block" />
             <button
               onClick={toggleTheme}
               className={cn(
-                'relative h-7 w-14 cursor-pointer rounded-sm',
-                'bg-[var(--daw-chassis-deep)] dark:bg-[var(--daw-chassis-deep)]',
-                'border border-black/20 dark:border-black/50',
-                'shadow-[inset_0_2px_4px_rgba(0,0,0,0.25)]',
+                controlClassName,
+                'h-8 w-11 rounded-sm p-0.5 sm:w-12',
               )}
-              aria-label="Toggle Theme"
+              aria-label="Toggle theme"
             >
-              <div className="absolute inset-0 flex items-center justify-between px-2">
-                <Sun size={11} className={cn('transition-opacity', mounted && theme === 'dark' ? 'opacity-25 text-black/60 dark:text-white/20' : 'opacity-100 text-amber-600')} />
-                <Moon size={11} className={cn('transition-opacity', mounted && theme === 'dark' ? 'opacity-100 text-indigo-300' : 'opacity-25 text-black/40')} />
-              </div>
-              <motion.div
+              <span className="pointer-events-none absolute top-1/2 right-1 left-1 h-px -translate-y-1/2 bg-black/60 shadow-[0_1px_rgba(255,255,255,0.08)]" />
+              <Sun
+                size={11}
                 className={cn(
-                  'absolute top-1 bottom-1 w-6 rounded-[2px]',
-                  'bg-gradient-to-b from-[#B8B9C4] to-[#7B7C84]',
-                  'border border-black/20',
-                  'shadow-[0_2px_4px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)]',
-                  'flex flex-col items-center justify-center gap-0.5',
+                  'absolute left-1.5 transition-opacity duration-150 motion-reduce:transition-none',
+                  mounted && theme === 'dark'
+                    ? 'text-white/60 opacity-30'
+                    : 'text-[#e0b75a]',
                 )}
+                aria-hidden="true"
+              />
+              <Moon
+                size={11}
+                className={cn(
+                  'absolute right-1.5 transition-opacity duration-150 motion-reduce:transition-none',
+                  mounted && theme === 'dark'
+                    ? 'text-[#a9c7e4]'
+                    : 'text-white/60 opacity-30',
+                )}
+                aria-hidden="true"
+              />
+              <motion.span
+                className="absolute top-1 bottom-1 w-4 rounded-[2px] border border-white/15 bg-gradient-to-b from-[#aeb4af] to-[#59605c] shadow-[0_1px_2px_rgba(0,0,0,0.6),inset_0_1px_rgba(255,255,255,0.3)]"
                 initial={false}
-                animate={{ x: mounted && theme === 'dark' ? 28 : 2 }}
-                transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+                animate={{ x: mounted && theme === 'dark' ? 24 : 2 }}
+                transition={
+                  shouldReduceMotion
+                    ? { duration: 0 }
+                    : { type: 'spring', stiffness: 500, damping: 34 }
+                }
               >
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-px w-3 bg-black/20 rounded-full" />
-                ))}
-              </motion.div>
+                <span className="absolute top-1/2 right-0.5 left-0.5 h-px bg-black/35" />
+              </motion.span>
             </button>
-            <span className="font-mono text-[7px] font-bold tracking-widest text-black/40 dark:text-white/25 uppercase">
-              POWER
-            </span>
+            <div className="hidden flex-col leading-none sm:flex">
+              <span className="font-mono text-[7px] font-bold tracking-[0.18em] text-white/50">
+                STUDIO BUS
+              </span>
+              <span className="mt-1 flex items-center gap-1.5 font-mono text-[6px] tracking-[0.14em] text-white/30">
+                <i className="h-1 w-1 rounded-full bg-[#d6ad45] shadow-[0_0_5px_#e0b75a]" />
+                ONLINE
+              </span>
+            </div>
           </div>
 
-          {/* LED indicator */}
-          <div className="relative h-3 w-3">
-            <div
-              className={cn(
-                'absolute inset-0 rounded-full transition-all duration-700',
-                mounted && theme === 'dark'
-                  ? 'animate-pulse bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]'
-                  : 'bg-black/20',
-              )}
-            />
-          </div>
-        </div>
-
-        {/* ══ CENTER: Nav channel strips (desktop) ══ */}
-        <nav className="hidden lg:flex items-stretch gap-px h-full py-2">
-          {navItems.map((item) => {
-            const isActive = item.href === pathname || (item.href !== '/' && pathname.startsWith(item.href))
-            const color = NAV_COLORS[item.name] ?? '#C9A447'
-
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onMouseEnter={() => setHoveredNav(item.name)}
-                onMouseLeave={() => setHoveredNav(null)}
-                className={cn(
-                  'relative flex flex-col items-center justify-between px-2.5 py-1 rounded-[3px]',
-                  'border transition-all duration-150 cursor-pointer',
-                  'shadow-[0_2px_0_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]',
-                  isActive || hoveredNav === item.name
-                    ? 'border-black/25 dark:border-white/15 bg-black/8 dark:bg-white/8'
-                    : 'border-black/10 dark:border-white/5 bg-[var(--daw-chassis-raised)] dark:bg-[var(--daw-chassis-raised)]',
-                )}
-              >
-                {/* LED dot at top */}
-                <div
-                  className="h-1.5 w-1.5 rounded-full transition-all"
-                  style={{
-                    background: isActive ? color : 'var(--daw-led-off)',
-                    boxShadow: isActive ? `0 0 5px ${color}, 0 0 8px ${color}` : 'none',
-                  }}
-                />
-                {/* Label */}
-                <span
-                  className="font-mono text-[7px] md:text-[8px] font-bold uppercase tracking-widest transition-colors select-none"
-                  style={{ color: isActive || hoveredNav === item.name ? color : undefined }}
-                >
-                  {item.name}
-                </span>
-              </Link>
-            )
-          })}
-        </nav>
-
-        {/* ══ CENTER-RIGHT: Mini LCD readout (desktop only) ══ */}
-        <div className="hidden xl:flex flex-col items-center ml-4">
-          <div
-            className={cn(
-              'px-3 py-1 rounded-[3px]',
-              'bg-[#0A0A0C]',
-              'border border-black/40',
-              'shadow-[inset_0_1px_4px_rgba(0,0,0,0.6)]',
-            )}
+          {/* Central rack navigation */}
+          <nav
+            className="hidden min-w-0 items-center justify-center gap-1 lg:flex"
+            aria-label="Primary navigation"
           >
-            <span
-              className="font-mono text-[10px] font-bold tracking-widest tabular-nums uppercase"
-              style={{
-                color: '#22C55E',
-                textShadow: '0 0 6px #22C55E, 0 0 10px #22C55E',
-              }}
-            >
-              {activeName.padEnd(8, '\u00A0')}
-            </span>
-          </div>
-          <span className="font-mono text-[6px] tracking-widest text-black/30 dark:text-white/20 uppercase mt-0.5">
-            SECTION
-          </span>
-        </div>
+            {navItems.map((item) => {
+              const isActive =
+                item.href === pathname ||
+                (item.href !== '/' && pathname.startsWith(item.href))
+              const color = NAV_COLORS[item.name] ?? '#D6AD45'
 
-        {/* ══ RIGHT: Transport + BPM + Jack ══ */}
-        <div className="flex items-center gap-3 md:gap-4 md:pr-6">
-          {/* Play button */}
-          <div className="hidden xl:flex items-center gap-2">
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onMouseEnter={() => setHoveredNav(item.name)}
+                  onMouseLeave={() => setHoveredNav(null)}
+                  className={cn(
+                    'group relative flex h-8 min-w-12 flex-col justify-center overflow-hidden rounded-sm border px-2 font-mono text-[8px] font-bold tracking-[0.13em] uppercase transition-[transform,border-color,background-color,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-[#e0b75a]/75 focus-visible:ring-offset-2 focus-visible:ring-offset-[#101212] focus-visible:outline-none active:translate-y-px motion-reduce:transition-none',
+                    isActive
+                      ? 'border-white/20 bg-white/[0.09] text-white'
+                      : 'border-white/[0.07] bg-black/20 text-white/48 hover:border-white/20 hover:bg-white/[0.06] hover:text-white/85',
+                  )}
+                  style={{
+                    color:
+                      isActive || hoveredNav === item.name ? color : undefined,
+                  }}
+                >
+                  <span className="absolute top-1 right-1.5 left-1.5 h-px bg-white/10" />
+                  <span
+                    className="mb-1 h-1 w-1 rounded-full transition-[box-shadow,background-color] duration-150 motion-reduce:transition-none"
+                    style={{
+                      backgroundColor: isActive
+                        ? color
+                        : 'rgba(255,255,255,0.16)',
+                      boxShadow: isActive
+                        ? `0 0 6px ${color}, 0 0 11px ${color}`
+                        : 'none',
+                    }}
+                  />
+                  <span className="relative">{item.name}</span>
+                </Link>
+              )
+            })}
+          </nav>
+
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+            {/* Section readout stays compact at mid-size desktop widths. */}
+            <div className="hidden rounded-sm border border-[#7abb5e]/25 bg-[#090c0b]/90 px-2 py-1 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] lg:block xl:px-2.5">
+              <div className="flex items-center gap-1.5">
+                <i className="h-1 w-1 rounded-full bg-[#7abb5e] shadow-[0_0_6px_#7abb5e]" />
+                <span className="font-mono text-[8px] font-bold tracking-[0.14em] text-[#98d887] [text-shadow:0_0_7px_rgba(122,187,94,0.8)] xl:text-[9px]">
+                  {activeName}
+                </span>
+              </div>
+            </div>
+
+            <div className="hidden h-5 w-px bg-white/10 lg:block" />
+
             <button
               onClick={togglePlay}
               className={cn(
-                'relative h-7 w-7 rounded-[3px] border cursor-pointer transition-all active:scale-95',
-                'flex items-center justify-center',
-                'shadow-[0_2px_0_rgba(0,0,0,0.3)] active:shadow-none active:translate-y-px',
-                isPlaying
-                  ? 'border-[#22C55E]/40 bg-[#22C55E]/10'
-                  : 'border-black/20 dark:border-white/10 bg-[var(--daw-chassis-raised)]',
+                controlClassName,
+                'h-8 w-8 rounded-sm',
+                isPlaying &&
+                  'border-[#7abb5e]/45 bg-[#7abb5e]/10 text-[#91d47a] shadow-[inset_0_1px_rgba(255,255,255,0.08),0_0_12px_rgba(122,187,94,0.12)]',
               )}
-              aria-label={isPlaying ? 'Pause' : 'Play'}
+              aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
             >
-              <div
+              <span
                 className={cn(
-                  'absolute -top-0.5 right-0.5 h-1.5 w-1.5 rounded-full transition-all',
+                  'pointer-events-none absolute top-1 right-1 h-1 w-1 rounded-full',
                   isPlaying
-                    ? 'bg-[#22C55E] shadow-[0_0_4px_rgba(34,197,94,0.8)] animate-pulse'
-                    : 'bg-black/20 dark:bg-white/10',
+                    ? 'bg-[#7abb5e] shadow-[0_0_6px_#7abb5e]'
+                    : 'bg-white/20',
                 )}
               />
               {isPlaying ? (
-                <svg width="10" height="10" viewBox="0 0 10 10" className="text-[#22C55E]">
-                  <rect x="1" y="1" width="3" height="8" fill="currentColor" rx="0.5" />
-                  <rect x="6" y="1" width="3" height="8" fill="currentColor" rx="0.5" />
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 10 10"
+                  aria-hidden="true"
+                >
+                  <rect
+                    x="1"
+                    y="1"
+                    width="3"
+                    height="8"
+                    fill="currentColor"
+                    rx="0.5"
+                  />
+                  <rect
+                    x="6"
+                    y="1"
+                    width="3"
+                    height="8"
+                    fill="currentColor"
+                    rx="0.5"
+                  />
                 </svg>
               ) : (
-                <svg width="10" height="10" viewBox="0 0 10 10" className="text-black/40 dark:text-white/30">
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 10 10"
+                  aria-hidden="true"
+                >
                   <polygon points="2,1 9,5 2,9" fill="currentColor" />
                 </svg>
               )}
             </button>
 
-            <div className="flex flex-col items-center gap-0">
-              <span className="font-mono text-[10px] font-black tabular-nums text-black/60 dark:text-white/50">{bpm}</span>
-              <span className="font-mono text-[6px] font-bold uppercase tracking-widest text-black/30 dark:text-white/20">BPM</span>
+            <div className="hidden flex-col items-end leading-none sm:flex">
+              <span className="font-mono text-[9px] font-bold text-white/75 tabular-nums">
+                {bpm}
+              </span>
+              <span className="mt-0.5 font-mono text-[6px] font-bold tracking-[0.12em] text-white/35">
+                BPM
+              </span>
             </div>
-          </div>
 
-          <div className="hidden md:block h-5 border-l border-black/15 dark:border-white/8" />
+            <div className="hidden h-5 w-px bg-white/10 md:block" />
 
-          {/* INPUT jack */}
-          <div className="hidden flex-col items-center gap-0.5 md:flex">
-            <div className="relative">
+            <div className="relative hidden md:block">
               <button
-                onClick={() => setIsPlugged((p) => !p)}
+                onClick={() => setIsPlugged((plugged) => !plugged)}
                 className={cn(
-                  'flex cursor-pointer items-center justify-center rounded-full border-2 transition-all active:scale-95',
-                  'border-black/25 dark:border-white/10 bg-[var(--daw-chassis-deep)] dark:bg-[var(--daw-chassis-deep)]',
-                  'shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]',
-                  isScrolled ? 'h-7 w-7' : 'h-8 w-8',
+                  controlClassName,
+                  'h-8 w-8 rounded-full',
+                  isPlugged && 'border-[#e0b75a]/55 bg-[#d6ad45]/10',
                 )}
-                aria-label="Input Jack"
+                aria-label={
+                  isPlugged ? 'Disconnect input jack' : 'Connect input jack'
+                }
+                aria-pressed={isPlugged}
               >
-                <div className={cn('rounded-full bg-black/80 shadow-inner', isScrolled ? 'h-2.5 w-2.5' : 'h-3 w-3')} />
+                <span className="h-3 w-3 rounded-full border border-black/80 bg-[#060707] shadow-[inset_0_1px_2px_black,0_0_0_1px_rgba(255,255,255,0.08)]" />
+                {isPlugged && (
+                  <span className="pointer-events-none absolute h-1.5 w-1.5 rounded-full bg-[#d6ad45] shadow-[0_0_6px_#e0b75a]" />
+                )}
               </button>
 
-              <AnimatePresence>
+              <AnimatePresence initial={false}>
                 {isPlugged && (
                   <motion.div
-                    initial={{ y: 100, opacity: 0 }}
-                    animate={{ y: 10, opacity: 1 }}
-                    exit={{ y: 100, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                    className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2"
+                    initial={
+                      shouldReduceMotion
+                        ? { opacity: 0 }
+                        : { y: -7, opacity: 0 }
+                    }
+                    animate={
+                      shouldReduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }
+                    }
+                    exit={
+                      shouldReduceMotion
+                        ? { opacity: 0 }
+                        : { y: -5, opacity: 0 }
+                    }
+                    transition={{ duration: shouldReduceMotion ? 0.1 : 0.16 }}
+                    className="pointer-events-none absolute top-full right-0 z-20 mt-1 flex w-16 items-center gap-1 rounded-sm border border-[#d6ad45]/25 bg-[#151818]/95 px-1.5 py-1 shadow-lg"
+                    aria-hidden="true"
                   >
-                    <div className="flex flex-col items-center">
-                      <div className="h-4 w-3 rounded-t-sm bg-gradient-to-r from-amber-200 via-amber-400 to-amber-600 border-b border-amber-700/30" />
-                      <div className="h-0.5 w-3 bg-black" />
-                      <div className="flex h-10 w-4 flex-col items-center justify-between rounded-b-md bg-gradient-to-r from-zinc-700 via-zinc-800 to-zinc-900 py-1 shadow-xl border-t border-white/10">
-                        {[0,1,2].map(i => <div key={i} className="h-px w-full bg-black/30" />)}
-                      </div>
-                      <div className="-mt-1 h-4 w-2.5 rounded-b-full bg-zinc-900" />
-                      <div className="relative h-0 w-0">
-                        <svg className="pointer-events-none absolute top-0 left-0 h-[500px] w-[500px] overflow-visible">
-                          <path d="M 0 0 C 0 80, 40 150, 500 300" fill="none" stroke="#18181b" strokeWidth="6" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                    </div>
+                    <span className="h-2.5 w-1.5 rounded-[1px] bg-gradient-to-r from-[#8a6220] via-[#e0b75a] to-[#6f4f1d]" />
+                    <span className="h-px flex-1 bg-[#d6ad45]/60" />
+                    <span className="font-mono text-[6px] font-bold tracking-[0.1em] text-[#e0b75a]">
+                      IN
+                    </span>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-            <span className="font-mono text-[7px] font-bold tracking-widest text-black/35 dark:text-white/20 uppercase">INPUT</span>
-          </div>
 
-          {/* Mobile: hamburger */}
-          <div className="flex flex-col items-center gap-0.5 lg:hidden">
-            <button
-              ref={toggleButtonRef}
-              onClick={() => setIsOpen(!isOpen)}
-              className={cn(
-                'relative cursor-pointer rounded-full border-2 transition-all',
-                'border-black/20 dark:border-white/10',
-                'bg-gradient-to-b from-[var(--daw-chassis-raised)] to-[var(--daw-chassis-mid)]',
-                'shadow-[0_2px_4px_rgba(0,0,0,0.2)]',
-                isScrolled ? 'h-9 w-9' : 'h-11 w-11',
-                isOpen && 'border-[#C9A447]/60 rotate-[135deg]',
-              )}
-              aria-label="Toggle Menu"
-            >
-              <div className="absolute top-1 left-1/2 h-3 w-0.5 -translate-x-1/2 bg-black/30 dark:bg-white/20" />
-              <div
+            <div className="flex lg:hidden">
+              <button
+                ref={toggleButtonRef}
+                onClick={() => setIsOpen((open) => !open)}
                 className={cn(
-                  'absolute top-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full transition-opacity',
-                  isOpen ? 'bg-[#C9A447] opacity-100' : 'opacity-0',
+                  controlClassName,
+                  'h-8 w-8 rounded-sm',
+                  isOpen && 'border-[#d6ad45]/60 bg-[#d6ad45]/10',
                 )}
-              />
-            </button>
-            <span className="font-mono text-[7px] font-bold tracking-widest text-black/35 dark:text-white/20 uppercase">MENU</span>
+                aria-label="Toggle navigation menu"
+                aria-expanded={isOpen}
+                aria-controls="mobile-navigation"
+              >
+                <span className="pointer-events-none flex flex-col gap-1">
+                  <span
+                    className={cn(
+                      'h-px w-3 bg-current transition-transform duration-150 motion-reduce:transition-none',
+                      isOpen && 'translate-y-[3px] rotate-45',
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      'h-px w-3 bg-current transition-opacity duration-150 motion-reduce:transition-none',
+                      isOpen && 'opacity-0',
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      'h-px w-3 bg-current transition-transform duration-150 motion-reduce:transition-none',
+                      isOpen && '-translate-y-[3px] -rotate-45',
+                    )}
+                  />
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Mobile Menu */}
-      <StaggeredMenu
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        items={menuItems}
-        colors={theme === 'dark' ? ['#f59e0b', '#3a4699', '#1e2866'] : ['#273281', '#3d468b', '#e2e8f0']}
-        accentColor={theme === 'dark' ? '#f59e0b' : '#273281'}
-      />
+      <div id="mobile-navigation" ref={mobileMenuRef}>
+        <StaggeredMenu
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          items={menuItems}
+          colors={
+            theme === 'dark'
+              ? ['#e0b75a', '#7abb5e', '#263837']
+              : ['#273281', '#3d468b', '#e2e8f0']
+          }
+          accentColor={theme === 'dark' ? '#e0b75a' : '#273281'}
+        />
+      </div>
     </>
   )
 }

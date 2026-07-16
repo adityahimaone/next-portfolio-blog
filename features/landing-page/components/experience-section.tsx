@@ -71,31 +71,29 @@ export function ExperienceSection() {
 
         <div className="relative mx-auto max-w-6xl">
           <div className="pointer-events-none absolute top-[34%] right-[15%] left-[15%] h-24 rounded-full bg-[#a97b29]/15 blur-3xl dark:bg-[#e0b75a]/15" />
-          <div className="relative flex h-[270px] items-center justify-center sm:h-[355px] lg:h-[390px]">
-            <Cassette
-              experience={EXPERIENCES[previousIndex]}
-              index={previousIndex}
-              position="previous"
-              selectedIndex={selectedIndex}
-              reduceMotion={shouldReduceMotion}
-              onSelect={() => selectExperience(previousIndex)}
-            />
-            <Cassette
-              experience={EXPERIENCES[selectedIndex]}
-              index={selectedIndex}
-              position="active"
-              selectedIndex={selectedIndex}
-              reduceMotion={shouldReduceMotion}
-              onSelect={() => selectExperience(selectedIndex)}
-            />
-            <Cassette
-              experience={EXPERIENCES[nextIndex]}
-              index={nextIndex}
-              position="next"
-              selectedIndex={selectedIndex}
-              reduceMotion={shouldReduceMotion}
-              onSelect={() => selectExperience(nextIndex)}
-            />
+          <div
+            role="group"
+            aria-roledescription="carousel"
+            aria-label="Work experience cassette collection"
+            className="relative h-[270px] sm:h-[355px] lg:h-[390px]"
+          >
+            <AnimatePresence initial={false}>
+              {[
+                { index: previousIndex, position: 'previous' as const },
+                { index: selectedIndex, position: 'active' as const },
+                { index: nextIndex, position: 'next' as const },
+              ].map(({ index, position }) => (
+                <Cassette
+                  key={EXPERIENCES[index].id}
+                  experience={EXPERIENCES[index]}
+                  index={index}
+                  position={position}
+                  selectedIndex={selectedIndex}
+                  reduceMotion={shouldReduceMotion}
+                  onSelect={() => selectExperience(index)}
+                />
+              ))}
+            </AnimatePresence>
           </div>
 
           <div className="relative mx-auto mt-1 max-w-3xl border-t border-black/15 pt-5 dark:border-white/10">
@@ -163,6 +161,38 @@ export function ExperienceSection() {
   )
 }
 
+type CassettePosition = 'previous' | 'active' | 'next'
+
+const CASSETTE_POSES: Record<
+  CassettePosition,
+  {
+    x: string
+    scale: number
+    y: number
+    rotate: number
+    opacity: number
+    zIndex: number
+  }
+> = {
+  previous: {
+    x: '-48%',
+    scale: 0.62,
+    y: 10,
+    rotate: -8,
+    opacity: 0.7,
+    zIndex: 10,
+  },
+  active: { x: '0%', scale: 1, y: 0, rotate: 0, opacity: 1, zIndex: 20 },
+  next: {
+    x: '48%',
+    scale: 0.62,
+    y: 10,
+    rotate: 8,
+    opacity: 0.7,
+    zIndex: 10,
+  },
+}
+
 function Cassette({
   experience,
   index,
@@ -173,126 +203,152 @@ function Cassette({
 }: {
   experience: (typeof EXPERIENCES)[number]
   index: number
-  position: 'previous' | 'active' | 'next'
+  position: CassettePosition
   selectedIndex: number
   reduceMotion: boolean | null
   onSelect: () => void
 }) {
   const theme = CASSETTE_THEMES[index]
   const isActive = position === 'active'
-  const positionClass = {
-    previous:
-      'left-[-16%] z-10 -rotate-[7deg] opacity-70 sm:left-[-7%] lg:left-[3%]',
-    active: 'left-1/2 z-20 -translate-x-1/2',
-    next: 'right-[-16%] z-10 rotate-[7deg] opacity-70 sm:right-[-7%] lg:right-[3%]',
-  }[position]
+  const pose = CASSETTE_POSES[position]
+  const entryPose = {
+    ...pose,
+    x: position === 'previous' ? '-62%' : position === 'next' ? '62%' : '0%',
+    opacity: 0,
+  }
 
   return (
-    <m.button
-      type="button"
-      onClick={onSelect}
-      aria-label={`Select ${experience.company}`}
-      aria-pressed={isActive}
-      initial={false}
-      animate={{
-        scale: isActive ? 1 : 0.64,
-        y: isActive ? 0 : 8,
-        opacity: isActive ? 1 : 0.72,
-      }}
-      transition={
-        reduceMotion
-          ? { duration: 0 }
-          : { type: 'spring', stiffness: 260, damping: 28, mass: 0.75 }
-      }
-      className={cn(
-        'absolute top-1/2 w-[78%] max-w-[520px] -translate-y-1/2 cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-[#e0b75a] focus-visible:ring-offset-4 focus-visible:ring-offset-transparent',
-        positionClass,
-      )}
+    <m.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: reduceMotion ? 0 : 0.16 } }}
+      transition={{ duration: reduceMotion ? 0 : 0.18 }}
+      style={{ zIndex: pose.zIndex }}
+      className="pointer-events-none absolute inset-0 flex items-center justify-center"
     >
-      <div className="relative aspect-[1.58/1] overflow-hidden rounded-[5%] border-[6px] border-[#b5b6a4] bg-[#d5d4bd] p-[4%] shadow-[0_14px_0_rgba(56,59,52,0.22),0_22px_30px_rgba(20,24,22,0.2),inset_0_1px_rgba(255,255,255,0.9)] dark:border-[#737b72] dark:bg-[#b7b6a4] dark:shadow-[0_14px_0_rgba(0,0,0,0.45),0_22px_32px_rgba(0,0,0,0.4),inset_0_1px_rgba(255,255,255,0.35)]">
-        <ScrewDot className="top-[4%] left-[4%]" />
-        <ScrewDot className="top-[4%] right-[4%]" />
-        <ScrewDot className="bottom-[4%] left-[4%]" />
-        <ScrewDot className="right-[4%] bottom-[4%]" />
-        <div className="relative h-[64%] overflow-hidden rounded-[2%] border-2 border-[#eeeddd] bg-[#f4f1df] p-[3%] shadow-[inset_0_0_0_2px_rgba(107,111,98,0.3)]">
-          <div className="absolute top-[11%] right-[3%] left-[3%] h-px bg-[#929386]/55" />
-          <div className="absolute top-[20%] right-[3%] left-[3%] h-px bg-[#929386]/55" />
-          <div className="absolute top-[29%] right-[3%] left-[3%] h-px bg-[#929386]/55" />
-          <div
-            className="absolute right-[3%] bottom-0 left-[3%] h-[47%]"
-            style={{ backgroundColor: theme.label }}
-          />
-          <div className="absolute right-[5%] bottom-[5%] left-[5%] flex items-end justify-between">
+      <m.button
+        type="button"
+        onClick={onSelect}
+        aria-label={`${isActive ? 'Selected' : 'Select'} ${experience.company}, ${experience.role}`}
+        aria-pressed={isActive}
+        initial={entryPose}
+        animate={pose}
+        whileHover={
+          isActive || reduceMotion
+            ? undefined
+            : { scale: 0.67, y: 3, opacity: 0.92 }
+        }
+        whileTap={reduceMotion ? undefined : { scale: isActive ? 0.98 : 0.59 }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { type: 'spring', stiffness: 260, damping: 28, mass: 0.78 }
+        }
+        className="pointer-events-auto w-[78%] max-w-[520px] cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-[#e0b75a] focus-visible:ring-offset-4 focus-visible:ring-offset-transparent"
+      >
+        <div className="relative aspect-[1.58/1] overflow-hidden rounded-[5%] border-[6px] border-[#b5b6a4] bg-[#d5d4bd] p-[4%] shadow-[0_14px_0_rgba(56,59,52,0.22),0_22px_30px_rgba(20,24,22,0.2),inset_0_1px_rgba(255,255,255,0.9)] dark:border-[#737b72] dark:bg-[#b7b6a4] dark:shadow-[0_14px_0_rgba(0,0,0,0.45),0_22px_32px_rgba(0,0,0,0.4),inset_0_1px_rgba(255,255,255,0.35)]">
+          <ScrewDot className="top-[4%] left-[4%]" />
+          <ScrewDot className="top-[4%] right-[4%]" />
+          <ScrewDot className="bottom-[4%] left-[4%]" />
+          <ScrewDot className="right-[4%] bottom-[4%]" />
+          <div className="relative h-[64%] overflow-hidden rounded-[2%] border-2 border-[#eeeddd] bg-[#f4f1df] p-[3%] shadow-[inset_0_0_0_2px_rgba(107,111,98,0.3)]">
+            <div className="absolute top-[11%] right-[3%] left-[3%] h-px bg-[#929386]/55" />
+            <div className="absolute top-[20%] right-[3%] left-[3%] h-px bg-[#929386]/55" />
+            <div className="absolute top-[29%] right-[3%] left-[3%] h-px bg-[#929386]/55" />
             <div
-              className="leading-[0.76] font-black"
+              className="absolute top-[5%] right-[9%] left-[9%] z-10 flex items-start justify-between gap-3"
               style={{ color: theme.ink }}
             >
-              <span className="block text-[clamp(1.4rem,4vw,3rem)]">A</span>
-              <span className="text-[clamp(0.6rem,1.7vw,1.05rem)]">SIDE</span>
-            </div>
-            <div
-              className="mb-[1%] text-right font-mono text-[clamp(0.35rem,1.1vw,0.6rem)] leading-tight font-bold"
-              style={{ color: theme.ink }}
-            >
-              <span className="block">NOISE</span>
-              <span className="block">REDUCTION</span>
-              <span className="mt-1 block border-t border-current pt-1">
-                ■ IN
+              <div className="min-w-0">
+                <p className="truncate font-mono text-[clamp(0.42rem,1.05vw,0.67rem)] font-black tracking-[0.12em] uppercase">
+                  {experience.company}
+                </p>
+                <p className="mt-[2%] truncate text-[clamp(0.52rem,1.35vw,0.85rem)] leading-none font-black tracking-tight">
+                  {experience.role}
+                </p>
+              </div>
+              <span className="shrink-0 text-right font-mono text-[clamp(0.32rem,0.75vw,0.5rem)] leading-tight font-bold tracking-wide uppercase">
+                {experience.type}
+                <br />
+                {experience.period.split(' - ')[0]}
               </span>
-              <span className="block">□ OUT</span>
             </div>
-          </div>
-          <div className="absolute top-[38%] left-1/2 z-10 grid h-[41%] w-[52%] -translate-x-1/2 grid-cols-[1fr_0.9fr_1fr] items-center gap-[6%] rounded-full border-2 border-[#c0c1ae] bg-[#d9d9c8] px-[4%] shadow-[inset_0_2px_4px_rgba(63,66,58,0.24)]">
-            <CassetteWheel
-              direction={-1}
-              selectedIndex={selectedIndex}
-              active={isActive}
-              reduceMotion={reduceMotion}
+            <div
+              className="absolute right-[3%] bottom-0 left-[3%] h-[47%]"
+              style={{ backgroundColor: theme.label }}
             />
-            <div className="h-[52%] rounded-[8%] border border-[#3d3e38] bg-[#2c302d] shadow-[inset_0_2px_4px_rgba(0,0,0,0.7)]">
+            <div className="absolute right-[5%] bottom-[5%] left-[5%] flex items-end justify-between">
               <div
-                className="mx-auto h-full w-[28%]"
-                style={{
-                  background: `linear-gradient(90deg, ${theme.dark}, #302b27 26%, #302b27 74%, ${theme.dark})`,
-                }}
+                className="leading-[0.76] font-black"
+                style={{ color: theme.ink }}
+              >
+                <span className="block text-[clamp(1.4rem,4vw,3rem)]">A</span>
+                <span className="text-[clamp(0.6rem,1.7vw,1.05rem)]">SIDE</span>
+              </div>
+              <div
+                className="mb-[1%] text-right font-mono text-[clamp(0.35rem,1.1vw,0.6rem)] leading-tight font-bold"
+                style={{ color: theme.ink }}
+              >
+                <span className="block">NOISE</span>
+                <span className="block">REDUCTION</span>
+                <span className="mt-1 block border-t border-current pt-1">
+                  ■ IN
+                </span>
+                <span className="block">□ OUT</span>
+              </div>
+            </div>
+            <div className="absolute top-[38%] left-1/2 z-10 grid h-[41%] w-[52%] -translate-x-1/2 grid-cols-[1fr_0.9fr_1fr] items-center gap-[6%] rounded-full border-2 border-[#c0c1ae] bg-[#d9d9c8] px-[4%] shadow-[inset_0_2px_4px_rgba(63,66,58,0.24)]">
+              <CassetteWheel
+                direction={-1}
+                selectedIndex={selectedIndex}
+                active={isActive}
+                reduceMotion={reduceMotion}
+              />
+              <div className="h-[52%] rounded-[8%] border border-[#3d3e38] bg-[#2c302d] shadow-[inset_0_2px_4px_rgba(0,0,0,0.7)]">
+                <div
+                  className="mx-auto h-full w-[28%]"
+                  style={{
+                    background: `linear-gradient(90deg, ${theme.dark}, #302b27 26%, #302b27 74%, ${theme.dark})`,
+                  }}
+                />
+              </div>
+              <CassetteWheel
+                direction={1}
+                selectedIndex={selectedIndex}
+                active={isActive}
+                reduceMotion={reduceMotion}
               />
             </div>
-            <CassetteWheel
-              direction={1}
-              selectedIndex={selectedIndex}
-              active={isActive}
-              reduceMotion={reduceMotion}
-            />
+            <div
+              className="absolute right-[4%] bottom-[4%] left-[31%] z-20 flex items-end justify-between gap-[4%]"
+              style={{ color: theme.ink }}
+            >
+              <span className="text-[clamp(0.58rem,1.7vw,1.1rem)] font-black whitespace-nowrap italic">
+                STEREO CASSETTE
+              </span>
+              <span className="shrink-0 pr-[2%] font-mono text-[clamp(0.3rem,0.7vw,0.46rem)] font-bold whitespace-nowrap">
+                2×30
+              </span>
+            </div>
           </div>
-          <div
-            className="absolute right-[4%] bottom-[4%] left-[4%] z-20 flex items-end justify-between"
-            style={{ color: theme.ink }}
-          >
-            <span className="text-[clamp(0.7rem,2.15vw,1.4rem)] font-black italic">
-              STEREO CASSETTE
-            </span>
-            <span className="font-mono text-[clamp(0.35rem,1vw,0.6rem)] font-bold">
-              2X30 MIN
-            </span>
+          <div className="absolute right-[16%] bottom-[6%] left-[16%] h-[19%] border-x-2 border-t-2 border-[#b8b9a8] [clip-path:polygon(5%_0,95%_0,100%_100%,0_100%)]" />
+          <div className="absolute right-[28%] bottom-[7.5%] left-[28%] flex justify-between">
+            <span className="h-3 w-3 rounded-full border border-[#44463f] bg-[#77786c]" />
+            <span className="h-3 w-3 rounded-full border border-[#44463f] bg-[#77786c]" />
           </div>
         </div>
-        <div className="absolute right-[16%] bottom-[6%] left-[16%] h-[19%] border-x-2 border-t-2 border-[#b8b9a8] [clip-path:polygon(5%_0,95%_0,100%_100%,0_100%)]" />
-        <div className="absolute right-[28%] bottom-[7.5%] left-[28%] flex justify-between">
-          <span className="h-3 w-3 rounded-full border border-[#44463f] bg-[#77786c]" />
-          <span className="h-3 w-3 rounded-full border border-[#44463f] bg-[#77786c]" />
-        </div>
-      </div>
-      <span
-        className={cn(
-          'pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 font-mono text-[8px] font-bold tracking-[0.16em] whitespace-nowrap uppercase transition-opacity',
-          isActive
-            ? 'text-[#8d6827] opacity-100 dark:text-[#e0b75a]'
-            : 'text-black/35 opacity-0 dark:text-white/30',
-        )}
-      >
-        {experience.company}
-      </span>
-    </m.button>
+        <span
+          className={cn(
+            'pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 font-mono text-[8px] font-bold tracking-[0.16em] whitespace-nowrap uppercase transition-opacity',
+            isActive
+              ? 'text-[#8d6827] opacity-100 dark:text-[#e0b75a]'
+              : 'text-black/35 opacity-0 dark:text-white/30',
+          )}
+        >
+          {experience.company}
+        </span>
+      </m.button>
+    </m.div>
   )
 }
 

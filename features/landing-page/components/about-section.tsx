@@ -53,7 +53,7 @@ const SynthKnob = ({
     <div className="border-zinc-350 relative flex h-14 w-14 items-center justify-center rounded-full border-2 bg-gradient-to-b from-zinc-100 to-zinc-300 shadow-md dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900">
       {/* Outer indicator notch */}
       <div
-        className="absolute top-0.5 h-4 w-1 rounded-full bg-blue-500 dark:bg-blue-400"
+        className="absolute top-0.5 h-4 w-1 rounded-full bg-amber-500 dark:bg-amber-400"
         style={{
           transform: `rotate(${degree}deg)`,
           transformOrigin: '50% 100%',
@@ -83,14 +83,14 @@ const PatchSocket = ({
       className={cn(
         'relative flex h-10 w-10 items-center justify-center rounded-full border-2 shadow-inner transition-colors',
         active
-          ? 'border-blue-500 bg-zinc-100 dark:border-blue-400 dark:bg-zinc-900'
+          ? 'border-amber-500 bg-zinc-100 dark:border-amber-400 dark:bg-zinc-900'
           : 'border-zinc-300 bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-950',
       )}
     >
       {/* Core plug hole */}
       <div className="h-5 w-5 rounded-full border border-white/10 bg-zinc-900 dark:bg-black" />
       {active && (
-        <div className="absolute h-2.5 w-2.5 animate-ping rounded-full bg-blue-500 dark:bg-blue-400" />
+        <div className="absolute h-2.5 w-2.5 animate-ping rounded-full bg-amber-500 dark:bg-amber-400" />
       )}
     </div>
     <span className="text-[9px] font-bold tracking-widest text-zinc-500 uppercase dark:text-zinc-400">
@@ -200,7 +200,7 @@ const TrackHeader = ({
         className={cn(
           'flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold transition-colors',
           muted
-            ? 'bg-blue-500 text-white'
+            ? 'bg-amber-500 text-white'
             : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700',
         )}
       >
@@ -217,7 +217,7 @@ const TrackHeader = ({
         className={cn(
           'flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold transition-colors',
           soloed
-            ? 'bg-yellow-500 text-black'
+            ? 'bg-amber-500 text-black'
             : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700',
         )}
       >
@@ -251,7 +251,7 @@ const ClipBlock = ({
         'group relative flex h-20 items-center overflow-hidden rounded-md border border-l-4 transition-all hover:brightness-110',
         color.replace('text-', 'border-l-').replace('bg-', 'bg-opacity-20'),
         'border-zinc-200 bg-white dark:border-zinc-700/50 dark:bg-zinc-800',
-        isActive ? 'ring-2 ring-blue-500/20 dark:ring-white/20' : '',
+        isActive ? 'ring-2 ring-amber-500/20 dark:ring-white/20' : '',
       )}
       style={{
         gridColumn: `${clip.start} / span ${clip.duration}`,
@@ -469,7 +469,7 @@ export function AboutSection() {
       id: 'bio',
       name: 'IDENTITY',
       icon: User,
-      color: 'text-blue-500',
+      color: 'text-amber-500',
       clips: [
         {
           id: 'bio-main',
@@ -484,17 +484,17 @@ export function AboutSection() {
               {/* Profile Synth Header */}
               <div className="mb-8 flex items-center justify-between border-b-2 border-zinc-200 pb-4 dark:border-zinc-800">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-lg border-2 border-blue-500/20 bg-blue-500/10 dark:border-blue-400/25 dark:bg-blue-400/10">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-lg border-2 border-amber-500/20 bg-amber-500/10 dark:border-amber-400/25 dark:bg-amber-400/10">
                     <User
                       size={28}
-                      className="animate-pulse text-blue-500 dark:text-blue-400"
+                      className="animate-pulse text-amber-500 dark:text-amber-400"
                     />
                   </div>
                   <div>
                     <h1 className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white">
                       ADITYA HIMAONE
                     </h1>
-                    <p className="text-xs font-black tracking-widest text-blue-500 uppercase dark:text-blue-400">
+                    <p className="text-xs font-black tracking-widest text-amber-500 uppercase dark:text-amber-400">
                       Frontend Engineer / Jakarta Selatan
                     </p>
                   </div>
@@ -514,7 +514,7 @@ export function AboutSection() {
                 <div className="space-y-6 lg:col-span-3">
                   <div>
                     <h3 className="text-zinc-550 mb-4 flex items-center gap-2 text-xs font-black tracking-widest uppercase dark:text-zinc-400">
-                      <div className="h-2 w-2 rounded-full bg-blue-500" />
+                      <div className="h-2 w-2 rounded-full bg-amber-500" />
                       Parameter Dial Matrix
                     </h3>
                     <div className="grid grid-cols-3 gap-3">
@@ -578,7 +578,7 @@ export function AboutSection() {
                         <path
                           d="M 45 40 Q 120 70 200 40 T 350 40"
                           fill="none"
-                          stroke="#3b82f6"
+                          stroke="#f59e0b"
                           strokeWidth="3"
                           strokeDasharray="5,5"
                           className="animate-[dash_2s_linear_infinite]"
@@ -618,12 +618,12 @@ export function AboutSection() {
                       <MixerFader
                         label="React"
                         value={95}
-                        colorClass="bg-blue-500"
+                        colorClass="bg-amber-500"
                       />
                       <MixerFader
                         label="TypeScript"
                         value={90}
-                        colorClass="bg-indigo-500"
+                        colorClass="bg-emerald-500"
                       />
                       <MixerFader
                         label="Next.js"
@@ -633,7 +633,7 @@ export function AboutSection() {
                       <MixerFader
                         label="Tailwind CSS"
                         value={95}
-                        colorClass="bg-cyan-500"
+                        colorClass="bg-emerald-500"
                       />
                       <MixerFader
                         label="Node.js"
@@ -643,7 +643,7 @@ export function AboutSection() {
                       <MixerFader
                         label="Motion"
                         value={85}
-                        colorClass="bg-purple-500"
+                        colorClass="bg-amber-500"
                       />
                     </div>
                   </div>
@@ -769,7 +769,7 @@ export function AboutSection() {
                         label: 'Commit',
                         value: '99',
                         suffix: '%',
-                        color: 'text-rose-500',
+                        color: 'text-amber-500',
                       },
                     ].map((stat) => (
                       <div
@@ -806,17 +806,17 @@ export function AboutSection() {
                       <MixerFader
                         label="Frontend Core"
                         value={95}
-                        colorClass="bg-blue-500"
+                        colorClass="bg-amber-500"
                       />
                       <MixerFader
                         label="UI/UX & Sound"
                         value={85}
-                        colorClass="bg-purple-500"
+                        colorClass="bg-amber-500"
                       />
                       <MixerFader
                         label="Fluid Animations"
                         value={90}
-                        colorClass="bg-pink-500"
+                        colorClass="bg-amber-500"
                       />
                       <MixerFader
                         label="Node API Sync"
@@ -925,7 +925,7 @@ export function AboutSection() {
                     <h3 className="text-zinc-550 mb-3 text-xs font-black tracking-widest uppercase dark:text-zinc-400">
                       Console Credo
                     </h3>
-                    <blockquote className="dark:text-zinc-350 border-l-4 border-blue-500 pl-3 text-sm text-zinc-700 italic">
+                    <blockquote className="dark:text-zinc-350 border-l-4 border-amber-500 pl-3 text-sm text-zinc-700 italic">
                       "Every interface is an instrument. The user should feel
                       like they're playing, not working."
                     </blockquote>
@@ -956,7 +956,7 @@ export function AboutSection() {
       id: 'audio',
       name: 'AUDIO',
       icon: Music,
-      color: 'text-purple-500',
+      color: 'text-amber-500',
       clips: [
         {
           id: 'audio-main',
@@ -1147,7 +1147,7 @@ export function AboutSection() {
 
             {/* Info Bar */}
             <div className="text-zinc-650 dark:text-zinc-450 flex h-8 items-center border-t border-zinc-200 bg-zinc-100 px-4 text-xs dark:border-zinc-800 dark:bg-zinc-950">
-              <span className="mr-2 font-bold text-blue-600 dark:text-blue-400">
+              <span className="mr-2 font-bold text-amber-600 dark:text-amber-400">
                 INFO
               </span>
               {hoveredClip

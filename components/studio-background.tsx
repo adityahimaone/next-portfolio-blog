@@ -60,11 +60,11 @@ export function StudioBackground() {
       stars = Array.from({ length: starCount }, () => {
         const starColor = isDark
           ? Math.random() > 0.5
-            ? 'rgba(225, 189, 255, '
+            ? 'rgba(224, 183, 90, '
             : 'rgba(247, 249, 250, '
           : Math.random() > 0.5
-            ? 'rgba(175, 80, 255, '
-            : 'rgba(127, 86, 217, '
+            ? 'rgba(201, 164, 71, '
+            : 'rgba(122, 187, 94, '
 
         return {
           x: Math.random() * width,
@@ -109,10 +109,10 @@ export function StudioBackground() {
         if (isDark && star.size > 1.2) {
           ctx.save()
           ctx.shadowBlur = 6
-          ctx.shadowColor = 'rgba(175, 80, 255, 0.4)'
+          ctx.shadowColor = 'rgba(224, 183, 90, 0.4)'
           ctx.beginPath()
           ctx.arc(star.x, star.y, star.size + 1.2, 0, Math.PI * 2)
-          ctx.fillStyle = `rgba(175, 80, 255, ${star.alpha * 0.15})`
+          ctx.fillStyle = `rgba(224, 183, 90, ${star.alpha * 0.15})`
           ctx.fill()
           ctx.restore()
         }
@@ -148,35 +148,35 @@ export function StudioBackground() {
         className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-700"
         style={{ y: yMesh, willChange: 'transform' }}
       >
-        {/* Glow Node 1: Top Left (Iris Violet Blur) */}
+        {/* Glow Node 1: Top Left (Warm Gold Blur) */}
         <div
           className="animate-cosmic-drift-1 absolute -top-[15%] -left-[10%] h-[80vw] w-[80vw] rounded-full opacity-65 mix-blend-screen blur-[120px]"
           style={{
             background: isDark
-              ? 'radial-gradient(circle, rgba(175, 80, 255, 0.12) 0%, rgba(175, 80, 255, 0) 70%)'
-              : 'radial-gradient(circle, rgba(127, 86, 217, 0.035) 0%, rgba(127, 86, 217, 0) 70%)',
+              ? 'radial-gradient(circle, rgba(224, 183, 90, 0.12) 0%, rgba(224, 183, 90, 0) 70%)'
+              : 'radial-gradient(circle, rgba(201, 164, 71, 0.035) 0%, rgba(201, 164, 71, 0) 70%)',
             willChange: 'transform',
           }}
         />
 
-        {/* Glow Node 2: Bottom Right (Cosmic Plum / Pink Blur) */}
+        {/* Glow Node 2: Bottom Right (Restrained Green Blur) */}
         <div
           className="animate-cosmic-drift-2 absolute -right-[10%] -bottom-[15%] h-[70vw] w-[70vw] rounded-full opacity-55 mix-blend-screen blur-[100px]"
           style={{
             background: isDark
-              ? 'radial-gradient(circle, rgba(225, 189, 255, 0.08) 0%, rgba(225, 189, 255, 0) 70%)'
-              : 'radial-gradient(circle, rgba(175, 80, 255, 0.02) 0%, rgba(175, 80, 255, 0) 70%)',
+              ? 'radial-gradient(circle, rgba(122, 187, 94, 0.08) 0%, rgba(122, 187, 94, 0) 70%)'
+              : 'radial-gradient(circle, rgba(122, 187, 94, 0.02) 0%, rgba(122, 187, 94, 0) 70%)',
             willChange: 'transform',
           }}
         />
 
-        {/* Glow Node 3: Center Left (Deep Aubergine for depth) */}
+        {/* Glow Node 3: Center Left (Deep Charcoal for depth) */}
         <div
           className="animate-cosmic-drift-3 absolute top-[25%] -left-[20%] h-[60vw] w-[60vw] rounded-full opacity-50 mix-blend-screen blur-[110px]"
           style={{
             background: isDark
-              ? 'radial-gradient(circle, rgba(39, 22, 53, 0.3) 0%, rgba(39, 22, 53, 0) 75%)'
-              : 'radial-gradient(circle, rgba(225, 189, 255, 0.02) 0%, rgba(225, 189, 255, 0) 75%)',
+              ? 'radial-gradient(circle, rgba(38, 35, 29, 0.3) 0%, rgba(38, 35, 29, 0) 75%)'
+              : 'radial-gradient(circle, rgba(201, 164, 71, 0.02) 0%, rgba(201, 164, 71, 0) 75%)',
             willChange: 'transform',
           }}
         />
@@ -212,7 +212,7 @@ export function StudioBackground() {
         style={{
           y: yTraces,
           opacity: isDark ? 0.035 : 0.02,
-          color: isDark ? 'var(--color-iris)' : 'var(--color-plum)',
+          color: isDark ? '#e0b75a' : '#c9a447',
           willChange: 'transform',
         }}
       >

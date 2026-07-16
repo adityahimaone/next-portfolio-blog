@@ -74,8 +74,8 @@ export function ProjectsSection() {
         ctx.beginPath()
         ctx.arc(centerX, centerY, currentRadius, 0, Math.PI * 2)
         ctx.strokeStyle = isDark
-          ? `rgba(175, 80, 255, ${Math.max(0.01, 0.06 - i * 0.008)})`
-          : `rgba(127, 86, 217, ${Math.max(0.005, 0.02 - i * 0.003)})`
+          ? `rgba(224, 183, 90, ${Math.max(0.01, 0.06 - i * 0.008)})`
+          : `rgba(201, 164, 71, ${Math.max(0.005, 0.025 - i * 0.003)})`
         ctx.lineWidth = 1.2
         ctx.stroke()
 
@@ -90,8 +90,8 @@ export function ProjectsSection() {
           ctx.beginPath()
           ctx.arc(px, py, 1.8, 0, Math.PI * 2)
           ctx.fillStyle = isDark
-            ? 'rgba(225, 189, 255, 0.2)'
-            : 'rgba(127, 86, 217, 0.08)'
+            ? 'rgba(224, 183, 90, 0.2)'
+            : 'rgba(122, 187, 94, 0.1)'
           ctx.fill()
         }
       })

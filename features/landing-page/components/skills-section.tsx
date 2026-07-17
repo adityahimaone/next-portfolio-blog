@@ -246,15 +246,16 @@ export function SkillsSection() {
   }
 
   return (
-    <section ref={sectionRef} id="skills" className="overflow-hidden py-24">
-      <div className="container mx-auto px-4">
+    <section ref={sectionRef} id="skills" className="relative overflow-hidden py-20 md:py-24">
+          <div className="pointer-events-none absolute inset-0 instrument-grid opacity-30" />
+          <div className="relative container mx-auto px-4">
         {/* Headings */}
         <div className="mb-16 flex flex-col items-center text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-4 flex items-center gap-2 rounded-full bg-zinc-200/50 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400"
+            className="instrument-control mb-4 flex items-center gap-2 rounded-sm px-4 py-1.5 font-mono text-[10px] font-bold tracking-[0.16em] text-[var(--daw-led-blue)] uppercase"
           >
             <Keyboard className="h-4 w-4" />
             <span>INTERACTIVE MIDI CONTROLLER</span>
@@ -277,7 +278,7 @@ export function SkillsSection() {
               : { opacity: 0, y: 42, scale: 0.97 }
           }
           transition={{ duration: 0.82, ease: [0.22, 1, 0.36, 1] }}
-          className="relative mx-auto max-w-5xl overflow-hidden rounded-2xl border border-black/10 bg-[var(--daw-chassis)] p-4 shadow-2xl transition-all duration-300 dark:border-black/50 dark:bg-[var(--daw-chassis)]"
+          className="instrument-module relative mx-auto max-w-5xl overflow-hidden rounded-2xl p-3 shadow-2xl transition-all duration-300 sm:p-4"
         >
           <div
             aria-hidden="true"
@@ -307,7 +308,7 @@ export function SkillsSection() {
               duration: 0.6,
               ease: [0.22, 1, 0.36, 1],
             }}
-            className="relative rounded-xl border border-black/20 bg-zinc-300/40 p-6 pt-12 shadow-inner backdrop-blur-[1px] md:p-8 md:pt-14 dark:bg-black/15"
+            className="instrument-plate relative rounded-xl p-6 pt-12 shadow-inner backdrop-blur-[1px] md:p-8 md:pt-14"
           >
             {/* TOP PANEL: Branding, LCD, Controls */}
             <div className="mb-8 flex flex-col gap-6 border-b border-black/10 pb-6 md:flex-row md:items-center md:justify-between dark:border-white/5">

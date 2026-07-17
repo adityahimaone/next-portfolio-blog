@@ -15,6 +15,7 @@ import {
   MotionConfig,
   Transition,
   Variant,
+  useReducedMotion,
 } from 'motion/react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
@@ -144,6 +145,7 @@ function MorphingDialogContent({
   style,
 }: MorphingDialogContentProps) {
   const { setIsOpen, isOpen, uniqueId, triggerRef } = useMorphingDialog()
+  const shouldReduceMotion = useReducedMotion()
   const containerRef = useRef<HTMLDivElement>(null!)
   const [firstFocusableElement, setFirstFocusableElement] =
     useState<HTMLElement | null>(null)
@@ -209,7 +211,11 @@ function MorphingDialogContent({
       ref={containerRef}
       layoutId={`dialog-${uniqueId}`}
       className={cn('overflow-hidden', className)}
-      style={style}
+      style={{ transformOrigin: '50% 50%', ...style }}
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.97, filter: 'blur(3px)' }}
+      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 4, scale: 0.985, filter: 'blur(2px)' }}
+      transition={shouldReduceMotion ? { duration: 0.16, ease: [0.23, 1, 0.32, 1] } : { type: 'spring', duration: 0.34, bounce: 0.08 }}
       role="dialog"
       aria-modal="true"
       aria-labelledby={`motion-ui-morphing-dialog-title-${uniqueId}`}
@@ -228,6 +234,7 @@ export type MorphingDialogContainerProps = {
 
 function MorphingDialogContainer({ children }: MorphingDialogContainerProps) {
   const { isOpen, uniqueId } = useMorphingDialog()
+  const shouldReduceMotion = useReducedMotion()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -243,10 +250,11 @@ function MorphingDialogContainer({ children }: MorphingDialogContainerProps) {
         <>
           <motion.div
             key={`backdrop-${uniqueId}`}
-            className="fixed inset-0 h-full w-full bg-white/40 backdrop-blur-sm dark:bg-black/40"
+            className="fixed inset-0 h-full w-full bg-[#1c1c1b]/35 backdrop-blur-[3px] dark:bg-black/60"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={shouldReduceMotion ? { duration: 0.1 } : { duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
           />
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             {children}

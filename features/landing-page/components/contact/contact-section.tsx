@@ -738,14 +738,19 @@ export function ContactSection() {
 
   return (
     <>
-      <section ref={sectionRef} id="contact" className="overflow-hidden py-24">
-        <div className="container mx-auto px-4">
+      <section
+        ref={sectionRef}
+        id="contact"
+        className="relative overflow-hidden py-20 md:py-24"
+      >
+        <div className="instrument-grid pointer-events-none absolute inset-0 opacity-25" />
+        <div className="relative container mx-auto px-4">
           <div className="mb-16 flex flex-col items-center text-center">
             <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full bg-zinc-200/50 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400"
+              className="instrument-control mb-4 flex items-center gap-2 rounded-sm px-4 py-1.5 font-mono text-[10px] font-bold tracking-[0.16em] text-[var(--daw-led-amber)] uppercase"
             >
               <Radio className="h-4 w-4" />
               <span>SESSION BOOKING</span>
@@ -777,7 +782,7 @@ export function ContactSection() {
                 : { opacity: 0, y: 42, scale: 0.97 }
             }
             transition={{ duration: 0.82, ease: [0.22, 1, 0.36, 1] }}
-            className="relative mx-auto max-w-6xl rounded-3xl bg-zinc-800 p-2 shadow-2xl sm:p-4 dark:bg-zinc-950"
+            className="instrument-module relative mx-auto max-w-6xl rounded-3xl p-2 shadow-2xl sm:p-4"
           >
             <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
 
@@ -793,7 +798,7 @@ export function ContactSection() {
                 duration: 0.55,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="relative rounded-2xl border border-zinc-700 bg-zinc-900 p-4 shadow-inner backdrop-blur-[1px] sm:p-6 md:p-10"
+              className="instrument-plate relative rounded-2xl p-4 shadow-inner backdrop-blur-[1px] sm:p-6 md:p-10"
             >
               <Screw className="absolute top-2 left-2 sm:top-4 sm:left-4" />
               <Screw className="absolute top-2 right-2 sm:top-4 sm:right-4" />
@@ -825,7 +830,7 @@ export function ContactSection() {
               </div>
 
               {/* Control Panel */}
-              <div className="mb-4 space-y-3 rounded-lg border border-zinc-700/50 bg-zinc-800/50 p-3">
+              <div className="instrument-control mb-4 space-y-3 rounded-lg p-3">
                 {/* Top row: Presets + Transport */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-[10px] font-bold text-zinc-500">

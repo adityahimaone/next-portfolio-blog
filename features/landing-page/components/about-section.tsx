@@ -301,7 +301,7 @@ const DetailWindow = ({
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm md:p-8"
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-[color-mix(in_srgb,var(--ko-display-bg)_82%,transparent)] p-4 backdrop-blur-md motion-reduce:backdrop-blur-none md:p-8"
     onClick={onClose}
   >
     <m.div
@@ -309,13 +309,14 @@ const DetailWindow = ({
       animate={{ scale: 1, y: 0 }}
       exit={{ scale: 0.95, y: 30 }}
       onClick={(e) => e.stopPropagation()}
-      className="relative flex h-[85vh] max-h-[650px] w-full max-w-5xl flex-col overflow-hidden rounded-lg border-[3px] border-zinc-700 bg-zinc-200 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+      className="instrument-module relative flex h-[85vh] max-h-[650px] w-full max-w-5xl flex-col overflow-hidden rounded-lg border-[3px] border-[var(--ko-screw)] bg-[var(--ko-chassis)] shadow-[0_24px_80px_rgb(0_0_0_/_0.55),0_0_0_1px_rgb(242_240_232_/_0.14)] dark:bg-[var(--ko-chassis)]"
     >
       {/* Outer Metal Bezel Overlay */}
-      <div className="pointer-events-none absolute inset-0 z-30 rounded border border-white/20" />
+      <div className="pointer-events-none absolute inset-0 z-30 rounded border border-white/25" />
+      <div className="pointer-events-none absolute -inset-20 z-[-1] bg-[radial-gradient(circle_at_50%_0%,rgb(242_83_31_/_0.18),transparent_54%)]" />
 
       {/* VST Studio Hardware Header */}
-      <div className="relative z-10 flex items-center justify-between border-b-2 border-zinc-400 bg-gradient-to-b from-zinc-300 to-zinc-400 px-6 py-4 dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950">
+      <div className="ko-rail relative z-10 flex items-center justify-between border-b-2 px-6 py-4">
         {/* Left rack ear mount hole */}
         <div className="absolute top-1/2 left-2 flex -translate-y-1/2 flex-col gap-2">
           <div className="h-2 w-2 rounded-full border border-black/30 bg-zinc-600 shadow-inner" />
@@ -323,21 +324,18 @@ const DetailWindow = ({
 
         <div className="flex items-center gap-4 pl-2">
           {/* LCD Status Screen */}
-          <div className="relative overflow-hidden rounded border border-amber-500/30 bg-black/90 px-4 py-1.5 shadow-[inset_0_2px_8px_rgba(0,0,0,1)]">
-            <span className="font-mono text-xs font-bold tracking-wider text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]">
+          <div className="instrument-display relative overflow-hidden px-4 py-1.5">
+            <span className="font-mono text-xs font-bold tracking-wider text-[var(--ko-accent-light)] shadow-[0_0_8px_var(--ko-accent)]">
               {clip.name.toUpperCase()} // STATUS: ONLINE
             </span>
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-[var(--ko-accent)]/10 to-transparent" />
           </div>
         </div>
 
         {/* Center: Vent Grills */}
-        <div className="hidden items-center gap-1 opacity-40 lg:flex">
+        <div className="ko-grille hidden h-8 w-32 items-center justify-center gap-1 rounded-sm opacity-70 lg:flex">
           {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="h-8 w-1 rounded-full bg-zinc-600 dark:bg-zinc-800"
-            />
+            <div key={i} className="h-5 w-px bg-white/25" />
           ))}
         </div>
 
@@ -347,9 +345,9 @@ const DetailWindow = ({
           <div className="hidden items-center gap-4 md:flex">
             {['PARAM 1', 'PARAM 2'].map((label, i) => (
               <div key={label} className="flex flex-col items-center">
-                <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-zinc-500 bg-gradient-to-b from-zinc-200 to-zinc-400 shadow-md dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900">
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[var(--ko-screw)] bg-linear-to-b from-[var(--ko-chassis-panel)] to-[var(--ko-chassis-mid)] shadow-md dark:from-[var(--ko-chassis-mid)] dark:to-[var(--ko-chassis-deep)]">
                   <div
-                    className="bg-zinc-850 absolute top-0.5 h-4 w-0.5 rounded-full dark:bg-zinc-300"
+                    className="absolute top-0.5 h-4 w-0.5 rounded-full bg-[var(--ko-display-bg)] dark:bg-[var(--ko-chassis-panel)]"
                     style={{
                       transform: `rotate(${45 + i * 90}deg)`,
                       transformOrigin: '50% 100%',
@@ -368,7 +366,7 @@ const DetailWindow = ({
           <button
             onClick={onClose}
             aria-label="Close clip detail"
-            className="group flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-red-900/30 bg-gradient-to-b from-red-500 to-red-700 text-white shadow-md hover:brightness-110 active:scale-95"
+            className="group flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-[var(--ko-accent-dark)]/70 bg-linear-to-b from-[var(--ko-accent)] to-[var(--ko-accent-dark)] text-white shadow-md hover:brightness-110 active:scale-95"
           >
             <X size={14} className="stroke-[2.5]" />
           </button>
@@ -994,14 +992,19 @@ export function AboutSection() {
 
   return (
     <>
-      <section ref={sectionRef} id="about" className="py-24">
-        <div className="container mx-auto px-4 md:px-6">
+      <section
+        ref={sectionRef}
+        id="about"
+        className="relative overflow-hidden py-20 md:py-24"
+      >
+        <div className="instrument-grid pointer-events-none absolute inset-0 opacity-35" />
+        <div className="relative container mx-auto px-4 md:px-6">
           <div className="mb-12 flex flex-col items-center text-center">
             <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-4 flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400"
+              className="instrument-control mb-4 flex items-center gap-2 rounded-sm px-4 py-1.5 font-mono text-[10px] font-bold tracking-[0.16em] text-[var(--daw-led-blue)] uppercase"
             >
               <Layers className="h-4 w-4" />
               <span>ARRANGEMENT VIEW</span>
@@ -1020,7 +1023,7 @@ export function AboutSection() {
                 : { opacity: 0, y: 42, scale: 0.97 }
             }
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="relative mx-auto max-w-6xl overflow-hidden rounded-xl border border-zinc-200/80 bg-white/95 shadow-2xl backdrop-blur-sm dark:border-zinc-800/80 dark:bg-zinc-950/95"
+            className="instrument-module relative mx-auto max-w-6xl overflow-hidden rounded-xl p-2 backdrop-blur-sm sm:p-3"
           >
             <div
               aria-hidden="true"

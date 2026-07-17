@@ -434,10 +434,10 @@
   --color-iron: #333333;
   --color-cinder: #423738;
   /* Legacy aliases retain the existing utility API while using the hardware palette. */
-  --color-iris: #e0b75a;
-  --color-plum: #c9a447;
-  --color-aubergine: #17201e;
-  --color-storm-gray: #4d5651;
+  --color-iris: #f4512a;
+  --color-plum: #24436f;
+  --color-aubergine: #111315;
+  --color-storm-gray: #59615f;
   --color-lavender-wash: #ead084;
 
   --gradient-orchid-radial: radial-gradient(
@@ -460,9 +460,9 @@
   --popover: #f4f1e6;
   --popover-foreground: #1a1d1c;
 
-  --primary: #9a692d;
-  --primary-light: #c9a447;
-  --primary-dark: #68451f;
+  --primary: #c94324;
+  --primary-light: #f4512a;
+  --primary-dark: #8f2d1c;
   --primary-foreground: #fffdf6;
 
   --secondary: #36564d;
@@ -470,9 +470,9 @@
   --secondary-dark: #223d35;
   --secondary-foreground: #fffdf6;
 
-  --accent: #c9a447;
-  --accent-light: #ead084;
-  --accent-dark: #8d6827;
+  --accent: #f4512a;
+  --accent-light: #ff8a5c;
+  --accent-dark: #b9341d;
   --accent-foreground: #1a1d1c;
 
   --muted: #d7d6cc;
@@ -517,7 +517,7 @@
   --led-active: #c9a447;
   --led-standby: #7abb5e;
   --led-glow: 0 0 6px rgba(201, 164, 71, 0.45);
-  --accent-knob: #c9a447;
+  --accent-knob: #f4512a;
   --panel-shadow: 0 5px 16px rgba(42, 45, 42, 0.13);
   --screw-color: #666b65;
 }
@@ -531,9 +531,9 @@
   --popover: #222827;
   --popover-foreground: #f1eee5;
 
-  --primary: #e0b75a;
-  --primary-light: #f0d98e;
-  --primary-dark: #a87a2d;
+  --primary: #ff6a3d;
+  --primary-light: #ff9a78;
+  --primary-dark: #b9341d;
   --primary-foreground: #16191b;
 
   --secondary: #7abb5e;
@@ -541,9 +541,9 @@
   --secondary-dark: #456f38;
   --secondary-foreground: #101312;
 
-  --accent: #c9a447;
-  --accent-light: #ead084;
-  --accent-dark: #8d6827;
+  --accent: #ff6a3d;
+  --accent-light: #ff9a78;
+  --accent-dark: #b9341d;
   --accent-foreground: #16191b;
 
   --muted: #2b3230;
@@ -1042,40 +1042,193 @@
 
 /* ─── DAW Controller Design Tokens ───────────────────────────── */
 :root {
-  --daw-chassis: #d7d6cc;
-  --daw-chassis-mid: #c5c5ba;
-  --daw-chassis-raised: #ece9dc;
-  --daw-chassis-deep: #a6a89f;
-  --daw-fader-cap: #8b8f88;
-  --daw-fader-rail: #b5b7ad;
-  --daw-display-bg: #17201e;
-  --daw-display-glass: rgba(10, 15, 14, 0.84);
-  --daw-screw: #7f837b;
-  --daw-gold: #c9a447;
-  --daw-led-green: #5d9a4b;
-  --daw-led-red: #c84b4b;
-  --daw-led-amber: #b77b28;
-  --daw-led-blue: #5d9a4b;
-  --daw-led-off: rgba(24, 29, 28, 0.16);
-  --daw-btn-shadow: rgba(29, 34, 31, 0.2);
+  /* KO-II / OP-1 Field palette: warm chassis, black glass, one deliberate orange signal. */
+  --ko-chassis: #e9e7de;
+  --ko-chassis-panel: #f2f0e8;
+  --ko-chassis-mid: #d4d2c8;
+  --ko-chassis-deep: #a8a69c;
+  --ko-display-bg: #131414;
+  --ko-display-glass: rgb(8 9 9 / 0.92);
+  --ko-grille: #4a4c4d;
+  --ko-accent: #f2531f;
+  --ko-accent-light: #ff7a45;
+  --ko-accent-dark: #b93d16;
+  --ko-key-dark: #1c1d1d;
+  --ko-key-light: #e4e2d9;
+  --ko-key-mid: #8f8d84;
+  --ko-led-red: #d94a2b;
+  --ko-led-green: #78935f;
+  --ko-led-idle: #6b6b63;
+  --ko-route: #24436f;
+  --ko-screw: #75736a;
+  --ko-btn-shadow: rgb(29 34 31 / 0.2);
+
+  --daw-chassis: var(--ko-chassis);
+  --daw-chassis-mid: var(--ko-chassis-mid);
+  --daw-chassis-raised: var(--ko-chassis-panel);
+  --daw-chassis-deep: var(--ko-chassis-deep);
+  --daw-fader-cap: #727775;
+  --daw-fader-rail: #b9b7af;
+  --daw-display-bg: var(--ko-display-bg);
+  --daw-display-glass: var(--ko-display-glass);
+  --daw-screw: var(--ko-screw);
+  --daw-gold: var(--ko-accent);
+  --daw-led-green: var(--ko-led-green);
+  --daw-led-red: var(--ko-led-red);
+  --daw-led-amber: var(--ko-accent);
+  --daw-led-blue: var(--ko-route);
+  --daw-led-off: rgb(24 29 28 / 0.16);
+  --daw-btn-shadow: var(--ko-btn-shadow);
 }
 
 .dark {
-  --daw-chassis: #16191b;
-  --daw-chassis-mid: #222827;
-  --daw-chassis-raised: #2d3532;
-  --daw-chassis-deep: #0d1110;
-  --daw-fader-cap: #68716c;
-  --daw-fader-rail: #151b19;
-  --daw-display-bg: #080b0a;
-  --daw-display-glass: rgba(0, 0, 0, 0.92);
-  --daw-screw: #48514d;
-  --daw-led-green: #7abb5e;
-  --daw-led-red: #d25555;
-  --daw-led-amber: #e0b75a;
-  --daw-led-blue: #7abb5e;
-  --daw-led-off: rgba(241, 238, 229, 0.06);
-  --daw-btn-shadow: rgba(0, 0, 0, 0.55);
+  --ko-chassis: #2a2b28;
+  --ko-chassis-panel: #333430;
+  --ko-chassis-mid: #1f201d;
+  --ko-chassis-deep: #141513;
+  --ko-display-bg: #0a0b0b;
+  --ko-display-glass: rgb(0 0 0 / 0.96);
+  --ko-grille: #2e2f2f;
+  --ko-accent: #ff6a3d;
+  --ko-accent-light: #ff9a78;
+  --ko-accent-dark: #b93d16;
+  --ko-key-dark: #0d0e0e;
+  --ko-key-light: #38392f;
+  --ko-key-mid: #5a5850;
+  --ko-led-red: #ff5a38;
+  --ko-led-green: #b4d28d;
+  --ko-led-idle: #46453f;
+  --ko-route: #6d8dbd;
+  --ko-screw: #55534b;
+  --ko-btn-shadow: rgb(0 0 0 / 0.55);
+
+  --daw-chassis: var(--ko-chassis);
+  --daw-chassis-mid: var(--ko-chassis-mid);
+  --daw-chassis-raised: var(--ko-chassis-panel);
+  --daw-chassis-deep: var(--ko-chassis-deep);
+  --daw-display-bg: var(--ko-display-bg);
+  --daw-display-glass: var(--ko-display-glass);
+  --daw-screw: var(--ko-screw);
+  --daw-gold: var(--ko-accent);
+  --daw-led-green: var(--ko-led-green);
+  --daw-led-red: var(--ko-led-red);
+  --daw-led-amber: var(--ko-accent);
+  --daw-led-blue: var(--ko-route);
+  --daw-led-off: rgb(241 238 229 / 0.06);
+  --daw-btn-shadow: var(--ko-btn-shadow);
+}
+
+/* Shared instrument surfaces for the landing-page hardware system. */
+.instrument-module {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ko-screw) 42%, transparent);
+  border-radius: 1rem;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--ko-chassis-panel) 88%, white 12%), var(--ko-chassis) 56%, var(--ko-chassis-deep));
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.45) inset,
+    0 18px 38px rgb(17 20 19 / 0.18),
+    0 3px 0 color-mix(in srgb, var(--ko-chassis-deep) 70%, transparent);
+}
+
+.instrument-module::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background: repeating-linear-gradient(0deg, transparent 0 3px, rgb(255 255 255 / 0.025) 3px 4px);
+  opacity: 0.7;
+}
+
+.instrument-plate {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--ko-screw) 34%, transparent);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--ko-chassis-deep) 26%, var(--ko-chassis));
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.18), 0 1px 0 rgb(255 255 255 / 0.3);
+}
+
+.instrument-display {
+  border: 1px solid color-mix(in srgb, var(--ko-screw) 60%, transparent);
+  border-radius: 0.45rem;
+  background: var(--ko-display-bg);
+  color: var(--ko-led-green);
+  box-shadow: inset 0 2px 8px rgb(0 0 0 / 0.5), 0 1px 0 rgb(255 255 255 / 0.16);
+}
+
+.instrument-label {
+  color: color-mix(in srgb, var(--ko-display-bg) 78%, var(--ko-chassis));
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.instrument-control {
+  border: 1px solid color-mix(in srgb, var(--ko-screw) 42%, transparent);
+  background: var(--ko-chassis-panel);
+  color: var(--ko-display-bg);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), 0 2px 0 rgb(0 0 0 / 0.12);
+}
+
+.instrument-button {
+  border: 1px solid color-mix(in srgb, var(--ko-screw) 50%, transparent);
+  background: var(--ko-chassis-panel);
+  color: var(--ko-display-bg);
+  box-shadow: 0 2px 0 var(--ko-btn-shadow), inset 0 1px 0 rgb(255 255 255 / 0.32);
+  transition: transform 140ms ease, filter 140ms ease, background-color 140ms ease;
+}
+
+.instrument-button:hover { filter: brightness(1.04); }
+.instrument-button:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--daw-btn-shadow); }
+
+.instrument-socket {
+  border: 2px solid color-mix(in srgb, var(--ko-screw) 76%, transparent);
+  background: var(--ko-display-bg);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.65), 0 1px 0 rgb(255 255 255 / 0.2);
+}
+
+.instrument-screw {
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--daw-screw) 80%, black);
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #d8d8d0 0 12%, var(--daw-screw) 34%, #4b504d 100%);
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.35), 0 1px 2px rgb(0 0 0 / 0.22);
+}
+
+.instrument-grid {
+  background-image: radial-gradient(color-mix(in srgb, var(--ko-screw) 34%, transparent) 0.7px, transparent 0.7px);
+  background-size: 9px 9px;
+}
+
+.ko-grille {
+  background-color: var(--ko-grille);
+  background-image: radial-gradient(rgb(255 255 255 / 0.16) 0.8px, transparent 0.9px);
+  background-size: 6px 6px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -2px 4px rgb(0 0 0 / 0.35);
+}
+
+.ko-rail {
+  border: 1px solid color-mix(in srgb, var(--ko-screw) 45%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ko-chassis-panel) 80%, white), var(--ko-chassis-mid));
+  color: var(--ko-display-bg);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55), 0 2px 0 rgb(0 0 0 / 0.18);
+}
+
+.ko-key {
+  border: 1px solid color-mix(in srgb, var(--ko-screw) 55%, transparent);
+  background: var(--ko-key-light);
+  color: var(--ko-key-dark);
+  box-shadow: inset 0 -5px 8px rgb(0 0 0 / 0.12), 0 1px 0 rgb(255 255 255 / 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .instrument-button { transition: none; }
+  .instrument-button:active { transform: none; }
 }
 
 /* DAW panel surface — replaces chassis-panel for hero */

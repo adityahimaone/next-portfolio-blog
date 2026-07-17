@@ -36,22 +36,55 @@ export function StudioSignalConnector({
   story,
 }: StudioSignalConnectorProps) {
   return (
-    <div className="mx-auto flex h-36 w-full items-center justify-center py-4 sm:h-44 sm:py-6">
-      <svg
-        viewBox="0 0 48 160"
-        className="h-full w-16 overflow-visible sm:w-20"
+    <div className="relative mx-auto w-full max-w-5xl px-3 py-2 sm:px-4 sm:py-3">
+      <div
+        className="instrument-module mx-auto flex w-full max-w-none items-center gap-2 px-2 py-2 sm:gap-3 sm:px-3"
         role="img"
         aria-label={`${from} to ${to}: ${story}`}
       >
-        <PatchCable
-          from={{ x: 24, y: 8 }}
-          to={{ x: 24, y: 152 }}
-          color="#c9a447"
-          animated
-          thickness={3}
-          className="transition-opacity duration-300"
+        <span className="instrument-screw shrink-0" aria-hidden="true" />
+        <div className="hidden min-w-16 sm:block">
+          <p className="instrument-label text-[10px] text-[var(--ko-route)]">
+            source · 信号
+          </p>
+          <p className="mt-0.5 truncate font-mono text-[8px] font-bold tracking-[0.1em] text-[var(--daw-display-bg)] uppercase">
+            {from}
+          </p>
+        </div>
+        <div className="instrument-plate relative flex h-10 min-w-0 flex-1 items-center justify-center overflow-hidden bg-[var(--ko-display-bg)] px-2 sm:h-11">
+          <div className="pointer-events-none absolute inset-x-3 top-1/2 h-px bg-[var(--ko-accent)]/30" />
+          <svg
+            viewBox="0 0 180 48"
+            className="relative h-full w-full overflow-visible"
+          >
+            <PatchCable
+              from={{ x: 8, y: 24 }}
+              to={{ x: 172, y: 24 }}
+              color="var(--ko-accent)"
+              taut
+              animated
+              thickness={2.5}
+              ariaLabel={`${from} signal cable to ${to}`}
+            />
+          </svg>
+          <span className="absolute bottom-0.5 left-1/2 max-w-[70%] -translate-x-1/2 truncate font-mono text-[6px] font-bold tracking-[0.12em] whitespace-nowrap text-white/55 uppercase">
+            {story}
+          </span>
+        </div>
+        <div className="min-w-16 text-right">
+          <p className="instrument-label text-[10px] text-[var(--ko-led-green)]">
+            destination · 出力
+          </p>
+          <p className="mt-0.5 truncate font-mono text-[8px] font-bold tracking-[0.1em] text-[var(--daw-display-bg)] uppercase">
+            {to}
+          </p>
+        </div>
+        <span className="instrument-screw shrink-0" aria-hidden="true" />
+        <span
+          className="led-glow hidden h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--daw-led-green)] sm:block"
+          aria-hidden="true"
         />
-      </svg>
+      </div>
     </div>
   )
 }
@@ -122,7 +155,7 @@ export function PatchCable({
       <path
         d={path}
         fill="none"
-        stroke="#1e1e24"
+        stroke="var(--ko-key-dark)"
         strokeWidth={thickness + 2}
         strokeLinecap="round"
       />
@@ -138,7 +171,7 @@ export function PatchCable({
         <path
           d={path}
           fill="none"
-          stroke="#ffffff"
+          stroke="var(--ko-accent-light)"
           strokeWidth={Math.max(1, thickness - 1.5)}
           strokeLinecap="round"
           className="patchcable-flow"
@@ -180,8 +213,8 @@ function JackEnd({
         cx={point.x}
         cy={point.y}
         r={7}
-        fill="#2a2a30"
-        stroke="#0d0d10"
+        fill="var(--ko-key-dark)"
+        stroke="var(--ko-display-bg)"
         strokeWidth={1}
       />
       <circle
@@ -189,7 +222,7 @@ function JackEnd({
         cy={point.y}
         r={5.5}
         fill="none"
-        stroke="#c9cad0"
+        stroke="var(--ko-key-mid)"
         strokeWidth={1.2}
       />
       <circle cx={point.x} cy={point.y} r={3} fill={color} />

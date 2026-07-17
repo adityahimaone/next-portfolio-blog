@@ -8,17 +8,17 @@ import { cn } from '@/lib/utils'
 import { SOCIAL_LINKS, FOOTER_NAVIGATION } from '../constants'
 
 const NAV_COLORS: Record<string, string> = {
-  HOME: '#E0B75A',
-  BLOG: '#C9A447',
-  PROJECTS: '#7ABB5E',
-  MIXTAPE: '#E0B75A',
+  HOME: 'var(--daw-led-amber)',
+  BLOG: 'var(--daw-led-blue)',
+  PROJECTS: 'var(--daw-led-green)',
+  MIXTAPE: 'var(--daw-led-amber)',
 }
 
 const SOCIAL_COLORS: Record<string, string> = {
-  GitHub: '#E0B75A',
-  LinkedIn: '#7ABB5E',
-  Spotify: '#7ABB5E',
-  Email: '#E0B75A',
+  GitHub: 'var(--daw-led-blue)',
+  LinkedIn: 'var(--daw-led-green)',
+  Spotify: 'var(--daw-led-green)',
+  Email: 'var(--daw-led-amber)',
 }
 
 export function Footer() {
@@ -28,7 +28,7 @@ export function Footer() {
   return (
     <footer
       className={cn(
-        'relative isolate overflow-hidden border-y border-black/80 bg-[#101312] text-white',
+        'relative isolate overflow-hidden border-y border-black/80 bg-[var(--ko-display-bg)] text-white',
         'shadow-[inset_0_1px_rgba(255,255,255,0.1),inset_0_-1px_rgba(0,0,0,0.9)]',
       )}
     >
@@ -36,6 +36,7 @@ export function Footer() {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),transparent_18%,transparent_82%,rgba(0,0,0,0.5)),repeating-linear-gradient(0deg,transparent_0,transparent_3px,rgba(255,255,255,0.018)_4px)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/15" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-black/90" />
+      <div className="ko-grille pointer-events-none absolute top-0 right-24 hidden h-5 w-36 opacity-70 sm:block" />
 
       <Screw className="pointer-events-none absolute top-3 left-3 z-20 scale-75 opacity-70 sm:top-4 sm:left-5" />
       <Screw className="pointer-events-none absolute top-3 right-3 z-20 scale-75 opacity-70 sm:top-4 sm:right-5" />
@@ -48,12 +49,12 @@ export function Footer() {
           <section className="flex min-h-32 flex-col justify-between border-b border-white/10 p-4 md:border-r md:border-b-0">
             <Link
               href="/"
-              className="group w-fit rounded-sm focus-visible:ring-2 focus-visible:ring-[var(--daw-led-amber)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#101312] focus-visible:outline-none"
+              className="group w-fit rounded-sm focus-visible:ring-2 focus-visible:ring-[var(--daw-led-amber)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--daw-display-bg)] focus-visible:outline-none"
               aria-label="Go to homepage"
             >
-              <div className="flex items-center gap-2 rounded-sm border border-[#7abb5e]/30 bg-[var(--daw-display-bg)] px-2.5 py-2 shadow-[inset_0_1px_8px_rgba(0,0,0,0.9)] transition-colors duration-150 group-hover:border-[#7abb5e]/60 motion-reduce:transition-none">
+              <div className="flex items-center gap-2 rounded-sm border border-[var(--daw-led-green)]/30 bg-[var(--daw-display-bg)] px-2.5 py-2 shadow-[inset_0_1px_8px_rgba(0,0,0,0.9)] transition-colors duration-150 group-hover:border-[var(--daw-led-green)]/60 motion-reduce:transition-none">
                 <i className="h-1.5 w-1.5 rounded-full bg-[var(--daw-led-green)] shadow-[0_0_7px_var(--daw-led-green)] motion-safe:animate-pulse" />
-                <span className="font-mono text-[10px] font-bold tracking-[0.18em] text-[#9ad58b] [text-shadow:0_0_7px_rgba(122,187,94,0.75)]">
+                <span className="font-mono text-[10px] font-bold tracking-[0.18em] text-[var(--daw-led-green)] [text-shadow:0_0_7px_var(--daw-led-green)]">
                   ADIT.SYS
                 </span>
               </div>
@@ -77,13 +78,14 @@ export function Footer() {
             aria-label="Footer navigation"
           >
             <div className="flex items-center justify-between font-mono text-[7px] font-bold tracking-[0.18em] text-white/35 uppercase">
-              <span>Output routing</span>
+              <span>Output routing · 出力</span>
               <span className="text-[var(--daw-led-amber)]">CH 01—04</span>
             </div>
 
             <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
               {FOOTER_NAVIGATION.map((item, index) => {
-                const color = NAV_COLORS[item.name.toUpperCase()] ?? '#E0B75A'
+                const color =
+                  NAV_COLORS[item.name.toUpperCase()] ?? 'var(--daw-led-amber)'
 
                 return (
                   <Link
@@ -128,13 +130,13 @@ export function Footer() {
                 />
                 Patch bay
               </span>
-              <span>OUT</span>
+              <span className="text-[var(--ko-accent)]">OUT / USB</span>
             </div>
 
             <div className="flex justify-between gap-2 rounded-sm border border-black/70 bg-[var(--daw-display-bg)] p-2 shadow-[inset_0_2px_7px_rgba(0,0,0,0.95)]">
               {SOCIAL_LINKS.map((link) => {
                 const isActive = hoveredJack === link.name
-                const color = SOCIAL_COLORS[link.name] ?? '#E0B75A'
+                const color = SOCIAL_COLORS[link.name] ?? 'var(--daw-led-amber)'
 
                 return (
                   <a

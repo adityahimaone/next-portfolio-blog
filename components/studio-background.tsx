@@ -45,8 +45,8 @@ export function StudioBackground() {
 
       <style jsx global>{`
         .studio-hardware-background {
-          background: #e7e4da;
-          color: rgba(132, 101, 36, 0.12);
+          background: var(--daw-chassis);
+          color: rgba(36, 67, 111, 0.12);
         }
 
         .studio-hardware-background__base {
@@ -55,13 +55,13 @@ export function StudioBackground() {
               rgba(255, 255, 255, 0.62) 0%,
               transparent 32%
             ),
-            linear-gradient(165deg, #efede5 0%, #e2dfd5 46%, #d6d4cb 100%);
+            linear-gradient(165deg, var(--daw-chassis-raised) 0%, var(--daw-chassis) 46%, var(--daw-chassis-mid) 100%);
         }
 
         .studio-hardware-background__reflection--amber {
           background: radial-gradient(
             ellipse 48% 34% at 8% 2%,
-            rgba(185, 142, 47, 0.1),
+            rgba(244, 81, 42, 0.1),
             transparent 72%
           );
         }
@@ -69,7 +69,7 @@ export function StudioBackground() {
         .studio-hardware-background__reflection--green {
           background: radial-gradient(
             ellipse 38% 30% at 96% 90%,
-            rgba(83, 126, 76, 0.055),
+            rgba(168, 198, 134, 0.07),
             transparent 72%
           );
         }
@@ -78,8 +78,8 @@ export function StudioBackground() {
           opacity: 0.55;
           background-image: repeating-linear-gradient(
               0deg,
-              rgba(71, 68, 58, 0.018) 0,
-              rgba(71, 68, 58, 0.018) 1px,
+              rgba(28, 31, 30, 0.018) 0,
+                rgba(28, 31, 30, 0.018) 1px,
               transparent 1px,
               transparent 4px
             ),
@@ -105,8 +105,8 @@ export function StudioBackground() {
         }
 
         .dark .studio-hardware-background {
-          background: #101210;
-          color: rgba(214, 169, 72, 0.13);
+          background: var(--daw-chassis-deep);
+          color: rgba(255, 106, 61, 0.14);
         }
 
         .dark .studio-hardware-background__base {
@@ -115,13 +115,13 @@ export function StudioBackground() {
               rgba(83, 86, 75, 0.12) 0%,
               transparent 30%
             ),
-            linear-gradient(158deg, #1d201c 0%, #141714 48%, #0d0f0e 100%);
+            linear-gradient(158deg, #2b3031 0%, #202426 48%, #111415 100%);
         }
 
         .dark .studio-hardware-background__reflection--amber {
           background: radial-gradient(
             ellipse 46% 30% at 6% 0%,
-            rgba(213, 161, 61, 0.105),
+            rgba(255, 106, 61, 0.12),
             transparent 72%
           );
         }
@@ -129,7 +129,7 @@ export function StudioBackground() {
         .dark .studio-hardware-background__reflection--green {
           background: radial-gradient(
             ellipse 42% 32% at 100% 96%,
-            rgba(93, 141, 81, 0.075),
+            rgba(180, 210, 141, 0.08),
             transparent 74%
           );
         }

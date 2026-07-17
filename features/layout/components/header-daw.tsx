@@ -15,15 +15,15 @@ import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import { Screw } from '@/components/screw'
 
 const NAV_COLORS: Record<string, string> = {
-  HOME: '#D6AD45',
-  ABOUT: '#D4864A',
-  SKILLS: '#C9A447',
-  EXP: '#7ABB5E',
-  WORK: '#4A9EC9',
-  CONTACT: '#8A5FC9',
-  BLOG: '#C95FAA',
-  PROJECTS: '#5FC9C9',
-  MIXTAPE: '#C9A447',
+  HOME: 'var(--daw-led-amber)',
+  ABOUT: 'var(--daw-led-amber)',
+  SKILLS: 'var(--daw-led-blue)',
+  EXP: 'var(--daw-led-green)',
+  WORK: 'var(--daw-led-blue)',
+  CONTACT: 'var(--daw-led-amber)',
+  BLOG: 'var(--daw-led-green)',
+  PROJECTS: 'var(--daw-led-blue)',
+  MIXTAPE: 'var(--daw-led-amber)',
 }
 
 interface TrackLcdProps {
@@ -83,7 +83,7 @@ function TrackLcd({
           : { type: 'spring', stiffness: 420, damping: 36 }
       }
       className={cn(
-        'hidden h-8 min-w-0 items-center rounded-sm border border-[#7abb5e]/25 bg-[#090c0b]/90 px-2 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] lg:flex xl:px-2.5',
+        'hidden h-8 min-w-0 items-center rounded-sm border border-[var(--daw-led-green)]/25 bg-[var(--daw-display-bg)]/90 px-2 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] lg:flex xl:px-2.5',
         isPlaying ? 'w-[min(18rem,28vw)]' : 'w-auto',
       )}
       title={label}
@@ -93,7 +93,9 @@ function TrackLcd({
         <i
           className={cn(
             'h-1 w-1 shrink-0 rounded-full',
-            isPlaying ? 'bg-[#7abb5e] shadow-[0_0_6px_#7abb5e]' : 'bg-white/25',
+            isPlaying
+              ? 'bg-[var(--daw-led-green)] shadow-[0_0_6px_var(--daw-led-green)]'
+              : 'bg-white/25',
           )}
         />
         <div ref={viewportRef} className="relative min-w-0 overflow-hidden">
@@ -107,7 +109,7 @@ function TrackLcd({
           {shouldMarquee ? (
             <div
               key={label}
-              className="animate-marquee flex w-max font-mono text-[8px] font-bold tracking-[0.12em] whitespace-nowrap text-[#98d887] [text-shadow:0_0_7px_rgba(122,187,94,0.8)] motion-reduce:animate-none xl:text-[9px]"
+              className="animate-marquee flex w-max font-mono text-[8px] font-bold tracking-[0.12em] whitespace-nowrap text-[var(--daw-led-green)] [text-shadow:0_0_7px_var(--daw-led-green)] motion-reduce:animate-none xl:text-[9px]"
               style={{
                 animationDuration: `${Math.max(14, label.length * 0.28)}s`,
               }}
@@ -118,7 +120,7 @@ function TrackLcd({
               </span>
             </div>
           ) : (
-            <span className="block truncate font-mono text-[8px] font-bold tracking-[0.12em] whitespace-nowrap text-[#98d887] [text-shadow:0_0_7px_rgba(122,187,94,0.8)] xl:text-[9px]">
+            <span className="block truncate font-mono text-[8px] font-bold tracking-[0.12em] whitespace-nowrap text-[var(--daw-led-green)] [text-shadow:0_0_7px_var(--daw-led-green)] xl:text-[9px]">
               {label}
             </span>
           )}
@@ -170,13 +172,13 @@ export function HeaderDaw() {
     )?.name ?? 'HOME'
 
   const controlClassName =
-    'relative isolate flex items-center justify-center border border-white/10 bg-[#1c2020]/85 text-white/65 shadow-[inset_0_1px_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.28)] transition-[transform,border-color,background-color,box-shadow] duration-150 ease-out hover:border-[#d6ad45]/45 hover:bg-[#292d2d]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e0b75a]/75 focus-visible:ring-offset-2 focus-visible:ring-offset-[#101212] active:translate-y-px active:scale-[0.97] motion-reduce:transition-none'
+    'relative isolate flex items-center justify-center border border-white/10 bg-[var(--ko-display-bg)]/90 text-white/75 shadow-[inset_0_1px_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.28)] transition-[transform,border-color,background-color,box-shadow] duration-150 ease-out hover:border-[var(--ko-accent)]/55 hover:bg-[var(--ko-chassis-mid)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ko-accent)]/75 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ko-display-bg)] active:translate-y-px active:scale-[0.97] motion-reduce:transition-none'
 
   return (
     <>
       <header
         className={cn(
-          'fixed top-2 right-2 left-2 z-50 overflow-hidden rounded-md border border-white/10 bg-[#121516]/84 text-white shadow-[0_12px_30px_rgba(0,0,0,0.28),inset_0_1px_rgba(255,255,255,0.08)] backdrop-blur-xl transition-[height,box-shadow] duration-200 ease-out motion-reduce:transition-none md:top-3 md:right-4 md:left-4',
+          'fixed top-2 right-2 left-2 z-50 overflow-hidden rounded-md border border-white/10 bg-[var(--ko-display-bg)]/95 text-white shadow-[0_12px_30px_rgba(0,0,0,0.32),inset_0_1px_rgba(255,255,255,0.08)] backdrop-blur-xl transition-[height,box-shadow] duration-200 ease-out motion-reduce:transition-none md:top-3 md:right-4 md:left-4',
           isScrolled
             ? 'h-12 shadow-[0_9px_22px_rgba(0,0,0,0.34),inset_0_1px_rgba(255,255,255,0.08)]'
             : 'h-14',
@@ -235,7 +237,7 @@ export function HeaderDaw() {
                   {mounted && theme === 'dark' ? (
                     <Moon
                       size={10}
-                      className="text-[#263837]"
+                      className="text-[var(--ko-display-bg)]"
                       aria-hidden="true"
                     />
                   ) : (
@@ -249,11 +251,11 @@ export function HeaderDaw() {
               </span>
             </button>
             <div className="hidden flex-col leading-none sm:flex">
-              <span className="font-mono text-[7px] font-bold tracking-[0.18em] text-white/50">
-                STUDIO BUS
+              <span className="font-mono text-[7px] font-bold tracking-[0.18em] text-white/65">
+                STUDIO BUS · 音の設計
               </span>
               <span className="mt-1 flex items-center gap-1.5 font-mono text-[6px] tracking-[0.14em] text-white/30">
-                <i className="h-1 w-1 rounded-full bg-[#d6ad45] shadow-[0_0_5px_#e0b75a]" />
+                <i className="h-1 w-1 rounded-full bg-[var(--daw-led-amber)] shadow-[0_0_5px_var(--daw-led-amber)]" />
                 ONLINE
               </span>
             </div>
@@ -268,7 +270,7 @@ export function HeaderDaw() {
               const isActive =
                 item.href === pathname ||
                 (item.href !== '/' && pathname.startsWith(item.href))
-              const color = NAV_COLORS[item.name] ?? '#D6AD45'
+              const color = NAV_COLORS[item.name] ?? 'var(--daw-led-amber)'
               const isPageMenuStart = item.name === 'BLOG'
 
               return (
@@ -276,7 +278,7 @@ export function HeaderDaw() {
                   {isPageMenuStart && (
                     <span
                       aria-hidden="true"
-                      className="mx-1 h-6 w-px bg-[#e0b75a]/35"
+                      className="mx-1 h-6 w-px bg-[var(--daw-led-amber)]/35"
                     />
                   )}
                   <Link
@@ -284,7 +286,7 @@ export function HeaderDaw() {
                     onMouseEnter={() => setHoveredNav(item.name)}
                     onMouseLeave={() => setHoveredNav(null)}
                     className={cn(
-                      'group relative flex h-8 min-w-12 flex-col justify-center overflow-hidden rounded-sm border px-2 font-mono text-[8px] font-bold tracking-[0.13em] uppercase transition-[transform,border-color,background-color,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-[#e0b75a]/75 focus-visible:ring-offset-2 focus-visible:ring-offset-[#101212] focus-visible:outline-none active:translate-y-px motion-reduce:transition-none',
+                      'group relative flex h-8 min-w-12 flex-col justify-center overflow-hidden rounded-sm border px-2 font-mono text-[8px] font-bold tracking-[0.13em] uppercase transition-[transform,border-color,background-color,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-[var(--daw-led-amber)]/75 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--daw-display-bg)] focus-visible:outline-none active:translate-y-px motion-reduce:transition-none',
                       isActive
                         ? 'border-white/20 bg-white/[0.09] text-white'
                         : 'border-white/[0.07] bg-black/20 text-white/48 hover:border-white/20 hover:bg-white/[0.06] hover:text-white/85',
@@ -331,7 +333,7 @@ export function HeaderDaw() {
                 controlClassName,
                 'h-8 w-8 rounded-sm',
                 isPlaying &&
-                  'border-[#7abb5e]/45 bg-[#7abb5e]/10 text-[#91d47a] shadow-[inset_0_1px_rgba(255,255,255,0.08),0_0_12px_rgba(122,187,94,0.12)]',
+                  'border-[var(--daw-led-green)]/45 bg-[var(--daw-led-green)]/10 text-[var(--daw-led-green)] shadow-[inset_0_1px_rgba(255,255,255,0.08),0_0_12px_rgba(168,198,134,0.12)]',
               )}
               aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
             >
@@ -339,7 +341,7 @@ export function HeaderDaw() {
                 className={cn(
                   'pointer-events-none absolute top-1 right-1 h-1 w-1 rounded-full',
                   isPlaying
-                    ? 'bg-[#7abb5e] shadow-[0_0_6px_#7abb5e]'
+                    ? 'bg-[var(--daw-led-green)] shadow-[0_0_6px_var(--daw-led-green)]'
                     : 'bg-white/20',
                 )}
               />
@@ -397,7 +399,8 @@ export function HeaderDaw() {
                 className={cn(
                   controlClassName,
                   'h-8 w-8 rounded-sm',
-                  isOpen && 'border-[#d6ad45]/60 bg-[#d6ad45]/10',
+                  isOpen &&
+                    'border-[var(--daw-led-amber)]/60 bg-[var(--daw-led-amber)]/10',
                 )}
                 aria-label="Toggle navigation menu"
                 aria-expanded={isOpen}
@@ -436,10 +439,20 @@ export function HeaderDaw() {
           items={menuItems}
           colors={
             theme === 'dark'
-              ? ['#e0b75a', '#7abb5e', '#263837']
-              : ['#273281', '#3d468b', '#e2e8f0']
+              ? [
+                  'var(--daw-led-amber)',
+                  'var(--daw-led-green)',
+                  'var(--daw-display-bg)',
+                ]
+              : [
+                  'var(--daw-led-blue)',
+                  'var(--daw-led-blue)',
+                  'var(--daw-chassis-raised)',
+                ]
           }
-          accentColor={theme === 'dark' ? '#e0b75a' : '#273281'}
+          accentColor={
+            theme === 'dark' ? 'var(--daw-led-amber)' : 'var(--daw-led-blue)'
+          }
         />
       </div>
     </>

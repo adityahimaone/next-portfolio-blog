@@ -42,10 +42,11 @@ export function ExperienceSection() {
   return (
     <section
       id="experience"
-      className="relative overflow-hidden py-16 lg:py-18"
+      className="relative overflow-hidden py-20 lg:py-24"
     >
       {/*<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(201,164,71,0.13),transparent_42%),linear-gradient(180deg,rgba(244,241,230,0.24),transparent_72%)] dark:bg-[radial-gradient(ellipse_at_50%_34%,rgba(224,183,90,0.1),transparent_43%),radial-gradient(ellipse_at_4%_76%,rgba(122,187,94,0.055),transparent_28%)]" />*/}
       <div className="relative container mx-auto px-4 md:px-6">
+              <div className="instrument-module mx-auto max-w-6xl p-4 sm:p-6 md:p-8">
         <div className="mb-8 flex items-end justify-between gap-5 sm:mb-10">
           <div>
             <m.p
@@ -112,7 +113,7 @@ export function ExperienceSection() {
             </AnimatePresence>
           </div>
 
-          <div className="relative mx-auto mt-1 max-w-3xl border-t border-black/15 pt-5 dark:border-white/10">
+          <div className="instrument-plate relative mx-auto mt-1 max-w-3xl p-4 pt-5 dark:border-white/10">
             <AnimatePresence mode="wait" initial={false}>
               <m.div
                 key={`${selectedJob.id}-${activeSubIndex}`}
@@ -172,6 +173,7 @@ export function ExperienceSection() {
             </span>
           </div>
         </m.div>
+        </div>
       </div>
     </section>
   )

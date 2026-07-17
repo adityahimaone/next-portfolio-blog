@@ -157,11 +157,18 @@ export function DawHero() {
   return (
     <section
       ref={containerRef}
-      className="relative h-screen min-h-160 w-full overflow-hidden bg-[#16191b] select-none"
+      className="relative h-screen min-h-160 w-full overflow-hidden bg-[var(--ko-display-bg)] select-none"
     >
+      <div className="pointer-events-none absolute inset-x-3 top-3 z-30 flex items-center justify-between border-y border-white/15 bg-black/25 px-3 py-2 font-mono text-[7px] font-bold tracking-[0.2em] text-white/60 uppercase backdrop-blur-sm sm:inset-x-5 sm:top-5 sm:px-4">
+        <span className="text-[var(--ko-accent)]">INPUT / 001</span>
+        <span className="hidden text-white/45 sm:inline">
+          操作面 · CONTROL SURFACE
+        </span>
+        <span>サンプラー</span>
+      </div>
       <motion.div
         style={{ y: wallY, opacity }}
-        className="absolute inset-0 grid grid-cols-8 grid-rows-12 sm:grid-cols-12 sm:grid-rows-8"
+        className="absolute inset-0 grid grid-cols-8 grid-rows-12 bg-[radial-gradient(circle_at_center,transparent_20%,rgb(0_0_0_/_0.28)_100%)] sm:grid-cols-12 sm:grid-rows-8"
       >
         {devices.map((device, index) => (
           <DeviceTile
@@ -182,20 +189,24 @@ export function DawHero() {
         ))}
       </motion.div>
 
-      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(8,10,11,0.12)_48%,rgba(8,10,11,0.62)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgb(8_10_11_/_0.12)_48%,rgb(8_10_11_/_0.78)_100%)]" />
 
       <motion.div
         style={{ y: titleY, opacity }}
         className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center px-4 text-center"
       >
-        <p className="mb-3 font-mono text-[9px] font-bold tracking-[0.48em] text-[#e0b75a] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-[11px]">
-          DIGITAL / ANALOG / INTERFACE
-        </p>
-        <h1 className="font-[family-name:var(--font-syne)] text-[clamp(3.3rem,11vw,10.5rem)] leading-[0.74] font-black tracking-[-0.09em] text-[#f1eee5] [text-shadow:0_3px_0_#121313,0_0_28px_rgba(0,0,0,0.85)]">
+        <div className="mb-3 flex items-center gap-3 font-mono text-[9px] font-bold tracking-[0.34em] text-[var(--ko-accent)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] sm:text-[11px]">
+          <span className="h-px w-8 bg-[var(--ko-accent)]/70 sm:w-12" />
+          <span>DIGITAL / ANALOG / INTERFACE</span>
+          <span className="text-white/55">音の設計</span>
+        </div>
+        <h1 className="font-[family-name:var(--font-syne)] text-[clamp(3.3rem,11vw,10.5rem)] leading-[0.74] font-black tracking-[-0.09em] text-[var(--daw-chassis-raised)] [text-shadow:0_3px_0_#121313,0_0_28px_rgba(0,0,0,0.85)]">
           ADITYA
-          <span className="block pl-[0.1em] text-[#e0b75a]">HIMAONE</span>
+          <span className="block pl-[0.1em] text-[var(--daw-led-amber)]">
+            HIMAONE
+          </span>
         </h1>
-        <p className="mt-6 bg-[#101212]/70 px-3 py-1.5 font-mono text-[8px] font-bold tracking-[0.25em] text-white/80 backdrop-blur-sm sm:text-[10px]">
+        <p className="mt-6 bg-[var(--daw-display-bg)]/75 px-3 py-1.5 font-mono text-[8px] font-bold tracking-[0.25em] text-white/80 backdrop-blur-sm sm:text-[10px]">
           FRONTEND DEVELOPER · JAKARTA, ID
         </p>
       </motion.div>
@@ -244,7 +255,7 @@ function DeviceTile({
       whileTap={reduceMotion ? undefined : { scale: 0.985 }}
       onClick={onToggle}
       className={cn(
-        'group relative min-h-0 overflow-hidden border border-black/70 text-left shadow-[inset_0_1px_rgba(255,255,255,0.12)] transition-[filter,box-shadow] duration-150 ease-out outline-none focus-visible:z-30 focus-visible:ring-2 focus-visible:ring-[#e0b75a] focus-visible:ring-inset',
+        'group relative min-h-0 overflow-hidden border border-black/70 text-left shadow-[inset_0_1px_rgba(255,255,255,0.12)] transition-[filter,box-shadow] duration-150 ease-out outline-none focus-visible:z-30 focus-visible:ring-2 focus-visible:ring-[var(--daw-led-amber)] focus-visible:ring-inset',
         active &&
           'z-10 shadow-[inset_0_0_0_1px_rgba(224,183,90,0.65),inset_0_1px_rgba(255,255,255,0.18)] brightness-110',
         device.className,
@@ -257,7 +268,8 @@ function DeviceTile({
       <span
         className={cn(
           'pointer-events-none absolute right-2 bottom-2 z-10 h-1.5 w-1.5 rounded-full bg-[#535957] transition-[background-color,box-shadow] duration-150',
-          active && 'bg-[#d6ad45] shadow-[0_0_8px_#e0b75a]',
+          active &&
+            'bg-[var(--daw-led-amber)] shadow-[0_0_8px_var(--daw-led-amber)]',
         )}
       />
     </motion.button>
@@ -301,13 +313,13 @@ function Dap({ active }: { active: boolean }) {
           <div className="h-full w-full bg-[linear-gradient(135deg,#152c2d,#0c1214)]">
             <div
               className={cn(
-                'mt-[18%] ml-[10%] h-0.5 w-[70%] bg-[#7abb5e] transition-all duration-200',
-                active && 'w-[82%] shadow-[0_0_6px_#7abb5e]',
+                'mt-[18%] ml-[10%] h-0.5 w-[70%] bg-[var(--daw-led-green)] transition-all duration-200',
+                active && 'w-[82%] shadow-[0_0_6px_var(--daw-led-green)]',
               )}
             />
             <div
               className={cn(
-                'mt-[12%] ml-[10%] h-0.5 w-[45%] bg-[#7abb5e]/60 transition-all duration-200',
+                'mt-[12%] ml-[10%] h-0.5 w-[45%] bg-[var(--daw-led-green)]/60 transition-all duration-200',
                 active && 'w-[68%]',
               )}
             />
@@ -367,7 +379,7 @@ function JogWheel({ active }: { active: boolean }) {
         <i
           className={cn(
             'h-3 w-3 rounded-sm bg-[#6b5730] transition-colors',
-            active && 'bg-[#e0b75a]',
+            active && 'bg-[var(--daw-led-amber)]',
           )}
         />
       </div>
@@ -403,13 +415,13 @@ function Mixer({ active }: { active: boolean }) {
 }
 function Sampler({ active }: { active: boolean }) {
   return (
-    <div className="grid h-full grid-cols-2 gap-2 bg-[#d7a84e] p-[17%] pt-[27%]">
+    <div className="grid h-full grid-cols-2 gap-2 bg-[var(--daw-led-amber)] p-[17%] pt-[27%]">
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
           className={cn(
             'border border-black/30 shadow-[inset_2px_2px_rgba(255,255,255,0.22),2px_2px_rgba(0,0,0,0.25)] transition-transform duration-150',
-            active && i % 3 === 1 ? 'scale-90 bg-[#d55c53]' : 'bg-[#c88e3d]',
+            active && i % 3 === 1 ? 'scale-90 bg-[#f4512a]' : 'bg-[#c66d3d]',
           )}
         />
       ))}
@@ -455,7 +467,7 @@ function Monitor({ active }: { active: boolean }) {
 }
 function Effects({ active }: { active: boolean }) {
   return (
-    <div className="h-full bg-[#745e78] p-[15%] pt-[27%]">
+    <div className="h-full bg-[var(--daw-led-blue)] p-[15%] pt-[27%]">
       <div className="h-[28%] border-2 border-[#2c2630] bg-[#1b2221]">
         <div
           className={cn(
@@ -486,7 +498,9 @@ function Sequencer({ active }: { active: boolean }) {
           key={i}
           className={cn(
             'aspect-square rounded-sm border border-black/35 bg-[#59605d] shadow-[inset_0_1px_rgba(255,255,255,0.16)] transition-colors duration-150',
-            active && i % 3 === 0 && 'bg-[#7abb5e] shadow-[0_0_8px_#7abb5e]',
+            active &&
+              i % 3 === 0 &&
+              'bg-[var(--daw-led-green)] shadow-[0_0_8px_var(--daw-led-green)]',
           )}
         />
       ))}

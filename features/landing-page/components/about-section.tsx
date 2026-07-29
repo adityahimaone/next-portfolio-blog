@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { m, AnimatePresence, useInView } from 'motion/react'
 import { cn } from '@/lib/utils'
+import { Portal } from '@/components/portal'
 import {
   Play,
   Pause,
@@ -297,97 +298,99 @@ const DetailWindow = ({
   clip: Clip
   onClose: () => void
 }) => (
-  <m.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm md:p-8"
-    onClick={onClose}
-  >
+  <Portal>
     <m.div
-      initial={{ scale: 0.95, y: 30 }}
-      animate={{ scale: 1, y: 0 }}
-      exit={{ scale: 0.95, y: 30 }}
-      onClick={(e) => e.stopPropagation()}
-      className="relative flex h-[85vh] max-h-[650px] w-full max-w-5xl flex-col overflow-hidden rounded-lg border-[3px] border-zinc-700 bg-zinc-200 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm md:p-8"
+      onClick={onClose}
     >
-      {/* Outer Metal Bezel Overlay */}
-      <div className="pointer-events-none absolute inset-0 z-30 rounded border border-white/20" />
+      <m.div
+        initial={{ scale: 0.95, y: 30 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.95, y: 30 }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative flex h-[85vh] max-h-[650px] w-full max-w-5xl flex-col overflow-hidden rounded-lg border-[3px] border-zinc-700 bg-zinc-200 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+      >
+        {/* Outer Metal Bezel Overlay */}
+        <div className="pointer-events-none absolute inset-0 z-30 rounded border border-white/20" />
 
-      {/* VST Studio Hardware Header */}
-      <div className="relative z-10 flex items-center justify-between border-b-2 border-zinc-400 bg-gradient-to-b from-zinc-300 to-zinc-400 px-6 py-4 dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950">
-        {/* Left rack ear mount hole */}
-        <div className="absolute top-1/2 left-2 flex -translate-y-1/2 flex-col gap-2">
-          <div className="h-2 w-2 rounded-full border border-black/30 bg-zinc-600 shadow-inner" />
-        </div>
-
-        <div className="flex items-center gap-4 pl-2">
-          {/* LCD Status Screen */}
-          <div className="relative overflow-hidden rounded border border-amber-500/30 bg-black/90 px-4 py-1.5 shadow-[inset_0_2px_8px_rgba(0,0,0,1)]">
-            <span className="font-mono text-xs font-bold tracking-wider text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]">
-              {clip.name.toUpperCase()} // STATUS: ONLINE
-            </span>
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent" />
+        {/* VST Studio Hardware Header */}
+        <div className="relative z-10 flex items-center justify-between border-b-2 border-zinc-400 bg-gradient-to-b from-zinc-300 to-zinc-400 px-6 py-4 dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950">
+          {/* Left rack ear mount hole */}
+          <div className="absolute top-1/2 left-2 flex -translate-y-1/2 flex-col gap-2">
+            <div className="h-2 w-2 rounded-full border border-black/30 bg-zinc-600 shadow-inner" />
           </div>
-        </div>
 
-        {/* Center: Vent Grills */}
-        <div className="hidden items-center gap-1 opacity-40 lg:flex">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="h-8 w-1 rounded-full bg-zinc-600 dark:bg-zinc-800"
-            />
-          ))}
-        </div>
+          <div className="flex items-center gap-4 pl-2">
+            {/* LCD Status Screen */}
+            <div className="relative overflow-hidden rounded border border-amber-500/30 bg-black/90 px-4 py-1.5 shadow-[inset_0_2px_8px_rgba(0,0,0,1)]">
+              <span className="font-mono text-xs font-bold tracking-wider text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]">
+                {clip.name.toUpperCase()} // STATUS: ONLINE
+              </span>
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent" />
+            </div>
+          </div>
 
-        {/* Right controls */}
-        <div className="flex items-center gap-6">
-          {/* Control Dials */}
-          <div className="hidden items-center gap-4 md:flex">
-            {['PARAM 1', 'PARAM 2'].map((label, i) => (
-              <div key={label} className="flex flex-col items-center">
-                <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-zinc-500 bg-gradient-to-b from-zinc-200 to-zinc-400 shadow-md dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900">
-                  <div
-                    className="bg-zinc-850 absolute top-0.5 h-4 w-0.5 rounded-full dark:bg-zinc-300"
-                    style={{
-                      transform: `rotate(${45 + i * 90}deg)`,
-                      transformOrigin: '50% 100%',
-                    }}
-                  />
-                </div>
-                <span className="mt-1 text-[7px] font-bold text-zinc-600 dark:text-zinc-400">
-                  {label}
-                </span>
-              </div>
+          {/* Center: Vent Grills */}
+          <div className="hidden items-center gap-1 opacity-40 lg:flex">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="h-8 w-1 rounded-full bg-zinc-600 dark:bg-zinc-800"
+              />
             ))}
           </div>
 
-          <div className="h-8 w-px bg-zinc-400 dark:bg-zinc-800" />
+          {/* Right controls */}
+          <div className="flex items-center gap-6">
+            {/* Control Dials */}
+            <div className="hidden items-center gap-4 md:flex">
+              {['PARAM 1', 'PARAM 2'].map((label, i) => (
+                <div key={label} className="flex flex-col items-center">
+                  <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-zinc-500 bg-gradient-to-b from-zinc-200 to-zinc-400 shadow-md dark:border-zinc-700 dark:from-zinc-800 dark:to-zinc-900">
+                    <div
+                      className="bg-zinc-850 absolute top-0.5 h-4 w-0.5 rounded-full dark:bg-zinc-300"
+                      style={{
+                        transform: `rotate(${45 + i * 90}deg)`,
+                        transformOrigin: '50% 100%',
+                      }}
+                    />
+                  </div>
+                  <span className="mt-1 text-[7px] font-bold text-zinc-600 dark:text-zinc-400">
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
 
-          <button
-            onClick={onClose}
-            aria-label="Close clip detail"
-            className="group flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-red-900/30 bg-gradient-to-b from-red-500 to-red-700 text-white shadow-md hover:brightness-110 active:scale-95"
-          >
-            <X size={14} className="stroke-[2.5]" />
-          </button>
+            <div className="h-8 w-px bg-zinc-400 dark:bg-zinc-800" />
+
+            <button
+              onClick={onClose}
+              aria-label="Close clip detail"
+              className="group flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-red-900/30 bg-gradient-to-b from-red-500 to-red-700 text-white shadow-md hover:brightness-110 active:scale-95"
+            >
+              <X size={14} className="stroke-[2.5]" />
+            </button>
+          </div>
+
+          {/* Right rack ear mount hole */}
+          <div className="absolute top-1/2 right-2 -translate-y-1/2">
+            <div className="h-2 w-2 rounded-full border border-black/30 bg-zinc-600 shadow-inner" />
+          </div>
         </div>
 
-        {/* Right rack ear mount hole */}
-        <div className="absolute top-1/2 right-2 -translate-y-1/2">
-          <div className="h-2 w-2 rounded-full border border-black/30 bg-zinc-600 shadow-inner" />
+        {/* Outboard Processor Interior (Content Display) */}
+        <div className="scrollbar-none no-scrollbar flex-1 overflow-y-auto bg-zinc-50 p-4 text-zinc-900 md:p-6 dark:bg-[#121214] dark:text-zinc-300">
+          <div className="border-zinc-350 no-scrollbar relative overflow-x-hidden rounded-lg border bg-white/50 p-4 shadow-inner md:p-6 dark:border-zinc-800/80 dark:bg-black/30">
+            {clip.content}
+          </div>
         </div>
-      </div>
-
-      {/* Outboard Processor Interior (Content Display) */}
-      <div className="scrollbar-none no-scrollbar flex-1 overflow-y-auto bg-zinc-50 p-4 text-zinc-900 md:p-6 dark:bg-[#121214] dark:text-zinc-300">
-        <div className="border-zinc-350 no-scrollbar relative overflow-x-hidden rounded-lg border bg-white/50 p-4 shadow-inner md:p-6 dark:border-zinc-800/80 dark:bg-black/30">
-          {clip.content}
-        </div>
-      </div>
+      </m.div>
     </m.div>
-  </m.div>
+  </Portal>
 )
 
 export function AboutSection() {

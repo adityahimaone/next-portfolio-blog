@@ -661,12 +661,23 @@ function Experience({
                             <i key={i} />
                           ))}
                         </span>
-                        <b />
+                        <span className={styles.cassetteTapePath}>
+                          <i />
+                          <b />
+                        </span>
                         <span className={styles.tapeWheel}>
                           {Array.from({ length: 6 }, (_, i) => (
                             <i key={i} />
                           ))}
                         </span>
+                      </div>
+                      <div
+                        className={styles.cassetteHeadAssembly}
+                        aria-hidden="true"
+                      >
+                        <i />
+                        <b />
+                        <i />
                       </div>
                       <span className={styles.cassetteFooter}>
                         {item.period}
@@ -793,16 +804,36 @@ function Work() {
   )
 }
 
+const PAD_COLORS = [
+  '#9b6cff',
+  '#d85fe8',
+  '#ef4f98',
+  '#f04462',
+  '#54d987',
+  '#38d2cf',
+  '#3f9df2',
+  '#656ee9',
+  '#f0bd45',
+  '#dce84c',
+  '#8bd950',
+  '#48cf67',
+  '#ef5947',
+  '#f27d3f',
+  '#f19d3f',
+  '#eab84b',
+] as const
+
 function Contact() {
   const [activePad, setActivePad] = useState<number | null>(0)
   const [bpm, setBpm] = useState(120)
-  const launchPads = Array.from({ length: 32 }, (_, index) => ({
+  const launchPads = Array.from({ length: 16 }, (_, index) => ({
     label:
       SOCIAL_LINKS_LANDING[index]?.label ??
       (index === 4 ? 'EMAIL' : `PAD ${String(index + 1).padStart(2, '0')}`),
     link:
       SOCIAL_LINKS_LANDING[index]?.link ??
       (index === 4 ? `mailto:${EMAIL}` : undefined),
+    color: PAD_COLORS[index],
   }))
 
   return (
@@ -831,7 +862,7 @@ function Contact() {
           <div className={styles.launchpadTopbar}>
             <div>
               <strong>RACK—01 / LAUNCH</strong>
-              <SilkscreenLabel>32 PAD PERFORMANCE ROUTER</SilkscreenLabel>
+              <SilkscreenLabel>16 PAD PERFORMANCE ROUTER</SilkscreenLabel>
             </div>
             <div className={styles.launchpadTransport}>
               <label>
@@ -870,6 +901,7 @@ function Contact() {
               }`
               const content = (
                 <>
+                  <i className={styles.launchPadLed} aria-hidden="true" />
                   <span>{String(index + 1).padStart(2, '0')}</span>
                   <strong>{pad.label}</strong>
                 </>
@@ -883,7 +915,13 @@ function Contact() {
                   rel="noreferrer"
                   key={pad.label}
                   onClick={() => setActivePad(index)}
-                  style={{ '--pad-index': index } as React.CSSProperties}
+                  aria-current={activePad === index ? 'true' : undefined}
+                  style={
+                    {
+                      '--pad-index': index,
+                      '--pad-color': pad.color,
+                    } as React.CSSProperties
+                  }
                 >
                   {content}
                 </a>
@@ -898,7 +936,12 @@ function Contact() {
                       current === index ? null : index,
                     )
                   }
-                  style={{ '--pad-index': index } as React.CSSProperties}
+                  style={
+                    {
+                      '--pad-index': index,
+                      '--pad-color': pad.color,
+                    } as React.CSSProperties
+                  }
                 >
                   {content}
                 </button>
@@ -1029,6 +1072,46 @@ export default function Rack01LandingPage() {
               end: 'top 38%',
               scrub: 0.45,
             },
+          })
+
+          const depthModules = gsap.utils.toArray<HTMLElement>(
+            `.${styles.timelinePanel}, .${styles.controller}, .${styles.cassetteDeck}, .${styles.contactLaunchpad}`,
+          )
+          depthModules.forEach((module) => {
+            gsap.fromTo(
+              module,
+              { y: 18 },
+              {
+                y: -18,
+                ease: 'none',
+                scrollTrigger: {
+                  trigger: module,
+                  start: 'top bottom',
+                  end: 'bottom top',
+                  scrub: 1.1,
+                },
+              },
+            )
+          })
+
+          const depthHeadings = gsap.utils.toArray<HTMLElement>(
+            `.${styles.about} .${styles.sectionHeading}, .${styles.skills} .${styles.sectionHeading}, .${styles.experience} .${styles.sectionHeading}, .${styles.contact} .${styles.patchHeader}`,
+          )
+          depthHeadings.forEach((heading) => {
+            gsap.fromTo(
+              heading,
+              { y: -8 },
+              {
+                y: 8,
+                ease: 'none',
+                scrollTrigger: {
+                  trigger: heading,
+                  start: 'top bottom',
+                  end: 'bottom top',
+                  scrub: 1.2,
+                },
+              },
+            )
           })
 
           gsap.to(`.${styles.tapeWheel}`, {

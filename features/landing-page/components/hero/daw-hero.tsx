@@ -175,6 +175,7 @@ export function DawHero({
             baseDelay={baseDelay}
             device={device}
             index={index}
+            immediatelyVisible={backgroundOnly}
             reduceMotion={shouldReduceMotion}
             onToggle={() => {
               hasManualInteraction.current = true
@@ -187,7 +188,9 @@ export function DawHero({
         ))}
       </motion.div>
 
-      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(8,10,11,0.12)_48%,rgba(8,10,11,0.62)_100%)]" />
+      {!backgroundOnly && (
+        <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(8,10,11,0.12)_48%,rgba(8,10,11,0.62)_100%)]" />
+      )}
 
       {!backgroundOnly && (
         <>
@@ -228,6 +231,7 @@ function DeviceTile({
   index,
   baseDelay,
   active,
+  immediatelyVisible,
   reduceMotion,
   onToggle,
 }: {
@@ -235,6 +239,7 @@ function DeviceTile({
   index: number
   baseDelay: number
   active: boolean
+  immediatelyVisible: boolean
   reduceMotion: boolean | null
   onToggle: () => void
 }) {
@@ -243,11 +248,16 @@ function DeviceTile({
       type="button"
       aria-label={`${device.label}: ${active ? 'active' : 'inactive'}. Activate module.`}
       aria-pressed={active}
-      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.965 }}
-      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+      initial={
+        immediatelyVisible || reduceMotion
+          ? false
+          : { opacity: 0, scale: 0.965 }
+      }
+      animate={{ opacity: 1, scale: 1 }}
       transition={{
-        duration: reduceMotion ? 0.2 : 0.42,
-        delay: baseDelay + index * 0.04,
+        duration: immediatelyVisible || reduceMotion ? 0 : 0.42,
+        delay:
+          immediatelyVisible || reduceMotion ? 0 : baseDelay + index * 0.04,
         ease: [0.22, 1, 0.36, 1],
       }}
       whileTap={reduceMotion ? undefined : { scale: 0.96 }}

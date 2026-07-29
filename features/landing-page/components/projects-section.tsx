@@ -5,6 +5,7 @@ import { m, AnimatePresence, useInView } from 'motion/react'
 import Image from 'next/image'
 import { Disc, X, Play, Music, Mic2, ArrowUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Portal } from '@/components/portal'
 
 import { PROJECTS_SHOWCASE, type ProjectShowcaseItem } from '../constants'
 
@@ -122,110 +123,112 @@ export function ProjectsSection() {
         </div>
 
         {/* Project Detail Modal (Liner Notes) */}
-        <AnimatePresence>
-          {selectedProject && (
-            <m.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-              onClick={() => setSelectedProject(null)}
-            >
+        <Portal>
+          <AnimatePresence>
+            {selectedProject && (
               <m.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className="relative max-h-[90vh] w-[95vw] max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-zinc-900"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+                onClick={() => setSelectedProject(null)}
               >
-                {/* Close Button */}
-                <button
-                  onClick={() => setSelectedProject(null)}
-                  aria-label="Close project modal"
-                  className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/10 text-zinc-900 backdrop-blur-md transition-colors hover:bg-black/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
+                <m.div
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="relative max-h-[90vh] w-[95vw] max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-zinc-900"
                 >
-                  <X className="h-5 w-5" />
-                </button>
+                  {/* Close Button */}
+                  <button
+                    onClick={() => setSelectedProject(null)}
+                    aria-label="Close project modal"
+                    className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/10 text-zinc-900 backdrop-blur-md transition-colors hover:bg-black/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
 
-                <div className="grid h-full grid-cols-1 md:grid-cols-2">
-                  {/* Left: Image Area */}
-                  <div className="relative h-48 bg-zinc-100 md:h-full lg:h-full dark:bg-zinc-800">
-                    <Image
-                      src={selectedProject.image}
-                      alt={selectedProject.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
+                  <div className="grid h-full grid-cols-1 md:grid-cols-2">
+                    {/* Left: Image Area */}
+                    <div className="relative h-48 bg-zinc-100 md:h-full lg:h-full dark:bg-zinc-800">
+                      <Image
+                        src={selectedProject.image}
+                        alt={selectedProject.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
 
-                    {/* Floating Music Note */}
-                    <div className="absolute bottom-6 left-6">
-                      <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg">
-                        <Music className="h-6 w-6 animate-pulse" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right: Content Area */}
-                  <div className="flex flex-col overflow-hidden p-6 md:p-8">
-                    <div className="mb-4 md:mb-6">
-                      <div className="text-primary mb-2 flex items-center gap-2 text-sm font-medium">
-                        <Mic2 className="h-4 w-4" />
-                        <span>FEATURED TRACK</span>
-                      </div>
-                      <h3 className="text-2xl leading-tight font-bold text-zinc-900 md:text-3xl dark:text-zinc-100">
-                        {selectedProject.title}
-                      </h3>
-                      <div className="mt-2 flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-                        <span>{selectedProject.genre}</span>
-                        <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                        <span>{selectedProject.year}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto pr-2">
-                      <p className="line-clamp-4 text-base leading-relaxed text-zinc-600 md:line-clamp-none md:text-lg dark:text-zinc-300">
-                        {selectedProject.description}
-                      </p>
-
-                      <div className="mt-8 space-y-4">
-                        <h4 className="text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-zinc-100">
-                          Production Credits
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {['React', 'Next.js', 'Tailwind', 'TypeScript'].map(
-                            (tech) => (
-                              <span
-                                key={tech}
-                                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                              >
-                                {tech}
-                              </span>
-                            ),
-                          )}
+                      {/* Floating Music Note */}
+                      <div className="absolute bottom-6 left-6">
+                        <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg">
+                          <Music className="h-6 w-6 animate-pulse" />
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-8 border-t border-zinc-100 pt-6 dark:border-zinc-800">
-                      <a
-                        href={selectedProject.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 py-4 font-bold text-white transition-all hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
-                      >
-                        <Play className="h-5 w-5 fill-current" />
-                        <span>Listen to Track (Visit Site)</span>
-                        <ArrowUpRight className="ml-auto h-5 w-5 opacity-50 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                      </a>
+                    {/* Right: Content Area */}
+                    <div className="flex flex-col overflow-hidden p-6 md:p-8">
+                      <div className="mb-4 md:mb-6">
+                        <div className="text-primary mb-2 flex items-center gap-2 text-sm font-medium">
+                          <Mic2 className="h-4 w-4" />
+                          <span>FEATURED TRACK</span>
+                        </div>
+                        <h3 className="text-2xl leading-tight font-bold text-zinc-900 md:text-3xl dark:text-zinc-100">
+                          {selectedProject.title}
+                        </h3>
+                        <div className="mt-2 flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
+                          <span>{selectedProject.genre}</span>
+                          <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                          <span>{selectedProject.year}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 overflow-y-auto pr-2">
+                        <p className="line-clamp-4 text-base leading-relaxed text-zinc-600 md:line-clamp-none md:text-lg dark:text-zinc-300">
+                          {selectedProject.description}
+                        </p>
+
+                        <div className="mt-8 space-y-4">
+                          <h4 className="text-sm font-bold tracking-wider text-zinc-900 uppercase dark:text-zinc-100">
+                            Production Credits
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {['React', 'Next.js', 'Tailwind', 'TypeScript'].map(
+                              (tech) => (
+                                <span
+                                  key={tech}
+                                  className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                                >
+                                  {tech}
+                                </span>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-8 border-t border-zinc-100 pt-6 dark:border-zinc-800">
+                        <a
+                          href={selectedProject.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 py-4 font-bold text-white transition-all hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+                        >
+                          <Play className="h-5 w-5 fill-current" />
+                          <span>Listen to Track (Visit Site)</span>
+                          <ArrowUpRight className="ml-auto h-5 w-5 opacity-50 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                        </a>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </m.div>
               </m.div>
-            </m.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
+        </Portal>
       </section>
     </>
   )

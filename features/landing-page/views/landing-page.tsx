@@ -82,16 +82,20 @@ function ScrollParallaxSection({
     [0, 0.16, 0.5, 0.84, 1],
     shouldReduceMotion ? [1, 1, 1, 1, 1] : [0.42, 0.78, 1, 0.78, 0.42],
   )
-  const y = useSpring(rawY, { stiffness: 120, damping: 24, mass: 0.7 })
+  // Tuned close to critical damping (ratio ~1.1-1.2) with higher stiffness
+  // and lower mass than before, so the parallax tracks scroll velocity
+  // closely instead of lagging behind and "catching up" — that lag is what
+  // reads as choppy rather than smooth.
+  const y = useSpring(rawY, { stiffness: 320, damping: 38, mass: 0.4 })
   const scale = useSpring(rawScale, {
-    stiffness: 140,
-    damping: 26,
-    mass: 0.7,
+    stiffness: 320,
+    damping: 38,
+    mass: 0.35,
   })
   const opacity = useSpring(rawOpacity, {
-    stiffness: 150,
-    damping: 28,
-    mass: 0.6,
+    stiffness: 320,
+    damping: 38,
+    mass: 0.3,
   })
 
   return (

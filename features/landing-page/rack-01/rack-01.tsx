@@ -238,32 +238,23 @@ function Hero() {
         >
           <DawHero backgroundOnly />
         </div>
-        <div className={styles.heroMarquee} aria-hidden="true">
-          <div className={styles.heroMarqueeRow}>
-            <div className={styles.heroMarqueeTrack}>
-              {Array.from({ length: 2 }, (_, group) => (
-                <div className={styles.heroMarqueeGroup} key={group}>
-                  <span>DEVICE WALL / SYSTEM ONLINE</span>
-                  <span>12 MODULES CONNECTED</span>
-                  <span>JAKARTA OUTPUT / READY</span>
-                  <span>SCROLL TO ADVANCE</span>
-                </div>
-              ))}
-            </div>
+        <div className={styles.heroViewfinderScrim} aria-hidden="true" />
+        <div className={styles.heroViewfinder} aria-hidden="true">
+          <span className={styles.viewfinderCornerTopLeft} />
+          <span className={styles.viewfinderCornerTopRight} />
+          <span className={styles.viewfinderCornerBottomLeft} />
+          <span className={styles.viewfinderCornerBottomRight} />
+          <div className={styles.viewfinderReticle}>
+            <i />
           </div>
-          <div className={styles.heroMarqueeRow}>
-            <div
-              className={`${styles.heroMarqueeTrack} ${styles.heroMarqueeReverse}`}
-            >
-              {Array.from({ length: 2 }, (_, group) => (
-                <div className={styles.heroMarqueeGroup} key={group}>
-                  <span>SELECT A DEVICE / PLAY</span>
-                  <span>SIGNAL LOCKED / 48KHZ</span>
-                  <span>RACK—01 / AH</span>
-                  <span>CREATIVE CHANNEL OPEN</span>
-                </div>
-              ))}
-            </div>
+          <div className={styles.viewfinderTelemetryTop}>
+            <span className={styles.viewfinderRecording}>REC</span>
+            <span>CAM A / DEVICE WALL</span>
+          </div>
+          <div className={styles.viewfinderTelemetryRight}>
+            <span>4K</span>
+            <span>24 FPS</span>
+            <span>48 KHZ</span>
           </div>
         </div>
 
@@ -284,34 +275,41 @@ function Hero() {
           </a>
         </header>
 
-        <div className={styles.heroIdentity}>
-          <div className={styles.heroStatus}>
-            <SilkscreenLabel>DEVICE WALL / SYSTEM ONLINE</SilkscreenLabel>
-            <span>
-              <i /> 12 MODULES CONNECTED
+        <div className={styles.heroViewfinderReadout}>
+          <div className={styles.heroViewfinderLabel}>
+            <span>FRONTEND ENGINEER / CREATIVE DEVELOPER</span>
+            <span className={styles.heroViewfinderStatus}>
+              <i /> LIVE SIGNAL
             </span>
           </div>
-          <h1 aria-label="Adityahimaone">
-            <span className={styles.heroLine}>ADITYA</span>
-            <span className={styles.heroLine}>
-              HIMA<em>ONE</em>
-            </span>
-          </h1>
-          <div className={styles.heroIdentityFooter}>
+
+          <div className={styles.heroViewfinderIdentity}>
+            <h1 aria-label="Aditya Himaone">
+              <span className={styles.heroLine}>ADITYA</span>
+              <span className={styles.heroLine}>
+                HIMA<em>ONE</em>
+              </span>
+            </h1>
             <p>
-              Frontend engineer and creative developer building expressive,
-              high-performance digital products.
+              Building expressive, high-performance digital products through
+              thoughtful interfaces, systems, and motion.
             </p>
+          </div>
+
+          <div className={styles.heroViewfinderActions}>
+            <span>12 DEVICES / JAKARTA, ID</span>
             <a href="#work" className={styles.primaryButton}>
-              <span>PLAY SELECTED WORK</span>
+              <span>VIEW SELECTED WORK</span>
               <ArrowDownRight size={18} aria-hidden="true" />
             </a>
           </div>
         </div>
 
         <div className={styles.heroFooter}>
-          <SilkscreenLabel>JAKARTA, ID / 06°12′S 106°49′E</SilkscreenLabel>
-          <span>SELECT A DEVICE / SCROLL TO ADVANCE ↓</span>
+          <SilkscreenLabel>
+            COLLECTION / 12 INTERACTIVE INSTRUMENTS
+          </SilkscreenLabel>
+          <span>JAKARTA, ID / SELECT A DEVICE / SCROLL ↓</span>
         </div>
       </div>
     </section>
@@ -653,6 +651,9 @@ function Skills() {
       data-rack-section
     >
       <div className={styles.skillsStage}>
+        <div className={styles.skillsBackdrop} aria-hidden="true">
+          SKILLS
+        </div>
         <div className={styles.skillsIntro}>
           <SectionHeading index="03" eyebrow="MIDI MAP">
             A practical toolkit, mapped like an instrument.
@@ -1512,23 +1513,18 @@ export default function Rack01LandingPage() {
             })
             .to(
               `.${styles.heroLine}`,
-              { yPercent: -10, stagger: 0.08, ease: 'none' },
+              { yPercent: -6, stagger: 0.06, ease: 'none' },
               0,
             )
             .to(
-              `.${styles.heroIdentity}`,
-              { yPercent: -6, scale: 0.985, ease: 'none' },
+              `.${styles.heroViewfinderReadout}`,
+              { y: -18, opacity: 0.76, ease: 'none' },
               0,
-            )
-            .to(
-              `.${styles.heroStatus}, .${styles.heroIdentityFooter}`,
-              { opacity: 0.35, ease: 'none' },
-              0.08,
             )
 
           gsap.to(`.${styles.heroDeviceWall}`, {
-            yPercent: 5,
-            scale: 1.035,
+            yPercent: 3,
+            scale: 1.02,
             ease: 'none',
             scrollTrigger: {
               trigger: `.${styles.hero}`,

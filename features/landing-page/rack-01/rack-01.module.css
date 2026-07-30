@@ -76,7 +76,7 @@
 
 .hero {
   position: relative;
-  height: 175svh;
+  height: 158svh;
   background: var(--chassis);
 }
 .heroStage {
@@ -121,57 +121,123 @@
   width: 100%;
   height: 100%;
 }
-.heroMarquee {
+.heroViewfinderScrim {
   position: absolute;
   z-index: 2;
-  inset: 18% 0 auto;
-  display: grid;
-  gap: clamp(82px, 24vh, 230px);
-  overflow: hidden;
-  color: rgba(244, 240, 232, 0.16);
-  pointer-events: none;
-  user-select: none;
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 8%,
-    #000 92%,
-    transparent
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 48%;
+  background: linear-gradient(
+    0deg,
+    rgba(7, 9, 8, 0.88) 0,
+    rgba(7, 9, 8, 0.5) 38%,
+    transparent 100%
   );
+  pointer-events: none;
 }
-.heroMarqueeRow {
-  overflow: hidden;
+.heroViewfinder {
+  position: absolute;
+  z-index: 3;
+  inset: clamp(84px, 12vh, 118px) clamp(22px, 4vw, 64px) clamp(66px, 8vh, 88px);
+  border: 1px solid rgba(231, 226, 216, 0.2);
+  color: rgba(231, 226, 216, 0.78);
+  font: 8px var(--font-geist-mono);
+  letter-spacing: 0.12em;
+  pointer-events: none;
 }
-.heroMarqueeTrack {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-  animation: hero-marquee 32s linear infinite;
+.viewfinderCornerTopLeft,
+.viewfinderCornerTopRight,
+.viewfinderCornerBottomLeft,
+.viewfinderCornerBottomRight {
+  position: absolute;
+  width: clamp(30px, 4vw, 58px);
+  height: clamp(30px, 4vw, 58px);
+  border-color: rgba(231, 226, 216, 0.86);
+  border-style: solid;
 }
-.heroMarqueeGroup {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
+.viewfinderCornerTopLeft {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
 }
-.heroMarqueeGroup span {
-  display: flex;
-  align-items: center;
-  font: 650 clamp(34px, 5.8vw, 92px) / 0.8 var(--font-space-grotesk);
-  letter-spacing: -0.055em;
-  white-space: nowrap;
+.viewfinderCornerTopRight {
+  top: -1px;
+  right: -1px;
+  border-width: 2px 2px 0 0;
 }
-.heroMarqueeGroup span::after {
-  width: clamp(8px, 1vw, 15px);
-  height: clamp(8px, 1vw, 15px);
-  flex: 0 0 auto;
-  margin: 0 clamp(24px, 4vw, 72px);
-  border: 1px solid currentcolor;
+.viewfinderCornerBottomLeft {
+  bottom: -1px;
+  left: -1px;
+  border-width: 0 0 2px 2px;
+}
+.viewfinderCornerBottomRight {
+  right: -1px;
+  bottom: -1px;
+  border-width: 0 2px 2px 0;
+}
+.viewfinderReticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(40px, 4.5vw, 68px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(231, 226, 216, 0.42);
   border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.viewfinderReticle::before,
+.viewfinderReticle::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: rgba(231, 226, 216, 0.68);
+  content: '';
+  transform: translate(-50%, -50%);
+}
+.viewfinderReticle::before {
+  width: calc(100% + 24px);
+  height: 1px;
+}
+.viewfinderReticle::after {
+  width: 1px;
+  height: calc(100% + 24px);
+}
+.viewfinderReticle i {
+  position: absolute;
+  inset: 40%;
+  border: 1px solid var(--signal-orange);
+}
+.viewfinderTelemetryTop,
+.viewfinderTelemetryRight {
+  position: absolute;
+  display: flex;
+  gap: 12px;
+  text-shadow: 0 1px 5px #000;
+}
+.viewfinderTelemetryTop {
+  top: 12px;
+  left: 14px;
+}
+.viewfinderRecording {
+  color: #ff6a3d;
+}
+.viewfinderRecording::before {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentcolor;
+  box-shadow: 0 0 8px currentcolor;
   content: '';
 }
-.heroMarqueeReverse {
-  animation-direction: reverse;
-  animation-duration: 38s;
+.viewfinderTelemetryRight {
+  top: 50%;
+  right: 12px;
+  flex-direction: column;
+  align-items: flex-end;
+  transform: translateY(-50%);
 }
 .topline {
   position: relative;
@@ -1657,15 +1723,6 @@
   }
 }
 
-@keyframes hero-marquee {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-
 @keyframes about-phase-in {
   from {
     opacity: 0;
@@ -1721,67 +1778,42 @@
 }
 
 /* RACK—01 hardware family */
-.heroIdentity {
+.heroViewfinderReadout {
   position: absolute;
   z-index: 4;
-  top: 50%;
-  left: 50%;
-  width: min(920px, calc(100% - 80px));
-  padding: clamp(22px, 3vw, 38px);
-  border: 1px solid rgba(244, 240, 232, 0.34);
-  border-radius: 4px;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px) 0
-      0 / 24px 24px,
-    linear-gradient(145deg, rgba(8, 10, 9, 0.9), rgba(20, 22, 20, 0.78));
+  bottom: clamp(82px, 10vh, 112px);
+  left: clamp(36px, 6vw, 92px);
+  width: min(760px, 54vw);
+  padding: 14px 0 0;
+  border-top: 1px solid rgba(231, 226, 216, 0.54);
   color: var(--chassis-hi);
-  box-shadow:
-    0 30px 70px rgba(0, 0, 0, 0.5),
-    0 7px 18px rgba(0, 0, 0, 0.34),
-    inset 0 1px rgba(255, 255, 255, 0.12),
-    inset 0 0 0 7px rgba(244, 240, 232, 0.025);
-  backdrop-filter: blur(14px) saturate(0.8);
-  transform: translate(-50%, -50%);
+  text-shadow: 0 2px 12px #000;
   pointer-events: none;
-  will-change: transform;
+  will-change: transform, opacity;
 }
-.heroIdentity::before,
-.heroIdentity::after {
-  position: absolute;
-  top: 10px;
-  width: 6px;
-  height: 6px;
-  border: 1px solid rgba(244, 240, 232, 0.4);
-  border-radius: 50%;
-  background: #242623;
-  box-shadow: inset 0 1px 2px #000;
-  content: '';
-}
-.heroIdentity::before {
-  left: 10px;
-}
-.heroIdentity::after {
-  right: 10px;
-}
-.heroStatus,
-.heroIdentityFooter {
+.heroViewfinderLabel,
+.heroViewfinderIdentity,
+.heroViewfinderActions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: clamp(16px, 3vw, 42px);
 }
-.heroStatus {
-  padding-bottom: 13px;
-  border-bottom: 1px solid rgba(244, 240, 232, 0.2);
+.heroViewfinderLabel,
+.heroViewfinderActions {
+  font: 8px var(--font-geist-mono);
+  letter-spacing: 0.12em;
 }
-.heroStatus > span {
+.heroViewfinderLabel {
+  color: rgba(231, 226, 216, 0.68);
+}
+.heroViewfinderStatus {
   display: flex;
   align-items: center;
   gap: 7px;
-  font: 8px var(--font-geist-mono);
-  letter-spacing: 0.1em;
+  white-space: nowrap;
 }
-.heroStatus > span i,
+.heroViewfinderStatus i,
 .powerSwitch i {
   width: 7px;
   height: 7px;
@@ -1789,35 +1821,37 @@
   background: var(--lcd-green);
   box-shadow: 0 0 8px rgba(92, 214, 163, 0.7);
 }
-.heroIdentity h1 {
-  margin: clamp(24px, 5vh, 48px) 0;
+.heroViewfinderIdentity {
+  align-items: end;
+  margin: clamp(12px, 2vh, 20px) 0 16px;
+}
+.heroViewfinderReadout h1 {
+  flex: 0 0 auto;
+  margin: 0;
   font-family: var(--font-space-grotesk), sans-serif;
-  font-size: clamp(64px, 10.5vw, 164px);
+  font-size: clamp(52px, 6vw, 96px);
   font-weight: 680;
   line-height: 0.72;
-  letter-spacing: -0.09em;
-  text-shadow:
-    0 2px 0 rgba(10, 12, 11, 0.92),
-    0 0 28px rgba(0, 0, 0, 0.88);
-  text-wrap: balance;
+  letter-spacing: -0.085em;
 }
-.heroIdentity .heroLine:nth-child(2) {
-  margin-left: clamp(34px, 9vw, 140px);
+.heroViewfinderReadout .heroLine:nth-child(2) {
+  margin-left: clamp(16px, 3vw, 44px);
 }
-.heroIdentityFooter {
-  align-items: end;
-  padding-top: 15px;
-  border-top: 1px solid rgba(244, 240, 232, 0.2);
-}
-.heroIdentityFooter p {
-  max-width: 500px;
+.heroViewfinderIdentity p {
+  max-width: 275px;
   margin: 0;
-  color: rgba(244, 240, 232, 0.9);
-  font-size: clamp(12px, 1.15vw, 16px);
-  line-height: 1.45;
+  color: rgba(231, 226, 216, 0.82);
+  font-size: clamp(11px, 0.9vw, 14px);
+  line-height: 1.48;
   text-wrap: pretty;
 }
-.heroIdentityFooter a {
+.heroViewfinderActions {
+  padding-top: 12px;
+  border-top: 1px solid rgba(231, 226, 216, 0.24);
+  color: rgba(231, 226, 216, 0.64);
+}
+.heroViewfinderActions a {
+  flex: 0 0 auto;
   pointer-events: auto;
 }
 
@@ -3394,6 +3428,21 @@
   padding: clamp(14px, 2.2vh, 36px) clamp(16px, 2.4vw, 38px)
     clamp(24px, 3vh, 48px);
 }
+.skillsBackdrop {
+  position: absolute;
+  z-index: 1;
+  right: -0.025em;
+  bottom: -0.1em;
+  left: -0.025em;
+  overflow: hidden;
+  color: rgba(231, 226, 216, 0.075);
+  font: 700 clamp(112px, 22vw, 350px) / 0.72 var(--font-space-grotesk);
+  letter-spacing: -0.085em;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
 .skillsIntro {
   position: relative;
   z-index: 3;
@@ -4583,23 +4632,40 @@
   .availability {
     display: none;
   }
-  .heroIdentity {
-    width: calc(100% - 38px);
-    padding: 18px;
+  .heroViewfinderScrim {
+    height: 62%;
   }
-  .heroIdentity h1 {
-    margin: 32px 0;
-    font-size: clamp(52px, 17vw, 88px);
-    line-height: 0.76;
+  .heroViewfinder {
+    inset: 130px 14px 66px;
   }
-  .heroIdentity .heroLine:nth-child(2) {
-    margin-left: 0;
+  .viewfinderTelemetryRight {
+    display: none;
   }
-  .heroIdentityFooter {
+  .heroViewfinderReadout {
+    right: 22px;
+    bottom: 76px;
+    left: 22px;
+    width: auto;
+  }
+  .heroViewfinderIdentity {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .heroViewfinderReadout h1 {
+    font-size: clamp(46px, 13vw, 72px);
+    line-height: 0.75;
+  }
+  .heroViewfinderIdentity p {
+    max-width: 34rem;
+    font-size: 12px;
+  }
+  .heroViewfinderActions {
     align-items: stretch;
     flex-direction: column;
+    gap: 12px;
   }
-  .heroIdentityFooter .primaryButton {
+  .heroViewfinderActions .primaryButton {
     width: 100%;
   }
   .heroGrid {
@@ -4649,8 +4715,9 @@
     grid-template-columns: repeat(4, 1fr);
   }
   .heroFooter {
-    position: static;
-    margin-top: 55px;
+    right: 14px;
+    bottom: 19px;
+    left: 14px;
   }
   .heroFooter span:last-child {
     display: none;
@@ -5043,19 +5110,7 @@
     opacity: 1;
     filter: saturate(0.92) contrast(1.04) brightness(0.96);
   }
-  .heroIdentity {
-    border-color: rgba(244, 240, 232, 0.3);
-    background: radial-gradient(
-        ellipse at center,
-        rgba(46, 63, 92, 0.22),
-        transparent 68%
-      ),
-      rgba(9, 11, 10, 0.88);
-    box-shadow:
-      0 22px 48px rgba(0, 0, 0, 0.48),
-      inset 0 1px rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(12px) saturate(0.82);
-  }
+
   .heroCopy {
     padding: 22px 18px;
   }
@@ -5143,11 +5198,21 @@
   .lcdReadout .segmentCounter {
     font-size: 30px;
   }
-  .heroStatus > span {
+  .heroViewfinderLabel > span:first-child {
     display: none;
   }
-  .heroIdentity h1 {
-    font-size: clamp(47px, 16.5vw, 70px);
+  .heroViewfinderReadout {
+    right: 16px;
+    left: 16px;
+  }
+  .heroViewfinderReadout h1 {
+    font-size: clamp(44px, 15vw, 62px);
+  }
+  .viewfinderTelemetryTop > span:last-child {
+    display: none;
+  }
+  .skillsBackdrop {
+    font-size: clamp(92px, 30vw, 138px);
   }
   .padBank > div {
     grid-template-columns: repeat(2, 1fr);
@@ -5353,8 +5418,12 @@
     width: min(76vw, 460px);
   }
   .heroDeviceWall,
+  .heroViewfinderReadout,
   .controller {
     transform: none !important;
     opacity: 1 !important;
+  }
+  .heroViewfinderReadout {
+    will-change: auto;
   }
 }

@@ -238,32 +238,23 @@ function Hero() {
         >
           <DawHero backgroundOnly />
         </div>
-        <div className={styles.heroMarquee} aria-hidden="true">
-          <div className={styles.heroMarqueeRow}>
-            <div className={styles.heroMarqueeTrack}>
-              {Array.from({ length: 2 }, (_, group) => (
-                <div className={styles.heroMarqueeGroup} key={group}>
-                  <span>DEVICE WALL / SYSTEM ONLINE</span>
-                  <span>12 MODULES CONNECTED</span>
-                  <span>JAKARTA OUTPUT / READY</span>
-                  <span>SCROLL TO ADVANCE</span>
-                </div>
-              ))}
-            </div>
+        <div className={styles.heroViewfinderScrim} aria-hidden="true" />
+        <div className={styles.heroViewfinder} aria-hidden="true">
+          <span className={styles.viewfinderCornerTopLeft} />
+          <span className={styles.viewfinderCornerTopRight} />
+          <span className={styles.viewfinderCornerBottomLeft} />
+          <span className={styles.viewfinderCornerBottomRight} />
+          <div className={styles.viewfinderReticle}>
+            <i />
           </div>
-          <div className={styles.heroMarqueeRow}>
-            <div
-              className={`${styles.heroMarqueeTrack} ${styles.heroMarqueeReverse}`}
-            >
-              {Array.from({ length: 2 }, (_, group) => (
-                <div className={styles.heroMarqueeGroup} key={group}>
-                  <span>SELECT A DEVICE / PLAY</span>
-                  <span>SIGNAL LOCKED / 48KHZ</span>
-                  <span>RACK—01 / AH</span>
-                  <span>CREATIVE CHANNEL OPEN</span>
-                </div>
-              ))}
-            </div>
+          <div className={styles.viewfinderTelemetryTop}>
+            <span className={styles.viewfinderRecording}>REC</span>
+            <span>CAM A / DEVICE WALL</span>
+          </div>
+          <div className={styles.viewfinderTelemetryRight}>
+            <span>4K</span>
+            <span>24 FPS</span>
+            <span>48 KHZ</span>
           </div>
         </div>
 
@@ -284,34 +275,41 @@ function Hero() {
           </a>
         </header>
 
-        <div className={styles.heroIdentity}>
-          <div className={styles.heroStatus}>
-            <SilkscreenLabel>DEVICE WALL / SYSTEM ONLINE</SilkscreenLabel>
-            <span>
-              <i /> 12 MODULES CONNECTED
+        <div className={styles.heroViewfinderReadout}>
+          <div className={styles.heroViewfinderLabel}>
+            <span>FRONTEND ENGINEER / CREATIVE DEVELOPER</span>
+            <span className={styles.heroViewfinderStatus}>
+              <i /> LIVE SIGNAL
             </span>
           </div>
-          <h1 aria-label="Adityahimaone">
-            <span className={styles.heroLine}>ADITYA</span>
-            <span className={styles.heroLine}>
-              HIMA<em>ONE</em>
-            </span>
-          </h1>
-          <div className={styles.heroIdentityFooter}>
+
+          <div className={styles.heroViewfinderIdentity}>
+            <h1 aria-label="Aditya Himaone">
+              <span className={styles.heroLine}>ADITYA</span>
+              <span className={styles.heroLine}>
+                HIMA<em>ONE</em>
+              </span>
+            </h1>
             <p>
-              Frontend engineer and creative developer building expressive,
-              high-performance digital products.
+              Building expressive, high-performance digital products through
+              thoughtful interfaces, systems, and motion.
             </p>
+          </div>
+
+          <div className={styles.heroViewfinderActions}>
+            <span>12 DEVICES / JAKARTA, ID</span>
             <a href="#work" className={styles.primaryButton}>
-              <span>PLAY SELECTED WORK</span>
+              <span>VIEW SELECTED WORK</span>
               <ArrowDownRight size={18} aria-hidden="true" />
             </a>
           </div>
         </div>
 
         <div className={styles.heroFooter}>
-          <SilkscreenLabel>JAKARTA, ID / 06°12′S 106°49′E</SilkscreenLabel>
-          <span>SELECT A DEVICE / SCROLL TO ADVANCE ↓</span>
+          <SilkscreenLabel>
+            COLLECTION / 12 INTERACTIVE INSTRUMENTS
+          </SilkscreenLabel>
+          <span>JAKARTA, ID / SELECT A DEVICE / SCROLL ↓</span>
         </div>
       </div>
     </section>
@@ -580,6 +578,58 @@ function About({
   )
 }
 
+function SignalDivider() {
+  const topPhrase =
+    'BUILD WITH INTENT · SHIP WITH CLARITY · MAKE COMPLEX IDEAS USEFUL ·'
+  const bottomPhrase =
+    'SHARE THE PROCESS · DOCUMENT THE DETAILS · LEARN IN PUBLIC ·'
+
+  return (
+    <section
+      className={styles.signalDivider}
+      aria-label="Build with intent. Share what works."
+    >
+      <div className={styles.signalDividerStage}>
+        <div
+          className={`${styles.signalDividerLane} ${styles.signalDividerLaneTop}`}
+          aria-hidden="true"
+        >
+          <div
+            className={`${styles.signalDividerRail} ${styles.signalDividerTopRail}`}
+          >
+            {Array.from({ length: 4 }, (_, index) => (
+              <span className={styles.signalDividerPhrase} key={index}>
+                {topPhrase}
+              </span>
+            ))}
+          </div>
+        </div>
+        <p className={styles.signalDividerMotto}>
+          <span>PORTFOLIO / FIELD NOTES</span>
+          <strong>
+            Selected work, practical experiments, and notes from building for
+            the web.
+          </strong>
+        </p>
+        <div
+          className={`${styles.signalDividerLane} ${styles.signalDividerLaneBottom}`}
+          aria-hidden="true"
+        >
+          <div
+            className={`${styles.signalDividerRail} ${styles.signalDividerBottomRail}`}
+          >
+            {Array.from({ length: 4 }, (_, index) => (
+              <span className={styles.signalDividerPhrase} key={index}>
+                {bottomPhrase}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function Skills() {
   const [activeSkill, setActiveSkill] = useState(SKILLS[0])
   const [levels, setLevels] = useState<Record<string, number>>(() =>
@@ -601,6 +651,9 @@ function Skills() {
       data-rack-section
     >
       <div className={styles.skillsStage}>
+        <div className={styles.skillsBackdrop} aria-hidden="true">
+          SKILLS
+        </div>
         <div className={styles.skillsIntro}>
           <SectionHeading index="03" eyebrow="MIDI MAP">
             A practical toolkit, mapped like an instrument.
@@ -609,9 +662,6 @@ function Skills() {
             Pads, encoders, faders, and keys restore the previous controller
             workflow inside the RACK—01 chassis.
           </p>
-          <span className={styles.skillsBackdropTitle} aria-hidden="true">
-            SKILLS
-          </span>
         </div>
         <div className={styles.controller}>
           <Screw className={styles.screwTopLeft} />
@@ -750,6 +800,41 @@ function Skills() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function CableDivider() {
+  return (
+    <section
+      className={styles.cableDivider}
+      aria-label="Skills output connected to experience input"
+    >
+      <div className={styles.cableDividerInner}>
+        <p className={styles.cableDividerLabel}>
+          <span>SIGNAL PATH / 03—04</span>
+          <strong>Turning capability into experience.</strong>
+        </p>
+
+        <div className={styles.cableAssembly} aria-hidden="true">
+          <div className={`${styles.cableHalf} ${styles.cableMaleHalf}`}>
+            <span className={styles.cableLine} />
+            <span className={styles.cableMale}>
+              <i />
+            </span>
+          </div>
+          <div className={`${styles.cableHalf} ${styles.cableFemaleHalf}`}>
+            <span className={styles.cableFemale}>
+              <i />
+            </span>
+            <span className={styles.cableLine} />
+          </div>
+          <span className={styles.cableConnectionFx}>
+            <i />
+            <i />
+          </span>
         </div>
       </div>
     </section>
@@ -962,6 +1047,96 @@ function Experience({
             >
               ▶
             </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+const SPLIT_FLAP_ROWS = [
+  {
+    from: 'EXPERIENCE  ARCHIVED  ',
+    to: 'PROJECTS    DEPARTING ',
+  },
+  {
+    from: '04  MASTER LOG  CLOSED',
+    to: '05  FEATURED  BOARDING',
+  },
+  {
+    from: 'YEARS OF CRAFT  LOGGED',
+    to: 'SELECTED WORK  ON AIR ',
+  },
+  {
+    from: 'SYSTEMS BUILT  TESTED ',
+    to: 'PRODUCTS READY TO SHIP',
+  },
+  {
+    from: 'PROCESS NOTES  STORED ',
+    to: 'CASE STUDIES  NOW LIVE',
+  },
+] as const
+
+function SplitFlapCell({ from, to }: { from: string; to: string }) {
+  const source = from === ' ' ? '\u00a0' : from
+  const target = to === ' ' ? '\u00a0' : to
+
+  return (
+    <span className={styles.splitFlapCell}>
+      <span className={`${styles.splitFlapHalf} ${styles.splitFlapStaticTop}`}>
+        <span>{target}</span>
+      </span>
+      <span
+        className={`${styles.splitFlapHalf} ${styles.splitFlapStaticBottom}`}
+      >
+        <span>{source}</span>
+      </span>
+      <span className={`${styles.splitFlapHalf} ${styles.splitFlapTop}`}>
+        <span>{source}</span>
+      </span>
+      <span className={`${styles.splitFlapHalf} ${styles.splitFlapBottom}`}>
+        <span>{target}</span>
+      </span>
+      <i />
+    </span>
+  )
+}
+
+function SplitFlapDivider() {
+  return (
+    <section
+      className={styles.splitFlapDivider}
+      aria-label="Experience archived. Featured projects now departing."
+    >
+      <div className={styles.splitFlapBoard} aria-hidden="true">
+        <div className={styles.splitFlapInner}>
+          <div className={styles.splitFlapCopy}>
+            <span>STUDIO DEPARTURES / 04—05</span>
+            <strong>Recorded experience, cleared for release.</strong>
+          </div>
+
+          <div className={styles.splitFlapPanel}>
+            <div className={styles.splitFlapHeader}>
+              <span>
+                <i /> AH STUDIO / DEPARTURE BOARD
+              </span>
+              <span>SCROLL TO RELEASE</span>
+            </div>
+            <div className={styles.splitFlapGrid}>
+              {SPLIT_FLAP_ROWS.flatMap((row, rowIndex) =>
+                Array.from(row.from).map((character, columnIndex) => (
+                  <SplitFlapCell
+                    from={character}
+                    to={row.to[columnIndex] ?? ' '}
+                    key={`${rowIndex}-${columnIndex}`}
+                  />
+                )),
+              )}
+            </div>
+            <div className={styles.splitFlapStatus}>
+              <span>OUTPUT / 05</span>
+              <strong>READY FOR BOARDING</strong>
+            </div>
           </div>
         </div>
       </div>
@@ -1338,23 +1513,18 @@ export default function Rack01LandingPage() {
             })
             .to(
               `.${styles.heroLine}`,
-              { yPercent: -10, stagger: 0.08, ease: 'none' },
+              { yPercent: -6, stagger: 0.06, ease: 'none' },
               0,
             )
             .to(
-              `.${styles.heroIdentity}`,
-              { yPercent: -6, scale: 0.985, ease: 'none' },
+              `.${styles.heroViewfinderReadout}`,
+              { y: -18, opacity: 0.76, ease: 'none' },
               0,
-            )
-            .to(
-              `.${styles.heroStatus}, .${styles.heroIdentityFooter}`,
-              { opacity: 0.35, ease: 'none' },
-              0.08,
             )
 
           gsap.to(`.${styles.heroDeviceWall}`, {
-            yPercent: 5,
-            scale: 1.035,
+            yPercent: 3,
+            scale: 1.02,
             ease: 'none',
             scrollTrigger: {
               trigger: `.${styles.hero}`,
@@ -1408,32 +1578,22 @@ export default function Rack01LandingPage() {
             )
           })
 
-          gsap
-            .timeline({
+          gsap.fromTo(
+            `.${styles.controller}`,
+            { scale: 1, yPercent: 0 },
+            {
+              scale: 0.86,
+              yPercent: -2,
+              transformOrigin: '50% 0%',
+              ease: 'none',
               scrollTrigger: {
                 trigger: `.${styles.skills}`,
                 start: 'top top',
                 end: 'bottom bottom',
                 scrub: 0.85,
               },
-            })
-            .fromTo(
-              `.${styles.controller}`,
-              { scale: 1, yPercent: 0 },
-              {
-                scale: 0.9,
-                yPercent: 18,
-                transformOrigin: '50% 15%',
-                ease: 'none',
-              },
-              0,
-            )
-            .fromTo(
-              `.${styles.skillsBackdropTitle}`,
-              { yPercent: 22, opacity: 0.04 },
-              { yPercent: 0, opacity: 0.72, ease: 'none' },
-              0,
-            )
+            },
+          )
 
           gsap.from(`.${styles.controlBank}`, {
             y: 18,
@@ -1616,6 +1776,164 @@ export default function Rack01LandingPage() {
             })
           }
         })
+
+        const dividerTopRail = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.signalDividerTopRail}`,
+        )
+        const dividerBottomRail = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.signalDividerBottomRail}`,
+        )
+
+        if (dividerTopRail && dividerBottomRail) {
+          const dividerTravel = () => Math.min(150, window.innerWidth * 0.11)
+          const railScrollTrigger = {
+            trigger: `.${styles.signalDivider}`,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1.4,
+            invalidateOnRefresh: true,
+          }
+
+          gsap.fromTo(
+            dividerTopRail,
+            { x: () => -dividerTravel() },
+            {
+              x: () => dividerTravel(),
+              force3D: true,
+              ease: 'none',
+              scrollTrigger: railScrollTrigger,
+            },
+          )
+
+          gsap.fromTo(
+            dividerBottomRail,
+            { x: () => dividerTravel() },
+            {
+              x: () => -dividerTravel(),
+              force3D: true,
+              ease: 'none',
+              scrollTrigger: { ...railScrollTrigger },
+            },
+          )
+        }
+
+        const cableMaleHalf = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.cableMaleHalf}`,
+        )
+        const cableFemaleHalf = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.cableFemaleHalf}`,
+        )
+        const cableConnectionFx = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.cableConnectionFx}`,
+        )
+        if (cableMaleHalf && cableFemaleHalf && cableConnectionFx) {
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: `.${styles.cableDivider}`,
+                start: 'top bottom',
+                end: 'bottom 45%',
+                scrub: 1.15,
+                invalidateOnRefresh: true,
+              },
+            })
+            .fromTo(
+              cableMaleHalf,
+              { x: () => -Math.min(360, window.innerWidth * 0.3) },
+              { x: 0, duration: 0.82, force3D: true, ease: 'none' },
+              0,
+            )
+            .fromTo(
+              cableFemaleHalf,
+              { x: () => Math.min(360, window.innerWidth * 0.3) },
+              { x: 0, duration: 0.82, force3D: true, ease: 'none' },
+              0,
+            )
+            .fromTo(
+              cableConnectionFx,
+              { autoAlpha: 0, scale: 0.7 },
+              {
+                autoAlpha: 1,
+                scale: 1,
+                duration: 0.18,
+                transformOrigin: '50% 50%',
+                ease: 'power2.out',
+              },
+              0.82,
+            )
+        }
+
+        const splitFlapPanel = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.splitFlapPanel}`,
+        )
+        const splitFlapTops = rootRef.current?.querySelectorAll<HTMLElement>(
+          `.${styles.splitFlapTop}`,
+        )
+        const splitFlapBottoms = rootRef.current?.querySelectorAll<HTMLElement>(
+          `.${styles.splitFlapBottom}`,
+        )
+        const splitFlapStatus = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.splitFlapStatus}`,
+        )
+
+        if (
+          splitFlapPanel &&
+          splitFlapTops?.length &&
+          splitFlapBottoms?.length &&
+          splitFlapStatus
+        ) {
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: `.${styles.splitFlapDivider}`,
+                start: 'top bottom',
+                end: 'bottom 38%',
+                scrub: 1.15,
+              },
+            })
+            .fromTo(
+              splitFlapPanel,
+              { y: 14, scale: 0.985, autoAlpha: 0.72 },
+              {
+                y: 0,
+                scale: 1,
+                autoAlpha: 1,
+                duration: 0.2,
+                force3D: true,
+                ease: 'power2.out',
+              },
+              0,
+            )
+            .to(
+              splitFlapTops,
+              {
+                rotateX: -92,
+                duration: 0.17,
+                stagger: { amount: 0.56, from: 'start' },
+                force3D: true,
+                ease: 'power1.in',
+              },
+              0.12,
+            )
+            .to(
+              splitFlapBottoms,
+              {
+                rotateX: 0,
+                duration: 0.2,
+                stagger: { amount: 0.56, from: 'start' },
+                force3D: true,
+                ease: 'power1.out',
+              },
+              0.2,
+            )
+            .fromTo(
+              splitFlapStatus,
+              { autoAlpha: 0.36 },
+              { autoAlpha: 1, duration: 0.22, ease: 'power1.out' },
+              0.78,
+            )
+        }
+
         return () => media.revert()
       }, rootRef)
     }
@@ -1639,8 +1957,11 @@ export default function Rack01LandingPage() {
         setSelected={setAboutIndex}
         scrollProgress={aboutProgress}
       />
+      <SignalDivider />
       <Skills />
+      <CableDivider />
       <Experience selected={experienceIndex} setSelected={setExperienceIndex} />
+      <SplitFlapDivider />
       <Work />
       <Contact />
       <TransportBridge

@@ -36,6 +36,7 @@ const ROUTE_ITEMS = [
   { href: '/blog', label: 'Blog' },
   { href: '/projects', label: 'Projects' },
   { href: '/music', label: 'Mixtape' },
+  { href: '/bookmarks', label: 'Bookmarks' },
 ] as const
 
 const SKILLS = MIXER_DATA.flatMap((group) => group.channels)

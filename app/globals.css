@@ -24,6 +24,19 @@
     scroll-behavior: smooth;
   }
 
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  html.lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  html.lenis.lenis-stopped {
+    overflow: clip;
+  }
+
   body {
     @apply bg-background text-foreground;
     margin: 0;

@@ -31,7 +31,53 @@ const NAV_ITEMS = [
   { id: 'contact', label: 'Contact' },
 ] as const
 
+const ROUTE_ITEMS = [
+  { href: '/blog', label: 'Blog' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/music', label: 'Mixtape' },
+] as const
+
 const SKILLS = MIXER_DATA.flatMap((group) => group.channels)
+
+const CASSETTE_THEMES = [
+  {
+    shell: '#d8d1c5',
+    shellDeep: '#aaa094',
+    label: '#d9895b',
+    ink: '#25231f',
+    accent: '#7b2735',
+  },
+  {
+    shell: '#b9c7c8',
+    shellDeep: '#7f9498',
+    label: '#d9c36e',
+    ink: '#18292c',
+    accent: '#315f68',
+  },
+  {
+    shell: '#c8bfd2',
+    shellDeep: '#8e819b',
+    label: '#d97b9f',
+    ink: '#2b2130',
+    accent: '#644375',
+  },
+  {
+    shell: '#d7c59d',
+    shellDeep: '#a78d5b',
+    label: '#e36d3f',
+    ink: '#30271b',
+    accent: '#7d4027',
+  },
+] as const
+
+const PROJECT_PALETTES = [
+  { vinyl: '#315d72', label: '#df9c58', accent: '#7eb8c7' },
+  { vinyl: '#476b50', label: '#d7c467', accent: '#8fc49a' },
+  { vinyl: '#a55b35', label: '#e1bd69', accent: '#dc8752' },
+  { vinyl: '#563f70', label: '#d17da4', accent: '#9c7fbd' },
+  { vinyl: '#36466f', label: '#9b83c4', accent: '#7489bd' },
+  { vinyl: '#743f3f', label: '#d08168', accent: '#b96862' },
+] as const
 
 function SilkscreenLabel({ children }: { children: React.ReactNode }) {
   return <span className={styles.silkscreen}>{children}</span>
@@ -95,9 +141,11 @@ function Knob({
 function TransportBridge({
   progress,
   activeId,
+  compact,
 }: {
   progress: number
   activeId: string
+  compact: boolean
 }) {
   const counter = useMemo(() => {
     const totalSeconds = Math.round(progress * 3_599)
@@ -113,7 +161,7 @@ function TransportBridge({
 
   return (
     <aside
-      className={styles.transport}
+      className={`${styles.transport} ${compact ? styles.transportCompact : ''}`}
       aria-label="Page transport and section navigation"
     >
       <div className={styles.transportStatus}>
@@ -158,9 +206,14 @@ function Hero() {
           <a href="#home" className={styles.wordmark} aria-label="RACK-01 home">
             RACK—01 <span>/ AH</span>
           </a>
-          <span className={styles.availability}>
-            <i /> AVAILABLE FOR SELECTED PROJECTS
-          </span>
+          <nav className={styles.heroRouteNav} aria-label="Primary pages">
+            {ROUTE_ITEMS.map((item, index) => (
+              <a href={item.href} key={item.href}>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                {item.label}
+              </a>
+            ))}
+          </nav>
           <a href={`mailto:${EMAIL}`} className={styles.topContact}>
             CONTACT ↗
           </a>
@@ -204,29 +257,58 @@ const ABOUT_TRACKS = [
   {
     title: 'DISCOVER',
     note: 'Listen / frame / map',
+    heading: 'Find the signal before shaping the surface.',
+    body: 'I listen for the real constraint, map the product model, and turn ambiguity into a direction the whole team can understand.',
+    signal: 'RESEARCH / SYSTEM MAP',
+    surface: '#d7b36f',
+    ink: '#2c251b',
+    accent: '#8a432d',
     detail:
       'I turn ambiguity into a clear product model before touching pixels.',
   },
   {
     title: 'DESIGN',
     note: 'Prototype / tune / align',
+    heading: 'Tune structure, interaction, and feeling together.',
+    body: 'I prototype the system as one instrument—visual hierarchy, motion, accessibility, and interaction all reinforcing the same idea.',
+    signal: 'PROTOTYPE / INTERACTION',
+    surface: '#8199ad',
+    ink: '#17252d',
+    accent: '#315d72',
     detail:
       'Systems, motion, and interaction are tuned together—not as polish later.',
   },
   {
-    title: 'DELIVER',
+    title: 'BUILD',
     note: 'Build / test / ship',
+    heading: 'Make the final system as durable as the idea.',
+    body: 'I translate the direction into production code that stays fast, accessible, testable, and straightforward for teams to evolve.',
+    signal: 'ENGINEERING / DELIVERY',
+    surface: '#b68ba5',
+    ink: '#30212a',
+    accent: '#70415d',
     detail:
       'Production code stays fast, accessible, and easy for teams to evolve.',
   },
 ]
 
-function About() {
+function About({
+  selected,
+  setSelected,
+  scrollProgress,
+}: {
+  selected: number
+  setSelected: React.Dispatch<React.SetStateAction<number>>
+  scrollProgress: number
+}) {
   const [isPlaying, setIsPlaying] = useState(false)
-  const [playhead, setPlayhead] = useState(0.08)
-  const [activeClip, setActiveClip] = useState(0)
+  const [playhead, setPlayhead] = useState(0.17)
   const [mutedTracks, setMutedTracks] = useState<Set<number>>(new Set())
   const [soloedTrack, setSoloedTrack] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!isPlaying) setPlayhead(0.17 + scrollProgress * 0.74)
+  }, [isPlaying, scrollProgress])
 
   useEffect(() => {
     if (!isPlaying) return
@@ -257,136 +339,169 @@ function About() {
       className={`${styles.section} ${styles.about}`}
       data-rack-section
     >
-      <SectionHeading index="02" eyebrow="SIGNAL SOURCE">
-        I turn complex ideas into clear, playable systems.
-      </SectionHeading>
-      <div className={styles.aboutDeck}>
-        <div className={styles.aboutCopy}>
-          <p className={styles.lead}>
-            A frontend developer who cares equally about architecture, feel, and
-            the tiny timing details people notice without naming.
-          </p>
-          <div className={styles.aboutStats}>
-            <div>
-              <SegmentCounter value="08+" />
-              <span>YEARS BUILDING</span>
+      <div className={styles.aboutStage}>
+        <SectionHeading index="02" eyebrow="SIGNAL SOURCE">
+          I turn complex ideas into clear, playable systems.
+        </SectionHeading>
+        <div className={styles.aboutDeck}>
+          <div className={styles.aboutCopy}>
+            <div className={styles.aboutCardStack} aria-live="polite">
+              {ABOUT_TRACKS.map((track, index) => {
+                return (
+                  <button
+                    type="button"
+                    key={track.title}
+                    className={`${styles.aboutCard} ${selected === index ? styles.aboutCardActive : ''}`}
+                    style={
+                      {
+                        '--about-card': track.surface,
+                        '--about-ink': track.ink,
+                        '--about-accent': track.accent,
+                      } as React.CSSProperties
+                    }
+                    aria-pressed={selected === index}
+                    onClick={() => setSelected(index)}
+                  >
+                    <SilkscreenLabel>
+                      PHASE {String(index + 1).padStart(2, '0')} /{' '}
+                      {track.signal}
+                    </SilkscreenLabel>
+                    <strong>{track.heading}</strong>
+                    <p>{track.body}</p>
+                    <span>{track.title}</span>
+                  </button>
+                )
+              })}
             </div>
-            <div>
-              <SegmentCounter value="03" />
-              <span>ACTIVE CHANNELS</span>
-            </div>
-            <div>
-              <SegmentCounter value="∞" />
-              <span>CURIOSITY</span>
+            <div className={styles.aboutStats}>
+              <div>
+                <SegmentCounter value="08+" />
+                <span>YEARS BUILDING</span>
+              </div>
+              <div>
+                <SegmentCounter value="03" />
+                <span>ACTIVE CHANNELS</span>
+              </div>
+              <div>
+                <SegmentCounter value="∞" />
+                <span>CURIOSITY</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className={styles.timelinePanel}>
-          <Screw className={styles.screwTopLeft} />
-          <Screw className={styles.screwTopRight} />
-          <div className={styles.timelineDeviceBrand}>
-            <div>
-              <strong>RACK—01</strong>
-              <SilkscreenLabel>ARRANGEMENT WORKSTATION</SilkscreenLabel>
+          <div className={styles.timelinePanel}>
+            <Screw className={styles.screwTopLeft} />
+            <Screw className={styles.screwTopRight} />
+            <div className={styles.timelineDeviceBrand}>
+              <div>
+                <strong>RACK—01</strong>
+                <SilkscreenLabel>ARRANGEMENT WORKSTATION</SilkscreenLabel>
+              </div>
+              <div className={styles.timelineMeters} aria-hidden="true">
+                {Array.from({ length: 12 }, (_, index) => (
+                  <i key={index} />
+                ))}
+              </div>
             </div>
-            <div className={styles.timelineMeters} aria-hidden="true">
-              {Array.from({ length: 12 }, (_, index) => (
-                <i key={index} />
+            <div className={styles.panelHeader}>
+              <SilkscreenLabel>ARRANGEMENT / IDENTITY.AIF</SilkscreenLabel>
+              <div className={styles.timelineTransport}>
+                <button
+                  type="button"
+                  onClick={() => setIsPlaying((current) => !current)}
+                  aria-label={isPlaying ? 'Pause timeline' : 'Play timeline'}
+                >
+                  {isPlaying ? <Pause size={13} /> : <Play size={13} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPlaying(false)
+                    setPlayhead(0.17)
+                  }}
+                  aria-label="Stop and rewind timeline"
+                >
+                  <Square size={12} />
+                </button>
+                <span>120 BPM / 4—4</span>
+              </div>
+            </div>
+            <div className={styles.timelineRuler}>
+              {Array.from({ length: 9 }, (_, i) => (
+                <span key={i}>{i + 1}</span>
               ))}
             </div>
-          </div>
-          <div className={styles.panelHeader}>
-            <SilkscreenLabel>ARRANGEMENT / IDENTITY.AIF</SilkscreenLabel>
-            <div className={styles.timelineTransport}>
-              <button
-                type="button"
-                onClick={() => setIsPlaying((current) => !current)}
-                aria-label={isPlaying ? 'Pause timeline' : 'Play timeline'}
-              >
-                {isPlaying ? <Pause size={13} /> : <Play size={13} />}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPlaying(false)
-                  setPlayhead(0.08)
-                }}
-                aria-label="Stop and rewind timeline"
-              >
-                <Square size={12} />
-              </button>
-              <span>120 BPM / 4—4</span>
-            </div>
-          </div>
-          <div className={styles.timelineRuler}>
-            {Array.from({ length: 9 }, (_, i) => (
-              <span key={i}>{i + 1}</span>
-            ))}
-          </div>
-          <div
-            className={styles.playhead}
-            style={
-              { '--playhead': `${playhead * 100}%` } as React.CSSProperties
-            }
-            aria-hidden="true"
-          />
-          {ABOUT_TRACKS.map((item, index) => (
             <div
-              className={`${styles.track} ${
-                mutedTracks.has(index) ||
-                (soloedTrack !== null && soloedTrack !== index)
-                  ? styles.trackMuted
-                  : ''
-              }`}
-              key={item.title}
-            >
-              <div>
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <strong>{item.title}</strong>
-                <span className={styles.trackActions}>
-                  <button
-                    type="button"
-                    aria-label={`${mutedTracks.has(index) ? 'Unmute' : 'Mute'} ${item.title}`}
-                    aria-pressed={mutedTracks.has(index)}
-                    onClick={() => toggleMuted(index)}
-                  >
-                    M
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`${soloedTrack === index ? 'Unsolo' : 'Solo'} ${item.title}`}
-                    aria-pressed={soloedTrack === index}
-                    onClick={() =>
-                      setSoloedTrack((current) =>
-                        current === index ? null : index,
-                      )
-                    }
-                  >
-                    S
-                  </button>
-                </span>
-              </div>
-              <button
-                type="button"
-                className={`${styles.clip} ${
-                  activeClip === index ? styles.clipActive : ''
+              className={styles.playhead}
+              style={
+                { '--playhead': `${playhead * 100}%` } as React.CSSProperties
+              }
+              aria-hidden="true"
+            />
+            {ABOUT_TRACKS.map((item, index) => (
+              <div
+                className={`${styles.track} ${
+                  mutedTracks.has(index) ||
+                  (soloedTrack !== null && soloedTrack !== index)
+                    ? styles.trackMuted
+                    : ''
                 }`}
+                key={item.title}
                 style={
-                  { '--clip-offset': `${index * 12}%` } as React.CSSProperties
+                  {
+                    '--track-color': item.surface,
+                    '--track-ink': item.ink,
+                    '--track-accent': item.accent,
+                  } as React.CSSProperties
                 }
-                onClick={() => setActiveClip(index)}
-                aria-pressed={activeClip === index}
               >
-                <span>{item.note}</span>
-                <i />
-              </button>
+                <div>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <strong>{item.title}</strong>
+                  <span className={styles.trackActions}>
+                    <button
+                      type="button"
+                      aria-label={`${mutedTracks.has(index) ? 'Unmute' : 'Mute'} ${item.title}`}
+                      aria-pressed={mutedTracks.has(index)}
+                      onClick={() => toggleMuted(index)}
+                    >
+                      M
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`${soloedTrack === index ? 'Unsolo' : 'Solo'} ${item.title}`}
+                      aria-pressed={soloedTrack === index}
+                      onClick={() =>
+                        setSoloedTrack((current) =>
+                          current === index ? null : index,
+                        )
+                      }
+                    >
+                      S
+                    </button>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className={`${styles.clip} ${
+                    selected === index ? styles.clipActive : ''
+                  }`}
+                  style={
+                    { '--clip-offset': `${index * 12}%` } as React.CSSProperties
+                  }
+                  onClick={() => setSelected(index)}
+                  aria-pressed={selected === index}
+                >
+                  <span>{item.note}</span>
+                  <i />
+                </button>
+              </div>
+            ))}
+            <div className={styles.clipDetail} aria-live="polite">
+              <SilkscreenLabel>
+                CLIP {String(selected + 1).padStart(2, '0')} / SELECTED
+              </SilkscreenLabel>
+              <p>{ABOUT_TRACKS[selected].detail}</p>
             </div>
-          ))}
-          <div className={styles.clipDetail} aria-live="polite">
-            <SilkscreenLabel>
-              CLIP {String(activeClip + 1).padStart(2, '0')} / SELECTED
-            </SilkscreenLabel>
-            <p>{ABOUT_TRACKS[activeClip].detail}</p>
           </div>
         </div>
       </div>
@@ -414,144 +529,154 @@ function Skills() {
       className={`${styles.section} ${styles.skills}`}
       data-rack-section
     >
-      <div className={styles.skillsIntro}>
-        <SectionHeading index="03" eyebrow="MIDI MAP">
-          A practical toolkit, mapped like an instrument.
-        </SectionHeading>
-        <p>
-          Pads, encoders, faders, and keys restore the previous controller
-          workflow inside the RACK—01 chassis.
-        </p>
-      </div>
-      <div className={styles.controller}>
-        <Screw className={styles.screwTopLeft} />
-        <Screw className={styles.screwTopRight} />
-        <Screw className={styles.screwBottomLeft} />
-        <Screw className={styles.screwBottomRight} />
-        <div className={styles.controllerTopbar}>
-          <div>
-            <strong>RACK—01 / MIDI</strong>
-            <SilkscreenLabel>SKILL CONTROL SURFACE</SilkscreenLabel>
-          </div>
-          <div className={styles.controllerDisplay} aria-live="polite">
-            <span>ACTIVE PROGRAM</span>
-            <strong>{activeSkill.name}</strong>
-            <SegmentCounter
-              value={`${String(levels[activeSkill.name] ?? activeSkill.level).padStart(3, '0')}%`}
-            />
-          </div>
-          <span className={styles.powerSwitch}>
-            <i /> PWR
+      <div className={styles.skillsStage}>
+        <div className={styles.skillsIntro}>
+          <SectionHeading index="03" eyebrow="MIDI MAP">
+            A practical toolkit, mapped like an instrument.
+          </SectionHeading>
+          <p>
+            Pads, encoders, faders, and keys restore the previous controller
+            workflow inside the RACK—01 chassis.
+          </p>
+          <span className={styles.skillsBackdropTitle} aria-hidden="true">
+            SKILLS
           </span>
         </div>
-        <div className={styles.controllerBanks}>
-          <div className={`${styles.controlBank} ${styles.padBank}`}>
-            <SilkscreenLabel>PAD BANK A / LANGUAGES</SilkscreenLabel>
+        <div className={styles.controller}>
+          <Screw className={styles.screwTopLeft} />
+          <Screw className={styles.screwTopRight} />
+          <Screw className={styles.screwBottomLeft} />
+          <Screw className={styles.screwBottomRight} />
+          <div className={styles.controllerTopbar}>
             <div>
-              {MIXER_DATA[0].channels.map((skill, index) => (
-                <button
-                  type="button"
-                  key={skill.name}
-                  aria-pressed={activeSkill.name === skill.name}
-                  onClick={() => setActiveSkill(skill)}
-                  className={
-                    activeSkill.name === skill.name
-                      ? styles.padActive
-                      : undefined
-                  }
-                >
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <strong>{skill.name}</strong>
-                  <i
-                    style={
-                      {
-                        '--level': `${levels[skill.name]}%`,
-                      } as React.CSSProperties
+              <strong>RACK—01 / MIDI</strong>
+              <SilkscreenLabel>SKILL CONTROL SURFACE</SilkscreenLabel>
+            </div>
+            <div className={styles.controllerDisplay} aria-live="polite">
+              <span>ACTIVE PROGRAM</span>
+              <strong>{activeSkill.name}</strong>
+              <SegmentCounter
+                value={`${String(levels[activeSkill.name] ?? activeSkill.level).padStart(3, '0')}%`}
+              />
+            </div>
+            <span className={styles.powerSwitch}>
+              <i /> PWR
+            </span>
+          </div>
+          <div className={styles.controllerBanks}>
+            <div className={`${styles.controlBank} ${styles.padBank}`}>
+              <SilkscreenLabel>PAD BANK A / LANGUAGES</SilkscreenLabel>
+              <div>
+                {MIXER_DATA[0].channels.map((skill, index) => (
+                  <button
+                    type="button"
+                    key={skill.name}
+                    aria-pressed={activeSkill.name === skill.name}
+                    onClick={() => setActiveSkill(skill)}
+                    className={
+                      activeSkill.name === skill.name
+                        ? styles.padActive
+                        : undefined
                     }
-                  />
-                </button>
-              ))}
+                  >
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <strong>{skill.name}</strong>
+                    <i
+                      style={
+                        {
+                          '--level': `${levels[skill.name]}%`,
+                        } as React.CSSProperties
+                      }
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className={`${styles.controlBank} ${styles.encoderBank}`}>
-            <SilkscreenLabel>PARAM BANK B / FRAMEWORKS</SilkscreenLabel>
-            <div>
-              {MIXER_DATA[1].channels.map((skill, index) => (
-                <Knob
-                  key={skill.name}
-                  color={colors[index]}
-                  label={skill.name}
-                  value={levels[skill.name]}
-                  onChange={(value) => updateLevel(skill.name, value)}
-                />
-              ))}
-            </div>
-          </div>
-          <div className={`${styles.controlBank} ${styles.faderBank}`}>
-            <SilkscreenLabel>FADERS C / TOOLS + FX</SilkscreenLabel>
-            <div>
-              {MIXER_DATA[2].channels.map((skill) => (
-                <label key={skill.name}>
-                  <output>{levels[skill.name]}</output>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
+            <div className={`${styles.controlBank} ${styles.encoderBank}`}>
+              <SilkscreenLabel>PARAM BANK B / FRAMEWORKS</SilkscreenLabel>
+              <div>
+                {MIXER_DATA[1].channels.map((skill, index) => (
+                  <Knob
+                    key={skill.name}
+                    color={colors[index]}
+                    label={skill.name}
                     value={levels[skill.name]}
-                    onChange={(event) =>
-                      updateLevel(skill.name, Number(event.target.value))
-                    }
-                    aria-label={`${skill.name} level`}
+                    onChange={(value) => updateLevel(skill.name, value)}
                   />
-                  <span>{skill.name}</span>
-                </label>
-              ))}
+                ))}
+              </div>
+            </div>
+            <div className={`${styles.controlBank} ${styles.faderBank}`}>
+              <SilkscreenLabel>FADERS C / TOOLS + FX</SilkscreenLabel>
+              <div>
+                {MIXER_DATA[2].channels.map((skill) => (
+                  <label key={skill.name}>
+                    <output>{levels[skill.name]}</output>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={levels[skill.name]}
+                      onChange={(event) =>
+                        updateLevel(skill.name, Number(event.target.value))
+                      }
+                      aria-label={`${skill.name} level`}
+                    />
+                    <span>{skill.name}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-        <div
-          className={styles.keyboardBed}
-          aria-label="Playable skill keyboard"
-        >
-          <div className={styles.pitchControls}>
-            <span>PITCH</span>
-            <i />
-            <span>MOD</span>
-            <i />
-          </div>
-          <div className={styles.controllerKeys}>
-            <div className={styles.whiteKeys}>
-              {Array.from({ length: 14 }, (_, index) => (
-                <button
-                  type="button"
-                  key={index}
-                  aria-label={`Play white key ${index + 1}`}
-                  aria-pressed={activeKey === index}
-                  onPointerDown={() => setActiveKey(index)}
-                  onPointerUp={() => setActiveKey(null)}
-                  onPointerCancel={() => setActiveKey(null)}
-                  onPointerLeave={() => setActiveKey(null)}
-                />
-              ))}
+          <div
+            className={styles.keyboardBed}
+            aria-label="Playable skill keyboard"
+          >
+            <div className={styles.pitchControls}>
+              <span>PITCH</span>
+              <i />
+              <span>MOD</span>
+              <i />
             </div>
-            <div className={styles.blackKeys} aria-label="Sharp and flat keys">
-              {[0, 1, 3, 4, 5, 7, 8, 10, 11, 12].map((whiteKeyIndex, index) => (
-                <button
-                  type="button"
-                  key={whiteKeyIndex}
-                  aria-label={`Play black key ${index + 1}`}
-                  aria-pressed={activeKey === index + 14}
-                  style={
-                    {
-                      '--key-position': `${((whiteKeyIndex + 1) / 14) * 100}%`,
-                    } as React.CSSProperties
-                  }
-                  onPointerDown={() => setActiveKey(index + 14)}
-                  onPointerUp={() => setActiveKey(null)}
-                  onPointerCancel={() => setActiveKey(null)}
-                  onPointerLeave={() => setActiveKey(null)}
-                />
-              ))}
+            <div className={styles.controllerKeys}>
+              <div className={styles.whiteKeys}>
+                {Array.from({ length: 14 }, (_, index) => (
+                  <button
+                    type="button"
+                    key={index}
+                    aria-label={`Play white key ${index + 1}`}
+                    aria-pressed={activeKey === index}
+                    onPointerDown={() => setActiveKey(index)}
+                    onPointerUp={() => setActiveKey(null)}
+                    onPointerCancel={() => setActiveKey(null)}
+                    onPointerLeave={() => setActiveKey(null)}
+                  />
+                ))}
+              </div>
+              <div
+                className={styles.blackKeys}
+                aria-label="Sharp and flat keys"
+              >
+                {[0, 1, 3, 4, 5, 7, 8, 10, 11, 12].map(
+                  (whiteKeyIndex, index) => (
+                    <button
+                      type="button"
+                      key={whiteKeyIndex}
+                      aria-label={`Play black key ${index + 1}`}
+                      aria-pressed={activeKey === index + 14}
+                      style={
+                        {
+                          '--key-position': `${((whiteKeyIndex + 1) / 14) * 100}%`,
+                        } as React.CSSProperties
+                      }
+                      onPointerDown={() => setActiveKey(index + 14)}
+                      onPointerUp={() => setActiveKey(null)}
+                      onPointerCancel={() => setActiveKey(null)}
+                      onPointerLeave={() => setActiveKey(null)}
+                    />
+                  ),
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -634,6 +759,7 @@ function Experience({
                     (selected + offset + EXPERIENCES.length) %
                     EXPERIENCES.length
                   const item = EXPERIENCES[index]
+                  const theme = CASSETTE_THEMES[index % CASSETTE_THEMES.length]
                   return (
                     <button
                       type="button"
@@ -641,9 +767,18 @@ function Experience({
                       onClick={() => setSelected(index)}
                       aria-pressed={offset === 0}
                       className={`${styles.cassette} ${offset === 0 ? styles.cassetteActive : offset < 0 ? styles.cassettePrevious : styles.cassetteNext}`}
+                      style={
+                        {
+                          '--cassette-shell': theme.shell,
+                          '--cassette-shell-deep': theme.shellDeep,
+                          '--cassette-label': theme.label,
+                          '--cassette-ink': theme.ink,
+                          '--cassette-accent': theme.accent,
+                        } as React.CSSProperties
+                      }
                     >
                       <span className={styles.cassetteBrand}>
-                        RACK—01 / TYPE II
+                        <b>RACK—01</b> / TYPE II · HIGH BIAS 70μs
                       </span>
                       <div className={styles.cassetteLabel}>
                         <small>
@@ -694,19 +829,28 @@ function Experience({
               role="tablist"
               aria-label="Experience recordings"
             >
-              {EXPERIENCES.map((item, index) => (
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={selected === index}
-                  key={item.id}
-                  onClick={() => setSelected(index)}
-                >
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <strong>{item.company}</strong>
-                  <small>{item.period}</small>
-                </button>
-              ))}
+              {EXPERIENCES.map((item, index) => {
+                const theme = CASSETTE_THEMES[index % CASSETTE_THEMES.length]
+                return (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={selected === index}
+                    key={item.id}
+                    onClick={() => setSelected(index)}
+                    style={
+                      {
+                        '--cassette-label': theme.label,
+                        '--cassette-accent': theme.accent,
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <strong>{item.company}</strong>
+                    <small>{item.period}</small>
+                  </button>
+                )
+              })}
             </div>
             <div className={styles.experienceNotes} role="tabpanel">
               <div>
@@ -769,34 +913,79 @@ function Work() {
         </div>
         <div className={styles.workViewport}>
           <div className={styles.workRail}>
-            {PROJECTS_SHOWCASE.map((project, index) => (
-              <article className={styles.projectModule} key={project.id}>
-                <Screw className={styles.projectScrewLeft} />
-                <Screw className={styles.projectScrewRight} />
-                <div className={styles.projectMeta}>
-                  <SilkscreenLabel>
-                    REL—{String(index + 1).padStart(2, '0')} / {project.year}
-                  </SilkscreenLabel>
-                  <span>{project.genre}</span>
-                </div>
-                <div className={styles.projectImage}>
-                  <Image
-                    src={project.image}
-                    alt=""
-                    fill
-                    sizes="(max-width: 768px) 84vw, 48vw"
-                  />
-                  <span className={styles.imageScan} />
-                </div>
-                <div className={styles.projectCopy}>
-                  <h3>{project.title}</h3>
-                  <p>{project.description}</p>
-                  <a href={project.url} target="_blank" rel="noreferrer">
-                    OPEN RELEASE <ArrowUpRight size={17} aria-hidden="true" />
-                  </a>
-                </div>
-              </article>
-            ))}
+            {PROJECTS_SHOWCASE.map((project, index) => {
+              const palette = PROJECT_PALETTES[index % PROJECT_PALETTES.length]
+              const releaseNumber = String(index + 1).padStart(2, '0')
+
+              return (
+                <article
+                  className={styles.projectModule}
+                  key={project.id}
+                  style={
+                    {
+                      '--record-color': palette.vinyl,
+                      '--record-label': palette.label,
+                      '--record-accent': palette.accent,
+                    } as React.CSSProperties
+                  }
+                >
+                  <Screw className={styles.projectScrewLeft} />
+                  <Screw className={styles.projectScrewRight} />
+                  <div className={styles.projectMeta}>
+                    <SilkscreenLabel>
+                      RACK—01 · REL—{releaseNumber} / {project.year}
+                    </SilkscreenLabel>
+                    <span>33⅓ RPM · STEREO</span>
+                  </div>
+                  <div className={styles.projectMedia}>
+                    <div className={styles.projectSleeve}>
+                      <div className={styles.projectImage}>
+                        <Image
+                          src={project.image}
+                          alt={`${project.title} project cover`}
+                          fill
+                          sizes="(max-width: 768px) 72vw, 34vw"
+                        />
+                        <span className={styles.imageScan} />
+                        <span className={styles.projectCoverLabel}>
+                          <b>{releaseNumber}</b>
+                          <small>{project.genre}</small>
+                        </span>
+                      </div>
+                      <span className={styles.projectSleeveSpine}>
+                        {project.title} · {project.year}
+                      </span>
+                    </div>
+                    <div className={styles.projectTurntable} aria-hidden="true">
+                      <span className={styles.projectVinyl}>
+                        <i />
+                        <b>
+                          REL
+                          <br />
+                          {releaseNumber}
+                        </b>
+                      </span>
+                    </div>
+                  </div>
+                  <div className={styles.projectCopy}>
+                    <div className={styles.projectTitleBlock}>
+                      <span>
+                        TRACK {releaseNumber} / {project.genre}
+                      </span>
+                      <h3>{project.title}</h3>
+                    </div>
+                    <p>{project.description}</p>
+                    <span
+                      className={styles.projectWaveform}
+                      aria-hidden="true"
+                    />
+                    <a href={project.url} target="_blank" rel="noreferrer">
+                      PLAY RELEASE <ArrowUpRight size={17} aria-hidden="true" />
+                    </a>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -963,17 +1152,21 @@ export default function Rack01LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null)
   const [progress, setProgress] = useState(0)
   const [activeId, setActiveId] = useState('home')
+  const [aboutIndex, setAboutIndex] = useState(0)
+  const [aboutProgress, setAboutProgress] = useState(0)
   const [experienceIndex, setExperienceIndex] = useState(0)
+  const [transportCompact, setTransportCompact] = useState(false)
 
   useEffect(() => {
     let frame = 0
     const updateProgress = () => {
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
+        const currentY = window.scrollY
         const max = document.documentElement.scrollHeight - window.innerHeight
-        setProgress(
-          max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0,
-        )
+
+        setProgress(max > 0 ? Math.min(1, Math.max(0, currentY / max)) : 0)
+        setTransportCompact(currentY >= 120)
       })
     }
     updateProgress()
@@ -1061,6 +1254,47 @@ export default function Rack01LandingPage() {
             },
           })
 
+          ScrollTrigger.create({
+            trigger: `.${styles.about}`,
+            start: 'top top',
+            end: 'bottom bottom',
+            onUpdate: (self) => {
+              setAboutProgress(self.progress)
+              const next = Math.min(
+                ABOUT_TRACKS.length - 1,
+                Math.floor(self.progress * ABOUT_TRACKS.length),
+              )
+              setAboutIndex((current) => (current === next ? current : next))
+            },
+          })
+
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: `.${styles.skills}`,
+                start: 'top top',
+                end: 'bottom bottom',
+                scrub: 0.85,
+              },
+            })
+            .fromTo(
+              `.${styles.controller}`,
+              { scale: 1.04, yPercent: 0 },
+              {
+                scale: 0.88,
+                yPercent: 18,
+                transformOrigin: '50% 15%',
+                ease: 'none',
+              },
+              0,
+            )
+            .fromTo(
+              `.${styles.skillsBackdropTitle}`,
+              { yPercent: 22, opacity: 0.04 },
+              { yPercent: 0, opacity: 0.72, ease: 'none' },
+              0,
+            )
+
           gsap.from(`.${styles.controlBank}`, {
             y: 18,
             opacity: 0.55,
@@ -1075,7 +1309,7 @@ export default function Rack01LandingPage() {
           })
 
           const depthModules = gsap.utils.toArray<HTMLElement>(
-            `.${styles.timelinePanel}, .${styles.controller}, .${styles.cassetteDeck}, .${styles.contactLaunchpad}`,
+            `.${styles.contactLaunchpad}`,
           )
           depthModules.forEach((module) => {
             gsap.fromTo(
@@ -1095,7 +1329,7 @@ export default function Rack01LandingPage() {
           })
 
           const depthHeadings = gsap.utils.toArray<HTMLElement>(
-            `.${styles.about} .${styles.sectionHeading}, .${styles.skills} .${styles.sectionHeading}, .${styles.experience} .${styles.sectionHeading}, .${styles.contact} .${styles.patchHeader}`,
+            `.${styles.contact} .${styles.patchHeader}`,
           )
           depthHeadings.forEach((heading) => {
             gsap.fromTo(
@@ -1113,6 +1347,72 @@ export default function Rack01LandingPage() {
               },
             )
           })
+
+          const studioDetails = gsap.utils.toArray<HTMLElement>(
+            `.${styles.skillsIntro} > p, .${styles.workHint}, .${styles.patchScreen}`,
+          )
+          studioDetails.forEach((detail) => {
+            gsap.fromTo(
+              detail,
+              { y: 24, opacity: 0.35 },
+              {
+                y: 0,
+                opacity: 1,
+                ease: 'none',
+                scrollTrigger: {
+                  trigger: detail,
+                  start: 'top 92%',
+                  end: 'top 62%',
+                  scrub: 0.8,
+                },
+              },
+            )
+          })
+
+          gsap.fromTo(
+            `.${styles.projectModule}`,
+            { y: 42, scale: 0.97, opacity: 0.5 },
+            {
+              y: 0,
+              scale: 1,
+              opacity: 1,
+              stagger: 0.06,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: `.${styles.work}`,
+                start: 'top 88%',
+                end: 'top 38%',
+                scrub: 0.8,
+              },
+            },
+          )
+
+          gsap.to(`.${styles.projectVinyl}`, {
+            rotate: 540,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: `.${styles.work}`,
+              start: 'top top',
+              end: 'bottom bottom',
+              scrub: 0.7,
+            },
+          })
+
+          gsap.fromTo(
+            `.${styles.experience} .${styles.sectionHeading} h2`,
+            { y: 40, opacity: 0.2 },
+            {
+              y: 0,
+              opacity: 1,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: `.${styles.experience}`,
+                start: 'top 82%',
+                end: 'top 24%',
+                scrub: 0.8,
+              },
+            },
+          )
 
           gsap.to(`.${styles.tapeWheel}`, {
             rotate: 920,
@@ -1171,12 +1471,20 @@ export default function Rack01LandingPage() {
         Skip to content
       </a>
       <Hero />
-      <About />
+      <About
+        selected={aboutIndex}
+        setSelected={setAboutIndex}
+        scrollProgress={aboutProgress}
+      />
       <Skills />
       <Experience selected={experienceIndex} setSelected={setExperienceIndex} />
       <Work />
       <Contact />
-      <TransportBridge progress={progress} activeId={activeId} />
+      <TransportBridge
+        progress={progress}
+        activeId={activeId}
+        compact={transportCompact}
+      />
     </div>
   )
 }

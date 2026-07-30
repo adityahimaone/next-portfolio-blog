@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Lenis from 'lenis'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDownRight,
@@ -202,6 +203,35 @@ function Hero() {
         >
           <DawHero backgroundOnly />
         </div>
+        <div className={styles.heroMarquee} aria-hidden="true">
+          <div className={styles.heroMarqueeRow}>
+            <div className={styles.heroMarqueeTrack}>
+              {Array.from({ length: 2 }, (_, group) => (
+                <div className={styles.heroMarqueeGroup} key={group}>
+                  <span>DEVICE WALL / SYSTEM ONLINE</span>
+                  <span>12 MODULES CONNECTED</span>
+                  <span>JAKARTA OUTPUT / READY</span>
+                  <span>SCROLL TO ADVANCE</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className={styles.heroMarqueeRow}>
+            <div
+              className={`${styles.heroMarqueeTrack} ${styles.heroMarqueeReverse}`}
+            >
+              {Array.from({ length: 2 }, (_, group) => (
+                <div className={styles.heroMarqueeGroup} key={group}>
+                  <span>SELECT A DEVICE / PLAY</span>
+                  <span>SIGNAL LOCKED / 48KHZ</span>
+                  <span>RACK—01 / AH</span>
+                  <span>CREATIVE CHANNEL OPEN</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <header className={styles.topline}>
           <a href="#home" className={styles.wordmark} aria-label="RACK-01 home">
             RACK—01 <span>/ AH</span>
@@ -255,40 +285,45 @@ function Hero() {
 
 const ABOUT_TRACKS = [
   {
-    title: 'DISCOVER',
-    note: 'Listen / frame / map',
-    heading: 'Find the signal before shaping the surface.',
-    body: 'I listen for the real constraint, map the product model, and turn ambiguity into a direction the whole team can understand.',
-    signal: 'RESEARCH / SYSTEM MAP',
+    title: 'EXPERIENCE',
+    note: '2019—NOW / PRODUCT TEAMS',
+    metric: '04+',
+    metricLabel: 'YEARS BUILDING',
+    heading: 'Four years turning product complexity into shipped interfaces.',
+    body: 'I have worked across product teams and ambitious builds, translating unclear requirements into reliable experiences people can actually use.',
+    signal: 'YEARS / IN PRACTICE',
     surface: '#d7b36f',
     ink: '#2c251b',
     accent: '#8a432d',
-    detail:
-      'I turn ambiguity into a clear product model before touching pixels.',
+    detail: 'Four-plus years shaping product ideas into production interfaces.',
   },
   {
-    title: 'DESIGN',
-    note: 'Prototype / tune / align',
-    heading: 'Tune structure, interaction, and feeling together.',
-    body: 'I prototype the system as one instrument—visual hierarchy, motion, accessibility, and interaction all reinforcing the same idea.',
-    signal: 'PROTOTYPE / INTERACTION',
+    title: 'CRAFT',
+    note: 'DESIGN / MOTION / CODE',
+    metric: '03',
+    metricLabel: 'CONNECTED DISCIPLINES',
+    heading: 'Design, motion, and engineering tuned as one practice.',
+    body: 'I work across the three disciplines instead of handing ideas between silos, keeping the concept intact from first frame to production code.',
+    signal: 'DISCIPLINES / CONNECTED',
     surface: '#8199ad',
     ink: '#17252d',
     accent: '#315d72',
     detail:
-      'Systems, motion, and interaction are tuned together—not as polish later.',
+      'Design, motion, and engineering stay connected from concept to ship.',
   },
   {
-    title: 'BUILD',
-    note: 'Build / test / ship',
-    heading: 'Make the final system as durable as the idea.',
-    body: 'I translate the direction into production code that stays fast, accessible, testable, and straightforward for teams to evolve.',
-    signal: 'ENGINEERING / DELIVERY',
+    title: 'PRACTICE',
+    note: 'DISCOVER / DESIGN / BUILD',
+    metric: '01',
+    metricLabel: 'INTEGRATED SYSTEM',
+    heading: 'One process that carries the signal from question to release.',
+    body: 'I discover the real constraint, design the interaction, and build the durable system—without losing the reason the work began.',
+    signal: 'PROCESS / END TO END',
     surface: '#b68ba5',
     ink: '#30212a',
     accent: '#70415d',
     detail:
-      'Production code stays fast, accessible, and easy for teams to evolve.',
+      'One end-to-end practice carries each idea from discovery to release.',
   },
 ]
 
@@ -303,6 +338,7 @@ function About({
 }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [playhead, setPlayhead] = useState(0.17)
+
   const [mutedTracks, setMutedTracks] = useState<Set<number>>(new Set())
   const [soloedTrack, setSoloedTrack] = useState<number | null>(null)
 
@@ -344,48 +380,48 @@ function About({
           I turn complex ideas into clear, playable systems.
         </SectionHeading>
         <div className={styles.aboutDeck}>
-          <div className={styles.aboutCopy}>
-            <div className={styles.aboutCardStack} aria-live="polite">
-              {ABOUT_TRACKS.map((track, index) => {
-                return (
-                  <button
-                    type="button"
-                    key={track.title}
-                    className={`${styles.aboutCard} ${selected === index ? styles.aboutCardActive : ''}`}
-                    style={
-                      {
-                        '--about-card': track.surface,
-                        '--about-ink': track.ink,
-                        '--about-accent': track.accent,
-                      } as React.CSSProperties
-                    }
-                    aria-pressed={selected === index}
-                    onClick={() => setSelected(index)}
-                  >
-                    <SilkscreenLabel>
-                      PHASE {String(index + 1).padStart(2, '0')} /{' '}
-                      {track.signal}
-                    </SilkscreenLabel>
-                    <strong>{track.heading}</strong>
-                    <p>{track.body}</p>
-                    <span>{track.title}</span>
-                  </button>
-                )
-              })}
+          <div className={styles.aboutCardStack}>
+            <div className={styles.aboutCardRail} aria-live="polite">
+              {ABOUT_TRACKS.map((track, index) => (
+                <button
+                  type="button"
+                  key={track.title}
+                  className={`${styles.aboutCard} ${
+                    selected === index ? styles.aboutCardActive : ''
+                  }`}
+                  style={
+                    {
+                      '--about-card': track.surface,
+                      '--about-ink': track.ink,
+                      '--about-accent': track.accent,
+                    } as React.CSSProperties
+                  }
+                  aria-label={`${track.title}. Select this phase`}
+                  aria-pressed={selected === index}
+                  onClick={() => setSelected(index)}
+                >
+                  <SilkscreenLabel>
+                    RECORD {String(index + 1).padStart(2, '0')} / {track.signal}
+                  </SilkscreenLabel>
+                  <span className={styles.aboutMetric}>
+                    <b>{track.metric}</b>
+                    <small>{track.metricLabel}</small>
+                  </span>
+                  <strong>{track.heading}</strong>
+                  <p>{track.body}</p>
+                  <span className={styles.aboutCardLabel}>{track.title}</span>
+                </button>
+              ))}
             </div>
-            <div className={styles.aboutStats}>
-              <div>
-                <SegmentCounter value="08+" />
-                <span>YEARS BUILDING</span>
-              </div>
-              <div>
-                <SegmentCounter value="03" />
-                <span>ACTIVE CHANNELS</span>
-              </div>
-              <div>
-                <SegmentCounter value="∞" />
-                <span>CURIOSITY</span>
-              </div>
+            <div className={styles.aboutPhaseIndex} aria-hidden="true">
+              {ABOUT_TRACKS.map((item, index) => (
+                <span
+                  key={item.title}
+                  className={index === selected ? styles.phaseIndexActive : ''}
+                >
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+              ))}
             </div>
           </div>
           <div className={styles.timelinePanel}>
@@ -1035,14 +1071,37 @@ function Contact() {
           <Mail size={18} /> START A TRANSMISSION
         </a>
       </div>
+      <div className={styles.contactSignal} aria-hidden="true">
+        <div className={styles.contactSignalTrack}>
+          {Array.from({ length: 2 }, (_, group) => (
+            <div className={styles.contactSignalGroup} key={group}>
+              <span>OPEN CHANNEL</span>
+              <span>IDEAS IN / PRODUCTS OUT</span>
+              <span>JAKARTA → WORLDWIDE</span>
+              <span>RESPONSE TIME / 24—48H</span>
+            </div>
+          ))}
+        </div>
+      </div>
       <div className={styles.patchbay}>
         <div className={styles.patchScreen}>
-          <SilkscreenLabel>MASTER OUTPUT / READY</SilkscreenLabel>
-          <strong>
-            LET’S MAKE
-            <br />
-            SOMETHING <em>PLAY.</em>
+          <div className={styles.contactScreenStatus}>
+            <SilkscreenLabel>MASTER OUTPUT / READY</SilkscreenLabel>
+            <span>
+              <i /> CHANNEL OPEN
+            </span>
+          </div>
+          <strong className={styles.contactHeadline}>
+            <span>LET’S MAKE</span>
+            <span>
+              SOMETHING <em>PLAY.</em>
+            </span>
           </strong>
+          <div className={styles.contactWaveform} aria-hidden="true">
+            {Array.from({ length: 24 }, (_, index) => (
+              <i key={index} />
+            ))}
+          </div>
           <span>JAKARTA / AVAILABLE WORLDWIDE</span>
         </div>
         <div className={styles.contactLaunchpad}>
@@ -1199,6 +1258,7 @@ export default function Rack01LandingPage() {
 
   useEffect(() => {
     let context: { revert: () => void } | undefined
+    let smoothScrollCleanup: (() => void) | undefined
     let cancelled = false
 
     const setup = async () => {
@@ -1213,6 +1273,21 @@ export default function Rack01LandingPage() {
       ])
       if (cancelled || !rootRef.current) return
       gsap.registerPlugin(ScrollTrigger)
+
+      const lenis = new Lenis({
+        lerp: 0.085,
+        smoothWheel: true,
+        wheelMultiplier: 0.9,
+        touchMultiplier: 1,
+      })
+      const updateLenis = (time: number) => lenis.raf(time * 1000)
+      lenis.on('scroll', ScrollTrigger.update)
+      gsap.ticker.add(updateLenis)
+      gsap.ticker.lagSmoothing(0)
+      smoothScrollCleanup = () => {
+        gsap.ticker.remove(updateLenis)
+        lenis.destroy()
+      }
 
       context = gsap.context(() => {
         const media = gsap.matchMedia()
@@ -1256,16 +1331,46 @@ export default function Rack01LandingPage() {
 
           ScrollTrigger.create({
             trigger: `.${styles.about}`,
-            start: 'top top',
-            end: 'bottom bottom',
-            onUpdate: (self) => {
-              setAboutProgress(self.progress)
-              const next = Math.min(
-                ABOUT_TRACKS.length - 1,
-                Math.floor(self.progress * ABOUT_TRACKS.length),
-              )
-              setAboutIndex((current) => (current === next ? current : next))
-            },
+            start: 'top bottom',
+            end: 'bottom top',
+            onUpdate: (self) => setAboutProgress(self.progress),
+          })
+
+          const aboutCards = gsap.utils.toArray<HTMLElement>(
+            `.${styles.aboutCard}`,
+          )
+          aboutCards.forEach((card, index) => {
+            ScrollTrigger.create({
+              trigger: card,
+              start: 'top 58%',
+              end: 'bottom 42%',
+              onEnter: () => setAboutIndex(index),
+              onEnterBack: () => setAboutIndex(index),
+            })
+          })
+
+          const storyHeadings = gsap.utils.toArray<HTMLElement>(
+            `.${styles.sectionHeading}`,
+          )
+          storyHeadings.forEach((heading) => {
+            const label = heading.querySelector(`.${styles.silkscreen}`)
+            const title = heading.querySelector('h2')
+            gsap.fromTo(
+              [label, title],
+              { yPercent: 105, opacity: 0 },
+              {
+                yPercent: 0,
+                opacity: 1,
+                stagger: 0.08,
+                ease: 'power3.out',
+                scrollTrigger: {
+                  trigger: heading,
+                  start: 'top 90%',
+                  end: 'top 58%',
+                  scrub: 0.7,
+                },
+              },
+            )
           })
 
           gsap
@@ -1279,9 +1384,9 @@ export default function Rack01LandingPage() {
             })
             .fromTo(
               `.${styles.controller}`,
-              { scale: 1.04, yPercent: 0 },
+              { scale: 1, yPercent: 0 },
               {
-                scale: 0.88,
+                scale: 0.9,
                 yPercent: 18,
                 transformOrigin: '50% 15%',
                 ease: 'none',
@@ -1369,6 +1474,44 @@ export default function Rack01LandingPage() {
             )
           })
 
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: `.${styles.contact}`,
+                start: 'top 82%',
+                end: 'top 24%',
+                scrub: 0.8,
+              },
+            })
+            .fromTo(
+              `.${styles.contactSignal}`,
+              { clipPath: 'inset(0 50% 0 50%)', opacity: 0.25 },
+              { clipPath: 'inset(0 0% 0 0%)', opacity: 1, ease: 'none' },
+              0,
+            )
+            .fromTo(
+              `.${styles.contactHeadline} > span`,
+              { yPercent: 85, opacity: 0 },
+              {
+                yPercent: 0,
+                opacity: 1,
+                stagger: 0.1,
+                ease: 'none',
+              },
+              0.12,
+            )
+            .fromTo(
+              `.${styles.launchpadTopbar}, .${styles.launchpadHeader}, .${styles.launchpadGrid}`,
+              { y: 28, opacity: 0.28 },
+              {
+                y: 0,
+                opacity: 1,
+                stagger: 0.08,
+                ease: 'none',
+              },
+              0.18,
+            )
+
           gsap.fromTo(
             `.${styles.projectModule}`,
             { y: 42, scale: 0.97, opacity: 0.5 },
@@ -1397,22 +1540,6 @@ export default function Rack01LandingPage() {
               scrub: 0.7,
             },
           })
-
-          gsap.fromTo(
-            `.${styles.experience} .${styles.sectionHeading} h2`,
-            { y: 40, opacity: 0.2 },
-            {
-              y: 0,
-              opacity: 1,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: `.${styles.experience}`,
-                start: 'top 82%',
-                end: 'top 24%',
-                scrub: 0.8,
-              },
-            },
-          )
 
           gsap.to(`.${styles.tapeWheel}`, {
             rotate: 920,
@@ -1462,6 +1589,7 @@ export default function Rack01LandingPage() {
     return () => {
       cancelled = true
       context?.revert()
+      smoothScrollCleanup?.()
     }
   }, [])
 

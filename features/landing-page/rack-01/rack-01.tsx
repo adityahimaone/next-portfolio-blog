@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import Lenis from 'lenis'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -59,9 +60,9 @@ const CASSETTE_THEMES = [
   {
     shell: '#c8bfd2',
     shellDeep: '#8e819b',
-    label: '#d97b9f',
-    ink: '#2b2130',
-    accent: '#644375',
+    label: '#8c769f',
+    ink: '#211a26',
+    accent: '#523467',
   },
   {
     shell: '#d7c59d',
@@ -85,10 +86,6 @@ function SilkscreenLabel({ children }: { children: React.ReactNode }) {
   return <span className={styles.silkscreen}>{children}</span>
 }
 
-function SegmentCounter({ value }: { value: string }) {
-  return <span className={styles.segmentCounter}>{value}</span>
-}
-
 function SectionHeading({
   index,
   eyebrow,
@@ -99,12 +96,21 @@ function SectionHeading({
   children: React.ReactNode
 }) {
   return (
-    <header className={styles.sectionHeading}>
-      <SilkscreenLabel>
-        {index} / {eyebrow}
-      </SilkscreenLabel>
+    <div className={styles.sectionHeading}>
+      <div className={styles.sectionEyebrow}>
+        <SilkscreenLabel>{eyebrow}</SilkscreenLabel>
+        <span>SYS—{index}</span>
+      </div>
       <h2>{children}</h2>
-    </header>
+    </div>
+  )
+}
+
+function SegmentCounter({ value }: { value: string }) {
+  return (
+    <div className={`${styles.silkscreen} ${styles.segmentCounter}`}>
+      {value}
+    </div>
   )
 }
 
@@ -149,6 +155,8 @@ function TransportBridge({
   activeId: string
   compact: boolean
 }) {
+  const [isNavHovered, setIsNavHovered] = useState(false)
+
   const counter = useMemo(() => {
     const totalSeconds = Math.round(progress * 3_599)
     const minutes = Math.floor(totalSeconds / 60)
@@ -164,7 +172,7 @@ function TransportBridge({
   return (
     <aside
       className={`${styles.transport} ${compact ? styles.transportCompact : ''}`}
-      aria-label="Page transport and section navigation"
+      aria-label="Page transport and navigation"
     >
       <div className={styles.transportStatus}>
         <span className={styles.recordDot} aria-hidden="true" />
@@ -178,17 +186,43 @@ function TransportBridge({
         <span style={{ transform: `scaleX(${progress})` }} />
       </div>
       <SegmentCounter value={counter} />
-      <nav className={styles.transportNav} aria-label="Portfolio sections">
-        {NAV_ITEMS.map((item, index) => (
-          <a
-            key={item.id}
-            href={`#${item.id}`}
-            className={activeId === item.id ? styles.navActive : undefined}
-            aria-current={activeId === item.id ? 'location' : undefined}
-          >
-            <span>{String(index + 1).padStart(2, '0')}</span> {item.label}
-          </a>
-        ))}
+      <nav
+        className={`${styles.transportNav} ${isNavHovered ? styles.transportNavExpanded : ''}`}
+        onMouseEnter={() => setIsNavHovered(true)}
+        onMouseLeave={() => setIsNavHovered(false)}
+        aria-label="Portfolio sections and pages"
+      >
+        <div className={styles.sectionNavGroup}>
+          {NAV_ITEMS.map((item, index) => {
+            const isActive = activeId === item.id
+            return (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                className={`${isActive ? styles.navActive : ''} ${
+                  !isNavHovered && !isActive ? styles.navHidden : ''
+                }`}
+                aria-current={isActive ? 'location' : undefined}
+              >
+                <span>{String(index + 1).padStart(2, '0')}</span> {item.label}
+                {isActive && !isNavHovered && (
+                  <span className={styles.expandHint}>▸</span>
+                )}
+              </a>
+            )
+          })}
+        </div>
+        <div className={styles.routeNavGroup}>
+          {ROUTE_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={styles.transportRouteItem}
+            >
+              <span className={styles.routeDot} /> {item.label}
+            </Link>
+          ))}
+        </div>
       </nav>
     </aside>
   )

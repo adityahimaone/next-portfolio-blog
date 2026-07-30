@@ -1493,7 +1493,8 @@
 .transportCompact {
   right: clamp(12px, 3vw, 42px);
   bottom: clamp(12px, 2vw, 24px);
-  width: min(calc(100vw - 24px), 820px);
+  width: fit-content;
+  max-width: min(calc(100vw - 24px), 960px);
   min-height: 44px;
   grid-template-columns: auto auto auto auto;
   gap: 9px;
@@ -1501,6 +1502,12 @@
   border: 1px solid #555650;
   border-radius: 24px;
   box-shadow: 0 14px 38px rgba(0, 0, 0, 0.3);
+  transition:
+    width 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    gap 350ms ease,
+    padding 350ms ease,
+    box-shadow 350ms ease;
 }
 .transportCompact .transportProgress {
   width: clamp(72px, 9vw, 128px);
@@ -1549,46 +1556,98 @@
 }
 .transportNav {
   display: flex;
-  max-width: 620px;
+  max-width: 900px;
   align-items: stretch;
   align-self: stretch;
   overflow: hidden;
   opacity: 1;
+  border-left: 1px solid #aaa69d;
   transition:
-    max-width 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 160ms ease;
+    max-width 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 250ms ease;
 }
 .transportCompact .transportNav {
-  max-width: 620px;
+  max-width: 900px;
   opacity: 1;
 }
-.transportCompact .transportNav a {
-  padding-right: 7px;
-  padding-left: 7px;
+.transportCompact .transportNav a,
+.transportCompact .transportRouteItem {
+  padding-right: 6px;
+  padding-left: 6px;
   font-size: 7px;
 }
-.transportNav a {
+.transportNav a,
+.transportRouteItem {
   display: flex;
   align-items: center;
-  padding: 0 10px;
-  border-left: 1px solid #aaa69d;
+  max-width: 140px;
+  padding: 0 9px;
+  border-right: 1px solid #aaa69d;
   font: 8px var(--font-geist-mono);
   text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 1;
+  transform: scaleX(1);
+  transform-origin: left;
   transition:
+    max-width 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease,
+    transform 250ms ease,
     background 150ms ease,
     color 150ms ease;
 }
 .transportNav a span {
-  margin-right: 4px;
+  margin-right: 3px;
   color: var(--slate);
 }
 .transportNav a:hover,
-.transportNav a.navActive {
+.transportNav a.navActive,
+.transportRouteItem:hover {
   background: var(--graphite);
   color: var(--chassis);
 }
 .transportNav a.navActive span {
   color: var(--signal-orange);
+}
+.transportRouteItem {
+  color: var(--graphite);
+  font-weight: 700;
+  background: rgba(255, 90, 31, 0.09);
+}
+.routeDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--signal-orange);
+  box-shadow: 0 0 5px var(--signal-orange);
+}
+.sectionNavGroup,
+.routeNavGroup {
+  display: flex;
+  align-items: stretch;
+}
+.navHidden {
+  max-width: 0 !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+  border-right: 0 !important;
+  opacity: 0 !important;
+  transform: scaleX(0) !important;
+  pointer-events: none !important;
+}
+.expandHint {
+  display: inline-block;
+  margin-left: 5px;
+  color: var(--signal-orange);
+  font-size: 8px;
+  animation: pulse-hint 1.4s ease-in-out infinite;
+}
+@keyframes pulse-hint {
+  0%, 100% { opacity: 0.6; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(2px); }
 }
 
 @keyframes hero-marquee {
@@ -2324,10 +2383,11 @@
 }
 .tapeCarousel {
   position: relative;
-  height: 248px;
+  min-height: 260px;
+  height: auto;
   overflow: hidden;
   border: 5px solid #343532;
-  border-radius: 4px;
+  border-radius: 6px;
   background: radial-gradient(
       circle at 50% 15%,
       rgba(255, 255, 255, 0.09),
@@ -2343,10 +2403,10 @@
   top: 50%;
   left: 50%;
   display: grid;
-  width: min(460px, 72%);
-  min-height: 188px;
+  width: min(440px, 76%);
+  max-height: calc(100% - 16px);
   grid-template-columns: 1fr;
-  padding: 15px 19px 12px;
+  padding: 12px 16px 10px;
   border: 1px solid #74736d;
   border-radius: 5px;
   background: linear-gradient(
@@ -2375,13 +2435,13 @@
   z-index: 1;
   opacity: 0.68;
   filter: brightness(0.76);
-  transform: translate(-112%, -48%) rotate(-5deg) scale(0.78);
+  transform: translate(-92%, -50%) rotate(-4deg) scale(0.82);
 }
 .cassetteNext {
   z-index: 2;
   opacity: 0.72;
   filter: brightness(0.8);
-  transform: translate(12%, -48%) rotate(5deg) scale(0.78);
+  transform: translate(-8%, -50%) rotate(4deg) scale(0.82);
 }
 .cassette:active {
   transform: translate(-50%, -50%) scale(0.96);

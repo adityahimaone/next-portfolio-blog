@@ -14,6 +14,7 @@ import {
   Square,
 } from 'lucide-react'
 import { Screw } from '@/components/screw'
+import { EncryptedText } from '@/components/encrypted-text'
 import { DawHero } from '../components/hero'
 import {
   EMAIL,
@@ -23,6 +24,17 @@ import {
   SOCIAL_LINKS_LANDING,
 } from '../constants'
 import styles from './rack-01.module.css'
+
+const HERO_MARQUEE_ITEMS = [
+  'RACK—01 CHASSIS ONLINE',
+  '12 INTERACTIVE AUDIO-VISUAL INSTRUMENTS',
+  'SIGNAL LOCKED // 48.0 KHZ 24-BIT',
+  'FRONTEND ENGINEERING & MOTION DESIGN',
+  'JAKARTA, ID',
+  '120.00 BPM SYNCHRONIZED',
+  'SELECT ANY DECK TO PLAY',
+  'DISCIPLINED INTERFACES & CREATIVE CODE',
+] as const
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Home' },
@@ -249,7 +261,13 @@ function Hero() {
           </div>
           <div className={styles.viewfinderTelemetryTop}>
             <span className={styles.viewfinderRecording}>REC</span>
-            <span>CAM A / DEVICE WALL</span>
+            <span>
+              <EncryptedText
+                text="CAM A / DEVICE WALL"
+                revealDelayMs={40}
+                encryptedClassName={styles.encryptedChar}
+              />
+            </span>
           </div>
           <div className={styles.viewfinderTelemetryRight}>
             <span>4K</span>
@@ -275,9 +293,27 @@ function Hero() {
           </a>
         </header>
 
+        <div className={styles.heroMarqueeBar} aria-hidden="true">
+          <div className={styles.heroMarqueeTrack}>
+            {[...HERO_MARQUEE_ITEMS, ...HERO_MARQUEE_ITEMS].map(
+              (item, index) => (
+                <span key={index} className={styles.heroMarqueeItem}>
+                  <span className={styles.heroMarqueeItemDot} />
+                  {item}
+                </span>
+              ),
+            )}
+          </div>
+        </div>
+
         <div className={styles.heroViewfinderReadout}>
           <div className={styles.heroViewfinderLabel}>
-            <span>FRONTEND ENGINEER / CREATIVE DEVELOPER</span>
+            <EncryptedText
+              text="FRONTEND ENGINEER / CREATIVE DEVELOPER"
+              revealDelayMs={35}
+              encryptedClassName={styles.encryptedChar}
+              scrambleOnHover
+            />
             <span className={styles.heroViewfinderStatus}>
               <i /> LIVE SIGNAL
             </span>
@@ -285,9 +321,20 @@ function Hero() {
 
           <div className={styles.heroViewfinderIdentity}>
             <h1 aria-label="Aditya Himaone">
-              <span className={styles.heroLine}>ADITYA</span>
               <span className={styles.heroLine}>
-                HIMA<em>ONE</em>
+                <EncryptedText
+                  text="ADITYA"
+                  revealDelayMs={50}
+                  encryptedClassName={styles.encryptedChar}
+                />
+              </span>
+              <span className={styles.heroLine}>
+                <EncryptedText
+                  text="HIMA"
+                  revealDelayMs={60}
+                  encryptedClassName={styles.encryptedChar}
+                />
+                <em>ONE</em>
               </span>
             </h1>
             <p>
@@ -297,7 +344,13 @@ function Hero() {
           </div>
 
           <div className={styles.heroViewfinderActions}>
-            <span>12 DEVICES / JAKARTA, ID</span>
+            <span>
+              <EncryptedText
+                text="12 DEVICES / JAKARTA, ID"
+                revealDelayMs={40}
+                encryptedClassName={styles.encryptedChar}
+              />
+            </span>
             <a href="#work" className={styles.primaryButton}>
               <span>VIEW SELECTED WORK</span>
               <ArrowDownRight size={18} aria-hidden="true" />
@@ -309,7 +362,20 @@ function Hero() {
           <SilkscreenLabel>
             COLLECTION / 12 INTERACTIVE INSTRUMENTS
           </SilkscreenLabel>
-          <span>JAKARTA, ID / SELECT A DEVICE / SCROLL ↓</span>
+          <a
+            href="#about"
+            className={styles.scrollAction}
+            aria-label="Scroll down to about section"
+          >
+            <span>JAKARTA, ID / SELECT A DEVICE /</span>
+            <EncryptedText
+              text="SCROLL"
+              revealDelayMs={45}
+              encryptedClassName={styles.encryptedChar}
+              scrambleOnHover
+            />
+            <span className={styles.scrollArrow}>↓</span>
+          </a>
         </div>
       </div>
     </section>
@@ -1056,33 +1122,59 @@ function Experience({
 
 const SPLIT_FLAP_ROWS = [
   {
-    from: 'EXPERIENCE  ARCHIVED  ',
-    to: 'PROJECTS    DEPARTING ',
+    from: '                                                            ',
+    to: '                                                            ',
+    isFlipping: false,
   },
   {
-    from: '04  MASTER LOG  CLOSED',
-    to: '05  FEATURED  BOARDING',
+    from: '                                                            ',
+    to: '                                                            ',
+    isFlipping: false,
   },
   {
-    from: 'YEARS OF CRAFT  LOGGED',
-    to: 'SELECTED WORK  ON AIR ',
+    from: '                04 YEARS EXPERIENCE ARCHIVED                ',
+    to: '                05 FEATURED RELEASES DEPARTING              ',
+    isFlipping: true,
   },
   {
-    from: 'SYSTEMS BUILT  TESTED ',
-    to: 'PRODUCTS READY TO SHIP',
+    from: '                MASTER INTERFACE LOG CLOSED                 ',
+    to: '                SELECTED WORK SHOWCASE ON AIR               ',
+    isFlipping: true,
   },
   {
-    from: 'PROCESS NOTES  STORED ',
-    to: 'CASE STUDIES  NOW LIVE',
+    from: '                SYSTEMS & MOTION CRAFT LOGGED               ',
+    to: '                DIGITAL PRODUCTS READY TO SHIP              ',
+    isFlipping: true,
+  },
+  {
+    from: '                                                            ',
+    to: '                                                            ',
+    isFlipping: false,
+  },
+  {
+    from: '                                                            ',
+    to: '                                                            ',
+    isFlipping: false,
   },
 ] as const
 
-function SplitFlapCell({ from, to }: { from: string; to: string }) {
+function SplitFlapCell({
+  from,
+  to,
+  isFlipping = true,
+}: {
+  from: string
+  to: string
+  isFlipping?: boolean
+}) {
   const source = from === ' ' ? '\u00a0' : from
-  const target = to === ' ' ? '\u00a0' : to
+  const target = isFlipping ? (to === ' ' ? '\u00a0' : to) : source
 
   return (
-    <span className={styles.splitFlapCell}>
+    <span
+      className={styles.splitFlapCell}
+      data-flipping={isFlipping ? 'true' : 'false'}
+    >
       <span className={`${styles.splitFlapHalf} ${styles.splitFlapStaticTop}`}>
         <span>{target}</span>
       </span>
@@ -1091,12 +1183,16 @@ function SplitFlapCell({ from, to }: { from: string; to: string }) {
       >
         <span>{source}</span>
       </span>
-      <span className={`${styles.splitFlapHalf} ${styles.splitFlapTop}`}>
-        <span>{source}</span>
-      </span>
-      <span className={`${styles.splitFlapHalf} ${styles.splitFlapBottom}`}>
-        <span>{target}</span>
-      </span>
+      {isFlipping && (
+        <>
+          <span className={`${styles.splitFlapHalf} ${styles.splitFlapTop}`}>
+            <span>{source}</span>
+          </span>
+          <span className={`${styles.splitFlapHalf} ${styles.splitFlapBottom}`}>
+            <span>{target}</span>
+          </span>
+        </>
+      )}
       <i />
     </span>
   )
@@ -1110,11 +1206,6 @@ function SplitFlapDivider() {
     >
       <div className={styles.splitFlapBoard} aria-hidden="true">
         <div className={styles.splitFlapInner}>
-          <div className={styles.splitFlapCopy}>
-            <span>STUDIO DEPARTURES / 04—05</span>
-            <strong>Recorded experience, cleared for release.</strong>
-          </div>
-
           <div className={styles.splitFlapPanel}>
             <div className={styles.splitFlapHeader}>
               <span>
@@ -1128,6 +1219,7 @@ function SplitFlapDivider() {
                   <SplitFlapCell
                     from={character}
                     to={row.to[columnIndex] ?? ' '}
+                    isFlipping={row.isFlipping}
                     key={`${rowIndex}-${columnIndex}`}
                   />
                 )),
@@ -1867,10 +1959,10 @@ export default function Rack01LandingPage() {
           `.${styles.splitFlapPanel}`,
         )
         const splitFlapTops = rootRef.current?.querySelectorAll<HTMLElement>(
-          `.${styles.splitFlapTop}`,
+          `.${styles.splitFlapCell}[data-flipping="true"] .${styles.splitFlapTop}`,
         )
         const splitFlapBottoms = rootRef.current?.querySelectorAll<HTMLElement>(
-          `.${styles.splitFlapBottom}`,
+          `.${styles.splitFlapCell}[data-flipping="true"] .${styles.splitFlapBottom}`,
         )
         const splitFlapStatus = rootRef.current?.querySelector<HTMLElement>(
           `.${styles.splitFlapStatus}`,

@@ -609,9 +609,6 @@ function Skills() {
             Pads, encoders, faders, and keys restore the previous controller
             workflow inside the RACK—01 chassis.
           </p>
-          <span className={styles.skillsBackdropTitle} aria-hidden="true">
-            SKILLS
-          </span>
         </div>
         <div className={styles.controller}>
           <Screw className={styles.screwTopLeft} />
@@ -751,6 +748,9 @@ function Skills() {
             </div>
           </div>
         </div>
+        <span className={styles.skillsBackdropTitle} aria-hidden="true">
+          SKILLS
+        </span>
       </div>
     </section>
   )
@@ -1421,17 +1421,17 @@ export default function Rack01LandingPage() {
               `.${styles.controller}`,
               { scale: 1, yPercent: 0 },
               {
-                scale: 0.9,
-                yPercent: 18,
-                transformOrigin: '50% 15%',
+                scale: 0.86,
+                yPercent: -2,
+                transformOrigin: '50% 0%',
                 ease: 'none',
               },
               0,
             )
             .fromTo(
               `.${styles.skillsBackdropTitle}`,
-              { yPercent: 22, opacity: 0.04 },
-              { yPercent: 0, opacity: 0.72, ease: 'none' },
+              { yPercent: 12, opacity: 0.2 },
+              { yPercent: -8, opacity: 0.75, ease: 'none' },
               0,
             )
 

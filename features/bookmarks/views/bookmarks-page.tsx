@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { Bookmark, BookmarkCategory, BookmarkFormData } from '../types'
+import { BOOKMARK_CATEGORIES, CATEGORY_COLORS } from '../constants/categories'
 import { BookmarkHero } from '../components/bookmark-hero'
-import { BookmarkFilter } from '../components/bookmark-filter'
+import { BookmarkFilter, SortOption } from '../components/bookmark-filter'
 import { BookmarkCard } from '../components/bookmark-card'
 import { BookmarkAdminModal } from '../components/bookmark-admin-modal'
 import { SubpageHeader, Footer } from '@/features/layout'
@@ -22,6 +23,10 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
 
   // View Mode: 'list' (DEFAULT) or 'grid'
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+
+  // Sorting & Grouping States (Default: Grouped by Category, Sorted by Date Newest)
+  const [sortBy, setSortBy] = useState<SortOption>('newest')
+  const [groupByCategory, setGroupByCategory] = useState(true)
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('')
@@ -74,6 +79,52 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
     })
   }, [bookmarks, selectedCategory, featuredOnly, selectedTags, searchQuery])
 
+  // Sort Bookmarks logic
+  const sortedBookmarks = useMemo(() => {
+    const list = [...filteredBookmarks]
+    list.sort((a, b) => {
+      if (sortBy === 'a-z') {
+        return a.title.localeCompare(b.title)
+      }
+      if (sortBy === 'z-a') {
+        return b.title.localeCompare(a.title)
+      }
+      if (sortBy === 'oldest') {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+        return dateA - dateB
+      }
+      // 'newest' (default)
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return dateB - dateA
+    })
+    return list
+  }, [filteredBookmarks, sortBy])
+
+  // Group Bookmarks by Category logic
+  const groupedBookmarks = useMemo(() => {
+    if (!groupByCategory || selectedCategory !== 'All') return null
+    const groups: { category: string; items: Bookmark[] }[] = []
+    const categoriesToGroup = BOOKMARK_CATEGORIES.filter((c) => c !== 'All')
+
+    categoriesToGroup.forEach((cat) => {
+      const items = sortedBookmarks.filter((b) => b.category === cat)
+      if (items.length > 0) {
+        groups.push({ category: cat, items })
+      }
+    })
+
+    // Also include any custom category items not in standard list
+    const knownCats = new Set<string>(categoriesToGroup)
+    const extraItems = sortedBookmarks.filter((b) => !knownCats.has(b.category))
+    if (extraItems.length > 0) {
+      groups.push({ category: 'Other', items: extraItems })
+    }
+
+    return groups
+  }, [sortedBookmarks, groupByCategory, selectedCategory])
+
   // Handlers
   const handleTagClick = (tag: string) => {
     if (!selectedTags.includes(tag)) {
@@ -90,6 +141,7 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
     setSelectedCategory('All')
     setSelectedTags([])
     setFeaturedOnly(false)
+    setSortBy('newest')
   }
 
   const handleOpenAddModal = () => {
@@ -149,7 +201,7 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
       <SubpageHeader />
 
       <main className="mx-auto max-w-7xl px-4 py-20 pt-28 min-h-screen">
-        {/* Simplified Header */}
+        {/* Header Hero */}
         <BookmarkHero
           bookmarks={bookmarks}
           isAdmin={isAdmin}
@@ -163,7 +215,7 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
           }}
         />
 
-        {/* Filters, View Toggle (List/Grid), Search */}
+        {/* Filters, Sort, Group Toggle, View Switch */}
         <BookmarkFilter
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -178,31 +230,92 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
           onResetFilters={handleResetFilters}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          sortBy={sortBy}
+          onSortByChange={setSortBy}
+          groupByCategory={groupByCategory}
+          onToggleGroupByCategory={() => setGroupByCategory((prev) => !prev)}
           totalCount={bookmarks.length}
           filteredCount={filteredBookmarks.length}
         />
 
-        {/* Bookmarks Display List or Grid */}
-        {filteredBookmarks.length > 0 ? (
-          <div
-            className={cn(
-              viewMode === 'list'
-                ? 'flex flex-col space-y-3.5'
-                : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-            )}
-          >
-            {filteredBookmarks.map((bookmark) => (
-              <BookmarkCard
-                key={bookmark.id}
-                bookmark={bookmark}
-                viewMode={viewMode}
-                isAdmin={isAdmin}
-                onTagClick={handleTagClick}
-                onEdit={handleEditBookmark}
-                onDelete={handleDeleteBookmark}
-              />
-            ))}
-          </div>
+        {/* Bookmarks Display: Grouped or Flat */}
+        {sortedBookmarks.length > 0 ? (
+          groupedBookmarks && groupedBookmarks.length > 0 ? (
+            /* GROUPED BY CATEGORY VIEW */
+            <div className="space-y-10">
+              {groupedBookmarks.map(({ category, items }) => {
+                const theme = CATEGORY_COLORS[category] || {
+                  bg: 'bg-zinc-800',
+                  text: 'text-zinc-200',
+                  border: 'border-zinc-700',
+                }
+
+                return (
+                  <section key={category} className="space-y-3.5">
+                    {/* Category Group Header */}
+                    <div className="flex items-center gap-3 pb-1 border-b border-zinc-800/80">
+                      <span
+                        className={cn(
+                          'px-3 py-1 rounded-lg border text-xs font-mono font-bold uppercase tracking-wider shadow-sm',
+                          theme.bg,
+                          theme.text,
+                          theme.border
+                        )}
+                      >
+                        {category}
+                      </span>
+                      <span className="text-xs font-mono text-zinc-200 font-bold">
+                        ({items.length} {items.length === 1 ? 'bookmark' : 'bookmarks'})
+                      </span>
+                      <div className="flex-1 h-px bg-gradient-to-r from-zinc-800 via-zinc-800/40 to-transparent" />
+                    </div>
+
+                    {/* Category Items List / Grid */}
+                    <div
+                      className={cn(
+                        viewMode === 'list'
+                          ? 'flex flex-col space-y-2.5'
+                          : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'
+                      )}
+                    >
+                      {items.map((bookmark) => (
+                        <BookmarkCard
+                          key={bookmark.id}
+                          bookmark={bookmark}
+                          viewMode={viewMode}
+                          isAdmin={isAdmin}
+                          onTagClick={handleTagClick}
+                          onEdit={handleEditBookmark}
+                          onDelete={handleDeleteBookmark}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )
+              })}
+            </div>
+          ) : (
+            /* FLAT VIEW */
+            <div
+              className={cn(
+                viewMode === 'list'
+                  ? 'flex flex-col space-y-2.5'
+                  : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'
+              )}
+            >
+              {sortedBookmarks.map((bookmark) => (
+                <BookmarkCard
+                  key={bookmark.id}
+                  bookmark={bookmark}
+                  viewMode={viewMode}
+                  isAdmin={isAdmin}
+                  onTagClick={handleTagClick}
+                  onEdit={handleEditBookmark}
+                  onDelete={handleDeleteBookmark}
+                />
+              ))}
+            </div>
+          )
         ) : (
           /* Empty State */
           <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/50 p-12 text-center my-8">
@@ -244,3 +357,4 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
     </>
   )
 }
+

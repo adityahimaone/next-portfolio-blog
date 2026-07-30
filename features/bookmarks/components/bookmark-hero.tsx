@@ -40,7 +40,7 @@ export function BookmarkHero({
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white flex items-center gap-3">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-amber-400">
             Bookmarks
           </h1>
           <p className="mt-2 text-base text-zinc-400 max-w-2xl">

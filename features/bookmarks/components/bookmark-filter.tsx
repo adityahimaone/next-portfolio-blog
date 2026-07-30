@@ -2,8 +2,10 @@
 
 import { BookmarkCategory } from '../types'
 import { BOOKMARK_CATEGORIES } from '../constants/categories'
-import { Search, X, Sparkles, Filter, LayoutList, LayoutGrid } from 'lucide-react'
+import { Search, X, Sparkles, Filter, LayoutList, LayoutGrid, ArrowUpDown, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+export type SortOption = 'newest' | 'oldest' | 'a-z' | 'z-a'
 
 interface BookmarkFilterProps {
   searchQuery: string
@@ -19,6 +21,10 @@ interface BookmarkFilterProps {
   onResetFilters: () => void
   viewMode: 'list' | 'grid'
   onViewModeChange: (mode: 'list' | 'grid') => void
+  sortBy: SortOption
+  onSortByChange: (sort: SortOption) => void
+  groupByCategory: boolean
+  onToggleGroupByCategory: () => void
   totalCount: number
   filteredCount: number
 }
@@ -37,6 +43,10 @@ export function BookmarkFilter({
   onResetFilters,
   viewMode,
   onViewModeChange,
+  sortBy,
+  onSortByChange,
+  groupByCategory,
+  onToggleGroupByCategory,
   totalCount,
   filteredCount,
 }: BookmarkFilterProps) {
@@ -44,17 +54,17 @@ export function BookmarkFilter({
 
   return (
     <div className="space-y-4 mb-8">
-      {/* Top Bar: Search Input + View Mode Switch + Featured Switch */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      {/* Top Bar: Search Input + Sort Dropdown + Grouping + View Mode Switch + Featured Switch */}
+      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
         {/* Search Input */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-[240px]">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
           <input
             type="text"
             placeholder="Search bookmarks by title, description, domain, or tag..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 text-sm text-white placeholder-zinc-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all shadow-inner"
+            className="w-full pl-10 pr-10 py-2 rounded-xl border border-zinc-700 bg-zinc-900 text-sm text-white placeholder-zinc-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all shadow-inner"
           />
           {searchQuery && (
             <button
@@ -66,21 +76,52 @@ export function BookmarkFilter({
           )}
         </div>
 
-        {/* View Mode Toggle + Featured Switch */}
-        <div className="flex items-center gap-2">
+        {/* Controls: Sort dropdown, Group Toggle, View Mode, Featured */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Sort Selector */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono text-zinc-300">
+            <ArrowUpDown className="h-3.5 w-3.5 text-amber-400" />
+            <span className="hidden sm:inline font-semibold">SORT:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => onSortByChange(e.target.value as SortOption)}
+              className="bg-transparent text-white font-bold font-mono focus:outline-none cursor-pointer text-xs"
+            >
+              <option value="newest" className="bg-zinc-900 text-white">Date (Latest)</option>
+              <option value="oldest" className="bg-zinc-900 text-white">Date (Oldest)</option>
+              <option value="a-z" className="bg-zinc-900 text-white">Name (A – Z)</option>
+              <option value="z-a" className="bg-zinc-900 text-white">Name (Z – A)</option>
+            </select>
+          </div>
+
+          {/* Category Grouping Toggle (Active when All categories selected) */}
+          <button
+            onClick={onToggleGroupByCategory}
+            title="Toggle Category Grouping"
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-mono font-bold transition-all',
+              groupByCategory
+                ? 'border-amber-400/80 bg-amber-950/60 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.25)]'
+                : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500 hover:text-white'
+            )}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            <span>Grouped</span>
+          </button>
+
           {/* List vs Grid Mode Toggle */}
           <div className="flex items-center p-1 rounded-xl border border-zinc-700 bg-zinc-900">
             <button
               onClick={() => onViewModeChange('list')}
-              title="List View (Default)"
+              title="List View"
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all',
+                'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all',
                 viewMode === 'list'
-                  ? 'bg-amber-400 text-zinc-950 shadow-[0_0_10px_rgba(251,191,36,0.5)]'
-                  : 'text-zinc-300 hover:text-white'
+                  ? 'bg-amber-400 text-zinc-950 shadow-[0_0_8px_rgba(251,191,36,0.5)]'
+                  : 'text-zinc-400 hover:text-white'
               )}
             >
-              <LayoutList className="h-4 w-4" />
+              <LayoutList className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">List</span>
             </button>
 
@@ -88,13 +129,13 @@ export function BookmarkFilter({
               onClick={() => onViewModeChange('grid')}
               title="Grid View"
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all',
+                'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all',
                 viewMode === 'grid'
-                  ? 'bg-amber-400 text-zinc-950 shadow-[0_0_10px_rgba(251,191,36,0.5)]'
-                  : 'text-zinc-300 hover:text-white'
+                  ? 'bg-amber-400 text-zinc-950 shadow-[0_0_8px_rgba(251,191,36,0.5)]'
+                  : 'text-zinc-400 hover:text-white'
               )}
             >
-              <LayoutGrid className="h-4 w-4" />
+              <LayoutGrid className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Grid</span>
             </button>
           </div>
@@ -103,9 +144,9 @@ export function BookmarkFilter({
           <button
             onClick={onToggleFeatured}
             className={cn(
-              'flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-mono font-bold transition-all',
+              'flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-mono font-bold transition-all',
               featuredOnly
-                ? 'border-amber-400/80 bg-amber-950/60 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                ? 'border-amber-400/80 bg-amber-950/60 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
                 : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500 hover:text-white'
             )}
           >
@@ -116,7 +157,7 @@ export function BookmarkFilter({
           {isFiltered && (
             <button
               onClick={onResetFilters}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold text-zinc-300 hover:text-white hover:border-zinc-500 transition-all"
+              className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold text-zinc-300 hover:text-white hover:border-zinc-500 transition-all"
             >
               <X className="h-3.5 w-3.5" />
               <span>Reset</span>
@@ -194,10 +235,13 @@ export function BookmarkFilter({
           SHOWING <span className="text-amber-400 font-extrabold">{filteredCount}</span> OF{' '}
           <span className="text-white font-extrabold">{totalCount}</span> BOOKMARKS
         </div>
-        <div className="uppercase text-[11px] tracking-wider text-zinc-400">
-          VIEW: <span className="text-white font-bold">{viewMode}</span>
+        <div className="uppercase text-[11px] tracking-wider text-zinc-400 flex items-center gap-3">
+          <span>SORT: <strong className="text-amber-400 uppercase">{sortBy}</strong></span>
+          <span>•</span>
+          <span>VIEW: <strong className="text-white uppercase">{viewMode}</strong></span>
         </div>
       </div>
     </div>
   )
 }
+

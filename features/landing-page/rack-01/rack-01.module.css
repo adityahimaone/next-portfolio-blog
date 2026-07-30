@@ -1646,8 +1646,15 @@
   animation: pulse-hint 1.4s ease-in-out infinite;
 }
 @keyframes pulse-hint {
-  0%, 100% { opacity: 0.6; transform: translateX(0); }
-  50% { opacity: 1; transform: translateX(2px); }
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(2px);
+  }
 }
 
 @keyframes hero-marquee {
@@ -3232,6 +3239,123 @@
     inset 0 0 0 2px var(--track-accent),
     0 4px 10px rgba(0, 0, 0, 0.18);
 }
+.signalDivider {
+  position: relative;
+  overflow: clip;
+  background: #171917;
+}
+.signalDividerStage {
+  position: relative;
+  display: grid;
+  min-height: clamp(220px, 28vw, 340px);
+  grid-template-rows: minmax(0, 1fr) clamp(44px, 5vw, 52px) minmax(0, 1fr);
+  overflow: hidden;
+  isolation: isolate;
+}
+.signalDividerStage::before,
+.signalDividerStage::after {
+  position: absolute;
+  z-index: -1;
+  right: 0;
+  left: 0;
+  height: 50%;
+  content: '';
+  pointer-events: none;
+}
+.signalDividerStage::before {
+  top: 0;
+  background:
+    radial-gradient(
+      circle at 88% 14%,
+      rgba(201, 165, 116, 0.19),
+      transparent 23%
+    ),
+    linear-gradient(90deg, rgba(29, 30, 28, 0.035) 1px, transparent 1px) 0 0 /
+      28px 28px,
+    var(--chassis-hi);
+}
+.signalDividerStage::after {
+  bottom: 0;
+  background:
+    radial-gradient(circle at 10% 15%, rgba(46, 63, 92, 0.34), transparent 28%),
+    radial-gradient(
+      circle at 90% 72%,
+      rgba(201, 165, 116, 0.12),
+      transparent 28%
+    ),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0
+      0 / 32px 32px,
+    #171917;
+}
+.signalDividerLane {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  overflow: hidden;
+  contain: layout paint;
+}
+.signalDividerLaneTop {
+  border-bottom: 1px solid rgba(29, 30, 28, 0.22);
+  color: rgba(29, 30, 28, 0.82);
+}
+.signalDividerLaneBottom {
+  justify-content: flex-end;
+  border-top: 1px solid rgba(244, 240, 232, 0.16);
+  color: rgba(244, 240, 232, 0.82);
+}
+.signalDividerRail {
+  position: relative;
+  display: flex;
+  width: max-content;
+  min-width: max-content;
+  align-items: center;
+  will-change: transform;
+}
+.signalDividerTopRail {
+  left: -12vw;
+}
+.signalDividerBottomRail {
+  right: -12vw;
+}
+.signalDividerPhrase {
+  display: block;
+  flex: 0 0 auto;
+  padding-right: clamp(28px, 4vw, 64px);
+  font: 700 clamp(24px, 3vw, 46px) / 0.92 var(--font-space-grotesk);
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+}
+.signalDividerMotto {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(18px, 3vw, 48px);
+  margin: 0;
+  padding: 0 clamp(20px, 5vw, 78px);
+  border-top: 1px solid rgba(244, 240, 232, 0.12);
+  border-bottom: 1px solid rgba(244, 240, 232, 0.12);
+  background: rgba(23, 25, 23, 0.96);
+  color: var(--chassis);
+}
+.signalDividerMotto span {
+  color: #918c83;
+  font: 700 8px var(--font-geist-mono);
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+.signalDividerMotto strong {
+  overflow: hidden;
+  color: var(--signal-orange);
+  font: 600 clamp(11px, 1.15vw, 15px) / 1.25 var(--font-space-grotesk);
+  letter-spacing: -0.015em;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .skills {
   position: relative;
   min-height: 240svh;
@@ -3247,6 +3371,16 @@
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0
       0 / 32px 32px,
     #171917;
+}
+.section.skills::before {
+  display: none;
+}
+.skills .sectionHeading > .silkscreen {
+  padding-top: 0;
+  border-top: 0;
+}
+.skills .sectionHeading > .silkscreen::before {
+  display: none;
 }
 .skillsStage {
   position: sticky;
@@ -3299,21 +3433,7 @@
   pointer-events: auto;
   backdrop-filter: blur(8px);
 }
-.skillsBackdropTitle {
-  position: absolute;
-  right: -0.03em;
-  bottom: 0;
-  left: -0.03em;
-  z-index: 0;
-  color: rgba(244, 240, 232, 0.65);
-  font: 700 clamp(110px, 20vw, 340px) / 0.72 var(--font-space-grotesk);
-  letter-spacing: -0.09em;
-  text-align: center;
-  white-space: nowrap;
-  pointer-events: none;
-  user-select: none;
-  will-change: transform, opacity;
-}
+
 .controller {
   position: relative;
   z-index: 2;
@@ -3338,6 +3458,485 @@
   content: '';
   pointer-events: none;
 }
+.cableDivider {
+  position: relative;
+  min-height: clamp(180px, 20vw, 260px);
+  overflow: hidden;
+  isolation: isolate;
+  background: #c8a474;
+}
+.cableDivider::before,
+.cableDivider::after {
+  position: absolute;
+  z-index: -1;
+  right: 0;
+  left: 0;
+  height: 50%;
+  content: '';
+  pointer-events: none;
+}
+.cableDivider::before {
+  top: 0;
+  background:
+    radial-gradient(circle at 10% 15%, rgba(46, 63, 92, 0.34), transparent 28%),
+    radial-gradient(
+      circle at 90% 72%,
+      rgba(201, 165, 116, 0.12),
+      transparent 28%
+    ),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0
+      0 / 32px 32px,
+    #171917;
+}
+.cableDivider::after {
+  bottom: 0;
+  background:
+    radial-gradient(
+      circle at 14% 22%,
+      rgba(123, 39, 53, 0.18),
+      transparent 25%
+    ),
+    linear-gradient(90deg, rgba(48, 39, 27, 0.05) 1px, transparent 1px) 0 0 /
+      30px 30px,
+    #c8a474;
+}
+.cableDividerInner {
+  --cable-gutter: clamp(20px, 5vw, 78px);
+  display: grid;
+  min-height: clamp(180px, 20vw, 260px);
+  grid-template-rows: auto 1fr;
+  gap: clamp(10px, 1.4vw, 18px);
+  align-items: center;
+  padding: clamp(22px, 3vw, 38px) var(--cable-gutter);
+}
+.cableDividerLabel {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 0;
+  font-family: var(--font-geist-mono), monospace;
+  text-transform: uppercase;
+}
+.cableDividerLabel span {
+  color: #918c83;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+.cableDividerLabel strong {
+  color: rgba(244, 240, 232, 0.78);
+  font-size: clamp(9px, 0.8vw, 11px);
+  letter-spacing: 0.08em;
+  text-align: right;
+}
+.cableAssembly {
+  --connector-pin-width: clamp(20px, 2vw, 28px);
+  --connector-pin-height: clamp(11px, 1.2vw, 14px);
+  --connector-socket-depth: calc(var(--connector-pin-width) + 5px);
+  --connector-socket-height: calc(var(--connector-pin-height) + 6px);
+  position: relative;
+  z-index: 2;
+  width: calc(100% + (var(--cable-gutter) * 2));
+  height: clamp(58px, 7vw, 82px);
+  margin-inline: calc(var(--cable-gutter) * -1);
+}
+.cableHalf {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  width: calc(50% + 7px);
+  align-items: center;
+  transform: translateY(-50%);
+  will-change: transform;
+}
+.cableMaleHalf {
+  right: 50%;
+  flex-direction: row;
+}
+.cableFemaleHalf {
+  left: 50%;
+  flex-direction: row;
+}
+.cableLine {
+  position: relative;
+  height: clamp(9px, 1vw, 13px);
+  flex: 1;
+  border: 1px solid #090a09;
+  background: linear-gradient(180deg, #3e403d 0 22%, #111311 42% 76%, #050605);
+  box-shadow:
+    0 7px 12px rgba(0, 0, 0, 0.34),
+    inset 0 1px rgba(255, 255, 255, 0.2);
+}
+.cableLine::after {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.13);
+  content: '';
+}
+.cableMale,
+.cableFemale {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  border: 1px solid #111310;
+  background: linear-gradient(
+    180deg,
+    #8b8d87,
+    #3d403c 48%,
+    #20221f 52%,
+    #666862
+  );
+  box-shadow:
+    0 8px 15px rgba(0, 0, 0, 0.34),
+    inset 0 1px rgba(255, 255, 255, 0.48);
+}
+.cableMale {
+  z-index: 3;
+  width: clamp(52px, 6vw, 78px);
+  height: clamp(30px, 3.5vw, 42px);
+  border-radius: 5px 2px 2px 5px;
+}
+.cableMale::before {
+  position: absolute;
+  top: 50%;
+  left: 9px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #171917;
+  box-shadow: inset 0 1px 2px #000;
+  content: '';
+  transform: translateY(-50%);
+}
+.cableMale i {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  width: var(--connector-pin-width);
+  height: var(--connector-pin-height);
+  border: 1px solid #393b37;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #d9dad3, #777972 58%, #bfc1b9);
+  box-shadow:
+    inset -3px 0 #272925,
+    inset 0 1px rgba(255, 255, 255, 0.62);
+  transform: translateY(-50%);
+}
+.cableFemale {
+  z-index: 2;
+  width: clamp(52px, 6vw, 76px);
+  height: clamp(38px, 4.2vw, 50px);
+  border-radius: 3px 6px 6px 3px;
+}
+.cableFemale::before {
+  position: absolute;
+  top: 50%;
+  left: -1px;
+  width: var(--connector-socket-depth);
+  height: var(--connector-socket-height);
+  border: 2px solid #777a73;
+  border-left: 0;
+  border-radius: 0 4px 4px 0;
+  background: #090b09;
+  box-shadow:
+    inset -5px 0 6px #000,
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  content: '';
+  transform: translateY(-50%);
+}
+.cableFemale i {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #242723;
+  box-shadow: inset 0 1px 2px #000;
+  transform: translateY(-50%);
+}
+.cableConnectionFx {
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  left: calc(50% + (var(--connector-pin-width) / 2));
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--lcd-green);
+  opacity: 0;
+  box-shadow:
+    0 0 9px rgba(92, 214, 163, 0.82),
+    0 0 22px rgba(92, 214, 163, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.cableConnectionFx i {
+  position: absolute;
+  inset: -6px;
+  border: 1px solid rgba(92, 214, 163, 0.58);
+  border-radius: 50%;
+  animation: cable-signal-pulse 1.8s ease-out infinite;
+}
+.cableConnectionFx i:last-child {
+  animation-delay: 0.9s;
+}
+@keyframes cable-signal-pulse {
+  0% {
+    opacity: 0.72;
+    transform: scale(0.55);
+  }
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(2.1);
+  }
+}
+
+.splitFlapDivider {
+  position: relative;
+  z-index: 2;
+  min-height: clamp(270px, 30vw, 370px);
+  overflow: hidden;
+  isolation: isolate;
+  background: radial-gradient(
+      circle at 16% 24%,
+      rgba(244, 224, 188, 0.14),
+      transparent 28%
+    ),
+    linear-gradient(180deg, #c8a474 0%, #8d704f 23%, #302d26 62%, #111310 100%);
+  color: var(--chassis);
+}
+.splitFlapDivider::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0
+      0 / 32px 32px,
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px) 0 0 / 32px
+      32px;
+  content: '';
+  mask-image: linear-gradient(to bottom, transparent, #000 32%, #000);
+  pointer-events: none;
+}
+.splitFlapInner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(1180px, 100%);
+  min-height: clamp(270px, 30vw, 370px);
+  flex-direction: column;
+  justify-content: center;
+  margin: 0 auto;
+  padding: clamp(20px, 2.5vw, 32px) clamp(18px, 5vw, 72px)
+    clamp(28px, 3vw, 42px);
+}
+.splitFlapCopy {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: clamp(14px, 1.8vw, 24px);
+}
+.splitFlapCopy span {
+  color: rgba(240, 232, 220, 0.62);
+  font: 700 clamp(7px, 0.62vw, 9px) var(--font-geist-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.splitFlapCopy strong {
+  max-width: min(440px, 48vw);
+  color: #f0e8dc;
+  font: 600 clamp(16px, 1.75vw, 26px) / 1 var(--font-space-grotesk);
+  letter-spacing: -0.03em;
+  text-align: right;
+  text-wrap: balance;
+}
+.splitFlapBoard {
+  position: relative;
+  width: 100%;
+  min-height: clamp(270px, 30vw, 370px);
+  overflow: hidden;
+  border-block: 1px solid #565852;
+  background: repeating-linear-gradient(
+      90deg,
+      transparent 0 47px,
+      rgba(255, 255, 255, 0.018) 47px 48px
+    ),
+    linear-gradient(145deg, #333630, #171916 58%, #0c0e0c);
+  box-shadow:
+    0 24px 45px rgba(0, 0, 0, 0.38),
+    0 5px 10px rgba(0, 0, 0, 0.28),
+    inset 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 -1px rgba(0, 0, 0, 0.76);
+}
+.splitFlapBoard::before,
+.splitFlapBoard::after {
+  position: absolute;
+  top: 50%;
+  width: clamp(28px, 4vw, 62px);
+  height: 44%;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 4px;
+  background: repeating-linear-gradient(180deg, #0c0e0c 0 2px, #252822 2px 5px);
+  box-shadow:
+    inset 0 0 14px #090a09,
+    0 1px rgba(255, 255, 255, 0.05);
+  content: '';
+  opacity: 0.58;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.splitFlapBoard::before {
+  left: clamp(8px, 1.5vw, 24px);
+}
+.splitFlapBoard::after {
+  right: clamp(8px, 1.5vw, 24px);
+}
+.splitFlapPanel {
+  position: relative;
+  width: min(100%, 1040px);
+  margin: 0 auto;
+  padding: clamp(9px, 1vw, 13px);
+  border: 1px solid #565852;
+  border-radius: clamp(8px, 1vw, 13px);
+  background: linear-gradient(145deg, #292c27, #121411 62%, #090b09);
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.38),
+    0 4px 8px rgba(0, 0, 0, 0.26),
+    inset 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 0 3px #1c1f1b;
+  will-change: transform, opacity;
+}
+.splitFlapHeader,
+.splitFlapStatus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #8e9289;
+  font: 700 clamp(6px, 0.52vw, 8px) var(--font-geist-mono);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.splitFlapHeader {
+  padding: 0 3px clamp(7px, 0.7vw, 10px);
+}
+.splitFlapHeader span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.splitFlapHeader i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--signal-orange);
+  box-shadow: 0 0 8px rgba(217, 137, 91, 0.72);
+}
+.splitFlapGrid {
+  display: grid;
+  grid-template-columns: repeat(22, minmax(0, 1fr));
+  gap: clamp(1px, 0.16vw, 2px);
+}
+.splitFlapCell {
+  position: relative;
+  aspect-ratio: 1.18;
+  overflow: hidden;
+  border: 1px solid #080a08;
+  border-radius: clamp(2px, 0.28vw, 4px);
+  background: #111310;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.035),
+    0 1px 2px rgba(0, 0, 0, 0.65);
+  perspective: 500px;
+  transform-style: preserve-3d;
+}
+.splitFlapHalf {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: calc(50% - 0.5px);
+  overflow: hidden;
+  background: linear-gradient(90deg, #252824, #30332e 48%, #232620);
+  color: #f1eee5;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+.splitFlapHalf > span {
+  position: absolute;
+  left: 0;
+  display: grid;
+  width: 100%;
+  height: 200%;
+  place-items: center;
+  font: 700 clamp(7px, 1.25vw, 17px) / 1 var(--font-geist-mono);
+  text-shadow: 0 1px 1px #000;
+}
+.splitFlapStaticTop,
+.splitFlapTop {
+  top: 0;
+}
+.splitFlapStaticBottom,
+.splitFlapBottom {
+  bottom: 0;
+}
+.splitFlapStaticTop > span,
+.splitFlapTop > span {
+  top: 0;
+}
+.splitFlapStaticBottom > span,
+.splitFlapBottom > span {
+  bottom: 0;
+}
+.splitFlapStaticTop {
+  background: linear-gradient(90deg, #282b26, #363a33 48%, #272a24);
+}
+.splitFlapStaticBottom {
+  background: linear-gradient(90deg, #1d201c, #292c27 48%, #1c1f1b);
+}
+.splitFlapTop {
+  z-index: 3;
+  transform: rotateX(0deg);
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+.splitFlapBottom {
+  z-index: 2;
+  background: linear-gradient(90deg, #20231f, #2c302a 48%, #1f221e);
+  transform: rotateX(92deg);
+  transform-origin: 50% 0;
+  will-change: transform;
+}
+.splitFlapCell > i {
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: #070807;
+  box-shadow: 0 1px rgba(255, 255, 255, 0.05);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.splitFlapStatus {
+  padding: clamp(7px, 0.75vw, 10px) 3px 0;
+  will-change: opacity;
+}
+.splitFlapStatus strong {
+  color: var(--lcd-green);
+  font: inherit;
+  text-shadow: 0 0 8px rgba(92, 214, 163, 0.38);
+}
+
 .experience {
   background:
     radial-gradient(
@@ -4143,6 +4742,28 @@
   .playhead {
     display: none;
   }
+  .signalDividerStage {
+    min-height: clamp(220px, 58vw, 260px);
+    grid-template-rows: minmax(0, 1fr) 58px minmax(0, 1fr);
+  }
+  .signalDividerPhrase {
+    padding-right: 28px;
+    font-size: clamp(18px, 6vw, 28px);
+    letter-spacing: -0.035em;
+  }
+  .signalDividerMotto {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    flex-direction: column;
+    padding: 8px 20px;
+  }
+  .signalDividerMotto strong {
+    width: 100%;
+    font-size: 11px;
+    text-align: left;
+  }
   .skills {
     min-height: 0;
     padding: 90px 20px;
@@ -4173,9 +4794,6 @@
     right: auto;
     max-width: none;
     margin-bottom: 35px;
-  }
-  .skillsBackdropTitle {
-    display: none;
   }
   .controller {
     width: 100%;
@@ -4229,6 +4847,22 @@
     width: clamp(10px, calc((100% / 14) * 0.62), 20px);
     height: 58px;
   }
+  .cableDivider,
+  .cableDividerInner {
+    min-height: 168px;
+  }
+  .cableDividerInner {
+    --cable-gutter: 20px;
+    gap: 8px;
+    padding: 20px var(--cable-gutter);
+  }
+  .cableDividerLabel strong {
+    display: none;
+  }
+  .cableAssembly {
+    height: 58px;
+  }
+
   .experience {
     height: auto;
   }
@@ -4552,6 +5186,50 @@
   .launchpadTransport label {
     display: none;
   }
+  .splitFlapDivider,
+  .splitFlapBoard,
+  .splitFlapInner {
+    min-height: 228px;
+  }
+  .splitFlapInner {
+    padding: 17px 14px 24px;
+  }
+  .splitFlapCopy {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .splitFlapCopy span {
+    max-width: 112px;
+    line-height: 1.35;
+  }
+  .splitFlapCopy strong {
+    max-width: 55vw;
+    font-size: clamp(14px, 4.3vw, 18px);
+  }
+  .splitFlapBoard::before,
+  .splitFlapBoard::after {
+    display: none;
+  }
+  .splitFlapPanel {
+    padding: 7px;
+    border-radius: 8px;
+  }
+  .splitFlapHeader span:last-child {
+    display: none;
+  }
+  .splitFlapGrid {
+    gap: 1px;
+  }
+  .splitFlapCell {
+    aspect-ratio: 1.05;
+  }
+  .splitFlapHalf > span {
+    font-size: clamp(6px, 2.45vw, 10px);
+  }
+  .splitFlapStatus {
+    letter-spacing: 0.08em;
+  }
   .projectModule {
     width: 84vw;
     height: auto;
@@ -4587,12 +5265,52 @@
   }
   .hero,
   .about,
+  .signalDivider,
   .skills,
   .experience,
   .work {
     height: auto;
     min-height: 0;
   }
+  .signalDividerStage {
+    min-height: clamp(220px, 28vw, 340px);
+  }
+  .signalDividerRail {
+    transform: none !important;
+    will-change: auto;
+  }
+  .cableHalf {
+    transform: translateY(-50%) !important;
+    will-change: auto;
+  }
+  .cableConnectionFx {
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    will-change: auto;
+  }
+  .cableConnectionFx i {
+    animation: none;
+    opacity: 0.4;
+    transform: scale(1.35);
+  }
+  .splitFlapPanel {
+    opacity: 1 !important;
+    transform: none !important;
+    will-change: auto;
+  }
+  .splitFlapTop {
+    transform: rotateX(-92deg) !important;
+    will-change: auto;
+  }
+  .splitFlapBottom {
+    transform: rotateX(0deg) !important;
+    will-change: auto;
+  }
+  .splitFlapStatus {
+    opacity: 1 !important;
+    will-change: auto;
+  }
+
   .heroStage,
   .aboutStage,
   .skillsStage,
@@ -4621,9 +5339,6 @@
     top: auto;
     right: auto;
     margin-bottom: 40px;
-  }
-  .skillsBackdropTitle {
-    display: none;
   }
   .work {
     padding: 90px 0;

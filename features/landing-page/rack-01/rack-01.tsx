@@ -580,6 +580,58 @@ function About({
   )
 }
 
+function SignalDivider() {
+  const topPhrase =
+    'BUILD WITH INTENT · SHIP WITH CLARITY · MAKE COMPLEX IDEAS USEFUL ·'
+  const bottomPhrase =
+    'SHARE THE PROCESS · DOCUMENT THE DETAILS · LEARN IN PUBLIC ·'
+
+  return (
+    <section
+      className={styles.signalDivider}
+      aria-label="Build with intent. Share what works."
+    >
+      <div className={styles.signalDividerStage}>
+        <div
+          className={`${styles.signalDividerLane} ${styles.signalDividerLaneTop}`}
+          aria-hidden="true"
+        >
+          <div
+            className={`${styles.signalDividerRail} ${styles.signalDividerTopRail}`}
+          >
+            {Array.from({ length: 4 }, (_, index) => (
+              <span className={styles.signalDividerPhrase} key={index}>
+                {topPhrase}
+              </span>
+            ))}
+          </div>
+        </div>
+        <p className={styles.signalDividerMotto}>
+          <span>PORTFOLIO / FIELD NOTES</span>
+          <strong>
+            Selected work, practical experiments, and notes from building for
+            the web.
+          </strong>
+        </p>
+        <div
+          className={`${styles.signalDividerLane} ${styles.signalDividerLaneBottom}`}
+          aria-hidden="true"
+        >
+          <div
+            className={`${styles.signalDividerRail} ${styles.signalDividerBottomRail}`}
+          >
+            {Array.from({ length: 4 }, (_, index) => (
+              <span className={styles.signalDividerPhrase} key={index}>
+                {bottomPhrase}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function Skills() {
   const [activeSkill, setActiveSkill] = useState(SKILLS[0])
   const [levels, setLevels] = useState<Record<string, number>>(() =>
@@ -748,9 +800,41 @@ function Skills() {
             </div>
           </div>
         </div>
-        <span className={styles.skillsBackdropTitle} aria-hidden="true">
-          SKILLS
-        </span>
+      </div>
+    </section>
+  )
+}
+
+function CableDivider() {
+  return (
+    <section
+      className={styles.cableDivider}
+      aria-label="Skills output connected to experience input"
+    >
+      <div className={styles.cableDividerInner}>
+        <p className={styles.cableDividerLabel}>
+          <span>SIGNAL PATH / 03—04</span>
+          <strong>Turning capability into experience.</strong>
+        </p>
+
+        <div className={styles.cableAssembly} aria-hidden="true">
+          <div className={`${styles.cableHalf} ${styles.cableMaleHalf}`}>
+            <span className={styles.cableLine} />
+            <span className={styles.cableMale}>
+              <i />
+            </span>
+          </div>
+          <div className={`${styles.cableHalf} ${styles.cableFemaleHalf}`}>
+            <span className={styles.cableFemale}>
+              <i />
+            </span>
+            <span className={styles.cableLine} />
+          </div>
+          <span className={styles.cableConnectionFx}>
+            <i />
+            <i />
+          </span>
+        </div>
       </div>
     </section>
   )
@@ -962,6 +1046,96 @@ function Experience({
             >
               ▶
             </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+const SPLIT_FLAP_ROWS = [
+  {
+    from: 'EXPERIENCE  ARCHIVED  ',
+    to: 'PROJECTS    DEPARTING ',
+  },
+  {
+    from: '04  MASTER LOG  CLOSED',
+    to: '05  FEATURED  BOARDING',
+  },
+  {
+    from: 'YEARS OF CRAFT  LOGGED',
+    to: 'SELECTED WORK  ON AIR ',
+  },
+  {
+    from: 'SYSTEMS BUILT  TESTED ',
+    to: 'PRODUCTS READY TO SHIP',
+  },
+  {
+    from: 'PROCESS NOTES  STORED ',
+    to: 'CASE STUDIES  NOW LIVE',
+  },
+] as const
+
+function SplitFlapCell({ from, to }: { from: string; to: string }) {
+  const source = from === ' ' ? '\u00a0' : from
+  const target = to === ' ' ? '\u00a0' : to
+
+  return (
+    <span className={styles.splitFlapCell}>
+      <span className={`${styles.splitFlapHalf} ${styles.splitFlapStaticTop}`}>
+        <span>{target}</span>
+      </span>
+      <span
+        className={`${styles.splitFlapHalf} ${styles.splitFlapStaticBottom}`}
+      >
+        <span>{source}</span>
+      </span>
+      <span className={`${styles.splitFlapHalf} ${styles.splitFlapTop}`}>
+        <span>{source}</span>
+      </span>
+      <span className={`${styles.splitFlapHalf} ${styles.splitFlapBottom}`}>
+        <span>{target}</span>
+      </span>
+      <i />
+    </span>
+  )
+}
+
+function SplitFlapDivider() {
+  return (
+    <section
+      className={styles.splitFlapDivider}
+      aria-label="Experience archived. Featured projects now departing."
+    >
+      <div className={styles.splitFlapBoard} aria-hidden="true">
+        <div className={styles.splitFlapInner}>
+          <div className={styles.splitFlapCopy}>
+            <span>STUDIO DEPARTURES / 04—05</span>
+            <strong>Recorded experience, cleared for release.</strong>
+          </div>
+
+          <div className={styles.splitFlapPanel}>
+            <div className={styles.splitFlapHeader}>
+              <span>
+                <i /> AH STUDIO / DEPARTURE BOARD
+              </span>
+              <span>SCROLL TO RELEASE</span>
+            </div>
+            <div className={styles.splitFlapGrid}>
+              {SPLIT_FLAP_ROWS.flatMap((row, rowIndex) =>
+                Array.from(row.from).map((character, columnIndex) => (
+                  <SplitFlapCell
+                    from={character}
+                    to={row.to[columnIndex] ?? ' '}
+                    key={`${rowIndex}-${columnIndex}`}
+                  />
+                )),
+              )}
+            </div>
+            <div className={styles.splitFlapStatus}>
+              <span>OUTPUT / 05</span>
+              <strong>READY FOR BOARDING</strong>
+            </div>
           </div>
         </div>
       </div>
@@ -1408,32 +1582,22 @@ export default function Rack01LandingPage() {
             )
           })
 
-          gsap
-            .timeline({
+          gsap.fromTo(
+            `.${styles.controller}`,
+            { scale: 1, yPercent: 0 },
+            {
+              scale: 0.86,
+              yPercent: -2,
+              transformOrigin: '50% 0%',
+              ease: 'none',
               scrollTrigger: {
                 trigger: `.${styles.skills}`,
                 start: 'top top',
                 end: 'bottom bottom',
                 scrub: 0.85,
               },
-            })
-            .fromTo(
-              `.${styles.controller}`,
-              { scale: 1, yPercent: 0 },
-              {
-                scale: 0.86,
-                yPercent: -2,
-                transformOrigin: '50% 0%',
-                ease: 'none',
-              },
-              0,
-            )
-            .fromTo(
-              `.${styles.skillsBackdropTitle}`,
-              { yPercent: 12, opacity: 0.2 },
-              { yPercent: -8, opacity: 0.75, ease: 'none' },
-              0,
-            )
+            },
+          )
 
           gsap.from(`.${styles.controlBank}`, {
             y: 18,
@@ -1616,6 +1780,164 @@ export default function Rack01LandingPage() {
             })
           }
         })
+
+        const dividerTopRail = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.signalDividerTopRail}`,
+        )
+        const dividerBottomRail = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.signalDividerBottomRail}`,
+        )
+
+        if (dividerTopRail && dividerBottomRail) {
+          const dividerTravel = () => Math.min(150, window.innerWidth * 0.11)
+          const railScrollTrigger = {
+            trigger: `.${styles.signalDivider}`,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1.4,
+            invalidateOnRefresh: true,
+          }
+
+          gsap.fromTo(
+            dividerTopRail,
+            { x: () => -dividerTravel() },
+            {
+              x: () => dividerTravel(),
+              force3D: true,
+              ease: 'none',
+              scrollTrigger: railScrollTrigger,
+            },
+          )
+
+          gsap.fromTo(
+            dividerBottomRail,
+            { x: () => dividerTravel() },
+            {
+              x: () => -dividerTravel(),
+              force3D: true,
+              ease: 'none',
+              scrollTrigger: { ...railScrollTrigger },
+            },
+          )
+        }
+
+        const cableMaleHalf = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.cableMaleHalf}`,
+        )
+        const cableFemaleHalf = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.cableFemaleHalf}`,
+        )
+        const cableConnectionFx = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.cableConnectionFx}`,
+        )
+        if (cableMaleHalf && cableFemaleHalf && cableConnectionFx) {
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: `.${styles.cableDivider}`,
+                start: 'top bottom',
+                end: 'bottom 45%',
+                scrub: 1.15,
+                invalidateOnRefresh: true,
+              },
+            })
+            .fromTo(
+              cableMaleHalf,
+              { x: () => -Math.min(360, window.innerWidth * 0.3) },
+              { x: 0, duration: 0.82, force3D: true, ease: 'none' },
+              0,
+            )
+            .fromTo(
+              cableFemaleHalf,
+              { x: () => Math.min(360, window.innerWidth * 0.3) },
+              { x: 0, duration: 0.82, force3D: true, ease: 'none' },
+              0,
+            )
+            .fromTo(
+              cableConnectionFx,
+              { autoAlpha: 0, scale: 0.7 },
+              {
+                autoAlpha: 1,
+                scale: 1,
+                duration: 0.18,
+                transformOrigin: '50% 50%',
+                ease: 'power2.out',
+              },
+              0.82,
+            )
+        }
+
+        const splitFlapPanel = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.splitFlapPanel}`,
+        )
+        const splitFlapTops = rootRef.current?.querySelectorAll<HTMLElement>(
+          `.${styles.splitFlapTop}`,
+        )
+        const splitFlapBottoms = rootRef.current?.querySelectorAll<HTMLElement>(
+          `.${styles.splitFlapBottom}`,
+        )
+        const splitFlapStatus = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.splitFlapStatus}`,
+        )
+
+        if (
+          splitFlapPanel &&
+          splitFlapTops?.length &&
+          splitFlapBottoms?.length &&
+          splitFlapStatus
+        ) {
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: `.${styles.splitFlapDivider}`,
+                start: 'top bottom',
+                end: 'bottom 38%',
+                scrub: 1.15,
+              },
+            })
+            .fromTo(
+              splitFlapPanel,
+              { y: 14, scale: 0.985, autoAlpha: 0.72 },
+              {
+                y: 0,
+                scale: 1,
+                autoAlpha: 1,
+                duration: 0.2,
+                force3D: true,
+                ease: 'power2.out',
+              },
+              0,
+            )
+            .to(
+              splitFlapTops,
+              {
+                rotateX: -92,
+                duration: 0.17,
+                stagger: { amount: 0.56, from: 'start' },
+                force3D: true,
+                ease: 'power1.in',
+              },
+              0.12,
+            )
+            .to(
+              splitFlapBottoms,
+              {
+                rotateX: 0,
+                duration: 0.2,
+                stagger: { amount: 0.56, from: 'start' },
+                force3D: true,
+                ease: 'power1.out',
+              },
+              0.2,
+            )
+            .fromTo(
+              splitFlapStatus,
+              { autoAlpha: 0.36 },
+              { autoAlpha: 1, duration: 0.22, ease: 'power1.out' },
+              0.78,
+            )
+        }
+
         return () => media.revert()
       }, rootRef)
     }
@@ -1639,8 +1961,11 @@ export default function Rack01LandingPage() {
         setSelected={setAboutIndex}
         scrollProgress={aboutProgress}
       />
+      <SignalDivider />
       <Skills />
+      <CableDivider />
       <Experience selected={experienceIndex} setSelected={setExperienceIndex} />
+      <SplitFlapDivider />
       <Work />
       <Contact />
       <TransportBridge

@@ -1,0 +1,90 @@
+[
+  {
+    "id": "bm-1",
+    "title": "Next.js Documentation",
+    "url": "https://nextjs.org",
+    "description": "The React Framework for the Web. Documentation on App Router, server components, and performance optimizations.",
+    "category": "Dev Tools",
+    "tags": ["React", "Next.js", "Frontend", "Framework"],
+    "faviconUrl": "https://www.google.com/s2/favicons?domain=nextjs.org&sz=64",
+    "featured": true,
+    "createdAt": "2026-07-30T10:00:00.000Z"
+  },
+  {
+    "id": "bm-2",
+    "title": "React Bits",
+    "url": "https://reactbits.dev",
+    "description": "A collection of interactive, animated, lightweight React components to boost your web apps aesthetic.",
+    "category": "UI & Design",
+    "tags": ["React", "Animations", "UI Components", "Framer Motion"],
+    "faviconUrl": "https://www.google.com/s2/favicons?domain=reactbits.dev&sz=64",
+    "featured": true,
+    "createdAt": "2026-07-30T10:05:00.000Z"
+  },
+  {
+    "id": "bm-3",
+    "title": "Tone.js Audio Framework",
+    "url": "https://tonejs.github.io",
+    "description": "A Web Audio framework for creating interactive music in the browser with synths, effects, and sequencers.",
+    "category": "Audio & DAW",
+    "tags": ["WebAudio", "Sound", "DAW", "JavaScript"],
+    "faviconUrl": "https://www.google.com/s2/favicons?domain=tonejs.github.io&sz=64",
+    "featured": true,
+    "createdAt": "2026-07-30T10:10:00.000Z"
+  },
+  {
+    "id": "bm-4",
+    "title": "Tailwind CSS Documentation",
+    "url": "https://tailwindcss.com",
+    "description": "A utility-first CSS framework packed with classes that can be composed to build any design, directly in your markup.",
+    "category": "UI & Design",
+    "tags": ["CSS", "Tailwind", "Styling"],
+    "faviconUrl": "https://www.google.com/s2/favicons?domain=tailwindcss.com&sz=64",
+    "featured": false,
+    "createdAt": "2026-07-30T10:15:00.000Z"
+  },
+  {
+    "id": "bm-5",
+    "title": "Lucide Icons",
+    "url": "https://lucide.dev",
+    "description": "Beautiful & consistent icon toolkit for modern web applications.",
+    "category": "UI & Design",
+    "tags": ["Icons", "Design", "SVGs"],
+    "faviconUrl": "https://www.google.com/s2/favicons?domain=lucide.dev&sz=64",
+    "featured": false,
+    "createdAt": "2026-07-30T10:20:00.000Z"
+  },
+  {
+    "id": "bm-6",
+    "title": "Hugging Face Models & Datasets",
+    "url": "https://huggingface.co",
+    "description": "The AI community building the future. Discover models, datasets, and spaces for machine learning.",
+    "category": "AI & ML",
+    "tags": ["AI", "LLM", "Machine Learning", "Open Source"],
+    "faviconUrl": "https://www.google.com/s2/favicons?domain=huggingface.co&sz=64",
+    "featured": true,
+    "createdAt": "2026-07-30T10:25:00.000Z"
+  },
+  {
+    "id": "bm-7",
+    "title": "Awwwards Web Design Gallery",
+    "url": "https://www.awwwards.com",
+    "description": "The awards that recognize the talent and effort of the best web designers, developers and agencies in the world.",
+    "category": "Inspiration",
+    "tags": ["Inspiration", "Web Design", "Showcase", "UI/UX"],
+    "faviconUrl": "https://www.google.com/s2/favicons?domain=awwwards.com&sz=64",
+    "featured": false,
+    "createdAt": "2026-07-30T10:30:00.000Z"
+  },
+  {
+    "id": "bm-8",
+    "title": "WebAudio API Specification",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API",
+    "description": "Comprehensive documentation on Web Audio API processing graphs, audio nodes, and synthesis techniques.",
+    "category": "Audio & DAW",
+    "tags": ["WebAudio", "MDN", "Docs", "JavaScript"],
+    "faviconUrl": "https://www.google.com/s2/favicons?domain=developer.mozilla.org&sz=64",
+    "featured": false,
+    "createdAt": "2026-07-30T10:35:00.000Z"
+  }
+]

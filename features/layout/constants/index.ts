@@ -10,6 +10,7 @@ export const HOMEPAGE_NAV_ITEMS = [
   { name: 'BLOG', href: '/blog' },
   { name: 'PROJECTS', href: '/projects' },
   { name: 'MIXTAPE', href: '/music' },
+  { name: 'BOOKMARKS', href: '/bookmarks' },
 ] as const
 
 export const SUBPAGE_NAV_ITEMS = [
@@ -17,6 +18,7 @@ export const SUBPAGE_NAV_ITEMS = [
   { name: 'BLOG', href: '/blog' },
   { name: 'PROJECTS', href: '/projects' },
   { name: 'MIXTAPE', href: '/music' },
+  { name: 'BOOKMARKS', href: '/bookmarks' },
 ] as const
 
 export const SOCIAL_LINKS = [
@@ -51,6 +53,7 @@ export const FOOTER_NAVIGATION = [
   { name: 'Blog', href: '/blog' },
   { name: 'Projects', href: '/projects' },
   { name: 'Mixtape', href: '/music' },
+  { name: 'Bookmarks', href: '/bookmarks' },
 ] as const
 
 export const TECH_STACK = [

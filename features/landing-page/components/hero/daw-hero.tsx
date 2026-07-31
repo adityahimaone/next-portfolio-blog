@@ -8,6 +8,7 @@ import {
   useTransform,
 } from 'motion/react'
 import { Screw } from '@/components/screw'
+import { BrokenLightText } from '@/components/broken-light-text'
 import { cn } from '@/lib/utils'
 
 const devices = [
@@ -202,8 +203,10 @@ export function DawHero({
               DIGITAL / ANALOG / INTERFACE
             </p>
             <h1 className="font-[family-name:var(--font-syne)] text-[clamp(3.3rem,11vw,10.5rem)] leading-[0.74] font-black tracking-[-0.09em] text-[#f1eee5] [text-shadow:0_3px_0_#121313,0_0_28px_rgba(0,0,0,0.85)]">
-              ADITYA
-              <span className="block pl-[0.1em] text-[#e0b75a]">HIMAONE</span>
+              <BrokenLightText text="ADITYA" mode="settle" glowColor="#ff5a1f" />
+              <span className="block pl-[0.1em] text-[#e0b75a]">
+                <BrokenLightText text="HIMAONE" mode="settle" glowColor="#e0b75a" />
+              </span>
             </h1>
             <p className="mt-6 bg-[#101212]/70 px-3 py-1.5 font-mono text-[8px] font-bold tracking-[0.25em] text-white/80 backdrop-blur-sm sm:text-[10px]">
               FRONTEND DEVELOPER · JAKARTA, ID

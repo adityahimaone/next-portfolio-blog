@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Screw } from '@/components/screw'
 import { EncryptedText } from '@/components/encrypted-text'
+import { BrokenLightText } from '@/components/broken-light-text'
 import { DawHero } from '../components/hero'
 import {
   EMAIL,
@@ -320,21 +321,27 @@ function Hero() {
           </div>
 
           <div className={styles.heroViewfinderIdentity}>
-            <h1 aria-label="Aditya Himaone">
+            <h1 aria-label="ADITYA HIMAONE">
               <span className={styles.heroLine}>
-                <EncryptedText
+                <BrokenLightText
                   text="ADITYA"
-                  revealDelayMs={50}
-                  encryptedClassName={styles.encryptedChar}
+                  mode="settle"
+                  // glowColor="#ff5a1f"
                 />
               </span>
               <span className={styles.heroLine}>
-                <EncryptedText
+                <BrokenLightText
                   text="HIMA"
-                  revealDelayMs={60}
-                  encryptedClassName={styles.encryptedChar}
+                  mode="settle"
+                  // glowColor="#ff5a1f"
                 />
-                <em>ONE</em>
+                <em>
+                  <BrokenLightText
+                    text="ONE"
+                    mode="settle"
+                    // glowColor="#e0b75a"
+                  />
+                </em>
               </span>
             </h1>
             <p>
@@ -992,8 +999,7 @@ function Experience({
                   <i
                     style={{
                       left: `${targetNeedle}%`,
-                      transition:
-                        'left 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                      transition: 'left 450ms cubic-bezier(0.22, 1, 0.36, 1)',
                     }}
                   />
                 </div>
@@ -1979,8 +1985,6 @@ export default function Rack01LandingPage() {
               0.82,
             )
         }
-
-
 
         const splitFlapPanel = rootRef.current?.querySelector<HTMLElement>(
           `.${styles.splitFlapPanel}`,

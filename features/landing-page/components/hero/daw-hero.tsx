@@ -104,9 +104,9 @@ type DeviceType = Device['type']
 export function DawHero({
   backgroundOnly = false,
 }: { backgroundOnly?: boolean } = {}) {
-  const [baseDelay, setBaseDelay] = useState(0.15)
+  const [baseDelay, setBaseDelay] = useState(0)
   const [activeDevice, setActiveDevice] = useState<string | null>(null)
-  const [bootIndex, setBootIndex] = useState<number | null>(null)
+  const [bootIndex, setBootIndex] = useState<number | null>(0)
   const shouldReduceMotion = useReducedMotion()
   const containerRef = useRef<HTMLDivElement>(null)
   const hasManualInteraction = useRef(false)
@@ -127,19 +127,8 @@ export function DawHero({
   const opacity = useTransform(scrollYProgress, [0, 0.72], [1, 0])
 
   useEffect(() => {
-    const hasSeenPreloader = Boolean(sessionStorage.getItem('preloaderShown'))
-    if (hasSeenPreloader) setBaseDelay(0)
-    if (shouldReduceMotion) return
-
-    const startTimer = window.setTimeout(
-      () => {
-        if (!hasManualInteraction.current) setBootIndex(0)
-      },
-      hasSeenPreloader ? 280 : 1380,
-    )
-
-    return () => window.clearTimeout(startTimer)
-  }, [shouldReduceMotion])
+    setBaseDelay(0)
+  }, [])
 
   useEffect(() => {
     if (bootIndex === null || shouldReduceMotion) return
@@ -203,9 +192,17 @@ export function DawHero({
               DIGITAL / ANALOG / INTERFACE
             </p>
             <h1 className="font-[family-name:var(--font-syne)] text-[clamp(3.3rem,11vw,10.5rem)] leading-[0.74] font-black tracking-[-0.09em] text-[#f1eee5] [text-shadow:0_3px_0_#121313,0_0_28px_rgba(0,0,0,0.85)]">
-              <BrokenLightText text="ADITYA" mode="settle" glowColor="#ff5a1f" />
+              <BrokenLightText
+                text="ADITYA"
+                mode="settle"
+                glowColor="#ff5a1f"
+              />
               <span className="block pl-[0.1em] text-[#e0b75a]">
-                <BrokenLightText text="HIMAONE" mode="settle" glowColor="#e0b75a" />
+                <BrokenLightText
+                  text="HIMAONE"
+                  mode="settle"
+                  glowColor="#e0b75a"
+                />
               </span>
             </h1>
             <p className="mt-6 bg-[#101212]/70 px-3 py-1.5 font-mono text-[8px] font-bold tracking-[0.25em] text-white/80 backdrop-blur-sm sm:text-[10px]">
@@ -258,10 +255,8 @@ function DeviceTile({
       }
       animate={{ opacity: 1, scale: 1 }}
       transition={{
-        duration: immediatelyVisible || reduceMotion ? 0 : 0.42,
-        delay:
-          immediatelyVisible || reduceMotion ? 0 : baseDelay + index * 0.04,
-        ease: [0.22, 1, 0.36, 1],
+        duration: 0,
+        delay: 0,
       }}
       whileTap={reduceMotion ? undefined : { scale: 0.96 }}
       onClick={onToggle}

@@ -1384,6 +1384,15 @@ const PAD_COLORS = [
 function Contact() {
   const [activePad, setActivePad] = useState<number | null>(0)
   const [bpm, setBpm] = useState(120)
+  const [sequentialLitPadIndices, setSequentialLitPadIndices] = useState<
+    Set<number>
+  >(new Set())
+
+  const contactRef = useRef<HTMLDivElement>(null)
+  const activeTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  )
+
   const launchPads = Array.from({ length: 16 }, (_, index) => ({
     label:
       SOCIAL_LINKS_LANDING[index]?.label ??
@@ -1394,8 +1403,101 @@ function Contact() {
     color: PAD_COLORS[index],
   }))
 
+  useEffect(() => {
+    const el = contactRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries
+        if (entry.isIntersecting) {
+          // Clear active wave timers
+          activeTimeoutsRef.current.forEach((t) => clearTimeout(t))
+          activeTimeoutsRef.current.clear()
+
+          // Group 16 pads by diagonal distance row + col (0 to 6) in 4x4 grid
+          const diagonalGroups = new Map<number, number[]>()
+          for (let index = 0; index < 16; index++) {
+            const row = Math.floor(index / 4)
+            const col = index % 4
+            const diag = row + col
+            if (!diagonalGroups.has(diag)) {
+              diagonalGroups.set(diag, [])
+            }
+            diagonalGroups.get(diag)!.push(index)
+          }
+
+          const sortedDiagonals = Array.from(diagonalGroups.keys()).sort(
+            (a, b) => a - b,
+          )
+
+          const stepDelay = 60 // ms per diagonal step
+          const singleWaveDuration = sortedDiagonals.length * stepDelay + 220
+          const pauseBetweenWaves = 180
+          const initialDelay = 150 // start quickly when shown
+
+          const runSweepWave = (waveIndex: number) => {
+            sortedDiagonals.forEach((diag, stepIndex) => {
+              const indices = diagonalGroups.get(diag) ?? []
+
+              const onTimeout = setTimeout(() => {
+                setSequentialLitPadIndices((prev) => {
+                  const next = new Set(prev)
+                  indices.forEach((idx) => next.add(idx))
+                  return next
+                })
+
+                const offTimeout = setTimeout(() => {
+                  setSequentialLitPadIndices((prev) => {
+                    const next = new Set(prev)
+                    indices.forEach((idx) => next.delete(idx))
+                    return next
+                  })
+                }, 220)
+
+                activeTimeoutsRef.current.set(
+                  `wave-off-${waveIndex}-${diag}`,
+                  offTimeout,
+                )
+              }, stepIndex * stepDelay)
+
+              activeTimeoutsRef.current.set(
+                `wave-on-${waveIndex}-${diag}`,
+                onTimeout,
+              )
+            })
+          }
+
+          // Run 3x diagonal sweeps from top-left to bottom-right
+          for (let wave = 0; wave < 3; wave++) {
+            const waveStartTime =
+              initialDelay + wave * (singleWaveDuration + pauseBetweenWaves)
+            const waveTimer = setTimeout(() => {
+              runSweepWave(wave)
+            }, waveStartTime)
+
+            activeTimeoutsRef.current.set(`wave-run-${wave}`, waveTimer)
+          }
+        }
+      },
+      { threshold: 0.25 },
+    )
+
+    observer.observe(el)
+    return () => {
+      observer.disconnect()
+      activeTimeoutsRef.current.forEach((t) => clearTimeout(t))
+      activeTimeoutsRef.current.clear()
+    }
+  }, [])
+
   return (
-    <section id="contact" className={styles.contact} data-rack-section>
+    <section
+      ref={contactRef}
+      id="contact"
+      className={styles.contact}
+      data-rack-section
+    >
       <div className={styles.patchHeader}>
         <SectionHeading index="06" eyebrow="OUTPUT ROUTING">
           Have a signal worth sending?
@@ -1477,8 +1579,10 @@ function Contact() {
           </div>
           <div className={styles.launchpadGrid}>
             {launchPads.map((pad, index) => {
+              const isPadLit =
+                activePad === index || sequentialLitPadIndices.has(index)
               const className = `${styles.launchPad} ${
-                activePad === index ? styles.launchPadActive : ''
+                isPadLit ? styles.launchPadActive : ''
               }`
               const content = (
                 <>
@@ -1496,7 +1600,7 @@ function Contact() {
                   rel="noreferrer"
                   key={pad.label}
                   onClick={() => setActivePad(index)}
-                  aria-current={activePad === index ? 'true' : undefined}
+                  aria-current={isPadLit ? 'true' : undefined}
                   style={
                     {
                       '--pad-index': index,
@@ -1511,7 +1615,7 @@ function Contact() {
                   className={className}
                   type="button"
                   key={`${pad.label}-${index}`}
-                  aria-pressed={activePad === index}
+                  aria-pressed={isPadLit}
                   onClick={() =>
                     setActivePad((current) =>
                       current === index ? null : index,

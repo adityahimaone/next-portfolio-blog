@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import Lenis from 'lenis'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Screw } from '@/components/screw'
 import { EncryptedText } from '@/components/encrypted-text'
+import { BrokenLightText } from '@/components/broken-light-text'
 import { DawHero } from '../components/hero'
 import {
   EMAIL,
@@ -320,21 +321,27 @@ function Hero() {
           </div>
 
           <div className={styles.heroViewfinderIdentity}>
-            <h1 aria-label="Aditya Himaone">
+            <h1 aria-label="ADITYA HIMAONE">
               <span className={styles.heroLine}>
-                <EncryptedText
+                <BrokenLightText
                   text="ADITYA"
-                  revealDelayMs={50}
-                  encryptedClassName={styles.encryptedChar}
+                  mode="settle"
+                  // glowColor="#ff5a1f"
                 />
               </span>
               <span className={styles.heroLine}>
-                <EncryptedText
+                <BrokenLightText
                   text="HIMA"
-                  revealDelayMs={60}
-                  encryptedClassName={styles.encryptedChar}
+                  mode="settle"
+                  // glowColor="#ff5a1f"
                 />
-                <em>ONE</em>
+                <em>
+                  <BrokenLightText
+                    text="ONE"
+                    mode="settle"
+                    // glowColor="#e0b75a"
+                  />
+                </em>
               </span>
             </h1>
             <p>
@@ -907,6 +914,10 @@ function CableDivider() {
   )
 }
 
+const STATIONS = [88.5, 94.2, 100.8, 106.5]
+const NEEDLE_POSITIONS = [8, 36, 64, 92]
+const KNOB_ROTATIONS = [0, 135, 270, 405]
+
 function Experience({
   selected,
   setSelected,
@@ -919,6 +930,34 @@ function Experience({
     experience.description ??
     experience.items?.map((item) => item.description) ??
     []
+
+  const [displayFreq, setDisplayFreq] = useState('88.50')
+
+  useEffect(() => {
+    const targetFreq = STATIONS[selected] ?? 88.5
+    const startFreq = parseFloat(displayFreq) || 88.5
+    const duration = 450
+    const startTime = performance.now()
+
+    let animId: number
+    const step = (now: number) => {
+      const elapsed = now - startTime
+      const progress = Math.min(1, elapsed / duration)
+      const ease = 1 - Math.pow(1 - progress, 3)
+      const current = startFreq + (targetFreq - startFreq) * ease
+      setDisplayFreq(current.toFixed(2))
+
+      if (progress < 1) {
+        animId = requestAnimationFrame(step)
+      }
+    }
+    animId = requestAnimationFrame(step)
+
+    return () => cancelAnimationFrame(animId)
+  }, [selected])
+
+  const targetNeedle = NEEDLE_POSITIONS[selected] ?? 8
+  const targetKnob = KNOB_ROTATIONS[selected] ?? 0
 
   return (
     <section id="experience" className={styles.experience} data-rack-section>
@@ -950,14 +989,19 @@ function Experience({
               <div className={styles.radioTuner} aria-hidden="true">
                 <div className={styles.frequencyDisplay}>
                   <span>FM</span>
-                  <strong>98.70</strong>
-                  <small>MHz / STEREO</small>
+                  <strong>{displayFreq}</strong>
+                  <small>MHz</small>
                 </div>
                 <div className={styles.frequencyScale}>
                   {[88, 92, 96, 100, 104, 108].map((frequency) => (
                     <span key={frequency}>{frequency}</span>
                   ))}
-                  <i />
+                  <i
+                    style={{
+                      left: `${targetNeedle}%`,
+                      transition: 'left 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                    }}
+                  />
                 </div>
                 <div className={styles.radioDials}>
                   <span>
@@ -965,7 +1009,13 @@ function Experience({
                     VOL
                   </span>
                   <span>
-                    <i />
+                    <i
+                      style={{
+                        transform: `rotate(${targetKnob}deg)`,
+                        transition:
+                          'transform 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                      }}
+                    />
                     TUNE
                   </span>
                   <b>ON AIR</b>
@@ -1122,16 +1172,6 @@ function Experience({
 
 const SPLIT_FLAP_ROWS = [
   {
-    from: '                                                            ',
-    to: '                                                            ',
-    isFlipping: false,
-  },
-  {
-    from: '                                                            ',
-    to: '                                                            ',
-    isFlipping: false,
-  },
-  {
     from: '                04 YEARS EXPERIENCE ARCHIVED                ',
     to: '                05 FEATURED RELEASES DEPARTING              ',
     isFlipping: true,
@@ -1146,19 +1186,9 @@ const SPLIT_FLAP_ROWS = [
     to: '                DIGITAL PRODUCTS READY TO SHIP              ',
     isFlipping: true,
   },
-  {
-    from: '                                                            ',
-    to: '                                                            ',
-    isFlipping: false,
-  },
-  {
-    from: '                                                            ',
-    to: '                                                            ',
-    isFlipping: false,
-  },
 ] as const
 
-function SplitFlapCell({
+const SplitFlapCell = memo(function SplitFlapCell({
   from,
   to,
   isFlipping = true,
@@ -1167,13 +1197,14 @@ function SplitFlapCell({
   to: string
   isFlipping?: boolean
 }) {
+  const shouldFlip = isFlipping && !(from === ' ' && to === ' ') && from !== to
   const source = from === ' ' ? '\u00a0' : from
-  const target = isFlipping ? (to === ' ' ? '\u00a0' : to) : source
+  const target = shouldFlip ? (to === ' ' ? '\u00a0' : to) : source
 
   return (
     <span
       className={styles.splitFlapCell}
-      data-flipping={isFlipping ? 'true' : 'false'}
+      data-flipping={shouldFlip ? 'true' : 'false'}
     >
       <span className={`${styles.splitFlapHalf} ${styles.splitFlapStaticTop}`}>
         <span>{target}</span>
@@ -1183,7 +1214,7 @@ function SplitFlapCell({
       >
         <span>{source}</span>
       </span>
-      {isFlipping && (
+      {shouldFlip && (
         <>
           <span className={`${styles.splitFlapHalf} ${styles.splitFlapTop}`}>
             <span>{source}</span>
@@ -1196,7 +1227,7 @@ function SplitFlapCell({
       <i />
     </span>
   )
-}
+})
 
 function SplitFlapDivider() {
   return (

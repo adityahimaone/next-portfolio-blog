@@ -3854,9 +3854,9 @@
   isolation: isolate;
   padding: 0;
   margin: 0;
-  border-top: 1px solid rgba(244, 240, 232, 0.1);
-  border-bottom: 1px solid rgba(244, 240, 232, 0.1);
-  background: #0c0e0c;
+  border-top: 1px solid rgba(244, 240, 232, 0.12);
+  border-bottom: 1px solid rgba(244, 240, 232, 0.12);
+  background: #0b0d0c;
   color: var(--chassis);
 }
 .splitFlapDivider::before {
@@ -3864,12 +3864,10 @@
   z-index: -1;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0
-      0 / 32px 32px,
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px) 0 0 / 32px
-      32px;
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0
+      0 / 28px 28px,
+    #0b0d0c;
   content: '';
-  mask-image: linear-gradient(to bottom, transparent, #000 32%, #000);
   pointer-events: none;
 }
 .splitFlapInner {
@@ -3892,18 +3890,13 @@
   justify-content: center;
   overflow: hidden;
   padding: clamp(2px, 0.4vw, 6px) clamp(6px, 1vw, 12px);
-  border-block: 1px solid #454742;
-  background: repeating-linear-gradient(
-      90deg,
-      transparent 0 47px,
-      rgba(255, 255, 255, 0.018) 47px 48px
-    ),
-    linear-gradient(145deg, #2a2d27, #141613 58%, #0c0e0c);
+  border-block: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0c0e0c;
   box-shadow:
-    0 16px 36px rgba(0, 0, 0, 0.42),
-    0 4px 8px rgba(0, 0, 0, 0.28),
-    inset 0 1px rgba(255, 255, 255, 0.12),
-    inset 0 -1px rgba(0, 0, 0, 0.76);
+    0 18px 44px rgba(0, 0, 0, 0.65),
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 -1px rgba(0, 0, 0, 0.85);
 }
 .splitFlapBoard::before,
 .splitFlapBoard::after {
@@ -3911,14 +3904,14 @@
   top: 50%;
   width: clamp(14px, 1.8vw, 28px);
   height: 60%;
-  border: 1px solid rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.075);
   border-radius: 4px;
-  background: repeating-linear-gradient(180deg, #0c0e0c 0 2px, #252822 2px 5px);
+  background: repeating-linear-gradient(180deg, #080a08 0 2px, #20231e 2px 5px);
   box-shadow:
-    inset 0 0 14px #090a09,
-    0 1px rgba(255, 255, 255, 0.05);
+    inset 0 0 14px #060706,
+    0 1px rgba(255, 255, 255, 0.06);
   content: '';
-  opacity: 0.58;
+  opacity: 0.65;
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -3933,14 +3926,14 @@
   width: 100%;
   margin: 0;
   padding: clamp(2px, 0.3vw, 4px);
-  border: 1px solid #565852;
+  border: 1px solid rgba(73, 102, 120, 0.5);
   border-radius: 0;
-  background: linear-gradient(145deg, #292c27, #121411 62%, #090b09);
+  background: linear-gradient(145deg, #222521, #0f110f 62%, #070907);
   box-shadow:
-    0 14px 28px rgba(0, 0, 0, 0.35),
-    0 3px 6px rgba(0, 0, 0, 0.24),
-    inset 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 0 0 3px #1c1f1b;
+    0 16px 32px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(49, 93, 114, 0.15),
+    inset 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 0 0 3px #151714;
   will-change: transform, opacity;
 }
 .splitFlapHeader,
@@ -3948,7 +3941,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #8e9289;
+  color: #9fa39a;
   font: 700 clamp(6px, 0.52vw, 8px) var(--font-geist-mono);
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -3966,7 +3959,7 @@
   height: 5px;
   border-radius: 50%;
   background: var(--signal-orange);
-  box-shadow: 0 0 8px rgba(217, 137, 91, 0.72);
+  box-shadow: 0 0 10px rgba(255, 90, 31, 0.85);
 }
 .splitFlapGrid {
   display: grid;
@@ -3977,12 +3970,12 @@
   position: relative;
   aspect-ratio: 0.95;
   overflow: hidden;
-  border: 1px solid #080a08;
+  border: 1px solid #060706;
   border-radius: 1px;
-  background: #111310;
+  background: #0d0f0d;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.035),
-    0 1px 2px rgba(0, 0, 0, 0.65);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 1px 3px rgba(0, 0, 0, 0.7);
   perspective: 500px;
   transform-style: preserve-3d;
 }
@@ -3992,8 +3985,8 @@
   width: 100%;
   height: calc(50% - 0.5px);
   overflow: hidden;
-  background: linear-gradient(90deg, #252824, #30332e 48%, #232620);
-  color: #f1eee5;
+  background: linear-gradient(90deg, #232622, #2d302a 48%, #212420);
+  color: #f4f1e8;
   transform-style: preserve-3d;
   backface-visibility: hidden;
 }
@@ -4025,10 +4018,10 @@
   bottom: 0;
 }
 .splitFlapStaticTop {
-  background: linear-gradient(90deg, #282b26, #363a33 48%, #272a24);
+  background: linear-gradient(90deg, #252824, #32362f 48%, #242723);
 }
 .splitFlapStaticBottom {
-  background: linear-gradient(90deg, #1d201c, #292c27 48%, #1c1f1b);
+  background: linear-gradient(90deg, #181a17, #232621 48%, #171916);
 }
 .splitFlapTop {
   z-index: 3;
@@ -4038,7 +4031,7 @@
 }
 .splitFlapBottom {
   z-index: 2;
-  background: linear-gradient(90deg, #20231f, #2c302a 48%, #1f221e);
+  background: linear-gradient(90deg, #1b1e1a, #262a24 48%, #1a1d19);
   transform: rotateX(92deg);
   transform-origin: 50% 0;
   will-change: transform;
@@ -4050,8 +4043,8 @@
   right: 0;
   left: 0;
   height: 1px;
-  background: #070807;
-  box-shadow: 0 1px rgba(255, 255, 255, 0.05);
+  background: #050605;
+  box-shadow: 0 1px rgba(255, 255, 255, 0.06);
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -4062,7 +4055,7 @@
 .splitFlapStatus strong {
   color: var(--lcd-green);
   font: inherit;
-  text-shadow: 0 0 8px rgba(92, 214, 163, 0.38);
+  text-shadow: 0 0 10px rgba(92, 214, 163, 0.55);
 }
 
 .experience {

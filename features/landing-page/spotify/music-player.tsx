@@ -72,46 +72,56 @@ export function MusicPlayer() {
           }}
           transition={{ duration: 0.4 }}
           className={cn(
-            'fixed right-2 z-50 md:right-8 bottom-24',
+            'fixed right-3 bottom-24 z-50 md:right-8',
             !showScrollTop && 'pointer-events-none',
           )}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
+          {/* Audio Chassis Widget */}
           <motion.div
-            className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-zinc-200 p-1 shadow-[0_4px_0_rgb(161,161,170),0_5px_10px_rgba(0,0,0,0.2)] transition-all dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-[0_4px_0_rgb(39,39,42),0_5px_10px_rgba(0,0,0,0.5)]"
+            className="group relative flex items-center gap-2.5 rounded-lg border border-[#3e423c] bg-[#121412] p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.7),inset_0_1px_rgba(255,255,255,0.12),0_0_0_1px_#070807] transition-all"
             layout
           >
-            {/* Play/Pause Button */}
+            {/* Micro Screws */}
+            <div className="absolute top-1 left-1 flex h-1.5 w-1.5 items-center justify-center rounded-full bg-[#2e312c] opacity-60">
+              <div className="h-0.5 w-1 rotate-45 bg-[#0d0e0d]" />
+            </div>
+            <div className="absolute top-1 right-1 flex h-1.5 w-1.5 items-center justify-center rounded-full bg-[#2e312c] opacity-60">
+              <div className="h-0.5 w-1 -rotate-45 bg-[#0d0e0d]" />
+            </div>
+
+            {/* Tactile Play/Pause Button */}
             <div className="relative">
               <button
                 onClick={togglePlay}
                 aria-label={isPlaying ? 'Pause music' : 'Play music'}
                 className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-md border-2 transition-all active:scale-95',
+                  'relative flex h-10 w-10 items-center justify-center rounded-md border transition-all active:scale-95',
                   isPlaying
-                    ? 'border-amber-500/50 bg-amber-500/10 text-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
-                    : 'border-zinc-400/50 bg-zinc-300/50 text-zinc-600 dark:border-zinc-600/50 dark:bg-zinc-800/50 dark:text-zinc-400',
+                    ? 'border-[#ff5a1f]/60 bg-gradient-to-b from-[#2a1d17] to-[#171311] text-[#ff5a1f] shadow-[0_0_12px_rgba(255,90,31,0.35),inset_0_1px_rgba(255,255,255,0.15)]'
+                    : 'border-[#4a4d47] bg-gradient-to-b from-[#252824] to-[#151715] text-[#a0a49c] hover:border-[#686c64] hover:text-[#e4e1d7] shadow-[0_2px_4px_rgba(0,0,0,0.5),inset_0_1px_rgba(255,255,255,0.08)]',
                 )}
               >
                 {isPlaying ? (
-                  <Pause size={18} fill="currentColor" aria-hidden="true" />
+                  <Pause size={17} fill="currentColor" aria-hidden="true" />
                 ) : (
                   <Play
-                    size={18}
+                    size={17}
                     fill="currentColor"
                     className="ml-0.5"
                     aria-hidden="true"
                   />
                 )}
               </button>
+
               {/* Status LED */}
               <div
                 className={cn(
-                  'absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border border-zinc-200 transition-colors dark:border-zinc-900',
+                  'absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border border-[#0d0e0d] transition-colors',
                   isPlaying
-                    ? 'bg-green-500 shadow-[0_0_5px_#22c55e]'
-                    : 'bg-red-900',
+                    ? 'bg-[#5cd6a3] shadow-[0_0_8px_#5cd6a3]'
+                    : 'bg-[#5c2424]',
                 )}
               />
             </div>
@@ -119,52 +129,58 @@ export function MusicPlayer() {
             <AnimatePresence>
               {isHovered && (
                 <motion.div
-                  className="flex items-center gap-3 overflow-hidden"
+                  className="flex items-center gap-3 overflow-hidden pr-1"
                   initial={{ scaleX: 0, opacity: 0, transformOrigin: 'left' }}
                   animate={{ scaleX: 1, opacity: 1, transformOrigin: 'left' }}
                   exit={{ scaleX: 0, opacity: 0, transformOrigin: 'left' }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  transition={{ duration: 0.28, ease: 'easeInOut' }}
                 >
-                  {/* Divider */}
-                  <div className="h-8 w-px bg-zinc-400 dark:bg-zinc-700" />
+                  {/* Separator Line */}
+                  <div className="h-8 w-px bg-[#2e312c]" />
 
                   {/* Volume Controls */}
                   <div className="flex items-center gap-2">
                     <button
                       onClick={toggleMute}
                       aria-label={isMuted ? 'Unmute volume' : 'Mute volume'}
-                      className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                      className="text-[#969b90] transition-colors hover:text-[#5cd6a3]"
                     >
                       {isMuted ? (
-                        <VolumeX size={16} aria-hidden="true" />
+                        <VolumeX size={15} aria-hidden="true" />
                       ) : (
-                        <Volume2 size={16} aria-hidden="true" />
+                        <Volume2 size={15} aria-hidden="true" />
                       )}
                     </button>
-                    <Slider
-                      defaultValue={[0.5]}
-                      value={[volume]}
-                      onValueChange={handleVolumeChange}
-                      max={1}
-                      step={0.01}
-                      className="w-20"
-                    />
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center justify-between font-mono text-[7px] font-bold tracking-wider text-[#82877c]">
+                        <span>VOL</span>
+                        <span>{isMuted ? '0%' : `${Math.round(volume * 100)}%`}</span>
+                      </div>
+                      <Slider
+                        defaultValue={[0.5]}
+                        value={[isMuted ? 0 : volume]}
+                        onValueChange={handleVolumeChange}
+                        max={1}
+                        step={0.01}
+                        className="w-20 cursor-pointer"
+                      />
+                    </div>
                   </div>
 
-                  {/* Signal Indicator */}
-                  <div className="flex h-4 items-end gap-0.5">
+                  {/* Spectrum Visualizer */}
+                  <div className="flex h-5 items-end gap-0.5 pl-1">
                     {[...Array(4)].map((_, i) => (
                       <motion.div
                         key={i}
-                        className="w-1 rounded-sm bg-amber-500/50"
+                        className="w-1 rounded-xs bg-[#ff5a1f]"
                         animate={{
-                          height: isPlaying ? [4, 12, 6, 10, 4] : 4,
-                          opacity: isPlaying ? 1 : 0.3,
+                          height: isPlaying ? [4, 16, 7, 13, 4] : 4,
+                          opacity: isPlaying ? 1 : 0.25,
                         }}
                         transition={{
-                          duration: 0.4,
+                          duration: 0.35,
                           repeat: Infinity,
-                          delay: i * 0.1,
+                          delay: i * 0.08,
                           repeatType: 'reverse',
                         }}
                       />

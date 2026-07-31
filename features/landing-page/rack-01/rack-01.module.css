@@ -737,7 +737,8 @@
 }
 
 @keyframes scrollBounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -2431,30 +2432,45 @@
   align-items: stretch;
 }
 .frequencyDisplay {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 1px 8px;
-  padding: 9px 11px;
+  align-items: center;
+  gap: 2px 10px;
+  padding: 8px 12px;
   border: 1px solid #30322f;
   border-radius: 2px;
   background: #101410;
   color: var(--lcd-green);
   box-shadow: inset 0 3px 8px #000;
+  contain: layout style paint;
 }
-.frequencyDisplay span,
+.frequencyDisplay span {
+  grid-row: 1;
+  grid-column: 1;
+  font: 700 7px var(--font-geist-mono);
+  letter-spacing: 0.11em;
+  white-space: nowrap;
+}
 .frequencyDisplay small {
-  font: 6px var(--font-geist-mono);
+  grid-row: 2;
+  grid-column: 1;
+  font: 700 7px var(--font-geist-mono);
   letter-spacing: 0.09em;
+  white-space: nowrap;
+  color: rgba(92, 214, 163, 0.72);
 }
 .frequencyDisplay strong {
   grid-row: 1 / 3;
   grid-column: 2;
-  align-self: center;
+  justify-self: end;
+  width: auto;
+  min-width: 6ch;
+  text-align: right;
   color: #dbb16f;
-  font:
-    620 22px var(--font-orbitron),
-    var(--font-geist-mono);
+  font: 650 20px / 1 var(--font-orbitron), var(--font-geist-mono);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .frequencyScale {
   position: relative;
@@ -2478,10 +2494,11 @@
   position: absolute;
   top: 5px;
   bottom: 4px;
-  left: 52%;
+  left: 4%;
   width: 2px;
   background: var(--signal-orange);
   box-shadow: 0 0 6px rgba(255, 90, 31, 0.7);
+  will-change: left;
 }
 .radioDials {
   display: flex;
@@ -2509,6 +2526,7 @@
   box-shadow:
     0 2px 3px rgba(0, 0, 0, 0.28),
     inset 0 1px rgba(255, 255, 255, 0.16);
+  will-change: transform;
 }
 .radioDials b {
   align-self: start;
@@ -3528,10 +3546,10 @@
   position: absolute;
   z-index: 1;
   right: -0.025em;
-  bottom: -0.1em;
+  bottom: 0em;
   left: -0.025em;
   overflow: hidden;
-  color: rgba(231, 226, 216, 0.075);
+  color: rgba(231, 226, 216, 0.233);
   font: 700 clamp(112px, 22vw, 350px) / 0.72 var(--font-space-grotesk);
   letter-spacing: -0.085em;
   text-align: center;
@@ -3620,27 +3638,18 @@
   content: '';
   pointer-events: none;
 }
+/* Top 50%: Solid Black (#171917) with grid pattern */
 .cableDivider::before {
   top: 0;
   background:
-    radial-gradient(circle at 10% 15%, rgba(46, 63, 92, 0.34), transparent 28%),
-    radial-gradient(
-      circle at 90% 72%,
-      rgba(201, 165, 116, 0.12),
-      transparent 28%
-    ),
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0
       0 / 32px 32px,
     #171917;
 }
+/* Bottom 50%: Solid Tan (#c8a474) with grid pattern */
 .cableDivider::after {
   bottom: 0;
   background:
-    radial-gradient(
-      circle at 14% 22%,
-      rgba(123, 39, 53, 0.18),
-      transparent 25%
-    ),
     linear-gradient(90deg, rgba(48, 39, 27, 0.05) 1px, transparent 1px) 0 0 /
       30px 30px,
     #c8a474;
@@ -3965,6 +3974,8 @@
   display: grid;
   grid-template-columns: repeat(60, minmax(0, 1fr));
   gap: clamp(0.5px, 0.05vw, 1px);
+  padding-block: clamp(4px, 0.6vw, 10px);
+  contain: layout style paint;
 }
 .splitFlapCell {
   position: relative;
@@ -3976,6 +3987,9 @@
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     0 1px 3px rgba(0, 0, 0, 0.7);
+  contain: strict;
+}
+.splitFlapCell[data-flipping='true'] {
   perspective: 500px;
   transform-style: preserve-3d;
 }

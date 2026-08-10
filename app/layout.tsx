@@ -26,9 +26,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://adityahimaone.space'),
-  title: 'adityahimaone - frontend developer',
+  title: 'Aditya Himawan — Frontend Engineer | React, Next.js, TypeScript',
   description:
-    'I am a frontend developer who loves to craft beautiful and performant websites.',
+    'Frontend Engineer with 4+ years building production web apps with React, Next.js, and TypeScript — leading platforms serving 15K+ users. Music-themed interactive portfolio.',
   icons: {
     icon: [
       {
@@ -44,18 +44,20 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: 'adityahimaone — frontend developer',
+    title: 'Aditya Himawan — Frontend Engineer',
     type: 'website',
     images:
       'https://ucarecdn.com/b624aa7d-978f-44ef-8e45-bf3c12f1e846/memojilaptop1.png',
     url: 'https://adityahimaone.space/',
-    description: "adit's personal website",
+    description:
+      'Frontend Engineer with 4+ years building production web apps with React, Next.js, and TypeScript — leading platforms serving 15K+ users.',
   },
   twitter: {
     card: 'summary_large_image',
     site: '@adityahimaone',
-    title: 'adit — frontend developer',
-    description: "adit's personal website",
+    title: 'Aditya Himawan — Frontend Engineer',
+    description:
+      'Frontend Engineer with 4+ years building production web apps with React, Next.js, and TypeScript.',
     images:
       'https://ucarecdn.com/b624aa7d-978f-44ef-8e45-bf3c12f1e846/memojilaptop1.png',
   },

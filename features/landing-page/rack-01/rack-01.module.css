@@ -4766,7 +4766,7 @@
     position: relative;
     height: auto;
     min-height: 100svh;
-    padding-top: 16px;
+    padding-top: 54px;
     padding-bottom: 80px;
     overflow: visible;
   }
@@ -4775,21 +4775,8 @@
     gap: 10px 16px;
     padding-bottom: 10px;
   }
-  .heroMarqueeBar {
-    position: static;
-  }
   .heroRouteNav {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    width: 100%;
-    min-height: 44px;
-    justify-self: stretch;
-  }
-  .heroRouteNav a {
-    min-width: 0;
-    flex: 1;
-    justify-content: center;
-    padding: 0 8px;
+    display: none;
   }
   .availability {
     display: none;
@@ -4805,7 +4792,7 @@
   }
   .heroViewfinderReadout {
     right: 22px;
-    bottom: 116px;
+    bottom: 100px;
     left: 22px;
     width: auto;
   }
@@ -4886,18 +4873,6 @@
     grid-template-columns: repeat(4, 1fr);
   }
   .heroFooter {
-    right: 14px;
-    bottom: 100px;
-    left: 14px;
-    gap: 10px;
-    font-size: 8px;
-    letter-spacing: 0.08em;
-  }
-  .heroFooter .silkscreen {
-    font-size: 8px;
-    letter-spacing: 0.08em;
-  }
-  .heroFooter span:last-child {
     display: none;
   }
   .section {

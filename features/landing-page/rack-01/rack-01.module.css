@@ -85,7 +85,7 @@
   height: 100svh;
   min-height: 680px;
   overflow: hidden;
-  padding: 22px clamp(20px, 4vw, 64px) 36px;
+  padding: clamp(54px, 6vh, 68px) clamp(20px, 4vw, 64px) 36px;
   background: #171917;
   isolation: isolate;
 }
@@ -710,10 +710,12 @@
 }
 
 .heroMarqueeBar {
-  position: relative;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
   z-index: 5;
   overflow: hidden;
-  margin-top: 14px;
   padding: 6px 0;
   border-top: 1px solid rgba(244, 240, 232, 0.14);
   border-bottom: 1px solid rgba(244, 240, 232, 0.14);
@@ -4764,12 +4766,17 @@
     position: relative;
     height: auto;
     min-height: 100svh;
+    padding-top: 16px;
     padding-bottom: 80px;
     overflow: visible;
   }
   .topline {
     grid-template-columns: 1fr auto;
     gap: 10px 16px;
+    padding-bottom: 10px;
+  }
+  .heroMarqueeBar {
+    position: static;
   }
   .heroRouteNav {
     grid-column: 1 / -1;
@@ -4798,7 +4805,7 @@
   }
   .heroViewfinderReadout {
     right: 22px;
-    bottom: 172px;
+    bottom: 116px;
     left: 22px;
     width: auto;
   }
@@ -4880,7 +4887,7 @@
   }
   .heroFooter {
     right: 14px;
-    bottom: 108px;
+    bottom: 100px;
     left: 14px;
     gap: 10px;
     font-size: 8px;

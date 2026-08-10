@@ -1203,6 +1203,14 @@ const SPLIT_FLAP_ROWS = [
   },
 ] as const
 
+const SPLIT_FLAP_MOBILE_ROWS = [
+  {
+    from: ' 05 SELECTED WORKS READY    ',
+    to: ' 05 FEATURED RELEASES ON AIR',
+    isFlipping: true,
+  },
+] as const
+
 const SplitFlapCell = memo(function SplitFlapCell({
   from,
   to,
@@ -1280,12 +1288,19 @@ function SplitFlapDivider() {
             <p>
               <i /> AH STUDIO / DEPARTURE BOARD
             </p>
-            <h3>
-              FEATURED RELEASES
-              <br />
-              <em>NOW DEPARTING</em>
-            </h3>
-            <span>05 SELECTED WORKS · READY FOR BOARDING</span>
+            <div className={styles.splitFlapMobileGrid} aria-hidden="true">
+              {SPLIT_FLAP_MOBILE_ROWS.flatMap((row) =>
+                Array.from(row.from).map((character, columnIndex) => (
+                  <SplitFlapCell
+                    from={character}
+                    to={row.to[columnIndex] ?? ' '}
+                    isFlipping={row.isFlipping}
+                    key={`m-${columnIndex}`}
+                  />
+                )),
+              )}
+            </div>
+            <span>OUTPUT / 05 · READY FOR BOARDING</span>
           </div>
         </div>
       </div>

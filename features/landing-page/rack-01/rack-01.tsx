@@ -692,10 +692,10 @@ function SignalDivider() {
           </div>
         </div>
         <p className={styles.signalDividerMotto}>
-          <span>PORTFOLIO / FIELD NOTES</span>
+          <span>PORTFOLIO / FRONTEND ENGINEERING</span>
           <strong>
-            Selected work, practical experiments, and notes from building for
-            the web.
+            React, Next.js & TypeScript — shipping production web apps for
+            15K+ users since 2022.
           </strong>
         </p>
         <div

@@ -108,10 +108,9 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
     period: 'OCT 2022 - PRESENT',
     color: 'bg-purple-500',
     description: [
-      'Led frontend development of Bisadaya, a job-seeker platform serving 15K+ users, using Next.js SSR, feature-based architecture, reusable component architecture, Zustand, and React Query.',
-      'Built and launched Campus Connect, a platform connecting students with career opportunities and campus initiatives, within 3 months using scalable frontend architecture, SSR, reusable components, Zustand, and React Query.',
-      'Developed and maintained frontend features for a SaaS HRIS platform, supporting core HR workflows and improving usability and performance as part of a cross-functional engineering team.',
-      'Designed and implemented KPI automation within 3 months, streamlining performance-tracking workflows and reducing manual reporting effort for HR teams.',
+      'Led frontend for Bisadaya — job-seeker platform serving 15K+ users (Next.js SSR, Zustand, React Query).',
+      'Shipped Campus Connect in 3 months — student-career platform (SSR, reusable components).',
+      'Delivered SaaS HRIS features + KPI automation, cutting manual reporting for HR teams.',
     ],
   },
   {
@@ -123,8 +122,8 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
     period: 'APR 2024 - SEP 2024',
     color: 'bg-blue-500',
     description: [
-      'Developed frontend features for an HR Management System, integrating with backend services built with tRPC and Prisma to support scalable data workflows.',
-      'Resolved critical production issues and optimized frontend performance across key HR management workflows, improving application reliability.',
+      'Built frontend for an HR management system — integrated tRPC + Prisma backend services.',
+      'Resolved critical production issues and optimized performance across HR workflows.',
     ],
   },
   {
@@ -136,9 +135,8 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
     period: 'JUN 2022 - SEP 2022',
     color: 'bg-pink-500',
     description: [
-      'Built responsive e-commerce interfaces using React.js, implementing reusable UI components and responsive layouts across key shopping workflows.',
-      'Developed reusable React components with Tailwind CSS for an NFT platform, improving UI consistency and accelerating feature development.',
-      'Delivered a production landing page using Next.js within a short delivery timeline.',
+      'Built responsive e-commerce UIs with React.js + reusable component system.',
+      'Shipped NFT platform components (Tailwind CSS) + a production Next.js landing page.',
     ],
   },
   {
@@ -156,7 +154,7 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
         period: 'AUG 2018 - OCT 2022',
         company: 'Universitas AMIKOM Yogyakarta',
         description:
-          "Universitas AMIKOM Yogyakarta — Bachelor's in Informatics, GPA 3.75/4.00. Lab Assistant for Data Structures and Operating Systems, specializing in Linux.",
+          "AMIKOM Yogyakarta — Bachelor's in Informatics, GPA 3.75/4.00, Linux lab assistant.",
       },
       {
         role: 'Frontend JavaScript',

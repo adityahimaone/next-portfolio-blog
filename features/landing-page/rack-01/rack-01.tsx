@@ -1276,6 +1276,17 @@ function SplitFlapDivider() {
               <strong>READY FOR BOARDING</strong>
             </div>
           </div>
+          <div className={styles.splitFlapMobile}>
+            <p>
+              <i /> AH STUDIO / DEPARTURE BOARD
+            </p>
+            <h3>
+              FEATURED RELEASES
+              <br />
+              <em>NOW DEPARTING</em>
+            </h3>
+            <span>05 SELECTED WORKS · READY FOR BOARDING</span>
+          </div>
         </div>
       </div>
     </section>
@@ -2027,7 +2038,10 @@ export default function Rack01LandingPage() {
         )
 
         if (dividerTopRail && dividerBottomRail) {
-          const dividerTravel = () => Math.min(150, window.innerWidth * 0.11)
+          const dividerTravel = () =>
+            window.innerWidth < 769
+              ? Math.min(240, Math.max(130, window.innerWidth * 0.42))
+              : Math.min(150, window.innerWidth * 0.11)
           const railScrollTrigger = {
             trigger: `.${styles.signalDivider}`,
             start: 'top bottom',

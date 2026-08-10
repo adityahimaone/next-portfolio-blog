@@ -362,20 +362,22 @@ function Hero() {
                 encryptedClassName={styles.encryptedChar}
               />
             </span>
-            <a href="#work" className={styles.primaryButton}>
-              <span>VIEW SELECTED WORK</span>
-              <ArrowDownRight size={18} aria-hidden="true" />
-            </a>
-            <a
-              href={RESUME_URL}
-              target="_blank"
-              rel="noreferrer"
-              className={styles.resumeButton}
-              aria-label="Download resume PDF"
-            >
-              <span>DOWNLOAD RESUME</span>
-              <Download size={16} aria-hidden="true" />
-            </a>
+            <div className={styles.heroActions}>
+              <a href="#work" className={styles.primaryButton}>
+                <span>VIEW SELECTED WORK</span>
+                <ArrowDownRight size={18} aria-hidden="true" />
+              </a>
+              <a
+                href={RESUME_URL}
+                target="_blank"
+                rel="noreferrer"
+                className={styles.resumeButton}
+                aria-label="Download resume PDF"
+              >
+                <span>DOWNLOAD RESUME</span>
+                <Download size={16} aria-hidden="true" />
+              </a>
+            </div>
           </div>
         </div>
 
@@ -694,8 +696,7 @@ function SignalDivider() {
         <p className={styles.signalDividerMotto}>
           <span>PORTFOLIO / FRONTEND ENGINEERING</span>
           <strong>
-            React, Next.js & TypeScript — shipping production web apps for
-            15K+ users since 2022.
+            React, Next.js & TypeScript — shipped for 15K+ users.
           </strong>
         </p>
         <div

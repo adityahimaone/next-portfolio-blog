@@ -406,7 +406,6 @@
   justify-content: space-between;
   gap: 16px;
   min-height: 50px;
-  margin-left: clamp(12px, 2.5vw, 28px);
   padding: 0 17px;
   border: 1px solid rgba(224, 183, 90, 0.75);
   border-radius: 3px;
@@ -441,6 +440,15 @@
 }
 .resumeButton:active {
   transform: scale(0.96);
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.6vw, 18px);
+}
+.heroActions .resumeButton {
+  margin-left: 0;
 }
 
 .sampler {
@@ -4828,6 +4836,11 @@
     width: 100%;
     margin-left: 0;
   }
+  .heroActions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
   .heroGrid {
     display: flex;
     height: auto;
@@ -4930,6 +4943,8 @@
     min-height: 250px;
     flex-basis: auto;
     transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
   }
   .aboutMetric {
     min-width: 72px;
@@ -5306,52 +5321,152 @@
     gap: 12px;
     margin-top: 55px;
   }
-  .transport {
-    right: 0;
-    bottom: 0;
-    left: auto;
-    width: 100%;
-    grid-template-columns: auto 1fr auto;
-    gap: 8px;
-    min-height: 50px;
-  }
+  /* ── Fresh mobile bottom nav: floating glass capsule ── */
+  .transport,
   .transportCompact {
-    right: 7px;
-    bottom: 7px;
-    width: calc(100% - 14px);
-    grid-template-columns: minmax(0, 1fr) auto;
-    min-height: 42px;
-    padding: 4px 7px;
+    right: auto;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 24px);
+    max-width: 460px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    min-height: 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 18px;
+    background: rgba(16, 18, 16, 0.86);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(16px);
+    overflow: hidden;
   }
-  .transportCompact .transportStatus,
-  .transportCompact .transportProgress {
-    display: none;
+  .transportStatus,
+  .transportCompact .transportStatus {
+    display: none !important;
   }
-  .transportCompact .transportNav {
-    grid-column: 1;
-    grid-row: 1;
-    min-width: 0;
-  }
-  .transportCompact .transportNav a {
-    min-width: 0;
-    flex: 1;
-    justify-content: center;
-    padding: 0 3px;
-    font-size: 6px;
-  }
+  .transport > .segmentCounter,
   .transportCompact > .segmentCounter {
-    grid-column: 2;
-    grid-row: 1;
+    display: none !important;
   }
-  .transportStatus {
-    font-size: 7px;
+  .transportProgress,
+  .transportCompact .transportProgress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block !important;
+    width: 100% !important;
+    height: 2px !important;
+    border: 0 !important;
+    background: transparent !important;
   }
-  .signalLock {
+  .transportProgress span {
+    background: linear-gradient(90deg, #e0b75a, #ff5a1f) !important;
+  }
+  .transportNav,
+  .transportCompact .transportNav {
+    display: flex;
+    flex-direction: column;
+    grid-column: auto;
+    grid-row: auto;
+    max-width: none;
+    min-width: 0;
+    align-self: stretch;
+    border-left: 0;
+    overflow: visible;
+    padding: 10px 12px 12px;
+  }
+  .sectionNavGroup {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 0 0 10px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sectionNavGroup::-webkit-scrollbar {
     display: none;
   }
-  .transport > .segmentCounter {
-    min-width: 72px;
-    font-size: 9px;
+  .sectionNavGroup a,
+  .transportCompact .sectionNavGroup a {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: none;
+    justify-content: center;
+    padding: 7px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.045);
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    opacity: 1 !important;
+    transform: none !important;
+    color: rgba(255, 255, 255, 0.58);
+    transition:
+      background 150ms ease,
+      color 150ms ease,
+      border-color 150ms ease;
+  }
+  .sectionNavGroup a span {
+    display: none;
+  }
+  .sectionNavGroup a.navActive,
+  .transportCompact .sectionNavGroup a.navActive {
+    background: rgba(224, 183, 90, 0.16);
+    border-color: rgba(224, 183, 90, 0.5);
+    color: #f0c75e;
+  }
+  .navHidden {
+    max-width: none !important;
+    padding-right: 12px !important;
+    padding-left: 12px !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+  }
+  .routeNavGroup {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    padding-top: 10px;
+  }
+  .routeNavGroup a,
+  .transportCompact .routeNavGroup a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    max-width: none;
+    padding: 4px 2px;
+    border: 0;
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.45);
+  }
+  .routeNavGroup a:hover,
+  .transportCompact .routeNavGroup a:hover {
+    background: transparent;
+    color: #f0c75e;
+  }
+  .routeNavGroup .routeDot {
+    width: 4px;
+    height: 4px;
+    margin-right: 3px;
+    background: rgba(224, 183, 90, 0.55);
+    box-shadow: none;
+  }
+  .expandHint {
+    display: none !important;
   }
 
   /* Split-flap board: GSAP is desktop-only, so on mobile force the
@@ -5372,6 +5487,41 @@
   .splitFlapStatus {
     opacity: 1 !important;
     will-change: auto;
+  }
+
+  /* Split-flap divider responsive sizing (tablet → small phone) */
+  .splitFlapDivider,
+  .splitFlapBoard,
+  .splitFlapInner {
+    min-height: 260px;
+  }
+  .splitFlapInner {
+    padding: 20px 18px 26px;
+  }
+  .splitFlapCopy {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .splitFlapCopy span {
+    max-width: 140px;
+    line-height: 1.35;
+  }
+  .splitFlapCopy strong {
+    max-width: 58vw;
+    font-size: clamp(15px, 4.6vw, 20px);
+  }
+  .splitFlapGrid {
+    gap: 2px;
+  }
+  .splitFlapCell {
+    aspect-ratio: 1.08;
+  }
+  .splitFlapHalf > span {
+    font-size: clamp(7px, 2.2vw, 11px);
+  }
+  .splitFlapHeader span:last-child {
+    display: none;
   }
 
   /* Signal divider rails: CSS marquee loop so mobile keeps the motion

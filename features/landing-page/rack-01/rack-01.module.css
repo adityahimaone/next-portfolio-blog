@@ -4798,7 +4798,7 @@
   }
   .heroViewfinderReadout {
     right: 22px;
-    bottom: 76px;
+    bottom: 172px;
     left: 22px;
     width: auto;
   }
@@ -4880,8 +4880,15 @@
   }
   .heroFooter {
     right: 14px;
-    bottom: 116px;
+    bottom: 108px;
     left: 14px;
+    gap: 10px;
+    font-size: 8px;
+    letter-spacing: 0.08em;
+  }
+  .heroFooter .silkscreen {
+    font-size: 8px;
+    letter-spacing: 0.08em;
   }
   .heroFooter span:last-child {
     display: none;
@@ -5547,21 +5554,17 @@
   }
   .splitFlapMobileGrid {
     display: grid;
-    grid-template-columns: repeat(28, minmax(0, 1fr));
-    gap: 2px;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
     width: 100%;
-    padding-block: 14px;
+    padding-block: 12px;
     contain: layout style paint;
   }
   .splitFlapMobileGrid .splitFlapCell {
-    aspect-ratio: 0.95;
+    aspect-ratio: 0.38;
   }
-  .splitFlapMobile > span {
-    color: var(--lcd-green);
-    font: 700 9px var(--font-geist-mono);
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    text-shadow: 0 0 10px rgba(92, 214, 163, 0.5);
+  .splitFlapMobileGrid .splitFlapHalf > span {
+    font-size: clamp(24px, 10vw, 52px);
   }
 
   /* Signal divider rails: same GSAP scroll scrub as desktop — no CSS

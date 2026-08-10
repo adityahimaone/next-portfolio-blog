@@ -1205,8 +1205,8 @@ const SPLIT_FLAP_ROWS = [
 
 const SPLIT_FLAP_MOBILE_ROWS = [
   {
-    from: ' 05 SELECTED WORKS READY    ',
-    to: ' 05 FEATURED RELEASES ON AIR',
+    from: 'ARCHIVE',
+    to: 'RELEASE',
     isFlipping: true,
   },
 ] as const
@@ -1300,7 +1300,6 @@ function SplitFlapDivider() {
                 )),
               )}
             </div>
-            <span>OUTPUT / 05 · READY FOR BOARDING</span>
           </div>
         </div>
       </div>

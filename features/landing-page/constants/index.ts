@@ -156,28 +156,28 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
         period: 'AUG 2018 - OCT 2022',
         company: 'Universitas AMIKOM Yogyakarta',
         description:
-          "Bachelor's degree in informatics, GPA 3.75/4.00. Lab Assistant for Data Structures and Operating Systems, specializing in Linux.",
+          "Universitas AMIKOM Yogyakarta — Bachelor's in Informatics, GPA 3.75/4.00. Lab Assistant for Data Structures and Operating Systems, specializing in Linux.",
       },
       {
         role: 'Frontend JavaScript',
         period: 'FEB 2022 - JUL 2022',
         company: 'Binar Academy',
         description:
-          'Kampus Merdeka bootcamp — React, JavaScript. Frontend JavaScript specialization.',
+          'Binar Academy — Kampus Merdeka bootcamp: Frontend JavaScript (React, JavaScript).',
       },
       {
         role: 'Fullstack Engineering',
         period: 'AUG 2021 - JAN 2022',
         company: 'Alterra Academy',
         description:
-          'Kampus Merdeka bootcamp — React, Golang. Fullstack engineering specialization.',
+          'Alterra Academy — Kampus Merdeka bootcamp: Fullstack Engineering (React, Golang).',
       },
       {
         role: 'Cloud Computing',
         period: 'FEB 2021 - JUL 2021',
         company: 'Bangkit Academy',
         description:
-          'Kampus Merdeka program by Google — Node.js, REST API. Cloud computing specialization.',
+          'Bangkit Academy by Google — Kampus Merdeka: Cloud Computing (Node.js, REST API).',
       },
     ],
   },

@@ -13,7 +13,6 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react', 'motion'],
-    optimizeCss: true,
   },
   images: {
     remotePatterns: [

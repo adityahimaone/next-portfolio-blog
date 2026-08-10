@@ -330,7 +330,7 @@ export default function SpotifySetupPage() {
               <div className="h-1.5 w-10 rounded-full bg-zinc-900 shadow-inner" />
             </div>
             <div className="font-mono text-[8px] text-zinc-800">
-              DESIGNED BY ADITYA HIMAONE // TOKYO-ID-2025
+              DESIGNED BY ADITYA HIMAWAN // TOKYO-ID-2025
             </div>
           </div>
         </div>

@@ -72,7 +72,7 @@ export const functionalPads: readonly FunctionalPad[] = [
     label: 'RESUME',
     icon: FileText,
     color: 'bg-amber-500',
-    href: 'https://drive.google.com/file/d/13Ym0zbrZyi8oOkvUp0r9GBCM_Acsk2XM/view?usp=sharing',
+    href: 'https://drive.google.com/file/d/17x3GuEkZxbt9ZeLilXx1ShBHV_CZTfSq/view?usp=sharing',
     x: 5,
     y: 2,
     w: 1,

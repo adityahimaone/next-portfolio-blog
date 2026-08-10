@@ -1,7 +1,7 @@
 import { MusicPageView } from '@/features/mixtape/views/music-page'
 
 export const metadata = {
-  title: 'Mixtape | Aditya Himaone',
+  title: 'Mixtape | Aditya Himawan',
   description:
     'An interactive archive of coding playlists and audio experiments.',
 }

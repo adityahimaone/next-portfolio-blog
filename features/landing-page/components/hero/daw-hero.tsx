@@ -199,7 +199,7 @@ export function DawHero({
               />
               <span className="block pl-[0.1em] text-[#e0b75a]">
                 <BrokenLightText
-                  text="HIMAONE"
+                  text="HIMAWAN"
                   mode="settle"
                   glowColor="#e0b75a"
                 />

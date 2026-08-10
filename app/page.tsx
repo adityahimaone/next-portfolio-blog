@@ -4,7 +4,7 @@ export default function Home() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: 'Aditya Himaone',
+    name: 'Aditya Himawan',
     url: 'https://adityahimaone.space',
     jobTitle: 'Frontend Developer',
     sameAs: [

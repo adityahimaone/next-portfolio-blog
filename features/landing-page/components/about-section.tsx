@@ -495,7 +495,7 @@ export function AboutSection() {
                   </div>
                   <div>
                     <h1 className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white">
-                      ADITYA HIMAONE
+                      ADITYA HIMAWAN
                     </h1>
                     <p className="text-xs font-black tracking-widest text-amber-500 uppercase dark:text-amber-400">
                       Frontend Engineer / Jakarta Selatan

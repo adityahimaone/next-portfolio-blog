@@ -107,7 +107,7 @@ export function Preloader() {
               <div className="flex items-center gap-4">
                 <div className="flex flex-col gap-1">
                   <h1 className="text-3xl font-black tracking-tighter text-zinc-800 italic md:text-5xl dark:text-zinc-200">
-                    ADITYA <span className="text-primary">HIMAONE</span>
+                    ADITYA <span className="text-primary">HIMAWAN</span>
                   </h1>
                   <span className="text-xs tracking-[0.3em] text-zinc-500 uppercase md:text-sm dark:text-zinc-500">
                     Pre-Amplifier

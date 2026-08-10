@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { m as motion, useScroll, useTransform } from 'motion/react'
-import { Play, Pause, SkipForward } from 'lucide-react'
+import { Play, Pause, SkipForward, Download } from 'lucide-react'
 import { Magnetic } from '@/components/magnetic'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import { useTheme } from 'next-themes'
@@ -380,7 +380,42 @@ export function HeroSection() {
               </LCDDisplay>
             </motion.div>
 
-            {/* 2. Transport Controls Bar */}
+            {/* 2. Download Resume CTA */}
+            <motion.a
+              href="https://drive.google.com/file/d/17x3GuEkZxbt9ZeLilXx1ShBHV_CZTfSq/view?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Download resume PDF"
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: baseDelay + 0.15, ease: 'easeOut' }}
+              className={cn(
+                "group relative flex items-center justify-center gap-3 rounded-lg border px-5 py-4 shadow-[inset_0_1px_4px_rgba(0,0,0,0.15)] transition-all active:scale-[0.98]",
+                isDark
+                  ? "bg-zinc-900/80 border-zinc-800 hover:border-amber-500/60 hover:bg-zinc-800/80"
+                  : "bg-zinc-100/90 border-zinc-300 hover:border-amber-500/60 hover:bg-white"
+              )}
+            >
+              {/* LED indicator */}
+              <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+              <span
+                className={cn(
+                  "font-mono text-xs font-black tracking-widest uppercase",
+                  isDark ? "text-amber-400" : "text-amber-600"
+                )}
+              >
+                Download Resume
+              </span>
+              <Download
+                size={14}
+                className={cn(
+                  "transition-transform group-hover:translate-y-0.5",
+                  isDark ? "text-amber-400" : "text-amber-600"
+                )}
+              />
+            </motion.a>
+
+            {/* 3. Transport Controls Bar */}
             <motion.div
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}

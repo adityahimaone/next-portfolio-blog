@@ -7,6 +7,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
+  Download,
   Mail,
   Pause,
   Play,
@@ -25,6 +26,9 @@ import {
   SOCIAL_LINKS_LANDING,
 } from '../constants'
 import styles from './rack-01.module.css'
+
+const RESUME_URL =
+  'https://drive.google.com/file/d/17x3GuEkZxbt9ZeLilXx1ShBHV_CZTfSq/view?usp=sharing'
 
 const HERO_MARQUEE_ITEMS = [
   'RACK—01 CHASSIS ONLINE',
@@ -321,7 +325,7 @@ function Hero() {
           </div>
 
           <div className={styles.heroViewfinderIdentity}>
-            <h1 aria-label="ADITYA HIMAONE">
+            <h1 aria-label="ADITYA HIMAWAN">
               <span className={styles.heroLine}>
                 <BrokenLightText
                   text="ADITYA"
@@ -337,7 +341,7 @@ function Hero() {
                 />
                 <em>
                   <BrokenLightText
-                    text="ONE"
+                    text="WAN"
                     mode="settle"
                     // glowColor="#e0b75a"
                   />
@@ -361,6 +365,16 @@ function Hero() {
             <a href="#work" className={styles.primaryButton}>
               <span>VIEW SELECTED WORK</span>
               <ArrowDownRight size={18} aria-hidden="true" />
+            </a>
+            <a
+              href={RESUME_URL}
+              target="_blank"
+              rel="noreferrer"
+              className={styles.resumeButton}
+              aria-label="Download resume PDF"
+            >
+              <span>DOWNLOAD RESUME</span>
+              <Download size={16} aria-hidden="true" />
             </a>
           </div>
         </div>
@@ -392,7 +406,7 @@ function Hero() {
 const ABOUT_TRACKS = [
   {
     title: 'EXPERIENCE',
-    note: '2019—NOW / PRODUCT TEAMS',
+    note: '2022—NOW / PRODUCT TEAMS',
     metric: '04+',
     metricLabel: 'YEARS BUILDING',
     heading: 'Four years turning product complexity into shipped interfaces.',
@@ -1396,11 +1410,11 @@ function Contact() {
   const launchPads = Array.from({ length: 16 }, (_, index) => ({
     label:
       SOCIAL_LINKS_LANDING[index]?.label ??
-      (index === 4 ? 'EMAIL' : `PAD ${String(index + 1).padStart(2, '0')}`),
+      (index === 4 ? 'EMAIL' : index === 5 ? 'RESUME' : `PAD ${String(index + 1).padStart(2, '0')}`),
     link:
       SOCIAL_LINKS_LANDING[index]?.link ??
-      (index === 4 ? `mailto:${EMAIL}` : undefined),
-    color: PAD_COLORS[index],
+      (index === 4 ? `mailto:${EMAIL}` : index === 5 ? RESUME_URL : undefined),
+    color: index === 5 ? '#f0bd45' : PAD_COLORS[index],
   }))
 
   useEffect(() => {

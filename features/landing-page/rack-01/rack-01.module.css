@@ -789,6 +789,21 @@
   }
 }
 
+@keyframes signalRailScroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes signalRailScrollReverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 .section {
   position: relative;
   padding: clamp(90px, 11vw, 170px) clamp(20px, 5vw, 78px);
@@ -5179,7 +5194,20 @@
     overflow-x: auto;
     padding: 10px 20px 20px;
     scroll-snap-type: x mandatory;
-    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(224, 183, 90, 0.45) transparent;
+  }
+  .workViewport::-webkit-scrollbar {
+    height: 4px;
+  }
+  .workViewport::-webkit-scrollbar-thumb {
+    background: rgba(224, 183, 90, 0.4);
+    border-radius: 2px;
+  }
+  .workViewport::-webkit-scrollbar-track {
+    background: transparent;
   }
   .workRail {
     gap: 16px;
@@ -5324,6 +5352,38 @@
   .transport > .segmentCounter {
     min-width: 72px;
     font-size: 9px;
+  }
+
+  /* Split-flap board: GSAP is desktop-only, so on mobile force the
+     post-flip (departed) state instead of a frozen mid-flip frame. */
+  .splitFlapTop {
+    transform: rotateX(-92deg) !important;
+    will-change: auto;
+  }
+  .splitFlapBottom {
+    transform: rotateX(0deg) !important;
+    will-change: auto;
+  }
+  .splitFlapPanel {
+    opacity: 1 !important;
+    transform: none !important;
+    will-change: auto;
+  }
+  .splitFlapStatus {
+    opacity: 1 !important;
+    will-change: auto;
+  }
+
+  /* Signal divider rails: CSS marquee loop so mobile keeps the motion
+     desktop gets from the GSAP scroll scrub. */
+  .signalDividerTopRail {
+    animation: signalRailScroll 26s linear infinite;
+  }
+  .signalDividerBottomRail {
+    animation: signalRailScrollReverse 26s linear infinite;
+  }
+  .signalDividerRail {
+    will-change: transform;
   }
 }
 

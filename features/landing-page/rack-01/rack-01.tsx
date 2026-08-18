@@ -417,7 +417,8 @@ const ABOUT_TRACKS = [
     surface: '#d7b36f',
     ink: '#2c251b',
     accent: '#8a432d',
-    detail: 'Four-plus years leading frontend builds for products serving 15K+ users.',
+    detail:
+      'Four-plus years leading frontend builds for products serving 15K+ users.',
   },
   {
     title: 'CRAFT',
@@ -459,13 +460,13 @@ function About({
   scrollProgress: number
 }) {
   const [isPlaying, setIsPlaying] = useState(false)
-  const [playhead, setPlayhead] = useState(0.17)
+  const [playhead, setPlayhead] = useState(0.08)
 
   const [mutedTracks, setMutedTracks] = useState<Set<number>>(new Set())
   const [soloedTrack, setSoloedTrack] = useState<number | null>(null)
 
   useEffect(() => {
-    if (!isPlaying) setPlayhead(0.17 + scrollProgress * 0.74)
+    if (!isPlaying) setPlayhead(0.05 + scrollProgress * 0.9)
   }, [isPlaying, scrollProgress])
 
   useEffect(() => {
@@ -574,7 +575,7 @@ function About({
                   type="button"
                   onClick={() => {
                     setIsPlaying(false)
-                    setPlayhead(0.17)
+                    setPlayhead(0.05)
                   }}
                   aria-label="Stop and rewind timeline"
                 >
@@ -583,77 +584,86 @@ function About({
                 <span>120 BPM / 4—4</span>
               </div>
             </div>
-            <div className={styles.timelineRuler}>
-              {Array.from({ length: 9 }, (_, i) => (
-                <span key={i}>{i + 1}</span>
+            <div className={styles.timelineArrangement}>
+              <div className={styles.timelineRuler}>
+                <div className={styles.timelineRulerHeader}>
+                  <span>TRK</span>
+                </div>
+                <div className={styles.timelineRulerLanes}>
+                  {Array.from({ length: 8 }, (_, i) => (
+                    <span key={i}>{i + 1}</span>
+                  ))}
+                </div>
+              </div>
+              <div
+                className={styles.playhead}
+                style={
+                  { '--playhead': `${playhead}` } as React.CSSProperties
+                }
+                aria-hidden="true"
+              />
+              {ABOUT_TRACKS.map((item, index) => (
+                <div
+                  className={`${styles.track} ${
+                    mutedTracks.has(index) ||
+                    (soloedTrack !== null && soloedTrack !== index)
+                      ? styles.trackMuted
+                      : ''
+                  }`}
+                  key={item.title}
+                  style={
+                    {
+                      '--track-color': item.surface,
+                      '--track-ink': item.ink,
+                      '--track-accent': item.accent,
+                    } as React.CSSProperties
+                  }
+                >
+                  <div className={styles.trackHeader}>
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <strong>{item.title}</strong>
+                    <span className={styles.trackActions}>
+                      <button
+                        type="button"
+                        aria-label={`${mutedTracks.has(index) ? 'Unmute' : 'Mute'} ${item.title}`}
+                        aria-pressed={mutedTracks.has(index)}
+                        onClick={() => toggleMuted(index)}
+                      >
+                        M
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`${soloedTrack === index ? 'Unsolo' : 'Solo'} ${item.title}`}
+                        aria-pressed={soloedTrack === index}
+                        onClick={() =>
+                          setSoloedTrack((current) =>
+                            current === index ? null : index,
+                          )
+                        }
+                      >
+                        S
+                      </button>
+                    </span>
+                  </div>
+                  <div className={styles.trackLane}>
+                    <button
+                      type="button"
+                      className={`${styles.clip} ${
+                        selected === index ? styles.clipActive : ''
+                      }`}
+                      style={
+                        { '--clip-offset': `${index * 12.5}%` } as React.CSSProperties
+                      }
+                      onClick={() => setSelected(index)}
+                      aria-pressed={selected === index}
+                    >
+                      <span>{item.note}</span>
+                      <i />
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
-            <div
-              className={styles.playhead}
-              style={
-                { '--playhead': `${playhead * 100}%` } as React.CSSProperties
-              }
-              aria-hidden="true"
-            />
-            {ABOUT_TRACKS.map((item, index) => (
-              <div
-                className={`${styles.track} ${
-                  mutedTracks.has(index) ||
-                  (soloedTrack !== null && soloedTrack !== index)
-                    ? styles.trackMuted
-                    : ''
-                }`}
-                key={item.title}
-                style={
-                  {
-                    '--track-color': item.surface,
-                    '--track-ink': item.ink,
-                    '--track-accent': item.accent,
-                  } as React.CSSProperties
-                }
-              >
-                <div>
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <strong>{item.title}</strong>
-                  <span className={styles.trackActions}>
-                    <button
-                      type="button"
-                      aria-label={`${mutedTracks.has(index) ? 'Unmute' : 'Mute'} ${item.title}`}
-                      aria-pressed={mutedTracks.has(index)}
-                      onClick={() => toggleMuted(index)}
-                    >
-                      M
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`${soloedTrack === index ? 'Unsolo' : 'Solo'} ${item.title}`}
-                      aria-pressed={soloedTrack === index}
-                      onClick={() =>
-                        setSoloedTrack((current) =>
-                          current === index ? null : index,
-                        )
-                      }
-                    >
-                      S
-                    </button>
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className={`${styles.clip} ${
-                    selected === index ? styles.clipActive : ''
-                  }`}
-                  style={
-                    { '--clip-offset': `${index * 12}%` } as React.CSSProperties
-                  }
-                  onClick={() => setSelected(index)}
-                  aria-pressed={selected === index}
-                >
-                  <span>{item.note}</span>
-                  <i />
-                </button>
-              </div>
-            ))}
             <div className={styles.clipDetail} aria-live="polite">
               <SilkscreenLabel>
                 CLIP {String(selected + 1).padStart(2, '0')} / SELECTED
@@ -695,9 +705,7 @@ function SignalDivider() {
         </div>
         <p className={styles.signalDividerMotto}>
           <span>PORTFOLIO / FRONTEND ENGINEERING</span>
-          <strong>
-            React, Next.js & TypeScript — shipped for 15K+ users.
-          </strong>
+          <strong>React, Next.js & TypeScript — shipped for 15K+ users.</strong>
         </p>
         <div
           className={`${styles.signalDividerLane} ${styles.signalDividerLaneBottom}`}
@@ -1436,7 +1444,11 @@ function Contact() {
   const launchPads = Array.from({ length: 16 }, (_, index) => ({
     label:
       SOCIAL_LINKS_LANDING[index]?.label ??
-      (index === 4 ? 'EMAIL' : index === 5 ? 'RESUME' : `PAD ${String(index + 1).padStart(2, '0')}`),
+      (index === 4
+        ? 'EMAIL'
+        : index === 5
+          ? 'RESUME'
+          : `PAD ${String(index + 1).padStart(2, '0')}`),
     link:
       SOCIAL_LINKS_LANDING[index]?.link ??
       (index === 4 ? `mailto:${EMAIL}` : index === 5 ? RESUME_URL : undefined),

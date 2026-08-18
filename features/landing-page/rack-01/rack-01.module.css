@@ -812,6 +812,40 @@
   max-width: 1480px;
   margin: 0 auto 70px;
 }
+
+.sectionHeading > .silkscreen {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: max-content;
+  padding-top: 6px;
+  border-top: 1.5px solid rgba(244, 240, 232, 0.4);
+  color: #ffffff;
+  font: 750 10.5px var(--font-geist-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  will-change: transform, opacity;
+}
+
+.sectionHeading > .silkscreen::before {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #ff5a1f;
+  box-shadow: 0 0 8px #ff5a1f;
+  content: '';
+}
+
+.sectionHeading > .silkscreen .sectionSysCode {
+  color: #ff6a35;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding-left: 4px;
+}
+
 .sectionHeading h2 {
   max-width: 1000px;
   margin: 0;
@@ -820,6 +854,21 @@
   font-weight: 650;
   line-height: 0.9;
   letter-spacing: -0.065em;
+  text-wrap: balance;
+  will-change: transform, opacity, clip-path;
+}
+
+.about .sectionHeading > .silkscreen {
+  border-top-color: rgba(18, 20, 19, 0.4);
+  color: #0b0d0c;
+}
+
+.about .sectionHeading > .silkscreen .sectionSysCode {
+  color: #c94412;
+}
+
+.about .sectionHeading h2 {
+  color: #101211;
 }
 .about {
   background: var(--chassis-hi);
@@ -2431,13 +2480,84 @@
   font-variant-numeric: tabular-nums;
 }
 .faderBank input {
-  width: 18px;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
   height: 125px;
-  margin: 0;
-  accent-color: var(--field-navy);
+  margin: 0 auto;
+  background: transparent;
   cursor: ns-resize;
   direction: rtl;
   writing-mode: vertical-lr;
+  outline: none;
+}
+
+/* Webkit Track */
+.faderBank input::-webkit-slider-runnable-track {
+  width: 6px;
+  height: 100%;
+  border-radius: 3px;
+  background: #080a08;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.85),
+    0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Webkit Thumb (Realistic Metallic Studio Fader Cap) */
+.faderBank input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 16px;
+  margin-left: -9px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.75);
+  background:
+    linear-gradient(90deg, transparent 46%, #ff5a1f 46%, #ff5a1f 54%, transparent 54%),
+    linear-gradient(180deg, #d2d3dc 0%, #8f9098 40%, #525359 75%, #35363b 100%);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  cursor: ns-resize;
+  transition:
+    transform 100ms ease,
+    filter 100ms ease;
+}
+
+.faderBank input:hover::-webkit-slider-thumb,
+.faderBank input:active::-webkit-slider-thumb {
+  filter: brightness(1.12);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.8),
+    0 0 6px rgba(255, 90, 31, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Firefox Track */
+.faderBank input::-moz-range-track {
+  width: 6px;
+  height: 100%;
+  border-radius: 3px;
+  background: #080a08;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85);
+}
+
+/* Firefox Thumb */
+.faderBank input::-moz-range-thumb {
+  width: 24px;
+  height: 16px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  background:
+    linear-gradient(90deg, transparent 46%, #ff5a1f 46%, #ff5a1f 54%, transparent 54%),
+    linear-gradient(180deg, #d2d3dc 0%, #8f9098 40%, #525359 75%, #35363b 100%);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  cursor: ns-resize;
 }
 .faderBank label span {
   overflow-wrap: anywhere;
@@ -2461,21 +2581,122 @@
     inset 0 -2px rgba(0, 0, 0, 0.08);
 }
 .pitchControls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  align-content: end;
-  font: 7px var(--font-geist-mono);
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2px;
 }
-.pitchControls i {
-  display: block;
-  height: 52px;
-  border: 1px solid #242624;
-  border-radius: 8px 8px 3px 3px;
-  background: linear-gradient(90deg, #2e302e, #181a18 50%, #333532);
+
+.wheelGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+}
+
+.wheelLabel {
+  font: 700 7px var(--font-geist-mono);
+  color: #4a4b49;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.wheelWell {
+  position: relative;
+  width: 38px;
+  height: 84px;
+  border-radius: 4px;
+  background: #090a09;
+  border: 1px solid #2e302c;
   box-shadow:
-    0 2px 2px rgba(0, 0, 0, 0.25),
-    inset 0 1px rgba(255, 255, 255, 0.12);
+    inset 0 4px 10px rgba(0, 0, 0, 0.9),
+    inset 0 0 0 1px #050605,
+    0 1px 0 rgba(255, 255, 255, 0.4);
+  overflow: hidden;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+  display: flex;
+  justify-content: center;
+}
+
+.wheelCylinder {
+  position: absolute;
+  top: 12px;
+  width: 30px;
+  height: 60px;
+  border-radius: 4px 4px 3px 3px;
+  border: 1px solid rgba(0, 0, 0, 0.8);
+  background:
+    repeating-linear-gradient(
+      180deg,
+      #171917 0px,
+      #171917 2px,
+      #323531 2px,
+      #323531 4px,
+      #111311 4px,
+      #111311 6px
+    );
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+  transition: transform 80ms ease-out;
+  will-change: transform;
+}
+
+.wheelWell:active .wheelCylinder {
+  filter: brightness(1.15);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(255, 90, 31, 0.35);
+}
+
+.wheelCenterRidge {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  right: 2px;
+  height: 3px;
+  transform: translateY(-50%);
+  border-radius: 1px;
+  background: var(--signal-orange);
+  box-shadow: 0 0 5px var(--signal-orange);
+}
+
+.wheelModRidge {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  right: 2px;
+  height: 3px;
+  transform: translateY(-50%);
+  border-radius: 1px;
+  background: #4a9ec9;
+  box-shadow: 0 0 5px #4a9ec9;
+}
+
+.wheelTensionIndicator {
+  position: absolute;
+  right: 1px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  font: 700 6px var(--font-geist-mono);
+  color: rgba(255, 255, 255, 0.25);
+  padding: 4px 0;
+  pointer-events: none;
+}
+
+.wheelTickCenter {
+  color: var(--signal-orange);
+  opacity: 0.7;
 }
 .controllerKeys {
   position: relative;
@@ -3106,8 +3327,81 @@
   font: 8px var(--font-geist-mono);
 }
 .launchpadTransport input {
-  width: 105px;
-  accent-color: var(--signal-orange);
+  -webkit-appearance: none;
+  appearance: none;
+  width: 110px;
+  height: 24px;
+  background: transparent;
+  cursor: ew-resize;
+  outline: none;
+}
+
+/* Webkit Track */
+.launchpadTransport input::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #080a08;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.85),
+    0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Webkit Thumb (Horizontal Fader Cap) */
+.launchpadTransport input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -7px;
+  width: 16px;
+  height: 20px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  background:
+    linear-gradient(180deg, transparent 46%, #ff5a1f 46%, #ff5a1f 54%, transparent 54%),
+    linear-gradient(90deg, #d2d3dc 0%, #8f9098 40%, #525359 75%, #35363b 100%);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  cursor: ew-resize;
+  transition:
+    transform 100ms ease,
+    filter 100ms ease;
+}
+
+.launchpadTransport input:hover::-webkit-slider-thumb,
+.launchpadTransport input:active::-webkit-slider-thumb {
+  filter: brightness(1.12);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.8),
+    0 0 6px rgba(255, 90, 31, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Firefox Track */
+.launchpadTransport input::-moz-range-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #080a08;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85);
+}
+
+/* Firefox Thumb */
+.launchpadTransport input::-moz-range-thumb {
+  width: 16px;
+  height: 20px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  background:
+    linear-gradient(180deg, transparent 46%, #ff5a1f 46%, #ff5a1f 54%, transparent 54%),
+    linear-gradient(90deg, #d2d3dc 0%, #8f9098 40%, #525359 75%, #35363b 100%);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  cursor: ew-resize;
 }
 .launchpadTransport .segmentCounter {
   min-width: 50px;
@@ -4134,51 +4428,23 @@
   flex-direction: column;
   justify-content: center;
   overflow: hidden;
-  padding: clamp(2px, 0.4vw, 6px) clamp(6px, 1vw, 12px);
-  border-block: 1px solid rgba(255, 255, 255, 0.12);
-  background: #0c0e0c;
+  padding: 2px;
+  border-block: 1px solid rgba(255, 255, 255, 0.08);
+  background: #080a08;
   box-shadow:
-    0 18px 44px rgba(0, 0, 0, 0.65),
-    0 4px 12px rgba(0, 0, 0, 0.4),
-    inset 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 -1px rgba(0, 0, 0, 0.85);
+    0 16px 36px rgba(0, 0, 0, 0.65),
+    inset 0 1px rgba(255, 255, 255, 0.08);
 }
-.splitFlapBoard::before,
-.splitFlapBoard::after {
-  position: absolute;
-  top: 50%;
-  width: clamp(14px, 1.8vw, 28px);
-  height: 60%;
-  border: 1px solid rgba(255, 255, 255, 0.075);
-  border-radius: 4px;
-  background: repeating-linear-gradient(180deg, #080a08 0 2px, #20231e 2px 5px);
-  box-shadow:
-    inset 0 0 14px #060706,
-    0 1px rgba(255, 255, 255, 0.06);
-  content: '';
-  opacity: 0.65;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-.splitFlapBoard::before {
-  left: clamp(4px, 0.8vw, 12px);
-}
-.splitFlapBoard::after {
-  right: clamp(4px, 0.8vw, 12px);
-}
+
 .splitFlapPanel {
   position: relative;
   width: 100%;
   margin: 0;
-  padding: clamp(2px, 0.3vw, 4px);
-  border: 1px solid rgba(73, 102, 120, 0.5);
+  padding: 2px 4px;
+  border: 1px solid rgba(73, 102, 120, 0.35);
   border-radius: 0;
-  background: linear-gradient(145deg, #222521, #0f110f 62%, #070907);
-  box-shadow:
-    0 16px 32px rgba(0, 0, 0, 0.5),
-    0 0 24px rgba(49, 93, 114, 0.15),
-    inset 0 1px rgba(255, 255, 255, 0.12),
-    inset 0 0 0 3px #151714;
+  background: #0d0f0d;
+  box-shadow: inset 0 0 0 1px #151714;
   will-change: transform, opacity;
 }
 .splitFlapHeader,
@@ -4190,9 +4456,10 @@
   font: 700 clamp(6px, 0.52vw, 8px) var(--font-geist-mono);
   letter-spacing: 0.13em;
   text-transform: uppercase;
+  padding: 1px 3px;
 }
 .splitFlapHeader {
-  padding: 0 3px clamp(2px, 0.3vw, 4px);
+  padding: 1px 3px;
 }
 .splitFlapHeader span:first-child {
   display: flex;
@@ -4209,20 +4476,20 @@
 .splitFlapGrid {
   display: grid;
   grid-template-columns: repeat(60, minmax(0, 1fr));
-  gap: clamp(0.5px, 0.05vw, 1px);
-  padding-block: clamp(4px, 0.6vw, 10px);
+  gap: 1px;
+  padding-block: 2px;
   contain: layout style paint;
 }
 .splitFlapCell {
   position: relative;
-  aspect-ratio: 0.95;
+  aspect-ratio: 0.85;
   overflow: hidden;
   border: 1px solid #060706;
   border-radius: 1px;
   background: #0d0f0d;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 1px 3px rgba(0, 0, 0, 0.7);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 1px 2px rgba(0, 0, 0, 0.6);
   contain: strict;
 }
 .splitFlapCell[data-flipping='true'] {
@@ -5494,14 +5761,15 @@
     background: rgba(16, 18, 17, 0.95);
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
     overflow: visible;
+    justify-content: center;
   }
 
   .transportCompact {
     bottom: 12px;
     left: 50%;
     transform: translateX(-50%);
-    width: calc(100% - 20px);
-    max-width: 480px;
+    width: max-content;
+    max-width: min(calc(100vw - 20px), 480px);
     min-height: 44px;
     padding: 4px 8px;
     gap: 6px;
@@ -5513,15 +5781,20 @@
       0 2px 8px rgba(0, 0, 0, 0.35),
       inset 0 1px 0 rgba(255, 255, 255, 0.14);
     overflow: visible;
+    justify-content: center;
   }
 
-  /* ── Mobile Section Trigger Button ── */
+  /* ── Mobile Section Trigger Button (Consistent Fixed Width) ── */
   .mobileSectionTrigger {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
+    width: 96px;
+    min-width: 96px;
+    max-width: 96px;
     height: 34px;
-    padding: 0 10px;
+    padding: 0 8px;
     border: 1px solid rgba(255, 90, 31, 0.4);
     border-radius: 999px;
     background: rgba(255, 90, 31, 0.14);
@@ -5544,10 +5817,15 @@
 
   .mobileActiveIndex {
     color: var(--signal-orange);
+    font-variant-numeric: tabular-nums;
   }
 
   .mobileActiveLabel {
     color: #fff;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .mobileMenuChevron {
@@ -5560,16 +5838,18 @@
     transform: rotate(180deg);
   }
 
-  /* ── Direct Mobile Routes ── */
+  /* ── Direct Mobile Routes (Zero Extra Spaces) ── */
   .routeNavGroup {
     display: flex !important;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    flex: 1;
+    flex: 0 0 auto;
     min-width: 0;
+    margin: 0;
+    padding: 0;
     justify-content: flex-start;
   }
 
@@ -5580,9 +5860,9 @@
   .transportRouteItem {
     flex-shrink: 0;
     height: 32px;
-    padding: 0 7px;
+    padding: 0 8px;
     font-size: 8px;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
   }
 
   .routeDot {
@@ -5691,15 +5971,14 @@
     box-shadow: 0 0 6px var(--signal-orange);
   }
 
-  /* Split-flap divider: mobile swaps the flap columns for a clear,
-     simple text departure board. */
+  /* Split-flap divider: mobile authentic multi-row Solari matrix (20 columns x 5 rows) */
   .splitFlapDivider,
   .splitFlapBoard,
   .splitFlapInner {
-    min-height: 240px;
+    min-height: auto;
   }
   .splitFlapBoard {
-    padding: clamp(20px, 5vw, 28px) clamp(16px, 4.5vw, 24px);
+    padding: 2px;
   }
   .splitFlapPanel {
     display: none;
@@ -5709,40 +5988,50 @@
     align-items: stretch;
     flex-direction: column;
     justify-content: center;
-    gap: 12px;
+    gap: 2px;
     width: 100%;
-    min-height: 200px;
+    padding: 2px;
+    background: #0d0f0d;
+    border: 1px solid rgba(73, 102, 120, 0.35);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   }
-  .splitFlapMobile p {
+  .splitFlapMobileHeader,
+  .splitFlapMobileStatus {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin: 0;
+    justify-content: space-between;
     color: #9fa39a;
-    font: 700 10px var(--font-geist-mono);
-    letter-spacing: 0.14em;
+    font: 700 7.5px var(--font-geist-mono);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
+    padding: 1px 2px;
   }
-  .splitFlapMobile p i {
-    width: 6px;
-    height: 6px;
+  .splitFlapMobileHeader span:first-child {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .splitFlapMobileHeader i {
+    width: 4px;
+    height: 4px;
     border-radius: 50%;
     background: var(--signal-orange);
-    box-shadow: 0 0 10px rgba(255, 90, 31, 0.85);
+    box-shadow: 0 0 6px rgba(255, 90, 31, 0.85);
   }
   .splitFlapMobileGrid {
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 4px;
+    grid-template-columns: repeat(20, minmax(0, 1fr));
+    gap: 1px;
     width: 100%;
-    padding-block: 12px;
+    padding-block: 2px;
     contain: layout style paint;
   }
   .splitFlapMobileGrid .splitFlapCell {
-    aspect-ratio: 0.38;
+    aspect-ratio: 0.85;
   }
   .splitFlapMobileGrid .splitFlapHalf > span {
-    font-size: clamp(24px, 10vw, 52px);
+    font-size: clamp(8px, 2.5vw, 12px);
+    font-weight: 800;
   }
 
   /* Signal divider rails: same GSAP scroll scrub as desktop — no CSS

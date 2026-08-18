@@ -26,12 +26,13 @@ import {
   SOCIAL_LINKS_LANDING,
 } from '../constants'
 import styles from './rack-01.module.css'
+import { cn } from '@/lib/utils'
 
 const RESUME_URL =
   'https://drive.google.com/file/d/17x3GuEkZxbt9ZeLilXx1ShBHV_CZTfSq/view?usp=sharing'
 
 const HERO_MARQUEE_ITEMS = [
-  'RACK—01 CHASSIS ONLINE',
+  'AH / STUDIO ONLINE',
   '12 INTERACTIVE AUDIO-VISUAL INSTRUMENTS',
   'SIGNAL LOCKED // 48.0 KHZ 24-BIT',
   'FRONTEND ENGINEERING & MOTION DESIGN',
@@ -114,9 +115,9 @@ function SectionHeading({
 }) {
   return (
     <div className={styles.sectionHeading}>
-      <div className={styles.sectionEyebrow}>
-        <SilkscreenLabel>{eyebrow}</SilkscreenLabel>
-        <span>SYS—{index}</span>
+      <div className={styles.silkscreen}>
+        <span>{eyebrow}</span>
+        <span className={styles.sectionSysCode}>SYS—{index}</span>
       </div>
       <h2>{children}</h2>
     </div>
@@ -396,8 +397,12 @@ function Hero() {
         </div>
 
         <header className={styles.topline}>
-          <a href="#home" className={styles.wordmark} aria-label="RACK-01 home">
-            RACK—01 <span>/ AH</span>
+          <a
+            href="#home"
+            className={styles.wordmark}
+            aria-label="AH STUDIO home"
+          >
+            AH <span>/ STUDIO</span>
           </a>
           <nav className={styles.heroRouteNav} aria-label="Primary pages">
             {ROUTE_ITEMS.map((item, index) => (
@@ -666,7 +671,7 @@ function About({
             <Screw className={styles.screwTopRight} />
             <div className={styles.timelineDeviceBrand}>
               <div>
-                <strong>RACK—01</strong>
+                <strong>AH / STUDIO</strong>
                 <SilkscreenLabel>ARRANGEMENT WORKSTATION</SilkscreenLabel>
               </div>
               <div className={styles.timelineMeters} aria-hidden="true">
@@ -711,9 +716,7 @@ function About({
               </div>
               <div
                 className={styles.playhead}
-                style={
-                  { '--playhead': `${playhead}` } as React.CSSProperties
-                }
+                style={{ '--playhead': `${playhead}` } as React.CSSProperties}
                 aria-hidden="true"
               />
               {ABOUT_TRACKS.map((item, index) => (
@@ -766,7 +769,9 @@ function About({
                         selected === index ? styles.clipActive : ''
                       }`}
                       style={
-                        { '--clip-offset': `${index * 12.5}%` } as React.CSSProperties
+                        {
+                          '--clip-offset': `${index * 12.5}%`,
+                        } as React.CSSProperties
                       }
                       onClick={() => setSelected(index)}
                       aria-pressed={selected === index}
@@ -846,12 +851,49 @@ function Skills() {
     Object.fromEntries(SKILLS.map((skill) => [skill.name, skill.level])),
   )
   const [activeKey, setActiveKey] = useState<number | null>(null)
+  const [pitch, setPitch] = useState(0)
+  const [mod, setMod] = useState(25)
+  const pitchDragRef = useRef(false)
+  const modDragRef = useRef(false)
+  const pitchOriginY = useRef(0)
+  const modOriginY = useRef(0)
   const colors = ['#2e3f5c', '#c9a574', '#8b8d8a', '#ff5a1f']
 
   const updateLevel = (name: string, value: number) => {
     setLevels((current) => ({ ...current, [name]: value }))
     const skill = SKILLS.find((item) => item.name === name)
     if (skill) setActiveSkill({ ...skill, level: value })
+  }
+
+  const handlePitchDown = (e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    pitchDragRef.current = true
+    pitchOriginY.current = e.clientY
+  }
+  const handlePitchMove = (e: React.PointerEvent) => {
+    if (!pitchDragRef.current) return
+    const delta = pitchOriginY.current - e.clientY
+    const clamped = Math.max(-50, Math.min(50, Math.round(delta * 1.4)))
+    setPitch(clamped)
+  }
+  const handlePitchUp = () => {
+    pitchDragRef.current = false
+    setPitch(0)
+  }
+
+  const handleModDown = (e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    modDragRef.current = true
+    modOriginY.current = e.clientY
+  }
+  const handleModMove = (e: React.PointerEvent) => {
+    if (!modDragRef.current) return
+    const delta = (modOriginY.current - e.clientY) * 1.1
+    setMod((prev) => Math.max(0, Math.min(100, Math.round(prev + delta))))
+    modOriginY.current = e.clientY
+  }
+  const handleModUp = () => {
+    modDragRef.current = false
   }
 
   return (
@@ -870,7 +912,7 @@ function Skills() {
           </SectionHeading>
           <p>
             Pads, encoders, faders, and keys restore the previous controller
-            workflow inside the RACK—01 chassis.
+            workflow inside the AH / STUDIO chassis.
           </p>
         </div>
         <div className={styles.controller}>
@@ -880,7 +922,7 @@ function Skills() {
           <Screw className={styles.screwBottomRight} />
           <div className={styles.controllerTopbar}>
             <div>
-              <strong>RACK—01 / MIDI</strong>
+              <strong>AH / MIDI</strong>
               <SilkscreenLabel>SKILL CONTROL SURFACE</SilkscreenLabel>
             </div>
             <div className={styles.controllerDisplay} aria-live="polite">
@@ -964,10 +1006,56 @@ function Skills() {
             aria-label="Playable skill keyboard"
           >
             <div className={styles.pitchControls}>
-              <span>PITCH</span>
-              <i />
-              <span>MOD</span>
-              <i />
+              <div className={styles.wheelGroup}>
+                <span className={styles.wheelLabel}>PITCH</span>
+                <div
+                  className={styles.wheelWell}
+                  onPointerDown={handlePitchDown}
+                  onPointerMove={handlePitchMove}
+                  onPointerUp={handlePitchUp}
+                  onPointerCancel={handlePitchUp}
+                  aria-label="Pitch Bend Wheel"
+                  role="slider"
+                  aria-valuenow={pitch}
+                >
+                  <div
+                    className={styles.wheelCylinder}
+                    style={{ transform: `translateY(${-pitch * 0.4}px)` }}
+                  >
+                    <span className={styles.wheelCenterRidge} />
+                  </div>
+                  <div className={styles.wheelTensionIndicator}>
+                    <span>+</span>
+                    <span className={styles.wheelTickCenter}>0</span>
+                    <span>-</span>
+                  </div>
+                </div>
+              </div>
+              <div className={styles.wheelGroup}>
+                <span className={styles.wheelLabel}>MOD</span>
+                <div
+                  className={styles.wheelWell}
+                  onPointerDown={handleModDown}
+                  onPointerMove={handleModMove}
+                  onPointerUp={handleModUp}
+                  onPointerCancel={handleModUp}
+                  aria-label="Modulation Wheel"
+                  role="slider"
+                  aria-valuenow={mod}
+                >
+                  <div
+                    className={styles.wheelCylinder}
+                    style={{ transform: `translateY(${-(mod - 25) * 0.35}px)` }}
+                  >
+                    <span className={styles.wheelModRidge} />
+                  </div>
+                  <div className={styles.wheelTensionIndicator}>
+                    <span>MAX</span>
+                    <span className={styles.wheelTickCenter}>—</span>
+                    <span>0</span>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className={styles.controllerKeys}>
               <div className={styles.whiteKeys}>
@@ -1109,7 +1197,7 @@ function Experience({
             <span />
           </div>
           <div className={styles.cassetteHeader}>
-            <span>RACK—01 / FIELD RADIO</span>
+            <span>AH / FIELD RADIO</span>
             <span>FM / AUX / TAPE ARCHIVE</span>
           </div>
           <div className={styles.radioFace}>
@@ -1187,7 +1275,7 @@ function Experience({
                       }
                     >
                       <span className={styles.cassetteBrand}>
-                        <b>RACK—01</b> / TYPE II · HIGH BIAS 70μs
+                        <b>AH / STUDIO</b> / TYPE II · HIGH BIAS 70μs
                       </span>
                       <div className={styles.cassetteLabel}>
                         <small>
@@ -1309,27 +1397,66 @@ function Experience({
 
 const SPLIT_FLAP_ROWS = [
   {
-    from: '                04 YEARS EXPERIENCE ARCHIVED                ',
-    to: '                05 FEATURED RELEASES DEPARTING              ',
+    from: ''.padEnd(60, ' '),
+    to: ''.padEnd(60, ' '),
+    isFlipping: false,
+  },
+  {
+    from: '04 YEARS EXPERIENCE ARCHIVED ────────> STATUS: LOGGED'.padEnd(
+      60,
+      ' ',
+    ),
+    to: '05 FEATURED RELEASES DEPARTING ─────> STATUS: ACTIVE'.padEnd(60, ' '),
     isFlipping: true,
   },
   {
-    from: '                MASTER INTERFACE LOG CLOSED                 ',
-    to: '                SELECTED WORK SHOWCASE ON AIR               ',
+    from: 'MASTER INTERFACE CONSOLE CLOSED ─────> GATE: 04 CLOSED'.padEnd(
+      60,
+      ' ',
+    ),
+    to: 'SELECTED WORK RELEASES ON AIR ─────> GATE: 05 BOARDING'.padEnd(
+      60,
+      ' ',
+    ),
     isFlipping: true,
   },
   {
-    from: '                SYSTEMS & MOTION CRAFT LOGGED               ',
-    to: '                DIGITAL PRODUCTS READY TO SHIP              ',
+    from: 'SYSTEMS & MOTION CRAFT LOGGED ──────> DEPT: ARCHIVE'.padEnd(60, ' '),
+    to: 'DIGITAL PRODUCTS READY TO SHIP ────> DEPT: SHIPPED'.padEnd(60, ' '),
     isFlipping: true,
+  },
+  {
+    from: ''.padEnd(60, ' '),
+    to: ''.padEnd(60, ' '),
+    isFlipping: false,
   },
 ] as const
 
 const SPLIT_FLAP_MOBILE_ROWS = [
   {
-    from: 'ARCHIVE',
-    to: 'RELEASE',
+    from: ''.padEnd(20, ' '),
+    to: ''.padEnd(20, ' '),
+    isFlipping: false,
+  },
+  {
+    from: '04 YRS EXP ARCHIVED'.padEnd(20, ' '),
+    to: '05 RELEASES DEPART'.padEnd(20, ' '),
     isFlipping: true,
+  },
+  {
+    from: 'ARCHIVE LOG: CLOSED'.padEnd(20, ' '),
+    to: 'PROJECTS: BOARDING'.padEnd(20, ' '),
+    isFlipping: true,
+  },
+  {
+    from: 'SYS / MOTION CRAFT'.padEnd(20, ' '),
+    to: 'PRODUCTS READY SHIP'.padEnd(20, ' '),
+    isFlipping: true,
+  },
+  {
+    from: ''.padEnd(20, ' '),
+    to: ''.padEnd(20, ' '),
+    isFlipping: false,
   },
 ] as const
 
@@ -1385,9 +1512,9 @@ function SplitFlapDivider() {
           <div className={styles.splitFlapPanel}>
             <div className={styles.splitFlapHeader}>
               <span>
-                <i /> AH STUDIO / DEPARTURE BOARD
+                <i /> AH STUDIO // DEPARTURE BOARD
               </span>
-              <span>SCROLL TO RELEASE</span>
+              <span>SCROLL TO BOARD RELEASE</span>
             </div>
             <div className={styles.splitFlapGrid}>
               {SPLIT_FLAP_ROWS.flatMap((row, rowIndex) =>
@@ -1407,20 +1534,27 @@ function SplitFlapDivider() {
             </div>
           </div>
           <div className={styles.splitFlapMobile}>
-            <p>
-              <i /> AH STUDIO / DEPARTURE BOARD
-            </p>
+            <div className={styles.splitFlapMobileHeader}>
+              <span>
+                <i /> AH STUDIO // DEPARTURE BOARD
+              </span>
+              <span>SYS-05</span>
+            </div>
             <div className={styles.splitFlapMobileGrid} aria-hidden="true">
-              {SPLIT_FLAP_MOBILE_ROWS.flatMap((row) =>
+              {SPLIT_FLAP_MOBILE_ROWS.flatMap((row, rowIndex) =>
                 Array.from(row.from).map((character, columnIndex) => (
                   <SplitFlapCell
                     from={character}
                     to={row.to[columnIndex] ?? ' '}
                     isFlipping={row.isFlipping}
-                    key={`m-${columnIndex}`}
+                    key={`m-${rowIndex}-${columnIndex}`}
                   />
                 )),
               )}
+            </div>
+            <div className={styles.splitFlapMobileStatus}>
+              <span>OUTPUT / 05</span>
+              <strong>BOARDING</strong>
             </div>
           </div>
         </div>
@@ -1464,7 +1598,7 @@ function Work() {
                   <Screw className={styles.projectScrewRight} />
                   <div className={styles.projectMeta}>
                     <SilkscreenLabel>
-                      RACK—01 · REL—{releaseNumber} / {project.year}
+                      AH / STUDIO · REL—{releaseNumber} / {project.year}
                     </SilkscreenLabel>
                     <span>33⅓ RPM · STEREO</span>
                   </div>
@@ -1710,7 +1844,7 @@ function Contact() {
           <Screw className={styles.screwTopRight} />
           <div className={styles.launchpadTopbar}>
             <div>
-              <strong>RACK—01 / LAUNCH</strong>
+              <strong>AH / LAUNCH</strong>
               <SilkscreenLabel>16 PAD PERFORMANCE ROUTER</SilkscreenLabel>
             </div>
             <div className={styles.launchpadTransport}>

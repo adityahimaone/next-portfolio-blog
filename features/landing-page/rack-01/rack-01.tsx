@@ -1460,23 +1460,42 @@ const SPLIT_FLAP_MOBILE_ROWS = [
   },
 ] as const
 
+interface SplitFlapCellProps {
+  from: string
+  to: string
+  isFlipping?: boolean
+  flipIndex?: number
+}
+
 const SplitFlapCell = memo(function SplitFlapCell({
   from,
   to,
   isFlipping = true,
-}: {
-  from: string
-  to: string
-  isFlipping?: boolean
-}) {
-  const shouldFlip = isFlipping && !(from === ' ' && to === ' ') && from !== to
+  flipIndex = 0,
+}: SplitFlapCellProps) {
+  const isBlank = from === ' ' && to === ' '
+  if (isBlank) {
+    return <span className={styles.splitFlapCell} aria-hidden="true" />
+  }
+
+  const shouldFlip = isFlipping && from !== to
   const source = from === ' ' ? '\u00a0' : from
   const target = shouldFlip ? (to === ' ' ? '\u00a0' : to) : source
+
+  if (!shouldFlip) {
+    return (
+      <span className={styles.splitFlapCell} aria-hidden="true">
+        <span className={styles.splitFlapStaticChar}>{source}</span>
+      </span>
+    )
+  }
 
   return (
     <span
       className={styles.splitFlapCell}
-      data-flipping={shouldFlip ? 'true' : 'false'}
+      data-flipping="true"
+      style={{ '--flap-i': flipIndex } as React.CSSProperties}
+      aria-hidden="true"
     >
       <span className={`${styles.splitFlapHalf} ${styles.splitFlapStaticTop}`}>
         <span>{target}</span>
@@ -1486,22 +1505,21 @@ const SplitFlapCell = memo(function SplitFlapCell({
       >
         <span>{source}</span>
       </span>
-      {shouldFlip && (
-        <>
-          <span className={`${styles.splitFlapHalf} ${styles.splitFlapTop}`}>
-            <span>{source}</span>
-          </span>
-          <span className={`${styles.splitFlapHalf} ${styles.splitFlapBottom}`}>
-            <span>{target}</span>
-          </span>
-        </>
-      )}
+      <span className={`${styles.splitFlapHalf} ${styles.splitFlapTop}`}>
+        <span>{source}</span>
+      </span>
+      <span className={`${styles.splitFlapHalf} ${styles.splitFlapBottom}`}>
+        <span>{target}</span>
+      </span>
       <i />
     </span>
   )
 })
 
 function SplitFlapDivider() {
+  let desktopFlipCount = 0
+  let mobileFlipCount = 0
+
   return (
     <section
       className={styles.splitFlapDivider}
@@ -1518,14 +1536,23 @@ function SplitFlapDivider() {
             </div>
             <div className={styles.splitFlapGrid}>
               {SPLIT_FLAP_ROWS.flatMap((row, rowIndex) =>
-                Array.from(row.from).map((character, columnIndex) => (
-                  <SplitFlapCell
-                    from={character}
-                    to={row.to[columnIndex] ?? ' '}
-                    isFlipping={row.isFlipping}
-                    key={`${rowIndex}-${columnIndex}`}
-                  />
-                )),
+                Array.from(row.from).map((character, columnIndex) => {
+                  const targetChar = row.to[columnIndex] ?? ' '
+                  const willFlip =
+                    row.isFlipping &&
+                    !(character === ' ' && targetChar === ' ') &&
+                    character !== targetChar
+                  const currentFlipIdx = willFlip ? desktopFlipCount++ : 0
+                  return (
+                    <SplitFlapCell
+                      from={character}
+                      to={targetChar}
+                      isFlipping={row.isFlipping}
+                      flipIndex={currentFlipIdx}
+                      key={`${rowIndex}-${columnIndex}`}
+                    />
+                  )
+                }),
               )}
             </div>
             <div className={styles.splitFlapStatus}>
@@ -1542,14 +1569,23 @@ function SplitFlapDivider() {
             </div>
             <div className={styles.splitFlapMobileGrid} aria-hidden="true">
               {SPLIT_FLAP_MOBILE_ROWS.flatMap((row, rowIndex) =>
-                Array.from(row.from).map((character, columnIndex) => (
-                  <SplitFlapCell
-                    from={character}
-                    to={row.to[columnIndex] ?? ' '}
-                    isFlipping={row.isFlipping}
-                    key={`m-${rowIndex}-${columnIndex}`}
-                  />
-                )),
+                Array.from(row.from).map((character, columnIndex) => {
+                  const targetChar = row.to[columnIndex] ?? ' '
+                  const willFlip =
+                    row.isFlipping &&
+                    !(character === ' ' && targetChar === ' ') &&
+                    character !== targetChar
+                  const currentFlipIdx = willFlip ? mobileFlipCount++ : 0
+                  return (
+                    <SplitFlapCell
+                      from={character}
+                      to={targetChar}
+                      isFlipping={row.isFlipping}
+                      flipIndex={currentFlipIdx}
+                      key={`m-${rowIndex}-${columnIndex}`}
+                    />
+                  )
+                }),
               )}
             </div>
             <div className={styles.splitFlapMobileStatus}>
@@ -2393,75 +2429,19 @@ export default function Rack01LandingPage() {
             )
         }
 
-        const splitFlapPanel = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.splitFlapPanel}`,
-        )
-        const splitFlapTops = rootRef.current?.querySelectorAll<HTMLElement>(
-          `.${styles.splitFlapCell}[data-flipping="true"] .${styles.splitFlapTop}`,
-        )
-        const splitFlapBottoms = rootRef.current?.querySelectorAll<HTMLElement>(
-          `.${styles.splitFlapCell}[data-flipping="true"] .${styles.splitFlapBottom}`,
-        )
-        const splitFlapStatus = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.splitFlapStatus}`,
+        const splitFlapDivider = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.splitFlapDivider}`,
         )
 
-        if (
-          splitFlapPanel &&
-          splitFlapTops?.length &&
-          splitFlapBottoms?.length &&
-          splitFlapStatus
-        ) {
-          gsap
-            .timeline({
-              scrollTrigger: {
-                trigger: `.${styles.splitFlapDivider}`,
-                start: 'top bottom',
-                end: 'bottom 38%',
-                scrub: 1.15,
-              },
-            })
-            .fromTo(
-              splitFlapPanel,
-              { y: 14, scale: 0.985, autoAlpha: 0.72 },
-              {
-                y: 0,
-                scale: 1,
-                autoAlpha: 1,
-                duration: 0.2,
-                force3D: true,
-                ease: 'power2.out',
-              },
-              0,
-            )
-            .to(
-              splitFlapTops,
-              {
-                rotateX: -92,
-                duration: 0.17,
-                stagger: { amount: 0.56, from: 'start' },
-                force3D: true,
-                ease: 'power1.in',
-              },
-              0.12,
-            )
-            .to(
-              splitFlapBottoms,
-              {
-                rotateX: 0,
-                duration: 0.2,
-                stagger: { amount: 0.56, from: 'start' },
-                force3D: true,
-                ease: 'power1.out',
-              },
-              0.2,
-            )
-            .fromTo(
-              splitFlapStatus,
-              { autoAlpha: 0.36 },
-              { autoAlpha: 1, duration: 0.22, ease: 'power1.out' },
-              0.78,
-            )
+        if (splitFlapDivider) {
+          ScrollTrigger.create({
+            trigger: splitFlapDivider,
+            start: 'top 75%',
+            end: 'bottom 20%',
+            onEnter: () => splitFlapDivider.setAttribute('data-flipped', 'true'),
+            onLeaveBack: () =>
+              splitFlapDivider.removeAttribute('data-flipped'),
+          })
         }
 
         return () => media.revert()

@@ -4445,7 +4445,6 @@
   border-radius: 0;
   background: #0d0f0d;
   box-shadow: inset 0 0 0 1px #151714;
-  will-change: transform, opacity;
 }
 .splitFlapHeader,
 .splitFlapStatus {
@@ -4477,7 +4476,7 @@
   display: grid;
   grid-template-columns: repeat(60, minmax(0, 1fr));
   gap: 1px;
-  padding-block: 2px;
+  padding-block: 3px;
   contain: layout style paint;
 }
 .splitFlapCell {
@@ -4492,8 +4491,19 @@
     0 1px 2px rgba(0, 0, 0, 0.6);
   contain: strict;
 }
+.splitFlapStaticChar {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  font: 850 clamp(9px, 1.4vw, 22px) / 1 var(--font-geist-mono);
+  letter-spacing: -0.02em;
+  color: #f4f1e8;
+  text-shadow: 0 1px 2px #000;
+  background: linear-gradient(180deg, #252824 0%, #2a2d28 49%, #060706 50%, #1a1c19 51%, #181a17 100%);
+}
 .splitFlapCell[data-flipping='true'] {
-  perspective: 500px;
+  perspective: 400px;
   transform-style: preserve-3d;
 }
 .splitFlapHalf {
@@ -4544,14 +4554,32 @@
   z-index: 3;
   transform: rotateX(0deg);
   transform-origin: 50% 100%;
-  will-change: transform;
+  transition: transform 0.16s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition-delay: calc(var(--flap-i, 0) * 8ms + 60ms);
 }
 .splitFlapBottom {
   z-index: 2;
   background: linear-gradient(90deg, #1b1e1a, #262a24 48%, #1a1d19);
   transform: rotateX(92deg);
   transform-origin: 50% 0;
-  will-change: transform;
+  transition: transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition-delay: calc(var(--flap-i, 0) * 8ms);
+}
+
+.splitFlapDivider[data-flipped='true'] .splitFlapTop {
+  transform: rotateX(-92deg);
+  transition-delay: calc(var(--flap-i, 0) * 8ms);
+}
+.splitFlapDivider[data-flipped='true'] .splitFlapBottom {
+  transform: rotateX(0deg);
+  transition-delay: calc(var(--flap-i, 0) * 8ms + 70ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splitFlapTop,
+  .splitFlapBottom {
+    transition: none !important;
+  }
 }
 .splitFlapCell > i {
   position: absolute;
@@ -4567,7 +4595,6 @@
 }
 .splitFlapStatus {
   padding: clamp(7px, 0.75vw, 10px) 3px 0;
-  will-change: opacity;
 }
 .splitFlapStatus strong {
   color: var(--lcd-green);
@@ -6029,6 +6056,7 @@
   .splitFlapMobileGrid .splitFlapCell {
     aspect-ratio: 0.85;
   }
+  .splitFlapMobileGrid .splitFlapStaticChar,
   .splitFlapMobileGrid .splitFlapHalf > span {
     font-size: clamp(8px, 2.5vw, 12px);
     font-weight: 800;

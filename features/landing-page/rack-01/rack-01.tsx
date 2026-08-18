@@ -166,13 +166,22 @@ function Knob({
 function TransportBridge({
   progress,
   activeId,
-  compact,
+  compact = false,
 }: {
   progress: number
   activeId: string
-  compact: boolean
+  compact?: boolean
 }) {
-  const [isNavHovered, setIsNavHovered] = useState(false)
+  const [isSectionHovered, setIsSectionHovered] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const activeIndex = useMemo(() => {
+    const idx = NAV_ITEMS.findIndex((item) => item.id === activeId)
+    return idx >= 0 ? idx : 0
+  }, [activeId])
+
+  const activeItem = NAV_ITEMS[activeIndex]
 
   const counter = useMemo(() => {
     const totalSeconds = Math.round(progress * 3_599)
@@ -186,61 +195,166 @@ function TransportBridge({
     return `${minutes}:${seconds}:${frames}`
   }, [progress])
 
+  // Close mobile dropdown on click outside or escape key
+  useEffect(() => {
+    if (!isMobileMenuOpen) return
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isMobileMenuOpen])
+
   return (
     <aside
-      className={`${styles.transport} ${compact ? styles.transportCompact : ''}`}
+      ref={dropdownRef}
+      className={`${styles.transport} ${
+        compact ? styles.transportCompact : styles.transportDocked
+      }`}
       aria-label="Page transport and navigation"
     >
-      <div className={styles.transportStatus}>
-        <span className={styles.recordDot} aria-hidden="true" />
-        <span>REC</span>
-        <span className={styles.signalLock}>▶ SIGNAL LOCK</span>
-      </div>
-      <div
-        className={styles.transportProgress}
-        aria-label={`Scroll progress ${Math.round(progress * 100)}%`}
-      >
+      {/* Top Progress Runner */}
+      <div className={styles.transportProgressBar} aria-hidden="true">
         <span style={{ transform: `scaleX(${progress})` }} />
       </div>
-      <SegmentCounter value={counter} />
-      <nav
-        className={`${styles.transportNav} ${isNavHovered ? styles.transportNavExpanded : ''}`}
-        onMouseEnter={() => setIsNavHovered(true)}
-        onMouseLeave={() => setIsNavHovered(false)}
-        aria-label="Portfolio sections and pages"
+
+      {/* Upward Mobile Dropdown Menu for Landing Page Sections */}
+      {isMobileMenuOpen && (
+        <div className={styles.mobileDropdown} role="dialog" aria-modal="true">
+          <div className={styles.mobileDropdownHeader}>
+            <SilkscreenLabel>SECTIONS</SilkscreenLabel>
+            <button
+              type="button"
+              className={styles.mobileDropdownClose}
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-label="Close sections menu"
+            >
+              ✕
+            </button>
+          </div>
+          <div className={styles.mobileDropdownSections}>
+            {NAV_ITEMS.map((item, index) => {
+              const isActive = activeId === item.id
+              return (
+                <a
+                  key={item.id}
+                  href={`#${item.id}`}
+                  className={`${styles.mobileDropdownItem} ${
+                    isActive ? styles.mobileDropdownActive : ''
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  aria-current={isActive ? 'location' : undefined}
+                >
+                  <span className={styles.navItemIndex}>
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <span className={styles.navItemLabel}>{item.label}</span>
+                  {isActive && <span className={styles.activeDot} />}
+                </a>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Telemetry / Counter (Hidden on mobile) */}
+      <div className={styles.transportStatus}>
+        <span className={styles.recordDot} aria-hidden="true" />
+        <span className={styles.liveBadge}>LIVE</span>
+        <div className={styles.fixedSegmentCounter}>
+          <SegmentCounter value={counter} />
+        </div>
+      </div>
+
+      {/* Desktop Section Navigation (Expands ONLY when hovering this group) */}
+      <div
+        className={`${styles.sectionNavWrapper} ${
+          compact && !isSectionHovered
+            ? styles.sectionNavWrapperCompact
+            : styles.sectionNavWrapperExpanded
+        }`}
+        onMouseEnter={() => setIsSectionHovered(true)}
+        onMouseLeave={() => setIsSectionHovered(false)}
       >
         <div className={styles.sectionNavGroup}>
           {NAV_ITEMS.map((item, index) => {
             const isActive = activeId === item.id
+            const isHidden = compact && !isSectionHovered && !isActive
             return (
               <a
                 key={item.id}
                 href={`#${item.id}`}
-                className={`${isActive ? styles.navActive : ''} ${
-                  !isNavHovered && !isActive ? styles.navHidden : ''
+                className={`${styles.navItem} ${isActive ? styles.navActive : ''} ${
+                  isHidden ? styles.navItemHidden : ''
                 }`}
                 aria-current={isActive ? 'location' : undefined}
               >
-                <span>{String(index + 1).padStart(2, '0')}</span> {item.label}
-                {isActive && !isNavHovered && (
-                  <span className={styles.expandHint}>▸</span>
+                <span className={styles.navItemIndex}>
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span className={styles.navItemLabel}>{item.label}</span>
+                {isActive && compact && !isSectionHovered && (
+                  <span className={styles.expandChevron} aria-hidden="true">
+                    ▾
+                  </span>
                 )}
               </a>
             )
           })}
         </div>
-        <div className={styles.routeNavGroup}>
-          {ROUTE_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={styles.transportRouteItem}
-            >
-              <span className={styles.routeDot} /> {item.label}
-            </Link>
-          ))}
-        </div>
-      </nav>
+      </div>
+
+      {/* Mobile Active Section Dropdown Trigger */}
+      <button
+        type="button"
+        className={styles.mobileSectionTrigger}
+        onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+        aria-expanded={isMobileMenuOpen}
+        aria-label={`Current section: ${activeItem.label}. Tap to choose section.`}
+      >
+        <span className={styles.mobileActiveIndex}>
+          {String(activeIndex + 1).padStart(2, '0')}
+        </span>
+        <span className={styles.mobileActiveLabel}>{activeItem.label}</span>
+        <span
+          className={`${styles.mobileMenuChevron} ${
+            isMobileMenuOpen ? styles.chevronOpen : ''
+          }`}
+          aria-hidden="true"
+        >
+          ▲
+        </span>
+      </button>
+
+      {/* Hairline Divider between Section Nav and Direct Route Links */}
+      <div className={styles.transportDivider} aria-hidden="true" />
+
+      {/* Direct Route Links (Blog, Projects, Mixtape, Bookmarks) */}
+      <div className={styles.routeNavGroup}>
+        {ROUTE_ITEMS.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={styles.transportRouteItem}
+          >
+            <span className={styles.routeDot} /> {item.label}
+          </Link>
+        ))}
+      </div>
     </aside>
   )
 }

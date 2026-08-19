@@ -444,7 +444,7 @@ function Hero() {
           </div>
 
           <div className={styles.heroViewfinderIdentity}>
-            <h1 aria-label="ADITYA HIMAWAN">
+            <h1 aria-label="ADITYA HIMAONE">
               <span className={styles.heroLine}>
                 <BrokenLightText
                   text="ADITYA"
@@ -460,9 +460,9 @@ function Hero() {
                 />
                 <em>
                   <BrokenLightText
-                    text="WAN"
+                    text="ONE"
                     mode="settle"
-                    // glowColor="#e0b75a"
+                    glowColor="#e0b75a"
                   />
                 </em>
               </span>
@@ -2536,7 +2536,7 @@ function Contact() {
         </div>
       </div>
       <footer className={styles.footer}>
-        <span>© {new Date().getFullYear()} ADITYA HIMAWAN</span>
+        <span>© {new Date().getFullYear()} ADITYA HIMA[ONE/WAN]</span>
         <span>DESIGNED + ENGINEERED IN JAKARTA</span>
         <a href="#home">REWIND TO 00:00 ↑</a>
       </footer>

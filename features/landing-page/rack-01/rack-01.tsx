@@ -1940,6 +1940,15 @@ function Experience({
   )
 }
 
+function balanceIndent(
+  text: string,
+  leftIndent: number,
+  totalLength: number,
+): string {
+  const padded = text.padStart(text.length + leftIndent, ' ')
+  return padded.padEnd(totalLength, ' ')
+}
+
 const SPLIT_FLAP_ROWS = [
   {
     from: ''.padEnd(60, ' '),
@@ -1947,27 +1956,42 @@ const SPLIT_FLAP_ROWS = [
     isFlipping: false,
   },
   {
-    from: '04 YEARS EXPERIENCE ARCHIVED ────────> STATUS: LOGGED'.padEnd(
+    from: balanceIndent(
+      '04 YEARS EXPERIENCE ARCHIVED ────────> STATUS: LOGGED',
+      4,
       60,
-      ' ',
     ),
-    to: '05 FEATURED RELEASES DEPARTING ─────> STATUS: ACTIVE'.padEnd(60, ' '),
-    isFlipping: true,
-  },
-  {
-    from: 'MASTER INTERFACE CONSOLE CLOSED ─────> GATE: 04 CLOSED'.padEnd(
+    to: balanceIndent(
+      '05 FEATURED RELEASES DEPARTING ─────> STATUS: ACTIVE',
+      4,
       60,
-      ' ',
-    ),
-    to: 'SELECTED WORK RELEASES ON AIR ─────> GATE: 05 BOARDING'.padEnd(
-      60,
-      ' ',
     ),
     isFlipping: true,
   },
   {
-    from: 'SYSTEMS & MOTION CRAFT LOGGED ──────> DEPT: ARCHIVE'.padEnd(60, ' '),
-    to: 'DIGITAL PRODUCTS READY TO SHIP ────> DEPT: SHIPPED'.padEnd(60, ' '),
+    from: balanceIndent(
+      'MASTER INTERFACE CONSOLE CLOSED ─────> GATE: 04 CLOSED',
+      4,
+      60,
+    ),
+    to: balanceIndent(
+      'SELECTED WORK RELEASES ON AIR ─────> GATE: 05 BOARDING',
+      4,
+      60,
+    ),
+    isFlipping: true,
+  },
+  {
+    from: balanceIndent(
+      'SYSTEMS & MOTION CRAFT LOGGED ──────> DEPT: ARCHIVE',
+      4,
+      60,
+    ),
+    to: balanceIndent(
+      'DIGITAL PRODUCTS READY TO SHIP ────> DEPT: SHIPPED',
+      4,
+      60,
+    ),
     isFlipping: true,
   },
   {
@@ -1984,18 +2008,18 @@ const SPLIT_FLAP_MOBILE_ROWS = [
     isFlipping: false,
   },
   {
-    from: '04 YRS EXP ARCHIVED'.padEnd(20, ' '),
-    to: '05 RELEASES DEPART'.padEnd(20, ' '),
+    from: balanceIndent('04 YRS EXP ARCHIVED', 1, 20),
+    to: balanceIndent('05 RELEASES DEPART', 1, 20),
     isFlipping: true,
   },
   {
-    from: 'ARCHIVE LOG: CLOSED'.padEnd(20, ' '),
-    to: 'PROJECTS: BOARDING'.padEnd(20, ' '),
+    from: balanceIndent('ARCHIVE LOG: CLOSED', 1, 20),
+    to: balanceIndent('PROJECTS: BOARDING', 1, 20),
     isFlipping: true,
   },
   {
-    from: 'SYS / MOTION CRAFT'.padEnd(20, ' '),
-    to: 'PRODUCTS READY SHIP'.padEnd(20, ' '),
+    from: balanceIndent('SYS / MOTION CRAFT', 1, 20),
+    to: balanceIndent('PRODUCTS READY SHIP', 1, 20),
     isFlipping: true,
   },
   {
@@ -2009,37 +2033,43 @@ interface SplitFlapCellProps {
   from: string
   to: string
   isFlipping?: boolean
-  flipIndex?: number
+  rowIndex: number
+  colIndex: number
 }
 
 const SplitFlapCell = memo(function SplitFlapCell({
   from,
   to,
   isFlipping = true,
-  flipIndex = 0,
+  rowIndex = 0,
+  colIndex = 0,
 }: SplitFlapCellProps) {
   const isBlank = from === ' ' && to === ' '
-  if (isBlank) {
-    return <span className={styles.splitFlapCell} aria-hidden="true" />
-  }
-
   const shouldFlip = isFlipping && from !== to
   const source = from === ' ' ? '\u00a0' : from
   const target = shouldFlip ? (to === ' ' ? '\u00a0' : to) : source
 
-  if (!shouldFlip) {
+  // High performance static mechanical tile for blank or unchanging tiles (renders full Solari look without 3D overhead)
+  if (!shouldFlip || isBlank) {
     return (
       <span className={styles.splitFlapCell} aria-hidden="true">
         <span className={styles.splitFlapStaticChar}>{source}</span>
+        <i />
       </span>
     )
   }
 
+  // Active mechanical flipping tile with cascading row-by-row and col-by-col delay
   return (
     <span
       className={styles.splitFlapCell}
       data-flipping="true"
-      style={{ '--flap-i': flipIndex } as React.CSSProperties}
+      style={
+        {
+          '--flap-row': rowIndex,
+          '--flap-col': colIndex,
+        } as React.CSSProperties
+      }
       aria-hidden="true"
     >
       <span className={`${styles.splitFlapHalf} ${styles.splitFlapStaticTop}`}>
@@ -2062,9 +2092,6 @@ const SplitFlapCell = memo(function SplitFlapCell({
 })
 
 function SplitFlapDivider() {
-  let desktopFlipCount = 0
-  let mobileFlipCount = 0
-
   return (
     <section
       className={styles.splitFlapDivider}
@@ -2083,17 +2110,13 @@ function SplitFlapDivider() {
               {SPLIT_FLAP_ROWS.flatMap((row, rowIndex) =>
                 Array.from(row.from).map((character, columnIndex) => {
                   const targetChar = row.to[columnIndex] ?? ' '
-                  const willFlip =
-                    row.isFlipping &&
-                    !(character === ' ' && targetChar === ' ') &&
-                    character !== targetChar
-                  const currentFlipIdx = willFlip ? desktopFlipCount++ : 0
                   return (
                     <SplitFlapCell
                       from={character}
                       to={targetChar}
                       isFlipping={row.isFlipping}
-                      flipIndex={currentFlipIdx}
+                      rowIndex={rowIndex}
+                      colIndex={columnIndex}
                       key={`${rowIndex}-${columnIndex}`}
                     />
                   )
@@ -2116,17 +2139,13 @@ function SplitFlapDivider() {
               {SPLIT_FLAP_MOBILE_ROWS.flatMap((row, rowIndex) =>
                 Array.from(row.from).map((character, columnIndex) => {
                   const targetChar = row.to[columnIndex] ?? ' '
-                  const willFlip =
-                    row.isFlipping &&
-                    !(character === ' ' && targetChar === ' ') &&
-                    character !== targetChar
-                  const currentFlipIdx = willFlip ? mobileFlipCount++ : 0
                   return (
                     <SplitFlapCell
                       from={character}
                       to={targetChar}
                       isFlipping={row.isFlipping}
-                      flipIndex={currentFlipIdx}
+                      rowIndex={rowIndex}
+                      colIndex={columnIndex}
                       key={`m-${rowIndex}-${columnIndex}`}
                     />
                   )

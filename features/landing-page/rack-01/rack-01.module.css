@@ -4887,7 +4887,9 @@
   transform: rotateX(0deg);
   transform-origin: 50% 100%;
   transition: transform 0.16s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  transition-delay: calc(var(--flap-i, 0) * 8ms + 60ms);
+  transition-delay: calc(
+    var(--flap-row, 0) * 110ms + var(--flap-col, 0) * 6ms + 55ms
+  );
 }
 .splitFlapBottom {
   z-index: 2;
@@ -4895,16 +4897,22 @@
   transform: rotateX(92deg);
   transform-origin: 50% 0;
   transition: transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  transition-delay: calc(var(--flap-i, 0) * 8ms);
+  transition-delay: calc(
+    var(--flap-row, 0) * 110ms + var(--flap-col, 0) * 6ms
+  );
 }
 
 .splitFlapDivider[data-flipped='true'] .splitFlapTop {
   transform: rotateX(-92deg);
-  transition-delay: calc(var(--flap-i, 0) * 8ms);
+  transition-delay: calc(
+    var(--flap-row, 0) * 110ms + var(--flap-col, 0) * 6ms
+  );
 }
 .splitFlapDivider[data-flipped='true'] .splitFlapBottom {
   transform: rotateX(0deg);
-  transition-delay: calc(var(--flap-i, 0) * 8ms + 70ms);
+  transition-delay: calc(
+    var(--flap-row, 0) * 110ms + var(--flap-col, 0) * 6ms + 65ms
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {

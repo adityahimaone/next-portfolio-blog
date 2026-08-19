@@ -4401,7 +4401,7 @@
   color: rgba(231, 226, 216, 0.233);
   font-family: var(--font-space-grotesk), sans-serif;
   font-weight: 700;
-  font-size: clamp(100px, min(22vw, 34vh), 350px);
+  font-size: clamp(100px, min(22vw, 34vh), 320px);
   line-height: 0.72;
   letter-spacing: -0.085em;
   text-align: center;
@@ -5518,8 +5518,8 @@
     height: 44px;
   }
   .skillsBackdrop {
-    font-size: clamp(88px, min(20vw, 28vh), 240px);
-    opacity: 0.28;
+    font-size: clamp(400px, min(30vw, 60vh), 350px);
+    opacity: 0.62;
   }
 }
 
@@ -5537,8 +5537,8 @@
     transform-origin: 50% 0%;
   }
   .skillsBackdrop {
-    font-size: clamp(75px, min(18vw, 25vh), 190px);
-    opacity: 0.32;
+    font-size: clamp(250px, min(18vw, 32vh), 280px);
+    opacity: 0.62;
   }
 }
 

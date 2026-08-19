@@ -859,16 +859,19 @@
   padding-bottom: 8px;
 }
 
-.about .sectionHeading > .silkscreen {
+.about .sectionHeading > .silkscreen,
+.contact .sectionHeading > .silkscreen {
   border-top-color: rgba(18, 20, 19, 0.4);
   color: #0b0d0c;
 }
 
-.about .sectionHeading > .silkscreen .sectionSysCode {
+.about .sectionHeading > .silkscreen .sectionSysCode,
+.contact .sectionHeading > .silkscreen .sectionSysCode {
   color: #c94412;
 }
 
-.about .sectionHeading h2 {
+.about .sectionHeading h2,
+.contact .sectionHeading h2 {
   color: #101211;
 }
 .about {
@@ -1163,112 +1166,246 @@
     inset 0 1px rgba(255, 255, 255, 0.9);
   color: var(--graphite);
 }
+.controllerTopbar {
+  display: grid;
+  grid-template-columns: 1.1fr 2fr auto;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #9c9991;
+}
+.controllerBrand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.controllerBrand strong {
+  font: 800 18px var(--font-space-grotesk);
+  letter-spacing: -0.02em;
+  color: #121412;
+}
 .controllerDisplay {
   position: relative;
   display: grid;
   grid-template-columns: 1fr auto;
-  align-items: end;
-  min-height: 105px;
-  margin-bottom: 28px;
-  padding: 17px 20px;
+  gap: 10px 16px;
+  min-height: 92px;
+  padding: 12px 18px;
   overflow: hidden;
-  border: 2px solid #363735;
-  border-radius: 2px;
-  background: var(--lcd-black);
+  border: 2px solid #282a27;
+  border-radius: 4px;
+  background: #090b09;
   color: var(--chassis);
-  box-shadow: inset 0 4px 15px #000;
+  box-shadow:
+    inset 0 4px 18px #000,
+    0 1px rgba(255, 255, 255, 0.4);
 }
-.controllerDisplay > .silkscreen {
+.displayHeader {
   grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(92, 214, 163, 0.18);
+  padding-bottom: 4px;
+  font: 750 7.5px var(--font-geist-mono);
+  letter-spacing: 0.12em;
   color: var(--lcd-green);
-}
-.controllerDisplay strong {
-  color: var(--signal-orange);
-  font: 600 clamp(25px, 4vw, 48px) var(--font-space-grotesk);
   text-transform: uppercase;
 }
-.controllerDisplay > div {
+.displayModeTags {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
 }
-.controllerDisplay .segmentCounter {
-  font-size: 28px;
-}
-.controllerDisplay > div span:last-child {
-  font: 8px var(--font-geist-mono);
-}
-.skillPads {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: clamp(7px, 1.2vw, 14px);
-}
-.skillPads button {
-  position: relative;
-  display: flex;
-  min-height: 100px;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
-  padding: 11px;
-  border: 1px solid #070807;
-  border-radius: 3px;
-  background: linear-gradient(#30312f, #272826);
-  color: #eee;
-  box-shadow:
-    0 2px 3px rgba(0, 0, 0, 0.55),
-    inset 0 1px rgba(255, 255, 255, 0.11);
+.modeTag {
+  padding: 2px 6px;
+  border-radius: 2px;
+  border: 1px solid rgba(92, 214, 163, 0.3);
+  background: transparent;
+  color: var(--lcd-green);
+  font: 700 7px var(--font-geist-mono);
   cursor: pointer;
-  text-align: left;
-  transition:
-    transform 150ms ease,
-    background 150ms ease,
-    box-shadow 150ms ease;
+  letter-spacing: 0.08em;
+  transition: all 120ms ease;
 }
-.skillPads button:hover,
-.skillPads button.padActive {
-  background: var(--signal-orange);
-  color: var(--lcd-black);
-  transform: translateY(1px) scale(0.98);
-  box-shadow:
-    inset 0 2px 3px rgba(0, 0, 0, 0.25),
-    0 0 14px rgba(255, 90, 31, 0.24);
+.modeTag:hover,
+.modeTagActive {
+  background: var(--lcd-green);
+  color: #090b09;
+  box-shadow: 0 0 8px rgba(92, 214, 163, 0.6);
 }
-.skillPads button > span {
-  font: 9px var(--font-geist-mono);
+.displayBody {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
 }
-.skillPads button strong {
+.screenCanvasWrapper {
   position: relative;
-  z-index: 1;
-  font: 10px var(--font-geist-mono);
-  overflow-wrap: anywhere;
+  width: clamp(140px, 18vw, 260px);
+  height: 52px;
+  background: #040604;
+  border: 1px solid rgba(92, 214, 163, 0.25);
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px #000;
 }
-.skillPads button i {
+.screenCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.canvasScanline {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 4px;
-  background: linear-gradient(
-    90deg,
-    var(--field-tan) var(--level),
-    transparent var(--level)
-  );
+  inset: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
+  background-size: 100% 3px;
+  pointer-events: none;
 }
-.controllerKeys {
-  display: grid;
-  grid-template-columns: repeat(14, 1fr);
+.programReadout {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.programReadout span {
+  font: 7px var(--font-geist-mono);
+  color: #79a891;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.programReadout strong {
+  font: 800 clamp(16px, 2vw, 24px) var(--font-space-grotesk);
+  color: var(--signal-orange);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 0 10px rgba(255, 90, 31, 0.4);
+}
+.displayTelemetry {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+.meterStack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 4px;
-  margin-top: 30px;
 }
-.controllerKeys span {
-  height: 72px;
-  border: 1px solid #85837d;
-  border-radius: 2px 2px 6px 6px;
-  background: linear-gradient(90deg, #e5e2dc, #f4f1eb 45%, #d9d6cf);
+.vuBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 28px;
+  padding: 2px;
+  background: #050705;
+  border: 1px solid #1c241c;
+  border-radius: 2px;
+}
+.vuBars i {
+  width: 3px;
+  height: 100%;
+  background: #142819;
+  border-radius: 1px;
+  transition: background 60ms ease;
+}
+.vuBars i.vuLitGreen {
+  background: var(--lcd-green);
+  box-shadow: 0 0 4px var(--lcd-green);
+}
+.vuBars i.vuLitOrange {
+  background: var(--signal-orange);
+  box-shadow: 0 0 4px var(--signal-orange);
+}
+.vuBars i.vuLitRed {
+  background: #ff3333;
+  box-shadow: 0 0 4px #ff3333;
+}
+.telemetryStats {
+  font: 700 7.5px var(--font-geist-mono);
+  color: #8da396;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-align: right;
+}
+.telemetryStats b {
+  color: #e5ede8;
+}
+.controllerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.arpButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #787670;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #383a37, #232522);
+  color: #f2efe9;
+  font: 800 8.5px var(--font-geist-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
   box-shadow:
-    0 2px 2px rgba(0, 0, 0, 0.34),
-    inset 0 1px #fff;
+    0 3px 6px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 140ms ease;
+}
+.arpButton:hover {
+  background: linear-gradient(180deg, #444743, #2d302c);
+  color: #fff;
+  border-color: #929088;
+}
+.arpButton.arpActive {
+  background: var(--signal-orange);
+  color: #0b0d0c;
+  border-color: #ff5a1f;
+  box-shadow:
+    0 0 16px rgba(255, 90, 31, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transform: translateY(1px);
+}
+.arpButton i {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff5a1f;
+  box-shadow: 0 0 6px #ff5a1f;
+}
+.arpButton.arpActive i {
+  background: #0b0d0c;
+  box-shadow: none;
+}
+.powerToggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font: 800 8px var(--font-geist-mono);
+  color: #2b2e2a;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.powerToggle i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lcd-green);
+  box-shadow: 0 0 8px rgba(92, 214, 163, 0.85);
+  transition: all 180ms ease;
+}
+.powerToggle.powerOff i {
+  background: #444943;
+  box-shadow: none;
 }
 
 .experience {
@@ -2306,71 +2443,21 @@
   background: var(--signal-orange);
 }
 
-.controller {
-  padding: clamp(16px, 2.5vw, 30px);
-  background: radial-gradient(
-      circle at 16% 0,
-      rgba(255, 255, 255, 0.88),
-      transparent 27%
-    ),
-    linear-gradient(145deg, #ebe8e1 0%, #d5d1c9 55%, #c2bfb8 100%);
-}
-.controllerTopbar {
-  display: grid;
-  grid-template-columns: 1fr minmax(290px, 0.7fr) auto;
-  gap: 22px;
-  align-items: center;
-  margin: 5px 5px 24px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid #99968e;
-}
-.controllerTopbar > div:first-child {
-  display: grid;
-  gap: 5px;
-}
-.controllerTopbar .controllerDisplay {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 14px;
-  min-height: 72px;
-  margin: 0;
-  padding: 12px 15px;
-}
-.controllerTopbar .controllerDisplay > span:first-child {
-  grid-column: 1 / -1;
-  color: var(--lcd-green);
-  font: 7px var(--font-geist-mono);
-  letter-spacing: 0.14em;
-}
-.controllerTopbar .controllerDisplay strong {
-  overflow: hidden;
-  font-size: clamp(17px, 2.2vw, 28px);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.controllerTopbar .controllerDisplay .segmentCounter {
-  align-self: end;
-  font-size: 17px;
-}
-.powerSwitch {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font: 8px var(--font-geist-mono);
-}
 .controllerBanks {
   display: grid;
-  grid-template-columns: 5fr 4fr 3fr;
+  grid-template-columns: 5fr 4fr 3.2fr;
+  gap: 0;
   border: 1px solid #8a8881;
-  border-radius: 4px;
-  background: rgba(216, 212, 203, 0.62);
+  border-radius: 6px;
+  background: rgba(216, 212, 203, 0.7);
   box-shadow:
     inset 0 1px rgba(255, 255, 255, 0.85),
-    inset 0 -1px rgba(0, 0, 0, 0.08);
+    inset 0 -1px rgba(0, 0, 0, 0.12),
+    0 4px 14px rgba(0, 0, 0, 0.08);
 }
 .controlBank {
   min-width: 0;
-  padding: clamp(14px, 2vw, 23px);
+  padding: clamp(16px, 2.2vw, 28px);
 }
 .controlBank + .controlBank {
   border-left: 1px solid #918f88;
@@ -2378,55 +2465,106 @@
 .controlBank > .silkscreen {
   display: block;
   min-height: 25px;
-  font-size: 7px;
+  font-size: 7.5px;
+  letter-spacing: 0.12em;
 }
 .padBank > div {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 9px;
+  gap: 10px;
 }
 .padBank button {
   position: relative;
   display: flex;
   min-width: 0;
-  min-height: 92px;
+  min-height: 100px;
   overflow: hidden;
   flex-direction: column;
   justify-content: space-between;
-  padding: 9px;
-  border: 1px solid #171917;
-  border-radius: 3px;
-  background: linear-gradient(145deg, #353633, #242623);
-  color: #efede7;
+  padding: 11px 12px;
+  border: 1.5px solid #141613;
+  border-radius: 4px;
+  background: linear-gradient(145deg, #373935, #222421);
+  color: #f0eee8;
   box-shadow:
-    0 2px 3px rgba(0, 0, 0, 0.3),
-    inset 0 1px rgba(255, 255, 255, 0.12);
-  font: 8px var(--font-geist-mono);
+    0 3px 5px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+  font: 8.5px var(--font-geist-mono);
   text-align: left;
   cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
   transition:
-    transform 120ms ease,
-    color 120ms ease,
-    background-color 120ms ease,
-    box-shadow 120ms ease;
+    transform 90ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    color 90ms ease,
+    background 90ms ease,
+    box-shadow 90ms ease;
 }
-.padBank button:hover,
-.padBank button.padActive {
-  background: var(--signal-orange);
-  color: var(--lcd-black);
+.padBank button:hover {
+  background: linear-gradient(145deg, #444742, #2c2f2a);
+  color: #fff;
+  border-color: #ff5a1f;
   box-shadow:
-    inset 0 2px 3px rgba(0, 0, 0, 0.22),
-    0 0 12px rgba(255, 90, 31, 0.2);
+    0 4px 10px rgba(0, 0, 0, 0.45),
+    0 0 10px rgba(255, 90, 31, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.padBank button.padActive {
+  background: linear-gradient(145deg, #ff6a35, #e04810) !important;
+  color: #0b0d0c !important;
+  border-color: #ff5a1f !important;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.35),
+    0 0 18px rgba(255, 90, 31, 0.6) !important;
   transform: translateY(1px);
 }
 .padBank button:active {
-  transform: scale(0.96);
+  transform: scale(0.96) translateY(2px);
+  background: #ff5a1f;
+  color: #000;
+  box-shadow:
+    inset 0 3px 6px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(255, 90, 31, 0.7);
+}
+.padBank button.padHit {
+  animation: padPulse 180ms ease-out;
+}
+@keyframes padPulse {
+  0% {
+    transform: scale(0.94);
+    box-shadow:
+      0 0 24px #ff5a1f,
+      inset 0 0 12px #fff;
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 .padBank button strong {
   position: relative;
   z-index: 1;
   overflow-wrap: anywhere;
-  font-size: 9px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.padShortcutHint {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(244, 240, 232, 0.45);
+  font: 700 6.5px var(--font-geist-mono);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.padBank button:hover .padShortcutHint,
+.padBank button.padActive .padShortcutHint {
+  background: rgba(0, 0, 0, 0.65);
+  color: #ff5a1f;
 }
 .padBank button i {
   position: absolute;
@@ -3945,8 +4083,8 @@
 .signalDividerStage {
   position: relative;
   display: grid;
-  min-height: clamp(220px, 28vw, 340px);
-  grid-template-rows: minmax(0, 1fr) clamp(44px, 5vw, 52px) minmax(0, 1fr);
+  min-height: clamp(240px, 28vw, 350px);
+  grid-template-rows: minmax(0, 1fr) clamp(46px, 5vw, 56px) minmax(0, 1fr);
   overflow: hidden;
   isolation: isolate;
 }
@@ -3995,13 +4133,41 @@
   contain: layout paint;
 }
 .signalDividerLaneTop {
-  border-bottom: 1px solid rgba(29, 30, 28, 0.22);
-  color: rgba(29, 30, 28, 0.82);
+  border-bottom: 1px solid rgba(29, 30, 28, 0.16);
+  color: #181a17;
 }
 .signalDividerLaneBottom {
   justify-content: flex-end;
-  border-top: 1px solid rgba(244, 240, 232, 0.16);
-  color: rgba(244, 240, 232, 0.82);
+  border-top: 1px solid rgba(244, 240, 232, 0.14);
+  color: #f4f0e8;
+}
+.signalDividerLaneBadge,
+.signalDividerLaneBadgeBottom {
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font: 800 7.5px var(--font-geist-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.signalDividerLaneBadge {
+  left: clamp(14px, 2.5vw, 36px);
+  background: rgba(29, 30, 28, 0.1);
+  border: 1px solid rgba(29, 30, 28, 0.2);
+  color: #1a1c19;
+}
+.signalDividerLaneBadgeBottom {
+  right: clamp(14px, 2.5vw, 36px);
+  background: rgba(255, 90, 31, 0.14);
+  border: 1px solid rgba(255, 90, 31, 0.35);
+  color: var(--signal-orange);
 }
 .signalDividerRail {
   position: relative;
@@ -4012,47 +4178,180 @@
   will-change: transform;
 }
 .signalDividerTopRail {
-  left: -12vw;
+  left: -10vw;
 }
 .signalDividerBottomRail {
-  right: -12vw;
+  right: -10vw;
+}
+.signalDividerTrackGroup {
+  display: inline-flex;
+  align-items: center;
 }
 .signalDividerPhrase {
-  display: block;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
   flex: 0 0 auto;
-  padding-right: clamp(28px, 4vw, 64px);
-  font: 700 clamp(24px, 3vw, 46px) / 0.92 var(--font-space-grotesk);
+  font: 750 clamp(20px, 2.4vw, 38px) / 0.95 var(--font-space-grotesk);
   letter-spacing: -0.045em;
   white-space: nowrap;
+  user-select: none;
 }
-.signalDividerMotto {
+.signalDividerLaneTop .signalDividerPhrase strong {
+  color: #121411;
+}
+.signalDividerLaneBottom .signalDividerPhrase strong {
+  color: #f5f2eb;
+}
+.signalDividerTrackIndex,
+.signalDividerTrackIndexBottom {
+  font: 800 8.5px var(--font-geist-mono);
+  letter-spacing: 0.1em;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+.signalDividerTrackIndex {
+  background: rgba(29, 30, 28, 0.12);
+  color: #72402d;
+}
+.signalDividerTrackIndexBottom {
+  background: rgba(255, 90, 31, 0.18);
+  color: var(--signal-orange);
+}
+.signalDividerGlyph,
+.signalDividerGlyphBottom {
+  display: inline-block;
+  margin: 0 clamp(16px, 2vw, 36px);
+  font-size: 11px;
+  font-style: normal;
+}
+.signalDividerGlyph {
+  color: #c94412;
+}
+.signalDividerGlyphBottom {
+  color: var(--signal-orange);
+  text-shadow: 0 0 6px rgba(255, 90, 31, 0.6);
+}
+
+/* ── Central Studio Signal Router Bridge Console ── */
+.signalBridgeConsole {
   position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  z-index: 3;
+  display: flex;
   align-items: center;
-  gap: clamp(18px, 3vw, 48px);
-  margin: 0;
-  padding: 0 clamp(20px, 5vw, 78px);
-  border-top: 1px solid rgba(244, 240, 232, 0.12);
-  border-bottom: 1px solid rgba(244, 240, 232, 0.12);
-  background: rgba(23, 25, 23, 0.96);
+  justify-content: space-between;
+  gap: clamp(14px, 2.5vw, 36px);
+  padding: 0 clamp(24px, 4vw, 64px);
+  background: linear-gradient(180deg, #252824 0%, #151714 48%, #0c0e0b 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.7);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.8);
   color: var(--chassis);
 }
-.signalDividerMotto span {
-  color: #918c83;
-  font: 700 8px var(--font-geist-mono);
-  letter-spacing: 0.12em;
+.signalScrewLeft {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+}
+.signalScrewRight {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+}
+.signalBridgeLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.signalBridgeStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 800 7px var(--font-geist-mono);
+  letter-spacing: 0.14em;
+  color: var(--lcd-green);
+}
+.signalBridgeStatus i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lcd-green);
+  box-shadow: 0 0 6px var(--lcd-green);
+}
+.signalBridgeLeft strong {
+  font: 800 10px var(--font-geist-mono);
+  letter-spacing: 0.08em;
+  color: #edeae3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.signalBridgeCenter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 12px;
+  border-radius: 3px;
+  background: #060806;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 6px #000;
+}
+.signalBridgeMeter {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.signalBridgeMeter i {
+  width: 2.5px;
+  height: 100%;
+  background: var(--lcd-green);
+  border-radius: 1px;
+  opacity: 0.7;
+}
+.signalBridgeMeter i:nth-child(3n) {
+  height: 60%;
+}
+.signalBridgeMeter i:nth-child(3n + 1) {
+  height: 85%;
+}
+.signalBridgeMeter i:nth-child(3n + 2) {
+  height: 100%;
+  background: var(--signal-orange);
+}
+.signalBridgeCenter span {
+  font: 750 7.5px var(--font-geist-mono);
+  letter-spacing: 0.1em;
+  color: #79a891;
   white-space: nowrap;
 }
-.signalDividerMotto strong {
-  overflow: hidden;
-  color: var(--signal-orange);
-  font: 600 clamp(11px, 1.15vw, 15px) / 1.25 var(--font-space-grotesk);
-  letter-spacing: -0.015em;
+.signalBridgeRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
   text-align: right;
-  text-overflow: ellipsis;
+}
+.signalBridgeRight span {
+  font: 750 7px var(--font-geist-mono);
+  letter-spacing: 0.14em;
+  color: #8f948a;
+  text-transform: uppercase;
+}
+.signalBridgeRight strong {
+  font: 700 clamp(10px, 0.95vw, 13px) var(--font-space-grotesk);
+  color: var(--signal-orange);
+  letter-spacing: -0.01em;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .skills {
   position: relative;
@@ -4096,16 +4395,22 @@
   position: absolute;
   z-index: 1;
   right: -0.025em;
-  bottom: 0em;
+  bottom: clamp(-0.05em, 1.5vh, 0.05em);
   left: -0.025em;
   overflow: hidden;
   color: rgba(231, 226, 216, 0.233);
-  font: 700 clamp(112px, 22vw, 350px) / 0.72 var(--font-space-grotesk);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+  font-size: clamp(100px, min(22vw, 34vh), 350px);
+  line-height: 0.72;
   letter-spacing: -0.085em;
   text-align: center;
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
+  transition:
+    font-size 200ms ease,
+    opacity 200ms ease;
 }
 .skillsIntro {
   position: relative;
@@ -4150,8 +4455,8 @@
 .controller {
   position: relative;
   z-index: 2;
-  width: min(1480px, calc(100vw - clamp(32px, 5vw, 88px)));
-  max-width: 1480px;
+  width: min(1180px, calc(100vw - clamp(32px, 5vw, 88px)));
+  max-width: 1180px;
   margin: 0 auto;
   border-color: #777972;
   transform-origin: 50% 0%;
@@ -5141,6 +5446,102 @@
   }
 }
 
+@media (min-width: 769px) and (max-height: 900px) {
+  .skillsStage {
+    padding: clamp(10px, 1.5vh, 20px) clamp(16px, 2.4vw, 38px)
+      clamp(12px, 2vh, 28px);
+  }
+  .skillsIntro {
+    margin-bottom: clamp(4px, 0.8vh, 12px);
+  }
+  .skills .sectionHeading h2 {
+    font-size: clamp(20px, min(2.8vw, 3.8vh), 38px);
+  }
+  .skillsIntro > p {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+  .controller {
+    padding: clamp(12px, 1.8vh, 22px);
+  }
+  .controllerTopbar {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+  .controllerDisplay {
+    min-height: 68px;
+    padding: 8px 12px;
+  }
+  .screenCanvasWrapper {
+    height: 40px;
+    width: clamp(110px, 14vw, 180px);
+  }
+  .padBank button {
+    min-height: 78px;
+    padding: 7px 9px;
+  }
+  .encoderBank > div {
+    gap: 12px 8px;
+    padding: 4px 0;
+  }
+  .encoderBank .knob {
+    width: 42px;
+    height: 42px;
+  }
+  .encoderBank .knobScale {
+    width: 50px;
+    height: 50px;
+  }
+  .faderBank > div {
+    min-height: 125px;
+  }
+  .faderBank input {
+    height: 88px;
+  }
+  .keyboardBed {
+    margin-top: 10px;
+    padding: 8px 10px 12px;
+  }
+  .controllerKeys {
+    height: 84px;
+  }
+  .whiteKeys button {
+    height: 76px;
+  }
+  .blackKeys button {
+    height: 48px;
+  }
+  .wheelWell {
+    height: 64px;
+  }
+  .wheelCylinder {
+    height: 44px;
+  }
+  .skillsBackdrop {
+    font-size: clamp(88px, min(20vw, 28vh), 240px);
+    opacity: 0.28;
+  }
+}
+
+@media (min-width: 769px) and (max-height: 750px) {
+  .skillsStage {
+    padding-top: 8px;
+    padding-bottom: 10px;
+  }
+  .skillsIntro {
+    margin-bottom: 6px;
+  }
+  .controller {
+    padding: 10px 14px;
+    transform: scale(0.92);
+    transform-origin: 50% 0%;
+  }
+  .skillsBackdrop {
+    font-size: clamp(75px, min(18vw, 25vh), 190px);
+    opacity: 0.32;
+  }
+}
+
 @media (min-width: 769px) and (max-height: 820px) {
   .experienceStage {
     min-height: 0;
@@ -5554,6 +5955,89 @@
     width: clamp(10px, calc((100% / 14) * 0.62), 20px);
     height: 58px;
   }
+  .signalBridgeConsole {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1.2fr);
+    align-items: center;
+    gap: 8px;
+    padding: 0 clamp(20px, 5vw, 32px);
+    min-height: 44px;
+  }
+  .signalScrewLeft {
+    left: 6px;
+  }
+  .signalScrewRight {
+    right: 6px;
+  }
+  .signalBridgeLeft {
+    min-width: 0;
+    gap: 1px;
+  }
+  .signalBridgeStatus {
+    font-size: 6.5px;
+    letter-spacing: 0.1em;
+    gap: 4px;
+  }
+  .signalBridgeStatus i {
+    width: 4px;
+    height: 4px;
+  }
+  .signalBridgeLeft strong {
+    font-size: 8px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .signalBridgeCenter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px;
+  }
+  .signalBridgeCenter span {
+    display: none;
+  }
+  .signalBridgeMeter {
+    height: 10px;
+    gap: 1.5px;
+  }
+  .signalBridgeMeter i {
+    width: 2px;
+  }
+  .signalBridgeRight {
+    min-width: 0;
+    gap: 1px;
+  }
+  .signalBridgeRight span {
+    font-size: 6.5px;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .signalBridgeRight strong {
+    font-size: 8.5px;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .signalDividerPhrase {
+    font-size: clamp(16px, 4.2vw, 22px);
+    gap: 6px;
+  }
+  .signalDividerTrackIndex,
+  .signalDividerTrackIndexBottom {
+    font-size: 7.5px;
+    padding: 0 3px;
+  }
+  .signalDividerGlyph,
+  .signalDividerGlyphBottom {
+    margin: 0 clamp(10px, 2.5vw, 16px);
+    font-size: 9px;
+  }
+
   .cableDivider,
   .cableDividerInner {
     min-height: 168px;
@@ -6127,6 +6611,23 @@
   }
   .skillsBackdrop {
     font-size: clamp(92px, 30vw, 138px);
+  }
+  .signalBridgeConsole {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 0 25px;
+    min-height: 38px;
+  }
+  .signalBridgeCenter {
+    display: none;
+  }
+  .signalBridgeLeft strong {
+    font-size: 7px;
+  }
+  .signalBridgeRight strong {
+    font-size: 7.5px;
+  }
+  .signalDividerPhrase {
+    font-size: clamp(14px, 4.4vw, 18px);
   }
   .padBank > div {
     grid-template-columns: repeat(2, 1fr);

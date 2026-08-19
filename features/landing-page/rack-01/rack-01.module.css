@@ -4897,16 +4897,12 @@
   transform: rotateX(92deg);
   transform-origin: 50% 0;
   transition: transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  transition-delay: calc(
-    var(--flap-row, 0) * 110ms + var(--flap-col, 0) * 6ms
-  );
+  transition-delay: calc(var(--flap-row, 0) * 110ms + var(--flap-col, 0) * 6ms);
 }
 
 .splitFlapDivider[data-flipped='true'] .splitFlapTop {
   transform: rotateX(-92deg);
-  transition-delay: calc(
-    var(--flap-row, 0) * 110ms + var(--flap-col, 0) * 6ms
-  );
+  transition-delay: calc(var(--flap-row, 0) * 110ms + var(--flap-col, 0) * 6ms);
 }
 .splitFlapDivider[data-flipped='true'] .splitFlapBottom {
   transform: rotateX(0deg);
@@ -6146,6 +6142,7 @@
     overflow: visible;
     border-top: 1px solid var(--graphite);
     border-left: 0;
+    padding: 5px 5px;
   }
   .experienceSelector button small {
     display: none;
@@ -6586,6 +6583,24 @@
   .signalDividerRail {
     will-change: transform;
   }
+
+  .radioLevel {
+    right: 10px;
+    bottom: 2px;
+    left: 10px;
+    height: 18px;
+  }
+
+  .speakerGrille {
+    width: 130px;
+  }
+}
+
+@media (max-width: 450px) {
+  .cassetteFooter {
+    margin-top: 20px;
+    color: #ffffff;
+  }
 }
 
 @media (max-width: 420px) {
@@ -6677,10 +6692,10 @@
   .splitFlapDivider,
   .splitFlapBoard,
   .splitFlapInner {
-    min-height: 228px;
+    min-height: auto;
   }
   .splitFlapInner {
-    padding: 17px 14px 24px;
+    padding: 2px 2px 2px;
   }
   .splitFlapCopy {
     align-items: flex-start;
@@ -6739,6 +6754,10 @@
   .launchPad {
     min-height: 58px;
     padding: 7px;
+  }
+  .cassetteFooter {
+    margin-top: 20px;
+    color: #ffffff;
   }
 }
 

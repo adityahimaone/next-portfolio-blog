@@ -856,6 +856,7 @@
   letter-spacing: -0.065em;
   text-wrap: balance;
   will-change: transform, opacity, clip-path;
+  padding-bottom: 8px;
 }
 
 .about .sectionHeading > .silkscreen {
@@ -2513,8 +2514,13 @@
   margin-left: -9px;
   border-radius: 2px;
   border: 1px solid rgba(0, 0, 0, 0.75);
-  background:
-    linear-gradient(90deg, transparent 46%, #ff5a1f 46%, #ff5a1f 54%, transparent 54%),
+  background: linear-gradient(
+      90deg,
+      transparent 46%,
+      #ff5a1f 46%,
+      #ff5a1f 54%,
+      transparent 54%
+    ),
     linear-gradient(180deg, #d2d3dc 0%, #8f9098 40%, #525359 75%, #35363b 100%);
   box-shadow:
     0 3px 6px rgba(0, 0, 0, 0.65),
@@ -2551,8 +2557,13 @@
   height: 16px;
   border-radius: 2px;
   border: 1px solid rgba(0, 0, 0, 0.7);
-  background:
-    linear-gradient(90deg, transparent 46%, #ff5a1f 46%, #ff5a1f 54%, transparent 54%),
+  background: linear-gradient(
+      90deg,
+      transparent 46%,
+      #ff5a1f 46%,
+      #ff5a1f 54%,
+      transparent 54%
+    ),
     linear-gradient(180deg, #d2d3dc 0%, #8f9098 40%, #525359 75%, #35363b 100%);
   box-shadow:
     0 3px 6px rgba(0, 0, 0, 0.65),
@@ -2630,16 +2641,15 @@
   height: 60px;
   border-radius: 4px 4px 3px 3px;
   border: 1px solid rgba(0, 0, 0, 0.8);
-  background:
-    repeating-linear-gradient(
-      180deg,
-      #171917 0px,
-      #171917 2px,
-      #323531 2px,
-      #323531 4px,
-      #111311 4px,
-      #111311 6px
-    );
+  background: repeating-linear-gradient(
+    180deg,
+    #171917 0px,
+    #171917 2px,
+    #323531 2px,
+    #323531 4px,
+    #111311 4px,
+    #111311 6px
+  );
   box-shadow:
     0 3px 8px rgba(0, 0, 0, 0.7),
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
@@ -3357,8 +3367,13 @@
   height: 20px;
   border-radius: 2px;
   border: 1px solid rgba(0, 0, 0, 0.7);
-  background:
-    linear-gradient(180deg, transparent 46%, #ff5a1f 46%, #ff5a1f 54%, transparent 54%),
+  background: linear-gradient(
+      180deg,
+      transparent 46%,
+      #ff5a1f 46%,
+      #ff5a1f 54%,
+      transparent 54%
+    ),
     linear-gradient(90deg, #d2d3dc 0%, #8f9098 40%, #525359 75%, #35363b 100%);
   box-shadow:
     0 3px 6px rgba(0, 0, 0, 0.65),
@@ -3395,8 +3410,13 @@
   height: 20px;
   border-radius: 2px;
   border: 1px solid rgba(0, 0, 0, 0.7);
-  background:
-    linear-gradient(180deg, transparent 46%, #ff5a1f 46%, #ff5a1f 54%, transparent 54%),
+  background: linear-gradient(
+      180deg,
+      transparent 46%,
+      #ff5a1f 46%,
+      #ff5a1f 54%,
+      transparent 54%
+    ),
     linear-gradient(90deg, #d2d3dc 0%, #8f9098 40%, #525359 75%, #35363b 100%);
   box-shadow:
     0 3px 6px rgba(0, 0, 0, 0.65),
@@ -3682,7 +3702,7 @@
   align-items: center;
   gap: 12px;
   padding-top: 7px;
-  border-top: 1px solid currentcolor;
+  border-top: 1px solid currentColor;
 }
 .sectionHeading > .silkscreen::before {
   width: 7px;
@@ -4500,7 +4520,14 @@
   letter-spacing: -0.02em;
   color: #f4f1e8;
   text-shadow: 0 1px 2px #000;
-  background: linear-gradient(180deg, #252824 0%, #2a2d28 49%, #060706 50%, #1a1c19 51%, #181a17 100%);
+  background: linear-gradient(
+    180deg,
+    #252824 0%,
+    #2a2d28 49%,
+    #060706 50%,
+    #1a1c19 51%,
+    #181a17 100%
+  );
 }
 .splitFlapCell[data-flipping='true'] {
   perspective: 400px;
@@ -4668,10 +4695,10 @@
       rgba(255, 255, 255, 0.72),
       transparent 24%
     ),
-    radial-gradient(circle at 5% 8%, #545550 0 2px, transparent 2.5px),
-    radial-gradient(circle at 95% 8%, #545550 0 2px, transparent 2.5px),
-    radial-gradient(circle at 5% 92%, #545550 0 2px, transparent 2.5px),
-    radial-gradient(circle at 95% 92%, #545550 0 2px, transparent 2.5px),
+    radial-gradient(circle at 3% 5%, #545550 0 2px, transparent 2.5px),
+    radial-gradient(circle at 97% 5%, #545550 0 2px, transparent 2.5px),
+    radial-gradient(circle at 3% 95%, #545550 0 2px, transparent 2.5px),
+    radial-gradient(circle at 97% 95%, #545550 0 2px, transparent 2.5px),
     linear-gradient(145deg, var(--cassette-shell), var(--cassette-shell-deep));
   color: var(--cassette-ink);
   box-shadow:

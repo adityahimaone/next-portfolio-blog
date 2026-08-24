@@ -7,7 +7,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
-  Download,
   Mail,
   Pause,
   Play,
@@ -15,8 +14,6 @@ import {
   Square,
 } from 'lucide-react'
 import { Screw } from '@/components/screw'
-import { EncryptedText } from '@/components/encrypted-text'
-import { BrokenLightText } from '@/components/broken-light-text'
 import { DawHero } from '../components/hero'
 import {
   EMAIL,
@@ -359,162 +356,95 @@ function TransportBridge({
 }
 
 function Hero() {
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'touch') return
+    const rect = event.currentTarget.getBoundingClientRect()
+    event.currentTarget.style.setProperty(
+      '--hero-pointer-x',
+      `${event.clientX - rect.left}px`,
+    )
+    event.currentTarget.style.setProperty(
+      '--hero-pointer-y',
+      `${event.clientY - rect.top}px`,
+    )
+  }
+
   return (
     <section id="home" className={styles.hero} data-rack-section>
-      <div className={styles.heroStage}>
+      <div className={styles.heroStage} onPointerMove={handlePointerMove}>
+        <div className={styles.heroBootSequence} aria-hidden="true">
+          <i />
+          <span>Routing signal</span>
+        </div>
         <div
           className={styles.heroDeviceWall}
           aria-label="Interactive collection of music devices"
         >
           <DawHero backgroundOnly />
         </div>
-        <div className={styles.heroViewfinderScrim} aria-hidden="true" />
-        <div className={styles.heroViewfinder} aria-hidden="true">
-          <span className={styles.viewfinderCornerTopLeft} />
-          <span className={styles.viewfinderCornerTopRight} />
-          <span className={styles.viewfinderCornerBottomLeft} />
-          <span className={styles.viewfinderCornerBottomRight} />
-          <div className={styles.viewfinderReticle}>
-            <i />
-          </div>
-          <div className={styles.viewfinderTelemetryTop}>
-            <span className={styles.viewfinderRecording}>REC</span>
-            <span>
-              <EncryptedText
-                text="CAM A / DEVICE WALL"
-                revealDelayMs={40}
-                encryptedClassName={styles.encryptedChar}
-              />
-            </span>
-          </div>
-          <div className={styles.viewfinderTelemetryRight}>
-            <span>4K</span>
-            <span>24 FPS</span>
-            <span>48 KHZ</span>
-          </div>
+        <div className={styles.heroBackdropName} aria-hidden="true">
+          <span>Aditya</span>
+          <span>Himawan</span>
+        </div>
+        <div className={styles.heroAtmosphere} aria-hidden="true" />
+        <div className={styles.heroAboutHandoff} aria-hidden="true">
+          <span>Next signal / 02</span>
+          <strong>Profile</strong>
         </div>
 
-        <header className={styles.topline}>
-          <a
-            href="#home"
-            className={styles.wordmark}
-            aria-label="AH STUDIO home"
-          >
+        <header className={styles.heroMinimalNav}>
+          <a href="#home" className={styles.wordmark} aria-label="AH Studio home">
             AH <span>/ STUDIO</span>
           </a>
-          <nav className={styles.heroRouteNav} aria-label="Primary pages">
-            {ROUTE_ITEMS.map((item, index) => (
-              <a href={item.href} key={item.href}>
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                {item.label}
-              </a>
-            ))}
-          </nav>
+          <span className={styles.heroNavRole}>Frontend Engineer / Jakarta</span>
           <a href={`mailto:${EMAIL}`} className={styles.topContact}>
-            CONTACT ↗
+            Contact
           </a>
         </header>
 
-        <div className={styles.heroMarqueeBar} aria-hidden="true">
-          <div className={styles.heroMarqueeTrack}>
-            {[...HERO_MARQUEE_ITEMS, ...HERO_MARQUEE_ITEMS].map(
-              (item, index) => (
-                <span key={index} className={styles.heroMarqueeItem}>
-                  <span className={styles.heroMarqueeItemDot} />
-                  {item}
-                </span>
-              ),
-            )}
-          </div>
-        </div>
-
-        <div className={styles.heroViewfinderReadout}>
-          <div className={styles.heroViewfinderLabel}>
-            <EncryptedText
-                text="FRONTEND ENGINEER"
-              revealDelayMs={35}
-              encryptedClassName={styles.encryptedChar}
-              scrambleOnHover
-            />
-            <span className={styles.heroViewfinderStatus}>
-              <i /> LIVE SIGNAL
-            </span>
-          </div>
-
-          <div className={styles.heroViewfinderIdentity}>
-            <h1 aria-label="ADITYA HIMAONE">
-              <span className={styles.heroLine}>
-                <BrokenLightText
-                  text="ADITYA"
-                  mode="settle"
-                  // glowColor="#ff5a1f"
-                />
-              </span>
-              <span className={styles.heroLine}>
-                <BrokenLightText
-                  text="HIMA"
-                  mode="settle"
-                  // glowColor="#ff5a1f"
-                />
-                <em>
-                  <BrokenLightText
-                    text="ONE"
-                    mode="settle"
-                    glowColor="#e0b75a"
-                  />
-                </em>
-              </span>
+        <main className={styles.heroImmersiveContent}>
+          <div className={styles.heroEditorialPanel}>
+            <div className={styles.heroKicker}>
+              <span>Frontend Engineer</span>
+              <i aria-hidden="true" />
+              <span>Jakarta, Indonesia</span>
+            </div>
+            <h1 className={styles.srOnly}>
+              Aditya Himawan, Frontend Engineer
             </h1>
+            <strong className={styles.heroPanelTitle}>
+              Production frontend, from architecture to interaction.
+            </strong>
             <p>
-              I build production web applications with React, Next.js, and
-              TypeScript.
+              I build with React, Next.js, and TypeScript across products used
+              by more than 15,000 people.
             </p>
-          </div>
-
-          <div className={styles.heroViewfinderActions}>
-            <span>
-              <EncryptedText
-                text="BASED IN JAKARTA, INDONESIA"
-                revealDelayMs={40}
-                encryptedClassName={styles.encryptedChar}
-              />
-            </span>
             <div className={styles.heroActions}>
               <a href="#work" className={styles.primaryButton}>
-                <span>VIEW SELECTED WORK</span>
+                <span>Selected work</span>
                 <ArrowDownRight size={18} aria-hidden="true" />
               </a>
               <a
                 href={RESUME_URL}
                 target="_blank"
                 rel="noreferrer"
-                className={styles.resumeButton}
-                aria-label="Download resume PDF"
+                className={styles.heroResumeLink}
               >
-                <span>DOWNLOAD RESUME</span>
-                <Download size={16} aria-hidden="true" />
+                Resume <ArrowUpRight size={15} aria-hidden="true" />
               </a>
             </div>
+            <div className={styles.heroInlineProof} aria-label="Career highlights">
+              <span><b>4+</b> years</span>
+              <span><b>3</b> product teams</span>
+              <span><b>15K+</b> users</span>
+            </div>
           </div>
-        </div>
+        </main>
 
-        <div className={styles.heroFooter}>
-          <SilkscreenLabel>
-            FRONTEND ENGINEERING / PRODUCTION WEB APPLICATIONS
-          </SilkscreenLabel>
-          <a
-            href="#about"
-            className={styles.scrollAction}
-            aria-label="Scroll down to about section"
-          >
-            <span>JAKARTA, ID / SELECT A DEVICE /</span>
-            <EncryptedText
-              text="SCROLL"
-              revealDelayMs={45}
-              encryptedClassName={styles.encryptedChar}
-              scrambleOnHover
-            />
-            <span className={styles.scrollArrow}>↓</span>
+        <div className={styles.heroBottomRail}>
+          <span>Interactive device wall</span>
+          <a href="#about">
+            Continue <span aria-hidden="true">↓</span>
           </a>
         </div>
       </div>
@@ -797,16 +727,12 @@ function About({
 function SignalDivider() {
   const topNarrative = [
     'FRONTEND ARCHITECTURE',
-    'REUSABLE COMPONENTS',
-    'SERVER-SIDE RENDERING',
-    'STATE MANAGEMENT',
+    'PRODUCTION INTERFACES',
   ]
 
   const bottomNarrative = [
     'REACT / NEXT.JS / TYPESCRIPT',
-    'ZUSTAND / REACT QUERY',
-    '15K+ USER PLATFORM',
-    'END-TO-END FEATURE DELIVERY',
+    'STATE / DATA / DELIVERY',
   ]
 
   return (
@@ -831,7 +757,7 @@ function SignalDivider() {
                       02.{pIdx + 1}
                     </span>
                     <strong>{phrase}</strong>
-                    <i className={styles.signalDividerGlyph}>✦</i>
+                    <i className={styles.signalDividerGlyph}>/</i>
                   </span>
                 ))}
               </div>
@@ -841,26 +767,16 @@ function SignalDivider() {
 
         {/* Center Console: Signal Router Bridge Module */}
         <div className={styles.signalBridgeConsole}>
-          <Screw className={styles.signalScrewLeft} />
-          <Screw className={styles.signalScrewRight} />
           <div className={styles.signalBridgeLeft}>
             <div className={styles.signalBridgeStatus}>
               <i />
-              <span>SIGNAL ROUTE</span>
+              <span>02 / PROFILE</span>
             </div>
-            <strong>02 // ARCHITECTURE ➔ 03 // INSTRUMENTS</strong>
-          </div>
-          <div className={styles.signalBridgeCenter}>
-            <div className={styles.signalBridgeMeter} aria-hidden="true">
-              {Array.from({ length: 12 }, (_, i) => (
-                <i key={i} />
-              ))}
-            </div>
-            <span>LOCKED // 48.0 kHz 24-BIT</span>
+            <strong>Frontend systems</strong>
           </div>
           <div className={styles.signalBridgeRight}>
-            <span>INTENT · MOTION · CODE</span>
-            <strong>From system design to production ship.</strong>
+            <span>03 / TOOLKIT</span>
+            <strong>Production stack</strong>
           </div>
         </div>
 
@@ -880,7 +796,7 @@ function SignalDivider() {
                       03.{pIdx + 1}
                     </span>
                     <strong>{phrase}</strong>
-                    <i className={styles.signalDividerGlyphBottom}>✦</i>
+                    <i className={styles.signalDividerGlyphBottom}>/</i>
                   </span>
                 ))}
               </div>
@@ -2099,8 +2015,6 @@ function Work() {
                     } as React.CSSProperties
                   }
                 >
-                  <Screw className={styles.projectScrewLeft} />
-                  <Screw className={styles.projectScrewRight} />
                   <div className={styles.projectMeta}>
                     <SilkscreenLabel>
                       AH / STUDIO · REL-{releaseNumber} / {project.year}
@@ -2605,37 +2519,177 @@ export default function Rack01LandingPage() {
       context = gsap.context(() => {
         const media = gsap.matchMedia()
         media.add('(min-width: 769px)', () => {
-          gsap
-            .timeline({
-              scrollTrigger: {
-                trigger: `.${styles.hero}`,
-                start: 'top top',
-                end: 'bottom bottom',
-                scrub: 0.7,
-              },
-            })
-            .to(
-              `.${styles.heroLine}`,
-              { yPercent: -6, stagger: 0.06, ease: 'none' },
-              0,
-            )
-            .to(
-              `.${styles.heroViewfinderReadout}`,
-              { y: -18, opacity: 0.76, ease: 'none' },
-              0,
-            )
+          const hero = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.hero}`,
+          )
+          if (!hero) return
+          const wall = hero.querySelector<HTMLElement>(
+            `.${styles.heroDeviceWall}`,
+          )!
+          const modules = gsap.utils.toArray<HTMLElement>(
+            hero?.querySelectorAll<HTMLElement>('[data-hero-device]') ?? [],
+          )
+          const routes = gsap.utils.toArray<HTMLElement>(
+            hero?.querySelectorAll<HTMLElement>('[data-hero-route]') ?? [],
+          )
+          const anchors = modules.filter(
+            (module) => module.dataset.rackAnchor === 'true',
+          )
+          const supportingModules = modules.filter(
+            (module) => module.dataset.rackAnchor !== 'true',
+          )
+          const name = hero.querySelector<HTMLElement>(
+            `.${styles.heroBackdropName}`,
+          )!
+          const panel = hero.querySelector<HTMLElement>(
+            `.${styles.heroEditorialPanel}`,
+          )!
+          const nav = hero.querySelector<HTMLElement>(
+            `.${styles.heroMinimalNav}`,
+          )!
+          const heroRail = hero.querySelector<HTMLElement>(
+            `.${styles.heroBottomRail}`,
+          )!
+          const atmosphere = hero.querySelector<HTMLElement>(
+            `.${styles.heroAtmosphere}`,
+          )!
+          const handoff = hero.querySelector<HTMLElement>(
+            `.${styles.heroAboutHandoff}`,
+          )!
+          const boot = hero.querySelector<HTMLElement>(
+            `.${styles.heroBootSequence}`,
+          )!
 
-          gsap.to(`.${styles.heroDeviceWall}`, {
-            yPercent: 3,
-            scale: 1.02,
-            ease: 'none',
+          const intro = gsap.timeline({ defaults: { overwrite: 'auto' } })
+          intro
+            .fromTo(
+              wall,
+              { scale: 1.11, filter: 'saturate(0.45) contrast(1.15) brightness(0.42)' },
+              {
+                scale: 1.015,
+                filter: 'saturate(0.8) contrast(1.08) brightness(0.78)',
+                duration: 1.45,
+                ease: 'expo.out',
+              },
+            )
+            .fromTo(
+              modules,
+              {
+                xPercent: (index) =>
+                  Number(modules[index]?.dataset.collapseX ?? 0) * 0.72,
+                yPercent: (index) =>
+                  Number(modules[index]?.dataset.collapseY ?? 0) * 0.72,
+                rotation: (index) =>
+                  Number(modules[index]?.dataset.collapseRotation ?? 0) * 0.7,
+                scale: 0.88,
+                opacity: 0,
+              },
+              {
+                xPercent: 0,
+                yPercent: 0,
+                rotation: 0,
+                scale: 1,
+                opacity: 1,
+                duration: 1.25,
+                stagger: { each: 0.045, from: 'edges' },
+                ease: 'expo.out',
+              },
+              0.06,
+            )
+            .fromTo(
+              name,
+              { scale: 0.82, opacity: 0, filter: 'blur(8px)' },
+              {
+                scale: 1,
+                opacity: 1,
+                filter: 'blur(0px)',
+                duration: 1.05,
+                ease: 'power3.out',
+              },
+              0.42,
+            )
+            .fromTo(
+              panel,
+              { y: 34, opacity: 0, clipPath: 'inset(0 0 100% 0)' },
+              {
+                y: 0,
+                opacity: 1,
+                clipPath: 'inset(0 0 0% 0)',
+                duration: 0.82,
+                ease: 'power3.out',
+              },
+              0.78,
+            )
+            .fromTo(
+              [nav, heroRail],
+              { opacity: 0 },
+              { opacity: 1, duration: 0.55, ease: 'power2.out' },
+              0.94,
+            )
+            .to(boot, { opacity: 0, duration: 0.35, ease: 'power2.out' }, 0.38)
+
+          const collapse = gsap.timeline({
             scrollTrigger: {
-              trigger: `.${styles.hero}`,
+              trigger: hero,
               start: 'top top',
               end: 'bottom bottom',
-              scrub: 0.7,
+              scrub: 0.85,
+              invalidateOnRefresh: true,
             },
+            defaults: { ease: 'none', overwrite: 'auto' },
           })
+
+          collapse
+            .to(panel, { xPercent: -18, opacity: 0, filter: 'blur(5px)', duration: 0.18 }, 0.04)
+            .to([nav, heroRail], { opacity: 0.34, duration: 0.2 }, 0.06)
+            .to(
+              modules,
+              {
+                xPercent: (_, element) => Number((element as HTMLElement).dataset.collapseX ?? 0),
+                yPercent: (_, element) => Number((element as HTMLElement).dataset.collapseY ?? 0),
+                rotation: (_, element) => Number((element as HTMLElement).dataset.collapseRotation ?? 0),
+                scale: (_, element) =>
+                  (element as HTMLElement).dataset.rackAnchor === 'true' ? 0.96 : 0.88,
+                duration: 0.52,
+                stagger: 0.008,
+              },
+              0.1,
+            )
+            .to(supportingModules, { opacity: 0.16, duration: 0.28 }, 0.24)
+            .to(anchors, { opacity: 1, filter: 'brightness(1.08) saturate(1)', duration: 0.22 }, 0.28)
+            .to(routes, { opacity: 1, y: 0, duration: 0.18 }, 0.32)
+            .to(
+              name,
+              {
+                scale: 1.34,
+                letterSpacing: '-0.055em',
+                filter: 'blur(0px)',
+                duration: 0.5,
+              },
+              0.14,
+            )
+            .to(atmosphere, { opacity: 0.36, duration: 0.28 }, 0.3)
+            .to(routes, { opacity: 0, y: -5, duration: 0.16 }, 0.66)
+            .to(supportingModules, { opacity: 0.04, duration: 0.24 }, 0.7)
+            .to(anchors, { opacity: 0.18, scale: 1.02, duration: 0.24 }, 0.7)
+            .to(
+              name,
+              {
+                yPercent: -10,
+                opacity: 0.32,
+                scale: 1.46,
+                filter: 'blur(3px)',
+                duration: 0.25,
+              },
+              0.72,
+            )
+            .fromTo(
+              handoff,
+              { yPercent: 100, opacity: 0 },
+              { yPercent: 0, opacity: 1, duration: 0.26 },
+              0.72,
+            )
+            .to(atmosphere, { opacity: 0.1, duration: 0.2 }, 0.78)
 
           ScrollTrigger.create({
             trigger: `.${styles.about}`,

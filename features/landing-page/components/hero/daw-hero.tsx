@@ -23,6 +23,7 @@ const devices = [
     id: 'keys',
     type: 'keys',
     label: 'KEYSTATION 49',
+    route: 'WORK',
     className:
       'col-start-4 col-end-9 row-start-1 row-end-3 sm:col-start-4 sm:col-end-9 sm:row-start-1 sm:row-end-3',
   },
@@ -44,6 +45,7 @@ const devices = [
     id: 'jog',
     type: 'jog',
     label: 'DECK A',
+    route: 'EXPERIENCE',
     className:
       'col-start-1 col-end-4 row-start-5 row-end-9 sm:col-start-4 sm:col-end-7 sm:row-start-3 sm:row-end-7',
   },
@@ -72,6 +74,7 @@ const devices = [
     id: 'sequencer',
     type: 'sequencer',
     label: 'STEP SEQUENCER',
+    route: 'TOOLKIT',
     className:
       'col-start-1 col-end-6 row-start-9 row-end-11 sm:col-start-4 sm:col-end-9 sm:row-start-7 sm:row-end-9',
   },
@@ -100,6 +103,21 @@ const devices = [
 
 type Device = (typeof devices)[number]
 type DeviceType = Device['type']
+
+const collapseVectors = [
+  [-118, -72, -8],
+  [-24, -116, 5],
+  [96, -84, 7],
+  [126, -28, -6],
+  [-112, -12, 4],
+  [102, 12, -5],
+  [118, 68, 7],
+  [-92, 82, -6],
+  [-18, 116, 4],
+  [-124, 46, 7],
+  [42, 122, -5],
+  [124, 92, 6],
+] as const
 
 export function DawHero({
   backgroundOnly = false,
@@ -151,7 +169,7 @@ export function DawHero({
       ref={containerRef}
       className={cn(
         'relative h-screen min-h-160 w-full overflow-hidden bg-[#16191b] select-none',
-        backgroundOnly && 'absolute inset-0 h-full min-h-0 bg-[#111311]',
+        backgroundOnly && 'absolute inset-0 h-full min-h-0 bg-transparent',
       )}
     >
       <motion.div
@@ -243,11 +261,19 @@ function DeviceTile({
   reduceMotion: boolean | null
   onToggle: () => void
 }) {
+  const [collapseX, collapseY, collapseRotation] = collapseVectors[index]
+  const route = 'route' in device ? device.route : undefined
+
   return (
     <motion.button
       type="button"
       aria-label={`${device.label}: ${active ? 'active' : 'inactive'}. Activate module.`}
       aria-pressed={active}
+      data-hero-device
+      data-collapse-x={collapseX}
+      data-collapse-y={collapseY}
+      data-collapse-rotation={collapseRotation}
+      data-rack-anchor={route ? 'true' : undefined}
       initial={
         immediatelyVisible || reduceMotion
           ? false
@@ -277,6 +303,15 @@ function DeviceTile({
           active && 'bg-[#df6d36] shadow-[0_0_6px_rgba(223,109,54,0.8)]',
         )}
       />
+      {route && (
+        <span
+          data-hero-route
+          className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex translate-y-1 items-center justify-between border-t border-[#273036]/45 pt-1.5 font-mono text-[6px] font-bold tracking-[0.2em] text-[#1b242a] opacity-0 sm:text-[7px]"
+        >
+          {route}
+          <i className="h-1.5 w-1.5 rounded-full bg-[#df6d36] shadow-[0_0_7px_rgba(223,109,54,0.85)]" />
+        </span>
+      )}
     </motion.button>
   )
 }

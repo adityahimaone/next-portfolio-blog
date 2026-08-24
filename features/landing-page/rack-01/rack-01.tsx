@@ -145,6 +145,7 @@ function Knob({
       <div className={styles.knobScale} aria-hidden="true" />
       <button
         type="button"
+        data-skill-sequence="param"
         className={styles.knob}
         style={{ '--knob-color': color } as React.CSSProperties}
         aria-label={`${label}: ${value}. Press to increase`}
@@ -892,6 +893,7 @@ function Skills() {
   )
   const [activeFrequency, setActiveFrequency] = useState<number>(440)
   const [vuLevel, setVuLevel] = useState<number>(3)
+  const [skillSequenceProgress, setSkillSequenceProgress] = useState(1)
 
   const pitchDragRef = useRef(false)
   const modDragRef = useRef(false)
@@ -1093,6 +1095,25 @@ function Skills() {
     return () => {
       if (arpTimerRef.current) clearInterval(arpTimerRef.current)
     }
+  }, [])
+
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+    const handleSequence = (event: Event) => {
+      const progress = (event as CustomEvent<number>).detail
+      if (progress < 0) {
+        setSkillSequenceProgress(1)
+        setDisplayMode('WAVE')
+        return
+      }
+      setSkillSequenceProgress(progress)
+      setDisplayMode(
+        progress < 0.7 ? 'WAVE' : progress < 0.84 ? 'SPECTRUM' : 'TEL',
+      )
+    }
+    section.addEventListener('skills-sequence', handleSequence)
+    return () => section.removeEventListener('skills-sequence', handleSequence)
   }, [])
 
   // Physical Computer Keyboard Bindings
@@ -1302,6 +1323,7 @@ function Skills() {
                     <button
                       type="button"
                       key={mode}
+                      data-skill-sequence="display"
                       className={`${styles.modeTag} ${
                         displayMode === mode ? styles.modeTagActive : ''
                       }`}
@@ -1401,6 +1423,7 @@ function Skills() {
                   <button
                     type="button"
                     key={skill.name}
+                    data-skill-sequence="pad"
                     aria-pressed={activeSkill.name === skill.name}
                     onClick={() => handlePadClick(skill, index)}
                     className={`${
@@ -1430,7 +1453,10 @@ function Skills() {
                     key={skill.name}
                     color={colors[index]}
                     label={skill.name}
-                    value={levels[skill.name]}
+                    value={Math.round(
+                      levels[skill.name] *
+                        Math.max(0, Math.min(1, (skillSequenceProgress - 0.18) / 0.22)),
+                    )}
                     onChange={(value) => updateLevel(skill.name, value)}
                   />
                 ))}
@@ -1445,9 +1471,13 @@ function Skills() {
                     <output>{levels[skill.name]}</output>
                     <input
                       type="range"
+                      data-skill-sequence="fader"
                       min="0"
                       max="100"
-                      value={levels[skill.name]}
+                      value={Math.round(
+                        levels[skill.name] *
+                          Math.max(0, Math.min(1, (skillSequenceProgress - 0.4) / 0.22)),
+                      )}
                       onChange={(event) =>
                         updateLevel(skill.name, Number(event.target.value))
                       }
@@ -2751,6 +2781,88 @@ export default function Rack01LandingPage() {
               },
             },
           )
+
+          const skillSection = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.skills}`,
+          )
+          if (skillSection) {
+            const sequenceGroups = {
+              pads: gsap.utils.toArray<HTMLElement>(
+                skillSection.querySelectorAll<HTMLElement>(
+                  '[data-skill-sequence="pad"]',
+                ),
+              ),
+              params: gsap.utils.toArray<HTMLElement>(
+                skillSection.querySelectorAll<HTMLElement>(
+                  '[data-skill-sequence="param"]',
+                ),
+              ),
+              faders: gsap.utils.toArray<HTMLElement>(
+                skillSection.querySelectorAll<HTMLElement>(
+                  '[data-skill-sequence="fader"]',
+                ),
+              ),
+            }
+            const activateThrough = (
+              items: HTMLElement[],
+              progress: number,
+              start: number,
+              end: number,
+            ) => {
+              const local = Math.max(0, Math.min(1, (progress - start) / (end - start)))
+              const activeCount = Math.ceil(local * items.length)
+              items.forEach((item, index) => {
+                item.classList.toggle(
+                  styles.skillsSequenceActive,
+                  index < activeCount,
+                )
+              })
+            }
+            const activateCurrent = (
+              items: HTMLElement[],
+              progress: number,
+              start: number,
+              end: number,
+            ) => {
+              const local = Math.max(0, Math.min(1, (progress - start) / (end - start)))
+              const activeIndex = Math.min(
+                items.length - 1,
+                Math.floor(local * items.length),
+              )
+              items.forEach((item, index) =>
+                item.classList.toggle(
+                  styles.skillsSequenceActive,
+                  local > 0 && index === activeIndex,
+                ),
+              )
+            }
+
+            ScrollTrigger.create({
+              trigger: skillSection,
+              start: 'top 86%',
+              end: 'bottom 14%',
+              invalidateOnRefresh: true,
+              onUpdate: (self) => {
+                const progress = self.progress
+                skillSection.dispatchEvent(
+                  new CustomEvent<number>('skills-sequence', {
+                    detail: progress,
+                  }),
+                )
+                activateCurrent(sequenceGroups.pads, progress, 0.02, 0.18)
+                activateThrough(sequenceGroups.params, progress, 0.16, 0.38)
+                activateThrough(sequenceGroups.faders, progress, 0.34, 0.58)
+              },
+              onLeaveBack: () => {
+                Object.values(sequenceGroups).flat().forEach((item) =>
+                  item.classList.remove(styles.skillsSequenceActive),
+                )
+                skillSection.dispatchEvent(
+                  new CustomEvent<number>('skills-sequence', { detail: -1 }),
+                )
+              },
+            })
+          }
 
           const depthModules = gsap.utils.toArray<HTMLElement>(
             `.${styles.contactLaunchpad}`,

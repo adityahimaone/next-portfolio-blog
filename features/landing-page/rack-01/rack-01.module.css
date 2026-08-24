@@ -5163,6 +5163,98 @@
   }
 }
 
+/* Responsive Rack Collapse: same hierarchy, fewer columns. */
+@media (max-width: 768px) {
+  .heroStage {
+    min-height: 100svh;
+    padding: 18px 18px 18px;
+  }
+  .heroDeviceWall {
+    opacity: 0.86;
+    filter: saturate(0.78) contrast(1.06) brightness(0.7);
+    transform: scale(1.06);
+    transform-origin: 58% 30%;
+  }
+  .heroBackdropName {
+    top: 30%;
+    left: 50%;
+    font-size: clamp(68px, 20vw, 98px);
+    line-height: 0.74;
+    letter-spacing: -0.095em;
+  }
+  .heroImmersiveContent {
+    min-height: calc(100svh - 70px);
+    padding: clamp(245px, 43vh, 360px) 0 28px;
+  }
+  .heroEditorialPanel {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: repeat(5, auto);
+    gap: 10px 14px;
+    padding: 12px 0 0;
+    border: 0;
+    border-top: 1px solid rgba(244, 240, 232, 0.28);
+    background: transparent;
+    box-shadow: none;
+  }
+  .heroEditorialPanel .heroKicker {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    max-width: none;
+    margin: 0;
+    font-size: 8px;
+  }
+  .heroPanelTitle {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    max-width: 18ch;
+    font-size: clamp(24px, 7.4vw, 34px);
+    line-height: 0.98;
+  }
+  .heroEditorialPanel > p {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    max-width: 38ch;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .heroEditorialPanel .heroActions {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 2px 0 0;
+  }
+  .heroEditorialPanel .primaryButton,
+  .heroEditorialPanel .heroResumeLink {
+    width: auto;
+    min-height: 44px;
+  }
+  .heroEditorialPanel .primaryButton {
+    padding-inline: 14px;
+  }
+  .heroInlineProof {
+    grid-column: 1 / -1;
+    grid-row: 5;
+    gap: 7px 12px;
+    margin: 0;
+    padding-top: 2px;
+    font-size: 7px;
+  }
+  .heroBottomRail {
+    bottom: 8px;
+  }
+  .heroBottomRail > span {
+    display: none;
+  }
+  .heroBottomRail a {
+    margin-left: auto;
+  }
+}
+
 /* Continue the adjoining section calibration lines through the handoff. */
 .signalDividerStage::before {
   background:

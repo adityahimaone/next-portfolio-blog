@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import Lenis from 'lenis'
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -23,7 +23,6 @@ import {
   EXPERIENCES,
   MIXER_DATA,
   PROJECTS_SHOWCASE,
-  SOCIAL_LINKS_LANDING,
 } from '../constants'
 import styles from './rack-01.module.css'
 import { cn } from '@/lib/utils'
@@ -32,14 +31,13 @@ const RESUME_URL =
   'https://drive.google.com/file/d/17x3GuEkZxbt9ZeLilXx1ShBHV_CZTfSq/view?usp=sharing'
 
 const HERO_MARQUEE_ITEMS = [
-  'AH / STUDIO ONLINE',
-  '12 INTERACTIVE AUDIO-VISUAL INSTRUMENTS',
-  'SIGNAL LOCKED // 48.0 KHZ 24-BIT',
-  'FRONTEND ENGINEERING & MOTION DESIGN',
+  'ADITYA HIMAWAN / FRONTEND ENGINEER',
+  'REACT / NEXT.JS / TYPESCRIPT',
+  'PRODUCTION WEB APPLICATIONS',
+  'SSR / STATE / FRONTEND ARCHITECTURE',
   'JAKARTA, ID',
-  '120.00 BPM SYNCHRONIZED',
-  'SELECT ANY DECK TO PLAY',
-  'DISCIPLINED INTERFACES & CREATIVE CODE',
+  '4+ YEARS EXPERIENCE',
+  '15K+ USER PLATFORM',
 ] as const
 
 const NAV_ITEMS = [
@@ -116,8 +114,8 @@ function SectionHeading({
   return (
     <div className={styles.sectionHeading}>
       <div className={styles.silkscreen}>
+        <span className={styles.sectionIndex}>{index}</span>
         <span>{eyebrow}</span>
-        <span className={styles.sectionSysCode}>SYS—{index}</span>
       </div>
       <h2>{children}</h2>
     </div>
@@ -433,7 +431,7 @@ function Hero() {
         <div className={styles.heroViewfinderReadout}>
           <div className={styles.heroViewfinderLabel}>
             <EncryptedText
-              text="FRONTEND ENGINEER / CREATIVE DEVELOPER"
+                text="FRONTEND ENGINEER"
               revealDelayMs={35}
               encryptedClassName={styles.encryptedChar}
               scrambleOnHover
@@ -468,15 +466,15 @@ function Hero() {
               </span>
             </h1>
             <p>
-              Building expressive, high-performance digital products through
-              thoughtful interfaces, systems, and motion.
+              I build production web applications with React, Next.js, and
+              TypeScript.
             </p>
           </div>
 
           <div className={styles.heroViewfinderActions}>
             <span>
               <EncryptedText
-                text="12 DEVICES / JAKARTA, ID"
+                text="BASED IN JAKARTA, INDONESIA"
                 revealDelayMs={40}
                 encryptedClassName={styles.encryptedChar}
               />
@@ -502,7 +500,7 @@ function Hero() {
 
         <div className={styles.heroFooter}>
           <SilkscreenLabel>
-            COLLECTION / 12 INTERACTIVE INSTRUMENTS
+            FRONTEND ENGINEERING / PRODUCTION WEB APPLICATIONS
           </SilkscreenLabel>
           <a
             href="#about"
@@ -526,46 +524,46 @@ function Hero() {
 
 const ABOUT_TRACKS = [
   {
-    title: 'EXPERIENCE',
-    note: '2022—NOW / PRODUCT TEAMS',
+    title: 'FOCUS',
+    note: 'REACT / NEXT.JS / TYPESCRIPT',
     metric: '04+',
-    metricLabel: 'YEARS BUILDING',
-    heading: 'Four years turning product complexity into shipped interfaces.',
-    body: 'I lead frontend development across product teams — from job-seeker platforms serving 15K+ users to HR systems — turning unclear requirements into reliable experiences people can actually use.',
-    signal: 'YEARS / IN PRACTICE',
+    metricLabel: 'YEARS IN FRONTEND',
+    heading: 'Frontend engineering for production web applications.',
+    body: 'My work centers on React, Next.js, TypeScript, SSR, state management, and reusable component architecture.',
+    signal: 'PRIMARY PRACTICE',
     surface: '#d7b36f',
     ink: '#2c251b',
     accent: '#8a432d',
     detail:
-      'Four-plus years leading frontend builds for products serving 15K+ users.',
+      'Four-plus years building production web applications.',
   },
   {
-    title: 'CRAFT',
-    note: 'DESIGN / MOTION / CODE',
-    metric: '03',
-    metricLabel: 'CONNECTED DISCIPLINES',
-    heading: 'Design, motion, and engineering tuned as one practice.',
-    body: 'I work across the three disciplines instead of handing ideas between silos, keeping the concept intact from first frame to production code.',
-    signal: 'DISCIPLINES / CONNECTED',
+    title: 'SYSTEMS',
+    note: 'FEATURES / DATA / DELIVERY',
+    metric: 'SSR',
+    metricLabel: 'RENDERING',
+    heading: 'Architecture that stays maintainable as products grow.',
+    body: 'I use feature-based structure, Zustand, React Query, and reusable components to support end-to-end feature delivery.',
+    signal: 'FRONTEND ARCHITECTURE',
     surface: '#8199ad',
     ink: '#17252d',
     accent: '#315d72',
     detail:
-      'Design, motion, and engineering stay connected from concept to ship.',
+      'Feature-based architecture and reusable component design.',
   },
   {
-    title: 'PRACTICE',
-    note: 'DISCOVER / DESIGN / BUILD',
-    metric: '01',
-    metricLabel: 'INTEGRATED SYSTEM',
-    heading: 'One process that carries the signal from question to release.',
-    body: 'I discover the real constraint, design the interaction, and build the durable system—without losing the reason the work began.',
-    signal: 'PROCESS / END TO END',
+    title: 'RANGE',
+    note: 'BACKEND / AUTOMATION / INFRA',
+    metric: 'VPS',
+    metricLabel: 'SELF-HOSTED',
+    heading: 'Supporting skills beyond the browser.',
+    body: 'I also work with backend integrations, AI workflow automation, Docker, Nginx, and self-hosted monitoring.',
+    signal: 'ADDITIONAL EXPERIENCE',
     surface: '#b68ba5',
     ink: '#30212a',
     accent: '#70415d',
     detail:
-      'One end-to-end practice carries each idea from discovery to release.',
+      'Backend integration, automation, and self-hosted infrastructure.',
   },
 ]
 
@@ -618,8 +616,8 @@ function About({
       data-rack-section
     >
       <div className={styles.aboutStage}>
-        <SectionHeading index="02" eyebrow="SIGNAL SOURCE">
-          I turn complex ideas into clear, playable systems.
+        <SectionHeading index="02" eyebrow="Profile">
+          I build the layer people actually use.
         </SectionHeading>
         <div className={styles.aboutDeck}>
           <div className={styles.aboutCardStack}>
@@ -700,7 +698,7 @@ function About({
                 >
                   <Square size={12} />
                 </button>
-                <span>120 BPM / 4—4</span>
+                <span>120 BPM / 4-4</span>
               </div>
             </div>
             <div className={styles.timelineArrangement}>
@@ -798,19 +796,17 @@ function About({
 
 function SignalDivider() {
   const topNarrative = [
-    'CONVERTING COMPLEX SIGNALS INTO ELEGANT SYSTEMS',
-    'DISCIPLINED INTERFACES',
-    'INTENTIONAL MOTION',
-    'CRAFTED FOR HUMANS AT SCALE',
-    'WHERE CONCEPT MEETS LIVING ARCHITECTURE',
+    'FRONTEND ARCHITECTURE',
+    'REUSABLE COMPONENTS',
+    'SERVER-SIDE RENDERING',
+    'STATE MANAGEMENT',
   ]
 
   const bottomNarrative = [
-    'NEXT.JS & TYPESCRIPT RIGOR',
-    'HIGH-PERFORMANCE MOTION CRAFT',
-    'SCALED ACROSS PRODUCT TEAMS FOR 15K+ USERS',
-    'DIGITAL PRODUCTS TUNED TO SHIP',
-    'INTERACTIVE CODE IN PRODUCTION',
+    'REACT / NEXT.JS / TYPESCRIPT',
+    'ZUSTAND / REACT QUERY',
+    '15K+ USER PLATFORM',
+    'END-TO-END FEATURE DELIVERY',
   ]
 
   return (
@@ -1360,12 +1356,12 @@ function Skills() {
           SKILLS
         </div>
         <div className={styles.skillsIntro}>
-          <SectionHeading index="03" eyebrow="MIDI MAP">
-            A practical toolkit, mapped like an instrument.
+          <SectionHeading index="03" eyebrow="Toolkit">
+            The stack behind the shipped work.
           </SectionHeading>
           <p>
-            Pads, encoders, faders, and keys restore the previous controller
-            workflow inside the AH / STUDIO chassis.
+            Play the controller to inspect the stack. The controls produce
+            sound and remain keyboard accessible.
           </p>
         </div>
         <div className={styles.controller}>
@@ -1482,7 +1478,7 @@ function Skills() {
           <div className={styles.controllerBanks}>
             <div className={`${styles.controlBank} ${styles.padBank}`}>
               <SilkscreenLabel>
-                PAD BANK A / LANGUAGES (KEYS 1—6)
+                PAD BANK A / FRONTEND (KEYS 1-6)
               </SilkscreenLabel>
               <div>
                 {MIXER_DATA[0].channels.map((skill, index) => (
@@ -1551,7 +1547,7 @@ function Skills() {
           {/* KEYBOARD BED: Pitch & Mod Wheels + 24 Playable Piano Keys */}
           <div
             className={styles.keyboardBed}
-            aria-label="Playable skill keyboard (Keys A—L)"
+            aria-label="Playable skill keyboard (Keys A-L)"
           >
             <div className={styles.pitchControls}>
               <div className={styles.wheelGroup}>
@@ -1599,7 +1595,7 @@ function Skills() {
                   </div>
                   <div className={styles.wheelTensionIndicator}>
                     <span>MAX</span>
-                    <span className={styles.wheelTickCenter}>—</span>
+                    <span className={styles.wheelTickCenter}>-</span>
                     <span>0</span>
                   </div>
                 </div>
@@ -1657,7 +1653,7 @@ function CableDivider() {
     >
       <div className={styles.cableDividerInner}>
         <p className={styles.cableDividerLabel}>
-          <span>SIGNAL PATH / 03—04</span>
+          <span>SIGNAL PATH / 03-04</span>
           <strong>Turning capability into experience.</strong>
         </p>
 
@@ -1732,8 +1728,8 @@ function Experience({
   return (
     <section id="experience" className={styles.experience} data-rack-section>
       <div className={styles.experienceStage}>
-        <SectionHeading index="04" eyebrow="TAPE ARCHIVE">
-          Recorded experience. Still in motion.
+        <SectionHeading index="04" eyebrow="Experience">
+          Four-plus years. Three product teams.
         </SectionHeading>
         <div className={styles.cassetteDeck}>
           <Screw className={styles.screwTopLeft} />
@@ -1747,7 +1743,7 @@ function Experience({
           </div>
           <div className={styles.radioFace}>
             <div className={styles.radioSpeaker} aria-hidden="true">
-              <span className={styles.radioSpeakerBadge}>R—01</span>
+              <span className={styles.radioSpeakerBadge}>R-01</span>
               <div className={styles.speakerGrille} />
               <div className={styles.radioLevel}>
                 {Array.from({ length: 8 }, (_, index) => (
@@ -1951,53 +1947,32 @@ function balanceIndent(
 
 const SPLIT_FLAP_ROWS = [
   {
-    from: ''.padEnd(60, ' '),
-    to: ''.padEnd(60, ' '),
-    isFlipping: false,
-  },
-  {
     from: balanceIndent(
-      '04 YEARS EXPERIENCE ARCHIVED ────────> STATUS: LOGGED',
+      'EXPERIENCE ARCHIVE CLOSED',
       4,
       60,
     ),
     to: balanceIndent(
-      '05 FEATURED RELEASES DEPARTING ─────> STATUS: ACTIVE',
+      'SELECTED PROJECTS BOARDING',
       4,
       60,
     ),
-    isFlipping: true,
   },
   {
     from: balanceIndent(
-      'MASTER INTERFACE CONSOLE CLOSED ─────> GATE: 04 CLOSED',
+      'FRONTEND ENGINEERING / JAKARTA',
       4,
       60,
     ),
     to: balanceIndent(
-      'SELECTED WORK RELEASES ON AIR ─────> GATE: 05 BOARDING',
+      'REACT / NEXT.JS / TYPESCRIPT',
       4,
       60,
     ),
-    isFlipping: true,
   },
   {
-    from: balanceIndent(
-      'SYSTEMS & MOTION CRAFT LOGGED ──────> DEPT: ARCHIVE',
-      4,
-      60,
-    ),
-    to: balanceIndent(
-      'DIGITAL PRODUCTS READY TO SHIP ────> DEPT: SHIPPED',
-      4,
-      60,
-    ),
-    isFlipping: true,
-  },
-  {
-    from: ''.padEnd(60, ' '),
-    to: ''.padEnd(60, ' '),
-    isFlipping: false,
+    from: balanceIndent('STATUS: ARCHIVED', 4, 60),
+    to: balanceIndent('STATUS: READY', 4, 60),
   },
 ] as const
 
@@ -2029,68 +2004,6 @@ const SPLIT_FLAP_MOBILE_ROWS = [
   },
 ] as const
 
-interface SplitFlapCellProps {
-  from: string
-  to: string
-  isFlipping?: boolean
-  rowIndex: number
-  colIndex: number
-}
-
-const SplitFlapCell = memo(function SplitFlapCell({
-  from,
-  to,
-  isFlipping = true,
-  rowIndex = 0,
-  colIndex = 0,
-}: SplitFlapCellProps) {
-  const isBlank = from === ' ' && to === ' '
-  const shouldFlip = isFlipping && from !== to
-  const source = from === ' ' ? '\u00a0' : from
-  const target = shouldFlip ? (to === ' ' ? '\u00a0' : to) : source
-
-  // High performance static mechanical tile for blank or unchanging tiles (renders full Solari look without 3D overhead)
-  if (!shouldFlip || isBlank) {
-    return (
-      <span className={styles.splitFlapCell} aria-hidden="true">
-        <span className={styles.splitFlapStaticChar}>{source}</span>
-        <i />
-      </span>
-    )
-  }
-
-  // Active mechanical flipping tile with cascading row-by-row and col-by-col delay
-  return (
-    <span
-      className={styles.splitFlapCell}
-      data-flipping="true"
-      style={
-        {
-          '--flap-row': rowIndex,
-          '--flap-col': colIndex,
-        } as React.CSSProperties
-      }
-      aria-hidden="true"
-    >
-      <span className={`${styles.splitFlapHalf} ${styles.splitFlapStaticTop}`}>
-        <span>{target}</span>
-      </span>
-      <span
-        className={`${styles.splitFlapHalf} ${styles.splitFlapStaticBottom}`}
-      >
-        <span>{source}</span>
-      </span>
-      <span className={`${styles.splitFlapHalf} ${styles.splitFlapTop}`}>
-        <span>{source}</span>
-      </span>
-      <span className={`${styles.splitFlapHalf} ${styles.splitFlapBottom}`}>
-        <span>{target}</span>
-      </span>
-      <i />
-    </span>
-  )
-})
-
 function SplitFlapDivider() {
   return (
     <section
@@ -2107,21 +2020,16 @@ function SplitFlapDivider() {
               <span>SCROLL TO BOARD RELEASE</span>
             </div>
             <div className={styles.splitFlapGrid}>
-              {SPLIT_FLAP_ROWS.flatMap((row, rowIndex) =>
-                Array.from(row.from).map((character, columnIndex) => {
-                  const targetChar = row.to[columnIndex] ?? ' '
-                  return (
-                    <SplitFlapCell
-                      from={character}
-                      to={targetChar}
-                      isFlipping={row.isFlipping}
-                      rowIndex={rowIndex}
-                      colIndex={columnIndex}
-                      key={`${rowIndex}-${columnIndex}`}
-                    />
-                  )
-                }),
-              )}
+              {SPLIT_FLAP_ROWS.map((row, rowIndex) => (
+                <div
+                  className={styles.splitFlapRow}
+                  key={row.to}
+                  style={{ '--flap-row': rowIndex } as React.CSSProperties}
+                >
+                  <span>{row.from}</span>
+                  <strong>{row.to}</strong>
+                </div>
+              ))}
             </div>
             <div className={styles.splitFlapStatus}>
               <span>OUTPUT / 05</span>
@@ -2136,20 +2044,17 @@ function SplitFlapDivider() {
               <span>SYS-05</span>
             </div>
             <div className={styles.splitFlapMobileGrid} aria-hidden="true">
-              {SPLIT_FLAP_MOBILE_ROWS.flatMap((row, rowIndex) =>
-                Array.from(row.from).map((character, columnIndex) => {
-                  const targetChar = row.to[columnIndex] ?? ' '
-                  return (
-                    <SplitFlapCell
-                      from={character}
-                      to={targetChar}
-                      isFlipping={row.isFlipping}
-                      rowIndex={rowIndex}
-                      colIndex={columnIndex}
-                      key={`m-${rowIndex}-${columnIndex}`}
-                    />
-                  )
-                }),
+              {SPLIT_FLAP_MOBILE_ROWS.filter((row) => row.isFlipping).map(
+                (row, rowIndex) => (
+                  <div
+                    className={styles.splitFlapRow}
+                    key={row.to}
+                    style={{ '--flap-row': rowIndex } as React.CSSProperties}
+                  >
+                    <span>{row.from}</span>
+                    <strong>{row.to}</strong>
+                  </div>
+                ),
               )}
             </div>
             <div className={styles.splitFlapMobileStatus}>
@@ -2168,12 +2073,12 @@ function Work() {
     <section id="work" className={styles.work} data-rack-section>
       <div className={styles.workStage}>
         <div className={styles.workHeader}>
-          <SectionHeading index="05" eyebrow="FEATURED RELEASES">
-            Selected output from the archive.
+          <SectionHeading index="05" eyebrow="Selected work">
+            Interfaces that made it to production.
           </SectionHeading>
           <div className={styles.workHint}>
             <span>DRAG / SCROLL</span>
-            <span>01—{String(PROJECTS_SHOWCASE.length).padStart(2, '0')}</span>
+            <span>01-{String(PROJECTS_SHOWCASE.length).padStart(2, '0')}</span>
           </div>
         </div>
         <div className={styles.workViewport}>
@@ -2198,7 +2103,7 @@ function Work() {
                   <Screw className={styles.projectScrewRight} />
                   <div className={styles.projectMeta}>
                     <SilkscreenLabel>
-                      AH / STUDIO · REL—{releaseNumber} / {project.year}
+                      AH / STUDIO · REL-{releaseNumber} / {project.year}
                     </SilkscreenLabel>
                     <span>33⅓ RPM · STEREO</span>
                   </div>
@@ -2258,138 +2163,217 @@ function Work() {
   )
 }
 
-const PAD_COLORS = [
+const CONTACT_PADS = [
+  { label: 'Email', detail: EMAIL, href: `mailto:${EMAIL}`, note: 261.63 },
+  {
+    label: 'LinkedIn',
+    detail: 'Professional profile',
+    href: 'https://www.linkedin.com/in/adityahimaone',
+    note: 329.63,
+  },
+  {
+    label: 'GitHub',
+    detail: 'Code and projects',
+    href: 'https://github.com/adityahimaone',
+    note: 392,
+  },
+  { label: 'Resume', detail: 'Open PDF', href: RESUME_URL, note: 523.25 },
+  { label: 'Kick', detail: 'Low pulse', note: 82.41 },
+  { label: 'Snare', detail: 'Short noise', note: 196 },
+  { label: 'Chord', detail: 'C major', note: 261.63 },
+  { label: 'Tone', detail: 'High signal', note: 659.25 },
+  { label: 'Sub', detail: 'Low sine', note: 65.41 },
+  { label: 'Rim', detail: 'Short click', note: 880 },
+  { label: 'Fifth', detail: 'C and G', note: 392 },
+  { label: 'Pluck', detail: 'Fast decay', note: 783.99 },
+  { label: 'Bass', detail: 'Square bass', note: 110 },
+  { label: 'Hat', detail: 'Bright noise', note: 1200 },
+  { label: 'Minor', detail: 'A minor', note: 220 },
+  { label: 'Bell', detail: 'Metal tone', note: 1046.5 },
+] as const
+
+const CONTACT_PAD_COLORS = [
+  '#35c78a',
+  '#4d8dff',
+  '#a778ff',
+  '#f2b84b',
+  '#ff5a3d',
+  '#ef4f91',
   '#9b6cff',
-  '#d85fe8',
-  '#ef4f98',
-  '#f04462',
-  '#54d987',
-  '#38d2cf',
-  '#3f9df2',
-  '#656ee9',
-  '#f0bd45',
-  '#dce84c',
-  '#8bd950',
-  '#48cf67',
-  '#ef5947',
-  '#f27d3f',
-  '#f19d3f',
-  '#eab84b',
+  '#3e9cff',
+  '#23c7b7',
+  '#85c94a',
+  '#e4ca3f',
+  '#f28b3d',
+  '#e05b52',
+  '#cf62c3',
+  '#746fe8',
+  '#4bafd1',
 ] as const
 
 function Contact() {
-  const [activePad, setActivePad] = useState<number | null>(0)
-  const [bpm, setBpm] = useState(120)
-  const [sequentialLitPadIndices, setSequentialLitPadIndices] = useState<
-    Set<number>
-  >(new Set())
+  const [activePad, setActivePad] = useState<number | null>(null)
+  const [loopingPads, setLoopingPads] = useState<Set<number>>(new Set())
+  const [sweepingPads, setSweepingPads] = useState<Set<number>>(new Set())
+  const [bpm, setBpm] = useState(112)
+  const [volume, setVolume] = useState(72)
+  const [bank, setBank] = useState<'A' | 'B'>('A')
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const contactRef = useRef<HTMLElement | null>(null)
+  const loopTimersRef = useRef<Map<number, number>>(new Map())
+  const sweepTimersRef = useRef<number[]>([])
 
-  const contactRef = useRef<HTMLDivElement>(null)
-  const activeTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
-    new Map(),
+  const triggerSound = useCallback(
+    (index: number) => {
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext
+      if (!AudioContextClass) return
+
+      const context = audioContextRef.current ?? new AudioContextClass()
+      audioContextRef.current = context
+      void context.resume()
+      const now = context.currentTime
+      const gain = context.createGain()
+      gain.gain.setValueAtTime(0.0001, now)
+      gain.gain.exponentialRampToValueAtTime(
+        Math.max(0.01, (volume / 100) * 0.18),
+        now + 0.008,
+      )
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24)
+      gain.connect(context.destination)
+
+      if (index === 5 || index === 13) {
+        const buffer = context.createBuffer(
+          1,
+          context.sampleRate * 0.16,
+          context.sampleRate,
+        )
+        const data = buffer.getChannelData(0)
+        for (let sample = 0; sample < data.length; sample += 1) {
+          data[sample] = Math.random() * 2 - 1
+        }
+        const source = context.createBufferSource()
+        source.buffer = buffer
+        source.connect(gain)
+        source.start(now)
+      } else {
+        const bankMultiplier = bank === 'A' ? 1 : 1.5
+        const frequencies =
+          index === 6
+            ? [261.63, 329.63, 392]
+            : index === 10
+              ? [261.63, 392]
+              : index === 14
+                ? [220, 261.63, 329.63]
+                : [CONTACT_PADS[index].note * bankMultiplier]
+        frequencies.forEach((frequency) => {
+          const oscillator = context.createOscillator()
+          oscillator.type =
+            index === 4 || index === 8
+              ? 'sine'
+              : index === 12
+                ? 'square'
+                : 'triangle'
+          oscillator.frequency.setValueAtTime(frequency, now)
+          if (index === 4) {
+            oscillator.frequency.exponentialRampToValueAtTime(42, now + 0.2)
+          }
+          oscillator.connect(gain)
+          oscillator.start(now)
+          oscillator.stop(now + 0.25)
+        })
+      }
+
+    },
+    [bank, volume],
   )
 
-  const launchPads = Array.from({ length: 16 }, (_, index) => ({
-    label:
-      SOCIAL_LINKS_LANDING[index]?.label ??
-      (index === 4
-        ? 'EMAIL'
-        : index === 5
-          ? 'RESUME'
-          : `PAD ${String(index + 1).padStart(2, '0')}`),
-    link:
-      SOCIAL_LINKS_LANDING[index]?.link ??
-      (index === 4 ? `mailto:${EMAIL}` : index === 5 ? RESUME_URL : undefined),
-    color: index === 5 ? '#f0bd45' : PAD_COLORS[index],
-  }))
+  const togglePad = useCallback(
+    (index: number) => {
+      setActivePad(index)
+      setLoopingPads((current) => {
+        const next = new Set(current)
+        if (next.has(index)) {
+          next.delete(index)
+          setActivePad((active) => (active === index ? null : active))
+        } else {
+          next.add(index)
+          triggerSound(index)
+        }
+        return next
+      })
+    },
+    [triggerSound],
+  )
 
   useEffect(() => {
-    const el = contactRef.current
-    if (!el) return
+    loopTimersRef.current.forEach((timer) => window.clearInterval(timer))
+    loopTimersRef.current.clear()
+    const beatDuration = Math.max(180, 60_000 / bpm)
+    loopingPads.forEach((index) => {
+      const timer = window.setInterval(() => triggerSound(index), beatDuration)
+      loopTimersRef.current.set(index, timer)
+    })
+    return () => {
+      loopTimersRef.current.forEach((timer) => window.clearInterval(timer))
+      loopTimersRef.current.clear()
+    }
+  }, [bpm, loopingPads, triggerSound])
 
+  useEffect(() => {
+    const section = contactRef.current
+    if (!section) return
     const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries
-        if (entry.isIntersecting) {
-          // Clear active wave timers
-          activeTimeoutsRef.current.forEach((t) => clearTimeout(t))
-          activeTimeoutsRef.current.clear()
-
-          // Group 16 pads by diagonal distance row + col (0 to 6) in 4x4 grid
-          const diagonalGroups = new Map<number, number[]>()
-          for (let index = 0; index < 16; index++) {
-            const row = Math.floor(index / 4)
-            const col = index % 4
-            const diag = row + col
-            if (!diagonalGroups.has(diag)) {
-              diagonalGroups.set(diag, [])
-            }
-            diagonalGroups.get(diag)!.push(index)
-          }
-
-          const sortedDiagonals = Array.from(diagonalGroups.keys()).sort(
-            (a, b) => a - b,
-          )
-
-          const stepDelay = 60 // ms per diagonal step
-          const singleWaveDuration = sortedDiagonals.length * stepDelay + 220
-          const pauseBetweenWaves = 180
-          const initialDelay = 150 // start quickly when shown
-
-          const runSweepWave = (waveIndex: number) => {
-            sortedDiagonals.forEach((diag, stepIndex) => {
-              const indices = diagonalGroups.get(diag) ?? []
-
-              const onTimeout = setTimeout(() => {
-                setSequentialLitPadIndices((prev) => {
-                  const next = new Set(prev)
-                  indices.forEach((idx) => next.add(idx))
-                  return next
-                })
-
-                const offTimeout = setTimeout(() => {
-                  setSequentialLitPadIndices((prev) => {
-                    const next = new Set(prev)
-                    indices.forEach((idx) => next.delete(idx))
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        observer.disconnect()
+        const order = Array.from({ length: CONTACT_PADS.length }, (_, index) =>
+          index,
+        ).sort((a, b) => {
+          const distanceA = Math.floor(a / 4) + (a % 4)
+          const distanceB = Math.floor(b / 4) + (b % 4)
+          return distanceA - distanceB || a - b
+        })
+        const stepDelay = 72
+        const waveDuration = order.length * stepDelay + 260
+        for (let wave = 0; wave < 3; wave += 1) {
+          order.forEach((index, step) => {
+            const onTimer = window.setTimeout(
+              () => {
+                setSweepingPads((current) => new Set(current).add(index))
+                const offTimer = window.setTimeout(() => {
+                  setSweepingPads((current) => {
+                    const next = new Set(current)
+                    next.delete(index)
                     return next
                   })
-                }, 220)
-
-                activeTimeoutsRef.current.set(
-                  `wave-off-${waveIndex}-${diag}`,
-                  offTimeout,
-                )
-              }, stepIndex * stepDelay)
-
-              activeTimeoutsRef.current.set(
-                `wave-on-${waveIndex}-${diag}`,
-                onTimeout,
-              )
-            })
-          }
-
-          // Run 3x diagonal sweeps from top-left to bottom-right
-          for (let wave = 0; wave < 3; wave++) {
-            const waveStartTime =
-              initialDelay + wave * (singleWaveDuration + pauseBetweenWaves)
-            const waveTimer = setTimeout(() => {
-              runSweepWave(wave)
-            }, waveStartTime)
-
-            activeTimeoutsRef.current.set(`wave-run-${wave}`, waveTimer)
-          }
+                }, 230)
+                sweepTimersRef.current.push(offTimer)
+              },
+              420 + wave * (waveDuration + 280) + step * stepDelay,
+            )
+            sweepTimersRef.current.push(onTimer)
+          })
         }
       },
-      { threshold: 0.25 },
+      { threshold: 0.28 },
     )
-
-    observer.observe(el)
+    observer.observe(section)
     return () => {
       observer.disconnect()
-      activeTimeoutsRef.current.forEach((t) => clearTimeout(t))
-      activeTimeoutsRef.current.clear()
+      sweepTimersRef.current.forEach((timer) => window.clearTimeout(timer))
+      sweepTimersRef.current = []
     }
   }, [])
+
+  useEffect(
+    () => () => {
+      void audioContextRef.current?.close()
+    },
+    [],
+  )
 
   return (
     <section
@@ -2398,147 +2382,139 @@ function Contact() {
       className={styles.contact}
       data-rack-section
     >
-      <div className={styles.patchHeader}>
-        <SectionHeading index="06" eyebrow="OUTPUT ROUTING">
-          Have a signal worth sending?
+      <div className={styles.contactFreshHeader}>
+        <SectionHeading index="06" eyebrow="Open channel">
+          Bring me the hard frontend.
         </SectionHeading>
-        <a className={styles.contactButton} href={`mailto:${EMAIL}`}>
-          <Mail size={18} /> START A TRANSMISSION
-        </a>
+        <p>
+          I work where product logic, performance, and interface behavior meet.
+          If that part of your product needs an owner, start here.
+        </p>
       </div>
-      <div className={styles.contactSignal} aria-hidden="true">
-        <div className={styles.contactSignalTrack}>
-          {Array.from({ length: 2 }, (_, group) => (
-            <div className={styles.contactSignalGroup} key={group}>
-              <span>OPEN CHANNEL</span>
-              <span>IDEAS IN / PRODUCTS OUT</span>
-              <span>JAKARTA → WORLDWIDE</span>
-              <span>RESPONSE TIME / 24—48H</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className={styles.patchbay}>
-        <div className={styles.patchScreen}>
-          <div className={styles.contactScreenStatus}>
-            <SilkscreenLabel>MASTER OUTPUT / READY</SilkscreenLabel>
-            <span>
-              <i /> CHANNEL OPEN
-            </span>
-          </div>
-          <strong className={styles.contactHeadline}>
-            <span>LET’S MAKE</span>
-            <span>
-              SOMETHING <em>PLAY.</em>
-            </span>
-          </strong>
-          <div className={styles.contactWaveform} aria-hidden="true">
-            {Array.from({ length: 24 }, (_, index) => (
-              <i key={index} />
-            ))}
-          </div>
-          <span>JAKARTA / AVAILABLE WORLDWIDE</span>
-        </div>
-        <div className={styles.contactLaunchpad}>
-          <Screw className={styles.screwTopLeft} />
-          <Screw className={styles.screwTopRight} />
-          <div className={styles.launchpadTopbar}>
-            <div>
-              <strong>AH / LAUNCH</strong>
-              <SilkscreenLabel>16 PAD PERFORMANCE ROUTER</SilkscreenLabel>
-            </div>
-            <div className={styles.launchpadTransport}>
-              <label>
-                BPM{' '}
-                <input
-                  type="range"
-                  min="60"
-                  max="160"
-                  value={bpm}
-                  onChange={(event) => setBpm(Number(event.target.value))}
-                />
-              </label>
-              <SegmentCounter value={String(bpm)} />
-              <button
-                type="button"
-                onClick={() => setActivePad(null)}
-                aria-label="Clear all pads"
-              >
-                <Square size={12} />
-              </button>
-            </div>
-          </div>
-          <div className={styles.launchpadHeader}>
-            <div>
-              <SilkscreenLabel>ACTIVE ROUTE / MIDI CH 01</SilkscreenLabel>
-              <strong>{launchPads[activePad ?? 0].label}</strong>
-            </div>
-            <SegmentCounter
-              value={`P${String((activePad ?? 0) + 1).padStart(2, '0')}`}
-            />
-          </div>
-          <div className={styles.launchpadGrid}>
-            {launchPads.map((pad, index) => {
-              const isPadLit =
-                activePad === index || sequentialLitPadIndices.has(index)
-              const className = `${styles.launchPad} ${
-                isPadLit ? styles.launchPadActive : ''
-              }`
-              const content = (
-                <>
-                  <i className={styles.launchPadLed} aria-hidden="true" />
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <strong>{pad.label}</strong>
-                </>
-              )
 
-              return pad.link ? (
-                <a
-                  className={className}
-                  href={pad.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  key={pad.label}
-                  onClick={() => setActivePad(index)}
-                  aria-current={isPadLit ? 'true' : undefined}
-                  style={
-                    {
-                      '--pad-index': index,
-                      '--pad-color': pad.color,
-                    } as React.CSSProperties
-                  }
-                >
-                  {content}
-                </a>
-              ) : (
-                <button
-                  className={className}
-                  type="button"
-                  key={`${pad.label}-${index}`}
-                  aria-pressed={isPadLit}
-                  onClick={() =>
-                    setActivePad((current) =>
-                      current === index ? null : index,
-                    )
-                  }
-                  style={
-                    {
-                      '--pad-index': index,
-                      '--pad-color': pad.color,
-                    } as React.CSSProperties
-                  }
-                >
-                  {content}
-                </button>
-              )
+      <div className={styles.contactDeck}>
+        <div className={styles.contactDeckBrand}>
+          <div>
+            <strong>AH / GRID 16</strong>
+            <span>CONTACT PERFORMANCE CONTROLLER</span>
+          </div>
+          <span>USB / WEB AUDIO</span>
+        </div>
+
+        <div className={styles.contactDeckTop}>
+          <label className={styles.contactDial}>
+            <input
+              type="range"
+              min="70"
+              max="150"
+              value={bpm}
+              onChange={(event) => setBpm(Number(event.target.value))}
+            />
+            <span
+              style={
+                {
+                  '--dial-rotation': `${-130 + (bpm - 70) * 3.25}deg`,
+                } as React.CSSProperties
+              }
+            />
+            <b>Tempo</b>
+            <small>{bpm} BPM</small>
+          </label>
+          <div className={styles.contactDeckDisplay} aria-live="polite">
+            <span>PAD {activePad === null ? '--' : String(activePad + 1).padStart(2, '0')}</span>
+            <strong>{activePad === null ? 'Select a pad' : CONTACT_PADS[activePad].label}</strong>
+            <small>BANK {bank} / {activePad === null ? 'READY' : 'TRIGGERED'}</small>
+          </div>
+          <label className={styles.contactDial}>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={volume}
+              onChange={(event) => setVolume(Number(event.target.value))}
+            />
+            <span
+              style={
+                {
+                  '--dial-rotation': `${-130 + volume * 2.6}deg`,
+                } as React.CSSProperties
+              }
+            />
+            <b>Level</b>
+            <small>{volume}%</small>
+          </label>
+        </div>
+
+        <div className={styles.contactPerformanceArea}>
+          <div className={styles.contactModeRail}>
+            <button type="button" aria-pressed={bank === 'A'} onClick={() => setBank('A')}>A</button>
+            <button type="button" aria-pressed={bank === 'B'} onClick={() => setBank('B')}>B</button>
+            <span>Bank</span>
+          </div>
+          <div className={styles.contactPadGrid}>
+            {CONTACT_PADS.map((pad, index) => {
+            const content = (
+              <>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <strong>{pad.label}</strong>
+                <small>{pad.detail}</small>
+              </>
+            )
+            const className = `${styles.contactPad} ${
+              loopingPads.has(index) ? styles.contactPadActive : ''
+            } ${
+              sweepingPads.has(index) ? styles.contactPadSweeping : ''
+            }`
+
+            return 'href' in pad ? (
+              <a
+                key={pad.label}
+                className={className}
+                href={pad.href}
+                target={pad.href.startsWith('mailto:') ? undefined : '_blank'}
+                rel={pad.href.startsWith('mailto:') ? undefined : 'noreferrer'}
+                onClick={() => togglePad(index)}
+                style={
+                  {
+                    '--pad-color': CONTACT_PAD_COLORS[index],
+                  } as React.CSSProperties
+                }
+              >
+                {content}
+              </a>
+            ) : (
+              <button
+                key={pad.label}
+                type="button"
+                className={className}
+                aria-pressed={loopingPads.has(index)}
+                onClick={() => togglePad(index)}
+                style={
+                  {
+                    '--pad-color': CONTACT_PAD_COLORS[index],
+                  } as React.CSSProperties
+                }
+              >
+                {content}
+              </button>
+            )
             })}
           </div>
+          <div className={styles.contactModeRail}>
+            <a href={`mailto:${EMAIL}`} aria-label="Email Aditya"><Mail size={16} /></a>
+            <button type="button" onClick={() => setActivePad(null)} aria-label="Clear active pad"><Square size={14} /></button>
+            <span>Out</span>
+          </div>
         </div>
+        <p className={styles.contactDeckNote}>
+          Pads 01 to 04 open a channel. Pads 05 to 16 play the instrument.
+        </p>
       </div>
+
       <footer className={styles.footer}>
-        <span>© {new Date().getFullYear()} ADITYA HIMA[ONE/WAN]</span>
-        <span>DESIGNED + ENGINEERED IN JAKARTA</span>
-        <a href="#home">REWIND TO 00:00 ↑</a>
+        <span>© {new Date().getFullYear()} ADITYA HIMAWAN</span>
+        <span>FRONTEND ENGINEER IN JAKARTA</span>
+        <a href="#home">BACK TO TOP ↑</a>
       </footer>
     </section>
   )

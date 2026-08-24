@@ -90,9 +90,7 @@ export const WORK_EXPERIENCE: WorkExperience[] = [
 
 export const SOCIAL_LINKS_LANDING: SocialLink[] = [
   { label: 'Github', link: 'https://github.com/adityahimaone' },
-  { label: 'Twitter', link: 'https://twitter.com/adityahimaone' },
   { label: 'LinkedIn', link: 'https://www.linkedin.com/in/adityahimaone' },
-  { label: 'Instagram', link: 'https://www.instagram.com/adityahimaone' },
 ]
 
 export const EMAIL = 'adityahimaone@gmail.com'
@@ -108,9 +106,9 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
     period: 'OCT 2022 - PRESENT',
     color: 'bg-purple-500',
     description: [
-      'Led frontend for Bisadaya — job-seeker platform serving 15K+ users (Next.js SSR, Zustand, React Query).',
-      'Shipped Campus Connect in 3 months — student-career platform (SSR, reusable components).',
-      'Delivered SaaS HRIS features + KPI automation, cutting manual reporting for HR teams.',
+      'Led frontend development for Bisadaya, a job-seeker platform serving 15K+ users.',
+      'Built and launched Campus Connect within three months.',
+      'Developed SaaS HRIS features and KPI automation for HR teams.',
     ],
   },
   {
@@ -122,7 +120,7 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
     period: 'APR 2024 - SEP 2024',
     color: 'bg-blue-500',
     description: [
-      'Built frontend for an HR management system — integrated tRPC + Prisma backend services.',
+      'Built frontend features for an HR management system with tRPC and Prisma services.',
       'Resolved critical production issues and optimized performance across HR workflows.',
     ],
   },
@@ -135,8 +133,8 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
     period: 'JUN 2022 - SEP 2022',
     color: 'bg-pink-500',
     description: [
-      'Built responsive e-commerce UIs with React.js + reusable component system.',
-      'Shipped NFT platform components (Tailwind CSS) + a production Next.js landing page.',
+      'Built responsive e-commerce interfaces with React and reusable components.',
+      'Developed Tailwind CSS components for an NFT platform and delivered a Next.js landing page.',
     ],
   },
   {
@@ -154,28 +152,28 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
         period: 'AUG 2018 - OCT 2022',
         company: 'Universitas AMIKOM Yogyakarta',
         description:
-          "AMIKOM Yogyakarta — Bachelor's in Informatics, GPA 3.75/4.00, Linux lab assistant.",
+          "Bachelor's degree in Informatics, GPA 3.75/4.00. Lab assistant for Data Structures and Operating Systems.",
       },
       {
         role: 'Frontend JavaScript',
         period: 'FEB 2022 - JUL 2022',
         company: 'Binar Academy',
         description:
-          'Binar Academy — Kampus Merdeka bootcamp: Frontend JavaScript (React, JavaScript).',
+          'Frontend JavaScript course through Kampus Merdeka, focused on React and JavaScript.',
       },
       {
         role: 'Fullstack Engineering',
         period: 'AUG 2021 - JAN 2022',
         company: 'Alterra Academy',
         description:
-          'Alterra Academy — Kampus Merdeka bootcamp: Fullstack Engineering (React, Golang).',
+          'Fullstack Engineering course through Kampus Merdeka, focused on React and Golang.',
       },
       {
         role: 'Cloud Computing',
         period: 'FEB 2021 - JUL 2021',
         company: 'Bangkit Academy',
         description:
-          'Bangkit Academy by Google — Kampus Merdeka: Cloud Computing (Node.js, REST API).',
+          'Cloud Computing course through Kampus Merdeka, focused on Node.js and REST APIs.',
       },
     ],
   },
@@ -185,37 +183,37 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
 export const MIXER_DATA: readonly MixerGroup[] = [
   {
     id: 'languages',
-    label: 'LANGUAGES',
+    label: 'FRONTEND',
     type: 'fader',
     channels: [
-      { name: 'HTML', level: 95 },
-      { name: 'CSS', level: 95 },
-      { name: 'JS', level: 95 },
-      { name: 'TS', level: 90 },
-      { name: 'GO', level: 60 },
-      { name: 'SQL', level: 75 },
+      { name: 'REACT', level: 100 },
+      { name: 'NEXT.JS', level: 100 },
+      { name: 'TYPESCRIPT', level: 100 },
+      { name: 'JAVASCRIPT', level: 100 },
+      { name: 'TAILWIND', level: 100 },
+      { name: 'SSR', level: 100 },
     ],
   },
   {
     id: 'frameworks',
-    label: 'FRAMEWORKS',
+    label: 'STATE & DATA',
     type: 'knob',
     channels: [
-      { name: 'REACT', level: 95 },
-      { name: 'NEXT', level: 92 },
-      { name: 'TAILWIND', level: 95 },
-      { name: 'JQUERY', level: 85 },
+      { name: 'ZUSTAND', level: 100 },
+      { name: 'REACT QUERY', level: 100 },
+      { name: 'REST API', level: 100 },
+      { name: 'TRPC', level: 100 },
     ],
   },
   {
     id: 'tools',
-    label: 'TOOLS & FX',
+    label: 'INFRASTRUCTURE',
     type: 'knob',
     channels: [
-      { name: 'VS CODE', level: 99 },
-      { name: 'DOCKER', level: 75 },
-      { name: 'GIT', level: 90 },
-      { name: 'MOTION', level: 90 },
+      { name: 'DOCKER', level: 100 },
+      { name: 'NGINX', level: 100 },
+      { name: 'GRAFANA', level: 100 },
+      { name: 'UPTIME KUMA', level: 100 },
     ],
   },
 ] as const
@@ -250,7 +248,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     id: 3,
     title: 'Frontend Resources',
     description:
-      'A curated collection of the best frontend development tools, libraries, and inspiration sources to supercharge your web development workflow.',
+      'A curated directory of frontend tools, libraries, and references.',
     image: '/assets/thumbnail-fe-resources.png',
     url: 'https://frontend-resources-rouge.vercel.app/',
     genre: 'Educational / Tools',
@@ -262,7 +260,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     id: 4,
     title: 'SeaPhantom',
     description:
-      'Landing page for SeaPhantom, an NFT project focusing on innovative and sustainable technologies. Explore the world of NFTs and peer-to-peer trading on the SeaPhantom platform.',
+      'A responsive landing page for the SeaPhantom NFT platform.',
     image:
       'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/y2l1g36bjudgsf6yr0eg.webp',
     url: 'https://seaphantom.com',
@@ -275,7 +273,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     id: 5,
     title: 'SeaPhantom P2P',
     description:
-      'Engage in NFT trading with the P2P Rum Token Escrow Trading project. This platform facilitates secure and transparent NFT transactions.',
+      'A frontend for peer-to-peer NFT trading workflows.',
     image:
       'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/fphb7ddemp4ixeutav1b.webp',
     url: 'https://auth.seaphantom.com/',
@@ -288,7 +286,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     id: 6,
     title: 'Labgrownbeasts',
     description:
-      'Explore the Labgrownbeasts Company Profile, showcasing innovation and excellence in the field. Learn about our vision, mission, and the cutting-edge work we do.',
+      'A company profile site for Labgrownbeasts.',
     image:
       'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/mqprcb6todunicq4cg0a.webp',
     url: 'https://labgrownbeasts.com/',

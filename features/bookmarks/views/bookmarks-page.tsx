@@ -2,14 +2,14 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { Bookmark, BookmarkCategory, BookmarkFormData } from '../types'
-import { BOOKMARK_CATEGORIES, CATEGORY_COLORS } from '../constants/categories'
+import { BOOKMARK_CATEGORIES } from '../constants/categories'
 import { BookmarkHero } from '../components/bookmark-hero'
 import { BookmarkFilter, SortOption } from '../components/bookmark-filter'
 import { BookmarkCard } from '../components/bookmark-card'
 import { BookmarkAdminModal } from '../components/bookmark-admin-modal'
 import { SubpageHeader, Footer } from '@/features/layout'
 import { RefreshCw, FolderSearch } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import styles from '../bookmarks.module.css'
 
 interface BookmarksPageProps {
   initialBookmarks: Bookmark[]
@@ -20,6 +20,8 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false)
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Bookmark | null>(null)
+  const [statusMessage, setStatusMessage] = useState('')
 
   // View Mode: 'list' (DEFAULT) or 'grid'
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
@@ -43,7 +45,7 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
           setBookmarks(data.bookmarks)
         }
       })
-      .catch(() => {})
+      .catch(() => setStatusMessage('Could not refresh the archive. Showing the saved snapshot.'))
   }, [])
 
   // Collect all unique available tags
@@ -154,18 +156,24 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
     setIsAdminModalOpen(true)
   }
 
-  const handleDeleteBookmark = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this bookmark?')) return
+  const handleDeleteBookmark = (id: string) => {
+    setDeleteTarget(bookmarks.find((bookmark) => bookmark.id === id) ?? null)
+  }
+
+  const confirmDeleteBookmark = async () => {
+    if (!deleteTarget) return
+    const id = deleteTarget.id
     try {
       const res = await fetch(`/api/bookmarks?id=${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) {
         setBookmarks((prev) => prev.filter((b) => b.id !== id))
+        setDeleteTarget(null)
       } else {
-        alert(data.message || 'Failed to delete bookmark')
+        setStatusMessage(data.message || 'Failed to delete bookmark')
       }
     } catch {
-      alert('Error deleting bookmark')
+      setStatusMessage('Error deleting bookmark')
     }
   }
 
@@ -200,7 +208,8 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
       {/* DAW Header (same as Projects subpage) */}
       <SubpageHeader />
 
-      <main className="mx-auto max-w-7xl px-4 py-20 pt-28 min-h-screen">
+      <div className={styles.page}>
+      <main className={styles.main}>
         {/* Header Hero */}
         <BookmarkHero
           bookmarks={bookmarks}
@@ -237,46 +246,27 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
           totalCount={bookmarks.length}
           filteredCount={filteredBookmarks.length}
         />
+        {statusMessage && <p className={styles.status} role="status" aria-live="polite">{statusMessage}</p>}
 
         {/* Bookmarks Display: Grouped or Flat */}
         {sortedBookmarks.length > 0 ? (
           groupedBookmarks && groupedBookmarks.length > 0 ? (
             /* GROUPED BY CATEGORY VIEW */
-            <div className="space-y-10">
+            <div className={styles.groups}>
               {groupedBookmarks.map(({ category, items }) => {
-                const theme = CATEGORY_COLORS[category] || {
-                  bg: 'bg-zinc-800',
-                  text: 'text-zinc-200',
-                  border: 'border-zinc-700',
-                }
-
                 return (
-                  <section key={category} className="space-y-3.5">
+                  <section key={category} className={styles.group}>
                     {/* Category Group Header */}
-                    <div className="flex items-center gap-3 pb-1 border-b border-zinc-800/80">
-                      <span
-                        className={cn(
-                          'px-3 py-1 rounded-lg border text-xs font-mono font-bold uppercase tracking-wider shadow-sm',
-                          theme.bg,
-                          theme.text,
-                          theme.border
-                        )}
-                      >
-                        {category}
-                      </span>
-                      <span className="text-xs font-mono text-zinc-200 font-bold">
+                    <div className={styles.groupHeader}>
+                      <span className={styles.groupName}>{category}</span>
+                      <span className={styles.groupCount}>
                         ({items.length} {items.length === 1 ? 'bookmark' : 'bookmarks'})
                       </span>
-                      <div className="flex-1 h-px bg-gradient-to-r from-zinc-800 via-zinc-800/40 to-transparent" />
                     </div>
 
                     {/* Category Items List / Grid */}
                     <div
-                      className={cn(
-                        viewMode === 'list'
-                          ? 'flex flex-col space-y-2.5'
-                          : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'
-                      )}
+                      className={viewMode === 'list' ? styles.list : styles.grid}
                     >
                       {items.map((bookmark) => (
                         <BookmarkCard
@@ -297,11 +287,7 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
           ) : (
             /* FLAT VIEW */
             <div
-              className={cn(
-                viewMode === 'list'
-                  ? 'flex flex-col space-y-2.5'
-                  : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'
-              )}
+              className={viewMode === 'list' ? styles.list : styles.grid}
             >
               {sortedBookmarks.map((bookmark) => (
                 <BookmarkCard
@@ -318,19 +304,15 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
           )
         ) : (
           /* Empty State */
-          <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/50 p-12 text-center my-8">
-            <div className="flex justify-center mb-3">
-              <div className="p-3 rounded-full bg-zinc-900 border border-zinc-800 text-amber-400">
-                <FolderSearch className="h-8 w-8" />
-              </div>
-            </div>
-            <h3 className="text-lg font-bold text-white mb-1">No Bookmarks Found</h3>
-            <p className="text-xs text-zinc-400 max-w-sm mx-auto mb-4">
-              No curated web resources match your current filter settings or search query.
+          <div className={styles.empty}>
+            <FolderSearch className={styles.emptyIcon} size={28} />
+            <h3 className={styles.emptyTitle}>No bookmarks on this channel</h3>
+            <p className={styles.emptyText}>
+              Nothing matches the current search or filter settings.
             </p>
             <button
               onClick={handleResetFilters}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-semibold shadow-[0_0_12px_rgba(245,158,11,0.3)] transition-all"
+              className={styles.reset}
             >
               <RefreshCw className="h-3.5 w-3.5" />
               Reset All Filters
@@ -350,11 +332,24 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
           editingBookmark={editingBookmark}
           onSaveBookmark={handleSaveBookmark}
         />
+        {deleteTarget && (
+          <div className={styles.dialogBackdrop} role="presentation">
+            <div className={styles.confirmDialog} role="dialog" aria-modal="true" aria-labelledby="delete-bookmark-title">
+              <span className={styles.eyebrow}>Remove signal</span>
+              <h2 id="delete-bookmark-title">Delete “{deleteTarget.title}”?</h2>
+              <p>This removes the bookmark from the archive.</p>
+              <div className={styles.dialogActions}>
+                <button type="button" className={styles.reset} onClick={() => setDeleteTarget(null)}>Keep it</button>
+                <button type="button" className={styles.adminButton} onClick={confirmDeleteBookmark}>Delete bookmark</button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
+      </div>
 
       {/* Global Footer */}
       <Footer />
     </>
   )
 }
-

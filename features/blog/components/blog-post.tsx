@@ -174,7 +174,7 @@ export function BlogPost({
         style={{ scaleX }}
       />
 
-      <div className="mx-auto flex max-w-7xl gap-8 px-4 py-16 sm:py-24">
+      <div className="mx-auto flex max-w-7xl gap-8 px-4 pb-20 pt-0 sm:pb-24">
         {/* Main content */}
         <article className="min-w-0 flex-1">
           <div className="mx-auto max-w-[65ch]">

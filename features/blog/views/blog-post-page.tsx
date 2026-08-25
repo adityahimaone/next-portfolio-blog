@@ -12,7 +12,7 @@ export function BlogPostPage({ meta, content, relatedPosts }: BlogPostPageProps)
   return (
     <>
       <SubpageHeader />
-      <main className="min-h-screen pt-14">
+      <main className="min-h-screen pt-28">
         <BlogPost meta={meta} content={content} relatedPosts={relatedPosts} />
       </main>
       <Footer />

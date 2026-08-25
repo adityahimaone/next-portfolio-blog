@@ -5,49 +5,49 @@ import type { BlogMeta } from '../lib/blog'
 export function BlogCardPinned({ post }: { post: BlogMeta }) {
   return (
     <Link href={`/blog/${post.slug}`} className="group block h-full">
-      <article className="relative flex h-full flex-col xl:flex-row gap-4 overflow-hidden rounded-xl border-2 border-primary/20 bg-primary/5 p-4 sm:p-5 transition-all hover:border-primary/40 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:border-primary/10 dark:bg-primary/5 dark:hover:border-primary/30">
-        
-        {/* Decorative Tape Pattern */}
-        <div className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.03]">
-          <div className="absolute inset-0 bg-[radial-gradient(#808080_1.5px,transparent_1.5px)]" style={{ backgroundSize: '12px 12px' }} />
-        </div>
-
-        <div className="relative z-10 flex flex-1 flex-col justify-center">
+      <article className="relative grid min-h-48 overflow-hidden rounded-xl border border-primary/50 bg-card transition-colors hover:border-primary md:grid-cols-[minmax(0,1fr)_180px]">
+        <div className="relative z-10 flex flex-1 flex-col justify-center p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium tracking-wider">
-            <span className="flex items-center gap-1 bg-primary text-white px-2 py-0.5 rounded shadow-sm">
-              <Pin size={10} className="fill-white" /> Pinned
+            <span className="flex items-center gap-1 rounded bg-primary px-2 py-1 text-primary-foreground">
+              <Pin size={10} className="fill-current" /> Pinned
             </span>
-            <time dateTime={post.date} className="text-zinc-500 dark:text-zinc-400 tracking-normal text-xs font-medium">
+            <time dateTime={post.date} className="text-muted-foreground tracking-normal text-xs font-medium">
               {new Date(post.date).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
               })}
             </time>
-            <span className="text-zinc-300 dark:text-zinc-700">•</span>
-            <span className="text-zinc-500 tracking-normal text-xs dark:text-zinc-400">{post.readingTime}</span>
+            <span className="text-border">•</span>
+            <span className="text-muted-foreground tracking-normal text-xs">{post.readingTime}</span>
           </div>
 
-          <h2 className="mt-3 text-xl font-bold tracking-tight text-zinc-900 group-hover:text-primary dark:text-white dark:group-hover:text-primary-light">
+          <h2 className="mt-3 max-w-2xl text-2xl font-bold tracking-tight text-foreground group-hover:text-primary">
             {post.title}
           </h2>
 
-          <p className="mt-2 line-clamp-2 text-zinc-600 dark:text-zinc-400 leading-relaxed text-sm">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             {post.description}
           </p>
 
           {post.tags.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-1.5">
+            <div className="mt-3 flex flex-wrap gap-1.5">
               {post.tags.map(tag => (
                 <span
                   key={tag}
-                  className="rounded bg-white/60 backdrop-blur-sm border border-zinc-200/50 px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider text-zinc-700 dark:bg-black/20 dark:border-white/5 dark:text-zinc-300"
+                  className="rounded border border-border bg-card/60 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
                 >
                   {tag}
                 </span>
               ))}
             </div>
           )}
+        </div>
+        <div className="relative hidden overflow-hidden border-l border-border bg-primary/5 md:block" aria-hidden="true">
+          <div className="absolute left-1/2 top-1/2 aspect-square w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/35 bg-[repeating-radial-gradient(circle,transparent_0_5px,color-mix(in_srgb,var(--foreground)_10%,transparent)_6px_7px)]">
+            <span className="absolute left-1/2 top-1/2 aspect-square w-9 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
+          </div>
+          <span className="absolute bottom-5 left-5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-primary">Featured recording</span>
         </div>
       </article>
     </Link>

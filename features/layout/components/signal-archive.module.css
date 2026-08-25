@@ -1,0 +1,96 @@
+.header {
+  margin-bottom: 2rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--card);
+  color: var(--card-foreground);
+}
+
+.transport {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 0.75rem 0 1rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 72%, var(--card));
+}
+
+.back,
+.navLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--muted-foreground);
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.back { gap: 0.5rem; font-size: 0.875rem; font-weight: 700; }
+.back:hover, .navLink:hover { color: var(--foreground); }
+.nav { display: flex; align-items: center; gap: 0.25rem; }
+.navLink { gap: 0.45rem; padding: 0 0.8rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 700; }
+.navLink span { color: var(--primary); font-family: var(--font-geist-mono), monospace; font-size: 0.625rem; }
+.navLink[aria-current='page'] { background: var(--primary); color: var(--primary-foreground); }
+.navLink[aria-current='page'] span { color: currentColor; opacity: 0.75; }
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, auto);
+  min-height: 196px;
+  gap: 2rem;
+  align-items: center;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.copy { min-width: 0; }
+.label { display: inline-block; color: var(--primary); font: 700 0.6875rem/1.2 var(--font-geist-mono), monospace; letter-spacing: 0.12em; text-transform: uppercase; }
+.title { max-width: 13ch; margin: 0.55rem 0 0; color: var(--foreground); font: 750 clamp(2.5rem, 5vw, 4.5rem)/0.96 var(--font-syne), var(--font-geist-sans), sans-serif; letter-spacing: -0.05em; }
+.description { max-width: 44rem; margin: 0.9rem 0 0; color: var(--muted-foreground); font-size: 1rem; line-height: 1.55; }
+.aside { width: min(100%, 21rem); justify-self: end; }
+
+.record {
+  position: relative;
+  width: clamp(7.5rem, 11vw, 9.5rem);
+  aspect-ratio: 1;
+  justify-self: end;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, transparent 0 5px, color-mix(in srgb, var(--foreground) 9%, transparent) 6px 7px), color-mix(in srgb, var(--foreground) 8%, var(--card));
+}
+
+.record::before, .record::after, .record span { content: ''; position: absolute; inset: 50% auto auto 50%; border-radius: 50%; transform: translate(-50%, -50%); }
+.record::before { width: 38%; aspect-ratio: 1; background: var(--primary); }
+.record::after { width: 9%; aspect-ratio: 1; background: var(--card); }
+.record span { width: 70%; aspect-ratio: 1; border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent); }
+
+.timeline { position: relative; height: 30px; overflow: hidden; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--muted) 60%, var(--card)); }
+.timeline::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 47px, color-mix(in srgb, var(--border) 70%, transparent) 48px 49px); }
+.playhead { position: absolute; z-index: 2; top: 0; bottom: 0; left: 24%; width: 2px; background: var(--primary); }
+.playhead::before { content: ''; position: absolute; top: 0; left: 50%; width: 8px; height: 6px; background: var(--primary); transform: translateX(-50%); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.waveform { position: absolute; inset: 5px 1rem; display: flex; align-items: center; gap: 4px; opacity: 0.58; }
+.waveform span { display: block; width: 3px; min-height: 3px; border-radius: 2px; background: var(--foreground); }
+
+.back:focus-visible, .navLink:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  .transport { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 0.25rem; padding: 0.25rem; }
+  .back { justify-content: center; padding: 0; }
+  .back span { display: none; }
+  .nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .navLink { justify-content: center; padding: 0 0.45rem; }
+  .body { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 1.25rem; padding: 1.5rem 1.25rem; }
+  .title { font-size: clamp(2.5rem, 12vw, 3.75rem); }
+  .aside { width: 100%; justify-self: stretch; }
+  .record { display: none; }
+}
+
+@media (max-width: 420px) {
+  .navLink span { display: none; }
+  .navLink { font-size: 0.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back, .navLink { transition: none; }
+}

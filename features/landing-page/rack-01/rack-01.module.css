@@ -1765,7 +1765,7 @@
   position: relative;
   z-index: 2;
   min-height: 100svh;
-  padding: clamp(90px, 11vw, 170px) clamp(20px, 5vw, 78px) 115px;
+  padding: clamp(90px, 11vw, 170px) clamp(20px, 5vw, 78px) 0;
   background: var(--chassis);
 }
 .patchHeader {
@@ -1905,14 +1905,64 @@
     0 0 13px rgba(255, 90, 31, 0.25);
 }
 .footer {
+  position: relative;
+  isolation: isolate;
   display: flex;
+  flex-direction: column;
+  width: 100vw;
+  max-width: none;
+  margin: 80px calc(50% - 50vw) 0;
+  padding: clamp(44px, 5vw, 80px) clamp(20px, 5vw, 78px) 34px;
+  background: transparent;
+  gap: clamp(24px, 4vw, 48px);
+}
+.footer::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(17, 19, 17, 0.08) 18%,
+    rgba(17, 19, 17, 0.32) 40%,
+    rgba(17, 19, 17, 0.68) 68%,
+    rgba(17, 19, 17, 0.94) 100%
+  );
+  content: '';
+  pointer-events: none;
+}
+.footerMeta {
+  position: relative;
+  z-index: 1;
+  width: min(1480px, 100%);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  max-width: 1480px;
-  margin: 80px auto 0;
-  padding-top: 18px;
-  border-top: 1px solid var(--graphite);
+  gap: 18px;
+  padding-top: 14px;
+  color: rgba(240, 237, 228, 0.72);
   font: 9px var(--font-geist-mono);
   letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.footerMeta a {
+  color: #f0ede4;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    margin-top: 55px;
+    padding-top: 44px;
+  }
+
+  .footerMeta {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    line-height: 1.4;
+  }
 }
 
 /* ── Redesigned Bottom Navigation Bar ("Master Transport Console") ── */

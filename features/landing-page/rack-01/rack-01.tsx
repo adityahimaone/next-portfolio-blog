@@ -2394,9 +2394,11 @@ function Contact() {
       </div>
 
       <footer className={styles.footer}>
-        <span>© {new Date().getFullYear()} ADITYA HIMAWAN</span>
-        <span>FRONTEND ENGINEER IN JAKARTA</span>
-        <a href="#home">BACK TO TOP ↑</a>
+        <div className={styles.footerMeta}>
+          <span>© {new Date().getFullYear()} ADITYA HIMAWAN</span>
+          <span>FRONTEND ENGINEER IN JAKARTA</span>
+          <a href="#home">BACK TO TOP ↑</a>
+        </div>
       </footer>
     </section>
   )

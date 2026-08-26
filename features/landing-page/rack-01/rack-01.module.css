@@ -9091,3 +9091,14 @@
     margin-top: 0;
   }
 }
+
+/* Compact release cards keep copy readable without a fixed-height crop. */
+.workStage { overflow: visible; }
+.projectModule { height: auto; min-height: 0; grid-template-rows: auto auto; }
+.projectCopy { min-height: 78px; }
+.projectCopy h3 { overflow: visible; text-overflow: clip; white-space: normal; }
+.projectCoverLabel { min-width: 52px; overflow-wrap: anywhere; }
+@media (min-width: 769px) {
+  .projectModule { width: min(32vw, 460px); }
+  .projectMedia { aspect-ratio: 5 / 4; }
+}

@@ -1952,12 +1952,6 @@ function Work() {
                     } as React.CSSProperties
                   }
                 >
-                  <div className={styles.projectMeta}>
-                    <SilkscreenLabel>
-                      AH / STUDIO · REL-{releaseNumber} / {project.year}
-                    </SilkscreenLabel>
-                    <span>33⅓ RPM · STEREO</span>
-                  </div>
                   <div className={styles.projectMedia}>
                     <div className={styles.projectSleeve}>
                       <div className={styles.projectImage}>

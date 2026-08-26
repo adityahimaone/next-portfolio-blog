@@ -7,7 +7,7 @@ export function BlogPage({ posts }: { posts: BlogMeta[] }) {
   return (
     <>
       <SubpageHeader />
-      <main className="min-h-screen pt-28">
+      <main id="main-content" className="min-h-screen pt-28">
         <BlogList posts={posts} />
       </main>
       <Footer />

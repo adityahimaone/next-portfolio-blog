@@ -28,7 +28,10 @@ export function ProjectsPage({
   return (
     <>
       <SubpageHeader />
-      <main className="mx-auto min-h-screen max-w-7xl bg-background px-4 pb-20 pt-28">
+      <main
+        id="main-content"
+        className="bg-background mx-auto min-h-screen max-w-7xl px-4 pt-28 pb-20"
+      >
         <SignalArchiveHeader
           activeSection="projects"
           label="Output 01 / Released work"
@@ -38,12 +41,18 @@ export function ProjectsPage({
 
         {/* Featured */}
         <section className="mb-12">
-          <h2 className="mb-4 text-xl font-semibold text-foreground">
+          <h2 className="text-foreground mb-4 text-xl font-semibold">
             Featured
           </h2>
           <div className="grid gap-3">
             {featured.map(({ project, repo }, index) => (
-              <ProjectCard key={project.slug} project={project} repo={repo} index={index} session />
+              <ProjectCard
+                key={project.slug}
+                project={project}
+                repo={repo}
+                index={index}
+                session
+              />
             ))}
           </div>
         </section>
@@ -52,14 +61,14 @@ export function ProjectsPage({
         {recent.length > 0 && (
           <section>
             <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="text-foreground text-xl font-semibold">
                 Recent Activity
               </h2>
               <a
                 href="https://github.com/adityahimaone"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
+                className="text-muted-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
               >
                 <Github size={16} />
                 View all on GitHub

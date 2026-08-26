@@ -32,7 +32,8 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<BookmarkCategory>('All')
+  const [selectedCategory, setSelectedCategory] =
+    useState<BookmarkCategory>('All')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [featuredOnly, setFeaturedOnly] = useState(false)
 
@@ -45,7 +46,11 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
           setBookmarks(data.bookmarks)
         }
       })
-      .catch(() => setStatusMessage('Could not refresh the archive. Showing the saved snapshot.'))
+      .catch(() =>
+        setStatusMessage(
+          'Could not refresh the archive. Showing the saved snapshot.',
+        ),
+      )
   }, [])
 
   // Collect all unique available tags
@@ -177,7 +182,10 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
     }
   }
 
-  const handleSaveBookmark = async (formData: BookmarkFormData, id?: string): Promise<boolean> => {
+  const handleSaveBookmark = async (
+    formData: BookmarkFormData,
+    id?: string,
+  ): Promise<boolean> => {
     try {
       const method = id ? 'PUT' : 'POST'
       const payload = id ? { ...formData, id } : formData
@@ -191,7 +199,9 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
 
       if (data.success && data.bookmark) {
         if (id) {
-          setBookmarks((prev) => prev.map((b) => (b.id === id ? data.bookmark : b)))
+          setBookmarks((prev) =>
+            prev.map((b) => (b.id === id ? data.bookmark : b)),
+          )
         } else {
           setBookmarks((prev) => [data.bookmark, ...prev])
         }
@@ -209,143 +219,166 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
       <SubpageHeader />
 
       <div className={styles.page}>
-      <main className={styles.main}>
-        {/* Header Hero */}
-        <BookmarkHero
-          bookmarks={bookmarks}
-          isAdmin={isAdmin}
-          onOpenAdminModal={handleOpenAddModal}
-          onToggleAdminLogin={() => {
-            if (isAdmin) {
-              setIsAdmin(false)
-            } else {
-              setIsAdminModalOpen(true)
-            }
-          }}
-        />
+        <main id="main-content" className={styles.main}>
+          {/* Header Hero */}
+          <BookmarkHero
+            bookmarks={bookmarks}
+            isAdmin={isAdmin}
+            onOpenAdminModal={handleOpenAddModal}
+            onToggleAdminLogin={() => {
+              if (isAdmin) {
+                setIsAdmin(false)
+              } else {
+                setIsAdminModalOpen(true)
+              }
+            }}
+          />
 
-        {/* Filters, Sort, Group Toggle, View Switch */}
-        <BookmarkFilter
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedCategory={selectedCategory}
-          onCategorySelect={setSelectedCategory}
-          selectedTags={selectedTags}
-          onRemoveTag={handleRemoveTag}
-          allAvailableTags={allAvailableTags}
-          onSelectTag={handleTagClick}
-          featuredOnly={featuredOnly}
-          onToggleFeatured={() => setFeaturedOnly((prev) => !prev)}
-          onResetFilters={handleResetFilters}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          sortBy={sortBy}
-          onSortByChange={setSortBy}
-          groupByCategory={groupByCategory}
-          onToggleGroupByCategory={() => setGroupByCategory((prev) => !prev)}
-          totalCount={bookmarks.length}
-          filteredCount={filteredBookmarks.length}
-        />
-        {statusMessage && <p className={styles.status} role="status" aria-live="polite">{statusMessage}</p>}
-
-        {/* Bookmarks Display: Grouped or Flat */}
-        {sortedBookmarks.length > 0 ? (
-          groupedBookmarks && groupedBookmarks.length > 0 ? (
-            /* GROUPED BY CATEGORY VIEW */
-            <div className={styles.groups}>
-              {groupedBookmarks.map(({ category, items }) => {
-                return (
-                  <section key={category} className={styles.group}>
-                    {/* Category Group Header */}
-                    <div className={styles.groupHeader}>
-                      <span className={styles.groupName}>{category}</span>
-                      <span className={styles.groupCount}>
-                        ({items.length} {items.length === 1 ? 'bookmark' : 'bookmarks'})
-                      </span>
-                    </div>
-
-                    {/* Category Items List / Grid */}
-                    <div
-                      className={viewMode === 'list' ? styles.list : styles.grid}
-                    >
-                      {items.map((bookmark) => (
-                        <BookmarkCard
-                          key={bookmark.id}
-                          bookmark={bookmark}
-                          viewMode={viewMode}
-                          isAdmin={isAdmin}
-                          onTagClick={handleTagClick}
-                          onEdit={handleEditBookmark}
-                          onDelete={handleDeleteBookmark}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                )
-              })}
-            </div>
-          ) : (
-            /* FLAT VIEW */
-            <div
-              className={viewMode === 'list' ? styles.list : styles.grid}
-            >
-              {sortedBookmarks.map((bookmark) => (
-                <BookmarkCard
-                  key={bookmark.id}
-                  bookmark={bookmark}
-                  viewMode={viewMode}
-                  isAdmin={isAdmin}
-                  onTagClick={handleTagClick}
-                  onEdit={handleEditBookmark}
-                  onDelete={handleDeleteBookmark}
-                />
-              ))}
-            </div>
-          )
-        ) : (
-          /* Empty State */
-          <div className={styles.empty}>
-            <FolderSearch className={styles.emptyIcon} size={28} />
-            <h3 className={styles.emptyTitle}>No bookmarks on this channel</h3>
-            <p className={styles.emptyText}>
-              Nothing matches the current search or filter settings.
+          {/* Filters, Sort, Group Toggle, View Switch */}
+          <BookmarkFilter
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedCategory={selectedCategory}
+            onCategorySelect={setSelectedCategory}
+            selectedTags={selectedTags}
+            onRemoveTag={handleRemoveTag}
+            allAvailableTags={allAvailableTags}
+            onSelectTag={handleTagClick}
+            featuredOnly={featuredOnly}
+            onToggleFeatured={() => setFeaturedOnly((prev) => !prev)}
+            onResetFilters={handleResetFilters}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            groupByCategory={groupByCategory}
+            onToggleGroupByCategory={() => setGroupByCategory((prev) => !prev)}
+            totalCount={bookmarks.length}
+            filteredCount={filteredBookmarks.length}
+          />
+          {statusMessage && (
+            <p className={styles.status} role="status" aria-live="polite">
+              {statusMessage}
             </p>
-            <button
-              onClick={handleResetFilters}
-              className={styles.reset}
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Reset All Filters
-            </button>
-          </div>
-        )}
+          )}
 
-        {/* Admin Authorization & Add/Edit Modal */}
-        <BookmarkAdminModal
-          isOpen={isAdminModalOpen}
-          onClose={() => setIsAdminModalOpen(false)}
-          isAdmin={isAdmin}
-          onLoginSuccess={() => {
-            setIsAdmin(true)
-            setIsAdminModalOpen(false)
-          }}
-          editingBookmark={editingBookmark}
-          onSaveBookmark={handleSaveBookmark}
-        />
-        {deleteTarget && (
-          <div className={styles.dialogBackdrop} role="presentation">
-            <div className={styles.confirmDialog} role="dialog" aria-modal="true" aria-labelledby="delete-bookmark-title">
-              <span className={styles.eyebrow}>Remove signal</span>
-              <h2 id="delete-bookmark-title">Delete “{deleteTarget.title}”?</h2>
-              <p>This removes the bookmark from the archive.</p>
-              <div className={styles.dialogActions}>
-                <button type="button" className={styles.reset} onClick={() => setDeleteTarget(null)}>Keep it</button>
-                <button type="button" className={styles.adminButton} onClick={confirmDeleteBookmark}>Delete bookmark</button>
+          {/* Bookmarks Display: Grouped or Flat */}
+          {sortedBookmarks.length > 0 ? (
+            groupedBookmarks && groupedBookmarks.length > 0 ? (
+              /* GROUPED BY CATEGORY VIEW */
+              <div className={styles.groups}>
+                {groupedBookmarks.map(({ category, items }) => {
+                  return (
+                    <section key={category} className={styles.group}>
+                      {/* Category Group Header */}
+                      <div className={styles.groupHeader}>
+                        <span className={styles.groupName}>{category}</span>
+                        <span className={styles.groupCount}>
+                          ({items.length}{' '}
+                          {items.length === 1 ? 'bookmark' : 'bookmarks'})
+                        </span>
+                      </div>
+
+                      {/* Category Items List / Grid */}
+                      <div
+                        className={
+                          viewMode === 'list' ? styles.list : styles.grid
+                        }
+                      >
+                        {items.map((bookmark) => (
+                          <BookmarkCard
+                            key={bookmark.id}
+                            bookmark={bookmark}
+                            viewMode={viewMode}
+                            isAdmin={isAdmin}
+                            onTagClick={handleTagClick}
+                            onEdit={handleEditBookmark}
+                            onDelete={handleDeleteBookmark}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  )
+                })}
+              </div>
+            ) : (
+              /* FLAT VIEW */
+              <div className={viewMode === 'list' ? styles.list : styles.grid}>
+                {sortedBookmarks.map((bookmark) => (
+                  <BookmarkCard
+                    key={bookmark.id}
+                    bookmark={bookmark}
+                    viewMode={viewMode}
+                    isAdmin={isAdmin}
+                    onTagClick={handleTagClick}
+                    onEdit={handleEditBookmark}
+                    onDelete={handleDeleteBookmark}
+                  />
+                ))}
+              </div>
+            )
+          ) : (
+            /* Empty State */
+            <div className={styles.empty}>
+              <FolderSearch className={styles.emptyIcon} size={28} />
+              <h3 className={styles.emptyTitle}>
+                No bookmarks on this channel
+              </h3>
+              <p className={styles.emptyText}>
+                Nothing matches the current search or filter settings.
+              </p>
+              <button onClick={handleResetFilters} className={styles.reset}>
+                <RefreshCw className="h-3.5 w-3.5" />
+                Reset All Filters
+              </button>
+            </div>
+          )}
+
+          {/* Admin Authorization & Add/Edit Modal */}
+          <BookmarkAdminModal
+            isOpen={isAdminModalOpen}
+            onClose={() => setIsAdminModalOpen(false)}
+            isAdmin={isAdmin}
+            onLoginSuccess={() => {
+              setIsAdmin(true)
+              setIsAdminModalOpen(false)
+            }}
+            editingBookmark={editingBookmark}
+            onSaveBookmark={handleSaveBookmark}
+          />
+          {deleteTarget && (
+            <div className={styles.dialogBackdrop} role="presentation">
+              <div
+                className={styles.confirmDialog}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-bookmark-title"
+              >
+                <span className={styles.eyebrow}>Remove signal</span>
+                <h2 id="delete-bookmark-title">
+                  Delete “{deleteTarget.title}”?
+                </h2>
+                <p>This removes the bookmark from the archive.</p>
+                <div className={styles.dialogActions}>
+                  <button
+                    type="button"
+                    className={styles.reset}
+                    onClick={() => setDeleteTarget(null)}
+                  >
+                    Keep it
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.adminButton}
+                    onClick={confirmDeleteBookmark}
+                  >
+                    Delete bookmark
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
       </div>
 
       {/* Global Footer */}

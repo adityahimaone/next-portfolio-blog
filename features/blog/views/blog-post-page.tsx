@@ -8,11 +8,15 @@ interface BlogPostPageProps {
   relatedPosts?: BlogMeta[]
 }
 
-export function BlogPostPage({ meta, content, relatedPosts }: BlogPostPageProps) {
+export function BlogPostPage({
+  meta,
+  content,
+  relatedPosts,
+}: BlogPostPageProps) {
   return (
     <>
       <SubpageHeader />
-      <main className="min-h-screen pt-28">
+      <main id="main-content" className="min-h-screen pt-28">
         <BlogPost meta={meta} content={content} relatedPosts={relatedPosts} />
       </main>
       <Footer />

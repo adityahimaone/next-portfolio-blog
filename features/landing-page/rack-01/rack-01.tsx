@@ -15,12 +15,7 @@ import {
 } from 'lucide-react'
 import { Screw } from '@/components/screw'
 import { DawHero } from '../components/hero'
-import {
-  EMAIL,
-  EXPERIENCES,
-  MIXER_DATA,
-  PROJECTS_SHOWCASE,
-} from '../constants'
+import { EMAIL, EXPERIENCES, MIXER_DATA, PROJECTS_SHOWCASE } from '../constants'
 import styles from './rack-01.module.css'
 import { cn } from '@/lib/utils'
 
@@ -47,10 +42,10 @@ const NAV_ITEMS = [
 ] as const
 
 const ROUTE_ITEMS = [
-  { href: '/blog', label: 'Blog' },
   { href: '/projects', label: 'Projects' },
-  { href: '/music', label: 'Mixtape' },
   { href: '/bookmarks', label: 'Bookmarks' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/music', label: 'Mixtape' },
 ] as const
 
 const SKILLS = MIXER_DATA.flatMap((group) => group.channels)
@@ -388,16 +383,18 @@ function Hero() {
           <span>Himawan</span>
         </div>
         <div className={styles.heroAtmosphere} aria-hidden="true" />
-        <div className={styles.heroAboutHandoff} aria-hidden="true">
-          <span>Next signal / 02</span>
-          <strong>Profile</strong>
-        </div>
 
         <header className={styles.heroMinimalNav}>
-          <a href="#home" className={styles.wordmark} aria-label="AH Studio home">
+          <a
+            href="#home"
+            className={styles.wordmark}
+            aria-label="AH Studio home"
+          >
             AH <span>/ STUDIO</span>
           </a>
-          <span className={styles.heroNavRole}>Frontend Engineer / Jakarta</span>
+          <span className={styles.heroNavRole}>
+            Frontend Engineer / Jakarta
+          </span>
           <a href={`mailto:${EMAIL}`} className={styles.topContact}>
             Contact
           </a>
@@ -410,9 +407,7 @@ function Hero() {
               <i aria-hidden="true" />
               <span>Jakarta, Indonesia</span>
             </div>
-            <h1 className={styles.srOnly}>
-              Aditya Himawan, Frontend Engineer
-            </h1>
+            <h1 className={styles.srOnly}>Aditya Himawan, Frontend Engineer</h1>
             <strong className={styles.heroPanelTitle}>
               Production frontend, from architecture to interaction.
             </strong>
@@ -434,10 +429,19 @@ function Hero() {
                 Resume <ArrowUpRight size={15} aria-hidden="true" />
               </a>
             </div>
-            <div className={styles.heroInlineProof} aria-label="Career highlights">
-              <span><b>4+</b> years</span>
-              <span><b>3</b> product teams</span>
-              <span><b>15K+</b> users</span>
+            <div
+              className={styles.heroInlineProof}
+              aria-label="Career highlights"
+            >
+              <span>
+                <b>4+</b> years
+              </span>
+              <span>
+                <b>3</b> product teams
+              </span>
+              <span>
+                <b>15K+</b> users
+              </span>
             </div>
           </div>
         </main>
@@ -447,6 +451,11 @@ function Hero() {
           <a href="#about">
             Continue <span aria-hidden="true">↓</span>
           </a>
+        </div>
+
+        <div className={styles.heroAboutHandoff} aria-hidden="true">
+          <span>Next signal / 02</span>
+          <strong>Profile</strong>
         </div>
       </div>
     </section>
@@ -465,8 +474,7 @@ const ABOUT_TRACKS = [
     surface: '#d7b36f',
     ink: '#2c251b',
     accent: '#8a432d',
-    detail:
-      'Four-plus years building production web applications.',
+    detail: 'Four-plus years building production web applications.',
   },
   {
     title: 'SYSTEMS',
@@ -479,8 +487,7 @@ const ABOUT_TRACKS = [
     surface: '#8199ad',
     ink: '#17252d',
     accent: '#315d72',
-    detail:
-      'Feature-based architecture and reusable component design.',
+    detail: 'Feature-based architecture and reusable component design.',
   },
   {
     title: 'RANGE',
@@ -493,8 +500,7 @@ const ABOUT_TRACKS = [
     surface: '#b68ba5',
     ink: '#30212a',
     accent: '#70415d',
-    detail:
-      'Backend integration, automation, and self-hosted infrastructure.',
+    detail: 'Backend integration, automation, and self-hosted infrastructure.',
   },
 ]
 
@@ -726,23 +732,23 @@ function About({
 }
 
 function SignalDivider() {
-  const topNarrative = [
-    'FRONTEND ARCHITECTURE',
-    'PRODUCTION INTERFACES',
+  const profileSignals = [
+    'Frontend architecture',
+    'Reusable components',
+    'Production interfaces',
   ]
-
-  const bottomNarrative = [
-    'REACT / NEXT.JS / TYPESCRIPT',
-    'STATE / DATA / DELIVERY',
+  const toolkitSignals = [
+    'React / Next.js / TypeScript',
+    'SSR / State / Data',
+    'Performance / Accessibility',
   ]
 
   return (
     <section
       className={styles.signalDivider}
-      aria-label="Signal Bridge: Architecture meets living code."
+      aria-label="Frontend systems dock alongside the production stack."
     >
       <div className={styles.signalDividerStage}>
-        {/* Top Track (Light Chassis / System Architecture) */}
         <div
           className={`${styles.signalDividerLane} ${styles.signalDividerLaneTop}`}
           aria-hidden="true"
@@ -751,37 +757,31 @@ function SignalDivider() {
             className={`${styles.signalDividerRail} ${styles.signalDividerTopRail}`}
           >
             {Array.from({ length: 3 }, (_, groupIndex) => (
-              <div className={styles.signalDividerTrackGroup} key={groupIndex}>
-                {topNarrative.map((phrase, pIdx) => (
-                  <span className={styles.signalDividerPhrase} key={pIdx}>
+              <span
+                className={styles.signalDividerTrackGroup}
+                key={`profile-signal-${groupIndex}`}
+              >
+                {profileSignals.map((signal, signalIndex) => (
+                  <span
+                    className={styles.signalDividerPhrase}
+                    key={`${signal}-${signalIndex}`}
+                  >
                     <span className={styles.signalDividerTrackIndex}>
-                      02.{pIdx + 1}
+                      02.{signalIndex + 1}
                     </span>
-                    <strong>{phrase}</strong>
-                    <i className={styles.signalDividerGlyph}>/</i>
+                    <strong>{signal}</strong>
+                    <i className={styles.signalDividerGlyph}>●</i>
                   </span>
                 ))}
-              </div>
+              </span>
             ))}
           </div>
         </div>
 
-        {/* Center Console: Signal Router Bridge Module */}
-        <div className={styles.signalBridgeConsole}>
-          <div className={styles.signalBridgeLeft}>
-            <div className={styles.signalBridgeStatus}>
-              <i />
-              <span>02 / PROFILE</span>
-            </div>
-            <strong>Frontend systems</strong>
-          </div>
-          <div className={styles.signalBridgeRight}>
-            <span>03 / TOOLKIT</span>
-            <strong>Production stack</strong>
-          </div>
+        <div className={styles.signalDock} aria-hidden="true">
+          <span className={styles.signalDockRule} />
         </div>
 
-        {/* Bottom Track (Dark Chassis / Living Code & Execution) */}
         <div
           className={`${styles.signalDividerLane} ${styles.signalDividerLaneBottom}`}
           aria-hidden="true"
@@ -790,17 +790,23 @@ function SignalDivider() {
             className={`${styles.signalDividerRail} ${styles.signalDividerBottomRail}`}
           >
             {Array.from({ length: 3 }, (_, groupIndex) => (
-              <div className={styles.signalDividerTrackGroup} key={groupIndex}>
-                {bottomNarrative.map((phrase, pIdx) => (
-                  <span className={styles.signalDividerPhrase} key={pIdx}>
+              <span
+                className={styles.signalDividerTrackGroup}
+                key={`toolkit-signal-${groupIndex}`}
+              >
+                {toolkitSignals.map((signal, signalIndex) => (
+                  <span
+                    className={styles.signalDividerPhrase}
+                    key={`${signal}-${signalIndex}`}
+                  >
                     <span className={styles.signalDividerTrackIndexBottom}>
-                      03.{pIdx + 1}
+                      03.{signalIndex + 1}
                     </span>
-                    <strong>{phrase}</strong>
-                    <i className={styles.signalDividerGlyphBottom}>/</i>
+                    <strong>{signal}</strong>
+                    <i className={styles.signalDividerGlyphBottom}>●</i>
                   </span>
                 ))}
-              </div>
+              </span>
             ))}
           </div>
         </div>
@@ -1297,8 +1303,8 @@ function Skills() {
             The stack behind the shipped work.
           </SectionHeading>
           <p>
-            Play the controller to inspect the stack. The controls produce
-            sound and remain keyboard accessible.
+            Play the controller to inspect the stack. The controls produce sound
+            and remain keyboard accessible.
           </p>
         </div>
         <div className={styles.controller}>
@@ -1455,7 +1461,10 @@ function Skills() {
                     label={skill.name}
                     value={Math.round(
                       levels[skill.name] *
-                        Math.max(0, Math.min(1, (skillSequenceProgress - 0.18) / 0.22)),
+                        Math.max(
+                          0,
+                          Math.min(1, (skillSequenceProgress - 0.18) / 0.22),
+                        ),
                     )}
                     onChange={(value) => updateLevel(skill.name, value)}
                   />
@@ -1476,7 +1485,10 @@ function Skills() {
                       max="100"
                       value={Math.round(
                         levels[skill.name] *
-                          Math.max(0, Math.min(1, (skillSequenceProgress - 0.4) / 0.22)),
+                          Math.max(
+                            0,
+                            Math.min(1, (skillSequenceProgress - 0.4) / 0.22),
+                          ),
                       )}
                       onChange={(event) =>
                         updateLevel(skill.name, Number(event.target.value))
@@ -1630,6 +1642,26 @@ const STATIONS = [88.5, 94.2, 100.8, 106.5]
 const NEEDLE_POSITIONS = [8, 36, 64, 92]
 const KNOB_ROTATIONS = [0, 135, 270, 405]
 
+function ReleaseTitleHandoff() {
+  return (
+    <div className={styles.experienceWorkHandoff} aria-hidden="true">
+      <span className={styles.handoffShade} />
+      <div className={styles.handoffEditorial}>
+        <span className={styles.handoffKicker}>SIDE B / SELECTED WORK</span>
+        <p className={styles.handoffTitle}>
+          <span>
+            <b>WORK</b>
+          </span>
+          <span>
+            <b>RELEASED.</b>
+          </span>
+        </p>
+        <span className={styles.handoffIndex}>05 / PROJECT ARCHIVE</span>
+      </div>
+    </div>
+  )
+}
+
 function Experience({
   selected,
   setSelected,
@@ -1674,341 +1706,216 @@ function Experience({
   return (
     <section id="experience" className={styles.experience} data-rack-section>
       <div className={styles.experienceStage}>
-        <SectionHeading index="04" eyebrow="Experience">
-          Four-plus years. Three product teams.
-        </SectionHeading>
-        <div className={styles.cassetteDeck}>
-          <Screw className={styles.screwTopLeft} />
-          <Screw className={styles.screwTopRight} />
-          <div className={styles.radioHandle} aria-hidden="true">
-            <span />
-          </div>
-          <div className={styles.cassetteHeader}>
-            <span>AH / FIELD RADIO</span>
-            <span>FM / AUX / TAPE ARCHIVE</span>
-          </div>
-          <div className={styles.radioFace}>
-            <div className={styles.radioSpeaker} aria-hidden="true">
-              <span className={styles.radioSpeakerBadge}>R-01</span>
-              <div className={styles.speakerGrille} />
-              <div className={styles.radioLevel}>
-                {Array.from({ length: 8 }, (_, index) => (
-                  <i key={index} />
-                ))}
-              </div>
+        <div className={styles.experienceContent}>
+          <SectionHeading index="04" eyebrow="Experience">
+            Four-plus years. Three product teams.
+          </SectionHeading>
+          <div className={styles.cassetteDeck}>
+            <Screw className={styles.screwTopLeft} />
+            <Screw className={styles.screwTopRight} />
+            <div className={styles.radioHandle} aria-hidden="true">
+              <span />
             </div>
-            <div className={styles.radioCore}>
-              <div className={styles.radioTuner} aria-hidden="true">
-                <div className={styles.frequencyDisplay}>
-                  <span>FM</span>
-                  <strong>{displayFreq}</strong>
-                  <small>MHz</small>
-                </div>
-                <div className={styles.frequencyScale}>
-                  {[88, 92, 96, 100, 104, 108].map((frequency) => (
-                    <span key={frequency}>{frequency}</span>
+            <div className={styles.cassetteHeader}>
+              <span>AH / FIELD RADIO</span>
+              <span>FM / AUX / TAPE ARCHIVE</span>
+            </div>
+            <div className={styles.radioFace}>
+              <div className={styles.radioSpeaker} aria-hidden="true">
+                <span className={styles.radioSpeakerBadge}>R-01</span>
+                <div className={styles.speakerGrille} />
+                <div className={styles.radioLevel}>
+                  {Array.from({ length: 8 }, (_, index) => (
+                    <i key={index} />
                   ))}
-                  <i
-                    style={{
-                      left: `${targetNeedle}%`,
-                      transition: 'left 450ms cubic-bezier(0.22, 1, 0.36, 1)',
-                    }}
-                  />
                 </div>
-                <div className={styles.radioDials}>
-                  <span>
-                    <i />
-                    VOL
-                  </span>
-                  <span>
+              </div>
+              <div className={styles.radioCore}>
+                <div className={styles.radioTuner} aria-hidden="true">
+                  <div className={styles.frequencyDisplay}>
+                    <span>FM</span>
+                    <strong>{displayFreq}</strong>
+                    <small>MHz</small>
+                  </div>
+                  <div className={styles.frequencyScale}>
+                    {[88, 92, 96, 100, 104, 108].map((frequency) => (
+                      <span key={frequency}>{frequency}</span>
+                    ))}
                     <i
                       style={{
-                        transform: `rotate(${targetKnob}deg)`,
-                        transition:
-                          'transform 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                        left: `${targetNeedle}%`,
+                        transition: 'left 450ms cubic-bezier(0.22, 1, 0.36, 1)',
                       }}
                     />
-                    TUNE
-                  </span>
-                  <b>ON AIR</b>
+                  </div>
+                  <div className={styles.radioDials}>
+                    <span>
+                      <i />
+                      VOL
+                    </span>
+                    <span>
+                      <i
+                        style={{
+                          transform: `rotate(${targetKnob}deg)`,
+                          transition:
+                            'transform 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                        }}
+                      />
+                      TUNE
+                    </span>
+                    <b>ON AIR</b>
+                  </div>
+                </div>
+                <div
+                  className={styles.tapeCarousel}
+                  role="group"
+                  aria-label="Work experience cassette collection"
+                >
+                  {[-1, 0, 1].map((offset) => {
+                    const index =
+                      (selected + offset + EXPERIENCES.length) %
+                      EXPERIENCES.length
+                    const item = EXPERIENCES[index]
+                    const theme =
+                      CASSETTE_THEMES[index % CASSETTE_THEMES.length]
+                    return (
+                      <button
+                        type="button"
+                        key={item.id}
+                        onClick={() => setSelected(index)}
+                        aria-pressed={offset === 0}
+                        className={`${styles.cassette} ${offset === 0 ? styles.cassetteActive : offset < 0 ? styles.cassettePrevious : styles.cassetteNext}`}
+                        style={
+                          {
+                            '--cassette-shell': theme.shell,
+                            '--cassette-shell-deep': theme.shellDeep,
+                            '--cassette-label': theme.label,
+                            '--cassette-ink': theme.ink,
+                            '--cassette-accent': theme.accent,
+                          } as React.CSSProperties
+                        }
+                      >
+                        <span className={styles.cassetteBrand}>
+                          <b>AH / STUDIO</b> / TYPE II · HIGH BIAS 70μs
+                        </span>
+                        <div className={styles.cassetteLabel}>
+                          <small>
+                            {item.type} / {String(index + 1).padStart(2, '0')}
+                          </small>
+                          <strong>{item.company}</strong>
+                          <span>{item.role}</span>
+                        </div>
+                        <div
+                          className={styles.cassetteMechanism}
+                          aria-hidden="true"
+                        >
+                          <span className={styles.tapeWheel}>
+                            {Array.from({ length: 6 }, (_, i) => (
+                              <i key={i} />
+                            ))}
+                          </span>
+                          <span className={styles.cassetteTapePath}>
+                            <i />
+                            <b />
+                          </span>
+                          <span className={styles.tapeWheel}>
+                            {Array.from({ length: 6 }, (_, i) => (
+                              <i key={i} />
+                            ))}
+                          </span>
+                        </div>
+                        <div
+                          className={styles.cassetteHeadAssembly}
+                          aria-hidden="true"
+                        >
+                          <i />
+                          <b />
+                          <i />
+                        </div>
+                        <span className={styles.cassetteFooter}>
+                          {item.period}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
+            </div>
+            <div className={styles.experienceBody}>
               <div
-                className={styles.tapeCarousel}
-                role="group"
-                aria-label="Work experience cassette collection"
+                className={styles.experienceSelector}
+                role="tablist"
+                aria-label="Experience recordings"
               >
-                {[-1, 0, 1].map((offset) => {
-                  const index =
-                    (selected + offset + EXPERIENCES.length) %
-                    EXPERIENCES.length
-                  const item = EXPERIENCES[index]
+                {EXPERIENCES.map((item, index) => {
                   const theme = CASSETTE_THEMES[index % CASSETTE_THEMES.length]
                   return (
                     <button
                       type="button"
+                      role="tab"
+                      aria-selected={selected === index}
                       key={item.id}
                       onClick={() => setSelected(index)}
-                      aria-pressed={offset === 0}
-                      className={`${styles.cassette} ${offset === 0 ? styles.cassetteActive : offset < 0 ? styles.cassettePrevious : styles.cassetteNext}`}
                       style={
                         {
-                          '--cassette-shell': theme.shell,
-                          '--cassette-shell-deep': theme.shellDeep,
                           '--cassette-label': theme.label,
-                          '--cassette-ink': theme.ink,
                           '--cassette-accent': theme.accent,
                         } as React.CSSProperties
                       }
                     >
-                      <span className={styles.cassetteBrand}>
-                        <b>AH / STUDIO</b> / TYPE II · HIGH BIAS 70μs
-                      </span>
-                      <div className={styles.cassetteLabel}>
-                        <small>
-                          {item.type} / {String(index + 1).padStart(2, '0')}
-                        </small>
-                        <strong>{item.company}</strong>
-                        <span>{item.role}</span>
-                      </div>
-                      <div
-                        className={styles.cassetteMechanism}
-                        aria-hidden="true"
-                      >
-                        <span className={styles.tapeWheel}>
-                          {Array.from({ length: 6 }, (_, i) => (
-                            <i key={i} />
-                          ))}
-                        </span>
-                        <span className={styles.cassetteTapePath}>
-                          <i />
-                          <b />
-                        </span>
-                        <span className={styles.tapeWheel}>
-                          {Array.from({ length: 6 }, (_, i) => (
-                            <i key={i} />
-                          ))}
-                        </span>
-                      </div>
-                      <div
-                        className={styles.cassetteHeadAssembly}
-                        aria-hidden="true"
-                      >
-                        <i />
-                        <b />
-                        <i />
-                      </div>
-                      <span className={styles.cassetteFooter}>
-                        {item.period}
-                      </span>
+                      <span>{String(index + 1).padStart(2, '0')}</span>
+                      <strong>{item.company}</strong>
+                      <small>{item.period}</small>
                     </button>
                   )
                 })}
               </div>
-            </div>
-          </div>
-          <div className={styles.experienceBody}>
-            <div
-              className={styles.experienceSelector}
-              role="tablist"
-              aria-label="Experience recordings"
-            >
-              {EXPERIENCES.map((item, index) => {
-                const theme = CASSETTE_THEMES[index % CASSETTE_THEMES.length]
-                return (
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={selected === index}
-                    key={item.id}
-                    onClick={() => setSelected(index)}
-                    style={
-                      {
-                        '--cassette-label': theme.label,
-                        '--cassette-accent': theme.accent,
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span>{String(index + 1).padStart(2, '0')}</span>
-                    <strong>{item.company}</strong>
-                    <small>{item.period}</small>
-                  </button>
-                )
-              })}
-            </div>
-            <div className={styles.experienceNotes} role="tabpanel">
-              <div>
-                <SilkscreenLabel>
-                  {experience.type} / {experience.location}
-                </SilkscreenLabel>
-              </div>
-              <ul>
-                {description.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          <div className={styles.deckButtons} aria-label="Experience controls">
-            <button
-              type="button"
-              aria-label="Previous experience"
-              onClick={() =>
-                setSelected((current) =>
-                  current === 0 ? EXPERIENCES.length - 1 : current - 1,
-                )
-              }
-            >
-              ◀◀
-            </button>
-            <button type="button" onClick={() => setSelected(0)}>
-              <RotateCcw size={12} aria-hidden="true" />
-              <span className={styles.srOnly}>Rewind experience</span>
-            </button>
-            <button
-              type="button"
-              className={styles.deckPlay}
-              aria-label="Next experience"
-              onClick={() =>
-                setSelected((current) => (current + 1) % EXPERIENCES.length)
-              }
-            >
-              ▶
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function balanceIndent(
-  text: string,
-  leftIndent: number,
-  totalLength: number,
-): string {
-  const padded = text.padStart(text.length + leftIndent, ' ')
-  return padded.padEnd(totalLength, ' ')
-}
-
-const SPLIT_FLAP_ROWS = [
-  {
-    from: balanceIndent(
-      'EXPERIENCE ARCHIVE CLOSED',
-      4,
-      60,
-    ),
-    to: balanceIndent(
-      'SELECTED PROJECTS BOARDING',
-      4,
-      60,
-    ),
-  },
-  {
-    from: balanceIndent(
-      'FRONTEND ENGINEERING / JAKARTA',
-      4,
-      60,
-    ),
-    to: balanceIndent(
-      'REACT / NEXT.JS / TYPESCRIPT',
-      4,
-      60,
-    ),
-  },
-  {
-    from: balanceIndent('STATUS: ARCHIVED', 4, 60),
-    to: balanceIndent('STATUS: READY', 4, 60),
-  },
-] as const
-
-const SPLIT_FLAP_MOBILE_ROWS = [
-  {
-    from: ''.padEnd(20, ' '),
-    to: ''.padEnd(20, ' '),
-    isFlipping: false,
-  },
-  {
-    from: balanceIndent('04 YRS EXP ARCHIVED', 1, 20),
-    to: balanceIndent('05 RELEASES DEPART', 1, 20),
-    isFlipping: true,
-  },
-  {
-    from: balanceIndent('ARCHIVE LOG: CLOSED', 1, 20),
-    to: balanceIndent('PROJECTS: BOARDING', 1, 20),
-    isFlipping: true,
-  },
-  {
-    from: balanceIndent('SYS / MOTION CRAFT', 1, 20),
-    to: balanceIndent('PRODUCTS READY SHIP', 1, 20),
-    isFlipping: true,
-  },
-  {
-    from: ''.padEnd(20, ' '),
-    to: ''.padEnd(20, ' '),
-    isFlipping: false,
-  },
-] as const
-
-function SplitFlapDivider() {
-  return (
-    <section
-      className={styles.splitFlapDivider}
-      aria-label="Experience archived. Featured projects now departing."
-    >
-      <div className={styles.splitFlapBoard} aria-hidden="true">
-        <div className={styles.splitFlapInner}>
-          <div className={styles.splitFlapPanel}>
-            <div className={styles.splitFlapHeader}>
-              <span>
-                <i /> AH STUDIO // DEPARTURE BOARD
-              </span>
-              <span>SCROLL TO BOARD RELEASE</span>
-            </div>
-            <div className={styles.splitFlapGrid}>
-              {SPLIT_FLAP_ROWS.map((row, rowIndex) => (
-                <div
-                  className={styles.splitFlapRow}
-                  key={row.to}
-                  style={{ '--flap-row': rowIndex } as React.CSSProperties}
-                >
-                  <span>{row.from}</span>
-                  <strong>{row.to}</strong>
+              <div className={styles.experienceNotes} role="tabpanel">
+                <div>
+                  <SilkscreenLabel>
+                    {experience.type} / {experience.location}
+                  </SilkscreenLabel>
                 </div>
-              ))}
+                <ul>
+                  {description.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <div className={styles.splitFlapStatus}>
-              <span>OUTPUT / 05</span>
-              <strong>READY FOR BOARDING</strong>
-            </div>
-          </div>
-          <div className={styles.splitFlapMobile}>
-            <div className={styles.splitFlapMobileHeader}>
-              <span>
-                <i /> AH STUDIO // DEPARTURE BOARD
-              </span>
-              <span>SYS-05</span>
-            </div>
-            <div className={styles.splitFlapMobileGrid} aria-hidden="true">
-              {SPLIT_FLAP_MOBILE_ROWS.filter((row) => row.isFlipping).map(
-                (row, rowIndex) => (
-                  <div
-                    className={styles.splitFlapRow}
-                    key={row.to}
-                    style={{ '--flap-row': rowIndex } as React.CSSProperties}
-                  >
-                    <span>{row.from}</span>
-                    <strong>{row.to}</strong>
-                  </div>
-                ),
-              )}
-            </div>
-            <div className={styles.splitFlapMobileStatus}>
-              <span>OUTPUT / 05</span>
-              <strong>BOARDING</strong>
+            <div
+              className={styles.deckButtons}
+              aria-label="Experience controls"
+            >
+              <button
+                type="button"
+                aria-label="Previous experience"
+                onClick={() =>
+                  setSelected((current) =>
+                    current === 0 ? EXPERIENCES.length - 1 : current - 1,
+                  )
+                }
+              >
+                ◀◀
+              </button>
+              <button type="button" onClick={() => setSelected(0)}>
+                <RotateCcw size={12} aria-hidden="true" />
+                <span className={styles.srOnly}>Rewind experience</span>
+              </button>
+              <button
+                type="button"
+                className={styles.deckPlay}
+                aria-label="Next experience"
+                onClick={() =>
+                  setSelected((current) => (current + 1) % EXPERIENCES.length)
+                }
+              >
+                ▶
+              </button>
             </div>
           </div>
         </div>
+        <ReleaseTitleHandoff />
       </div>
     </section>
   )
@@ -2094,7 +2001,7 @@ function Work() {
                       aria-hidden="true"
                     />
                     <a href={project.url} target="_blank" rel="noreferrer">
-                      PLAY RELEASE <ArrowUpRight size={17} aria-hidden="true" />
+                      View project <ArrowUpRight size={16} aria-hidden="true" />
                     </a>
                   </div>
                 </article>
@@ -2229,7 +2136,6 @@ function Contact() {
           oscillator.stop(now + 0.25)
         })
       }
-
     },
     [bank, volume],
   )
@@ -2273,8 +2179,9 @@ function Contact() {
       ([entry]) => {
         if (!entry.isIntersecting) return
         observer.disconnect()
-        const order = Array.from({ length: CONTACT_PADS.length }, (_, index) =>
-          index,
+        const order = Array.from(
+          { length: CONTACT_PADS.length },
+          (_, index) => index,
         ).sort((a, b) => {
           const distanceA = Math.floor(a / 4) + (a % 4)
           const distanceB = Math.floor(b / 4) + (b % 4)
@@ -2365,9 +2272,20 @@ function Contact() {
             <small>{bpm} BPM</small>
           </label>
           <div className={styles.contactDeckDisplay} aria-live="polite">
-            <span>PAD {activePad === null ? '--' : String(activePad + 1).padStart(2, '0')}</span>
-            <strong>{activePad === null ? 'Select a pad' : CONTACT_PADS[activePad].label}</strong>
-            <small>BANK {bank} / {activePad === null ? 'READY' : 'TRIGGERED'}</small>
+            <span>
+              PAD{' '}
+              {activePad === null
+                ? '--'
+                : String(activePad + 1).padStart(2, '0')}
+            </span>
+            <strong>
+              {activePad === null
+                ? 'Select a pad'
+                : CONTACT_PADS[activePad].label}
+            </strong>
+            <small>
+              BANK {bank} / {activePad === null ? 'READY' : 'TRIGGERED'}
+            </small>
           </div>
           <label className={styles.contactDial}>
             <input
@@ -2391,62 +2309,82 @@ function Contact() {
 
         <div className={styles.contactPerformanceArea}>
           <div className={styles.contactModeRail}>
-            <button type="button" aria-pressed={bank === 'A'} onClick={() => setBank('A')}>A</button>
-            <button type="button" aria-pressed={bank === 'B'} onClick={() => setBank('B')}>B</button>
+            <button
+              type="button"
+              aria-pressed={bank === 'A'}
+              onClick={() => setBank('A')}
+            >
+              A
+            </button>
+            <button
+              type="button"
+              aria-pressed={bank === 'B'}
+              onClick={() => setBank('B')}
+            >
+              B
+            </button>
             <span>Bank</span>
           </div>
           <div className={styles.contactPadGrid}>
             {CONTACT_PADS.map((pad, index) => {
-            const content = (
-              <>
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <strong>{pad.label}</strong>
-                <small>{pad.detail}</small>
-              </>
-            )
-            const className = `${styles.contactPad} ${
-              loopingPads.has(index) ? styles.contactPadActive : ''
-            } ${
-              sweepingPads.has(index) ? styles.contactPadSweeping : ''
-            }`
+              const content = (
+                <>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <strong>{pad.label}</strong>
+                  <small>{pad.detail}</small>
+                </>
+              )
+              const className = `${styles.contactPad} ${
+                loopingPads.has(index) ? styles.contactPadActive : ''
+              } ${sweepingPads.has(index) ? styles.contactPadSweeping : ''}`
 
-            return 'href' in pad ? (
-              <a
-                key={pad.label}
-                className={className}
-                href={pad.href}
-                target={pad.href.startsWith('mailto:') ? undefined : '_blank'}
-                rel={pad.href.startsWith('mailto:') ? undefined : 'noreferrer'}
-                onClick={() => togglePad(index)}
-                style={
-                  {
-                    '--pad-color': CONTACT_PAD_COLORS[index],
-                  } as React.CSSProperties
-                }
-              >
-                {content}
-              </a>
-            ) : (
-              <button
-                key={pad.label}
-                type="button"
-                className={className}
-                aria-pressed={loopingPads.has(index)}
-                onClick={() => togglePad(index)}
-                style={
-                  {
-                    '--pad-color': CONTACT_PAD_COLORS[index],
-                  } as React.CSSProperties
-                }
-              >
-                {content}
-              </button>
-            )
+              return 'href' in pad ? (
+                <a
+                  key={pad.label}
+                  className={className}
+                  href={pad.href}
+                  target={pad.href.startsWith('mailto:') ? undefined : '_blank'}
+                  rel={
+                    pad.href.startsWith('mailto:') ? undefined : 'noreferrer'
+                  }
+                  onClick={() => togglePad(index)}
+                  style={
+                    {
+                      '--pad-color': CONTACT_PAD_COLORS[index],
+                    } as React.CSSProperties
+                  }
+                >
+                  {content}
+                </a>
+              ) : (
+                <button
+                  key={pad.label}
+                  type="button"
+                  className={className}
+                  aria-pressed={loopingPads.has(index)}
+                  onClick={() => togglePad(index)}
+                  style={
+                    {
+                      '--pad-color': CONTACT_PAD_COLORS[index],
+                    } as React.CSSProperties
+                  }
+                >
+                  {content}
+                </button>
+              )
             })}
           </div>
           <div className={styles.contactModeRail}>
-            <a href={`mailto:${EMAIL}`} aria-label="Email Aditya"><Mail size={16} /></a>
-            <button type="button" onClick={() => setActivePad(null)} aria-label="Clear active pad"><Square size={14} /></button>
+            <a href={`mailto:${EMAIL}`} aria-label="Email Aditya">
+              <Mail size={16} />
+            </a>
+            <button
+              type="button"
+              onClick={() => setActivePad(null)}
+              aria-label="Clear active pad"
+            >
+              <Square size={14} />
+            </button>
             <span>Out</span>
           </div>
         </div>
@@ -2580,6 +2518,7 @@ export default function Rack01LandingPage() {
           const heroRail = hero.querySelector<HTMLElement>(
             `.${styles.heroBottomRail}`,
           )!
+          const heroRailLink = heroRail.querySelector<HTMLElement>('a')!
           const atmosphere = hero.querySelector<HTMLElement>(
             `.${styles.heroAtmosphere}`,
           )!
@@ -2594,7 +2533,10 @@ export default function Rack01LandingPage() {
           intro
             .fromTo(
               wall,
-              { scale: 1.11, filter: 'saturate(0.45) contrast(1.15) brightness(0.42)' },
+              {
+                scale: 1.11,
+                filter: 'saturate(0.45) contrast(1.15) brightness(0.42)',
+              },
               {
                 scale: 1.015,
                 filter: 'saturate(0.8) contrast(1.08) brightness(0.78)',
@@ -2670,23 +2612,65 @@ export default function Rack01LandingPage() {
           })
 
           collapse
-            .to(panel, { xPercent: -18, opacity: 0, filter: 'blur(5px)', duration: 0.18 }, 0.04)
-            .to([nav, heroRail], { opacity: 0.34, duration: 0.2 }, 0.06)
+            .to(
+              panel,
+              {
+                xPercent: -18,
+                opacity: 0,
+                filter: 'blur(5px)',
+                duration: 0.18,
+              },
+              0.04,
+            )
+            .to(nav, { opacity: 0.34, duration: 0.2 }, 0.06)
+            .to(
+              heroRail,
+              {
+                y: () => -Math.min(176, window.innerHeight * 0.2),
+                color: 'rgba(16, 18, 17, 0.68)',
+                opacity: 1,
+                duration: 0.36,
+              },
+              0.7,
+            )
+            .to(
+              heroRailLink,
+              {
+                color: 'rgba(16, 18, 17, 0.9)',
+                duration: 0.36,
+              },
+              0.7,
+            )
             .to(
               modules,
               {
-                xPercent: (_, element) => Number((element as HTMLElement).dataset.collapseX ?? 0),
-                yPercent: (_, element) => Number((element as HTMLElement).dataset.collapseY ?? 0),
-                rotation: (_, element) => Number((element as HTMLElement).dataset.collapseRotation ?? 0),
+                xPercent: (_, element) =>
+                  Number((element as HTMLElement).dataset.collapseX ?? 0),
+                yPercent: (_, element) =>
+                  Number((element as HTMLElement).dataset.collapseY ?? 0),
+                rotation: (_, element) =>
+                  Number(
+                    (element as HTMLElement).dataset.collapseRotation ?? 0,
+                  ),
                 scale: (_, element) =>
-                  (element as HTMLElement).dataset.rackAnchor === 'true' ? 0.96 : 0.88,
+                  (element as HTMLElement).dataset.rackAnchor === 'true'
+                    ? 0.96
+                    : 0.88,
                 duration: 0.52,
                 stagger: 0.008,
               },
               0.1,
             )
             .to(supportingModules, { opacity: 0.16, duration: 0.28 }, 0.24)
-            .to(anchors, { opacity: 1, filter: 'brightness(1.08) saturate(1)', duration: 0.22 }, 0.28)
+            .to(
+              anchors,
+              {
+                opacity: 1,
+                filter: 'brightness(1.08) saturate(1)',
+                duration: 0.22,
+              },
+              0.28,
+            )
             .to(routes, { opacity: 1, y: 0, duration: 0.18 }, 0.32)
             .to(
               name,
@@ -2809,7 +2793,10 @@ export default function Rack01LandingPage() {
               start: number,
               end: number,
             ) => {
-              const local = Math.max(0, Math.min(1, (progress - start) / (end - start)))
+              const local = Math.max(
+                0,
+                Math.min(1, (progress - start) / (end - start)),
+              )
               const activeCount = Math.ceil(local * items.length)
               items.forEach((item, index) => {
                 item.classList.toggle(
@@ -2824,7 +2811,10 @@ export default function Rack01LandingPage() {
               start: number,
               end: number,
             ) => {
-              const local = Math.max(0, Math.min(1, (progress - start) / (end - start)))
+              const local = Math.max(
+                0,
+                Math.min(1, (progress - start) / (end - start)),
+              )
               const activeIndex = Math.min(
                 items.length - 1,
                 Math.floor(local * items.length),
@@ -2854,9 +2844,11 @@ export default function Rack01LandingPage() {
                 activateThrough(sequenceGroups.faders, progress, 0.34, 0.58)
               },
               onLeaveBack: () => {
-                Object.values(sequenceGroups).flat().forEach((item) =>
-                  item.classList.remove(styles.skillsSequenceActive),
-                )
+                Object.values(sequenceGroups)
+                  .flat()
+                  .forEach((item) =>
+                    item.classList.remove(styles.skillsSequenceActive),
+                  )
                 skillSection.dispatchEvent(
                   new CustomEvent<number>('skills-sequence', { detail: -1 }),
                 )
@@ -2965,9 +2957,8 @@ export default function Rack01LandingPage() {
 
           gsap.fromTo(
             `.${styles.projectModule}`,
-            { y: 42, scale: 0.97, opacity: 0.5 },
+            { scale: 0.99, opacity: 0.72 },
             {
-              y: 0,
               scale: 1,
               opacity: 1,
               stagger: 0.06,
@@ -2982,7 +2973,7 @@ export default function Rack01LandingPage() {
           )
 
           gsap.to(`.${styles.projectVinyl}`, {
-            rotate: 540,
+            rotate: 360,
             ease: 'none',
             scrollTrigger: {
               trigger: `.${styles.work}`,
@@ -3001,9 +2992,10 @@ export default function Rack01LandingPage() {
               end: 'bottom bottom',
               scrub: 0.4,
               onUpdate: (self) => {
+                const experienceProgress = Math.min(1, self.progress / 0.52)
                 const next = Math.min(
                   EXPERIENCES.length - 1,
-                  Math.floor(self.progress * EXPERIENCES.length),
+                  Math.floor(experienceProgress * EXPERIENCES.length),
                 )
                 setExperienceIndex((current) =>
                   current === next ? current : next,
@@ -3011,6 +3003,77 @@ export default function Rack01LandingPage() {
               },
             },
           })
+
+          const experienceSection = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.experience}`,
+          )
+          const experienceContent = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.experienceContent}`,
+          )
+          const handoffShade = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.handoffShade}`,
+          )
+          const handoffEditorial = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.handoffEditorial}`,
+          )
+
+          if (
+            experienceSection &&
+            experienceContent &&
+            handoffShade &&
+            handoffEditorial
+          ) {
+            gsap
+              .timeline({
+                scrollTrigger: {
+                  trigger: experienceSection,
+                  start: 'top top',
+                  end: 'bottom bottom',
+                  scrub: 0.8,
+                  invalidateOnRefresh: true,
+                },
+                defaults: { ease: 'none' },
+              })
+              .to(
+                experienceContent,
+                {
+                  x: '-18vw',
+                  y: -22,
+                  scale: 0.9,
+                  transformOrigin: '50% 44%',
+                  duration: 0.38,
+                },
+                0.52,
+              )
+              .to(experienceContent, { opacity: 0.12, duration: 0.12 }, 0.86)
+              .fromTo(
+                handoffShade,
+                { opacity: 0 },
+                { opacity: 1, duration: 0.42 },
+                0.52,
+              )
+              .fromTo(
+                handoffEditorial,
+                { autoAlpha: 0 },
+                {
+                  autoAlpha: 1,
+                  duration: 0.12,
+                },
+                0.6,
+              )
+              .fromTo(
+                `.${styles.handoffTitle} b`,
+                { yPercent: 108 },
+                { yPercent: 0, stagger: 0.06, duration: 0.24 },
+                0.61,
+              )
+              .fromTo(
+                `.${styles.handoffKicker}, .${styles.handoffIndex}`,
+                { y: 12, opacity: 0 },
+                { y: 0, opacity: 1, stagger: 0.05, duration: 0.18 },
+                0.7,
+              )
+          }
 
           const rail = rootRef.current?.querySelector<HTMLElement>(
             `.${styles.workRail}`,
@@ -3024,7 +3087,7 @@ export default function Rack01LandingPage() {
               ease: 'none',
               scrollTrigger: {
                 trigger: `.${styles.work}`,
-                start: 'top top',
+                start: () => `top+=${window.innerHeight} top`,
                 end: 'bottom bottom',
                 scrub: 0.6,
                 invalidateOnRefresh: true,
@@ -3039,41 +3102,45 @@ export default function Rack01LandingPage() {
         const dividerBottomRail = rootRef.current?.querySelector<HTMLElement>(
           `.${styles.signalDividerBottomRail}`,
         )
+        const dividerDockRule = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.signalDockRule}`,
+        )
 
-        if (dividerTopRail && dividerBottomRail) {
-          const dividerTravel = () =>
+        if (dividerTopRail && dividerBottomRail && dividerDockRule) {
+          const horizontalTravel = () =>
             window.innerWidth < 769
-              ? Math.min(240, Math.max(130, window.innerWidth * 0.42))
-              : Math.min(150, window.innerWidth * 0.11)
-          const railScrollTrigger = {
-            trigger: `.${styles.signalDivider}`,
-            start: 'top bottom',
-            end: 'bottom top',
-            scrub: 1.4,
-            invalidateOnRefresh: true,
-          }
+              ? Math.min(22, window.innerWidth * 0.055)
+              : Math.min(48, window.innerWidth * 0.035)
 
-          gsap.fromTo(
-            dividerTopRail,
-            { x: () => -dividerTravel() },
-            {
-              x: () => dividerTravel(),
-              force3D: true,
-              ease: 'none',
-              scrollTrigger: railScrollTrigger,
-            },
-          )
-
-          gsap.fromTo(
-            dividerBottomRail,
-            { x: () => dividerTravel() },
-            {
-              x: () => -dividerTravel(),
-              force3D: true,
-              ease: 'none',
-              scrollTrigger: { ...railScrollTrigger },
-            },
-          )
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: `.${styles.signalDivider}`,
+                start: 'top 85%',
+                end: 'bottom 15%',
+                scrub: 0.8,
+                invalidateOnRefresh: true,
+              },
+              defaults: { ease: 'none' },
+            })
+            .fromTo(
+              dividerTopRail,
+              { x: () => -horizontalTravel() },
+              { x: 0, duration: 0.7, force3D: true },
+              0,
+            )
+            .fromTo(
+              dividerBottomRail,
+              { x: horizontalTravel },
+              { x: 0, duration: 0.7, force3D: true },
+              0,
+            )
+            .fromTo(
+              dividerDockRule,
+              { scaleX: 0.18, opacity: 0.5 },
+              { scaleX: 1, opacity: 0.82, duration: 0.52 },
+              0.22,
+            )
         }
 
         const cableMaleHalf = rootRef.current?.querySelector<HTMLElement>(
@@ -3122,20 +3189,47 @@ export default function Rack01LandingPage() {
             )
         }
 
-        const splitFlapDivider = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.splitFlapDivider}`,
-        )
-
-        if (splitFlapDivider) {
-          ScrollTrigger.create({
-            trigger: splitFlapDivider,
-            start: 'top 75%',
-            end: 'bottom 20%',
-            onEnter: () =>
-              splitFlapDivider.setAttribute('data-flipped', 'true'),
-            onLeaveBack: () => splitFlapDivider.removeAttribute('data-flipped'),
-          })
-        }
+        media.add('(max-width: 768px)', () => {
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: `.${styles.experienceWorkHandoff}`,
+                start: 'top 88%',
+                end: 'bottom 28%',
+                scrub: 0.75,
+              },
+              defaults: { ease: 'none' },
+            })
+            .fromTo(
+              `.${styles.handoffShade}`,
+              { opacity: 0 },
+              { opacity: 1, duration: 0.72 },
+              0,
+            )
+            .fromTo(
+              `.${styles.handoffEditorial}`,
+              { opacity: 0 },
+              { opacity: 1, duration: 0.22 },
+              0.12,
+            )
+            .to(
+              `.${styles.experienceContent}`,
+              { x: -24, opacity: 0.46, duration: 0.58 },
+              0,
+            )
+            .fromTo(
+              `.${styles.handoffTitle} b`,
+              { yPercent: 108 },
+              { yPercent: 0, stagger: 0.08, duration: 0.32 },
+              0.2,
+            )
+            .fromTo(
+              `.${styles.handoffKicker}, .${styles.handoffIndex}`,
+              { y: 10, opacity: 0 },
+              { y: 0, opacity: 1, stagger: 0.06, duration: 0.24 },
+              0.38,
+            )
+        })
 
         return () => media.revert()
       }, rootRef)
@@ -3164,7 +3258,6 @@ export default function Rack01LandingPage() {
       <Skills />
       <CableDivider />
       <Experience selected={experienceIndex} setSelected={setExperienceIndex} />
-      <SplitFlapDivider />
       <Work />
       <Contact />
       <TransportBridge

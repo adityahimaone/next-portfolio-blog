@@ -1415,6 +1415,7 @@
 }
 
 .experience {
+  position: relative;
   height: 190svh;
   background: var(--field-tan);
 }
@@ -1643,7 +1644,7 @@
   color: var(--signal-orange);
 }
 .workHeader .sectionHeading h2 {
-  max-width: 750px;
+  max-width: 1100px;
   font-size: clamp(37px, 5.5vw, 80px);
 }
 .workHint {
@@ -1975,8 +1976,9 @@
   align-items: center;
   justify-content: center;
   color: var(--chassis-hi);
-  backdrop-filter: blur(16px) saturate(1.2);
-  will-change: width, max-width, bottom, border-radius, padding;
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  backdrop-filter: blur(18px) saturate(1.35);
+  will-change: transform, width, max-width, border-radius, padding;
   transition:
     bottom 380ms cubic-bezier(0.16, 1, 0.3, 1),
     width 380ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -1987,6 +1989,16 @@
     box-shadow 300ms ease,
     background-color 300ms ease,
     border-color 300ms ease;
+}
+
+.projectNavTrigger {
+  position: absolute;
+  z-index: 2;
+  top: 62svh;
+  right: 0;
+  left: 0;
+  height: 1px;
+  pointer-events: none;
 }
 
 /* ── Docked / Hero State (Full Width, Crisp Dock, No Rounded Corners) ── */
@@ -2000,8 +2012,10 @@
   border-radius: 0;
   border: 0;
   border-top: 1px solid rgba(244, 240, 232, 0.18);
-  background: rgba(16, 18, 17, 0.95);
-  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.4);
+  background: rgba(16, 18, 17, 0.78);
+  box-shadow:
+    0 -8px 30px rgba(0, 0, 0, 0.34),
+    inset 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .transportDocked .transportProgressBar {
@@ -2020,17 +2034,31 @@
   gap: 10px;
   border-radius: 999px;
   border: 1px solid rgba(244, 240, 232, 0.16);
-  background: rgba(18, 20, 19, 0.9);
+  background: linear-gradient(
+    135deg,
+    rgba(34, 37, 35, 0.78),
+    rgba(12, 14, 13, 0.7)
+  );
   box-shadow:
     0 16px 40px rgba(0, 0, 0, 0.45),
     0 2px 6px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .transportCompact .transportProgressBar {
   right: 14px;
   left: 14px;
   border-radius: 2px;
+}
+
+.transport.transportBottom {
+  top: auto;
+}
+
+.transport.transportTop {
+  top: clamp(12px, 2vh, 20px);
+  bottom: auto;
 }
 
 .transportProgressBar {
@@ -6502,6 +6530,9 @@
   .workHeader {
     display: block;
   }
+  .workHeader .sectionHeading h2 {
+    max-width: 100%;
+  }
   .workHint {
     margin-top: 20px;
   }
@@ -6675,7 +6706,7 @@
     border-radius: 0;
     border: 0;
     border-top: 1px solid rgba(244, 240, 232, 0.18);
-    background: rgba(16, 18, 17, 0.95);
+    background: rgba(16, 18, 17, 0.78);
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
     overflow: visible;
     justify-content: center;
@@ -6692,7 +6723,7 @@
     gap: 6px;
     border-radius: 999px;
     border: 1px solid rgba(244, 240, 232, 0.18);
-    background: rgba(16, 18, 17, 0.94);
+    background: rgba(16, 18, 17, 0.76);
     box-shadow:
       0 12px 32px rgba(0, 0, 0, 0.55),
       0 2px 8px rgba(0, 0, 0, 0.35),
@@ -8586,11 +8617,15 @@
     padding: 5px 7px;
     border: 1px solid rgba(244, 240, 232, 0.18);
     border-radius: 999px;
-    background: rgba(16, 18, 17, 0.95);
+    background: rgba(16, 18, 17, 0.76);
     box-shadow:
       0 12px 32px rgba(0, 0, 0, 0.48),
       inset 0 1px 0 rgba(255, 255, 255, 0.12);
     transform: translateX(-50%);
+  }
+  .transport.transportTop {
+    top: 8px;
+    bottom: auto;
   }
   .transport.transportCompact .routeNavGroup {
     flex: 1 1 auto;
@@ -9027,6 +9062,11 @@
 }
 
 @media (max-width: 768px) {
+  .projectNavTrigger {
+    top: auto;
+    bottom: 0;
+  }
+
   .experienceContent {
     will-change: auto;
   }

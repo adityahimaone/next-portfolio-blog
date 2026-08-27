@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import Lenis from 'lenis'
+import { m as motion, useReducedMotion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDownRight,
@@ -159,11 +160,14 @@ function TransportBridge({
   progress,
   activeId,
   compact = false,
+  position,
 }: {
   progress: number
   activeId: string
   compact?: boolean
+  position: 'bottom' | 'top'
 }) {
+  const prefersReducedMotion = useReducedMotion()
   const [isSectionHovered, setIsSectionHovered] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -212,12 +216,21 @@ function TransportBridge({
   }, [isMobileMenuOpen])
 
   return (
-    <aside
+    <motion.aside
+      layout="position"
       ref={dropdownRef}
       className={`${styles.transport} ${
         compact ? styles.transportCompact : styles.transportDocked
+      } ${
+        position === 'top' ? styles.transportTop : styles.transportBottom
       }`}
+      transition={
+        prefersReducedMotion
+          ? { duration: 0 }
+          : { type: 'spring', stiffness: 220, damping: 30, mass: 0.9 }
+      }
       aria-label="Page transport and navigation"
+      data-position={position}
     >
       {/* Top Progress Runner */}
       <div className={styles.transportProgressBar} aria-hidden="true">
@@ -347,7 +360,7 @@ function TransportBridge({
           </Link>
         ))}
       </div>
-    </aside>
+    </motion.aside>
   )
 }
 
@@ -1665,9 +1678,11 @@ function ReleaseTitleHandoff() {
 function Experience({
   selected,
   setSelected,
+  projectDividerRef,
 }: {
   selected: number
   setSelected: React.Dispatch<React.SetStateAction<number>>
+  projectDividerRef: React.RefObject<HTMLDivElement | null>
 }) {
   const experience = EXPERIENCES[selected]
   const description =
@@ -1917,17 +1932,27 @@ function Experience({
         </div>
         <ReleaseTitleHandoff />
       </div>
+      <div
+        ref={projectDividerRef}
+        className={styles.projectNavTrigger}
+        aria-hidden="true"
+      />
     </section>
   )
 }
 
 function Work() {
   return (
-    <section id="work" className={styles.work} data-rack-section>
+    <section
+      id="work"
+      className={styles.work}
+      data-rack-section
+      data-no-heading-reveal
+    >
       <div className={styles.workStage}>
         <div className={styles.workHeader}>
           <SectionHeading index="05" eyebrow="Selected work">
-            Interfaces that made it to production.
+            Web products and interfaces.
           </SectionHeading>
           <div className={styles.workHint}>
             <span>DRAG / SCROLL</span>
@@ -2400,12 +2425,16 @@ function Contact() {
 
 export default function Rack01LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null)
+  const projectDividerRef = useRef<HTMLDivElement>(null)
+  const lastScrollYRef = useRef(0)
+  const scrollDirectionRef = useRef<'up' | 'down'>('down')
   const [progress, setProgress] = useState(0)
   const [activeId, setActiveId] = useState('home')
   const [aboutIndex, setAboutIndex] = useState(0)
   const [aboutProgress, setAboutProgress] = useState(0)
   const [experienceIndex, setExperienceIndex] = useState(0)
   const [transportCompact, setTransportCompact] = useState(false)
+  const [navPosition, setNavPosition] = useState<'bottom' | 'top'>('bottom')
 
   useEffect(() => {
     let frame = 0
@@ -2415,8 +2444,15 @@ export default function Rack01LandingPage() {
         const currentY = window.scrollY
         const max = document.documentElement.scrollHeight - window.innerHeight
 
+        if (currentY !== lastScrollYRef.current) {
+          scrollDirectionRef.current =
+            currentY > lastScrollYRef.current ? 'down' : 'up'
+          lastScrollYRef.current = currentY
+        }
+
         setProgress(max > 0 ? Math.min(1, Math.max(0, currentY / max)) : 0)
         setTransportCompact(currentY >= 120)
+        if (currentY < 120) setNavPosition('bottom')
       })
     }
     updateProgress()
@@ -2427,6 +2463,33 @@ export default function Rack01LandingPage() {
       window.removeEventListener('scroll', updateProgress)
       window.removeEventListener('resize', updateProgress)
     }
+  }, [])
+
+  useEffect(() => {
+    const divider = projectDividerRef.current
+    if (!divider) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+
+        if (scrollDirectionRef.current === 'down' && window.scrollY >= 120) {
+          setNavPosition('top')
+        } else if (scrollDirectionRef.current === 'up') {
+          setNavPosition('bottom')
+        }
+      },
+      { rootMargin: '-8% 0px -90% 0px', threshold: 0 },
+    )
+
+    observer.observe(divider)
+
+    // Restore the latched state when the page loads at a deep scroll position.
+    if (divider.getBoundingClientRect().top < window.innerHeight * 0.08) {
+      setNavPosition('top')
+    }
+
+    return () => observer.disconnect()
   }, [])
 
   useEffect(() => {
@@ -2721,9 +2784,9 @@ export default function Rack01LandingPage() {
             })
           })
 
-          const storyHeadings = gsap.utils.toArray<HTMLElement>(
-            `.${styles.sectionHeading}`,
-          )
+          const storyHeadings = gsap
+            .utils.toArray<HTMLElement>(`.${styles.sectionHeading}`)
+            .filter((heading) => !heading.closest('[data-no-heading-reveal]'))
           storyHeadings.forEach((heading) => {
             const label = heading.querySelector(`.${styles.silkscreen}`)
             const title = heading.querySelector('h2')
@@ -3253,13 +3316,18 @@ export default function Rack01LandingPage() {
       <SignalDivider />
       <Skills />
       <CableDivider />
-      <Experience selected={experienceIndex} setSelected={setExperienceIndex} />
+      <Experience
+        selected={experienceIndex}
+        setSelected={setExperienceIndex}
+        projectDividerRef={projectDividerRef}
+      />
       <Work />
       <Contact />
       <TransportBridge
         progress={progress}
         activeId={activeId}
         compact={transportCompact}
+        position={navPosition}
       />
     </div>
   )

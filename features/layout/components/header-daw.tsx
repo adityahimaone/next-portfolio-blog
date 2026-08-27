@@ -76,7 +76,7 @@ export function HeaderDaw() {
         id="top"
         className="border-border/80 bg-background/95 text-foreground fixed inset-x-0 top-0 z-50 border-b backdrop-blur-md"
       >
-        <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto] items-center gap-4 px-4 sm:px-6 lg:grid-cols-[1fr_auto_1fr] lg:px-8">
+        <div className="mx-auto grid h-[52px] max-w-7xl grid-cols-[1fr_auto] items-center gap-4 px-4 sm:px-6 lg:grid-cols-[1fr_auto_1fr] lg:px-8">
           <Link
             href="/"
             className="inline-flex min-h-11 w-fit items-center font-[family-name:var(--font-space-grotesk)] text-base font-bold tracking-[-0.045em] focus-visible:rounded-sm"

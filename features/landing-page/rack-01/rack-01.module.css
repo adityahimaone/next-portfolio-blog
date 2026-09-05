@@ -1954,8 +1954,8 @@
 
 @media (max-width: 768px) {
   .footer {
-    margin-top: 55px;
-    padding-top: 44px;
+    margin-top: 0;
+    padding-bottom: 72px;
   }
 
   .footerMeta {
@@ -2054,11 +2054,6 @@
 
 .transport.transportBottom {
   top: auto;
-}
-
-.transport.transportTop {
-  top: clamp(12px, 2vh, 20px);
-  bottom: auto;
 }
 
 .transportProgressBar {
@@ -5089,13 +5084,7 @@
     font-size: 7px;
   }
   .heroBottomRail {
-    bottom: 8px;
-  }
-  .heroBottomRail > span {
     display: none;
-  }
-  .heroBottomRail a {
-    margin-left: auto;
   }
 }
 
@@ -6600,7 +6589,7 @@
     margin-top: 0;
   }
   .contact {
-    padding: 90px 20px 100px;
+    padding: 90px 20px 0;
   }
   .patchHeader,
   .patchbay {
@@ -6683,7 +6672,7 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 12px;
-    margin-top: 55px;
+    margin-top: 0;
   }
   /* ── Mobile Navigation (Section Dropdown Trigger + Direct Route Links) ── */
   .transportStatus {
@@ -7888,15 +7877,7 @@
     font-size: 9px;
   }
   .heroBottomRail {
-    right: 18px;
-    bottom: 10px;
-    left: 18px;
-  }
-  .heroBottomRail > span {
     display: none;
-  }
-  .heroBottomRail a {
-    margin-left: auto;
   }
 }
 
@@ -8622,10 +8603,6 @@
       0 12px 32px rgba(0, 0, 0, 0.48),
       inset 0 1px 0 rgba(255, 255, 255, 0.12);
     transform: translateX(-50%);
-  }
-  .transport.transportTop {
-    top: 8px;
-    bottom: auto;
   }
   .transport.transportCompact .routeNavGroup {
     flex: 1 1 auto;

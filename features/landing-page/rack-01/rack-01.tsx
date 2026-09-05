@@ -160,12 +160,10 @@ function TransportBridge({
   progress,
   activeId,
   compact = false,
-  position,
 }: {
   progress: number
   activeId: string
   compact?: boolean
-  position: 'bottom' | 'top'
 }) {
   const prefersReducedMotion = useReducedMotion()
   const [isSectionHovered, setIsSectionHovered] = useState(false)
@@ -221,16 +219,13 @@ function TransportBridge({
       ref={dropdownRef}
       className={`${styles.transport} ${
         compact ? styles.transportCompact : styles.transportDocked
-      } ${
-        position === 'top' ? styles.transportTop : styles.transportBottom
-      }`}
+      } ${styles.transportBottom}`}
       transition={
         prefersReducedMotion
           ? { duration: 0 }
           : { type: 'spring', stiffness: 220, damping: 30, mass: 0.9 }
       }
       aria-label="Page transport and navigation"
-      data-position={position}
     >
       {/* Top Progress Runner */}
       <div className={styles.transportProgressBar} aria-hidden="true">
@@ -2426,15 +2421,12 @@ function Contact() {
 export default function Rack01LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null)
   const projectDividerRef = useRef<HTMLDivElement>(null)
-  const lastScrollYRef = useRef(0)
-  const scrollDirectionRef = useRef<'up' | 'down'>('down')
   const [progress, setProgress] = useState(0)
   const [activeId, setActiveId] = useState('home')
   const [aboutIndex, setAboutIndex] = useState(0)
   const [aboutProgress, setAboutProgress] = useState(0)
   const [experienceIndex, setExperienceIndex] = useState(0)
   const [transportCompact, setTransportCompact] = useState(false)
-  const [navPosition, setNavPosition] = useState<'bottom' | 'top'>('bottom')
 
   useEffect(() => {
     let frame = 0
@@ -2444,15 +2436,8 @@ export default function Rack01LandingPage() {
         const currentY = window.scrollY
         const max = document.documentElement.scrollHeight - window.innerHeight
 
-        if (currentY !== lastScrollYRef.current) {
-          scrollDirectionRef.current =
-            currentY > lastScrollYRef.current ? 'down' : 'up'
-          lastScrollYRef.current = currentY
-        }
-
         setProgress(max > 0 ? Math.min(1, Math.max(0, currentY / max)) : 0)
         setTransportCompact(currentY >= 120)
-        if (currentY < 120) setNavPosition('bottom')
       })
     }
     updateProgress()
@@ -2463,33 +2448,6 @@ export default function Rack01LandingPage() {
       window.removeEventListener('scroll', updateProgress)
       window.removeEventListener('resize', updateProgress)
     }
-  }, [])
-
-  useEffect(() => {
-    const divider = projectDividerRef.current
-    if (!divider) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return
-
-        if (scrollDirectionRef.current === 'down' && window.scrollY >= 120) {
-          setNavPosition('top')
-        } else if (scrollDirectionRef.current === 'up') {
-          setNavPosition('bottom')
-        }
-      },
-      { rootMargin: '-8% 0px -90% 0px', threshold: 0 },
-    )
-
-    observer.observe(divider)
-
-    // Restore the latched state when the page loads at a deep scroll position.
-    if (divider.getBoundingClientRect().top < window.innerHeight * 0.08) {
-      setNavPosition('top')
-    }
-
-    return () => observer.disconnect()
   }, [])
 
   useEffect(() => {
@@ -3327,7 +3285,6 @@ export default function Rack01LandingPage() {
         progress={progress}
         activeId={activeId}
         compact={transportCompact}
-        position={navPosition}
       />
     </div>
   )

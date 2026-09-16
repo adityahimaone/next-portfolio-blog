@@ -9527,3 +9527,157 @@
 .projectModuleExpanded {
   border-color: var(--record-accent);
 }
+
+/* Story rails: a quiet pause between the profile and the toolkit. */
+.signalDivider {
+  background: transparent;
+}
+
+.signalDividerStage {
+  min-height: clamp(132px, 14vw, 176px);
+  grid-template-rows: minmax(0, 1fr) 1px minmax(0, 1fr);
+  background: var(--chassis-hi);
+}
+
+.signalDividerStage::before,
+.signalDividerStage::after {
+  background: none;
+}
+
+.signalDividerStage::before {
+  background-color: var(--chassis-hi);
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(29, 30, 28, 0.08) 0,
+    rgba(29, 30, 28, 0.08) 1px,
+    transparent 1px,
+    transparent 28px
+  );
+}
+
+.signalDividerStage::after {
+  background-color: var(--graphite);
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(231, 226, 216, 0.045) 0,
+    rgba(231, 226, 216, 0.045) 1px,
+    transparent 1px,
+    transparent 32px
+  );
+}
+
+.signalDividerLaneTop {
+  align-items: flex-end;
+  padding-bottom: clamp(15px, 2vw, 24px);
+  color: var(--graphite);
+}
+
+.signalDividerLaneBottom {
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding-top: clamp(15px, 2vw, 24px);
+  color: var(--chassis-hi);
+}
+
+.signalDividerRail {
+  gap: 0;
+  animation-duration: 44s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+.signalDividerTopRail {
+  left: 0;
+  right: auto;
+  animation-name: storyRailTop;
+}
+
+.signalDividerBottomRail {
+  left: 0;
+  right: auto;
+  animation-name: storyRailBottom;
+}
+
+.signalDividerTrackGroup {
+  display: inline-flex;
+  align-items: center;
+}
+
+.signalDividerPhrase {
+  display: inline-block;
+  max-width: none;
+  padding: 0 clamp(22px, 4vw, 64px) 0 0;
+  color: currentColor;
+  font-family: var(--font-cormorant-garamond), Georgia, serif;
+  font-size: clamp(19px, 2.25vw, 31px);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.signalDividerPhrase::after {
+  content: '  /  ';
+  color: #b36b46;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.5em;
+  letter-spacing: 0.08em;
+  vertical-align: middle;
+}
+
+.signalDockRule {
+  right: clamp(20px, 5vw, 78px);
+  left: clamp(20px, 5vw, 78px);
+  height: 1px;
+  background: var(--slate);
+  opacity: 0.58;
+}
+
+@keyframes storyRailTop {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes storyRailBottom {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .signalDividerStage {
+    min-height: 128px;
+  }
+
+  .signalDividerPhrase {
+    padding-right: 28px;
+    font-size: clamp(18px, 5.6vw, 24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signalDividerRail {
+    animation: none;
+    transform: none !important;
+  }
+}
+
+/* Give the Skills title more room before the controller arrives. */
+@media (min-width: 769px) {
+  .skills .sectionHeading h2 {
+    font-size: clamp(30px, 4.5vw, 68px);
+  }
+
+  .skills .controller {
+    margin-top: clamp(10px, 1.6vh, 22px);
+  }
+}

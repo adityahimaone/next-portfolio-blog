@@ -221,11 +221,23 @@ export const MIXER_DATA: readonly MixerGroup[] = [
 // ─── Projects Showcase (Landing Section) ─────────────────
 export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
   {
+    id: 0,
+    title: 'Switchyard',
+    description:
+      'Control plane for coding agents. Switchyard stores boards and tasks, selects workspaces, claims tasks, dispatches work to executors, and holds results in review until changes are inspected and approved.',
+    image: '/assets/thumbnail-switchyard-2.webp',
+    url: 'https://primarindo.niqcode.com/',
+    genre: 'Corporate / Manufacturing',
+    year: '2024',
+    vinylColor: 'from-blue-600 to-cyan-500',
+    vinylIcon: Globe,
+  },
+  {
     id: 1,
     title: 'Primarindo Asia',
     description:
       'Company profile for Primarindo Asia Infrastructure Tbk, a manufacturer specializing in shoe production. The website showcases their manufacturing capabilities, product lines, and corporate information.',
-    image: '/assets/primarindo.png',
+    image: '/assets/thumbnail-primarindo-2.webp',
     url: 'https://primarindo.niqcode.com/',
     genre: 'Corporate / Manufacturing',
     year: '2024',
@@ -237,25 +249,25 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     title: 'Habit Tracker',
     description:
       'Habit tracking app to build better daily routines. Track streaks, view weekly overviews, and stay consistent.',
-    image: '/assets/thumbnail-habit-tracker.png',
+    image: '/assets/thumbnail-habit-tracker-2.webp',
     url: 'https://habit.adityahimaone.space/',
     genre: 'Utility / Productivity',
     year: '2026',
     vinylColor: 'from-green-500 to-emerald-500',
     vinylIcon: Zap,
   },
-  {
-    id: 3,
-    title: 'Frontend Resources',
-    description:
-      'A curated directory of frontend tools, libraries, and references.',
-    image: '/assets/thumbnail-fe-resources.png',
-    url: 'https://frontend-resources-rouge.vercel.app/',
-    genre: 'Educational / Tools',
-    year: '2023',
-    vinylColor: 'from-yellow-500 to-orange-500',
-    vinylIcon: Code,
-  },
+  // {
+  //   id: 3,
+  //   title: 'Frontend Resources',
+  //   description:
+  //     'A curated directory of frontend tools, libraries, and references.',
+  //   image: '/assets/thumbnail-fe-resources.png',
+  //   url: 'https://frontend-resources-rouge.vercel.app/',
+  //   genre: 'Educational / Tools',
+  //   year: '2023',
+  //   vinylColor: 'from-yellow-500 to-orange-500',
+  //   vinylIcon: Code,
+  // },
   {
     id: 4,
     title: 'SeaPhantom',

@@ -770,16 +770,10 @@ function About({
 }
 
 function SignalDivider() {
-  const profileSignals = [
-    'Frontend architecture',
-    'Reusable components',
-    'Production interfaces',
-  ]
-  const toolkitSignals = [
-    'React / Next.js / TypeScript',
-    'SSR / State / Data',
-    'Performance / Accessibility',
-  ]
+  const topStory =
+    'A collection of work shaped by observation, restraint, and the small decisions that make digital experiences feel human.'
+  const bottomStory =
+    'Each project begins with a question, becomes clearer through making, and stays open to what comes next.'
 
   return (
     <section
@@ -794,23 +788,12 @@ function SignalDivider() {
           <div
             className={`${styles.signalDividerRail} ${styles.signalDividerTopRail}`}
           >
-            {Array.from({ length: 3 }, (_, groupIndex) => (
+            {Array.from({ length: 2 }, (_, groupIndex) => (
               <span
                 className={styles.signalDividerTrackGroup}
-                key={`profile-signal-${groupIndex}`}
+                key={`top-story-${groupIndex}`}
               >
-                {profileSignals.map((signal, signalIndex) => (
-                  <span
-                    className={styles.signalDividerPhrase}
-                    key={`${signal}-${signalIndex}`}
-                  >
-                    <span className={styles.signalDividerTrackIndex}>
-                      02.{signalIndex + 1}
-                    </span>
-                    <strong>{signal}</strong>
-                    <i className={styles.signalDividerGlyph}>●</i>
-                  </span>
-                ))}
+                <span className={styles.signalDividerPhrase}>{topStory}</span>
               </span>
             ))}
           </div>
@@ -827,23 +810,14 @@ function SignalDivider() {
           <div
             className={`${styles.signalDividerRail} ${styles.signalDividerBottomRail}`}
           >
-            {Array.from({ length: 3 }, (_, groupIndex) => (
+            {Array.from({ length: 2 }, (_, groupIndex) => (
               <span
                 className={styles.signalDividerTrackGroup}
-                key={`toolkit-signal-${groupIndex}`}
+                key={`bottom-story-${groupIndex}`}
               >
-                {toolkitSignals.map((signal, signalIndex) => (
-                  <span
-                    className={styles.signalDividerPhrase}
-                    key={`${signal}-${signalIndex}`}
-                  >
-                    <span className={styles.signalDividerTrackIndexBottom}>
-                      03.{signalIndex + 1}
-                    </span>
-                    <strong>{signal}</strong>
-                    <i className={styles.signalDividerGlyphBottom}>●</i>
-                  </span>
-                ))}
+                <span className={styles.signalDividerPhrase}>
+                  {bottomStory}
+                </span>
               </span>
             ))}
           </div>
@@ -3345,22 +3319,11 @@ export default function Rack01LandingPage() {
           }
         })
 
-        const dividerTopRail = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.signalDividerTopRail}`,
-        )
-        const dividerBottomRail = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.signalDividerBottomRail}`,
-        )
         const dividerDockRule = rootRef.current?.querySelector<HTMLElement>(
           `.${styles.signalDockRule}`,
         )
 
-        if (dividerTopRail && dividerBottomRail && dividerDockRule) {
-          const horizontalTravel = () =>
-            window.innerWidth < 769
-              ? Math.min(22, window.innerWidth * 0.055)
-              : Math.min(48, window.innerWidth * 0.035)
-
+        if (dividerDockRule) {
           gsap
             .timeline({
               scrollTrigger: {
@@ -3372,18 +3335,6 @@ export default function Rack01LandingPage() {
               },
               defaults: { ease: 'none' },
             })
-            .fromTo(
-              dividerTopRail,
-              { x: () => -horizontalTravel() },
-              { x: 0, duration: 0.7, force3D: true },
-              0,
-            )
-            .fromTo(
-              dividerBottomRail,
-              { x: horizontalTravel },
-              { x: 0, duration: 0.7, force3D: true },
-              0,
-            )
             .fromTo(
               dividerDockRule,
               { scaleX: 0.18, opacity: 0.5 },

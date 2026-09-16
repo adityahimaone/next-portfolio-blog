@@ -9087,7 +9087,7 @@
   }
 
   .root .footerTangle {
-    height: 180px !important;
+    height: clamp(180px, 50vw, 350px) !important;
     margin-top: 12px;
   }
 }

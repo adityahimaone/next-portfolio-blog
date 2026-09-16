@@ -4049,13 +4049,15 @@
 }
 .aboutCardRail {
   display: grid;
+  grid-auto-rows: minmax(310px, 1fr);
   gap: var(--about-card-gap);
 }
 .aboutCard {
   position: relative;
   display: grid;
   width: 100%;
-  min-height: clamp(310px, 36vh, 360px);
+  height: 100%;
+  min-height: 0;
   box-sizing: border-box;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-rows: auto auto minmax(0, 1fr);
@@ -4159,30 +4161,6 @@
     0 20px 42px rgba(29, 30, 28, 0.28),
     inset 0 1px rgba(255, 255, 255, 0.55),
     inset 5px 0 var(--about-accent);
-}
-.aboutPhaseIndex {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.aboutPhaseIndex span {
-  display: grid;
-  width: 28px;
-  height: 22px;
-  place-items: center;
-  border: 1px solid #9a978f;
-  color: #73716b;
-  font: 7px var(--font-geist-mono);
-  transition:
-    width 280ms cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 180ms ease,
-    color 180ms ease;
-}
-.aboutPhaseIndex .phaseIndexActive {
-  width: 48px;
-  border-color: var(--graphite);
-  background: var(--graphite);
-  color: var(--lcd-green);
 }
 .aboutCopy .aboutStats {
   margin-top: 16px;
@@ -6226,10 +6204,6 @@
     height: auto;
     gap: 18px;
   }
-  .aboutPhaseIndex {
-    margin-top: 6px;
-    justify-content: flex-start;
-  }
   .aboutCardViewport {
     height: auto;
     overflow: visible;
@@ -6238,6 +6212,7 @@
   .aboutCardRail {
     transform: none !important;
     will-change: auto;
+    grid-auto-rows: minmax(250px, auto);
   }
   .aboutCard,
   .aboutCardActive {
@@ -9581,9 +9556,6 @@
 
 .signalDividerRail {
   gap: 0;
-  animation-duration: 44s;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
   will-change: transform;
 }
 
@@ -9602,6 +9574,18 @@
 .signalDividerTrackGroup {
   display: inline-flex;
   align-items: center;
+}
+
+.signalDividerMarquee {
+  display: flex;
+  width: max-content;
+  min-width: max-content;
+  animation: storyRailTop 36s linear infinite;
+  will-change: transform;
+}
+
+.signalDividerBottomRail .signalDividerMarquee {
+  animation-name: storyRailBottom;
 }
 
 .signalDividerPhrase {
@@ -9671,6 +9655,41 @@
   }
 }
 
+/* Compact profile records keep the three ideas visible as one sequence. */
+.aboutCardRail {
+  grid-auto-rows: clamp(280px, 29vh, 340px);
+  gap: 10px;
+}
+
+.aboutCard {
+  padding: clamp(18px, 2vw, 28px);
+}
+
+.aboutCard strong {
+  font-size: clamp(22px, 2.2vw, 34px);
+}
+
+.signalDividerRail {
+  animation: none;
+}
+
+@media (max-width: 768px) {
+  .aboutCardRail {
+    grid-auto-rows: 280px;
+  }
+
+  .aboutCard {
+    padding: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signalDividerMarquee {
+    animation: none;
+    transform: none !important;
+  }
+}
+
 /* Give the Skills title more room before the controller arrives. */
 @media (min-width: 769px) {
   .skills .sectionHeading h2 {
@@ -9680,4 +9699,75 @@
   .skills .controller {
     margin-top: clamp(10px, 1.6vh, 22px);
   }
+}
+
+/* Profile records share the same chassis language as the arrangement workstation. */
+.aboutCard {
+  border-color: #85847e;
+  border-radius: 5px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.42),
+      rgba(215, 210, 200, 0.1)
+    ),
+    color-mix(in srgb, var(--about-card) 42%, #d7d2c8);
+  box-shadow:
+    0 13px 28px rgba(29, 30, 28, 0.16),
+    inset 0 1px rgba(255, 255, 255, 0.7),
+    inset 4px 0 var(--about-accent);
+  color: var(--about-ink);
+  filter: none;
+}
+
+.aboutCard > .silkscreen {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #9c9991;
+  color: #555750;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.aboutCard > .silkscreen::before {
+  background: var(--about-accent);
+  box-shadow: none;
+}
+
+.aboutMetric {
+  border-left-color: #9c9991;
+}
+
+.aboutMetric b {
+  color: #272a26;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 700;
+}
+
+.aboutMetric small {
+  color: #666860;
+}
+
+.aboutCard strong {
+  color: #171917;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 650;
+}
+
+.aboutCard p {
+  color: #4f514b;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.aboutCardLabel {
+  border-radius: 2px;
+  background: #1d1e1c;
+  color: #e7e2d8;
+}
+
+.aboutCardActive {
+  border-color: #62645e;
+  box-shadow:
+    0 18px 36px rgba(29, 30, 28, 0.24),
+    inset 0 1px rgba(255, 255, 255, 0.8),
+    inset 4px 0 var(--about-accent);
 }

@@ -30,8 +30,9 @@ const RESUME_URL =
 const HERO_MARQUEE_ITEMS = [
   'ADITYA HIMAWAN / FRONTEND ENGINEER',
   'REACT / NEXT.JS / TYPESCRIPT',
-  'PRODUCTION WEB APPLICATIONS',
-  'SSR / STATE / FRONTEND ARCHITECTURE',
+  'FRONTEND SYSTEMS / PRODUCT UI',
+  'APP + DATA / GO / NODE.JS',
+  'DOCKER / NGINX / OBSERVABILITY',
   'JAKARTA, ID',
   '4+ YEARS EXPERIENCE',
   '15K+ USER PLATFORM',
@@ -55,10 +56,10 @@ const ROUTE_ITEMS = [
 
 const FOOTER_TANGLE_LINES = [
   'React / Next.js / TypeScript',
-  'Production interfaces, tuned with intent',
+  'Frontend systems for products people use',
+  'Product UI, app data, and delivery',
   'Frontend engineer, Jakarta',
-  'Signal in, clear decisions out',
-  'Build something worth returning to',
+  'See the work, then start a conversation',
 ] as const
 
 const PROJECT_PREVIEW_DURATION = 185
@@ -447,15 +448,16 @@ function Hero() {
             </div>
             <h1 className={styles.srOnly}>Aditya Himawan, Frontend Engineer</h1>
             <strong className={styles.heroPanelTitle}>
-              Production frontend, from architecture to interaction.
+              Built for the moment after launch.
             </strong>
             <p>
-              I build with React, Next.js, and TypeScript across products used
-              by more than 15,000 people.
+              Frontend systems for products that need to work clearly,
+              reliably, and at scale. React, Next.js, and TypeScript across
+              products used by more than 15,000 people.
             </p>
             <div className={styles.heroActions}>
               <a href="#work" className={styles.primaryButton}>
-                <span>Selected work</span>
+                <span>See the work</span>
                 <ArrowDownRight size={18} aria-hidden="true" />
               </a>
               <a
@@ -464,7 +466,7 @@ function Hero() {
                 rel="noreferrer"
                 className={styles.heroResumeLink}
               >
-                Resume <ArrowUpRight size={15} aria-hidden="true" />
+                Open résumé <ArrowUpRight size={15} aria-hidden="true" />
               </a>
             </div>
             <div
@@ -506,39 +508,39 @@ const ABOUT_TRACKS = [
     note: 'REACT / NEXT.JS / TYPESCRIPT',
     metric: '04+',
     metricLabel: 'YEARS IN FRONTEND',
-    heading: 'Frontend engineering for production web applications.',
-    body: 'My work centers on React, Next.js, TypeScript, SSR, state management, and reusable component architecture.',
+    heading: 'Start with the user.',
+    body: 'I begin with the interaction, not the component. The interface should make the next decision clear.',
     signal: 'PRIMARY PRACTICE',
     surface: '#d7b36f',
     ink: '#2c251b',
     accent: '#8a432d',
-    detail: 'Four-plus years building production web applications.',
+    detail: 'Understand the interaction before shaping the interface.',
   },
   {
     title: 'SYSTEMS',
     note: 'FEATURES / DATA / DELIVERY',
     metric: 'SSR',
     metricLabel: 'RENDERING',
-    heading: 'Architecture that stays maintainable as products grow.',
-    body: 'I use feature-based structure, Zustand, React Query, and reusable components to support end-to-end feature delivery.',
+    heading: 'Build the system.',
+    body: 'I use React, Next.js, and TypeScript to create reusable structures that keep new features consistent.',
     signal: 'FRONTEND ARCHITECTURE',
     surface: '#8199ad',
     ink: '#17252d',
     accent: '#315d72',
-    detail: 'Feature-based architecture and reusable component design.',
+    detail: 'Create a frontend system that can carry the next feature.',
   },
   {
     title: 'RANGE',
     note: 'BACKEND / AUTOMATION / INFRA',
     metric: 'VPS',
     metricLabel: 'SELF-HOSTED',
-    heading: 'Supporting skills beyond the browser.',
-    body: 'I also work with backend integrations, AI workflow automation, Docker, Nginx, and self-hosted monitoring.',
+    heading: 'Stay close to production.',
+    body: 'I work across application data, deployment, and monitoring when the frontend needs more than a polished screen.',
     signal: 'ADDITIONAL EXPERIENCE',
     surface: '#b68ba5',
     ink: '#30212a',
     accent: '#70415d',
-    detail: 'Backend integration, automation, and self-hosted infrastructure.',
+    detail: 'Keep the product visible and dependable after it ships.',
   },
 ]
 
@@ -592,7 +594,7 @@ function About({
     >
       <div className={styles.aboutStage}>
         <SectionHeading index="02" eyebrow="Profile">
-          I build the layer people actually use.
+          Make the complicated part feel obvious.
         </SectionHeading>
         <div className={styles.aboutDeck}>
           <div className={styles.aboutCardStack}>
@@ -616,7 +618,8 @@ function About({
                   onClick={() => setSelected(index)}
                 >
                   <SilkscreenLabel>
-                    RECORD {String(index + 1).padStart(2, '0')} / {track.signal}
+                    ARRANGEMENT / {String(index + 1).padStart(2, '0')} /{' '}
+                    {track.signal}
                   </SilkscreenLabel>
                   <span className={styles.aboutMetric}>
                     <b>{track.metric}</b>
@@ -626,16 +629,6 @@ function About({
                   <p>{track.body}</p>
                   <span className={styles.aboutCardLabel}>{track.title}</span>
                 </button>
-              ))}
-            </div>
-            <div className={styles.aboutPhaseIndex} aria-hidden="true">
-              {ABOUT_TRACKS.map((item, index) => (
-                <span
-                  key={item.title}
-                  className={index === selected ? styles.phaseIndexActive : ''}
-                >
-                  {String(index + 1).padStart(2, '0')}
-                </span>
               ))}
             </div>
           </div>
@@ -771,9 +764,9 @@ function About({
 
 function SignalDivider() {
   const topStory =
-    'A collection of work shaped by observation, restraint, and the small decisions that make digital experiences feel human.'
+    'Aditya Himawan builds frontend systems with React, Next.js, and TypeScript for products people rely on after launch.'
   const bottomStory =
-    'Each project begins with a question, becomes clearer through making, and stays open to what comes next.'
+    'Four-plus years in frontend work, including a job-seeker platform serving 15K+ users and a product launched within three months.'
 
   return (
     <section
@@ -788,14 +781,16 @@ function SignalDivider() {
           <div
             className={`${styles.signalDividerRail} ${styles.signalDividerTopRail}`}
           >
-            {Array.from({ length: 2 }, (_, groupIndex) => (
-              <span
-                className={styles.signalDividerTrackGroup}
-                key={`top-story-${groupIndex}`}
-              >
-                <span className={styles.signalDividerPhrase}>{topStory}</span>
-              </span>
-            ))}
+            <div className={styles.signalDividerMarquee}>
+              {Array.from({ length: 2 }, (_, groupIndex) => (
+                <span
+                  className={styles.signalDividerTrackGroup}
+                  key={`top-story-${groupIndex}`}
+                >
+                  <span className={styles.signalDividerPhrase}>{topStory}</span>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -810,16 +805,18 @@ function SignalDivider() {
           <div
             className={`${styles.signalDividerRail} ${styles.signalDividerBottomRail}`}
           >
-            {Array.from({ length: 2 }, (_, groupIndex) => (
-              <span
-                className={styles.signalDividerTrackGroup}
-                key={`bottom-story-${groupIndex}`}
-              >
-                <span className={styles.signalDividerPhrase}>
-                  {bottomStory}
+            <div className={styles.signalDividerMarquee}>
+              {Array.from({ length: 2 }, (_, groupIndex) => (
+                <span
+                  className={styles.signalDividerTrackGroup}
+                  key={`bottom-story-${groupIndex}`}
+                >
+                  <span className={styles.signalDividerPhrase}>
+                    {bottomStory}
+                  </span>
                 </span>
-              </span>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -1312,11 +1309,11 @@ function Skills() {
         </div>
         <div className={styles.skillsIntro}>
           <SectionHeading index="03" eyebrow="Toolkit">
-            The stack behind the shipped work.
+            The tools behind shipped product work.
           </SectionHeading>
           <p>
-            Play the controller to inspect the stack. The controls produce sound
-            and remain keyboard accessible.
+            A practical stack for building interfaces, connecting data, and
+            getting products into the hands of users.
           </p>
         </div>
         <div className={styles.controller}>
@@ -1328,14 +1325,14 @@ function Skills() {
           {/* TOPBAR: Branding, Interactive Screen, Actions */}
           <div className={styles.controllerTopbar}>
             <div className={styles.controllerBrand}>
-              <strong>AH / MIDI CONTROL</strong>
-              <SilkscreenLabel>ANALOG SKILL SYNTHESIZER</SilkscreenLabel>
+              <strong>AH / STACK CONTROL</strong>
+              <SilkscreenLabel>FRONTEND / APP / INFRA</SilkscreenLabel>
             </div>
 
             {/* CRT Oscilloscope Screen */}
             <div className={styles.controllerDisplay} aria-live="polite">
               <div className={styles.displayHeader}>
-                <span>STATUS: {isOn ? 'LIVE CARRIER 48.0kHz' : 'OFFLINE'}</span>
+                <span>STATUS: {isOn ? 'LIVE STACK' : 'OFFLINE'}</span>
                 <div className={styles.displayModeTags}>
                   {(['WAVE', 'SPECTRUM', 'TEL'] as const).map((mode) => (
                     <button
@@ -1464,7 +1461,7 @@ function Skills() {
             </div>
 
             <div className={`${styles.controlBank} ${styles.encoderBank}`}>
-              <SilkscreenLabel>PARAM BANK B / FRAMEWORKS</SilkscreenLabel>
+              <SilkscreenLabel>PARAM BANK B / APP + DATA</SilkscreenLabel>
               <div>
                 {MIXER_DATA[1].channels.map((skill, index) => (
                   <Knob
@@ -1485,7 +1482,7 @@ function Skills() {
             </div>
 
             <div className={`${styles.controlBank} ${styles.faderBank}`}>
-              <SilkscreenLabel>FADERS C / TOOLS + FX</SilkscreenLabel>
+              <SilkscreenLabel>FADERS C / DELIVERY + INFRA</SilkscreenLabel>
               <div>
                 {MIXER_DATA[2].channels.map((skill) => (
                   <label key={skill.name}>
@@ -1624,7 +1621,7 @@ function CableDivider() {
       <div className={styles.cableDividerInner}>
         <p className={styles.cableDividerLabel}>
           <span>SIGNAL PATH / 03-04</span>
-          <strong>Turning capability into experience.</strong>
+          <strong>Putting the stack to work.</strong>
         </p>
 
         <div className={styles.cableAssembly} aria-hidden="true">
@@ -1722,8 +1719,8 @@ function Experience({
     <section id="experience" className={styles.experience} data-rack-section>
       <div className={styles.experienceStage}>
         <div className={styles.experienceContent}>
-          <SectionHeading index="04" eyebrow="Experience">
-            Four-plus years. Three product teams.
+          <SectionHeading index="04" eyebrow="Experience + training">
+            What shipped, and where.
           </SectionHeading>
           <div className={styles.cassetteDeck}>
             <Screw className={styles.screwTopLeft} />
@@ -1994,7 +1991,7 @@ function Work() {
       <div className={styles.workStage}>
         <div className={styles.workHeader}>
           <SectionHeading index="05" eyebrow="Selected work">
-            Web products and interfaces.
+            Proof in the product.
           </SectionHeading>
           <div className={styles.workHint}>
             <span>DRAG / SCROLL</span>
@@ -2393,11 +2390,11 @@ function Contact() {
     >
       <div className={styles.contactFreshHeader}>
         <SectionHeading index="06" eyebrow="Open channel">
-          Bring me the hard frontend.
+          Bring me the difficult part.
         </SectionHeading>
         <p>
-          I work where product logic, performance, and interface behavior meet.
-          If that part of your product needs an owner, start here.
+          New frontend builds, complex product interfaces, and React
+          applications that need clearer structure.
         </p>
       </div>
 
@@ -3322,8 +3319,19 @@ export default function Rack01LandingPage() {
         const dividerDockRule = rootRef.current?.querySelector<HTMLElement>(
           `.${styles.signalDockRule}`,
         )
+        const dividerTopRail = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.signalDividerTopRail}`,
+        )
+        const dividerBottomRail = rootRef.current?.querySelector<HTMLElement>(
+          `.${styles.signalDividerBottomRail}`,
+        )
 
-        if (dividerDockRule) {
+        if (dividerTopRail && dividerBottomRail && dividerDockRule) {
+          const horizontalTravel = () =>
+            window.innerWidth < 769
+              ? Math.min(22, window.innerWidth * 0.055)
+              : Math.min(48, window.innerWidth * 0.035)
+
           gsap
             .timeline({
               scrollTrigger: {
@@ -3335,6 +3343,18 @@ export default function Rack01LandingPage() {
               },
               defaults: { ease: 'none' },
             })
+            .fromTo(
+              dividerTopRail,
+              { x: () => -horizontalTravel() },
+              { x: 0, duration: 0.7, force3D: true },
+              0,
+            )
+            .fromTo(
+              dividerBottomRail,
+              { x: () => horizontalTravel() },
+              { x: 0, duration: 0.7, force3D: true },
+              0,
+            )
             .fromTo(
               dividerDockRule,
               { scaleX: 0.18, opacity: 0.5 },

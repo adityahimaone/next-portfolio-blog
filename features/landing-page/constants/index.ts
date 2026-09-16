@@ -1,6 +1,5 @@
 import {
   Globe,
-  Code,
   Zap,
   Cpu,
   Database,
@@ -121,7 +120,7 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
     color: 'bg-blue-500',
     description: [
       'Built frontend features for an HR management system with tRPC and Prisma services.',
-      'Resolved critical production issues and optimized performance across HR workflows.',
+      'Resolved production issues across HR workflows and tightened the path from data to action.',
     ],
   },
   {
@@ -182,38 +181,38 @@ export const EXPERIENCES: readonly ExperienceItem[] = [
 // ─── Skills Mixer ────────────────────────────────────────
 export const MIXER_DATA: readonly MixerGroup[] = [
   {
-    id: 'languages',
+    id: 'frontend',
     label: 'FRONTEND',
     type: 'fader',
     channels: [
       { name: 'REACT', level: 100 },
-      { name: 'NEXT.JS', level: 100 },
-      { name: 'TYPESCRIPT', level: 100 },
-      { name: 'JAVASCRIPT', level: 100 },
-      { name: 'TAILWIND', level: 100 },
-      { name: 'SSR', level: 100 },
+      { name: 'NEXT.JS', level: 96 },
+      { name: 'TYPESCRIPT', level: 94 },
+      { name: 'TAILWIND CSS', level: 90 },
+      { name: 'TANSTACK QUERY', level: 86 },
+      { name: 'JQUERY', level: 64 },
     ],
   },
   {
-    id: 'frameworks',
-    label: 'STATE & DATA',
+    id: 'app-data',
+    label: 'APP + DATA',
     type: 'knob',
     channels: [
-      { name: 'ZUSTAND', level: 100 },
-      { name: 'REACT QUERY', level: 100 },
-      { name: 'REST API', level: 100 },
-      { name: 'TRPC', level: 100 },
+      { name: 'NODE.JS', level: 84 },
+      { name: 'GO', level: 76 },
+      { name: 'POSTGRESQL', level: 78 },
+      { name: 'PRISMA', level: 72 },
     ],
   },
   {
-    id: 'tools',
-    label: 'INFRASTRUCTURE',
+    id: 'delivery-infra',
+    label: 'DELIVERY + INFRA',
     type: 'knob',
     channels: [
-      { name: 'DOCKER', level: 100 },
-      { name: 'NGINX', level: 100 },
-      { name: 'GRAFANA', level: 100 },
-      { name: 'UPTIME KUMA', level: 100 },
+      { name: 'DOCKER', level: 82 },
+      { name: 'NGINX', level: 72 },
+      { name: 'GRAFANA', level: 58 },
+      { name: 'UPTIME KUMA', level: 52 },
     ],
   },
 ] as const
@@ -224,10 +223,10 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     id: 0,
     title: 'Switchyard',
     description:
-      'Control plane for coding agents. Switchyard stores boards and tasks, selects workspaces, claims tasks, dispatches work to executors, and holds results in review until changes are inspected and approved.',
+      'A control plane for coding agents. The interface brings boards, workspaces, task dispatch, and review into one operational flow.',
     image: '/assets/thumbnail-switchyard-2.webp',
-    url: 'https://primarindo.niqcode.com/',
-    genre: 'Corporate / Manufacturing',
+    url: 'https://github.com/adityahimaone/switchyard',
+    genre: 'Developer tools / Workflow',
     year: '2024',
     vinylColor: 'from-blue-600 to-cyan-500',
     vinylIcon: Globe,
@@ -236,7 +235,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     id: 1,
     title: 'Primarindo Asia',
     description:
-      'Company profile for Primarindo Asia Infrastructure Tbk, a manufacturer specializing in shoe production. The website showcases their manufacturing capabilities, product lines, and corporate information.',
+      'A corporate website for Primarindo Asia Infrastructure Tbk. The frontend organizes manufacturing capabilities, product lines, and company information into a clearer public presence.',
     image: '/assets/thumbnail-primarindo-2.webp',
     url: 'https://primarindo.niqcode.com/',
     genre: 'Corporate / Manufacturing',
@@ -248,7 +247,7 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     id: 2,
     title: 'Habit Tracker',
     description:
-      'Habit tracking app to build better daily routines. Track streaks, view weekly overviews, and stay consistent.',
+      'A focused habit tracker for daily routines, with streaks and weekly overviews kept inside one compact interface.',
     image: '/assets/thumbnail-habit-tracker-2.webp',
     url: 'https://habit.adityahimaone.space/',
     genre: 'Utility / Productivity',
@@ -256,23 +255,11 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     vinylColor: 'from-green-500 to-emerald-500',
     vinylIcon: Zap,
   },
-  // {
-  //   id: 3,
-  //   title: 'Frontend Resources',
-  //   description:
-  //     'A curated directory of frontend tools, libraries, and references.',
-  //   image: '/assets/thumbnail-fe-resources.png',
-  //   url: 'https://frontend-resources-rouge.vercel.app/',
-  //   genre: 'Educational / Tools',
-  //   year: '2023',
-  //   vinylColor: 'from-yellow-500 to-orange-500',
-  //   vinylIcon: Code,
-  // },
   {
-    id: 4,
+    id: 3,
     title: 'SeaPhantom',
     description:
-      'A responsive landing page for the SeaPhantom NFT platform.',
+      'A responsive landing page for the SeaPhantom NFT platform, built to introduce the product and give visitors a clear path into the experience.',
     image:
       'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/y2l1g36bjudgsf6yr0eg.webp',
     url: 'https://seaphantom.com',
@@ -282,10 +269,10 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     vinylIcon: Cpu,
   },
   {
-    id: 5,
+    id: 4,
     title: 'SeaPhantom P2P',
     description:
-      'A frontend for peer-to-peer NFT trading workflows.',
+      'A frontend for peer-to-peer NFT trading workflows, with attention to account states, trade actions, and interface feedback.',
     image:
       'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/fphb7ddemp4ixeutav1b.webp',
     url: 'https://auth.seaphantom.com/',
@@ -295,10 +282,10 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     vinylIcon: Database,
   },
   {
-    id: 6,
+    id: 5,
     title: 'Labgrownbeasts',
     description:
-      'A company profile site for Labgrownbeasts.',
+      'A company profile site for Labgrownbeasts, designed to make the company and its work easier to understand.',
     image:
       'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/mqprcb6todunicq4cg0a.webp',
     url: 'https://labgrownbeasts.com/',

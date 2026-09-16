@@ -19,6 +19,7 @@ import { DawHero } from '../components/hero'
 import { EMAIL, EXPERIENCES, MIXER_DATA, PROJECTS_SHOWCASE } from '../constants'
 import styles from './rack-01.module.css'
 import { cn } from '@/lib/utils'
+import { TangleFooter } from '@/src/components/ui/tangle-footer'
 
 const RESUME_URL =
   'https://drive.google.com/file/d/17x3GuEkZxbt9ZeLilXx1ShBHV_CZTfSq/view?usp=sharing'
@@ -47,6 +48,14 @@ const ROUTE_ITEMS = [
   { href: '/bookmarks', label: 'Bookmarks' },
   { href: '/blog', label: 'Blog' },
   { href: '/music', label: 'Mixtape' },
+] as const
+
+const FOOTER_TANGLE_LINES = [
+  'React / Next.js / TypeScript',
+  'Production interfaces, tuned with intent',
+  'Frontend engineer, Jakarta',
+  'Signal in, clear decisions out',
+  'Build something worth returning to',
 ] as const
 
 const SKILLS = MIXER_DATA.flatMap((group) => group.channels)
@@ -2408,11 +2417,18 @@ function Contact() {
       </div>
 
       <footer className={styles.footer}>
-        <div className={styles.footerMeta}>
-          <span>© {new Date().getFullYear()} ADITYA HIMAWAN</span>
-          <span>FRONTEND ENGINEER IN JAKARTA</span>
-          <a href="#home">BACK TO TOP ↑</a>
-        </div>
+        <div className={styles.footerTransition} aria-hidden="true" />
+
+        <TangleFooter
+          className={styles.footerTangle}
+          lines={[...FOOTER_TANGLE_LINES]}
+          background="#0b0d0c"
+          ribbon="#e7e2d8"
+          textColor="#0b0d0c"
+          height={350}
+          seed={23}
+          label="Rotating portfolio footer signal"
+        />
       </footer>
     </section>
   )

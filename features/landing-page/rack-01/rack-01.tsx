@@ -8,10 +8,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
+  Heart,
   Mail,
   Pause,
   Play,
   RotateCcw,
+  SkipBack,
+  SkipForward,
   Square,
 } from 'lucide-react'
 import { Screw } from '@/components/screw'
@@ -57,6 +60,24 @@ const FOOTER_TANGLE_LINES = [
   'Signal in, clear decisions out',
   'Build something worth returning to',
 ] as const
+
+const PROJECT_PREVIEW_DURATION = 185
+
+function formatProjectTime(seconds: number) {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = Math.floor(seconds % 60)
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+function getProjectInitials(title: string) {
+  return title
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase()
+}
 
 const SKILLS = MIXER_DATA.flatMap((group) => group.channels)
 
@@ -1663,6 +1684,7 @@ function ReleaseTitleHandoff() {
   return (
     <div className={styles.experienceWorkHandoff} aria-hidden="true">
       <span className={styles.handoffShade} />
+      <span className={styles.handoffCutLine} />
       <div className={styles.handoffEditorial}>
         <span className={styles.handoffKicker}>SIDE B / SELECTED WORK</span>
         <p className={styles.handoffTitle}>
@@ -1946,6 +1968,48 @@ function Experience({
 }
 
 function Work() {
+  const [playingId, setPlayingId] = useState<number | null>(null)
+  const [previewId, setPreviewId] = useState<number | null>(
+    PROJECTS_SHOWCASE[0]?.id ?? null,
+  )
+  const [likedIds, setLikedIds] = useState<Set<number>>(() => new Set())
+  const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [currentProgress, setCurrentProgress] = useState(52)
+
+  useEffect(() => {
+    if (playingId == null) return
+
+    const interval = window.setInterval(() => {
+      setCurrentProgress((progress) => {
+        if (progress >= PROJECT_PREVIEW_DURATION) {
+          setPlayingId(null)
+          return 0
+        }
+        return progress + 1
+      })
+    }, 1000)
+
+    return () => window.clearInterval(interval)
+  }, [playingId])
+
+  const toggleLike = (projectId: number) => {
+    setLikedIds((current) => {
+      const next = new Set(current)
+      if (next.has(projectId)) next.delete(projectId)
+      else next.add(projectId)
+      return next
+    })
+  }
+
+  const changeProjectPreview = (index: number, direction: -1 | 1) => {
+    const nextIndex =
+      (index + direction + PROJECTS_SHOWCASE.length) % PROJECTS_SHOWCASE.length
+    const nextProjectId = PROJECTS_SHOWCASE[nextIndex]?.id ?? null
+    setPreviewId(nextProjectId)
+    setPlayingId(nextProjectId)
+    setCurrentProgress(0)
+  }
+
   return (
     <section
       id="work"
@@ -1968,11 +2032,31 @@ function Work() {
             {PROJECTS_SHOWCASE.map((project, index) => {
               const palette = PROJECT_PALETTES[index % PROJECT_PALETTES.length]
               const releaseNumber = String(index + 1).padStart(2, '0')
+              const isPlaying = playingId === project.id
+              const isLiked = likedIds.has(project.id)
+              const isExpanded = expandedId === project.id
+              const progressPercentage =
+                (previewId === project.id ? currentProgress : 0) /
+                PROJECT_PREVIEW_DURATION *
+                100
 
               return (
                 <article
-                  className={styles.projectModule}
+                  className={cn(
+                    styles.projectModule,
+                    isExpanded && styles.projectModuleExpanded,
+                  )}
                   key={project.id}
+                  onClick={() => setExpandedId(isExpanded ? null : project.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setExpandedId(isExpanded ? null : project.id)
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
                   style={
                     {
                       '--record-color': palette.vinyl,
@@ -1982,50 +2066,126 @@ function Work() {
                   }
                 >
                   <div className={styles.projectMedia}>
-                    <div className={styles.projectSleeve}>
-                      <div className={styles.projectImage}>
-                        <Image
-                          src={project.image}
-                          alt={`${project.title} project cover`}
-                          fill
-                          sizes="(max-width: 768px) 72vw, 34vw"
-                        />
-                        <span className={styles.imageScan} />
-                        <span className={styles.projectCoverLabel}>
-                          <b>{releaseNumber}</b>
-                          <small>{project.genre}</small>
+                    <div className={styles.projectPlayerHeader}>
+                      <div className={styles.projectPlayerIdentity}>
+                        <span>
+                          <b>{project.title}</b>
+                          <small
+                            className={cn(
+                              styles.projectPlayerDescription,
+                              isExpanded && styles.projectPlayerDescriptionExpanded,
+                            )}
+                          >
+                            {project.description}
+                          </small>
                         </span>
                       </div>
-                      <span className={styles.projectSleeveSpine}>
-                        {project.title} · {project.year}
-                      </span>
+                      <div className={styles.projectPlayerActions}>
+                        <a
+                          href={project.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.projectAction}
+                          data-tooltip="View project"
+                          aria-label={`View ${project.title} project`}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <ArrowUpRight size={15} />
+                        </a>
+                        <button
+                          type="button"
+                          className={cn(styles.projectAction, isLiked && styles.projectLiked)}
+                          title={isLiked ? 'Unlike project' : 'Like project'}
+                          data-tooltip={isLiked ? 'Unlike project' : 'Like project'}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            toggleLike(project.id)
+                          }}
+                          aria-label={`${isLiked ? 'Unlike' : 'Like'} ${project.title}`}
+                          aria-pressed={isLiked}
+                        >
+                          <Heart size={15} fill={isLiked ? 'currentColor' : 'none'} />
+                        </button>
+                      </div>
                     </div>
-                    <div className={styles.projectTurntable} aria-hidden="true">
-                      <span className={styles.projectVinyl}>
-                        <i />
-                        <b>
-                          REL
-                          <br />
-                          {releaseNumber}
-                        </b>
-                      </span>
+                    <div className={styles.projectImage}>
+                      <Image
+                        src={project.image}
+                        alt={`${project.title} project cover`}
+                        fill
+                        sizes="(max-width: 768px) 78vw, 30vw"
+                      />
+                      <span className={styles.imageScan} />
+                      <div className={styles.projectControls}>
+                        <div className={styles.projectProgressLabels}>
+                          <span>{formatProjectTime(currentProgress)}</span>
+                          <span>
+                            -
+                            {formatProjectTime(
+                              PROJECT_PREVIEW_DURATION - currentProgress,
+                            )}
+                          </span>
+                        </div>
+                        <div
+                          className={styles.projectProgressTrack}
+                          role="progressbar"
+                          aria-label={`${project.title} preview progress`}
+                          aria-valuenow={progressPercentage}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            const bounds = event.currentTarget.getBoundingClientRect()
+                            const ratio = Math.min(
+                              1,
+                              Math.max(0, (event.clientX - bounds.left) / bounds.width),
+                            )
+                            setCurrentProgress(
+                              Math.round(PROJECT_PREVIEW_DURATION * ratio),
+                            )
+                          }}
+                        >
+                          <span style={{ width: `${progressPercentage}%` }} />
+                        </div>
+                        <div className={styles.projectPlaybackControls}>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              changeProjectPreview(index, -1)
+                            }}
+                            aria-label="Previous project preview"
+                          >
+                            <SkipBack size={17} />
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.projectPlayButton}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              if (isPlaying) setPlayingId(null)
+                              else {
+                                setPreviewId(project.id)
+                                setPlayingId(project.id)
+                              }
+                            }}
+                            aria-label={isPlaying ? 'Pause preview' : 'Play preview'}
+                          >
+                            {isPlaying ? <Pause size={21} /> : <Play size={21} fill="currentColor" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              changeProjectPreview(index, 1)
+                            }}
+                            aria-label="Next project preview"
+                          >
+                            <SkipForward size={17} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className={styles.projectCopy}>
-                    <div className={styles.projectTitleBlock}>
-                      <span>
-                        TRACK {releaseNumber} / {project.genre}
-                      </span>
-                      <h3>{project.title}</h3>
-                    </div>
-                    <p>{project.description}</p>
-                    <span
-                      className={styles.projectWaveform}
-                      aria-hidden="true"
-                    />
-                    <a href={project.url} target="_blank" rel="noreferrer">
-                      View project <ArrowUpRight size={16} aria-hidden="true" />
-                    </a>
                   </div>
                 </article>
               )
@@ -2086,6 +2246,7 @@ const CONTACT_PAD_COLORS = [
 ] as const
 
 function Contact() {
+  const currentYear = new Date().getFullYear()
   const [activePad, setActivePad] = useState<number | null>(null)
   const [loopingPads, setLoopingPads] = useState<Set<number>>(new Set())
   const [sweepingPads, setSweepingPads] = useState<Set<number>>(new Set())
@@ -2429,6 +2590,18 @@ function Contact() {
           seed={23}
           label="Rotating portfolio footer signal"
         />
+
+        <div className={styles.footerMeta}>
+          <span>© {currentYear} Aditya Himawan</span>
+          <button
+            type="button"
+            className={styles.footerTopButton}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            <span>Back to top</span>
+            <ArrowUpRight size={14} strokeWidth={1.8} aria-hidden="true" />
+          </button>
+        </div>
       </footer>
     </section>
   )
@@ -3049,12 +3222,16 @@ export default function Rack01LandingPage() {
           const handoffEditorial = rootRef.current?.querySelector<HTMLElement>(
             `.${styles.handoffEditorial}`,
           )
+          const handoffCutLine = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.handoffCutLine}`,
+          )
 
           if (
             experienceSection &&
             experienceContent &&
             handoffShade &&
-            handoffEditorial
+            handoffEditorial &&
+            handoffCutLine
           ) {
             gsap
               .timeline({
@@ -3081,8 +3258,18 @@ export default function Rack01LandingPage() {
               .to(experienceContent, { opacity: 0.12, duration: 0.12 }, 0.86)
               .fromTo(
                 handoffShade,
-                { opacity: 0 },
-                { opacity: 1, duration: 0.42 },
+                { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
+                {
+                  opacity: 1,
+                  clipPath: 'inset(0 0% 0 0)',
+                  duration: 0.42,
+                },
+                0.52,
+              )
+              .fromTo(
+                handoffCutLine,
+                { x: () => -window.innerWidth },
+                { x: () => window.innerWidth, duration: 0.42 },
                 0.52,
               )
               .fromTo(
@@ -3126,6 +3313,35 @@ export default function Rack01LandingPage() {
                 invalidateOnRefresh: true,
               },
             })
+          }
+
+          const workHeader = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.workHeader}`,
+          )
+          if (workHeader && rail) {
+            gsap
+              .timeline({
+                scrollTrigger: {
+                  trigger: `.${styles.work}`,
+                  start: 'bottom 28%',
+                  end: 'bottom bottom',
+                  scrub: 0.8,
+                  invalidateOnRefresh: true,
+                },
+                defaults: { ease: 'none' },
+              })
+              .fromTo(
+                rail,
+                { scale: 1 },
+                { scale: 0.98, duration: 0.72 },
+                0,
+              )
+              .fromTo(
+                workHeader,
+                { opacity: 1 },
+                { opacity: 1, duration: 0.48 },
+                0.08,
+              )
           }
         })
 
@@ -3235,8 +3451,18 @@ export default function Rack01LandingPage() {
             })
             .fromTo(
               `.${styles.handoffShade}`,
-              { opacity: 0 },
-              { opacity: 1, duration: 0.72 },
+              { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
+              {
+                opacity: 1,
+                clipPath: 'inset(0 0% 0 0)',
+                duration: 0.72,
+              },
+              0,
+            )
+            .fromTo(
+              `.${styles.handoffCutLine}`,
+              { x: () => -window.innerWidth },
+              { x: () => window.innerWidth, duration: 0.72 },
               0,
             )
             .fromTo(

@@ -9077,6 +9077,21 @@
   }
 }
 
+@media (max-width: 768px) {
+  .root .pitchControls {
+    display: none !important;
+  }
+
+  .root .footer {
+    margin-top: 56px;
+  }
+
+  .root .footerTangle {
+    height: 180px !important;
+    margin-top: 12px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .experienceStage {
     overflow: visible;

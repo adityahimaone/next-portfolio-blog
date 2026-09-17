@@ -22,6 +22,7 @@ import { EMAIL, EXPERIENCES, MIXER_DATA, PROJECTS_SHOWCASE } from '../constants'
 import styles from './rack-01.module.css'
 import { cn } from '@/lib/utils'
 import { TangleFooter } from '@/src/components/ui/tangle-footer'
+import { TextCascade } from '@/components/motion/text-cascade'
 
 const RESUME_URL =
   'https://drive.google.com/file/d/17x3GuEkZxbt9ZeLilXx1ShBHV_CZTfSq/view?usp=sharing'
@@ -389,7 +390,19 @@ function TransportBridge({
   )
 }
 
+
 function Hero() {
+  const [heroTitleTop, setHeroTitleTop] = useState('CODE')
+  const [heroTitleBottom, setHeroTitleBottom] = useState('SYSTEMS')
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setHeroTitleTop('ADITYA')
+      setHeroTitleBottom('HIMAWAN')
+    }, 720)
+    return () => window.clearTimeout(timer)
+  }, [])
+
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'touch') return
     const rect = event.currentTarget.getBoundingClientRect()
@@ -417,8 +430,16 @@ function Hero() {
           <DawHero backgroundOnly />
         </div>
         <div className={styles.heroBackdropName} aria-hidden="true">
-          <span>Aditya</span>
-          <span>Himawan</span>
+          <TextCascade
+            text={heroTitleTop}
+            className={styles.heroBackdropCascade}
+            animateInitial={false}
+          />
+          <TextCascade
+            text={heroTitleBottom}
+            className={styles.heroBackdropCascade}
+            animateInitial={false}
+          />
         </div>
         <div className={styles.heroAtmosphere} aria-hidden="true" />
 
@@ -456,7 +477,7 @@ function Hero() {
             </p>
             <div className={styles.heroActions}>
               <a href="#work" className={styles.primaryButton}>
-                <span>See the work</span>
+                <span>See the works</span>
                 <ArrowDownRight size={18} aria-hidden="true" />
               </a>
               <a
@@ -2655,6 +2676,7 @@ export default function Rack01LandingPage() {
           const supportingModules = modules.filter(
             (module) => module.dataset.rackAnchor !== 'true',
           )
+
           const name = hero.querySelector<HTMLElement>(
             `.${styles.heroBackdropName}`,
           )!
@@ -2717,30 +2739,7 @@ export default function Rack01LandingPage() {
               },
               0.06,
             )
-            .fromTo(
-              name,
-              { scale: 0.82, opacity: 0, filter: 'blur(8px)' },
-              {
-                scale: 1,
-                opacity: 1,
-                filter: 'blur(0px)',
-                duration: 1.05,
-                ease: 'power3.out',
-              },
-              0.42,
-            )
-            .fromTo(
-              panel,
-              { y: 34, opacity: 0, clipPath: 'inset(0 0 100% 0)' },
-              {
-                y: 0,
-                opacity: 1,
-                clipPath: 'inset(0 0 0% 0)',
-                duration: 0.82,
-                ease: 'power3.out',
-              },
-              0.78,
-            )
+
             .fromTo(
               [nav, heroRail],
               { opacity: 0 },

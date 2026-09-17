@@ -8,7 +8,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
-  Heart,
   Mail,
   Pause,
   Play,
@@ -764,9 +763,9 @@ function About({
 
 function SignalDivider() {
   const topStory =
-    'Aditya Himawan builds frontend systems with React, Next.js, and TypeScript for products people rely on after launch.'
+    'Frontend systems / clear interfaces.'
   const bottomStory =
-    'Four-plus years in frontend work, including a job-seeker platform serving 15K+ users and a product launched within three months.'
+    'React / Next.js / product work.'
 
   return (
     <section
@@ -781,16 +780,14 @@ function SignalDivider() {
           <div
             className={`${styles.signalDividerRail} ${styles.signalDividerTopRail}`}
           >
-            <div className={styles.signalDividerMarquee}>
-              {Array.from({ length: 2 }, (_, groupIndex) => (
-                <span
-                  className={styles.signalDividerTrackGroup}
-                  key={`top-story-${groupIndex}`}
-                >
-                  <span className={styles.signalDividerPhrase}>{topStory}</span>
-                </span>
-              ))}
-            </div>
+            {Array.from({ length: 8 }, (_, groupIndex) => (
+              <span
+                className={styles.signalDividerTrackGroup}
+                key={`top-story-${groupIndex}`}
+              >
+                <span className={styles.signalDividerPhrase}>{topStory}</span>
+              </span>
+            ))}
           </div>
         </div>
 
@@ -805,18 +802,16 @@ function SignalDivider() {
           <div
             className={`${styles.signalDividerRail} ${styles.signalDividerBottomRail}`}
           >
-            <div className={styles.signalDividerMarquee}>
-              {Array.from({ length: 2 }, (_, groupIndex) => (
-                <span
-                  className={styles.signalDividerTrackGroup}
-                  key={`bottom-story-${groupIndex}`}
-                >
-                  <span className={styles.signalDividerPhrase}>
-                    {bottomStory}
-                  </span>
+            {Array.from({ length: 8 }, (_, groupIndex) => (
+              <span
+                className={styles.signalDividerTrackGroup}
+                key={`bottom-story-${groupIndex}`}
+              >
+                <span className={styles.signalDividerPhrase}>
+                  {bottomStory}
                 </span>
-              ))}
-            </div>
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -1943,7 +1938,6 @@ function Work() {
   const [previewId, setPreviewId] = useState<number | null>(
     PROJECTS_SHOWCASE[0]?.id ?? null,
   )
-  const [likedIds, setLikedIds] = useState<Set<number>>(() => new Set())
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [currentProgress, setCurrentProgress] = useState(52)
 
@@ -1963,14 +1957,6 @@ function Work() {
     return () => window.clearInterval(interval)
   }, [playingId])
 
-  const toggleLike = (projectId: number) => {
-    setLikedIds((current) => {
-      const next = new Set(current)
-      if (next.has(projectId)) next.delete(projectId)
-      else next.add(projectId)
-      return next
-    })
-  }
 
   const changeProjectPreview = (index: number, direction: -1 | 1) => {
     const nextIndex =
@@ -2004,7 +1990,6 @@ function Work() {
               const palette = PROJECT_PALETTES[index % PROJECT_PALETTES.length]
               const releaseNumber = String(index + 1).padStart(2, '0')
               const isPlaying = playingId === project.id
-              const isLiked = likedIds.has(project.id)
               const isExpanded = expandedId === project.id
               const progressPercentage =
                 (previewId === project.id ? currentProgress : 0) /
@@ -2037,6 +2022,15 @@ function Work() {
                   }
                 >
                   <div className={styles.projectMedia}>
+                    <div className={styles.projectImage}>
+                      <Image
+                        src={project.image}
+                        alt={`${project.title} project cover`}
+                        fill
+                        sizes="(max-width: 768px) 70vw, 24vw"
+                      />
+                      <span className={styles.imageScan} />
+                    </div>
                     <div className={styles.projectPlayerHeader}>
                       <div className={styles.projectPlayerIdentity}>
                         <span>
@@ -2057,37 +2051,16 @@ function Work() {
                           target="_blank"
                           rel="noreferrer"
                           className={styles.projectAction}
+                          title={`View ${project.title} project`}
                           data-tooltip="View project"
                           aria-label={`View ${project.title} project`}
                           onClick={(event) => event.stopPropagation()}
                         >
                           <ArrowUpRight size={15} />
                         </a>
-                        <button
-                          type="button"
-                          className={cn(styles.projectAction, isLiked && styles.projectLiked)}
-                          title={isLiked ? 'Unlike project' : 'Like project'}
-                          data-tooltip={isLiked ? 'Unlike project' : 'Like project'}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            toggleLike(project.id)
-                          }}
-                          aria-label={`${isLiked ? 'Unlike' : 'Like'} ${project.title}`}
-                          aria-pressed={isLiked}
-                        >
-                          <Heart size={15} fill={isLiked ? 'currentColor' : 'none'} />
-                        </button>
                       </div>
                     </div>
-                    <div className={styles.projectImage}>
-                      <Image
-                        src={project.image}
-                        alt={`${project.title} project cover`}
-                        fill
-                        sizes="(max-width: 768px) 78vw, 30vw"
-                      />
-                      <span className={styles.imageScan} />
-                      <div className={styles.projectControls}>
+                    <div className={styles.projectControls}>
                         <div className={styles.projectProgressLabels}>
                           <span>{formatProjectTime(currentProgress)}</span>
                           <span>
@@ -2155,7 +2128,6 @@ function Work() {
                             <SkipForward size={17} />
                           </button>
                         </div>
-                      </div>
                     </div>
                   </div>
                 </article>
@@ -3148,6 +3120,35 @@ export default function Rack01LandingPage() {
               },
             },
           )
+
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: `.${styles.work}`,
+                start: 'top 82%',
+                end: 'top 18%',
+                scrub: 0.8,
+              },
+              defaults: { ease: 'power2.out' },
+            })
+            .fromTo(
+              `.${styles.projectImage}`,
+              { y: 18, opacity: 0.35 },
+              { y: 0, opacity: 1, stagger: 0.08, duration: 0.32 },
+              0,
+            )
+            .fromTo(
+              `.${styles.projectPlayerHeader}`,
+              { y: 12, opacity: 0 },
+              { y: 0, opacity: 1, stagger: 0.08, duration: 0.24 },
+              0.28,
+            )
+            .fromTo(
+              `.${styles.projectControls}`,
+              { y: 12, opacity: 0 },
+              { y: 0, opacity: 1, stagger: 0.08, duration: 0.24 },
+              0.52,
+            )
 
           gsap.to(`.${styles.projectVinyl}`, {
             rotate: 360,

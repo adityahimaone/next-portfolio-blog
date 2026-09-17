@@ -1618,7 +1618,7 @@
 }
 
 .work {
-  height: 400svh;
+  height: 280svh;
   background: var(--lcd-black);
   color: var(--chassis);
 }
@@ -9298,12 +9298,13 @@
   transition: width 200ms linear;
 }
 .projectPlaybackControls {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
-  justify-content: space-around;
   margin-top: 4px;
 }
 .projectPlaybackControls button {
+  justify-self: center;
   color: #f4f0e8;
 }
 .projectPlaybackControls button:hover {
@@ -9311,8 +9312,8 @@
   color: #f4f0e8;
 }
 .projectPlaybackControls .projectPlayButton {
-  width: 52px;
-  height: 52px;
+  width: 42px;
+  height: 42px;
   border: 1px solid rgba(244, 240, 232, 0.8);
   border-radius: 50%;
   background: rgba(11, 13, 12, 0.48);
@@ -9409,12 +9410,12 @@
   min-height: 44px;
 }
 @media (min-width: 769px) {
-  .projectModule { width: min(32vw, 460px); }
+  .projectModule { width: min(310px, 28vw); }
   .projectMedia { aspect-ratio: auto; }
 }
 @media (max-width: 768px) {
   .projectMedia {
-    aspect-ratio: auto;
+    aspect-ratio: 1;
   }
   .projectCopy {
     min-height: 172px;
@@ -9433,8 +9434,10 @@
   min-height: 0;
   overflow: visible;
   padding: 14px;
-  border-radius: 20px;
-  background: #c9c7bf;
+  border: 1px solid #454744;
+  border-radius: 12px;
+  background: #111311;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38), inset 0 1px rgba(255, 255, 255, 0.08);
 }
 .projectMedia {
   margin: 0;
@@ -9443,7 +9446,14 @@
   align-items: center;
   min-height: 60px;
   margin-bottom: 10px;
-  padding-bottom: 4px;
+  padding: 0 2px 4px;
+  color: #a8aaa4;
+}
+.projectPlayerIdentity b {
+  color: #f4f0e8;
+}
+.projectPlayerIdentity small {
+  color: #a8aaa4;
 }
 .projectPlayerDescription {
   width: 100%;
@@ -9503,6 +9513,38 @@
   border-color: var(--record-accent);
 }
 
+/* Compact vertical music-player card: square artwork, metadata, controls. */
+.projectMedia {
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: auto;
+  gap: 0;
+}
+.projectImage {
+  width: min(calc(100% - 28px), 260px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border-radius: 10px;
+}
+.projectControls {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  width: min(calc(100% - 28px), 260px);
+  margin-inline: auto;
+  padding: 0 2px 2px;
+  background: transparent;
+  color: #f4f0e8;
+}
+.projectPlayerHeader {
+  order: 2;
+  width: min(calc(100% - 28px), 260px);
+  margin: 14px auto 0;
+}
+.projectControls {
+  order: 3;
+}
+
 /* Story rails: a quiet pause between the profile and the toolkit. */
 .signalDivider {
   background: transparent;
@@ -9520,25 +9562,11 @@
 }
 
 .signalDividerStage::before {
-  background-color: var(--chassis-hi);
-  background-image: repeating-linear-gradient(
-    90deg,
-    rgba(29, 30, 28, 0.08) 0,
-    rgba(29, 30, 28, 0.08) 1px,
-    transparent 1px,
-    transparent 28px
-  );
+  background: linear-gradient(90deg, rgba(29, 30, 28, 0.035) 1px, transparent 1px) 0 0 / 28px 28px, var(--chassis-hi);
 }
 
 .signalDividerStage::after {
-  background-color: var(--graphite);
-  background-image: repeating-linear-gradient(
-    90deg,
-    rgba(231, 226, 216, 0.045) 0,
-    rgba(231, 226, 216, 0.045) 1px,
-    transparent 1px,
-    transparent 32px
-  );
+  background: radial-gradient(circle at 10% 15%, rgba(46, 63, 92, 0.34), transparent 28%), radial-gradient(circle at 90% 72%, rgba(201, 165, 116, 0.12), transparent 28%), linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0 0 / 32px 32px, #171917;
 }
 
 .signalDividerLaneTop {
@@ -9576,24 +9604,13 @@
   align-items: center;
 }
 
-.signalDividerMarquee {
-  display: flex;
-  width: max-content;
-  min-width: max-content;
-  animation: storyRailTop 36s linear infinite;
-  will-change: transform;
-}
-
-.signalDividerBottomRail .signalDividerMarquee {
-  animation-name: storyRailBottom;
-}
 
 .signalDividerPhrase {
   display: inline-block;
   max-width: none;
   padding: 0 clamp(22px, 4vw, 64px) 0 0;
   color: currentColor;
-  font-family: var(--font-cormorant-garamond), Georgia, serif;
+  font-family: var(--font-space-grotesk), sans-serif;
   font-size: clamp(19px, 2.25vw, 31px);
   font-weight: 500;
   letter-spacing: -0.015em;
@@ -9669,26 +9686,6 @@
   font-size: clamp(22px, 2.2vw, 34px);
 }
 
-.signalDividerRail {
-  animation: none;
-}
-
-@media (max-width: 768px) {
-  .aboutCardRail {
-    grid-auto-rows: 280px;
-  }
-
-  .aboutCard {
-    padding: 18px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .signalDividerMarquee {
-    animation: none;
-    transform: none !important;
-  }
-}
 
 /* Give the Skills title more room before the controller arrives. */
 @media (min-width: 769px) {
@@ -9697,7 +9694,7 @@
   }
 
   .skills .controller {
-    margin-top: clamp(10px, 1.6vh, 22px);
+    margin-top: clamp(0px, 0.5vh, 6px);
   }
 }
 

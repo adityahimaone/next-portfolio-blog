@@ -1671,7 +1671,8 @@ function ReleaseTitleHandoff() {
   return (
     <div className={styles.experienceWorkHandoff} aria-hidden="true">
       <span className={styles.handoffShade} />
-      <span className={styles.handoffCutLine} />
+      <span className={styles.handoffRibbon} />
+      <span className={styles.handoffDisc} />
       <div className={styles.handoffEditorial}>
         <span className={styles.handoffKicker}>SIDE B / SELECTED WORK</span>
         <p className={styles.handoffTitle}>
@@ -2642,7 +2643,7 @@ export default function Rack01LandingPage() {
       const lenis = new Lenis({
         lerp: 0.085,
         smoothWheel: true,
-        wheelMultiplier: 0.9,
+        wheelMultiplier: 0.8,
         touchMultiplier: 1,
       })
       const updateLenis = (time: number) => lenis.raf(time * 1000)
@@ -2899,9 +2900,15 @@ export default function Rack01LandingPage() {
 
           gsap.fromTo(
             `.${styles.controller}`,
-            { scale: 1, yPercent: 0 },
             {
-              scale: 0.86,
+              rotationX: 20,
+              transformPerspective: 1200,
+              scale: 1.05,
+              yPercent: 0,
+            },
+            {
+              rotationX: 0,
+              scale: 1,
               yPercent: -2,
               transformOrigin: '50% 0%',
               ease: 'none',
@@ -2909,7 +2916,7 @@ export default function Rack01LandingPage() {
                 trigger: `.${styles.skills}`,
                 start: 'top top',
                 end: 'bottom bottom',
-                scrub: 0.85,
+                scrub: 1.15,
               },
             },
           )
@@ -3193,8 +3200,11 @@ export default function Rack01LandingPage() {
           const handoffEditorial = rootRef.current?.querySelector<HTMLElement>(
             `.${styles.handoffEditorial}`,
           )
-          const handoffCutLine = rootRef.current?.querySelector<HTMLElement>(
-            `.${styles.handoffCutLine}`,
+          const handoffRibbon = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.handoffRibbon}`,
+          )
+          const handoffDisc = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.handoffDisc}`,
           )
 
           if (
@@ -3202,7 +3212,8 @@ export default function Rack01LandingPage() {
             experienceContent &&
             handoffShade &&
             handoffEditorial &&
-            handoffCutLine
+            handoffRibbon &&
+            handoffDisc
           ) {
             gsap
               .timeline({
@@ -3218,51 +3229,73 @@ export default function Rack01LandingPage() {
               .to(
                 experienceContent,
                 {
-                  x: '-18vw',
-                  y: -22,
-                  scale: 0.9,
-                  transformOrigin: '50% 44%',
-                  duration: 0.38,
+                  opacity: 0.2,
+                  scale: 0.99,
+                  transformOrigin: '50% 50%',
+                  duration: 0.3,
                 },
-                0.52,
+                0.48,
               )
-              .to(experienceContent, { opacity: 0.12, duration: 0.12 }, 0.86)
               .fromTo(
                 handoffShade,
-                { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
+                { opacity: 0 },
+                { opacity: 1, duration: 0.2 },
+                0.5,
+              )
+              .fromTo(
+                handoffRibbon,
                 {
+                  scaleX: 0,
+                  scaleY: 1,
+                  opacity: 0,
+                  transformOrigin: '0% 50%',
+                },
+                {
+                  scaleX: 1,
                   opacity: 1,
-                  clipPath: 'inset(0 0% 0 0)',
-                  duration: 0.42,
+                  duration: 0.3,
                 },
                 0.52,
               )
+              .to(
+                handoffRibbon,
+                {
+                  scaleY: 4,
+                  duration: 0.12,
+                },
+                0.84,
+              )
+              .to(
+                handoffDisc,
+                {
+                  rotation: 12,
+                  duration: 0.2,
+                },
+                0.86,
+              )
               .fromTo(
-                handoffCutLine,
-                { x: () => -window.innerWidth },
-                { x: () => window.innerWidth, duration: 0.42 },
-                0.52,
+                handoffDisc,
+                { scale: 0.96, rotation: -8, opacity: 0 },
+                { scale: 1, rotation: 0, opacity: 1, duration: 0.2 },
+                0.82,
               )
               .fromTo(
                 handoffEditorial,
                 { autoAlpha: 0 },
-                {
-                  autoAlpha: 1,
-                  duration: 0.12,
-                },
-                0.6,
+                { autoAlpha: 1, duration: 0.1 },
+                0.9,
               )
               .fromTo(
                 `.${styles.handoffTitle} b`,
-                { yPercent: 108 },
-                { yPercent: 0, stagger: 0.06, duration: 0.24 },
-                0.61,
+                { opacity: 0 },
+                { opacity: 1, stagger: 0.06, duration: 0.18 },
+                0.92,
               )
               .fromTo(
                 `.${styles.handoffKicker}, .${styles.handoffIndex}`,
-                { y: 12, opacity: 0 },
-                { y: 0, opacity: 1, stagger: 0.05, duration: 0.18 },
-                0.7,
+                { opacity: 0 },
+                { opacity: 1, stagger: 0.05, duration: 0.12 },
+                0.96,
               )
           }
 
@@ -3420,44 +3453,61 @@ export default function Rack01LandingPage() {
               },
               defaults: { ease: 'none' },
             })
-            .fromTo(
-              `.${styles.handoffShade}`,
-              { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
-              {
-                opacity: 1,
-                clipPath: 'inset(0 0% 0 0)',
-                duration: 0.72,
-              },
+            .to(
+              `.${styles.experienceContent}`,
+              { opacity: 0.2, scale: 0.99, duration: 0.3 },
               0,
             )
             .fromTo(
-              `.${styles.handoffCutLine}`,
-              { x: () => -window.innerWidth },
-              { x: () => window.innerWidth, duration: 0.72 },
-              0,
+              `.${styles.handoffShade}`,
+              { opacity: 0 },
+              { opacity: 1, duration: 0.2 },
+              0.08,
+            )
+            .fromTo(
+              `.${styles.handoffRibbon}`,
+              {
+                scaleX: 0,
+                scaleY: 1,
+                opacity: 0,
+                transformOrigin: '0% 50%',
+              },
+              { scaleX: 1, opacity: 1, duration: 0.3 },
+              0.1,
+            )
+            .to(
+              `.${styles.handoffRibbon}`,
+              { scaleY: 4, duration: 0.12 },
+              0.42,
+            )
+            .to(
+              `.${styles.handoffDisc}`,
+              { rotation: 12, duration: 0.2 },
+              0.46,
+            )
+            .fromTo(
+              `.${styles.handoffDisc}`,
+              { scale: 0.96, rotation: -8, opacity: 0 },
+              { scale: 1, rotation: 0, opacity: 1, duration: 0.2 },
+              0.42,
             )
             .fromTo(
               `.${styles.handoffEditorial}`,
               { opacity: 0 },
-              { opacity: 1, duration: 0.22 },
-              0.12,
-            )
-            .to(
-              `.${styles.experienceContent}`,
-              { x: -24, opacity: 0.46, duration: 0.58 },
-              0,
+              { opacity: 1, duration: 0.16 },
+              0.6,
             )
             .fromTo(
               `.${styles.handoffTitle} b`,
-              { yPercent: 108 },
-              { yPercent: 0, stagger: 0.08, duration: 0.32 },
-              0.2,
+              { opacity: 0 },
+              { opacity: 1, stagger: 0.08, duration: 0.24 },
+              0.64,
             )
             .fromTo(
               `.${styles.handoffKicker}, .${styles.handoffIndex}`,
-              { y: 10, opacity: 0 },
-              { y: 0, opacity: 1, stagger: 0.06, duration: 0.24 },
-              0.38,
+              { opacity: 0 },
+              { opacity: 1, stagger: 0.06, duration: 0.18 },
+              0.74,
             )
         })
 

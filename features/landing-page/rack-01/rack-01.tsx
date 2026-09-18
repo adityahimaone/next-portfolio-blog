@@ -154,6 +154,43 @@ function SegmentCounter({ value }: { value: string }) {
   )
 }
 
+function VenLogo() {
+  return (
+    <svg
+      className={styles.venLogo}
+      viewBox="0 0 64 64"
+      width="96"
+      height="96"
+      fill="none"
+      role="img"
+      aria-label="AH Studio loading mark"
+    >
+      <defs>
+        <clipPath id="ven-disc">
+          <circle cx="32" cy="32" r="32" />
+        </clipPath>
+        <linearGradient id="ven-face" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="currentColor" stopOpacity=".8" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity=".16" />
+        </linearGradient>
+      </defs>
+      <g clipPath="url(#ven-disc)">
+        {Array.from({ length: 9 }, (_, index) => (
+          <rect
+            className={styles.venSlat}
+            key={index}
+            x="-2"
+            y={index * 7.11}
+            width="68"
+            height="7.11"
+            style={{ '--i': index } as React.CSSProperties}
+          />
+        ))}
+      </g>
+    </svg>
+  )
+}
+
 function Knob({
   color,
   label,
@@ -392,8 +429,8 @@ function TransportBridge({
 
 
 function Hero() {
-  const [heroTitleTop, setHeroTitleTop] = useState('CODE')
-  const [heroTitleBottom, setHeroTitleBottom] = useState('SYSTEMS')
+  const [heroTitleTop, setHeroTitleTop] = useState('Hello')
+  const [heroTitleBottom, setHeroTitleBottom] = useState('こんにちは')
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -449,7 +486,7 @@ function Hero() {
             className={styles.wordmark}
             aria-label="AH Studio home"
           >
-            AH <span>/ STUDIO</span>
+            <VenLogo />
           </a>
           <span className={styles.heroNavRole}>
             Frontend Engineer / Jakarta
@@ -656,8 +693,8 @@ function About({
             <Screw className={styles.screwTopLeft} />
             <Screw className={styles.screwTopRight} />
             <div className={styles.timelineDeviceBrand}>
-              <div>
-                <strong>AH / STUDIO</strong>
+              <div className={styles.timelineBrandMark}>
+                <VenLogo />
                 <SilkscreenLabel>ARRANGEMENT WORKSTATION</SilkscreenLabel>
               </div>
               <div className={styles.timelineMeters} aria-hidden="true">

@@ -2317,6 +2317,11 @@ function Contact() {
     [triggerSound],
   )
 
+  const clearPads = useCallback(() => {
+    setActivePad(null)
+    setLoopingPads(new Set())
+  }, [])
+
   useEffect(() => {
     loopTimersRef.current.forEach((timer) => window.clearInterval(timer))
     loopTimersRef.current.clear()
@@ -2471,6 +2476,7 @@ function Contact() {
             <button
               type="button"
               aria-pressed={bank === 'A'}
+              aria-label="Use bank A"
               onClick={() => setBank('A')}
             >
               A
@@ -2478,6 +2484,7 @@ function Contact() {
             <button
               type="button"
               aria-pressed={bank === 'B'}
+              aria-label="Use bank B"
               onClick={() => setBank('B')}
             >
               B
@@ -2539,7 +2546,7 @@ function Contact() {
             </a>
             <button
               type="button"
-              onClick={() => setActivePad(null)}
+              onClick={clearPads}
               aria-label="Clear active pad"
             >
               <Square size={14} />
@@ -3021,45 +3028,85 @@ export default function Rack01LandingPage() {
             })
           }
 
-          const depthModules = gsap.utils.toArray<HTMLElement>(
-            `.${styles.contactLaunchpad}`,
+          const contactDeck = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.contact} .${styles.contactDeck}`,
           )
-          depthModules.forEach((module) => {
-            gsap.fromTo(
-              module,
-              { y: 18 },
-              {
-                y: -18,
-                ease: 'none',
-                scrollTrigger: {
-                  trigger: module,
-                  start: 'top bottom',
-                  end: 'bottom top',
-                  scrub: 1.1,
-                },
-              },
+          if (contactDeck) {
+            const contactLayers = {
+              brand: contactDeck.querySelector<HTMLElement>(
+                `.${styles.contactDeckBrand}`,
+              ),
+              controls: contactDeck.querySelector<HTMLElement>(
+                `.${styles.contactDeckTop}`,
+              ),
+              rails: gsap.utils.toArray<HTMLElement>(
+                contactDeck.querySelectorAll<HTMLElement>(
+                  `.${styles.contactModeRail}`,
+                ),
+              ),
+              pads: contactDeck.querySelector<HTMLElement>(
+                `.${styles.contactPadGrid}`,
+              ),
+              note: contactDeck.querySelector<HTMLElement>(
+                `.${styles.contactDeckNote}`,
+              ),
+            }
+            const layers = Object.values(contactLayers).flatMap((layer) =>
+              Array.isArray(layer) ? layer : layer ? [layer] : [],
             )
-          })
 
-          const depthHeadings = gsap.utils.toArray<HTMLElement>(
-            `.${styles.contact} .${styles.patchHeader}`,
-          )
-          depthHeadings.forEach((heading) => {
-            gsap.fromTo(
-              heading,
-              { y: -8 },
-              {
-                y: 8,
-                ease: 'none',
+            gsap.set([contactDeck, ...layers], {
+              transformPerspective: 1400,
+              transformStyle: 'preserve-3d',
+              willChange: 'transform',
+            })
+
+            gsap
+              .timeline({
                 scrollTrigger: {
-                  trigger: heading,
-                  start: 'top bottom',
-                  end: 'bottom top',
-                  scrub: 1.2,
+                  trigger: contactDeck,
+                  start: 'top 90%',
+                  end: 'bottom 14%',
+                  scrub: 0.9,
                 },
-              },
-            )
-          })
+              })
+              .fromTo(
+                contactDeck,
+                { rotationX: 8, rotationY: -1.8, y: 34, scale: 0.96 },
+                { rotationX: 0, rotationY: 0, y: 0, scale: 1, ease: 'none' },
+                0,
+              )
+              .fromTo(
+                contactLayers.brand ?? [],
+                { y: 16, z: 0 },
+                { y: -14, z: 18, ease: 'none' },
+                0,
+              )
+              .fromTo(
+                contactLayers.controls ?? [],
+                { y: 16, z: 0 },
+                { y: -4, z: 30, ease: 'none' },
+                0,
+              )
+              .fromTo(
+                contactLayers.rails,
+                { y: 16, z: 0 },
+                { y: 6, z: 22, ease: 'none' },
+                0,
+              )
+              .fromTo(
+                contactLayers.pads ?? [],
+                { y: 16, z: 0 },
+                { y: 12, z: 42, ease: 'none' },
+                0,
+              )
+              .fromTo(
+                contactLayers.note ?? [],
+                { y: 16, z: 0 },
+                { y: 18, z: 14, ease: 'none' },
+                0,
+              )
+          }
 
           const studioDetails = gsap.utils.toArray<HTMLElement>(
             `.${styles.skillsIntro} > p, .${styles.workHint}, .${styles.patchScreen}`,

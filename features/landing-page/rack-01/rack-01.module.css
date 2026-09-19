@@ -4280,6 +4280,212 @@
   }
 }
 
+/* Contact pad material: one glass instrument, with dark readouts and tactile controls. */
+.contact {
+  perspective: 1400px;
+}
+
+.contact .contactDeck {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: rgba(255, 255, 255, 0.3);
+  background:
+    radial-gradient(90% 70% at 8% 0, rgba(255, 255, 255, 0.16), transparent 48%),
+    radial-gradient(70% 90% at 100% 100%, rgba(255, 90, 31, 0.14), transparent 55%),
+    linear-gradient(145deg, rgba(45, 49, 46, 0.88), rgba(8, 11, 10, 0.96));
+  background-color: #101310;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -28px 34px -24px rgba(0, 0, 0, 0.78),
+    0 30px 60px rgba(0, 0, 0, 0.42),
+    0 8px 20px -12px rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(18px) saturate(1.5) brightness(0.9);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5) brightness(0.9);
+  transform-style: preserve-3d;
+  transform-origin: 50% 0%;
+  will-change: transform;
+}
+
+.contact .contactDeck::before {
+  position: absolute;
+  z-index: -1;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 11px;
+  content: '';
+  pointer-events: none;
+}
+
+.contact .contactDeckBrand {
+  position: relative;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(244, 240, 232, 0.92);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.contact .contactDeckBrand span {
+  color: rgba(219, 224, 216, 0.58);
+}
+
+.contact .contactDeckTop {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.contact .contactDeckDisplay {
+  border-color: rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background:
+    linear-gradient(rgba(92, 214, 163, 0.045) 1px, transparent 1px) 0 0 / 100% 5px,
+    radial-gradient(120% 100% at 18% 0, rgba(255, 255, 255, 0.13), transparent 48%),
+    rgba(9, 19, 14, 0.82);
+  box-shadow:
+    inset 0 2px 10px rgba(0, 0, 0, 0.76),
+    inset 0 1px rgba(255, 255, 255, 0.2),
+    0 10px 18px -14px rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(8px) saturate(1.3);
+  -webkit-backdrop-filter: blur(8px) saturate(1.3);
+}
+
+.contact .contactDial > span {
+  border-color: rgba(255, 255, 255, 0.42);
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.56), transparent 28%),
+    radial-gradient(circle at 38% 32%, rgba(112, 119, 111, 0.86), rgba(26, 31, 28, 0.92) 68%);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.56),
+    inset 0 -8px 12px rgba(0, 0, 0, 0.3),
+    0 7px 14px -10px rgba(15, 23, 42, 0.64);
+  backdrop-filter: blur(7px) saturate(1.35);
+  -webkit-backdrop-filter: blur(7px) saturate(1.35);
+}
+
+.contact .contactDial b {
+  color: rgba(244, 240, 232, 0.82);
+}
+
+.contact .contactDial small {
+  color: rgba(219, 224, 216, 0.58);
+}
+
+.contact .contactModeRail button,
+.contact .contactModeRail a {
+  border-color: rgba(255, 255, 255, 0.38);
+  border-bottom-width: 2px;
+  background:
+    radial-gradient(120% 90% at 18% 4%, rgba(255, 255, 255, 0.38), transparent 46%),
+    rgba(43, 50, 46, 0.58);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.46),
+    inset 0 -8px 12px -10px rgba(255, 210, 230, 0.36),
+    0 7px 14px -11px rgba(15, 23, 42, 0.54);
+  backdrop-filter: blur(8px) saturate(1.35);
+  -webkit-backdrop-filter: blur(8px) saturate(1.35);
+}
+
+.contact .contactModeRail,
+.contact .contactPadGrid,
+.contact .contactDeckNote {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.contact .contactModeRail button:hover,
+.contact .contactModeRail button:focus-visible,
+.contact .contactModeRail a:hover,
+.contact .contactModeRail a:focus-visible {
+  border-color: rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(120% 90% at 18% 4%, rgba(255, 255, 255, 0.5), transparent 46%),
+    rgba(57, 66, 60, 0.68);
+  transform: translateY(-1px);
+}
+
+.contact .contactModeRail button[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--signal-orange) 66%, white);
+  background:
+    radial-gradient(120% 90% at 18% 4%, rgba(255, 255, 255, 0.4), transparent 46%),
+    color-mix(in srgb, var(--signal-orange) 72%, rgba(42, 48, 45, 0.52));
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.62),
+    0 0 18px rgba(255, 90, 31, 0.16);
+}
+
+.contact .contactPad {
+  border-color: color-mix(in srgb, var(--pad-color) 48%, rgba(255, 255, 255, 0.56));
+  background:
+    radial-gradient(120% 90% at 18% 5%, rgba(255, 255, 255, 0.42), transparent 44%),
+    linear-gradient(155deg, color-mix(in srgb, var(--pad-color) 50%, rgba(255, 255, 255, 0.26)), rgba(44, 50, 46, 0.52));
+  background-color: #242a26;
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.58),
+    inset 0 -12px 18px -14px color-mix(in srgb, var(--pad-color) 42%, rgba(255, 210, 230, 0.35)),
+    0 8px 18px -12px rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(8px) saturate(1.35);
+  -webkit-backdrop-filter: blur(8px) saturate(1.35);
+  transition:
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.contact .contactPad:nth-child(-n + 4) {
+  border-color: color-mix(in srgb, var(--pad-color) 58%, rgba(255, 255, 255, 0.58));
+  background:
+    radial-gradient(120% 90% at 18% 5%, rgba(255, 255, 255, 0.46), transparent 44%),
+    linear-gradient(155deg, color-mix(in srgb, var(--pad-color) 64%, rgba(255, 255, 255, 0.28)), rgba(40, 78, 62, 0.52));
+}
+
+.contact .contactPad::before {
+  background: rgba(255, 255, 255, 0.66);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.contact .contactPad:hover,
+.contact .contactPad:focus-visible {
+  border-color: color-mix(in srgb, var(--pad-color) 74%, white);
+  background:
+    radial-gradient(120% 90% at 18% 5%, rgba(255, 255, 255, 0.56), transparent 44%),
+    linear-gradient(155deg, color-mix(in srgb, var(--pad-color) 62%, rgba(255, 255, 255, 0.3)), rgba(55, 63, 57, 0.6));
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.72),
+    0 12px 22px -13px color-mix(in srgb, var(--pad-color) 45%, rgba(15, 23, 42, 0.58));
+}
+
+.contact .contactPad:active,
+.contact .contactPadActive,
+.contact .contactPadSweeping {
+  border-color: color-mix(in srgb, var(--pad-color) 74%, white);
+  background:
+    radial-gradient(120% 90% at 18% 5%, rgba(255, 255, 255, 0.42), transparent 44%),
+    color-mix(in srgb, var(--pad-color) 78%, rgba(42, 48, 45, 0.3));
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.66),
+    0 0 20px color-mix(in srgb, var(--pad-color) 34%, transparent);
+}
+
+.contact .contactDeckNote {
+  color: rgba(219, 224, 216, 0.58);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .contact .contactDeck,
+  .contact .contactDeckDisplay,
+  .contact .contactDial > span,
+  .contact .contactModeRail button,
+  .contact .contactModeRail a,
+  .contact .contactPad {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-image: none;
+  }
+}
+
 /* Final radio material: glass surfaces, dark functional islands, crisp controls. */
 .experience .radioFace,
 .experience .radioSpeaker,

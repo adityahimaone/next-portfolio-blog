@@ -11,7 +11,6 @@ import {
   Mail,
   Pause,
   Play,
-  RotateCcw,
   SkipBack,
   SkipForward,
   Square,
@@ -692,41 +691,42 @@ function About({
           <div className={styles.timelinePanel}>
             <Screw className={styles.screwTopLeft} />
             <Screw className={styles.screwTopRight} />
-            <div className={styles.timelineDeviceBrand}>
-              <div className={styles.timelineBrandMark}>
-                <VenLogo />
-                <SilkscreenLabel>ARRANGEMENT WORKSTATION</SilkscreenLabel>
+            <div className={styles.timelineWorkspace}>
+              <div className={styles.timelineDeviceBrand}>
+                <div className={styles.timelineBrandMark}>
+                  <VenLogo />
+                  <SilkscreenLabel>ARRANGEMENT WORKSTATION</SilkscreenLabel>
+                </div>
+                <div className={styles.timelineMeters} aria-hidden="true">
+                  {Array.from({ length: 12 }, (_, index) => (
+                    <i key={index} />
+                  ))}
+                </div>
               </div>
-              <div className={styles.timelineMeters} aria-hidden="true">
-                {Array.from({ length: 12 }, (_, index) => (
-                  <i key={index} />
-                ))}
+              <div className={styles.panelHeader}>
+                <SilkscreenLabel>ARRANGEMENT / IDENTITY.AIF</SilkscreenLabel>
+                <div className={styles.timelineTransport}>
+                  <button
+                    type="button"
+                    onClick={() => setIsPlaying((current) => !current)}
+                    aria-label={isPlaying ? 'Pause timeline' : 'Play timeline'}
+                  >
+                    {isPlaying ? <Pause size={13} /> : <Play size={13} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPlaying(false)
+                      setPlayhead(0.05)
+                    }}
+                    aria-label="Stop and rewind timeline"
+                  >
+                    <Square size={12} />
+                  </button>
+                  <span>120 BPM / 4-4</span>
+                </div>
               </div>
-            </div>
-            <div className={styles.panelHeader}>
-              <SilkscreenLabel>ARRANGEMENT / IDENTITY.AIF</SilkscreenLabel>
-              <div className={styles.timelineTransport}>
-                <button
-                  type="button"
-                  onClick={() => setIsPlaying((current) => !current)}
-                  aria-label={isPlaying ? 'Pause timeline' : 'Play timeline'}
-                >
-                  {isPlaying ? <Pause size={13} /> : <Play size={13} />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsPlaying(false)
-                    setPlayhead(0.05)
-                  }}
-                  aria-label="Stop and rewind timeline"
-                >
-                  <Square size={12} />
-                </button>
-                <span>120 BPM / 4-4</span>
-              </div>
-            </div>
-            <div className={styles.timelineArrangement}>
+              <div className={styles.timelineArrangement}>
               <div className={styles.timelineRuler}>
                 <div className={styles.timelineRulerHeader}>
                   <span>TRK</span>
@@ -805,12 +805,13 @@ function About({
                   </div>
                 </div>
               ))}
-            </div>
-            <div className={styles.clipDetail} aria-live="polite">
-              <SilkscreenLabel>
-                CLIP {String(selected + 1).padStart(2, '0')} / SELECTED
-              </SilkscreenLabel>
-              <p>{ABOUT_TRACKS[selected].detail}</p>
+              <div className={styles.clipDetail} aria-live="polite">
+                <SilkscreenLabel>
+                  CLIP {String(selected + 1).padStart(2, '0')} / SELECTED
+                </SilkscreenLabel>
+                <p>{ABOUT_TRACKS[selected].detail}</p>
+              </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1784,7 +1785,10 @@ function Experience({
             </div>
             <div className={styles.cassetteHeader}>
               <span>AH / FIELD RADIO</span>
-              <span>FM / AUX / TAPE ARCHIVE</span>
+              <span className={styles.cassetteHeaderMeta}>
+                FM / AUX / TAPE ARCHIVE
+                <b className={styles.radioHeaderStatus}>ON AIR</b>
+              </span>
             </div>
             <div className={styles.radioFace}>
               <div className={styles.radioSpeaker} aria-hidden="true">
@@ -1829,7 +1833,6 @@ function Experience({
                       />
                       TUNE
                     </span>
-                    <b>ON AIR</b>
                   </div>
                 </div>
                 <div
@@ -1948,36 +1951,6 @@ function Experience({
                   ))}
                 </ul>
               </div>
-            </div>
-            <div
-              className={styles.deckButtons}
-              aria-label="Experience controls"
-            >
-              <button
-                type="button"
-                aria-label="Previous experience"
-                onClick={() =>
-                  setSelected((current) =>
-                    current === 0 ? EXPERIENCES.length - 1 : current - 1,
-                  )
-                }
-              >
-                ◀◀
-              </button>
-              <button type="button" onClick={() => setSelected(0)}>
-                <RotateCcw size={12} aria-hidden="true" />
-                <span className={styles.srOnly}>Rewind experience</span>
-              </button>
-              <button
-                type="button"
-                className={styles.deckPlay}
-                aria-label="Next experience"
-                onClick={() =>
-                  setSelected((current) => (current + 1) % EXPERIENCES.length)
-                }
-              >
-                ▶
-              </button>
             </div>
           </div>
         </div>

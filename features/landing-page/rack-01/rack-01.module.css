@@ -1689,33 +1689,6 @@
   font-size: 12px;
   line-height: 1.35;
 }
-.deckButtons {
-  display: flex;
-  gap: 6px;
-  margin-top: 18px;
-}
-.deckButtons button {
-  display: grid;
-  min-width: 52px;
-  height: 34px;
-  place-items: center;
-  border: 1px solid #77766f;
-  border-radius: 2px;
-  background: linear-gradient(#ddd9d1, #c6c3bc);
-  box-shadow:
-    0 2px 2px rgba(0, 0, 0, 0.2),
-    inset 0 1px rgba(255, 255, 255, 0.65);
-  font-size: 10px;
-  cursor: pointer;
-}
-.deckButtons button:active {
-  transform: scale(0.96);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-.deckButtons .deckPlay {
-  background: var(--signal-orange);
-}
-
 .work {
   height: 280svh;
   background: var(--lcd-black);
@@ -3406,14 +3379,6 @@
     inset 0 1px rgba(255, 255, 255, 0.16);
   will-change: transform;
 }
-.radioDials b {
-  align-self: start;
-  padding: 5px;
-  border-radius: 2px;
-  background: var(--signal-orange);
-  font: 7px var(--font-geist-mono);
-  white-space: nowrap;
-}
 .tapeCarousel {
   position: relative;
   min-height: 260px;
@@ -4312,6 +4277,724 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background-image: none;
+  }
+}
+
+/* Final radio material: glass surfaces, dark functional islands, crisp controls. */
+.experience .radioFace,
+.experience .radioSpeaker,
+.experience .radioLevel,
+.experience .radioTuner,
+.experience .radioDials,
+.experience .frequencyDisplay,
+.experience .frequencyScale,
+.experience .radioDials span > i,
+.experience .radioSpeakerBadge {
+  border-color: rgba(255, 255, 255, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.52),
+    inset 0 -10px 18px -16px rgba(255, 210, 230, 0.46),
+    0 10px 22px -16px rgba(15, 23, 42, 0.56);
+  backdrop-filter: blur(9px) saturate(1.45);
+  -webkit-backdrop-filter: blur(9px) saturate(1.45);
+}
+
+.experience .radioSpeaker {
+  background:
+    radial-gradient(120% 80% at 16% 4%, rgba(255, 255, 255, 0.34), transparent 44%),
+    linear-gradient(150deg, rgba(235, 231, 222, 0.38), rgba(105, 110, 104, 0.48));
+}
+
+.experience .radioSpeakerBadge {
+  background:
+    radial-gradient(120% 90% at 18% 4%, rgba(255, 255, 255, 0.24), transparent 46%),
+    rgba(30, 38, 36, 0.72);
+  color: rgba(244, 240, 232, 0.9);
+}
+
+.experience .speakerGrille {
+  border-color: #59615b;
+  box-shadow:
+    inset 0 0 0 12px rgba(218, 216, 207, 0.5),
+    inset 0 0 0 14px rgba(48, 54, 51, 0.72),
+    inset 0 3px 12px rgba(0, 0, 0, 0.5),
+    0 1px rgba(255, 255, 255, 0.5);
+}
+
+.experience .radioLevel {
+  border-radius: 4px;
+  background:
+    radial-gradient(120% 90% at 18% 0, rgba(255, 255, 255, 0.16), transparent 48%),
+    rgba(12, 20, 18, 0.76);
+}
+
+.experience .radioLevel i {
+  box-shadow: 0 0 5px rgba(92, 214, 163, 0.22);
+}
+
+.experience .radioLevel i:nth-child(3n) {
+  box-shadow: 0 0 5px rgba(255, 90, 31, 0.24);
+}
+
+.experience .radioTuner {
+  background:
+    radial-gradient(120% 90% at 18% 5%, rgba(255, 255, 255, 0.32), transparent 46%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.2), rgba(184, 183, 175, 0.16));
+}
+
+.experience .radioDials {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background:
+    radial-gradient(120% 90% at 20% 0, rgba(255, 255, 255, 0.2), transparent 48%),
+    rgba(42, 48, 45, 0.3);
+}
+
+.experience .frequencyDisplay,
+.experience .frequencyScale {
+  border-radius: 4px;
+  background-color: rgba(11, 17, 14, 0.84);
+  box-shadow:
+    inset 0 3px 8px rgba(0, 0, 0, 0.72),
+    inset 0 1px rgba(255, 255, 255, 0.18),
+    0 8px 18px -14px rgba(15, 23, 42, 0.52);
+}
+
+.experience .frequencyScale {
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0 11px, rgba(216, 211, 199, 0.42) 11px 12px),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.08), transparent 42%);
+}
+
+.experience .radioDials span > i {
+  border-color: rgba(255, 255, 255, 0.38);
+  background:
+    linear-gradient(90deg, transparent 48%, rgba(218, 194, 141, 0.9) 48% 52%, transparent 52%),
+    radial-gradient(circle at 32% 22%, rgba(154, 164, 157, 0.9), rgba(35, 46, 50, 0.9) 70%);
+}
+
+.experience .experienceSelector button {
+  border-color: rgba(255, 255, 255, 0.34);
+  background:
+    radial-gradient(120% 90% at 16% 5%, rgba(255, 255, 255, 0.34), transparent 46%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.24), rgba(184, 183, 175, 0.22));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.56),
+    inset 0 -8px 15px -12px rgba(255, 210, 230, 0.42),
+    0 8px 18px -14px rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px) saturate(1.4);
+  -webkit-backdrop-filter: blur(8px) saturate(1.4);
+}
+
+.experience .experienceSelector button:hover {
+  border-color: color-mix(in srgb, var(--cassette-accent) 68%, white);
+  background:
+    radial-gradient(120% 90% at 16% 5%, rgba(255, 255, 255, 0.44), transparent 46%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.3), rgba(184, 183, 175, 0.24));
+}
+
+.experience .experienceSelector button[aria-selected='true'] {
+  border-color: color-mix(in srgb, var(--cassette-accent) 72%, white);
+  background:
+    radial-gradient(120% 90% at 16% 5%, rgba(255, 255, 255, 0.3), transparent 46%),
+    color-mix(in srgb, var(--cassette-label) 78%, rgba(255, 255, 255, 0.24));
+  box-shadow:
+    inset 4px 0 var(--cassette-accent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    0 10px 20px -14px color-mix(in srgb, var(--cassette-accent) 38%, rgba(15, 23, 42, 0.5));
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .experience .experienceSelector button {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-image: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .experience .radioFace,
+  .experience .radioSpeaker,
+  .experience .radioLevel,
+  .experience .radioTuner,
+  .experience .radioDials,
+  .experience .frequencyDisplay,
+  .experience .frequencyScale,
+  .experience .radioDials span > i,
+  .experience .radioSpeakerBadge {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-image: none;
+  }
+}
+
+/* Timeline workstation: one liquid-glass device with quieter internal layers. */
+.about .timelineWorkspace {
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.about .timelineWorkspace .panelHeader {
+  min-height: 42px;
+  padding: 8px 11px 8px 13px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.about .timelineWorkspace .timelineArrangement {
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.about .aboutCardRail {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.about .aboutCardRail .aboutCard {
+  position: relative;
+  isolation: isolate;
+  border-color: color-mix(in srgb, var(--about-accent) 48%, rgba(255, 255, 255, 0.58));
+  border-radius: 12px;
+  background:
+    radial-gradient(120% 90% at 14% 5%, rgba(255, 255, 255, 0.58), transparent 45%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.06)),
+    color-mix(in srgb, var(--about-card) 76%, rgba(255, 255, 255, 0.32));
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.76),
+    inset 5px 0 var(--about-accent),
+    0 14px 26px -14px rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(9px) saturate(1.4);
+  -webkit-backdrop-filter: blur(9px) saturate(1.4);
+  transition:
+    transform 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.about .aboutCardRail .aboutCard:active {
+  transform: scale(0.985);
+}
+
+.about .aboutCardRail .aboutCardActive {
+  border-color: var(--about-accent);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.84),
+    inset 5px 0 var(--about-accent),
+    0 18px 34px -14px color-mix(in srgb, var(--about-accent) 36%, rgba(15, 23, 42, 0.42));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .about .aboutCardRail .aboutCard:hover {
+    transform: translateX(4px);
+    border-color: color-mix(in srgb, var(--about-accent) 72%, white);
+  }
+}
+
+.about .timelinePanel {
+  min-height: 0;
+  padding: 12px;
+  border-color: rgba(255, 255, 255, 0.62);
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 80% at 8% 0, rgba(255, 255, 255, 0.68), transparent 42%),
+    radial-gradient(90% 100% at 100% 100%, rgba(255, 190, 174, 0.2), transparent 58%),
+    linear-gradient(145deg, rgba(235, 231, 222, 0.68), rgba(201, 197, 188, 0.48));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    inset 0 -24px 34px -28px rgba(255, 210, 230, 0.58),
+    0 28px 64px rgba(29, 30, 28, 0.24),
+    0 8px 24px -10px rgba(15, 23, 42, 0.24);
+  backdrop-filter: blur(18px) saturate(1.55) brightness(1.04);
+  -webkit-backdrop-filter: blur(18px) saturate(1.55) brightness(1.04);
+}
+
+.about .timelinePanel .timelineDeviceBrand {
+  min-height: 58px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.about .timelinePanel .timelineBrandMark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.about .timelinePanel .timelineBrandMark .silkscreen {
+  display: block;
+  white-space: nowrap;
+}
+
+.about .timelinePanel .timelineBrandMark .venLogo {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.72), 0 5px 12px -9px rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(8px) saturate(1.4);
+  -webkit-backdrop-filter: blur(8px) saturate(1.4);
+}
+
+.about .timelinePanel .timelineMeters {
+  width: 128px;
+  height: 24px;
+  border-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  background:
+    radial-gradient(120% 90% at 20% 0, rgba(255, 255, 255, 0.2), transparent 52%),
+    rgba(17, 20, 18, 0.76);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.72), inset 0 1px rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(7px) saturate(1.4);
+  -webkit-backdrop-filter: blur(7px) saturate(1.4);
+}
+
+.about .timelineWorkspace .panelHeader {
+  min-height: 42px;
+  margin: 0;
+  padding: 7px 10px 7px 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px 10px 0 0;
+  background: #171916;
+  color: rgba(244, 240, 232, 0.88);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.about .timelinePanel .timelineArrangement {
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.about .timelinePanel .timelineRuler {
+  height: 34px;
+  border-bottom-color: rgba(255, 255, 255, 0.28);
+  background: rgba(25, 29, 26, 0.94);
+}
+
+.about .timelinePanel .timelineRulerHeader,
+.about .timelinePanel .timelineRulerLanes span {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: rgba(244, 240, 232, 0.86);
+}
+
+.about .timelinePanel .track {
+  min-height: 104px;
+  border-bottom-color: rgba(255, 255, 255, 0.24);
+  background: color-mix(in srgb, var(--track-color) 54%, rgba(25, 29, 26, 0.88));
+}
+
+.about .timelinePanel .trackHeader {
+  gap: 6px;
+  padding: 13px 10px 12px 12px;
+  border-right-color: rgba(255, 255, 255, 0.24);
+  box-shadow: inset 4px 0 var(--track-accent), inset 1px 0 rgba(255, 255, 255, 0.24);
+  color: rgba(244, 240, 232, 0.9);
+}
+
+.about .timelinePanel .trackLane {
+  min-width: 0;
+  padding: 0 10px;
+  background-image: linear-gradient(
+    to right,
+    transparent calc(100% - 1px),
+    rgba(244, 240, 232, 0.18) calc(100% - 1px)
+  );
+}
+
+.about .timelinePanel .trackHeader span {
+  color: rgba(244, 240, 232, 0.68);
+}
+
+.about .timelinePanel .trackHeader strong {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.about .timelinePanel .clip {
+  width: 69%;
+  min-height: 58px;
+  margin-left: var(--clip-offset);
+  padding: 10px 12px;
+  border-color: rgba(255, 255, 255, 0.52);
+  border-radius: 9px;
+  background:
+    radial-gradient(120% 90% at 18% 5%, rgba(255, 255, 255, 0.38), transparent 48%),
+    color-mix(in srgb, var(--track-color) 52%, rgba(255, 255, 255, 0.34));
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.72),
+    inset 0 -8px 14px -12px rgba(255, 210, 230, 0.42),
+    0 8px 18px -12px rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(8px) saturate(1.45);
+  -webkit-backdrop-filter: blur(8px) saturate(1.45);
+}
+
+.about .timelinePanel .timelineTransport button,
+.about .timelinePanel .trackActions button {
+  border-color: rgba(255, 255, 255, 0.46);
+  border-radius: 7px;
+  background:
+    radial-gradient(120% 90% at 18% 5%, rgba(255, 255, 255, 0.42), transparent 46%),
+    rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.64), 0 5px 12px -9px rgba(15, 23, 42, 0.44);
+  backdrop-filter: blur(8px) saturate(1.4);
+  -webkit-backdrop-filter: blur(8px) saturate(1.4);
+  transition:
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.about .timelinePanel .timelineTransport button {
+  width: 32px;
+  min-height: 32px;
+}
+
+.about .timelinePanel .trackActions button {
+  width: 28px;
+  min-height: 28px;
+}
+
+.about .timelinePanel .timelineTransport button:active,
+.about .timelinePanel .trackActions button:active {
+  transform: scale(0.97);
+}
+
+.about .timelinePanel .clipDetail {
+  min-height: 68px;
+  margin-top: 0;
+  padding: 12px 14px;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .about .timelinePanel .timelineTransport button:hover,
+  .about .timelinePanel .trackActions button:hover,
+  .about .timelinePanel .clip:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px rgba(255, 255, 255, 0.74),
+      0 9px 18px -11px rgba(15, 23, 42, 0.46);
+  }
+}
+
+@media (max-width: 768px) {
+  .about .timelinePanel {
+    padding: 8px;
+    border-radius: 14px;
+  }
+
+  .about .timelinePanel .timelineDeviceBrand {
+    min-height: 54px;
+    padding-inline: 10px;
+  }
+
+  .about .timelinePanel .timelineBrandMark .venLogo {
+    width: 25px;
+    height: 25px;
+  }
+
+  .about .timelinePanel .timelineMeters {
+    width: 88px;
+  }
+
+  .about .timelineWorkspace .panelHeader {
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 9px;
+  }
+
+  .about .timelinePanel .timelineTransport > span {
+    display: none;
+  }
+
+  .about .timelinePanel .track {
+    min-height: 96px;
+  }
+
+  .about .timelinePanel .clip {
+    width: 78%;
+    min-height: 54px;
+    padding: 9px 10px;
+  }
+
+  .about .timelinePanel .clipDetail {
+    margin-top: 0;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .about .timelineWorkspace,
+  .about .timelinePanel,
+  .about .timelinePanel .timelineDeviceBrand,
+  .about .timelinePanel .timelineBrandMark .venLogo,
+  .about .timelinePanel .timelineMeters,
+  .about .timelinePanel .panelHeader,
+  .about .timelinePanel .timelineArrangement,
+  .about .timelinePanel .clip,
+  .about .timelinePanel .timelineTransport button,
+  .about .timelinePanel .trackActions button,
+  .about .timelinePanel .clipDetail {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-image: none;
+  }
+}
+
+/* Keep the radio silhouette complete at every breakpoint. */
+.experience .radioHandle {
+  z-index: 3;
+  display: block;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 8px 18px -12px rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(8px) saturate(1.45);
+  -webkit-backdrop-filter: blur(8px) saturate(1.45);
+}
+
+.experience .radioHandle span {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(211, 208, 198, 0.42));
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.84),
+    0 3px 8px -6px rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(6px) saturate(1.35);
+  -webkit-backdrop-filter: blur(6px) saturate(1.35);
+}
+
+@media (max-width: 768px) {
+  .experience .radioHandle {
+    top: -27px;
+    width: 58%;
+    height: 35px;
+    border-width: 6px;
+    border-bottom-width: 0;
+    border-radius: 11px 11px 0 0;
+  }
+
+  .experience .radioHandle span {
+    inset: 5px 10px auto;
+    height: 7px;
+  }
+
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .experience .radioHandle,
+  .experience .radioHandle span {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-image: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .experience .cassetteHeader {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .experience .cassetteHeaderMeta {
+    justify-content: flex-end;
+    gap: 5px;
+    text-align: right;
+  }
+
+  .experience .radioHeaderStatus {
+    padding: 3px 5px;
+    font-size: 6px;
+  }
+
+  .experience .tapeCarousel {
+    height: 230px;
+    min-height: 230px;
+  }
+}
+
+/* Experience radio material: the hero's glass language, kept to the device. */
+.experience .cassetteDeck {
+  overflow: visible;
+  border-color: rgba(255, 255, 255, 0.56);
+  background:
+    radial-gradient(120% 80% at 12% 0, rgba(255, 255, 255, 0.62), transparent 44%),
+    radial-gradient(100% 90% at 88% 100%, rgba(255, 191, 170, 0.18), transparent 58%),
+    linear-gradient(145deg, rgba(235, 231, 222, 0.76), rgba(201, 197, 188, 0.62));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    inset 0 -18px 30px -24px rgba(255, 210, 230, 0.48),
+    0 25px 55px rgba(29, 30, 28, 0.24),
+    0 8px 24px -8px rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(16px) saturate(1.55) brightness(1.04);
+  -webkit-backdrop-filter: blur(16px) saturate(1.55) brightness(1.04);
+}
+
+.experience .cassetteHeader {
+  color: rgba(38, 40, 37, 0.68);
+}
+
+.experience .cassetteHeaderMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.experience .radioHeaderStatus {
+  padding: 4px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 5px;
+  background:
+    radial-gradient(120% 90% at 18% 5%, rgba(255, 255, 255, 0.38), transparent 46%),
+    rgba(42, 48, 43, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.44),
+    0 5px 12px -9px rgba(15, 23, 42, 0.52);
+  color: #f0eadf;
+  font: 700 7px var(--font-geist-mono);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  backdrop-filter: blur(8px) saturate(1.45);
+  -webkit-backdrop-filter: blur(8px) saturate(1.45);
+}
+
+.experience .radioFace {
+  border-color: rgba(255, 255, 255, 0.58);
+  background:
+    radial-gradient(120% 90% at 12% 2%, rgba(255, 255, 255, 0.52), transparent 40%),
+    linear-gradient(145deg, rgba(235, 231, 222, 0.55), rgba(201, 197, 188, 0.38));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    inset 0 -12px 24px -20px rgba(255, 210, 230, 0.44),
+    0 10px 24px -18px rgba(15, 23, 42, 0.32);
+  backdrop-filter: blur(10px) saturate(1.45);
+  -webkit-backdrop-filter: blur(10px) saturate(1.45);
+}
+
+.experience .radioSpeaker {
+  border-color: rgba(255, 255, 255, 0.48);
+  background:
+    radial-gradient(120% 90% at 18% 8%, rgba(255, 255, 255, 0.28), transparent 48%),
+    rgba(137, 139, 132, 0.46);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    inset 0 2px 7px rgba(0, 0, 0, 0.2),
+    0 8px 18px -14px rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(8px) saturate(1.35);
+  -webkit-backdrop-filter: blur(8px) saturate(1.35);
+}
+
+.experience .radioSpeakerBadge {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.24), 0 4px 12px -8px rgba(15, 23, 42, 0.5);
+}
+
+.experience .radioCore {
+  min-width: 0;
+}
+
+.experience .radioTuner {
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 7px;
+  background:
+    radial-gradient(120% 90% at 18% 5%, rgba(255, 255, 255, 0.3), transparent 46%),
+    rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.46),
+    inset 0 -8px 16px -14px rgba(255, 210, 230, 0.38),
+    0 8px 18px -14px rgba(15, 23, 42, 0.32);
+  backdrop-filter: blur(8px) saturate(1.4);
+  -webkit-backdrop-filter: blur(8px) saturate(1.4);
+}
+
+.experience .radioDials {
+  padding: 4px 3px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.11);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.experience .frequencyDisplay,
+.experience .frequencyScale,
+.experience .tapeCarousel {
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.68),
+    inset 0 1px rgba(255, 255, 255, 0.14),
+    0 8px 18px -14px rgba(15, 23, 42, 0.48);
+}
+
+.experience .tapeCarousel {
+  height: 260px;
+  min-height: 260px;
+  background:
+    radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.12), transparent 34%),
+    rgba(17, 20, 18, 0.78);
+  backdrop-filter: blur(8px) saturate(1.35);
+  -webkit-backdrop-filter: blur(8px) saturate(1.35);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .experience .cassetteDeck,
+  .experience .radioFace,
+  .experience .radioSpeaker,
+  .experience .radioTuner,
+  .experience .tapeCarousel,
+  .experience .radioHeaderStatus {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-image: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .experience .tapeCarousel {
+    height: 230px;
+    min-height: 230px;
   }
 }
 .aboutCopy .aboutStats {
@@ -6193,9 +6876,6 @@
   .experienceNotes li {
     font-size: 10px;
   }
-  .deckButtons {
-    margin-top: 10px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -7686,6 +8366,27 @@
 }
 /* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4 */
 /* Hero redesign: the device wall supplies the identity; the interface stays quiet. */
+.heroMinimalNav .venLogo {
+  border-color: rgba(255, 255, 255, 0.92);
+  background:
+    radial-gradient(circle at 24% 14%, rgba(255, 255, 255, 0.48), transparent 44%),
+    linear-gradient(145deg, rgba(22, 27, 25, 0.96), rgba(8, 11, 10, 0.88));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -8px 14px -10px rgba(255, 142, 92, 0.72),
+    0 0 0 1px rgba(7, 10, 9, 0.74),
+    0 8px 18px -8px rgba(0, 0, 0, 0.72);
+  color: #ff8a58;
+  filter: drop-shadow(0 0 6px rgba(255, 90, 31, 0.62));
+  backdrop-filter: blur(8px) saturate(1.5) brightness(0.86);
+  -webkit-backdrop-filter: blur(8px) saturate(1.5) brightness(0.86);
+}
+
+.heroMinimalNav .venLogo .venSlat {
+  fill: #ff8a58;
+  filter: drop-shadow(0 0 1px rgba(255, 226, 207, 0.72));
+}
+
 .heroStage {
   --hero-pointer-x: 68%;
   --hero-pointer-y: 38%;

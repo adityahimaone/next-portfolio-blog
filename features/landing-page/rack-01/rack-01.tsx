@@ -14,6 +14,7 @@ import {
   SkipBack,
   SkipForward,
   Square,
+  X,
 } from 'lucide-react'
 import { Screw } from '@/components/screw'
 import { DawHero } from '../components/hero'
@@ -1970,8 +1971,27 @@ function Work() {
   const [previewId, setPreviewId] = useState<number | null>(
     PROJECTS_SHOWCASE[0]?.id ?? null,
   )
-  const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [detailId, setDetailId] = useState<number | null>(null)
   const [currentProgress, setCurrentProgress] = useState(52)
+
+  const detailProject =
+    PROJECTS_SHOWCASE.find((project) => project.id === detailId) ?? null
+
+  useEffect(() => {
+    if (!detailProject) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setDetailId(null)
+    }
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [detailProject])
 
   useEffect(() => {
     if (playingId == null) return
@@ -2020,9 +2040,7 @@ function Work() {
           <div className={styles.workRail}>
             {PROJECTS_SHOWCASE.map((project, index) => {
               const palette = PROJECT_PALETTES[index % PROJECT_PALETTES.length]
-              const releaseNumber = String(index + 1).padStart(2, '0')
               const isPlaying = playingId === project.id
-              const isExpanded = expandedId === project.id
               const progressPercentage =
                 (previewId === project.id ? currentProgress : 0) /
                 PROJECT_PREVIEW_DURATION *
@@ -2032,19 +2050,18 @@ function Work() {
                 <article
                   className={cn(
                     styles.projectModule,
-                    isExpanded && styles.projectModuleExpanded,
                   )}
                   key={project.id}
-                  onClick={() => setExpandedId(isExpanded ? null : project.id)}
+                  tabIndex={0}
+                  aria-label={`Open details for ${project.title}`}
+                  onClick={() => setDetailId(project.id)}
                   onKeyDown={(event) => {
+                    if (event.target !== event.currentTarget) return
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault()
-                      setExpandedId(isExpanded ? null : project.id)
+                      setDetailId(project.id)
                     }
                   }}
-                  role="button"
-                  tabIndex={0}
-                  aria-expanded={isExpanded}
                   style={
                     {
                       '--record-color': palette.vinyl,
@@ -2068,10 +2085,8 @@ function Work() {
                         <span>
                           <b>{project.title}</b>
                           <small
-                            className={cn(
-                              styles.projectPlayerDescription,
-                              isExpanded && styles.projectPlayerDescriptionExpanded,
-                            )}
+                            id={`project-description-${project.id}`}
+                            className={styles.projectPlayerDescription}
                           >
                             {project.description}
                           </small>
@@ -2104,11 +2119,13 @@ function Work() {
                         </div>
                         <div
                           className={styles.projectProgressTrack}
-                          role="progressbar"
+                          role="slider"
+                          tabIndex={0}
                           aria-label={`${project.title} preview progress`}
                           aria-valuenow={progressPercentage}
                           aria-valuemin={0}
                           aria-valuemax={100}
+                          aria-valuetext={`${formatProjectTime(currentProgress)} elapsed`}
                           onClick={(event) => {
                             event.stopPropagation()
                             const bounds = event.currentTarget.getBoundingClientRect()
@@ -2118,6 +2135,18 @@ function Work() {
                             )
                             setCurrentProgress(
                               Math.round(PROJECT_PREVIEW_DURATION * ratio),
+                            )
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+                            event.preventDefault()
+                            event.stopPropagation()
+                            const step = event.key === 'ArrowRight' ? 5 : -5
+                            setCurrentProgress((current) =>
+                              Math.min(
+                                PROJECT_PREVIEW_DURATION,
+                                Math.max(0, current + step),
+                              ),
                             )
                           }}
                         >
@@ -2168,6 +2197,63 @@ function Work() {
           </div>
         </div>
       </div>
+      {detailProject ? (
+        <div
+          className={styles.projectDetailBackdrop}
+          role="presentation"
+          onMouseDown={() => setDetailId(null)}
+        >
+          <div
+            className={styles.projectDetailModal}
+            style={
+              {
+                '--record-accent':
+                  PROJECT_PALETTES[detailProject.id % PROJECT_PALETTES.length]
+                    .accent,
+              } as React.CSSProperties
+            }
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`project-detail-title-${detailProject.id}`}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className={styles.projectDetailClose}
+              onClick={() => setDetailId(null)}
+              aria-label="Close project details"
+            >
+              <X size={17} strokeWidth={1.8} />
+            </button>
+            <div className={styles.projectDetailImage}>
+              <Image
+                src={detailProject.image}
+                alt={`${detailProject.title} project cover`}
+                fill
+                sizes="(max-width: 768px) 82vw, 360px"
+              />
+            </div>
+            <div className={styles.projectDetailContent}>
+              <span className={styles.projectDetailMeta}>
+                RELEASE {String(detailProject.id + 1).padStart(2, '0')} /{' '}
+                {detailProject.genre} / {detailProject.year}
+              </span>
+              <h3 id={`project-detail-title-${detailProject.id}`}>
+                {detailProject.title}
+              </h3>
+              <p>{detailProject.description}</p>
+              <a
+                href={detailProject.url}
+                target="_blank"
+                rel="noreferrer"
+                className={styles.projectDetailLink}
+              >
+                Open project <ArrowUpRight size={15} aria-hidden="true" />
+              </a>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

@@ -1173,13 +1173,13 @@ function Skills() {
     const handleSequence = (event: Event) => {
       const progress = (event as CustomEvent<number>).detail
       if (progress < 0) {
-        setSkillSequenceProgress(1)
+        setSkillSequenceProgress(0)
         setDisplayMode('WAVE')
         return
       }
       setSkillSequenceProgress(progress)
       setDisplayMode(
-        progress < 0.7 ? 'WAVE' : progress < 0.84 ? 'SPECTRUM' : 'TEL',
+        progress < 0.4 ? 'WAVE' : progress < 0.68 ? 'SPECTRUM' : 'TEL',
       )
     }
     section.addEventListener('skills-sequence', handleSequence)
@@ -3087,8 +3087,8 @@ export default function Rack01LandingPage() {
 
             ScrollTrigger.create({
               trigger: skillSection,
-              start: 'top 86%',
-              end: 'bottom 14%',
+              start: 'top 94%',
+              end: 'bottom 10%',
               invalidateOnRefresh: true,
               onUpdate: (self) => {
                 const progress = self.progress
@@ -3097,9 +3097,9 @@ export default function Rack01LandingPage() {
                     detail: progress,
                   }),
                 )
-                activateCurrent(sequenceGroups.pads, progress, 0.02, 0.18)
-                activateThrough(sequenceGroups.params, progress, 0.16, 0.38)
-                activateThrough(sequenceGroups.faders, progress, 0.34, 0.58)
+                activateCurrent(sequenceGroups.pads, progress, 0.02, 0.34)
+                activateThrough(sequenceGroups.params, progress, 0.24, 0.5)
+                activateThrough(sequenceGroups.faders, progress, 0.46, 0.72)
               },
               onLeaveBack: () => {
                 Object.values(sequenceGroups)

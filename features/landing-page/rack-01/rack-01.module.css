@@ -10420,6 +10420,13 @@
   box-shadow: 0 0 12px rgba(255, 90, 31, 0.38);
   transform: translateY(-2px);
 }
+.controller [data-skill-sequence='pad'].skillsSequenceActive {
+  border-color: var(--signal-orange);
+  box-shadow:
+    0 0 14px rgba(255, 90, 31, 0.34),
+    inset 0 1px rgba(255, 255, 255, 0.24);
+  transform: translateY(-2px);
+}
 .controller [data-skill-sequence='fader'].skillsSequenceActive {
   accent-color: var(--signal-orange);
   filter: drop-shadow(0 0 5px rgba(255, 90, 31, 0.68));
@@ -11867,5 +11874,174 @@
   .work .workRail {
     min-width: 0;
     padding-inline: var(--project-rail-gap);
+  }
+}
+
+/* Skills device material pass: preserve the existing palette, add glass only
+   to the component groups so the instrument reads as one object. */
+.controller {
+  --skills-glass-border: rgba(255, 255, 255, 0.42);
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 15% 5%, rgba(255, 255, 255, 0.78), transparent 25%),
+    linear-gradient(145deg, rgba(233, 230, 223, 0.78), rgba(195, 192, 185, 0.7));
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.9),
+    inset 0 -18px 28px -24px rgba(255, 210, 230, 0.42),
+    0 26px 62px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(18px) saturate(1.14);
+  -webkit-backdrop-filter: blur(18px) saturate(1.14);
+}
+
+.controller::after {
+  inset: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 32%);
+  pointer-events: none;
+}
+
+.controllerTopbar {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--skills-glass-border);
+  border-radius: 12px;
+  background: rgba(244, 241, 233, 0.22);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.62),
+    inset 0 -10px 18px -16px rgba(255, 210, 230, 0.45),
+    0 10px 24px rgba(29, 30, 28, 0.12);
+  backdrop-filter: blur(12px) saturate(1.18);
+  -webkit-backdrop-filter: blur(12px) saturate(1.18);
+}
+
+.controllerDisplay {
+  border-color: rgba(40, 42, 39, 0.82);
+  border-radius: 9px;
+  box-shadow:
+    inset 0 4px 18px #000,
+    inset 0 1px rgba(255, 255, 255, 0.24),
+    0 8px 18px rgba(29, 30, 28, 0.16);
+  backdrop-filter: blur(8px) saturate(1.2);
+  -webkit-backdrop-filter: blur(8px) saturate(1.2);
+}
+
+.controllerActions {
+  position: relative;
+  z-index: 1;
+}
+
+.controllerBanks {
+  position: relative;
+  z-index: 1;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(137, 135, 128, 0.72);
+  border-radius: 14px;
+  background: rgba(216, 212, 203, 0.58);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.82),
+    inset 0 -12px 20px -18px rgba(255, 210, 230, 0.5),
+    0 12px 26px rgba(29, 30, 28, 0.12);
+  backdrop-filter: blur(14px) saturate(1.16);
+  -webkit-backdrop-filter: blur(14px) saturate(1.16);
+}
+
+.controlBank,
+.controlBank + .controlBank {
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 9px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08)),
+    rgba(201, 198, 190, 0.34);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.58),
+    inset 0 -10px 18px -18px rgba(255, 210, 230, 0.48);
+  backdrop-filter: blur(9px) saturate(1.14);
+  -webkit-backdrop-filter: blur(9px) saturate(1.14);
+}
+
+.controlBank + .controlBank {
+  border-left: 1px solid rgba(255, 255, 255, 0.42);
+}
+
+.padBank button {
+  border-radius: 8px;
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.16),
+    inset 0 -8px 12px -12px rgba(255, 210, 230, 0.3),
+    0 3px 5px rgba(0, 0, 0, 0.34);
+}
+
+.keyboardBed {
+  position: relative;
+  z-index: 1;
+  margin-top: 14px;
+  border: 1px solid rgba(133, 131, 125, 0.68);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.34), transparent 28%),
+    rgba(184, 181, 174, 0.66);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.78),
+    inset 0 -12px 20px -18px rgba(255, 210, 230, 0.46),
+    0 12px 26px rgba(29, 30, 28, 0.14);
+  backdrop-filter: blur(12px) saturate(1.12);
+  -webkit-backdrop-filter: blur(12px) saturate(1.12);
+}
+
+.controllerKeys {
+  border-radius: 8px 8px 10px 10px;
+  box-shadow:
+    inset 0 3px 5px rgba(0, 0, 0, 0.36),
+    inset 0 1px rgba(255, 255, 255, 0.3),
+    0 1px rgba(255, 255, 255, 0.52);
+}
+
+@media (max-width: 768px) {
+  .controller {
+    border-radius: 14px;
+  }
+
+  .controller::after {
+    inset: 5px;
+    border-radius: 10px;
+  }
+
+  .controllerTopbar {
+    margin-bottom: 12px;
+    padding: 9px;
+    border-radius: 10px;
+  }
+
+  .controllerBanks {
+    gap: 7px;
+    padding: 7px;
+    border-radius: 11px;
+  }
+
+  .controlBank,
+  .controlBank + .controlBank {
+    border-radius: 8px;
+  }
+
+  .keyboardBed {
+    margin-top: 10px;
+    border-radius: 11px;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .controller,
+  .controllerTopbar,
+  .controllerDisplay,
+  .controllerBanks,
+  .controlBank,
+  .keyboardBed {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }

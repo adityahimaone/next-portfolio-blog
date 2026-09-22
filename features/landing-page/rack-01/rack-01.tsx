@@ -746,6 +746,8 @@ function About({
               {ABOUT_TRACKS.map((item, index) => (
                 <div
                   className={`${styles.track} ${
+                    index === ABOUT_TRACKS.length - 1 ? styles.trackLast : ''
+                  } ${
                     mutedTracks.has(index) ||
                     (soloedTrack !== null && soloedTrack !== index)
                       ? styles.trackMuted
@@ -806,12 +808,12 @@ function About({
                   </div>
                 </div>
               ))}
+              </div>
               <div className={styles.clipDetail} aria-live="polite">
                 <SilkscreenLabel>
                   CLIP {String(selected + 1).padStart(2, '0')} / SELECTED
                 </SilkscreenLabel>
                 <p>{ABOUT_TRACKS[selected].detail}</p>
-              </div>
               </div>
             </div>
           </div>

@@ -14,6 +14,7 @@ import {
   User,
   Activity,
   Layers,
+  SlidersHorizontal,
   Zap,
 } from 'lucide-react'
 import NowPlaying from '@/features/landing-page/spotify/now-playing'
@@ -27,7 +28,7 @@ interface Clip {
   description: string
   start: number // Grid column start
   duration: number // Grid column span
-  type: 'bio' | 'stack' | 'stats' | 'spotify'
+  type: 'bio' | 'stack' | 'stats' | 'spotify' | 'range'
   content: React.ReactNode
 }
 
@@ -252,6 +253,9 @@ const ClipBlock = ({
         'group relative flex h-20 items-center overflow-hidden rounded-md border border-l-4 transition-all hover:brightness-110',
         color.replace('text-', 'border-l-').replace('bg-', 'bg-opacity-20'),
         'border-zinc-200 bg-white dark:border-zinc-700/50 dark:bg-zinc-800',
+        clip.id === 'range-main'
+          ? 'rounded-bl-xl rounded-br-xl'
+          : '',
         isActive ? 'ring-2 ring-amber-500/20 dark:ring-white/20' : '',
       )}
       style={{
@@ -303,7 +307,7 @@ const DetailWindow = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm md:p-8"
+      className="clip-detail fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm md:p-8"
       onClick={onClose}
     >
       <m.div
@@ -956,11 +960,90 @@ export function AboutSection() {
       ],
     },
     {
+      id: 'rack',
+      name: 'RACK / ARRANGEMENT',
+      icon: SlidersHorizontal,
+      color: 'text-emerald-500',
+      clips: [
+        {
+          id: 'rack-arrangement',
+          name: 'rack.arrangement',
+          subtitle: 'Rack Arrangement',
+          description: 'Separated device rack arrangement for focused workflow control.',
+          start: 4,
+          duration: 4,
+          type: 'stack',
+          content: (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {['Input', 'Logic', 'Motion', 'Output'].map((device, index) => (
+                <div
+                  key={device}
+                  className="rounded-lg border border-emerald-500/30 bg-zinc-950 p-4 shadow-inner"
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <span className="font-mono text-[10px] font-black tracking-widest text-emerald-400 uppercase">
+                      0{index + 1} {device}
+                    </span>
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-1 rounded-full bg-emerald-500/60" />
+                    <div className="h-1 w-3/4 rounded-full bg-zinc-700" />
+                    <div className="h-1 w-1/2 rounded-full bg-zinc-800" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ),
+        },
+      ],
+    },
+    {
       id: 'audio',
       name: 'AUDIO',
       icon: Music,
       color: 'text-amber-500',
       clips: [
+        {
+          id: 'range-main',
+          name: '03 Range',
+          subtitle: 'Clip Detail',
+          description: 'Latest track range with separated clip detail controls.',
+          start: 8,
+          duration: 4,
+          type: 'range',
+          content: (
+            <div className="space-y-6">
+              <div className="rounded-lg border border-amber-500/30 bg-zinc-950 p-5 shadow-inner">
+                <div className="mb-4 flex items-center justify-between">
+                  <span className="font-mono text-xs font-black tracking-widest text-amber-400 uppercase">
+                    03 Range
+                  </span>
+                  <span className="rounded bg-amber-500/15 px-2 py-1 font-mono text-[10px] text-amber-400">
+                    LATEST TRACK
+                  </span>
+                </div>
+                <div className="grid grid-cols-12 items-end gap-1">
+                  {[4, 7, 3, 9, 6, 8, 5, 10, 4, 7, 6, 9].map((height, index) => (
+                    <div
+                      key={index}
+                      className="rounded-t-sm bg-amber-500/80"
+                      style={{ height: `${height * 8}px` }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {['Start', 'Length', 'Mode'].map((label, index) => (
+                  <div key={label} className="rounded border border-zinc-700 bg-zinc-900 p-3">
+                    <span className="block text-[9px] font-bold tracking-widest text-zinc-500 uppercase">{label}</span>
+                    <span className="mt-1 block font-mono text-sm text-zinc-200">{['08:00', '04:00', 'Loop'][index]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ),
+        },
         {
           id: 'audio-main',
           name: 'now_playing.mp3',
@@ -1077,7 +1160,7 @@ export function AboutSection() {
             </div>
 
             {/* Main Workspace */}
-            <div className="relative flex h-[400px]">
+            <div className="timeline-panel relative flex h-[400px]">
               {/* Track Headers (Left) */}
               <div className="relative z-20 flex flex-col border-r border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
                 <div className="h-8 border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900" />{' '}
@@ -1117,17 +1200,18 @@ export function AboutSection() {
                     }}
                   />
 
-                  {/* Playhead */}
-                  <div
-                    ref={playheadRef}
-                    className="pointer-events-none absolute top-0 bottom-0 z-30 w-px bg-red-500 transition-all duration-75 ease-linear"
-                    style={{ left: '0%' }}
-                  >
-                    <div className="absolute -top-1 -left-1.5 h-0 w-0 border-x-[6px] border-t-[8px] border-x-transparent border-t-red-500" />
-                  </div>
 
                   {/* Tracks & Clips */}
-                  <div className="relative grid grid-rows-[repeat(3,6rem)]">
+                  <div className="relative overflow-hidden">
+                    {/* Playhead stays inside timeline panel body, below ruler. */}
+                    <div
+                      ref={playheadRef}
+                      className="pointer-events-none absolute inset-y-0 left-0 z-30 w-px bg-red-500 transition-all duration-75 ease-linear"
+                      style={{ left: '0%' }}
+                    >
+                      <div className="absolute -top-1 -left-1.5 h-0 w-0 border-x-[6px] border-t-8 border-x-transparent border-t-red-500" />
+                    </div>
+                    <div className="relative grid grid-rows-[repeat(4,6rem)] gap-px bg-zinc-200/60 dark:bg-zinc-800/60">
                     {tracks.map((track) => {
                       const isVisible =
                         !mutedTracks.has(track.id) &&
@@ -1156,6 +1240,7 @@ export function AboutSection() {
                         </div>
                       )
                     })}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1106,6 +1106,17 @@
   border-bottom: 1px solid #85837c;
   background: color-mix(in srgb, var(--track-color) 34%, #d7d2c8);
 }
+.trackLast {
+  overflow: hidden;
+  border-bottom: 0;
+  border-radius: 0 0 10px 10px;
+}
+.trackLast .trackHeader {
+  border-bottom-left-radius: 10px;
+}
+.trackLast .trackLane {
+  border-bottom-right-radius: 10px;
+}
 .trackHeader {
   display: flex;
   flex-direction: column;

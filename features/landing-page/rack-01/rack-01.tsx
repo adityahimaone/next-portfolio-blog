@@ -3371,33 +3371,22 @@ export default function Rack01LandingPage() {
                 workStage,
                 {
                   yPercent: 12,
-                  scale: 0.92,
-                  z: -180,
-                  rotationX: -8,
+                  scale: 0.94,
+                  z: -120,
+                  rotationX: -4,
                   opacity: 0,
                   transformPerspective: 1400,
                   transformOrigin: '50% 100%',
                 },
                 {
-                  yPercent: -2,
-                  scale: 1.04,
-                  z: 90,
-                  rotationX: 1,
-                  opacity: 1,
-                  duration: 0.22,
-                },
-                0.62,
-              )
-              .to(
-                workStage,
-                {
                   yPercent: 0,
                   scale: 1,
                   z: 0,
                   rotationX: 0,
-                  duration: 0.2,
+                  opacity: 1,
+                  duration: 0.42,
                 },
-                0.84,
+                0.58,
               )
           }
 

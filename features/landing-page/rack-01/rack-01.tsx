@@ -1711,18 +1711,25 @@ function ReleaseTitleHandoff() {
     <div className={styles.experienceWorkHandoff} aria-hidden="true">
       <span className={styles.handoffShade} />
       <span className={styles.handoffRibbon} />
-      <span className={styles.handoffDisc} />
-      <div className={styles.handoffEditorial}>
-        <span className={styles.handoffKicker}>SIDE B / SELECTED WORK</span>
-        <p className={styles.handoffTitle}>
-          <span>
-            <b>WORK</b>
-          </span>
-          <span>
-            <b>RELEASED.</b>
-          </span>
-        </p>
-        <span className={styles.handoffIndex}>05 / PROJECT ARCHIVE</span>
+      <div className={styles.handoffRoute}>
+        <span>EXPERIENCE / SIDE A</span>
+        <i />
+        <span>SIDE B / WORK</span>
+      </div>
+      <div className={styles.handoffScreen}>
+        <div className={styles.handoffScreenHeader}>
+          <span>05 / PROJECT RELEASE</span>
+          <span>LIVE SIGNAL</span>
+        </div>
+        <strong>PROJECT ARCHIVE</strong>
+        <div className={styles.handoffScreenWave}>
+          {Array.from({ length: 18 }, (_, index) => <i key={index} />)}
+        </div>
+      </div>
+      <div className={styles.handoffTelemetry}>
+        <span>SIGNAL ROUTED</span>
+        <span>04—05</span>
+        <span>FRONTEND SYSTEMS / PRODUCT WORK</span>
       </div>
     </div>
   )
@@ -1955,13 +1962,7 @@ function Experience({
             </div>
           </div>
         </div>
-        <ReleaseTitleHandoff />
       </div>
-      <div
-        ref={projectDividerRef}
-        className={styles.projectNavTrigger}
-        aria-hidden="true"
-      />
     </section>
   )
 }
@@ -2728,6 +2729,7 @@ export default function Rack01LandingPage() {
   useEffect(() => {
     let context: { revert: () => void } | undefined
     let smoothScrollCleanup: (() => void) | undefined
+
     let cancelled = false
 
     const setup = async () => {
@@ -3337,27 +3339,11 @@ export default function Rack01LandingPage() {
           const experienceContent = rootRef.current?.querySelector<HTMLElement>(
             `.${styles.experienceContent}`,
           )
-          const handoffShade = rootRef.current?.querySelector<HTMLElement>(
-            `.${styles.handoffShade}`,
-          )
-          const handoffEditorial = rootRef.current?.querySelector<HTMLElement>(
-            `.${styles.handoffEditorial}`,
-          )
-          const handoffRibbon = rootRef.current?.querySelector<HTMLElement>(
-            `.${styles.handoffRibbon}`,
-          )
-          const handoffDisc = rootRef.current?.querySelector<HTMLElement>(
-            `.${styles.handoffDisc}`,
+          const workStage = rootRef.current?.querySelector<HTMLElement>(
+            `.${styles.workStage}`,
           )
 
-          if (
-            experienceSection &&
-            experienceContent &&
-            handoffShade &&
-            handoffEditorial &&
-            handoffRibbon &&
-            handoffDisc
-          ) {
+          if (experienceSection && experienceContent && workStage) {
             gsap
               .timeline({
                 scrollTrigger: {
@@ -3372,73 +3358,46 @@ export default function Rack01LandingPage() {
               .to(
                 experienceContent,
                 {
-                  opacity: 0.2,
-                  scale: 0.99,
+                  opacity: 0,
+                  yPercent: 12,
+                  scale: 0.88,
+                  filter: 'blur(4px)',
                   transformOrigin: '50% 50%',
                   duration: 0.3,
                 },
                 0.48,
               )
               .fromTo(
-                handoffShade,
-                { opacity: 0 },
-                { opacity: 1, duration: 0.2 },
-                0.5,
-              )
-              .fromTo(
-                handoffRibbon,
+                workStage,
                 {
-                  scaleX: 0,
-                  scaleY: 1,
+                  yPercent: 12,
+                  scale: 0.92,
+                  z: -180,
+                  rotationX: -8,
                   opacity: 0,
-                  transformOrigin: '0% 50%',
+                  transformPerspective: 1400,
+                  transformOrigin: '50% 100%',
                 },
                 {
-                  scaleX: 1,
+                  yPercent: -2,
+                  scale: 1.04,
+                  z: 90,
+                  rotationX: 1,
                   opacity: 1,
-                  duration: 0.3,
+                  duration: 0.22,
                 },
-                0.52,
+                0.62,
               )
               .to(
-                handoffRibbon,
+                workStage,
                 {
-                  scaleY: 4,
-                  duration: 0.12,
-                },
-                0.84,
-              )
-              .to(
-                handoffDisc,
-                {
-                  rotation: 12,
+                  yPercent: 0,
+                  scale: 1,
+                  z: 0,
+                  rotationX: 0,
                   duration: 0.2,
                 },
-                0.86,
-              )
-              .fromTo(
-                handoffDisc,
-                { scale: 0.96, rotation: -8, opacity: 0 },
-                { scale: 1, rotation: 0, opacity: 1, duration: 0.2 },
-                0.82,
-              )
-              .fromTo(
-                handoffEditorial,
-                { autoAlpha: 0 },
-                { autoAlpha: 1, duration: 0.1 },
-                0.9,
-              )
-              .fromTo(
-                `.${styles.handoffTitle} b`,
-                { opacity: 0 },
-                { opacity: 1, stagger: 0.06, duration: 0.18 },
-                0.92,
-              )
-              .fromTo(
-                `.${styles.handoffKicker}, .${styles.handoffIndex}`,
-                { opacity: 0 },
-                { opacity: 1, stagger: 0.05, duration: 0.12 },
-                0.96,
+                0.84,
               )
           }
 
@@ -3454,7 +3413,7 @@ export default function Rack01LandingPage() {
               ease: 'none',
               scrollTrigger: {
                 trigger: `.${styles.work}`,
-                start: () => `top+=${window.innerHeight} top`,
+                start: 'top top',
                 end: 'bottom bottom',
                 scrub: 0.6,
                 invalidateOnRefresh: true,
@@ -3623,35 +3582,12 @@ export default function Rack01LandingPage() {
               { scaleY: 4, duration: 0.12 },
               0.42,
             )
-            .to(
-              `.${styles.handoffDisc}`,
-              { rotation: 12, duration: 0.2 },
-              0.46,
-            )
-            .fromTo(
-              `.${styles.handoffDisc}`,
-              { scale: 0.96, rotation: -8, opacity: 0 },
-              { scale: 1, rotation: 0, opacity: 1, duration: 0.2 },
-              0.42,
-            )
-            .fromTo(
-              `.${styles.handoffEditorial}`,
-              { opacity: 0 },
-              { opacity: 1, duration: 0.16 },
-              0.6,
-            )
-            .fromTo(
-              `.${styles.handoffTitle} b`,
-              { opacity: 0 },
-              { opacity: 1, stagger: 0.08, duration: 0.24 },
-              0.64,
-            )
-            .fromTo(
-              `.${styles.handoffKicker}, .${styles.handoffIndex}`,
-              { opacity: 0 },
-              { opacity: 1, stagger: 0.06, duration: 0.18 },
-              0.74,
-            )
+              .fromTo(
+                `.${styles.handoffScreen}`,
+                { clipPath: 'inset(100% 0 0 0)', opacity: 0 },
+                { clipPath: 'inset(0% 0 0 0)', opacity: 1, duration: 0.24 },
+                0.58,
+              )
         })
 
         return () => media.revert()
@@ -3663,6 +3599,7 @@ export default function Rack01LandingPage() {
       cancelled = true
       context?.revert()
       smoothScrollCleanup?.()
+
     }
   }, [])
 

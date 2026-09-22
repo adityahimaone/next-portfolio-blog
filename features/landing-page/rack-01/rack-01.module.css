@@ -4038,7 +4038,7 @@
 .contact {
   isolation: isolate;
 }
-.work::before,
+/*.work::before,*/
 .contact::before {
   position: absolute;
   z-index: 4;
@@ -8426,8 +8426,8 @@
   /* ── Mobile Section Trigger Button (Consistent Fixed Width) ── */
   .mobileSectionTrigger {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-start;
     gap: 6px;
     width: 96px;
     min-width: 96px;
@@ -10455,6 +10455,21 @@
   pointer-events: none;
 }
 
+.archiveEjectProxy {
+  position: fixed !important;
+  z-index: 100 !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+  transform: none;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+
+.archiveEjectProxy.cassetteActive,
+.archiveEjectProxy .cassetteActive {
+  transform: none;
+}
+
 .handoffShade {
   position: absolute;
   inset: 0;
@@ -10563,6 +10578,11 @@
 }
 
 .handoffRelease {
+  --handoff-shell: #d8d1c5;
+  --handoff-shell-deep: #aaa094;
+  --handoff-label: #d9895b;
+  --handoff-ink: #25231f;
+  --handoff-accent: #7b2735;
   position: absolute;
   z-index: 2;
   inset: 0;
@@ -10695,6 +10715,121 @@
   background: var(--handoff-accent);
 }
 
+.handoffCassetteFooter {
+  position: relative;
+  z-index: 1;
+  justify-self: end;
+  color: color-mix(in srgb, var(--handoff-ink) 72%, transparent);
+  font: 700 clamp(5px, 0.45vw, 7px) var(--font-geist-mono);
+  letter-spacing: 0.08em;
+}
+
+.handoffTelemetry {
+  position: absolute;
+  z-index: 4;
+  right: clamp(20px, 5vw, 78px);
+  bottom: clamp(28px, 5vh, 56px);
+  left: clamp(20px, 5vw, 78px);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: rgba(244, 240, 232, 0.58);
+  font: 700 clamp(7px, 0.58vw, 9px) var(--font-geist-mono);
+  letter-spacing: 0.12em;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.handoffTelemetry span:first-child {
+  color: var(--signal-orange);
+}
+
+.handoffTelemetry span:nth-child(2) {
+  color: rgba(244, 240, 232, 0.34);
+}
+
+.handoffScreen {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  display: grid;
+  min-height: 34%;
+  align-content: center;
+  gap: 14px;
+  padding: clamp(24px, 4vw, 48px) clamp(20px, 5vw, 78px);
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(13, 15, 13, 0.2), rgba(13, 15, 13, 0.96)), #0d0f0d;
+  color: #f4f0e8;
+  clip-path: inset(100% 0 0 0);
+  opacity: 0;
+  will-change: clip-path, opacity;
+}
+
+.handoffScreenHeader {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(244, 240, 232, 0.5);
+  font: 700 8px var(--font-geist-mono);
+  letter-spacing: 0.12em;
+}
+
+.handoffScreen > strong {
+  font: 650 clamp(28px, 5vw, 72px) / 0.9 var(--font-space-grotesk);
+  letter-spacing: -0.06em;
+}
+
+.handoffScreenWave {
+  display: flex;
+  height: 28px;
+  align-items: center;
+  gap: 4px;
+  border-top: 1px solid rgba(244, 240, 232, 0.14);
+  border-bottom: 1px solid rgba(244, 240, 232, 0.14);
+}
+
+.handoffScreenWave i {
+  width: 3px;
+  height: 14px;
+  background: var(--signal-orange);
+  opacity: 0.72;
+}
+
+.handoffScreenWave i:nth-child(3n) { height: 20px; }
+.handoffScreenWave i:nth-child(4n) { height: 10px; }
+
+@media (max-width: 768px) {
+  .handoffTelemetry {
+    right: 20px;
+    bottom: 22px;
+    left: 20px;
+    flex-wrap: wrap;
+    font-size: 7px;
+  }
+
+  .handoffScreen {
+    min-height: 40%;
+    padding: 24px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .handoffTelemetry {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .handoffRelease,
+  .handoffCassette,
+  .handoffScreen {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+}
+
+/* The handoff is a typographic scene marker. It leaves the project rail untouched. */
 .handoffSleeve {
   position: absolute;
   z-index: 2;
@@ -10878,8 +11013,15 @@
 
   .work {
     position: relative;
-    z-index: 1;
+    z-index: 3;
     margin-top: -100svh;
+    background: transparent;
+  }
+
+  .workStage {
+    background: var(--lcd-black);
+    transform-style: preserve-3d;
+    will-change: transform, opacity, clip-path;
   }
 }
 
@@ -11872,12 +12014,26 @@
     margin-inline: auto;
   }
 
+  .work .workStage {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .work .workHeader {
+    flex: 0 0 auto;
+  }
+
   .work .workViewport {
     display: flex;
-    min-height: calc(100svh - 150px);
-    align-items: center;
-    overflow: hidden;
-    padding: 20px 0 34px;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    margin-top: clamp(18px, 3vh, 30px);
+    overflow-x: hidden;
+    overflow-y: visible;
+    padding: 20px 0 0;
     -webkit-mask-image: linear-gradient(
       90deg,
       transparent,
@@ -11896,17 +12052,16 @@
 
   .work .workRail {
     min-width: 0;
+    align-items: flex-start;
     padding-inline: 0;
   }
 
   .work .projectModule {
-    flex: 0 0 clamp(280px, 29vw, 320px);
-    width: clamp(280px, 29vw, 320px);
-    height: clamp(340px, calc(100svh - 390px), 460px);
+    flex: 0 0 clamp(300px, 21vw, 380px);
+    width: clamp(300px, 21vw, 380px);
+    height: auto;
     min-height: 0;
-    display: grid;
-    grid-template-rows: minmax(0, 1fr);
-    align-content: stretch;
+    grid-template-rows: auto auto;
   }
 
   .work .projectMedia {
@@ -11915,10 +12070,7 @@
     min-height: 0;
   }
 
-  .work .projectImage {
-    flex: 0 0 auto;
-    aspect-ratio: 1;
-    height: auto;
+  .work .projectCopy {
     min-height: 0;
   }
 }

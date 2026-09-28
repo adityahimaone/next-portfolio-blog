@@ -1,5 +1,5 @@
 import { BlogPost } from '../components/blog-post'
-import { SubpageHeader, Footer } from '@/features/layout'
+import { TopBar, Footer } from '@/features/layout'
 import type { BlogMeta } from '../lib/blog'
 
 interface BlogPostPageProps {
@@ -15,8 +15,8 @@ export function BlogPostPage({
 }: BlogPostPageProps) {
   return (
     <>
-      <SubpageHeader />
-      <main id="main-content" className="min-h-screen pt-28">
+      <TopBar />
+      <main id="main-content" className="min-h-screen pt-16">
         <BlogPost meta={meta} content={content} relatedPosts={relatedPosts} />
       </main>
       <Footer />

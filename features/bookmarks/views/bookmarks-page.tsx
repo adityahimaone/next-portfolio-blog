@@ -7,7 +7,7 @@ import { BookmarkHero } from '../components/bookmark-hero'
 import { BookmarkFilter, SortOption } from '../components/bookmark-filter'
 import { BookmarkCard } from '../components/bookmark-card'
 import { BookmarkAdminModal } from '../components/bookmark-admin-modal'
-import { SubpageHeader, Footer } from '@/features/layout'
+import { TopBar, Footer } from '@/features/layout'
 import { RefreshCw, FolderSearch } from 'lucide-react'
 import styles from '../bookmarks.module.css'
 
@@ -216,7 +216,7 @@ export function BookmarksPage({ initialBookmarks }: BookmarksPageProps) {
   return (
     <>
       {/* DAW Header (same as Projects subpage) */}
-      <SubpageHeader />
+      <TopBar />
 
       <div className={styles.page}>
         <main id="main-content" className={styles.main}>

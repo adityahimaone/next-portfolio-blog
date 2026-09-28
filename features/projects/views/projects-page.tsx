@@ -5,7 +5,7 @@ import type { FeaturedProject } from '../constants'
 import type { GitHubRepo } from '../lib/github'
 import { ProjectCard } from '../components/project-card'
 import { ProjectCardMini } from '../components/project-card-mini'
-import { SignalArchiveHeader, SubpageHeader, Footer } from '@/features/layout'
+import { SignalArchiveHeader, TopBar, Footer } from '@/features/layout'
 
 interface ProjectsPageContentProps {
   repos: GitHubRepo[]
@@ -27,10 +27,10 @@ export function ProjectsPage({
 
   return (
     <>
-      <SubpageHeader />
+      <TopBar />
       <main
         id="main-content"
-        className="bg-background mx-auto min-h-screen max-w-7xl px-4 pt-28 pb-20"
+        className="bg-background mx-auto min-h-screen max-w-7xl px-4 pt-16 pb-20"
       >
         <SignalArchiveHeader
           activeSection="projects"

@@ -17,7 +17,7 @@ import {
 } from '../components'
 import { useAudioFrequency } from '../hooks/use-audio-frequency'
 import { cn } from '@/lib/utils'
-import { SubpageHeader } from '@/features/layout'
+import { TopBar } from '@/features/layout'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { Eye, EyeOff, Home } from 'lucide-react'
@@ -142,7 +142,7 @@ export function MusicPageView() {
   return (
     <div
       className={cn(
-        'relative flex min-h-screen items-center justify-center overflow-x-hidden p-2 pt-32 pb-24 font-sans transition-colors duration-700 selection:bg-amber-500/30 sm:p-4 lg:p-6',
+        'relative flex min-h-screen items-center justify-center overflow-x-hidden p-2 pt-20 pb-24 font-sans transition-colors duration-700 selection:bg-amber-500/30 sm:p-4 lg:p-6',
         mounted && theme === 'light' ? 'bg-zinc-200' : 'bg-[#050505]',
       )}
     >
@@ -198,7 +198,7 @@ export function MusicPageView() {
         </AnimatePresence>
       </div>
 
-      <SubpageHeader />
+      <TopBar />
       <div
         className={cn(
           'pointer-events-none fixed inset-0 opacity-100 transition-opacity duration-700',

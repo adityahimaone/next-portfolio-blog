@@ -1,10 +1,8 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 import Lenis from 'lenis'
-import { m as motion, useReducedMotion } from 'motion/react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -23,6 +21,7 @@ import styles from './rack-01.module.css'
 import { cn } from '@/lib/utils'
 import { TangleFooter } from '@/src/components/ui/tangle-footer'
 import { TextCascade } from '@/components/motion/text-cascade'
+import { TopBar } from '@/features/layout/components/top-bar'
 
 const RESUME_URL =
   'https://drive.google.com/file/d/17x3GuEkZxbt9ZeLilXx1ShBHV_CZTfSq/view?usp=sharing'
@@ -38,22 +37,6 @@ const HERO_MARQUEE_ITEMS = [
   '15K+ USER PLATFORM',
 ] as const
 
-const NAV_ITEMS = [
-  { id: 'home', label: 'Home' },
-  { id: 'about', label: 'About' },
-  { id: 'skills', label: 'Skills' },
-  { id: 'experience', label: 'Exp' },
-  { id: 'work', label: 'Work' },
-  { id: 'contact', label: 'Contact' },
-] as const
-
-const ROUTE_ITEMS = [
-  { href: '/projects', label: 'Projects' },
-  { href: '/bookmarks', label: 'Bookmarks' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/music', label: 'Mixtape' },
-] as const
-
 const FOOTER_TANGLE_LINES = [
   'React / Next.js / TypeScript',
   'Frontend systems for products people use',
@@ -61,6 +44,8 @@ const FOOTER_TANGLE_LINES = [
   'Frontend engineer, Jakarta',
   'See the work, then start a conversation',
 ] as const
+
+const FOOTER_MOTTO = 'Make it work, then make it sing.'
 
 const PROJECT_PREVIEW_DURATION = 185
 
@@ -224,210 +209,6 @@ function Knob({
   )
 }
 
-function TransportBridge({
-  progress,
-  activeId,
-  compact = false,
-}: {
-  progress: number
-  activeId: string
-  compact?: boolean
-}) {
-  const prefersReducedMotion = useReducedMotion()
-  const [isSectionHovered, setIsSectionHovered] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  const activeIndex = useMemo(() => {
-    const idx = NAV_ITEMS.findIndex((item) => item.id === activeId)
-    return idx >= 0 ? idx : 0
-  }, [activeId])
-
-  const activeItem = NAV_ITEMS[activeIndex]
-
-  const counter = useMemo(() => {
-    const totalSeconds = Math.round(progress * 3_599)
-    const minutes = Math.floor(totalSeconds / 60)
-      .toString()
-      .padStart(2, '0')
-    const seconds = (totalSeconds % 60).toString().padStart(2, '0')
-    const frames = Math.floor((progress * 100) % 100)
-      .toString()
-      .padStart(2, '0')
-    return `${minutes}:${seconds}:${frames}`
-  }, [progress])
-
-  // Close mobile dropdown on click outside or escape key
-  useEffect(() => {
-    if (!isMobileMenuOpen) return
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsMobileMenuOpen(false)
-      }
-    }
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsMobileMenuOpen(false)
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    document.addEventListener('touchstart', handleClickOutside)
-    document.addEventListener('keydown', handleKeyDown)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('touchstart', handleClickOutside)
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isMobileMenuOpen])
-
-  return (
-    <motion.aside
-      layout="position"
-      ref={dropdownRef}
-      className={`${styles.transport} ${
-        compact ? styles.transportCompact : styles.transportDocked
-      } ${styles.transportBottom}`}
-      transition={
-        prefersReducedMotion
-          ? { duration: 0 }
-          : { type: 'spring', stiffness: 220, damping: 30, mass: 0.9 }
-      }
-      aria-label="Page transport and navigation"
-    >
-      {/* Top Progress Runner */}
-      <div className={styles.transportProgressBar} aria-hidden="true">
-        <span style={{ transform: `scaleX(${progress})` }} />
-      </div>
-
-      {/* Upward Mobile Dropdown Menu for Landing Page Sections */}
-      {isMobileMenuOpen && (
-        <div className={styles.mobileDropdown} role="dialog" aria-modal="true">
-          <div className={styles.mobileDropdownHeader}>
-            <SilkscreenLabel>SECTIONS</SilkscreenLabel>
-            <button
-              type="button"
-              className={styles.mobileDropdownClose}
-              onClick={() => setIsMobileMenuOpen(false)}
-              aria-label="Close sections menu"
-            >
-              ✕
-            </button>
-          </div>
-          <div className={styles.mobileDropdownSections}>
-            {NAV_ITEMS.map((item, index) => {
-              const isActive = activeId === item.id
-              return (
-                <a
-                  key={item.id}
-                  href={`#${item.id}`}
-                  className={`${styles.mobileDropdownItem} ${
-                    isActive ? styles.mobileDropdownActive : ''
-                  }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  aria-current={isActive ? 'location' : undefined}
-                >
-                  <span className={styles.navItemIndex}>
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span className={styles.navItemLabel}>{item.label}</span>
-                  {isActive && <span className={styles.activeDot} />}
-                </a>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Desktop Telemetry / Counter (Hidden on mobile) */}
-      <div className={styles.transportStatus}>
-        <span className={styles.recordDot} aria-hidden="true" />
-        <span className={styles.liveBadge}>LIVE</span>
-        <div className={styles.fixedSegmentCounter}>
-          <SegmentCounter value={counter} />
-        </div>
-      </div>
-
-      {/* Desktop Section Navigation (Expands ONLY when hovering this group) */}
-      <div
-        className={`${styles.sectionNavWrapper} ${
-          compact && !isSectionHovered
-            ? styles.sectionNavWrapperCompact
-            : styles.sectionNavWrapperExpanded
-        }`}
-        onMouseEnter={() => setIsSectionHovered(true)}
-        onMouseLeave={() => setIsSectionHovered(false)}
-      >
-        <div className={styles.sectionNavGroup}>
-          {NAV_ITEMS.map((item, index) => {
-            const isActive = activeId === item.id
-            const isHidden = compact && !isSectionHovered && !isActive
-            return (
-              <a
-                key={item.id}
-                href={`#${item.id}`}
-                className={`${styles.navItem} ${isActive ? styles.navActive : ''} ${
-                  isHidden ? styles.navItemHidden : ''
-                }`}
-                aria-current={isActive ? 'location' : undefined}
-              >
-                <span className={styles.navItemIndex}>
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <span className={styles.navItemLabel}>{item.label}</span>
-                {isActive && compact && !isSectionHovered && (
-                  <span className={styles.expandChevron} aria-hidden="true">
-                    ▾
-                  </span>
-                )}
-              </a>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Mobile Active Section Dropdown Trigger */}
-      <button
-        type="button"
-        className={styles.mobileSectionTrigger}
-        onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-        aria-expanded={isMobileMenuOpen}
-        aria-label={`Current section: ${activeItem.label}. Tap to choose section.`}
-      >
-        <span className={styles.mobileActiveIndex}>
-          {String(activeIndex + 1).padStart(2, '0')}
-        </span>
-        <span className={styles.mobileActiveLabel}>{activeItem.label}</span>
-        <span
-          className={`${styles.mobileMenuChevron} ${
-            isMobileMenuOpen ? styles.chevronOpen : ''
-          }`}
-          aria-hidden="true"
-        >
-          ▲
-        </span>
-      </button>
-
-      {/* Hairline Divider between Section Nav and Direct Route Links */}
-      <div className={styles.transportDivider} aria-hidden="true" />
-
-      {/* Direct Route Links (Blog, Projects, Mixtape, Bookmarks) */}
-      <div className={styles.routeNavGroup}>
-        {ROUTE_ITEMS.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={styles.transportRouteItem}
-          >
-            <span className={styles.routeDot} /> {item.label}
-          </Link>
-        ))}
-      </div>
-    </motion.aside>
-  )
-}
-
-
 function Hero() {
   const [heroTitleTop, setHeroTitleTop] = useState('Hello')
   const [heroTitleBottom, setHeroTitleBottom] = useState('こんにちは')
@@ -480,22 +261,6 @@ function Hero() {
         </div>
         <div className={styles.heroAtmosphere} aria-hidden="true" />
 
-        <header className={styles.heroMinimalNav}>
-          <a
-            href="#home"
-            className={styles.wordmark}
-            aria-label="AH Studio home"
-          >
-            <VenLogo />
-          </a>
-          <span className={styles.heroNavRole}>
-            Frontend Engineer / Jakarta
-          </span>
-          <a href={`mailto:${EMAIL}`} className={styles.topContact}>
-            Contact
-          </a>
-        </header>
-
         <main className={styles.heroImmersiveContent}>
           <div className={styles.heroEditorialPanel}>
             <div className={styles.heroKicker}>
@@ -503,7 +268,7 @@ function Hero() {
               <i aria-hidden="true" />
               <span>Jakarta, Indonesia</span>
             </div>
-            <h1 className={styles.srOnly}>Aditya Himawan, Frontend Engineer</h1>
+            <h1 className={styles.srOnly}>Aditya Himaone, Frontend Engineer</h1>
             <strong className={styles.heroPanelTitle}>
               Built for the moment after launch.
             </strong>
@@ -2651,27 +2416,49 @@ function Contact() {
       <footer className={styles.footer}>
         <div className={styles.footerTransition} aria-hidden="true" />
 
-        <TangleFooter
-          className={styles.footerTangle}
-          lines={[...FOOTER_TANGLE_LINES]}
-          background="#0b0d0c"
-          ribbon="#e7e2d8"
-          textColor="#0b0d0c"
-          height={350}
-          seed={23}
-          label="Rotating portfolio footer signal"
-        />
+        <div className={styles.footerDeck}>
+          <div className={styles.footerPanel}>
+            <div className={styles.footerBrand}>
+              <span className={styles.footerBrandName}>Aditya Himaone</span>
+              <span className={styles.footerBrandMeta}>
+                © {currentYear} · adityahimaone.space
+              </span>
+            </div>
 
-        <div className={styles.footerMeta}>
-          <span>© {currentYear} Aditya Himawan</span>
-          <button
-            type="button"
-            className={styles.footerTopButton}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          >
-            <span>Back to top</span>
-            <ArrowUpRight size={14} strokeWidth={1.8} aria-hidden="true" />
-          </button>
+            <div className={styles.footerUnit}>
+              <span className={styles.footerEmitter} aria-hidden="true">
+                <span className={styles.footerEmitterRing} />
+                <span className={styles.footerEmitterCore} />
+              </span>
+              <p className={styles.footerMotto}>{FOOTER_MOTTO}</p>
+            </div>
+
+            <div className={styles.footerControls}>
+              <span className={styles.footerPower} aria-hidden="true" />
+              <button
+                type="button"
+                className={styles.footerTop}
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                aria-label="Back to top"
+              >
+                <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.footerSignal}>
+          <span className={styles.footerLead} aria-hidden="true" />
+          <TangleFooter
+            className={styles.footerTangle}
+            lines={[...FOOTER_TANGLE_LINES]}
+            background="#0b0d0c"
+            ribbon="#e7e2d8"
+            textColor="#0b0d0c"
+            height={350}
+            seed={23}
+            label="Rotating portfolio footer signal"
+          />
         </div>
       </footer>
     </section>
@@ -2681,52 +2468,9 @@ function Contact() {
 export default function Rack01LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null)
   const projectDividerRef = useRef<HTMLDivElement>(null)
-  const [progress, setProgress] = useState(0)
-  const [activeId, setActiveId] = useState('home')
   const [aboutIndex, setAboutIndex] = useState(0)
   const [aboutProgress, setAboutProgress] = useState(0)
   const [experienceIndex, setExperienceIndex] = useState(0)
-  const [transportCompact, setTransportCompact] = useState(false)
-
-  useEffect(() => {
-    let frame = 0
-    const updateProgress = () => {
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(() => {
-        const currentY = window.scrollY
-        const max = document.documentElement.scrollHeight - window.innerHeight
-
-        setProgress(max > 0 ? Math.min(1, Math.max(0, currentY / max)) : 0)
-        setTransportCompact(currentY >= 120)
-      })
-    }
-    updateProgress()
-    window.addEventListener('scroll', updateProgress, { passive: true })
-    window.addEventListener('resize', updateProgress)
-    return () => {
-      cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', updateProgress)
-      window.removeEventListener('resize', updateProgress)
-    }
-  }, [])
-
-  useEffect(() => {
-    const sections = Array.from(
-      rootRef.current?.querySelectorAll<HTMLElement>('[data-rack-section]') ??
-        [],
-    )
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-        if (visible?.target.id) setActiveId(visible.target.id)
-      },
-      { rootMargin: '-25% 0px -55% 0px', threshold: [0, 0.2, 0.5, 0.8] },
-    )
-    sections.forEach((section) => observer.observe(section))
-    return () => observer.disconnect()
-  }, [])
 
   useEffect(() => {
     let context: { revert: () => void } | undefined
@@ -2791,9 +2535,6 @@ export default function Rack01LandingPage() {
           const panel = hero.querySelector<HTMLElement>(
             `.${styles.heroEditorialPanel}`,
           )!
-          const nav = hero.querySelector<HTMLElement>(
-            `.${styles.heroMinimalNav}`,
-          )!
           const heroRail = hero.querySelector<HTMLElement>(
             `.${styles.heroBottomRail}`,
           )!
@@ -2849,7 +2590,7 @@ export default function Rack01LandingPage() {
             )
 
             .fromTo(
-              [nav, heroRail],
+              [heroRail],
               { opacity: 0 },
               { opacity: 1, duration: 0.55, ease: 'power2.out' },
               0.94,
@@ -2878,7 +2619,6 @@ export default function Rack01LandingPage() {
               },
               0.04,
             )
-            .to(nav, { opacity: 0.34, duration: 0.2 }, 0.06)
             .to(
               heroRail,
               {
@@ -3599,6 +3339,7 @@ export default function Rack01LandingPage() {
       <a className={styles.skipLink} href="#about">
         Skip to content
       </a>
+      <TopBar />
       <Hero />
       <About
         selected={aboutIndex}
@@ -3615,11 +3356,6 @@ export default function Rack01LandingPage() {
       />
       <Work />
       <Contact />
-      <TransportBridge
-        progress={progress}
-        activeId={activeId}
-        compact={transportCompact}
-      />
     </div>
   )
 }

@@ -13,6 +13,7 @@ import './globals.css'
 import { ThemeProvider } from 'next-themes'
 import { AudioProvider } from '@/features/landing-page/spotify/audio-context'
 import { MusicPlayer } from '@/features/landing-page/spotify/music-player'
+import { MagneticDock } from '@/features/layout/components/magnetic-dock'
 import { Analytics } from '@vercel/analytics/next'
 
 export const viewport: Viewport = {
@@ -132,6 +133,7 @@ export default function RootLayout({
             <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-geist)]">
               <div className="relative flex-1">{children}</div>
               <MusicPlayer />
+              <MagneticDock />
             </div>
           </AudioProvider>
         </ThemeProvider>

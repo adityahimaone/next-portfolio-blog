@@ -1,6 +1,6 @@
 export { Header } from './components/header'
 export { HeaderV2 } from './components/header-v2'
-export { HeaderDaw as SubpageHeader } from './components/header-daw'
-export { HeaderDaw } from './components/header-daw'
+export { TopBar } from './components/top-bar'
 export { Footer } from './components/footer'
 export { SignalArchiveHeader } from './components/signal-archive'
+export { MagneticDock } from './components/magnetic-dock'

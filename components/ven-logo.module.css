@@ -1,0 +1,36 @@
+.venLogo {
+  display: block;
+  color: #ff5a1f;
+  filter: drop-shadow(0 0 4px rgba(255, 90, 31, 0.5));
+}
+
+.venSlat {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ven-turn 2.6s infinite;
+  animation-delay: calc(var(--i) * -0.289s);
+}
+
+@keyframes ven-turn {
+  0% {
+    transform: scaleY(1);
+    opacity: 1;
+    animation-timing-function: ease-in;
+  }
+  50% {
+    transform: scaleY(0.02);
+    opacity: 0.5;
+    animation-timing-function: ease-out;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .venSlat {
+    animation: none;
+    transform: scaleY(calc(0.15 + 0.85 * (1 - var(--i) / 9)));
+  }
+}

@@ -11,6 +11,7 @@ import {
 import { Room } from './room'
 import { Dock } from './dock'
 import { DockSlotProvider } from './dock-slot'
+import { FloatingThemeToggle } from '@/features/layout'
 import styles from './booth.module.css'
 
 /**
@@ -77,6 +78,7 @@ export function BoothShell({ hue, children }: BoothShellProps) {
         <div className={styles.shell} data-booth>
           {children}
         </div>
+        <FloatingThemeToggle />
         <Dock />
       </ChannelContext.Provider>
     </DockSlotProvider>

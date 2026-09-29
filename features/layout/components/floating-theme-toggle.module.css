@@ -1,0 +1,77 @@
+/*
+  Sits above the dock (z-index 40) but below nothing that owns the viewport
+  edges. The booth pages reserve `padding-top: 5.5rem` in booth.module.css, so
+  a pill in this corner never collides with PageHeader.
+*/
+.toggle {
+  position: fixed;
+  z-index: 60;
+  top: clamp(12px, 2vw, 20px);
+  right: clamp(12px, 2vw, 20px);
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: auto;
+  border-radius: 999px;
+  color: var(--booth-ink);
+  transition:
+    transform var(--booth-dur-med, 360ms) var(--booth-ease, ease),
+    color 200ms ease;
+}
+
+/*
+  For a parent that already reserves the row — the top bar. Only the
+  positioning is dropped; the surface, radius and interaction are identical,
+  so the control reads as the same object in both places.
+*/
+.inFlow {
+  position: static;
+  z-index: auto;
+  top: auto;
+  right: auto;
+  flex: none;
+}
+
+.toggle:hover {
+  transform: scale(1.06);
+}
+
+.toggle:active {
+  transform: scale(0.94);
+}
+
+/* Chromium-only displacement, gated on capability by `useRefraction`. */
+.refract {
+  -webkit-backdrop-filter: url('#glass-refract') var(--glass-blur);
+  backdrop-filter: url('#glass-refract') var(--glass-blur);
+}
+
+/*
+  `DarkInner` paints a 1em crescent. It must not inherit the `::before`
+  specular, so the button itself stays transparent and the glass surface
+  underneath is the only thing that lightens.
+*/
+.inner {
+  background: none;
+  color: inherit;
+}
+
+.inner:hover {
+  color: var(--booth-ink);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .toggle {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .toggle {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

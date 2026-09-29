@@ -9,6 +9,10 @@ import {
 } from 'motion/react'
 import { Screw } from '@/components/screw'
 import { BrokenLightText } from '@/components/broken-light-text'
+import {
+  BOOT_ORDER_FALLBACK,
+  heroSweepIndices,
+} from '@/features/landing-page/lib/hero-sweep-order'
 import { cn } from '@/lib/utils'
 
 const devices = [
@@ -125,8 +129,10 @@ export function DawHero({
   const [baseDelay, setBaseDelay] = useState(0)
   const [activeDevice, setActiveDevice] = useState<string | null>(null)
   const [bootIndex, setBootIndex] = useState<number | null>(0)
+  const [bootOrder, setBootOrder] = useState<readonly number[]>(BOOT_ORDER_FALLBACK)
   const shouldReduceMotion = useReducedMotion()
   const containerRef = useRef<HTMLDivElement>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
   const hasManualInteraction = useRef(false)
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -148,21 +154,39 @@ export function DawHero({
     setBaseDelay(0)
   }, [])
 
+  // The rack is hand-authored rather than row-major, so array order is a
+  // zig-zag. Measuring the real layout is what makes the sweep read as
+  // left-to-right, and it stays correct across the 8- and 12-column layouts.
+  useEffect(() => {
+    const grid = gridRef.current
+    if (!grid) return
+
+    const frame = requestAnimationFrame(() => {
+      setBootOrder(
+        heroSweepIndices(
+          Array.from(grid.querySelectorAll<HTMLElement>('[data-hero-device]')),
+        ),
+      )
+    })
+
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
   useEffect(() => {
     if (bootIndex === null || shouldReduceMotion) return
 
     const stepTimer = window.setTimeout(() => {
       setBootIndex((current) => {
-        if (current === null || current >= devices.length - 1) return null
+        if (current === null || current >= bootOrder.length - 1) return null
         return current + 1
       })
     }, 230)
 
     return () => window.clearTimeout(stepTimer)
-  }, [bootIndex, shouldReduceMotion])
+  }, [bootIndex, bootOrder.length, shouldReduceMotion])
 
   const poweredDevice =
-    bootIndex === null ? activeDevice : devices[bootIndex]?.id
+    bootIndex === null ? activeDevice : devices[bootOrder[bootIndex] ?? -1]?.id
 
   return (
     <div
@@ -173,6 +197,7 @@ export function DawHero({
       )}
     >
       <motion.div
+        ref={gridRef}
         style={backgroundOnly ? { y: wallY } : { y: wallY, opacity }}
         className="absolute inset-0 grid grid-cols-8 grid-rows-12 sm:grid-cols-12 sm:grid-rows-8"
       >

@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { FolderSearch, Plus, RefreshCw, Shuffle, Unlock, X } from 'lucide-react'
 import type { Bookmark, BookmarkCategory, BookmarkFormData } from '../types'
 import { BOOKMARK_CATEGORIES, channelColor } from '../constants/categories'
-import { getFaviconUrl } from '../utils/favicon'
 import { FilterRow, PageHeader, useRoomChannel } from '@/components/booth'
 import { useDockSlot } from '@/components/booth/dock-slot'
+import { FaviconCell } from '../components/favicon-cell'
 import { TrackRow } from '../components/track-row'
 import { BookmarkAdminModal } from '../components/bookmark-admin-modal'
 import { useListKeys, useGlobalShortcuts } from '../hooks/use-list-keys'
@@ -309,11 +309,11 @@ export function BookmarksPage({
                       title={bookmark.title}
                       className={styles.pinnedTile}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={getFaviconUrl(bookmark.url, bookmark.faviconUrl)}
+                      <FaviconCell
+                        url={bookmark.url}
+                        faviconUrl={bookmark.faviconUrl}
                         alt={bookmark.title}
-                        loading="lazy"
+                        className={styles.pinnedFavicon}
                       />
                       <span className={styles.pinnedStar} aria-hidden="true">
                         ★

@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes'
 
 import { VenLogo } from '@/components/ven-logo'
 import { DarkInner } from '@/src/components/ui/dark-inner'
+import { FloatingThemeToggle } from './floating-theme-toggle'
 import { cn } from '@/lib/utils'
 
 import styles from './top-bar.module.css'
@@ -35,16 +36,10 @@ export function TopBar() {
           <VenLogo />
         </Link>
 
-        <DarkInner
-          toggled={isDark}
-          onClick={() => setTheme(isDark ? 'light' : 'dark')}
-          aria-label="Switch color theme"
-          className={cn(
-            PILL_CLASS,
-            styles.toggle,
-            'hover:text-foreground size-9 justify-center text-lg',
-          )}
-        />
+        {/* Same control the booth routes render, so the two are one
+            component rather than two lookalikes. `inFlow` drops the fixed
+            positioning so it lands in the top bar's flex row. */}
+        <FloatingThemeToggle inFlow className={cn(styles.toggle, 'size-9')} />
       </div>
     )
   }

@@ -31,7 +31,7 @@ export function NowCentre({
 
   return (
     <div className={styles.centre}>
-      {/* Top band: 1:3 — artwork, title, album. */}
+      {/* Top band: 1fr of the 1fr/2fr split — artwork, metadata. */}
       <div className={styles.centreTop}>
         <motion.div
           key={`art-${track.id}`}
@@ -78,7 +78,7 @@ export function NowCentre({
         </motion.div>
       </div>
 
-      {/* Bottom band: 2:3 — the running lyric view. */}
+      {/* Bottom band: 2fr — the running lyric view. */}
       <div className={styles.lyricStage}>
         <ul className={styles.lyricLines} aria-label="Running notes">
           {track.lyrics.map((line, index) => {

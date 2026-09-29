@@ -4,7 +4,8 @@ import { useRef, useState } from 'react'
 import { ArrowUpRight, Pencil, Play, Star, Trash2 } from 'lucide-react'
 import type { Bookmark } from '../types'
 import { channelColor } from '../constants/categories'
-import { extractDomain, getFaviconUrl } from '../utils/favicon'
+import { extractDomain } from '../utils/favicon'
+import { FaviconCell } from './favicon-cell'
 import { SitePeek } from './site-peek'
 import styles from '../library.module.css'
 
@@ -60,12 +61,7 @@ export function TrackRow({
         </span>
 
         <span className={styles.art}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={getFaviconUrl(bookmark.url, bookmark.faviconUrl)}
-            alt=""
-            loading="lazy"
-          />
+          <FaviconCell url={bookmark.url} faviconUrl={bookmark.faviconUrl} />
         </span>
 
         <span className={styles.name}>

@@ -13,6 +13,7 @@ import {
   type MotionValue,
 } from 'motion/react'
 import { NAV_ITEMS, isActiveNavItem } from '@/components/booth/nav-items'
+import { useInterfaceVisibility } from '@/hooks/use-hide-interface'
 import { cn } from '@/lib/utils'
 
 type DockItem = (typeof NAV_ITEMS)[number]
@@ -49,9 +50,14 @@ export function MagneticDock() {
   const pathname = usePathname()
   const mouseX = useMotionValue(Infinity)
   const shouldReduceMotion = useReducedMotion()
+  const interfaceVisibility = useInterfaceVisibility()
 
   if (isBoothRoute(pathname)) return null
   if (!isDockRoute(pathname)) return null
+  // The mixtape's stealth mode. Unmounts outright rather than fading, so the
+  // dock's backdrop-filter layer is gone instead of sitting invisible over
+  // the page still costing a compositing pass.
+  if (interfaceVisibility === 'hidden') return null
 
   const active = !shouldReduceMotion
 

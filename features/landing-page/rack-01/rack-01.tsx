@@ -11,6 +11,7 @@ import {
   Square,
 } from 'lucide-react'
 import { Screw } from '@/components/screw'
+import { ScanLoader } from '@/components/scan-loader'
 import { DawHero } from '../components/hero'
 import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
 import styles from './rack-01.module.css'
@@ -23,6 +24,7 @@ import {
   registerSmoothScroll,
   unregisterSmoothScroll,
 } from '../lib/smooth-scroll'
+import { heroSweepIndices } from '../lib/hero-sweep-order'
 
 const RESUME_URL =
   'https://drive.google.com/file/d/17x3GuEkZxbt9ZeLilXx1ShBHV_CZTfSq/view?usp=sharing'
@@ -2061,8 +2063,7 @@ function Contact() {
 
             <div className={styles.footerUnit}>
               <span className={styles.footerEmitter} aria-hidden="true">
-                <span className={styles.footerEmitterRing} />
-                <span className={styles.footerEmitterCore} />
+                <ScanLoader className={styles.footerEmitterScan} />
               </span>
               <p className={styles.footerMotto}>{FOOTER_MOTTO}</p>
             </div>
@@ -2167,6 +2168,13 @@ export default function Rack01LandingPage() {
           const supportingModules = modules.filter(
             (module) => module.dataset.rackAnchor !== 'true',
           )
+          // Same visual order the wall powers on in, so the tiles settle in
+          // the direction the eye is already travelling. Passed as the target
+          // rather than as a stagger option: the rack is a hand-authored
+          // layout, so the DOM order is a zig-zag and needs re-sorting first.
+          const heroSweepOrder = heroSweepIndices(modules).map(
+            (index) => modules[index],
+          )
 
           const name = hero.querySelector<HTMLElement>(
             `.${styles.heroBackdropName}`,
@@ -2204,14 +2212,15 @@ export default function Rack01LandingPage() {
               },
             )
             .fromTo(
-              modules,
+              heroSweepOrder,
               {
-                xPercent: (index) =>
-                  Number(modules[index]?.dataset.collapseX ?? 0) * 0.72,
-                yPercent: (index) =>
-                  Number(modules[index]?.dataset.collapseY ?? 0) * 0.72,
-                rotation: (index) =>
-                  Number(modules[index]?.dataset.collapseRotation ?? 0) * 0.7,
+                xPercent: (_, element) =>
+                  Number((element as HTMLElement).dataset.collapseX ?? 0) * 0.72,
+                yPercent: (_, element) =>
+                  Number((element as HTMLElement).dataset.collapseY ?? 0) * 0.72,
+                rotation: (_, element) =>
+                  Number((element as HTMLElement).dataset.collapseRotation ?? 0) *
+                  0.7,
                 scale: 0.88,
                 opacity: 0,
               },
@@ -2222,7 +2231,7 @@ export default function Rack01LandingPage() {
                 scale: 1,
                 opacity: 1,
                 duration: 1.25,
-                stagger: { each: 0.045, from: 'edges' },
+                stagger: { each: 0.045, from: 'start' },
                 ease: 'expo.out',
               },
               0.06,

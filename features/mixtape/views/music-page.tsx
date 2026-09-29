@@ -17,7 +17,7 @@ import {
 } from '../components'
 import { useAudioFrequency } from '../hooks/use-audio-frequency'
 import { cn } from '@/lib/utils'
-import { TopBar } from '@/features/layout'
+import { setInterfaceVisibility } from '@/hooks/use-hide-interface'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import { Eye, EyeOff, Home } from 'lucide-react'
@@ -40,24 +40,21 @@ export function MusicPageView() {
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [isScreenExpanded, setIsScreenExpanded] = useState(false)
-  const [isNavbarVisible, setIsNavbarVisible] = useState(true)
+  // Stealth mode. Owned here and published to the document, because the
+  // magnetic dock that has to stand down with it lives in the root layout —
+  // a different React tree, so no local ref or querySelector can reach it.
+  const [isInterfaceVisible, setIsInterfaceVisible] = useState(true)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Handle Navbar Visibility (Stealth Mode)
   useEffect(() => {
-    const header = document.querySelector('header')
-    if (header) {
-      header.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-      header.style.transform = isNavbarVisible
-        ? 'translateY(0)'
-        : 'translateY(-120%)'
-      header.style.opacity = isNavbarVisible ? '1' : '0'
-      header.style.pointerEvents = isNavbarVisible ? 'auto' : 'none'
-    }
-  }, [isNavbarVisible])
+    setInterfaceVisibility(isInterfaceVisible ? 'visible' : 'hidden')
+  }, [isInterfaceVisible])
+
+  // Navigating away with the interface hidden would take the dock with it.
+  useEffect(() => () => setInterfaceVisibility('visible'), [])
 
   // Simulated frequency data for YouTube
   useEffect(() => {
@@ -148,30 +145,30 @@ export function MusicPageView() {
     >
       {/* Bottom Left Utility Controls - Vertical Stack */}
       <div className="fixed bottom-10 left-6 z-[100] flex flex-col-reverse items-center gap-4">
-        {/* Toggle Navbar Button */}
+        {/* Toggle Interface Button */}
         <div className="group relative">
           <button
-            onClick={() => setIsNavbarVisible(!isNavbarVisible)}
+            onClick={() => setIsInterfaceVisible(!isInterfaceVisible)}
             className={cn(
               'flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 shadow-lg backdrop-blur-md transition-all',
-              isNavbarVisible
+              isInterfaceVisible
                 ? mounted && theme === 'light'
                   ? 'border-zinc-200 bg-white/80 text-zinc-600 shadow-sm hover:bg-zinc-50'
                   : 'bg-zinc-900/50 text-zinc-500 hover:bg-zinc-800'
                 : 'border-amber-500/20 bg-amber-500/10 text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-amber-500/20',
             )}
           >
-            {isNavbarVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+            {isInterfaceVisible ? <Eye size={16} /> : <EyeOff size={16} />}
           </button>
           {/* Tooltip */}
           <div className="pointer-events-none absolute left-full ml-3 rounded-md border border-white/5 bg-[#18181b] px-2 py-1 text-[9px] font-bold tracking-widest whitespace-nowrap text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100">
-            {isNavbarVisible ? 'HIDE INTERFACE' : 'SHOW INTERFACE'}
+            {isInterfaceVisible ? 'HIDE INTERFACE' : 'SHOW INTERFACE'}
           </div>
         </div>
 
-        {/* Home Button (Visible only when Navbar is hidden) */}
+        {/* Home Button (Visible only when the interface is hidden) */}
         <AnimatePresence>
-          {!isNavbarVisible && (
+          {!isInterfaceVisible && (
             <motion.div
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -198,7 +195,6 @@ export function MusicPageView() {
         </AnimatePresence>
       </div>
 
-      <TopBar />
       <div
         className={cn(
           'pointer-events-none fixed inset-0 opacity-100 transition-opacity duration-700',

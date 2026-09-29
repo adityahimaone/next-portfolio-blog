@@ -234,12 +234,6 @@
   transform: translateY(-2px);
 }
 
-.pinnedTile img {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
-}
-
 /* The star overhangs the tile by 4px on both axes. It was positioned at
    top/right -4px inside a container that scrolls, which clipped the top and
    right edges. Pulling it inside the tile's own bounds and inset to the edge
@@ -421,7 +415,20 @@
   overflow: hidden;
 }
 
-.art img {
+/* All three favicon states share one centred cell, so swapping between them
+   never reflows the row. The image stays mounted underneath the loader and
+   the fallback rather than being replaced, which keeps its decode and its
+   hover transition. */
+.faviconCell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.faviconImg {
+  grid-area: 1 / 1;
   width: 20px;
   height: 20px;
   object-fit: contain;
@@ -432,8 +439,33 @@
     opacity var(--dur-fast) ease;
 }
 
-.track:hover .art img,
-.track[data-active='true'] .art img {
+.faviconLoader {
+  grid-area: 1 / 1;
+  width: 18px;
+  height: 18px;
+  color: var(--booth-ink-dim);
+}
+
+.faviconFallback {
+  grid-area: 1 / 1;
+  width: 15px;
+  height: 15px;
+  color: var(--booth-ink-dim);
+  opacity: 0.7;
+}
+
+/* Hidden until it actually has pixels: a not-yet-loaded <img> would otherwise
+   render as a broken-image box on top of the loader. */
+.faviconImg[data-state='loading'] {
+  opacity: 0;
+}
+
+.faviconImg[data-state='error'] {
+  display: none;
+}
+
+.track:hover .faviconImg,
+.track[data-active='true'] .faviconImg {
   filter: none;
   opacity: 1;
 }
@@ -897,4 +929,23 @@ textarea.input {
 .submit:disabled {
   opacity: 0.55;
   cursor: progress;
+}
+
+/* ─── Pinned favicon sizing ────────────────────────────────────
+   Appended at the end deliberately. The base `.faviconImg` etc. are declared
+   lower down the sheet than the pinned tile's own block, so a rule up there
+   loses on order and the 64px tile ends up with a 20px icon. */
+.pinnedFavicon .faviconImg {
+  width: 32px;
+  height: 32px;
+}
+
+.pinnedFavicon .faviconLoader {
+  width: 28px;
+  height: 28px;
+}
+
+.pinnedFavicon .faviconFallback {
+  width: 22px;
+  height: 22px;
 }

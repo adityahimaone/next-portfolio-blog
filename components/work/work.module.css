@@ -651,6 +651,9 @@
 .centreArtWrap {
   display: grid;
   min-width: 0;
+  /* Without this the wrap resolves `height: 100%` against an indefinite row
+     and grows to the art's own size, so the art escapes the band. */
+  min-height: 0;
   place-items: center;
   height: 100%;
 }
@@ -658,15 +661,20 @@
 .centreArt {
   position: relative;
   overflow: hidden;
-  width: 100%;
+  /* Sized by the space the band actually has, not by the viewport. `height:
+     100%` plus `aspect-ratio` derives the width, and `max-width` still caps it,
+     so the art can never outgrow its row and cross the divider below it. */
+  width: auto;
+  height: 100%;
   max-width: min(22vh, 190px);
+  max-height: 100%;
   padding: 0;
   aspect-ratio: 1 / 1;
   border: 0;
   border-radius: 10px;
   background: #0e1110;
   box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.55),
+    0 8px 18px rgba(0, 0, 0, 0.5),
     inset 0 0 0 1px rgba(255, 255, 255, 0.12);
   cursor: pointer;
   transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
@@ -740,9 +748,16 @@
 .lyricLines {
   display: grid;
   width: 100%;
-  gap: clamp(6px, 0.9vh, 12px);
+  /* Six lines at a vh-derived size can exceed the 2fr band. A flex child with
+     no min-height floors itself at content height and overflows both ends of a
+     centred stage, so the block is pinned to the stage's own box and the type
+     scale is capped to keep it inside. */
+  min-height: 0;
+  max-height: 100%;
+  gap: clamp(5px, 0.8vh, 11px);
   margin: 0;
   padding: 0;
+  overflow: hidden;
   list-style: none;
 }
 
@@ -790,12 +805,21 @@
   background: rgba(255, 255, 255, 0.035);
 }
 
+/* Mirrors .sidebarHead: the count was an inline box flush against the title,
+   rendering as "Top Artists6". A flex row with a gap separates them, and
+   `align-items: baseline` keeps the 9px count optically aligned with the
+   14px heading rather than centring it against the cap height. */
 .artistHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
   padding: 12px 14px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .artistTitle {
+  min-width: 0;
   font-family: var(--font-space-grotesk);
   font-size: 14px;
   font-weight: 650;
@@ -1127,6 +1151,18 @@
     grid-template-rows: auto auto;
   }
 
+  /* Rows are `auto` here, so `height: 100%` on the art has nothing to resolve
+     against. Pin a definite size for the stacked layout instead. */
+  .centreArtWrap {
+    height: auto;
+  }
+
+  .centreArt {
+    width: auto;
+    height: auto;
+    max-height: none;
+  }
+
   .centreTop {
     grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
   }
@@ -1152,8 +1188,12 @@
     text-align: center;
   }
 
+  /* Width-driven at this size: the stacked column has no band height to
+     measure, so the viewport width is what bounds the art. */
   .centreArt {
-    max-width: min(56vw, 240px);
+    width: min(56vw, 240px);
+    height: auto;
+    max-width: none;
   }
 
   .lyricLine {

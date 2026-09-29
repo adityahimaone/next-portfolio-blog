@@ -28,6 +28,17 @@ const LinerNotes = dynamic(
 const COUNT = LIBRARY_TRACKS.length
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
 
+/**
+ * Scroll distance allotted to each project, in viewport heights.
+ *
+ * This was 55 — about 495px of scroll per project, six records deep. The
+ * reader had to travel a long way to advance one track, and by the time they
+ * reached the credits there was nothing left to read. 30 keeps every project
+ * fully scrubbable (all six lyric lines still land) while making the section
+ * feel like a transport rather than a scroll marathon.
+ */
+const SCROLL_PER_TRACK = 30
+
 export function Work() {
   const sectionRef = useRef<HTMLElement>(null)
   const coverButtonRef = useRef<HTMLButtonElement>(null)
@@ -126,7 +137,7 @@ export function Work() {
         {
           '--work-accent': track.palette.accent,
           ...(scrollDriven
-            ? { height: `calc(100svh + ${COUNT * 55}svh)` }
+            ? { height: `calc(100svh + ${COUNT * SCROLL_PER_TRACK}svh)` }
             : {}),
         } as React.CSSProperties
       }

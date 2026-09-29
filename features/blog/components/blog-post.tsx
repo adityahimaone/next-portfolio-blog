@@ -9,7 +9,7 @@ import {
   useSpring,
   useTransform,
 } from 'motion/react'
-import { ChevronLeft, ChevronRight, List, X } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, List, X } from 'lucide-react'
 import type { BlogMeta } from '../lib/blog'
 import { Cover, useDockSlot, useRoomChannel } from '@/components/booth'
 import {
@@ -227,6 +227,19 @@ export function BlogPost({
   return (
     <>
       <main className={styles.page} id="main-content">
+        <nav className={styles.crumbs} aria-label="Breadcrumb">
+          <Link href="/blog" className={styles.crumbBack}>
+            <ArrowLeft size={14} aria-hidden="true" />
+            All notes
+          </Link>
+          <span className={styles.crumbSep} aria-hidden="true">
+            /
+          </span>
+          <span className={styles.crumbHere} aria-current="page">
+            {meta.title}
+          </span>
+        </nav>
+
         <div className={styles.reader}>
           <article
             ref={articleRef}

@@ -2,26 +2,21 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  FolderSearch,
-  Lock,
-  Plus,
-  RefreshCw,
-  Shuffle,
-  Unlock,
-  X,
-} from 'lucide-react'
+import { FolderSearch, Plus, RefreshCw, Shuffle, Unlock, X } from 'lucide-react'
 import type { Bookmark, BookmarkCategory, BookmarkFormData } from '../types'
 import { BOOKMARK_CATEGORIES, channelColor } from '../constants/categories'
 import { getFaviconUrl } from '../utils/favicon'
-import { BoothControl, PageHeader, useRoomChannel } from '@/components/booth'
+import { FilterRow, PageHeader, useRoomChannel } from '@/components/booth'
 import { useDockSlot } from '@/components/booth/dock-slot'
 import { TrackRow } from '../components/track-row'
 import { BookmarkAdminModal } from '../components/bookmark-admin-modal'
 import { useListKeys, useGlobalShortcuts } from '../hooks/use-list-keys'
 import styles from '../library.module.css'
 
-const DEFAULT_HUE = '#ff5a1f'
+// The crate's own wash. It matches the /bookmarks entry in the booth layout so
+// the room does not flip colour on mount, and it doubles as the 'All' channel
+// colour — the one the room falls back to before a channel is picked.
+const DEFAULT_HUE = '#2dd4bf'
 
 /** Featured first, then alphabetical — an index reads best in a fixed order. */
 function indexOrder(a: Bookmark, b: Bookmark): number {
@@ -49,6 +44,17 @@ export function BookmarksPage({
   const [channel, setChannel] = useState<BookmarkCategory>('All')
 
   const searchRef = useRef<HTMLInputElement>(null)
+
+  // One listener for the whole list. The row preview needs a pointer that can
+  // rest before it opens, which touch never provides.
+  const [canHover, setCanHover] = useState(false)
+  useEffect(() => {
+    const query = window.matchMedia('(hover: hover)')
+    setCanHover(query.matches)
+    const onChange = (event: MediaQueryListEvent) => setCanHover(event.matches)
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
 
   useEffect(() => {
     fetch('/api/bookmarks')
@@ -129,11 +135,7 @@ export function BookmarksPage({
   }, [tracks])
 
   useDockSlot(
-    <button
-      type="button"
-      onClick={shuffle}
-      className={styles.chip}
-    >
+    <button type="button" onClick={shuffle} className={styles.chip}>
       <Shuffle size={15} aria-hidden="true" />
       Shuffle
       <span className={styles.playlistCount}>{tracks.length}</span>
@@ -149,6 +151,13 @@ export function BookmarksPage({
         } else if (key === 'p') router.push('/projects')
         else if (key === 'b') router.push('/blog')
         else if (key === 'l') router.push('/bookmarks')
+        // The admin panel has no visible entry point; `g` then `e` reaches it.
+        // The modal still asks for the password, so the chord is only a
+        // shortcut, never the credential.
+        else if (key === 'e') {
+          setEditing(null)
+          setIsAdminOpen(true)
+        }
       },
       [router],
     ),
@@ -216,77 +225,24 @@ export function BookmarksPage({
         <div className={styles.library}>
           <aside className={`${styles.sidebar} glass`} aria-label="Playlists">
             <p className={styles.sidebarTitle}>Playlists</p>
-            {channels.map((name) => (
-              <button
-                key={name}
-                type="button"
-                aria-pressed={channel === name}
-                onClick={() => {
-                  setChannel(name)
-                  setActive(0)
-                }}
-                className={styles.playlist}
-                style={{
-                  ['--led' as string]:
-                    name === 'All' ? DEFAULT_HUE : channelColor(name),
-                }}
-              >
-                <span className={styles.playlistLed} aria-hidden="true" />
-                <span className={styles.playlistName}>{name}</span>
-                <span className={styles.playlistCount}>
-                  {name === 'All' ? bookmarks.length : (counts.get(name) ?? 0)}
-                </span>
-              </button>
-            ))}
-
-            <div className={styles.adminRow} style={{ marginTop: '0.75rem' }}>
-              {isAdmin ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditing(null)
-                      setIsAdminOpen(true)
-                    }}
-                    className={`${styles.adminButton} ${styles.solidButton}`}
-                  >
-                    <Plus size={15} aria-hidden="true" />
-                    Add
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsAdmin(false)}
-                    className={styles.adminButton}
-                    title="Lock the panel"
-                  >
-                    <Unlock size={14} aria-hidden="true" />
-                    adityahimaone
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsAdminOpen(true)}
-                  className={styles.adminButton}
-                >
-                  <Lock size={14} aria-hidden="true" />
-                  Admin
-                </button>
-              )}
-            </div>
-          </aside>
-
-          <div>
-            <div className={styles.chipRow} role="group" aria-label="Channels">
+            <div className={styles.sidebarScroll}>
               {channels.map((name) => (
                 <button
                   key={name}
                   type="button"
                   aria-pressed={channel === name}
-                  onClick={() => setChannel(name)}
-                  className={styles.chip}
+                  onClick={() => {
+                    setChannel(name)
+                    setActive(0)
+                  }}
+                  className={styles.playlist}
+                  style={{
+                    ['--led' as string]:
+                      name === 'All' ? DEFAULT_HUE : channelColor(name),
+                  }}
                 >
-                  {name}
+                  <span className={styles.playlistLed} aria-hidden="true" />
+                  <span className={styles.playlistName}>{name}</span>
                   <span className={styles.playlistCount}>
                     {name === 'All'
                       ? bookmarks.length
@@ -294,6 +250,50 @@ export function BookmarksPage({
                   </span>
                 </button>
               ))}
+            </div>
+
+            {isAdmin && (
+              <div className={styles.adminRow} style={{ marginTop: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing(null)
+                    setIsAdminOpen(true)
+                  }}
+                  className={`${styles.adminButton} ${styles.solidButton}`}
+                >
+                  <Plus size={15} aria-hidden="true" />
+                  Add
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAdmin(false)}
+                  className={styles.adminButton}
+                  title="Lock the panel"
+                >
+                  <Unlock size={14} aria-hidden="true" />
+                  Lock
+                </button>
+              </div>
+            )}
+          </aside>
+
+          <div>
+            <div className={styles.chipRow}>
+              <FilterRow
+                label="Channels"
+                value={channel}
+                onChange={(next) => {
+                  setChannel((next || 'All') as BookmarkCategory)
+                  setActive(0)
+                }}
+                options={channels.map((name) => ({
+                  value: name,
+                  label: name,
+                  count:
+                    name === 'All' ? bookmarks.length : (counts.get(name) ?? 0),
+                }))}
+              />
             </div>
 
             {pinned.length > 0 && (
@@ -383,6 +383,7 @@ export function BookmarksPage({
                       index={index}
                       active={index === active}
                       isAdmin={isAdmin}
+                      canHover={canHover}
                       onEdit={() => {
                         setEditing(bookmark)
                         setIsAdminOpen(true)

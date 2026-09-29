@@ -172,12 +172,8 @@
   font-size: 0.625rem;
 }
 
-.genres {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
+/* .genres moved to the shared FilterRow; .genre stays, because the liner sheet
+   still uses it for the release's own genre stamp. */
 .genre {
   display: inline-flex;
   min-height: 40px;

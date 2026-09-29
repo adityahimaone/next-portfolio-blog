@@ -1264,9 +1264,16 @@
 
 :root {
   /* Booth radii are prefixed: the SIGNAL archive tokens of the same name are
-     still in use by the landing page chrome and mean different sizes. */
+     still in use by the landing page chrome and mean different sizes.
+
+     `--booth-r-control` is the pill — the general control silhouette, used by
+     buttons and chips throughout the booth. Filter rows deliberately do NOT use
+     it: a 999px radius on a 40px-tall filter chip rounds it into a lozenge,
+     which is a different silhouette from the 12px card chips they sit beside.
+     Filter rows use `--booth-r-filter` so all three pages agree. */
   --booth-r-panel: 20px;
   --booth-r-control: 999px;
+  --booth-r-filter: 12px;
   --booth-r-cover: 14px;
   --booth-dur-med: 360ms;
   --booth-ease: cubic-bezier(0.22, 1, 0.36, 1);

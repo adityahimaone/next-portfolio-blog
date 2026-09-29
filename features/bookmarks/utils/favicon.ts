@@ -4,9 +4,10 @@
  */
 export function extractDomain(url: string): string {
   try {
-    const formattedUrl = url.startsWith('http://') || url.startsWith('https://') 
-      ? url 
-      : `https://${url}`
+    const formattedUrl =
+      url.startsWith('http://') || url.startsWith('https://')
+        ? url
+        : `https://${url}`
     const parsed = new URL(formattedUrl)
     return parsed.hostname.replace(/^www\./, '')
   } catch {

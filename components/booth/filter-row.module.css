@@ -1,0 +1,81 @@
+/* The shared category filter row: /blog tags, /projects genres, /bookmarks
+   channels. One radius token, one active treatment, one surface. */
+
+.row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scroller {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.1rem;
+  scrollbar-width: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  display: inline-flex;
+  min-height: 40px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--glass-edge);
+  /* 12px, not the 999px control pill: a pill on a 40px chip is a lozenge, and
+     it did not match the card chips these sit beside. */
+  border-radius: var(--booth-r-filter);
+  background: var(--flat-fill);
+  color: var(--booth-ink-muted);
+  font: var(--silkscreen);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
+}
+
+.chip:hover {
+  border-color: color-mix(in srgb, var(--primary) 60%, var(--glass-edge));
+  background: var(--flat-fill-hover);
+  color: var(--booth-ink);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* The one lit state in the booth, matching .booth-control[data-on]. */
+.chip[data-on] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.chip[data-on]:hover {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  filter: brightness(1.08);
+}
+
+.count {
+  opacity: 0.7;
+  font-size: 0.625rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    transition: none;
+  }
+}

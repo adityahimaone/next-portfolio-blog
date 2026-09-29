@@ -8,6 +8,7 @@ import type { BlogMeta } from '../lib/blog'
 import {
   BoothControl,
   Cover,
+  FilterRow,
   PageHeader,
   useDockSlot,
   useRoomChannel,
@@ -167,25 +168,19 @@ export function BlogList({ posts }: { posts: BlogMeta[] }) {
             </BoothControl>
           </div>
 
-          <div className={styles.tagRow}>
-            <BoothControl
-              active={!tag}
-              onClick={() => updateParam('tag', null)}
-              className={styles.tag}
-            >
-              All
-            </BoothControl>
-            {tagCounts.map(([name, count]) => (
-              <BoothControl
-                key={name}
-                active={tag === name}
-                onClick={() => updateParam('tag', tag === name ? null : name)}
-                className={styles.tag}
-              >
-                {name} ({count})
-              </BoothControl>
-            ))}
-          </div>
+          <FilterRow
+            label="Filter by tag"
+            value={tag ?? ''}
+            onChange={(next) => updateParam('tag', next || null)}
+            options={[
+              { value: '', label: 'All' },
+              ...tagCounts.map(([name, count]) => ({
+                value: name,
+                label: name,
+                count,
+              })),
+            ]}
+          />
 
           {leads.map((post) => (
             <LeadRelease key={post.slug} post={post} />
@@ -298,7 +293,9 @@ function Side({
                 <Cover seed={post.slug} title={post.title} sizes="44px" />
               </span>
               <span className={styles.trackBody}>
-                <span className={styles.trackTitle}>{post.title}</span>
+                <span className={styles.trackTitle} title={post.title}>
+                  {post.title}
+                </span>
                 <span className={styles.trackMeta}>
                   {formatDate(post.date)}
                   <ViewCounter slug={post.slug} />

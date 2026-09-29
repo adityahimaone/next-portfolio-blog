@@ -10,11 +10,31 @@ import { BoothShell } from '@/components/booth'
  * their transport into the dock through context, and a component cannot
  * consume a provider that it renders itself.
  *
- * The default wash is signal orange. Pages retint the room through
- * `useRoomChannel()` as their context changes, and this resets it on
- * navigation so one route's colour never leaks into the next.
+ * Each route gets its own wash so the room reads as somewhere different per
+ * page instead of one orange everywhere. Pages still retint the room through
+ * `useRoomChannel()` as their own context changes — the bookmarks page tints
+ * per channel — and `key={pathname}` resets it on navigation so one route's
+ * colour never leaks into the next.
  */
+const ROUTE_HUES: Record<string, string> = {
+  '/projects': '#ff5a1f',
+  '/bookmarks': '#2dd4bf',
+  '/blog': '#a78bfa',
+  '/mix': '#f472b6',
+  '/music': '#38bdf8',
+  '/contact': '#fbbf24',
+}
+
 const DEFAULT_HUE = '#ff5a1f'
+
+/** Longest-prefix match, so `/blog/[slug]` inherits the blog's wash. */
+function hueFor(pathname: string): string {
+  if (ROUTE_HUES[pathname]) return ROUTE_HUES[pathname]
+  for (const [route, hue] of Object.entries(ROUTE_HUES)) {
+    if (pathname.startsWith(`${route}/`)) return hue
+  }
+  return DEFAULT_HUE
+}
 
 export default function BoothLayout({
   children,
@@ -23,7 +43,7 @@ export default function BoothLayout({
 }) {
   const pathname = usePathname()
   return (
-    <BoothShell hue={DEFAULT_HUE} key={pathname}>
+    <BoothShell hue={hueFor(pathname)} key={pathname}>
       {children}
     </BoothShell>
   )

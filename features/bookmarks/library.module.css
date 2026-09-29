@@ -45,6 +45,10 @@
   .sidebar {
     position: sticky;
     top: 2rem;
+    /* The catalogue carries 24 channels, so the panel is capped to the
+       viewport and the channel list scrolls inside it. The dock sits ~4rem
+       above the bottom edge, hence the clearance in the max-height. */
+    max-height: calc(100svh - 2rem - 5.5rem);
   }
 }
 
@@ -52,6 +56,29 @@
   padding: 0.25rem 0.5rem 0.6rem;
   color: var(--booth-ink-muted);
   font: var(--silkscreen);
+}
+
+/* The scrollable region: the channel list plus the admin row, so the admin
+   buttons stay pinned below the list rather than scrolling away. */
+.sidebarScroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline) transparent;
+}
+
+.sidebarScroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebarScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebarScroll::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: var(--hairline);
 }
 
 .playlist {
@@ -112,16 +139,11 @@
 
 /* ─── Channel chip row (mobile substitute for the sidebar) ────── */
 
+/* Hidden from 1024px up, where the sidebar carries the same filter. It only
+   needs to give the FilterRow room; the row does its own scrolling. */
 .chipRow {
-  display: flex;
-  gap: 0.4rem;
-  overflow-x: auto;
-  padding-bottom: 0.25rem;
-  scrollbar-width: none;
-}
-
-.chipRow::-webkit-scrollbar {
-  display: none;
+  min-width: 0;
+  margin-bottom: 1.25rem;
 }
 
 @media (min-width: 1024px) {
@@ -318,6 +340,13 @@
   margin: 0 0 2rem;
   padding: 0;
   list-style: none;
+}
+
+/* The imported catalogue runs to 550+ rows. Letting the browser skip layout and
+   paint for off-screen rows keeps the list scrollable without windowing it. */
+.trackList > li {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 52px;
 }
 
 .track {
@@ -559,6 +588,92 @@
 
 .solidButton:hover {
   filter: brightness(1.06);
+}
+
+/* ─── Live site peek ─────────────────────────────────────────── */
+
+/* Positioned against the viewport from the hovered row's measured rect, so it
+   is a fixed overlay rather than a child of the scrolling list. */
+.peek {
+  position: fixed;
+  z-index: 60;
+  width: 320px;
+  height: 208px;
+  overflow: hidden;
+  border-radius: var(--booth-r-panel);
+  background: var(--flat-fill);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.32);
+  pointer-events: none;
+  animation: peek-in var(--dur-fast) ease;
+}
+
+.peekFrame {
+  display: block;
+  /* Width, height and scale are set inline from PAGE_WIDTH / VIEW_HEIGHT, so
+     the page is laid out at a real desktop width and shrunk into the card
+     rather than being squeezed to 320px and served its mobile layout. */
+  border: 0;
+  background: var(--flat-fill);
+  transform-origin: top left;
+}
+
+/* Clips the oversized frame to the card and reveals it as the page paints. The
+   clip is on the window, not the frame, because the frame is transformed. */
+.peekWindow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  opacity: 0;
+  animation: peek-reveal 0.45s ease forwards;
+}
+
+@keyframes peek-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.peekHost {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.4rem;
+  max-width: calc(100% - 0.8rem);
+  overflow: hidden;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #f4f1e6;
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes peek-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peek {
+    animation: none;
+  }
+
+  /* Without the animation the window would stay at opacity 0 forever. */
+  .peekWindow {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 @media (max-width: 720px) {

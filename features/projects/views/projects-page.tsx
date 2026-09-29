@@ -3,7 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ArrowUpRight, Github, Pause, Play, Star } from 'lucide-react'
-import { Cover, PageHeader, Record, useRoomChannel } from '@/components/booth'
+import {
+  Cover,
+  FilterRow,
+  PageHeader,
+  Record,
+  useRoomChannel,
+} from '@/components/booth'
 import { useDockSlot } from '@/components/booth/dock-slot'
 import { formatRelative } from '@/lib/date'
 import {
@@ -223,23 +229,12 @@ export function ProjectsPage({
                   {visible.length} releases
                 </span>
               </h2>
-              <div
-                className={styles.genres}
-                role="group"
-                aria-label="Filter by genre"
-              >
-                {genres.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    aria-pressed={genre === name}
-                    onClick={() => setGenre(name)}
-                    className={styles.genre}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </div>
+              <FilterRow
+                label="Filter by genre"
+                value={genre}
+                onChange={(next) => setGenre(next || 'All')}
+                options={genres.map((name) => ({ value: name, label: name }))}
+              />
             </div>
 
             <div className={styles.sleeveGrid}>

@@ -1,0 +1,512 @@
+/* Crate — /projects (docs/DESIGN_BOOTH.md §4).
+   One focal release, a grid navigator, and a live table. No card chrome. */
+
+.page {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  /* Clears the fixed dock (min-height 64px at bottom 1.25rem). */
+  padding: 4rem 1.5rem 10rem;
+  background: var(--room-base);
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding: 5rem 2.5rem 10rem;
+  }
+}
+
+.crate {
+  display: grid;
+  gap: 3rem;
+  padding-top: 3rem;
+}
+
+/* ─── Now Spinning ───────────────────────────────────────────── */
+
+.nowSpinning {
+  display: grid;
+  gap: 2rem;
+  padding: 1.5rem;
+  border-radius: var(--booth-r-panel);
+  color: var(--booth-ink);
+}
+
+@media (min-width: 900px) {
+  .nowSpinning {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2.5rem;
+    padding: 2rem;
+  }
+}
+
+.nsArt {
+  position: relative;
+  width: clamp(150px, 20vw, 230px);
+  flex-shrink: 0;
+  border-radius: var(--booth-r-cover);
+  box-shadow:
+    0 20px 50px -20px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.nsRecord {
+  position: absolute;
+  z-index: -1;
+  top: 8%;
+  left: 14%;
+  width: 92%;
+  opacity: 0.9;
+  transition: transform var(--booth-dur-med) var(--booth-ease);
+}
+
+.nsBody {
+  min-width: 0;
+}
+
+.nsKicker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--booth-ink-muted);
+  font: var(--silkscreen);
+}
+
+.nsTitle {
+  margin: 0.55rem 0 0;
+  color: var(--booth-ink);
+  font:
+    750 clamp(1.75rem, 3.6vw, 2.75rem) / 1.02 var(--font-syne),
+    sans-serif;
+  letter-spacing: -0.045em;
+}
+
+.nsDesc {
+  max-width: 56ch;
+  margin: 0.75rem 0 0;
+  color: var(--booth-ink-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.nsCredits {
+  margin: 0.85rem 0 0;
+  color: var(--booth-ink-dim);
+  font: var(--silkscreen);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+.nsActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+/* ─── Crate grid ─────────────────────────────────────────────── */
+
+.crateHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.crateTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  color: var(--booth-ink);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.crateCount {
+  color: var(--booth-ink-dim);
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+}
+
+.genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.genre {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 0 0.8rem;
+  border-radius: var(--booth-r-control);
+  color: var(--booth-ink-muted);
+  font: var(--silkscreen);
+  font-size: 0.6875rem;
+  cursor: pointer;
+}
+
+.genre[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.sleeveGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* The peeking record sits outside its sleeve; the gutter stops the
+     outermost sleeves from spilling past the viewport. */
+  gap: 1.5rem;
+  padding-inline: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .sleeveGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .sleeveGrid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.sleeve {
+  position: relative;
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--booth-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sleeveArtWrap {
+  position: relative;
+  border-radius: var(--booth-r-cover);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 10px 26px -12px rgba(0, 0, 0, 0.6);
+  transition:
+    transform var(--booth-dur-med) var(--booth-ease),
+    box-shadow var(--booth-dur-med) var(--booth-ease);
+}
+
+.sleeve:hover .sleeveArtWrap,
+.sleeve:focus-visible .sleeveArtWrap,
+.sleeve[data-active='true'] .sleeveArtWrap {
+  transform: translateY(-5px) rotate(-2.5deg);
+  box-shadow:
+    0 0 0 2px var(--sleeve-accent),
+    0 20px 40px -16px rgba(0, 0, 0, 0.7);
+}
+
+.sleevePeek {
+  position: absolute;
+  z-index: -1;
+  top: 5%;
+  left: 12%;
+  width: 90%;
+  opacity: 0.85;
+  transition: transform var(--booth-dur-med) var(--booth-ease);
+}
+
+.sleeve:hover .sleevePeek,
+.sleeve:focus-visible .sleevePeek {
+  transform: translateX(26%) rotate(14deg);
+}
+
+.sleeveTag {
+  position: absolute;
+  bottom: 6px;
+  left: 7px;
+  color: #fff;
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+  mix-blend-mode: difference;
+}
+
+.sleeveName {
+  overflow: hidden;
+  color: var(--booth-ink-muted);
+  font:
+    650 0.875rem / 1.3 var(--font-syne),
+    sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.75;
+  transition: opacity var(--dur-fast) ease;
+}
+
+.sleeve:hover .sleeveName,
+.sleeve:focus-visible .sleeveName,
+.sleeve[data-active='true'] .sleeveName {
+  color: var(--booth-ink);
+  opacity: 1;
+}
+
+/* ─── Recently played ────────────────────────────────────────── */
+
+.tableWrap {
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: var(--booth-r-panel);
+  background: var(--flat-fill);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead th {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--flat-fill) 60%, transparent);
+  color: var(--booth-ink-dim);
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+  text-align: left;
+}
+
+.table tbody td {
+  height: 46px;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--booth-ink-muted);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table tbody tr:hover {
+  background: var(--flat-fill-hover);
+}
+
+.repoName {
+  color: var(--booth-ink);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--dur-fast) ease;
+}
+
+.table tbody tr:hover .repoName {
+  color: var(--primary);
+}
+
+.repoName:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.langDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  background: var(--secondary);
+  vertical-align: middle;
+}
+
+.num {
+  font: var(--silkscreen);
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+.empty {
+  padding: 1.5rem 1rem;
+  color: var(--booth-ink-muted);
+  font-size: 0.9375rem;
+}
+
+/* ─── Transport (renders into the dock) ──────────────────────── */
+
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.35rem;
+  color: var(--booth-ink);
+}
+
+.transportBtn,
+.transportPlay {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--booth-ink-muted);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease;
+}
+
+.transportBtn:hover {
+  color: var(--booth-ink);
+  background: var(--flat-fill-hover);
+}
+
+.transportPlay {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.transportPlay:hover {
+  filter: brightness(1.08);
+}
+
+.transportMeta {
+  color: var(--booth-ink-muted);
+  font: var(--silkscreen);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .transportMeta {
+    max-width: 38vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* ─── Liner notes sheet ──────────────────────────────────────── */
+
+.sheetBackdrop {
+  position: fixed;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.sheet {
+  position: relative;
+  display: grid;
+  width: min(920px, 100%);
+  max-height: calc(100vh - 3rem);
+  gap: 1.75rem;
+  overflow-y: auto;
+  padding: 1.75rem;
+  border-radius: var(--booth-r-panel);
+  color: var(--booth-ink);
+}
+
+@media (min-width: 720px) {
+  .sheet {
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  }
+}
+
+.sheetArt {
+  position: relative;
+  width: 100%;
+  border-radius: var(--booth-r-cover);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.sheetClose {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  cursor: pointer;
+}
+
+.sheetKicker {
+  color: var(--booth-ink-muted);
+  font: var(--silkscreen);
+}
+
+.sheetTitle {
+  margin: 0.5rem 0 0;
+  color: var(--booth-ink);
+  font:
+    750 1.75rem / 1.05 var(--font-syne),
+    sans-serif;
+  letter-spacing: -0.04em;
+}
+
+.sheetDesc {
+  margin: 0.6rem 0 0;
+  color: var(--booth-ink-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.sheetLabel {
+  margin: 1.4rem 0 0.5rem;
+  color: var(--booth-ink-dim);
+  font: var(--silkscreen);
+}
+
+.sheetList {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--booth-ink);
+  font-size: 0.9375rem;
+}
+
+.sheetList li {
+  margin-bottom: 0.35rem;
+}
+
+.sheetList li::marker {
+  color: var(--primary);
+  font: var(--silkscreen);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--booth-r-control);
+  background: var(--flat-fill);
+  color: var(--booth-ink-muted);
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+}
+
+@media (max-width: 640px) {
+  .colLang,
+  .colStars,
+  .cellLang,
+  .cellStars {
+    display: none;
+  }
+}

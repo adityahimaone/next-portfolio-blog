@@ -237,8 +237,7 @@
   width: 118%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background:
-    repeating-radial-gradient(
+  background: repeating-radial-gradient(
       circle,
       transparent 0 4px,
       rgba(255, 255, 255, 0.08) 4px 5px

@@ -1245,7 +1245,126 @@
   }
 }
 
-/* Guarded once, globally, instead of per component (design.md §0.2). */
+/* ─── Glass Booth (docs/DESIGN_BOOTH.md) ─────────────────────────
+   Glass is the control layer only. Rows, covers, cards and the reader
+   column use --flat-fill, which is translucent but never blurred, so
+   they look like glass and stay free to scroll. Budget: the dock plus
+   at most one of {sidebar, sheet, popover}. */
+
+:root {
+  /* Booth radii are prefixed: the SIGNAL archive tokens of the same name are
+     still in use by the landing page chrome and mean different sizes. */
+  --booth-r-panel: 20px;
+  --booth-r-control: 999px;
+  --booth-r-cover: 14px;
+  --booth-dur-med: 360ms;
+  --booth-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Daylight room: frosted white, flat rows on the chassis ground. */
+  --glass-fill: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0.38) 50%,
+    rgba(255, 255, 255, 0.55)
+  );
+  --glass-blur: blur(18px) saturate(1.5);
+  --glass-edge: rgba(29, 30, 28, 0.14);
+  --glass-shadow:
+    inset 0 1px 0 #fff,
+    0 14px 40px -16px rgba(29, 30, 28, 0.35);
+  --flat-fill: rgba(29, 30, 28, 0.04);
+  --flat-fill-hover: rgba(29, 30, 28, 0.08);
+  --hairline: rgba(29, 30, 28, 0.12);
+  --booth-ink: #1a1d1c;
+  --booth-ink-muted: #5e625c;
+  --booth-ink-dim: #8a8f87;
+  --room-base: #e7e6dd;
+  --wash-opacity: 0.12;
+}
+
+.dark {
+  --glass-fill: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.14),
+    rgba(255, 255, 255, 0.04) 45%,
+    rgba(255, 255, 255, 0.08)
+  );
+  --glass-blur: blur(20px) saturate(1.7);
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 50px -18px rgba(0, 0, 0, 0.7);
+  --flat-fill: rgba(255, 255, 255, 0.035);
+  --flat-fill-hover: rgba(255, 255, 255, 0.075);
+  --hairline: rgba(255, 255, 255, 0.09);
+  --booth-ink: #f1eee5;
+  --booth-ink-muted: #b6b3a9;
+  --booth-ink-dim: #8b8d8a;
+  --room-base: #0b0d0c;
+  --wash-opacity: 0.3;
+}
+
+@layer components {
+  /* The control-layer surface. Never apply to list rows. */
+  .glass {
+    position: relative;
+    isolation: isolate;
+    border: 1px solid var(--glass-edge);
+    background: var(--glass-fill);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+  }
+
+  /* Pointer-following specular, driven by one rAF handler on the dock only. */
+  .glass::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      160px circle at var(--mx, 50%) var(--my, 0%),
+      rgba(255, 255, 255, 0.22),
+      transparent 60%
+    );
+    pointer-events: none;
+  }
+
+  /* Content surface: translucent, never blurred. */
+  .flat {
+    background: var(--flat-fill);
+    transition: background-color var(--dur-fast) ease;
+  }
+
+  .flat:hover {
+    background: var(--flat-fill-hover);
+  }
+}
+
+/* Guarded once, globally (docs/DESIGN_BOOTH.md §3.3). */
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--card);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .glass::before {
+    display: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .glass {
+    background: var(--card);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: currentColor;
+  }
+}
+
 @media (prefers-reduced-transparency: reduce) {
   .glass-1,
   .glass-2 {

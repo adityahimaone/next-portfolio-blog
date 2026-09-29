@@ -10,7 +10,7 @@
 const GOLDEN_RATIO = 0.6180339887498949
 
 /** Stable 32-bit string hash (FNV-1a). Same input, same number, forever. */
-function hashSeed(input: string): number {
+export function hashSeed(input: string): number {
   let hash = 0x811c9dc5
   for (let i = 0; i < input.length; i++) {
     hash ^= input.charCodeAt(i)
@@ -58,6 +58,18 @@ export function waveformBars(
     const height = minHeight + value * span * centreBias
     return Math.round(Math.min(1, height) * 100)
   })
+}
+
+/**
+ * Same series as `waveformBars` but as 0..1 fractions, for callers that
+ * compose the height into a style value themselves.
+ */
+export function getWaveformBars(
+  seed: string | number,
+  count = 16,
+  { maxHeight = 1, minHeight = 0.12 }: BarOptions = {},
+): number[] {
+  return waveformBars(seed, count, { maxHeight, minHeight }).map((h) => h / 100)
 }
 
 /** Minutes carried by a readingTime string such as "7 min read". */

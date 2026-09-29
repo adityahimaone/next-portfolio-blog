@@ -1,0 +1,51 @@
+/* Booth control surfaces: buttons, chips, inputs, pills.
+   Deliberately NOT blurred — glass is reserved for the dock and one sheet.
+   These are translucent so they read as part of the same material, but a
+   backdrop-filter per chip would blow the two-layer budget instantly. */
+
+.booth-control {
+  position: relative;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--booth-r-control);
+  background: var(--flat-fill);
+  color: var(--booth-ink);
+  transition:
+    color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--booth-ease);
+}
+
+.booth-control:hover {
+  border-color: color-mix(in srgb, var(--primary) 60%, var(--glass-edge));
+  background: var(--flat-fill-hover);
+  color: var(--booth-ink);
+  transform: translateY(-1px);
+}
+
+.booth-control:active {
+  transform: scale(0.97);
+}
+
+.booth-control:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.booth-control:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* The one lit state in the booth: active filter, active destination. */
+.booth-control[data-on] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.booth-control[data-on]:hover {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  filter: brightness(1.08);
+}

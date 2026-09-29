@@ -1,0 +1,457 @@
+'use client'
+
+import { FOOTER_MOTTO, FOOTER_TANGLE_LINES, RESUME_URL } from './shared'
+
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ScanLoader } from '../scan-loader'
+import { TangleFooter } from '@/components/ui/tangle-footer'
+import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
+import styles from './rack-01.module.css'
+import { SectionHeading } from './section-heading'
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Mail,
+  Pause,
+  Play,
+  Square,
+} from 'lucide-react'
+import { Screw } from '@/components/ui/screw'
+
+const CONTACT_PADS = [
+  { label: 'Email', detail: EMAIL, href: `mailto:${EMAIL}`, note: 261.63 },
+  {
+    label: 'LinkedIn',
+    detail: 'Professional profile',
+    href: 'https://www.linkedin.com/in/adityahimaone',
+    note: 329.63,
+  },
+  {
+    label: 'GitHub',
+    detail: 'Code and projects',
+    href: 'https://github.com/adityahimaone',
+    note: 392,
+  },
+  { label: 'Resume', detail: 'Open PDF', href: RESUME_URL, note: 523.25 },
+  { label: 'Kick', detail: 'Low pulse', note: 82.41 },
+  { label: 'Snare', detail: 'Short noise', note: 196 },
+  { label: 'Chord', detail: 'C major', note: 261.63 },
+  { label: 'Tone', detail: 'High signal', note: 659.25 },
+  { label: 'Sub', detail: 'Low sine', note: 65.41 },
+  { label: 'Rim', detail: 'Short click', note: 880 },
+  { label: 'Fifth', detail: 'C and G', note: 392 },
+  { label: 'Pluck', detail: 'Fast decay', note: 783.99 },
+  { label: 'Bass', detail: 'Square bass', note: 110 },
+  { label: 'Hat', detail: 'Bright noise', note: 1200 },
+  { label: 'Minor', detail: 'A minor', note: 220 },
+  { label: 'Bell', detail: 'Metal tone', note: 1046.5 },
+] as const
+
+const CONTACT_PAD_COLORS = [
+  '#35c78a',
+  '#4d8dff',
+  '#a778ff',
+  '#f2b84b',
+  '#ff5a3d',
+  '#ef4f91',
+  '#9b6cff',
+  '#3e9cff',
+  '#23c7b7',
+  '#85c94a',
+  '#e4ca3f',
+  '#f28b3d',
+  '#e05b52',
+  '#cf62c3',
+  '#746fe8',
+  '#4bafd1',
+] as const
+
+export function Contact() {
+  const currentYear = new Date().getFullYear()
+  const [activePad, setActivePad] = useState<number | null>(null)
+  const [loopingPads, setLoopingPads] = useState<Set<number>>(new Set())
+  const [sweepingPads, setSweepingPads] = useState<Set<number>>(new Set())
+  const [bpm, setBpm] = useState(112)
+  const [volume, setVolume] = useState(72)
+  const [bank, setBank] = useState<'A' | 'B'>('A')
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const contactRef = useRef<HTMLElement | null>(null)
+  const loopTimersRef = useRef<Map<number, number>>(new Map())
+  const sweepTimersRef = useRef<number[]>([])
+
+  const triggerSound = useCallback(
+    (index: number) => {
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext
+      if (!AudioContextClass) return
+
+      const context = audioContextRef.current ?? new AudioContextClass()
+      audioContextRef.current = context
+      void context.resume()
+      const now = context.currentTime
+      const gain = context.createGain()
+      gain.gain.setValueAtTime(0.0001, now)
+      gain.gain.exponentialRampToValueAtTime(
+        Math.max(0.01, (volume / 100) * 0.18),
+        now + 0.008,
+      )
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24)
+      gain.connect(context.destination)
+
+      if (index === 5 || index === 13) {
+        const buffer = context.createBuffer(
+          1,
+          context.sampleRate * 0.16,
+          context.sampleRate,
+        )
+        const data = buffer.getChannelData(0)
+        for (let sample = 0; sample < data.length; sample += 1) {
+          data[sample] = Math.random() * 2 - 1
+        }
+        const source = context.createBufferSource()
+        source.buffer = buffer
+        source.connect(gain)
+        source.start(now)
+      } else {
+        const bankMultiplier = bank === 'A' ? 1 : 1.5
+        const frequencies =
+          index === 6
+            ? [261.63, 329.63, 392]
+            : index === 10
+              ? [261.63, 392]
+              : index === 14
+                ? [220, 261.63, 329.63]
+                : [CONTACT_PADS[index].note * bankMultiplier]
+        frequencies.forEach((frequency) => {
+          const oscillator = context.createOscillator()
+          oscillator.type =
+            index === 4 || index === 8
+              ? 'sine'
+              : index === 12
+                ? 'square'
+                : 'triangle'
+          oscillator.frequency.setValueAtTime(frequency, now)
+          if (index === 4) {
+            oscillator.frequency.exponentialRampToValueAtTime(42, now + 0.2)
+          }
+          oscillator.connect(gain)
+          oscillator.start(now)
+          oscillator.stop(now + 0.25)
+        })
+      }
+    },
+    [bank, volume],
+  )
+
+  const togglePad = useCallback(
+    (index: number) => {
+      setActivePad(index)
+      setLoopingPads((current) => {
+        const next = new Set(current)
+        if (next.has(index)) {
+          next.delete(index)
+          setActivePad((active) => (active === index ? null : active))
+        } else {
+          next.add(index)
+          triggerSound(index)
+        }
+        return next
+      })
+    },
+    [triggerSound],
+  )
+
+  const clearPads = useCallback(() => {
+    setActivePad(null)
+    setLoopingPads(new Set())
+  }, [])
+
+  useEffect(() => {
+    loopTimersRef.current.forEach((timer) => window.clearInterval(timer))
+    loopTimersRef.current.clear()
+    const beatDuration = Math.max(180, 60_000 / bpm)
+    loopingPads.forEach((index) => {
+      const timer = window.setInterval(() => triggerSound(index), beatDuration)
+      loopTimersRef.current.set(index, timer)
+    })
+    return () => {
+      loopTimersRef.current.forEach((timer) => window.clearInterval(timer))
+      loopTimersRef.current.clear()
+    }
+  }, [bpm, loopingPads, triggerSound])
+
+  useEffect(() => {
+    const section = contactRef.current
+    if (!section) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        observer.disconnect()
+        const order = Array.from(
+          { length: CONTACT_PADS.length },
+          (_, index) => index,
+        ).sort((a, b) => {
+          const distanceA = Math.floor(a / 4) + (a % 4)
+          const distanceB = Math.floor(b / 4) + (b % 4)
+          return distanceA - distanceB || a - b
+        })
+        const stepDelay = 72
+        const waveDuration = order.length * stepDelay + 260
+        for (let wave = 0; wave < 3; wave += 1) {
+          order.forEach((index, step) => {
+            const onTimer = window.setTimeout(
+              () => {
+                setSweepingPads((current) => new Set(current).add(index))
+                const offTimer = window.setTimeout(() => {
+                  setSweepingPads((current) => {
+                    const next = new Set(current)
+                    next.delete(index)
+                    return next
+                  })
+                }, 230)
+                sweepTimersRef.current.push(offTimer)
+              },
+              420 + wave * (waveDuration + 280) + step * stepDelay,
+            )
+            sweepTimersRef.current.push(onTimer)
+          })
+        }
+      },
+      { threshold: 0.28 },
+    )
+    observer.observe(section)
+    return () => {
+      observer.disconnect()
+      sweepTimersRef.current.forEach((timer) => window.clearTimeout(timer))
+      sweepTimersRef.current = []
+    }
+  }, [])
+
+  useEffect(
+    () => () => {
+      void audioContextRef.current?.close()
+    },
+    [],
+  )
+
+  return (
+    <section
+      ref={contactRef}
+      id="contact"
+      className={styles.contact}
+      data-rack-section
+    >
+      <div className={styles.contactFreshHeader}>
+        <SectionHeading index="06" eyebrow="Open channel">
+          Bring me the difficult part.
+        </SectionHeading>
+        <p>
+          New frontend builds, complex product interfaces, and React
+          applications that need clearer structure.
+        </p>
+      </div>
+
+      <div className={styles.contactDeck}>
+        <div className={styles.contactDeckBrand}>
+          <div>
+            <strong>AH / GRID 16</strong>
+            <span>CONTACT PERFORMANCE CONTROLLER</span>
+          </div>
+          <span>USB / WEB AUDIO</span>
+        </div>
+
+        <div className={styles.contactDeckTop}>
+          <label className={styles.contactDial}>
+            <input
+              type="range"
+              min="70"
+              max="150"
+              value={bpm}
+              onChange={(event) => setBpm(Number(event.target.value))}
+            />
+            <span
+              style={
+                {
+                  '--dial-rotation': `${-130 + (bpm - 70) * 3.25}deg`,
+                } as React.CSSProperties
+              }
+            />
+            <b>Tempo</b>
+            <small>{bpm} BPM</small>
+          </label>
+          <div className={styles.contactDeckDisplay} aria-live="polite">
+            <span>
+              PAD{' '}
+              {activePad === null
+                ? '--'
+                : String(activePad + 1).padStart(2, '0')}
+            </span>
+            <strong>
+              {activePad === null
+                ? 'Select a pad'
+                : CONTACT_PADS[activePad].label}
+            </strong>
+            <small>
+              BANK {bank} / {activePad === null ? 'READY' : 'TRIGGERED'}
+            </small>
+          </div>
+          <label className={styles.contactDial}>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={volume}
+              onChange={(event) => setVolume(Number(event.target.value))}
+            />
+            <span
+              style={
+                {
+                  '--dial-rotation': `${-130 + volume * 2.6}deg`,
+                } as React.CSSProperties
+              }
+            />
+            <b>Level</b>
+            <small>{volume}%</small>
+          </label>
+        </div>
+
+        <div className={styles.contactPerformanceArea}>
+          <div className={styles.contactModeRail}>
+            <button
+              type="button"
+              aria-pressed={bank === 'A'}
+              aria-label="Use bank A"
+              onClick={() => setBank('A')}
+            >
+              A
+            </button>
+            <button
+              type="button"
+              aria-pressed={bank === 'B'}
+              aria-label="Use bank B"
+              onClick={() => setBank('B')}
+            >
+              B
+            </button>
+            <span>Bank</span>
+          </div>
+          <div className={styles.contactPadGrid}>
+            {CONTACT_PADS.map((pad, index) => {
+              const content = (
+                <>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <strong>{pad.label}</strong>
+                  <small>{pad.detail}</small>
+                </>
+              )
+              const className = `${styles.contactPad} ${
+                loopingPads.has(index) ? styles.contactPadActive : ''
+              } ${sweepingPads.has(index) ? styles.contactPadSweeping : ''}`
+
+              return 'href' in pad ? (
+                <a
+                  key={pad.label}
+                  className={className}
+                  href={pad.href}
+                  target={pad.href.startsWith('mailto:') ? undefined : '_blank'}
+                  rel={
+                    pad.href.startsWith('mailto:') ? undefined : 'noreferrer'
+                  }
+                  onClick={() => togglePad(index)}
+                  style={
+                    {
+                      '--pad-color': CONTACT_PAD_COLORS[index],
+                    } as React.CSSProperties
+                  }
+                >
+                  {content}
+                </a>
+              ) : (
+                <button
+                  key={pad.label}
+                  type="button"
+                  className={className}
+                  aria-pressed={loopingPads.has(index)}
+                  onClick={() => togglePad(index)}
+                  style={
+                    {
+                      '--pad-color': CONTACT_PAD_COLORS[index],
+                    } as React.CSSProperties
+                  }
+                >
+                  {content}
+                </button>
+              )
+            })}
+          </div>
+          <div className={styles.contactModeRail}>
+            <a href={`mailto:${EMAIL}`} aria-label="Email Aditya">
+              <Mail size={16} />
+            </a>
+            <button
+              type="button"
+              onClick={clearPads}
+              aria-label="Clear active pad"
+            >
+              <Square size={14} />
+            </button>
+            <span>Out</span>
+          </div>
+        </div>
+        <p className={styles.contactDeckNote}>
+          Pads 01 to 04 open a channel. Pads 05 to 16 play the instrument.
+        </p>
+      </div>
+
+      <footer className={styles.footer}>
+        <div className={styles.footerTransition} aria-hidden="true" />
+
+        <div className={styles.footerDeck}>
+          <div className={styles.footerPanel}>
+            <div className={styles.footerBrand}>
+              <span className={styles.footerBrandName}>Aditya Himaone</span>
+              <span className={styles.footerBrandMeta}>
+                © {currentYear} · adityahimaone.space
+              </span>
+            </div>
+
+            <div className={styles.footerUnit}>
+              <span className={styles.footerEmitter} aria-hidden="true">
+                <ScanLoader className={styles.footerEmitterScan} />
+              </span>
+              <p className={styles.footerMotto}>{FOOTER_MOTTO}</p>
+            </div>
+
+            <div className={styles.footerControls}>
+              <span className={styles.footerPower} aria-hidden="true" />
+              <button
+                type="button"
+                className={styles.footerTop}
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                aria-label="Back to top"
+              >
+                <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.footerSignal}>
+          <span className={styles.footerLead} aria-hidden="true" />
+          <TangleFooter
+            className={styles.footerTangle}
+            lines={[...FOOTER_TANGLE_LINES]}
+            background="#0b0d0c"
+            ribbon="#e7e2d8"
+            textColor="#0b0d0c"
+            height={350}
+            seed={23}
+            label="Rotating portfolio footer signal"
+          />
+        </div>
+      </footer>
+    </section>
+  )
+}

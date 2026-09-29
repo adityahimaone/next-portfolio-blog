@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Lenis from 'lenis'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
@@ -9,19 +8,16 @@ import {
   Mail,
   Pause,
   Play,
-  SkipBack,
-  SkipForward,
   Square,
-  X,
 } from 'lucide-react'
 import { Screw } from '@/components/screw'
 import { DawHero } from '../components/hero'
-import { EMAIL, EXPERIENCES, MIXER_DATA, PROJECTS_SHOWCASE } from '../constants'
+import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
 import styles from './rack-01.module.css'
-import { cn } from '@/lib/utils'
 import { TangleFooter } from '@/src/components/ui/tangle-footer'
 import { TextCascade } from '@/components/motion/text-cascade'
 import { TopBar } from '@/features/layout/components/top-bar'
+import { Work } from '@/components/work/work'
 
 const RESUME_URL =
   'https://drive.google.com/file/d/17x3GuEkZxbt9ZeLilXx1ShBHV_CZTfSq/view?usp=sharing'
@@ -47,23 +43,6 @@ const FOOTER_TANGLE_LINES = [
 
 const FOOTER_MOTTO = 'Make it work, then make it sing.'
 
-const PROJECT_PREVIEW_DURATION = 185
-
-function formatProjectTime(seconds: number) {
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = Math.floor(seconds % 60)
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-}
-
-function getProjectInitials(title: string) {
-  return title
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase()
-}
 
 const SKILLS = MIXER_DATA.flatMap((group) => group.channels)
 
@@ -98,14 +77,6 @@ const CASSETTE_THEMES = [
   },
 ] as const
 
-const PROJECT_PALETTES = [
-  { vinyl: '#315d72', label: '#df9c58', accent: '#7eb8c7' },
-  { vinyl: '#476b50', label: '#d7c467', accent: '#8fc49a' },
-  { vinyl: '#a55b35', label: '#e1bd69', accent: '#dc8752' },
-  { vinyl: '#563f70', label: '#d17da4', accent: '#9c7fbd' },
-  { vinyl: '#36466f', label: '#9b83c4', accent: '#7489bd' },
-  { vinyl: '#743f3f', label: '#d08168', accent: '#b96862' },
-] as const
 
 function SilkscreenLabel({ children }: { children: React.ReactNode }) {
   return <span className={styles.silkscreen}>{children}</span>
@@ -1473,34 +1444,6 @@ const STATIONS = [88.5, 94.2, 100.8, 106.5]
 const NEEDLE_POSITIONS = [8, 36, 64, 92]
 const KNOB_ROTATIONS = [0, 135, 270, 405]
 
-function ReleaseTitleHandoff() {
-  return (
-    <div className={styles.experienceWorkHandoff} aria-hidden="true">
-      <span className={styles.handoffShade} />
-      <span className={styles.handoffRibbon} />
-      <div className={styles.handoffRoute}>
-        <span>EXPERIENCE / SIDE A</span>
-        <i />
-        <span>SIDE B / WORK</span>
-      </div>
-      <div className={styles.handoffScreen}>
-        <div className={styles.handoffScreenHeader}>
-          <span>05 / PROJECT RELEASE</span>
-          <span>LIVE SIGNAL</span>
-        </div>
-        <strong>PROJECT ARCHIVE</strong>
-        <div className={styles.handoffScreenWave}>
-          {Array.from({ length: 18 }, (_, index) => <i key={index} />)}
-        </div>
-      </div>
-      <div className={styles.handoffTelemetry}>
-        <span>SIGNAL ROUTED</span>
-        <span>04—05</span>
-        <span>FRONTEND SYSTEMS / PRODUCT WORK</span>
-      </div>
-    </div>
-  )
-}
 
 function Experience({
   selected,
@@ -1730,298 +1673,6 @@ function Experience({
           </div>
         </div>
       </div>
-    </section>
-  )
-}
-
-function Work() {
-  const [playingId, setPlayingId] = useState<number | null>(null)
-  const [previewId, setPreviewId] = useState<number | null>(
-    PROJECTS_SHOWCASE[0]?.id ?? null,
-  )
-  const [detailId, setDetailId] = useState<number | null>(null)
-  const [currentProgress, setCurrentProgress] = useState(52)
-
-  const detailProject =
-    PROJECTS_SHOWCASE.find((project) => project.id === detailId) ?? null
-
-  useEffect(() => {
-    if (!detailProject) return
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setDetailId(null)
-    }
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [detailProject])
-
-  useEffect(() => {
-    if (playingId == null) return
-
-    const interval = window.setInterval(() => {
-      setCurrentProgress((progress) => {
-        if (progress >= PROJECT_PREVIEW_DURATION) {
-          setPlayingId(null)
-          return 0
-        }
-        return progress + 1
-      })
-    }, 1000)
-
-    return () => window.clearInterval(interval)
-  }, [playingId])
-
-
-  const changeProjectPreview = (index: number, direction: -1 | 1) => {
-    const nextIndex =
-      (index + direction + PROJECTS_SHOWCASE.length) % PROJECTS_SHOWCASE.length
-    const nextProjectId = PROJECTS_SHOWCASE[nextIndex]?.id ?? null
-    setPreviewId(nextProjectId)
-    setPlayingId(nextProjectId)
-    setCurrentProgress(0)
-  }
-
-  return (
-    <section
-      id="work"
-      className={styles.work}
-      data-rack-section
-      data-no-heading-reveal
-    >
-      <div className={styles.workStage}>
-        <div className={styles.workHeader}>
-          <SectionHeading index="05" eyebrow="Selected work">
-            Proof in the product.
-          </SectionHeading>
-          <div className={styles.workHint}>
-            <span>DRAG / SCROLL</span>
-            <span>01-{String(PROJECTS_SHOWCASE.length).padStart(2, '0')}</span>
-          </div>
-        </div>
-        <div className={styles.workViewport}>
-          <div className={styles.workRail}>
-            {PROJECTS_SHOWCASE.map((project, index) => {
-              const palette = PROJECT_PALETTES[index % PROJECT_PALETTES.length]
-              const isPlaying = playingId === project.id
-              const progressPercentage =
-                (previewId === project.id ? currentProgress : 0) /
-                PROJECT_PREVIEW_DURATION *
-                100
-
-              return (
-                <article
-                  className={cn(
-                    styles.projectModule,
-                  )}
-                  key={project.id}
-                  tabIndex={0}
-                  aria-label={`Open details for ${project.title}`}
-                  onClick={() => setDetailId(project.id)}
-                  onKeyDown={(event) => {
-                    if (event.target !== event.currentTarget) return
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      setDetailId(project.id)
-                    }
-                  }}
-                  style={
-                    {
-                      '--record-color': palette.vinyl,
-                      '--record-label': palette.label,
-                      '--record-accent': palette.accent,
-                    } as React.CSSProperties
-                  }
-                >
-                  <div className={styles.projectMedia}>
-                    <div className={styles.projectImage}>
-                      <Image
-                        src={project.image}
-                        alt={`${project.title} project cover`}
-                        fill
-                        sizes="(max-width: 768px) 70vw, 24vw"
-                      />
-                      <span className={styles.imageScan} />
-                    </div>
-                    <div className={styles.projectPlayerHeader}>
-                      <div className={styles.projectPlayerIdentity}>
-                        <span>
-                          <b>{project.title}</b>
-                          <small
-                            id={`project-description-${project.id}`}
-                            className={styles.projectPlayerDescription}
-                          >
-                            {project.description}
-                          </small>
-                        </span>
-                      </div>
-                      <div className={styles.projectPlayerActions}>
-                        <a
-                          href={project.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={styles.projectAction}
-                          title={`View ${project.title} project`}
-                          data-tooltip="View project"
-                          aria-label={`View ${project.title} project`}
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <ArrowUpRight size={15} />
-                        </a>
-                      </div>
-                    </div>
-                    <div className={styles.projectControls}>
-                        <div className={styles.projectProgressLabels}>
-                          <span>{formatProjectTime(currentProgress)}</span>
-                          <span>
-                            -
-                            {formatProjectTime(
-                              PROJECT_PREVIEW_DURATION - currentProgress,
-                            )}
-                          </span>
-                        </div>
-                        <div
-                          className={styles.projectProgressTrack}
-                          role="slider"
-                          tabIndex={0}
-                          aria-label={`${project.title} preview progress`}
-                          aria-valuenow={progressPercentage}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-valuetext={`${formatProjectTime(currentProgress)} elapsed`}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            const bounds = event.currentTarget.getBoundingClientRect()
-                            const ratio = Math.min(
-                              1,
-                              Math.max(0, (event.clientX - bounds.left) / bounds.width),
-                            )
-                            setCurrentProgress(
-                              Math.round(PROJECT_PREVIEW_DURATION * ratio),
-                            )
-                          }}
-                          onKeyDown={(event) => {
-                            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
-                            event.preventDefault()
-                            event.stopPropagation()
-                            const step = event.key === 'ArrowRight' ? 5 : -5
-                            setCurrentProgress((current) =>
-                              Math.min(
-                                PROJECT_PREVIEW_DURATION,
-                                Math.max(0, current + step),
-                              ),
-                            )
-                          }}
-                        >
-                          <span style={{ width: `${progressPercentage}%` }} />
-                        </div>
-                        <div className={styles.projectPlaybackControls}>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              changeProjectPreview(index, -1)
-                            }}
-                            aria-label="Previous project preview"
-                          >
-                            <SkipBack size={17} />
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.projectPlayButton}
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              if (isPlaying) setPlayingId(null)
-                              else {
-                                setPreviewId(project.id)
-                                setPlayingId(project.id)
-                              }
-                            }}
-                            aria-label={isPlaying ? 'Pause preview' : 'Play preview'}
-                          >
-                            {isPlaying ? <Pause size={21} /> : <Play size={21} fill="currentColor" />}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              changeProjectPreview(index, 1)
-                            }}
-                            aria-label="Next project preview"
-                          >
-                            <SkipForward size={17} />
-                          </button>
-                        </div>
-                    </div>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-      {detailProject ? (
-        <div
-          className={styles.projectDetailBackdrop}
-          role="presentation"
-          onMouseDown={() => setDetailId(null)}
-        >
-          <div
-            className={styles.projectDetailModal}
-            style={
-              {
-                '--record-accent':
-                  PROJECT_PALETTES[detailProject.id % PROJECT_PALETTES.length]
-                    .accent,
-              } as React.CSSProperties
-            }
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={`project-detail-title-${detailProject.id}`}
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              className={styles.projectDetailClose}
-              onClick={() => setDetailId(null)}
-              aria-label="Close project details"
-            >
-              <X size={17} strokeWidth={1.8} />
-            </button>
-            <div className={styles.projectDetailImage}>
-              <Image
-                src={detailProject.image}
-                alt={`${detailProject.title} project cover`}
-                fill
-                sizes="(max-width: 768px) 82vw, 360px"
-              />
-            </div>
-            <div className={styles.projectDetailContent}>
-              <span className={styles.projectDetailMeta}>
-                RELEASE {String(detailProject.id + 1).padStart(2, '0')} /{' '}
-                {detailProject.genre} / {detailProject.year}
-              </span>
-              <h3 id={`project-detail-title-${detailProject.id}`}>
-                {detailProject.title}
-              </h3>
-              <p>{detailProject.description}</p>
-              <a
-                href={detailProject.url}
-                target="_blank"
-                rel="noreferrer"
-                className={styles.projectDetailLink}
-              >
-                Open project <ArrowUpRight size={15} aria-hidden="true" />
-              </a>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </section>
   )
 }
@@ -2939,7 +2590,7 @@ export default function Rack01LandingPage() {
           }
 
           const studioDetails = gsap.utils.toArray<HTMLElement>(
-            `.${styles.skillsIntro} > p, .${styles.workHint}, .${styles.patchScreen}`,
+            `.${styles.skillsIntro} > p, .${styles.patchScreen}`,
           )
           studioDetails.forEach((detail) => {
             gsap.fromTo(
@@ -2997,62 +2648,6 @@ export default function Rack01LandingPage() {
               0.18,
             )
 
-          gsap.fromTo(
-            `.${styles.projectModule}`,
-            { scale: 0.99, opacity: 0.72 },
-            {
-              scale: 1,
-              opacity: 1,
-              stagger: 0.06,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: `.${styles.work}`,
-                start: 'top 88%',
-                end: 'top 38%',
-                scrub: 0.8,
-              },
-            },
-          )
-
-          gsap
-            .timeline({
-              scrollTrigger: {
-                trigger: `.${styles.work}`,
-                start: 'top 82%',
-                end: 'top 18%',
-                scrub: 0.8,
-              },
-              defaults: { ease: 'power2.out' },
-            })
-            .fromTo(
-              `.${styles.projectImage}`,
-              { y: 18, opacity: 0.35 },
-              { y: 0, opacity: 1, stagger: 0.08, duration: 0.32 },
-              0,
-            )
-            .fromTo(
-              `.${styles.projectPlayerHeader}`,
-              { y: 12, opacity: 0 },
-              { y: 0, opacity: 1, stagger: 0.08, duration: 0.24 },
-              0.28,
-            )
-            .fromTo(
-              `.${styles.projectControls}`,
-              { y: 12, opacity: 0 },
-              { y: 0, opacity: 1, stagger: 0.08, duration: 0.24 },
-              0.52,
-            )
-
-          gsap.to(`.${styles.projectVinyl}`, {
-            rotate: 360,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: `.${styles.work}`,
-              start: 'top top',
-              end: 'bottom bottom',
-              scrub: 0.7,
-            },
-          })
 
           gsap.to(`.${styles.tapeWheel}`, {
             rotate: 920,
@@ -3132,54 +2727,6 @@ export default function Rack01LandingPage() {
               )
           }
 
-          const rail = rootRef.current?.querySelector<HTMLElement>(
-            `.${styles.workRail}`,
-          )
-          const viewport = rootRef.current?.querySelector<HTMLElement>(
-            `.${styles.workViewport}`,
-          )
-          if (rail && viewport) {
-            gsap.to(rail, {
-              x: () => Math.min(0, -(rail.scrollWidth - viewport.clientWidth)),
-              ease: 'none',
-              scrollTrigger: {
-                trigger: `.${styles.work}`,
-                start: 'top top',
-                end: 'bottom bottom',
-                scrub: 0.6,
-                invalidateOnRefresh: true,
-              },
-            })
-          }
-
-          const workHeader = rootRef.current?.querySelector<HTMLElement>(
-            `.${styles.workHeader}`,
-          )
-          if (workHeader && rail) {
-            gsap
-              .timeline({
-                scrollTrigger: {
-                  trigger: `.${styles.work}`,
-                  start: 'bottom 28%',
-                  end: 'bottom bottom',
-                  scrub: 0.8,
-                  invalidateOnRefresh: true,
-                },
-                defaults: { ease: 'none' },
-              })
-              .fromTo(
-                rail,
-                { scale: 1 },
-                { scale: 0.98, duration: 0.72 },
-                0,
-              )
-              .fromTo(
-                workHeader,
-                { opacity: 1 },
-                { opacity: 1, duration: 0.48 },
-                0.08,
-              )
-          }
         })
 
         const dividerDockRule = rootRef.current?.querySelector<HTMLElement>(

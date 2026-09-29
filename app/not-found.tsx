@@ -7,6 +7,17 @@ import { Home, BookOpen } from 'lucide-react'
 export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 text-center">
+      {/*
+        This file is a client component, so it cannot export a `metadata`
+        object — without this the 404 inherits the homepage's title and
+        description, which is what a crawler indexes for a broken link.
+      */}
+      <title>Page not found — Aditya Himawan</title>
+      <meta
+        name="description"
+        content="That page does not exist. Try the work, the notes, or the contact details."
+      />
+      <meta name="robots" content="noindex" />
       {/* DAW waveform visualization */}
       <motion.div
         className="relative mb-10"

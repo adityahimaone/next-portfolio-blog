@@ -108,7 +108,7 @@ export function WinampVisualizer({ className }: { className?: string }) {
 
       animRef.current = requestAnimationFrame(draw)
     } catch (err) {
-      setError('Mic access denied')
+      setError('Microphone access denied')
     }
   }, [presetIdx])
 

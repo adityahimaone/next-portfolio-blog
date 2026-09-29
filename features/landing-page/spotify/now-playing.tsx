@@ -119,7 +119,7 @@ export default function NowPlaying() {
                 </p>
               </div>
               <p className="truncate font-mono text-xs text-amber-700">
-                {isPlaying ? data?.artist : 'WAITING FOR INPUT...'}
+                {isPlaying ? data?.artist : 'WAITING FOR INPUT…'}
               </p>
             </div>
 

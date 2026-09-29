@@ -7,7 +7,15 @@ import { WorkHeading } from './work-heading'
 import { nowPlayingArtist, type LibraryTrack } from './library-data'
 import styles from './work.module.css'
 
-const TABS = ['Home', 'Projects', 'Albums', 'Stack'] as const
+/**
+ * Decorative chrome, not navigation: these render as spans with no href and no
+ * click handler. They were "Home / Projects / Albums / Stack" and the search
+ * asked what you wanted to listen to, which is a music player's vocabulary
+ * applied to a list of code projects — and the one place a visitor would
+ * reasonably expect the metaphor to break down. Re-worded to the work's own
+ * language while keeping the player layout intact.
+ */
+const TABS = ['Home', 'Projects', 'Credits', 'Stack'] as const
 
 type PlayerChromeProps = {
   query: string
@@ -45,7 +53,7 @@ export function PlayerChrome({ query, onQueryChange }: PlayerChromeProps) {
         <input
           type="search"
           className={styles.search}
-          placeholder="What do you want to listen to?"
+          placeholder="Search the work…"
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           aria-label="Search projects"

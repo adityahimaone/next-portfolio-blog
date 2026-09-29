@@ -411,7 +411,7 @@ export function Contact() {
         <div className={styles.footerDeck}>
           <div className={styles.footerPanel}>
             <div className={styles.footerBrand}>
-              <span className={styles.footerBrandName}>Aditya Himaone</span>
+              <span className={styles.footerBrandName}>Aditya Himawan</span>
               <span className={styles.footerBrandMeta}>
                 © {currentYear} · adityahimaone.space
               </span>

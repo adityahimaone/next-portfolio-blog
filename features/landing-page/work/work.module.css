@@ -1425,8 +1425,9 @@
 
 .bannerSub {
   margin: 0;
-  color: rgba(255, 255, 255, 0.66);
-  font-size: 11px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12.5px;
+  line-height: 1.4;
 }
 
 .bannerPlay {
@@ -1458,7 +1459,7 @@
 .libraryEmpty {
   padding: 16px 10px;
   color: var(--slate);
-  font-size: 11px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -1658,8 +1659,8 @@
 .artistPromoBody {
   margin: 0;
   color: var(--slate);
-  font-size: 10.5px;
-  line-height: 1.45;
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 
 .artistPromoCta {

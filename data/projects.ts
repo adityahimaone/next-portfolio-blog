@@ -26,7 +26,6 @@ export type WorkProject = {
   /** Liner notes tracklist, and the "lyrics" that light up on the turntable. */
   highlights: string[]
   palette: ProjectPalette
-  icon: LucideIcon
 }
 
 /**
@@ -53,20 +52,21 @@ const SEEDS: Seed[] = [
     slug: 'switchyard',
     title: 'Switchyard',
     description:
-      'A keyboard-first workflow board that turns a pile of tabs into one routeable list. Built for people who keep their whole workday in a browser.',
+      'A control plane for coding agents. Boards and tasks live in one place, a dispatcher claims each one, and results wait in review until someone approves the diff.',
     cover: '/work/switchyard-cover.webp',
     url: 'https://github.com/adityahimaone/switchyard',
     genre: 'Developer tools',
     year: 2024,
     role: 'Design and build',
-    stack: ['Next.js', 'TypeScript', 'Tailwind CSS'],
+    stack: ['Go', 'SQLite', 'React', 'Vite', 'gRPC'],
     highlights: [
-      'One board replaces the tab strip',
-      'Every item keeps its origin route',
-      'Keyboard-first, mouse-optional',
-      'Shipped as a static export',
+      'One board, one queue, no handoff',
+      'Dispatch lands where the task lives',
+      'Every run leaves a trace you can read',
+      'Review happens where the work happened',
+      'Nothing hides in a second tab',
+      'The agent stops when the work stops',
     ],
-    icon: Globe,
   },
   {
     slug: 'primarindo-asia',
@@ -80,12 +80,13 @@ const SEEDS: Seed[] = [
     role: 'Frontend lead',
     stack: ['Next.js', 'TypeScript', 'CMS'],
     highlights: [
-      'One catalogue across every plant',
-      'Enquiry flow cut from five steps to two',
-      'Editors ship changes without a deploy',
-      'Largest screen size reduced 38%',
+      'Manufacturing, made scannable',
+      'Product lines on one honest grid',
+      'Capability without the brochure tone',
+      'A public face that matches the plant',
+      'The facts first, the pitch after',
+      'Clear enough to forward to a client',
     ],
-    icon: 'globe' as unknown as LucideIcon,
   },
   {
     slug: 'habit-tracker',
@@ -99,12 +100,13 @@ const SEEDS: Seed[] = [
     role: 'Design and build',
     stack: ['Next.js', 'TypeScript', 'Tailwind CSS'],
     highlights: [
-      'Streaks survive timezone travel',
-      'Weekly review replaces daily nagging',
-      'Local-first storage, no account',
-      'Installable as a PWA',
+      'Log the day in a single tap',
+      'Miss once and the streak survives',
+      'The week reads in one glance',
+      'No dashboard sprawl to decode',
+      'Small enough to keep every morning',
+      'Momentum you can actually see',
     ],
-    icon: Zap,
   },
   {
     slug: 'seaphantom',
@@ -119,12 +121,13 @@ const SEEDS: Seed[] = [
     role: 'Frontend engineer',
     stack: ['React', 'Web3.js', 'Tailwind CSS'],
     highlights: [
-      'Wallet connect without a modal maze',
-      'Gallery scrolls smoothly on mobile',
-      'Ownership verified on chain',
-      'Lazy-loaded mint flow',
+      'Landing page for a Web3 product',
+      'Explain the collection, not the jargon',
+      'Responsive from the first breakpoint',
+      'A door, not a dead end',
+      'The pitch ends where the product starts',
+      'Built to hand off cleanly',
     ],
-    icon: Cpu,
   },
   {
     slug: 'seaphantom-p2p',
@@ -139,12 +142,13 @@ const SEEDS: Seed[] = [
     role: 'Frontend engineer',
     stack: ['React', 'TypeScript', 'Web3.js'],
     highlights: [
-      'Escrow states legible without docs',
-      'Order book updates without a reload',
-      'Settlement is explained, not implied',
-      'Keyboard reachable throughout',
+      'Account states you can read at a glance',
+      'Confirm before the trade commits',
+      'Every pending state has feedback',
+      'Trading without the guesswork',
+      'Failure modes surfaced, not swallowed',
+      'The interface admits what it does not know',
     ],
-    icon: Database,
   },
   {
     slug: 'labgrownbeasts',
@@ -159,20 +163,33 @@ const SEEDS: Seed[] = [
     role: 'Frontend engineer',
     stack: ['Next.js', 'CMS', 'Tailwind CSS'],
     highlights: [
-      'Science written for a general reader',
-      'Gallery preloads before scroll',
-      'Editorial structure, not a landing page',
-      'Print stylesheet included',
+      'A profile site for a small team',
+      'The work explains itself',
+      'Case studies in the order people arrive',
+      'Company story without a sales call',
+      'Maintainable by the people who own it',
+      'Clarity as a competitive edge',
     ],
-    icon: Layers,
   },
 ]
 
+/**
+ * Newest first, which is what the section heading promises the visitor.
+ * Sorting here rather than hand-ordering SEEDS means a new project added at
+ * the bottom lands in the right place without anyone remembering to move it —
+ * SEEDS order is 2024, 2024, 2026, 2022, so the raw order was the one place
+ * this could silently drift from the copy again.
+ *
+ * The spread-then-sort keeps SEEDS first, so two projects sharing a year stay
+ * in the order they were written rather than flipping between builds.
+ */
 export const WORK_PROJECTS: WorkProject[] = SEEDS.map((seed, index) => ({
   ...seed,
   id: index,
   palette: palette(index),
 }))
+  .sort((a, b) => b.year - a.year)
+  .map((project, index) => ({ ...project, id: index }))
 
 /** Seconds of "playback" each project gets in the turntable preview. */
 export const PROJECT_PREVIEW_DURATION = 185

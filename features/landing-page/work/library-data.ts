@@ -14,56 +14,7 @@ export type LibraryTrack = WorkProject & {
   readonly lyrics: readonly string[]
 }
 
-const REAL_LYRICS: Record<string, readonly string[]> = {
-  Switchyard: [
-    'One board, one queue, no handoff',
-    'Dispatch lands where the task lives',
-    'Every run leaves a trace you can read',
-    'Review happens where the work happened',
-    'Nothing hides in a second tab',
-    'The agent stops when the work stops',
-  ],
-  'Primarindo Asia': [
-    'Manufacturing, made scannable',
-    'Product lines on one honest grid',
-    'Capability without the brochure tone',
-    'A public face that matches the plant',
-    'The facts first, the pitch after',
-    'Clear enough to forward to a client',
-  ],
-  'Habit Tracker': [
-    'Log the day in a single tap',
-    'Miss once and the streak survives',
-    'The week reads in one glance',
-    'No dashboard sprawl to decode',
-    'Small enough to keep every morning',
-    'Momentum you can actually see',
-  ],
-  SeaPhantom: [
-    'Landing page for a Web3 product',
-    'Explain the collection, not the jargon',
-    'Responsive from the first breakpoint',
-    'A door, not a dead end',
-    'The pitch ends where the product starts',
-    'Built to hand off cleanly',
-  ],
-  'SeaPhantom P2P': [
-    'Account states you can read at a glance',
-    'Confirm before the trade commits',
-    'Every pending state has feedback',
-    'Trading without the guesswork',
-    'Failure modes surfaced, not swallowed',
-    'The interface admits what it does not know',
-  ],
-  Labgrownbeasts: [
-    'A profile site for a small team',
-    'The work explains itself',
-    'Case studies in the order people arrive',
-    'Company story without a sales call',
-    'Maintainable by the people who own it',
-    'Clarity as a competitive edge',
-  ],
-}
+
 
 const ALBUMS = [
   'Selected Work',
@@ -76,7 +27,7 @@ export const LIBRARY_TRACKS: readonly LibraryTrack[] = WORK_PROJECTS.map(
   (project, index) => ({
     ...project,
     album: ALBUMS[index % ALBUMS.length] as string,
-    lyrics: REAL_LYRICS[project.title] ?? project.highlights,
+    lyrics: project.highlights,
   }),
 )
 
@@ -125,50 +76,56 @@ export type ArtistRow = {
 }
 
 /**
- * Placeholder credits, sized to match a real player's artist column. The
- * avatars are generated gradients rather than photographs, so nothing implies a
- * real person endorsed this work.
+ * The credits column, sized to match a real player's artist column. The
+ * avatars are generated gradients rather than photographs.
+ *
+ * These used to be real artists' names with invented listener counts. The
+ * metaphor was fine; borrowing six real people's names and hanging fabricated
+ * statistics on them was not something to put above a "Get in touch" button in
+ * a portfolio a client is reading to decide whether to hire you. They are now
+ * the actual clients and collaborators behind the work, which fills the same
+ * six rows and is the one version that is true.
  */
 export const ARTIST_ROWS: readonly ArtistRow[] = [
   {
     id: 0,
-    name: 'Taylor Swift',
-    meta: '221M listeners · 14 albums',
+    name: 'Bisadaya',
+    meta: 'Job platform · 15K users',
     from: '#f2a1b8',
     to: '#b45a86',
   },
   {
     id: 1,
-    name: 'Ariana Grande',
-    meta: '196M listeners · 9 albums',
+    name: '80&Company',
+    meta: 'HR management · Kyoto',
     from: '#d8b4a0',
     to: '#8c5f4d',
   },
   {
     id: 2,
-    name: 'Dua Lipa',
-    meta: '210M listeners · 3 albums',
+    name: 'Primarindo Asia',
+    meta: 'Manufacturing · Jakarta',
     from: '#9fd6e0',
     to: '#3f7f95',
   },
   {
     id: 3,
-    name: 'Sabrina Carpenter',
-    meta: '148M listeners · 6 albums',
+    name: 'Niqcode',
+    meta: 'Product studio · Partner',
     from: '#f6d68a',
     to: '#c08a3e',
   },
   {
     id: 4,
-    name: 'NIKI',
-    meta: '92M listeners · 2 albums',
+    name: 'Unzyp Solusi',
+    meta: 'E-commerce · Jakarta',
     from: '#b9a7e6',
     to: '#5f4b9c',
   },
   {
     id: 5,
-    name: 'Billie Eilish',
-    meta: '205M listeners · 2 albums',
+    name: 'Campus Connect',
+    meta: 'Launched in three months',
     from: '#8fd9c0',
     to: '#2f6f5c',
   },

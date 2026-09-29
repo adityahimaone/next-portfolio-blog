@@ -10,6 +10,9 @@ export async function GET() {
     { url: '/projects', changefreq: 'monthly', priority: 0.8 },
     { url: '/bookmarks', changefreq: 'weekly', priority: 0.8 },
     { url: '/music', changefreq: 'monthly', priority: 0.8 },
+    // /contact is a real page a visitor can reach from the footer, so it
+    // belongs in the sitemap. It was missing while every other route was here.
+    { url: '/contact', changefreq: 'monthly', priority: 0.6 },
   ]
 
   const blogEntries = posts.map((post: { slug: string; date: string }) => ({

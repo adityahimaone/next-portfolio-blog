@@ -1344,10 +1344,10 @@
   background: rgba(244, 240, 232, 0.9);
 }
 .clipDetail p {
-  max-width: 620px;
+  max-width: 62ch;
   margin: 6px 0 0;
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.5;
 }
 .track:nth-of-type(4) .clip {
   background: #8190a5;
@@ -6484,7 +6484,8 @@
     font-size: clamp(20px, min(2.8vw, 3.8vh), 38px);
   }
   .skillsIntro > p {
-    font-size: 11px;
+    font-size: 13px;
+    line-height: 1.5;
     padding: 6px 10px;
   }
   .controller {
@@ -7960,11 +7961,10 @@
 }
 .contactDeckNote {
   margin: 20px 60px 0;
-  color: #7f837d;
-  font: 700 8px var(--font-geist-mono);
-  letter-spacing: 0.08em;
+  color: #8b8f88;
+  font: 700 11px/1.5 var(--font-geist-mono);
+  letter-spacing: 0.04em;
   text-align: center;
-  text-transform: uppercase;
 }
 
 @media (max-width: 768px) {
@@ -8286,9 +8286,9 @@
   font-variant-numeric: tabular-nums;
 }
 .heroProof span {
-  color: rgba(244, 240, 232, 0.7);
-  font-size: 11px;
-  line-height: 1.4;
+  color: rgba(244, 240, 232, 0.78);
+  font-size: 12.5px;
+  line-height: 1.45;
 }
 .heroBottomRail {
   position: absolute;
@@ -10765,8 +10765,8 @@
 .footerMotto {
   margin: 0;
   max-width: 32ch;
-  color: rgba(231, 226, 216, 0.6);
-  font: 500 clamp(11px, 1.05vw, 13px) / 1.35 var(--font-space-grotesk),
+  color: rgba(231, 226, 216, 0.72);
+  font: 500 clamp(13px, 1.05vw, 15px) / 1.45 var(--font-space-grotesk),
     sans-serif;
   letter-spacing: 0.01em;
 }

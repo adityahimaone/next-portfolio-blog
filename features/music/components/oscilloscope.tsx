@@ -84,7 +84,7 @@ export function Oscilloscope({ className }: { className?: string }) {
 
       animRef.current = requestAnimationFrame(draw)
     } catch (err) {
-      setError('Mic access denied')
+      setError('Microphone access denied')
     }
   }, [])
 

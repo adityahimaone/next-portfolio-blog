@@ -20,7 +20,7 @@ export const FEATURED_PROJECTS: FeaturedProject[] = [
     tech: ['Next.js', 'React 19', 'Tailwind CSS v4', 'TypeScript', 'Motion'],
   },
   {
-    name: 'Habbit Tracking',
+    name: 'Habit Tracking',
     slug: 'habbit-tracking',
     githubSlug: 'habbit-tracking-next',
     description:

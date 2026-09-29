@@ -355,7 +355,7 @@ export function BookmarksPage({
                 onChange={(event) => setQuery(event.target.value)}
                 className={styles.search}
                 aria-label="Search bookmarks"
-                placeholder="Search title, domain, tag…  ( / )"
+                placeholder="Search title, domain, tag… ( / )"
               />
               {query && (
                 <button

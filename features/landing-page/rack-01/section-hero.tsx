@@ -92,7 +92,7 @@ export function Hero() {
               <i aria-hidden="true" />
               <span>Jakarta, Indonesia</span>
             </div>
-            <h1 className={styles.srOnly}>Aditya Himaone, Frontend Engineer</h1>
+            <h1 className={styles.srOnly}>Aditya Himawan, Frontend Engineer</h1>
             <strong className={styles.heroPanelTitle}>
               Built for the moment after launch.
             </strong>

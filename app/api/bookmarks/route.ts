@@ -1,31 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
+import { timingSafeEqual } from 'node:crypto'
 import path from 'path'
 import { Bookmark } from '@/features/bookmarks/types'
 
 const FILE_PATH = path.join(process.cwd(), 'content', 'bookmarks.json')
 
-const ADMIN_USER = 'adityahimaone'
-const ADMIN_PASS = 'adit143'
+/**
+ * Admin credentials come from the environment. They used to be literals in
+ * this file, which put the password in git history on a public repository —
+ * recoverable from the commit even after the value is changed here.
+ *
+ * They are read per request rather than at module load: Next evaluates route
+ * modules while collecting page data at build time, so a module-level throw on
+ * a missing variable fails the build on any machine that has not exported
+ * them. Missing credentials instead mean every write is refused, which is the
+ * safe direction to fail and keeps `next build` independent of the deploy
+ * environment.
+ */
+function credentials(): { user: string; pass: string } | null {
+  const user = process.env.ADMIN_USER
+  const pass = process.env.ADMIN_PASS
+  return user && pass ? { user, pass } : null
+}
+
+function expectedTokenFor(user: string, pass: string): string {
+  return Buffer.from(`${user}:${pass}`).toString('base64')
+}
 
 function verifyAuth(req: NextRequest): boolean {
+  const creds = credentials()
+  // Fail closed: with no credentials configured, nothing can authenticate.
+  if (!creds) return false
+
   const authHeader =
     req.headers.get('authorization') || req.headers.get('x-admin-auth')
   const cookieAuth = req.cookies.get('admin_auth')?.value
+  const expectedToken = expectedTokenFor(creds.user, creds.pass)
 
-  const expectedToken = Buffer.from(`${ADMIN_USER}:${ADMIN_PASS}`).toString(
-    'base64',
-  )
+  // timingSafeEqual needs equal-length buffers, so compare lengths first and
+  // do the cheap rejection before taking the slower constant-time path.
+  const matches = (candidate: string | undefined) => {
+    if (!candidate) return false
+    const given = Buffer.from(candidate)
+    const expected = Buffer.from(expectedToken)
+    return given.length === expected.length && timingSafeEqual(given, expected)
+  }
 
-  if (cookieAuth === expectedToken) return true
+  if (matches(cookieAuth)) return true
   if (authHeader) {
     if (authHeader.startsWith('Basic ')) {
-      const token = authHeader.substring(6).trim()
-      return token === expectedToken
+      return matches(authHeader.substring(6).trim())
     }
     if (
-      authHeader === expectedToken ||
-      authHeader === `${ADMIN_USER}:${ADMIN_PASS}`
+      matches(authHeader) ||
+      authHeader === `${creds.user}:${creds.pass}`
     ) {
       return true
     }
@@ -68,21 +97,23 @@ export async function POST(req: NextRequest) {
     // Action: Login check
     if (body.action === 'login') {
       const { username, password } = body
-      if (username === ADMIN_USER && password === ADMIN_PASS) {
-        const token = Buffer.from(`${ADMIN_USER}:${ADMIN_PASS}`).toString(
-          'base64',
-        )
+      const creds = credentials()
+      if (creds && username === creds.user && password === creds.pass) {
         const response = NextResponse.json({
           success: true,
           message: 'Authenticated successfully',
         })
-        response.cookies.set('admin_auth', token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-        })
+        response.cookies.set(
+          'admin_auth',
+          expectedTokenFor(creds.user, creds.pass),
+          {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+          },
+        )
         return response
       }
       return NextResponse.json(
@@ -151,7 +182,7 @@ export async function PUT(req: NextRequest) {
   try {
     if (!verifyAuth(req)) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
+        { success: false, message: 'Unauthorized. Admin credentials required.' },
         { status: 401 },
       )
     }
@@ -219,7 +250,7 @@ export async function DELETE(req: NextRequest) {
   try {
     if (!verifyAuth(req)) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
+        { success: false, message: 'Unauthorized. Admin credentials required.' },
         { status: 401 },
       )
     }
@@ -229,7 +260,7 @@ export async function DELETE(req: NextRequest) {
 
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'Bookmark ID required' },
+        { success: false, message: 'Bookmark ID is required' },
         { status: 400 },
       )
     }

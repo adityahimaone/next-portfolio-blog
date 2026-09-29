@@ -75,7 +75,11 @@ export function LibrarySidebar({
         })}
 
         {visible.length === 0 && (
-          <li className={styles.libraryEmpty}>No matches</li>
+          <li className={styles.libraryEmpty}>
+            {query.trim()
+              ? `No project matches “${query.trim()}”`
+              : 'No project to show yet'}
+          </li>
         )}
       </ul>
 

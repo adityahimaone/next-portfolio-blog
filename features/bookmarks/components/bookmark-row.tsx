@@ -48,7 +48,6 @@ export function BookmarkRow({
             <Globe size={14} aria-hidden="true" />
           </span>
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={faviconSrc}
             alt=""

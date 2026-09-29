@@ -54,10 +54,12 @@ export function TapeDeck({ className }: { className?: string }) {
   }, [isPlaying])
 
   return (
-    <div className={cn(
-      'relative overflow-hidden rounded-xl border border-zinc-300 bg-zinc-100 shadow-xl dark:border-zinc-700 dark:bg-zinc-950',
-      className
-    )}>
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-xl border border-zinc-300 bg-zinc-100 shadow-xl dark:border-zinc-700 dark:bg-zinc-950',
+        className,
+      )}
+    >
       {/* Top panel */}
       <div className="flex items-center justify-between border-b border-zinc-300 bg-zinc-200/80 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900/80">
         <div className="flex items-center gap-3">
@@ -65,12 +67,15 @@ export function TapeDeck({ className }: { className?: string }) {
             <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
           </div>
           <div>
-            <div className="text-xs font-bold tracking-wider text-zinc-700 uppercase dark:text-zinc-300">TAPE DECK</div>
+            <div className="text-xs font-bold tracking-wider text-zinc-700 uppercase dark:text-zinc-300">
+              TAPE DECK
+            </div>
             <div className="text-[9px] text-zinc-500">CASSETTE / DOLBY NR</div>
           </div>
         </div>
         <div className="font-mono text-sm font-bold text-zinc-600 dark:text-zinc-400">
-          {String(Math.floor(counter / 60)).padStart(2, '0')}:{String(Math.floor(counter % 60)).padStart(2, '0')}
+          {String(Math.floor(counter / 60)).padStart(2, '0')}:
+          {String(Math.floor(counter % 60)).padStart(2, '0')}
         </div>
       </div>
 
@@ -85,8 +90,12 @@ export function TapeDeck({ className }: { className?: string }) {
 
             {/* Label area */}
             <div className="mb-3 rounded border border-zinc-700 bg-zinc-100 p-2 dark:bg-zinc-800">
-              <div className="text-center text-[10px] font-bold tracking-wider text-zinc-500 uppercase">A-SIDE</div>
-              <div className="text-center text-xs font-bold text-zinc-800 dark:text-zinc-200">Mixtape 2026</div>
+              <div className="text-center text-[10px] font-bold tracking-wider text-zinc-500 uppercase">
+                A-SIDE
+              </div>
+              <div className="text-center text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                Mixtape 2026
+              </div>
             </div>
 
             {/* Window with reels */}
@@ -104,7 +113,9 @@ export function TapeDeck({ className }: { className?: string }) {
                   <div
                     key={deg}
                     className="absolute top-1/2 left-1/2 h-8 w-1 -translate-x-1/2 -translate-y-1/2 bg-zinc-500"
-                    style={{ transform: `translate(-50%, -50%) rotate(${deg}deg)` }}
+                    style={{
+                      transform: `translate(-50%, -50%) rotate(${deg}deg)`,
+                    }}
                   />
                 ))}
               </div>
@@ -124,7 +135,9 @@ export function TapeDeck({ className }: { className?: string }) {
                   <div
                     key={deg}
                     className="absolute top-1/2 left-1/2 h-8 w-1 -translate-x-1/2 -translate-y-1/2 bg-zinc-500"
-                    style={{ transform: `translate(-50%, -50%) rotate(${deg}deg)` }}
+                    style={{
+                      transform: `translate(-50%, -50%) rotate(${deg}deg)`,
+                    }}
                   />
                 ))}
               </div>
@@ -132,13 +145,15 @@ export function TapeDeck({ className }: { className?: string }) {
 
             {/* Bottom label */}
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-[8px] text-zinc-500">TYPE I / NORMAL BIAS</span>
+              <span className="text-[8px] text-zinc-500">
+                TYPE I / NORMAL BIAS
+              </span>
               <span className="text-[8px] text-zinc-500">60 MIN</span>
             </div>
 
             {/* Bottom screws */}
             <div className="absolute bottom-2 left-2 h-2 w-2 rounded-full bg-zinc-700" />
-            <div className="absolute bottom-2 right-2 h-2 w-2 rounded-full bg-zinc-700" />
+            <div className="absolute right-2 bottom-2 h-2 w-2 rounded-full bg-zinc-700" />
           </div>
         </div>
       </div>
@@ -160,10 +175,14 @@ export function TapeDeck({ className }: { className?: string }) {
             'flex h-14 w-14 items-center justify-center rounded-full border-2 shadow-lg transition-colors',
             isPlaying
               ? 'border-amber-300 bg-amber-50 text-amber-600 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400'
-              : 'border-zinc-300 bg-white text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'
+              : 'border-zinc-300 bg-white text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200',
           )}
         >
-          {isPlaying ? <Pause size={22} /> : <Play size={22} className="ml-0.5" />}
+          {isPlaying ? (
+            <Pause size={22} />
+          ) : (
+            <Play size={22} className="ml-0.5" />
+          )}
         </m.button>
 
         <m.button
@@ -181,17 +200,27 @@ export function TapeDeck({ className }: { className?: string }) {
             'flex h-10 w-10 items-center justify-center rounded-full border-2 shadow-sm transition-colors',
             isRecording
               ? 'border-red-300 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400'
-              : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
+              : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
           )}
         >
-          <div className={cn('h-3.5 w-3.5 rounded-full', isRecording ? 'bg-red-500 animate-pulse' : 'bg-zinc-400')} />
+          <div
+            className={cn(
+              'h-3.5 w-3.5 rounded-full',
+              isRecording ? 'animate-pulse bg-red-500' : 'bg-zinc-400',
+            )}
+          />
         </m.button>
       </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between border-t border-zinc-300 bg-zinc-200/50 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-900/50">
         <div className="flex items-center gap-2">
-          <div className={cn('h-2 w-2 rounded-full', isPlaying ? 'animate-pulse bg-green-500' : 'bg-zinc-400')} />
+          <div
+            className={cn(
+              'h-2 w-2 rounded-full',
+              isPlaying ? 'animate-pulse bg-green-500' : 'bg-zinc-400',
+            )}
+          />
           <span className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">
             {isRecording ? 'RECORDING' : isPlaying ? 'PLAYING' : 'STOPPED'}
           </span>

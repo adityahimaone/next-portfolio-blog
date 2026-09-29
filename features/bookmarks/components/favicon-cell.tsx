@@ -50,7 +50,7 @@ export function FaviconCell({
         <Globe className={styles.faviconFallback} aria-hidden="true" />
       )}
 
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {}
       <img
         className={styles.faviconImg}
         src={src}

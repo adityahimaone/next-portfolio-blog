@@ -1,21 +1,27 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals'
+import nextTypescript from 'eslint-config-next/typescript'
+import prettierRecommended from 'eslint-plugin-prettier/recommended'
 
 const eslintConfig = [
-  ...compat.extends(
-    "next/core-web-vitals",
-    "next/typescript",
-    "plugin:prettier/recommended",
-    "plugin:mdx/recommended",
-  ),
-];
+  {
+    ignores: [
+      '.next/**',
+      'node_modules/**',
+      'test-results/**',
+      'playwright-report/**',
+      'next-env.d.ts',
+    ],
+  },
+  ...nextCoreWebVitals,
+  ...nextTypescript,
+  prettierRecommended,
+  {
+    rules: {
+      // Favicons and bookmark thumbnails are arbitrary remote hosts that the
+      // image optimizer cannot be configured for one by one.
+      '@next/next/no-img-element': 'off',
+    },
+  },
+]
 
-export default eslintConfig;
+export default eslintConfig

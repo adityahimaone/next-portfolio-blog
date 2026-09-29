@@ -100,7 +100,7 @@ export function MusicPlayer() {
                   'relative flex h-10 w-10 items-center justify-center rounded-md border transition-all active:scale-95',
                   isPlaying
                     ? 'border-[#ff5a1f]/60 bg-gradient-to-b from-[#2a1d17] to-[#171311] text-[#ff5a1f] shadow-[0_0_12px_rgba(255,90,31,0.35),inset_0_1px_rgba(255,255,255,0.15)]'
-                    : 'border-[#4a4d47] bg-gradient-to-b from-[#252824] to-[#151715] text-[#a0a49c] hover:border-[#686c64] hover:text-[#e4e1d7] shadow-[0_2px_4px_rgba(0,0,0,0.5),inset_0_1px_rgba(255,255,255,0.08)]',
+                    : 'border-[#4a4d47] bg-gradient-to-b from-[#252824] to-[#151715] text-[#a0a49c] shadow-[0_2px_4px_rgba(0,0,0,0.5),inset_0_1px_rgba(255,255,255,0.08)] hover:border-[#686c64] hover:text-[#e4e1d7]',
                 )}
               >
                 {isPlaying ? (
@@ -154,7 +154,9 @@ export function MusicPlayer() {
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center justify-between font-mono text-[7px] font-bold tracking-wider text-[#82877c]">
                         <span>VOL</span>
-                        <span>{isMuted ? '0%' : `${Math.round(volume * 100)}%`}</span>
+                        <span>
+                          {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
+                        </span>
                       </div>
                       <Slider
                         defaultValue={[0.5]}

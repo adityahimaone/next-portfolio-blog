@@ -29,8 +29,34 @@ const NOTES: Note[] = [
   { key: 53, start: 12, duration: 4, color: 'bg-emerald-500' },
 ]
 
-const KEY_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-const KEY_COLORS = ['white', 'black', 'white', 'black', 'white', 'white', 'black', 'white', 'black', 'white', 'black', 'white']
+const KEY_NAMES = [
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
+]
+const KEY_COLORS = [
+  'white',
+  'black',
+  'white',
+  'black',
+  'white',
+  'white',
+  'black',
+  'white',
+  'black',
+  'white',
+  'black',
+  'white',
+]
 
 function getKeyName(midi: number): string {
   const octave = Math.floor(midi / 12) - 1
@@ -74,31 +100,44 @@ export function PianoRoll({ className }: { className?: string }) {
   }, [])
 
   return (
-    <div className={cn(
-      'relative overflow-hidden rounded-xl border border-zinc-300 bg-zinc-100 shadow-xl dark:border-zinc-700 dark:bg-zinc-950',
-      className
-    )}>
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-xl border border-zinc-300 bg-zinc-100 shadow-xl dark:border-zinc-700 dark:bg-zinc-950',
+        className,
+      )}
+    >
       <div className="flex items-center justify-between border-b border-zinc-300 bg-zinc-200/80 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900/80">
         <div className="flex items-center gap-3">
           <div className="flex h-7 w-7 items-center justify-center rounded border border-zinc-300 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800">
             <div className="h-2.5 w-2.5 rounded-full bg-blue-500" />
           </div>
           <div>
-            <div className="text-xs font-bold tracking-wider text-zinc-700 uppercase dark:text-zinc-300">PIANO ROLL</div>
-            <div className="text-[9px] text-zinc-500">16-BARS / NOTE EDITOR</div>
+            <div className="text-xs font-bold tracking-wider text-zinc-700 uppercase dark:text-zinc-300">
+              PIANO ROLL
+            </div>
+            <div className="text-[9px] text-zinc-500">
+              16-BARS / NOTE EDITOR
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <m.button whileTap={{ scale: 0.9 }} onClick={togglePlay}
-            className={cn('flex h-9 w-9 items-center justify-center rounded border shadow-sm transition-colors',
+          <m.button
+            whileTap={{ scale: 0.9 }}
+            onClick={togglePlay}
+            className={cn(
+              'flex h-9 w-9 items-center justify-center rounded border shadow-sm transition-colors',
               isPlaying
                 ? 'border-amber-300 bg-amber-50 text-amber-600 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400'
-                : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300')}
+                : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+            )}
           >
             {isPlaying ? <Pause size={16} /> : <Play size={16} />}
           </m.button>
-          <m.button whileTap={{ scale: 0.9 }} onClick={stop}
-            className="flex h-9 w-9 items-center justify-center rounded border border-zinc-300 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+          <m.button
+            whileTap={{ scale: 0.9 }}
+            onClick={stop}
+            className="flex h-9 w-9 items-center justify-center rounded border border-zinc-300 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+          >
             <Square size={14} />
           </m.button>
         </div>
@@ -111,7 +150,13 @@ export function PianoRoll({ className }: { className?: string }) {
           <div className="flex h-6 border-b border-zinc-300 bg-zinc-200/50 dark:border-zinc-700 dark:bg-zinc-900/50">
             <div className="w-12 shrink-0 border-r border-zinc-300 dark:border-zinc-700" />
             {Array.from({ length: 16 }).map((_, i) => (
-              <div key={i} className={cn('flex-1 border-r border-zinc-200 px-1 text-[9px] font-mono text-zinc-500 dark:border-zinc-800', i % 4 === 0 && 'bg-zinc-200/30 dark:bg-zinc-800/30')}>
+              <div
+                key={i}
+                className={cn(
+                  'flex-1 border-r border-zinc-200 px-1 font-mono text-[9px] text-zinc-500 dark:border-zinc-800',
+                  i % 4 === 0 && 'bg-zinc-200/30 dark:bg-zinc-800/30',
+                )}
+              >
                 {i + 1}
               </div>
             ))}
@@ -123,21 +168,45 @@ export function PianoRoll({ className }: { className?: string }) {
               const noteIdx = key % 12
               const isBlack = KEY_COLORS[noteIdx] === 'black'
               return (
-                <div key={key} className={cn('flex h-5 border-b border-zinc-200 dark:border-zinc-800', isBlack ? 'bg-zinc-200/50 dark:bg-zinc-800/50' : 'bg-zinc-100 dark:bg-zinc-950')}>
+                <div
+                  key={key}
+                  className={cn(
+                    'flex h-5 border-b border-zinc-200 dark:border-zinc-800',
+                    isBlack
+                      ? 'bg-zinc-200/50 dark:bg-zinc-800/50'
+                      : 'bg-zinc-100 dark:bg-zinc-950',
+                  )}
+                >
                   {/* Key label */}
-                  <div className={cn('w-12 shrink-0 border-r border-zinc-300 px-1 text-right text-[9px] font-mono dark:border-zinc-700', isBlack ? 'text-zinc-400' : 'text-zinc-600')}>
+                  <div
+                    className={cn(
+                      'w-12 shrink-0 border-r border-zinc-300 px-1 text-right font-mono text-[9px] dark:border-zinc-700',
+                      isBlack ? 'text-zinc-400' : 'text-zinc-600',
+                    )}
+                  >
                     {getKeyName(key)}
                   </div>
                   {/* Grid cells */}
                   <div className="relative flex flex-1">
                     {Array.from({ length: 16 }).map((_, colIdx) => (
-                      <div key={colIdx} className={cn('flex-1 border-r border-zinc-100 dark:border-zinc-900', colIdx % 4 === 0 && 'border-r-zinc-300 dark:border-r-zinc-700')} />
+                      <div
+                        key={colIdx}
+                        className={cn(
+                          'flex-1 border-r border-zinc-100 dark:border-zinc-900',
+                          colIdx % 4 === 0 &&
+                            'border-r-zinc-300 dark:border-r-zinc-700',
+                        )}
+                      />
                     ))}
                     {/* Notes */}
                     {NOTES.filter((n) => n.key === key).map((note, ni) => (
                       <div
                         key={ni}
-                        className={cn('absolute top-0.5 h-4 rounded-sm', note.color, 'shadow-sm')}
+                        className={cn(
+                          'absolute top-0.5 h-4 rounded-sm',
+                          note.color,
+                          'shadow-sm',
+                        )}
                         style={{
                           left: `calc(${(note.start / 16) * 100}% + 3rem)`,
                           width: `calc(${(note.duration / 16) * 100}% - 2px)`,
@@ -151,7 +220,7 @@ export function PianoRoll({ className }: { className?: string }) {
 
             {/* Playhead */}
             <div
-              className="absolute top-0 bottom-0 w-px bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)] z-10 pointer-events-none"
+              className="pointer-events-none absolute top-0 bottom-0 z-10 w-px bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]"
               style={{ left: `calc(${(playhead / 16) * 100}% + 3rem)` }}
             />
           </div>
@@ -160,10 +229,19 @@ export function PianoRoll({ className }: { className?: string }) {
 
       <div className="flex items-center justify-between border-t border-zinc-300 bg-zinc-200/50 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-900/50">
         <div className="flex items-center gap-2">
-          <div className={cn('h-2 w-2 rounded-full', isPlaying ? 'animate-pulse bg-green-500' : 'bg-zinc-400')} />
-          <span className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">{isPlaying ? 'PLAYING' : 'STOPPED'}</span>
+          <div
+            className={cn(
+              'h-2 w-2 rounded-full',
+              isPlaying ? 'animate-pulse bg-green-500' : 'bg-zinc-400',
+            )}
+          />
+          <span className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">
+            {isPlaying ? 'PLAYING' : 'STOPPED'}
+          </span>
         </div>
-        <span className="text-[9px] text-zinc-500">BAR {Math.floor(playhead) + 1} / 16</span>
+        <span className="text-[9px] text-zinc-500">
+          BAR {Math.floor(playhead) + 1} / 16
+        </span>
       </div>
     </div>
   )

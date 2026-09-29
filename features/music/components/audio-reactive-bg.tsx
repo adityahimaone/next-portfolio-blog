@@ -32,7 +32,12 @@ export function AudioReactiveBg({
   }
 
   const drawGradient = useCallback(
-    (values: Float32Array, ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    (
+      values: Float32Array,
+      ctx: CanvasRenderingContext2D,
+      w: number,
+      h: number,
+    ) => {
       const mult = intensityMap[intensity]
 
       // Get average energy in low/mid/high bands
@@ -82,7 +87,10 @@ export function AudioReactiveBg({
         const sr = 50 + high * 200
 
         const spot = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr)
-        spot.addColorStop(0, `hsla(${hue1 + i * 30}, 80%, 50%, ${0.05 + mid * 0.05})`)
+        spot.addColorStop(
+          0,
+          `hsla(${hue1 + i * 30}, 80%, 50%, ${0.05 + mid * 0.05})`,
+        )
         spot.addColorStop(1, 'transparent')
 
         ctx.fillStyle = spot
@@ -93,7 +101,12 @@ export function AudioReactiveBg({
   )
 
   const drawBars = useCallback(
-    (values: Float32Array, ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    (
+      values: Float32Array,
+      ctx: CanvasRenderingContext2D,
+      w: number,
+      h: number,
+    ) => {
       const mult = intensityMap[intensity]
       const barCount = 32
       const barWidth = w / barCount
@@ -117,7 +130,12 @@ export function AudioReactiveBg({
   )
 
   const drawOrb = useCallback(
-    (values: Float32Array, ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    (
+      values: Float32Array,
+      ctx: CanvasRenderingContext2D,
+      w: number,
+      h: number,
+    ) => {
       const mult = intensityMap[intensity]
 
       let avg = 0
@@ -280,7 +298,7 @@ export function AudioReactiveBg({
 
       {/* Mode indicator */}
       {isActive && (
-        <div className="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 rounded border border-green-200 bg-green-50/80 px-2 py-1 backdrop-blur-sm dark:border-green-900/30 dark:bg-green-950/30">
+        <div className="absolute right-4 bottom-4 z-20 flex items-center gap-1.5 rounded border border-green-200 bg-green-50/80 px-2 py-1 backdrop-blur-sm dark:border-green-900/30 dark:bg-green-950/30">
           <Waves size={10} className="text-green-500" />
           <span className="text-[9px] font-bold text-green-600 uppercase dark:text-green-400">
             {mode}

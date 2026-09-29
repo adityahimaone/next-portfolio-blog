@@ -14,34 +14,105 @@ interface KnobParam {
 }
 
 const INITIAL_PARAMS: KnobParam[] = [
-  { label: 'CUTOFF', value: 65, min: 0, max: 100, unit: '%', color: 'text-blue-500' },
-  { label: 'RESONANCE', value: 30, min: 0, max: 100, unit: '%', color: 'text-purple-500' },
-  { label: 'ATTACK', value: 15, min: 0, max: 100, unit: 'ms', color: 'text-green-500' },
-  { label: 'DECAY', value: 45, min: 0, max: 100, unit: 'ms', color: 'text-amber-500' },
-  { label: 'SUSTAIN', value: 70, min: 0, max: 100, unit: '%', color: 'text-red-500' },
-  { label: 'RELEASE', value: 35, min: 0, max: 100, unit: 'ms', color: 'text-pink-500' },
-  { label: 'DETUNE', value: 0, min: -50, max: 50, unit: 'ct', color: 'text-cyan-500' },
-  { label: 'MIX', value: 80, min: 0, max: 100, unit: '%', color: 'text-orange-500' },
+  {
+    label: 'CUTOFF',
+    value: 65,
+    min: 0,
+    max: 100,
+    unit: '%',
+    color: 'text-blue-500',
+  },
+  {
+    label: 'RESONANCE',
+    value: 30,
+    min: 0,
+    max: 100,
+    unit: '%',
+    color: 'text-purple-500',
+  },
+  {
+    label: 'ATTACK',
+    value: 15,
+    min: 0,
+    max: 100,
+    unit: 'ms',
+    color: 'text-green-500',
+  },
+  {
+    label: 'DECAY',
+    value: 45,
+    min: 0,
+    max: 100,
+    unit: 'ms',
+    color: 'text-amber-500',
+  },
+  {
+    label: 'SUSTAIN',
+    value: 70,
+    min: 0,
+    max: 100,
+    unit: '%',
+    color: 'text-red-500',
+  },
+  {
+    label: 'RELEASE',
+    value: 35,
+    min: 0,
+    max: 100,
+    unit: 'ms',
+    color: 'text-pink-500',
+  },
+  {
+    label: 'DETUNE',
+    value: 0,
+    min: -50,
+    max: 50,
+    unit: 'ct',
+    color: 'text-cyan-500',
+  },
+  {
+    label: 'MIX',
+    value: 80,
+    min: 0,
+    max: 100,
+    unit: '%',
+    color: 'text-orange-500',
+  },
 ]
 
-function Knob({ param, onChange }: { param: KnobParam; onChange: (v: number) => void }) {
+function Knob({
+  param,
+  onChange,
+}: {
+  param: KnobParam
+  onChange: (v: number) => void
+}) {
   const [isDragging, setIsDragging] = useState(false)
   const startY = useRef(0)
   const startValue = useRef(0)
 
-  const handleStart = useCallback((y: number) => {
-    setIsDragging(true)
-    startY.current = y
-    startValue.current = param.value
-  }, [param.value])
+  const handleStart = useCallback(
+    (y: number) => {
+      setIsDragging(true)
+      startY.current = y
+      startValue.current = param.value
+    },
+    [param.value],
+  )
 
-  const handleMove = useCallback((y: number) => {
-    if (!isDragging) return
-    const delta = (startY.current - y) * 0.5
-    const range = param.max - param.min
-    const newValue = Math.max(param.min, Math.min(param.max, startValue.current + (delta / 100) * range))
-    onChange(newValue)
-  }, [isDragging, param.min, param.max, onChange])
+  const handleMove = useCallback(
+    (y: number) => {
+      if (!isDragging) return
+      const delta = (startY.current - y) * 0.5
+      const range = param.max - param.min
+      const newValue = Math.max(
+        param.min,
+        Math.min(param.max, startValue.current + (delta / 100) * range),
+      )
+      onChange(newValue)
+    },
+    [isDragging, param.min, param.max, onChange],
+  )
 
   const handleEnd = useCallback(() => setIsDragging(false), [])
 
@@ -54,7 +125,7 @@ function Knob({ param, onChange }: { param: KnobParam; onChange: (v: number) => 
       <div
         className={cn(
           'relative flex h-16 w-16 cursor-grab items-center justify-center rounded-full border-4 border-zinc-300 bg-zinc-200 shadow-inner active:cursor-grabbing dark:border-zinc-700 dark:bg-zinc-800',
-          isDragging && 'border-zinc-400 dark:border-zinc-500'
+          isDragging && 'border-zinc-400 dark:border-zinc-500',
         )}
         onMouseDown={(e) => handleStart(e.clientY)}
         onMouseMove={(e) => handleMove(e.clientY)}
@@ -66,7 +137,10 @@ function Knob({ param, onChange }: { param: KnobParam; onChange: (v: number) => 
       >
         {/* Knob indicator */}
         <div
-          className={cn('absolute h-1 w-5 rounded-full', param.color.replace('text-', 'bg-'))}
+          className={cn(
+            'absolute h-1 w-5 rounded-full',
+            param.color.replace('text-', 'bg-'),
+          )}
           style={{
             transform: `rotate(${angle}deg) translateY(-20px)`,
             transformOrigin: 'center center',
@@ -83,7 +157,9 @@ function Knob({ param, onChange }: { param: KnobParam; onChange: (v: number) => 
       </div>
 
       {/* Label */}
-      <span className="text-[9px] font-bold tracking-wider text-zinc-500">{param.label}</span>
+      <span className="text-[9px] font-bold tracking-wider text-zinc-500">
+        {param.label}
+      </span>
     </div>
   )
 }
@@ -92,22 +168,28 @@ export function SynthKnobs({ className }: { className?: string }) {
   const [params, setParams] = useState<KnobParam[]>(INITIAL_PARAMS)
 
   const updateParam = useCallback((idx: number, value: number) => {
-    setParams((prev) => prev.map((p, i) => i === idx ? { ...p, value } : p))
+    setParams((prev) => prev.map((p, i) => (i === idx ? { ...p, value } : p)))
   }, [])
 
   return (
-    <div className={cn(
-      'relative overflow-hidden rounded-xl border border-zinc-300 bg-zinc-100 shadow-xl dark:border-zinc-700 dark:bg-zinc-950',
-      className
-    )}>
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-xl border border-zinc-300 bg-zinc-100 shadow-xl dark:border-zinc-700 dark:bg-zinc-950',
+        className,
+      )}
+    >
       <div className="flex items-center justify-between border-b border-zinc-300 bg-zinc-200/80 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900/80">
         <div className="flex items-center gap-3">
           <div className="flex h-7 w-7 items-center justify-center rounded border border-zinc-300 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800">
             <div className="h-2.5 w-2.5 rounded-full bg-purple-500" />
           </div>
           <div>
-            <div className="text-xs font-bold tracking-wider text-zinc-700 uppercase dark:text-zinc-300">SYNTH PANEL</div>
-            <div className="text-[9px] text-zinc-500">8-PARAM / DRAG TO ADJUST</div>
+            <div className="text-xs font-bold tracking-wider text-zinc-700 uppercase dark:text-zinc-300">
+              SYNTH PANEL
+            </div>
+            <div className="text-[9px] text-zinc-500">
+              8-PARAM / DRAG TO ADJUST
+            </div>
           </div>
         </div>
         <m.button
@@ -128,7 +210,9 @@ export function SynthKnobs({ className }: { className?: string }) {
 
       {/* ADSR visual */}
       <div className="mx-4 mb-4 rounded border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mb-2 text-[9px] font-bold tracking-wider text-zinc-500">ENVELOPE PREVIEW</div>
+        <div className="mb-2 text-[9px] font-bold tracking-wider text-zinc-500">
+          ENVELOPE PREVIEW
+        </div>
         <svg viewBox="0 0 200 60" className="h-12 w-full">
           <polyline
             fill="none"
@@ -148,8 +232,10 @@ export function SynthKnobs({ className }: { className?: string }) {
 
       <div className="flex items-center justify-between border-t border-zinc-300 bg-zinc-200/50 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-900/50">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">ACTIVE</span>
+          <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+          <span className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">
+            ACTIVE
+          </span>
         </div>
         <span className="text-[9px] text-zinc-500">DRAG KNOBS TO ADJUST</span>
       </div>

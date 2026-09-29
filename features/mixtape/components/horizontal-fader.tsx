@@ -10,11 +10,7 @@ interface HorizontalFaderProps {
 }
 
 export const HorizontalFader = memo(
-  ({
-    label,
-    value,
-    onChange,
-  }: HorizontalFaderProps) => {
+  ({ label, value, onChange }: HorizontalFaderProps) => {
     return (
       <div className="flex w-full flex-col items-center">
         <div className="relative flex h-8 w-full items-center justify-center">

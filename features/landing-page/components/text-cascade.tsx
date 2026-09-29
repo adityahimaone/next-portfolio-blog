@@ -1,13 +1,13 @@
-"use client";
+'use client'
 // beui.dev/components/motion/text-animation
 
-import { ActionSwapText } from "./action-swap";
+import { ActionSwapText } from './action-swap'
 
 export interface TextCascadeProps {
   /** Current text. Changing it cascades the letters to the new value. */
-  text: string;
-  className?: string;
-  animateInitial?: boolean;
+  text: string
+  className?: string
+  animateInitial?: boolean
 }
 
 /**
@@ -29,5 +29,5 @@ export function TextCascade({
     >
       {text}
     </ActionSwapText>
-  );
+  )
 }

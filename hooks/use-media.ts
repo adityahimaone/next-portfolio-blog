@@ -69,7 +69,9 @@ function detectRefraction(): boolean {
   const reducedTransparency = window.matchMedia(
     '(prefers-reduced-transparency: reduce)',
   ).matches
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const reducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
   if (reducedTransparency || reducedMotion) {
     refractionCache = false
     return refractionCache

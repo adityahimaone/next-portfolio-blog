@@ -36,7 +36,13 @@ export function useFlicker(
   text: string,
   options: UseFlickerOptions = {},
 ): UseFlickerResult {
-  const { mode = 'settle', seed, onSettled, disabled, ...configOverrides } = options
+  const {
+    mode = 'settle',
+    seed,
+    onSettled,
+    disabled,
+    ...configOverrides
+  } = options
 
   const config: FlickerConfig = useMemo(
     () => ({ ...DEFAULT_FLICKER_CONFIG, ...configOverrides }),

@@ -21,9 +21,9 @@ export type BlogMeta = {
 function _getAllPosts(): BlogMeta[] {
   if (!fs.existsSync(BLOG_DIR)) return []
 
-  const files = fs.readdirSync(BLOG_DIR).filter(f => f.endsWith('.md'))
+  const files = fs.readdirSync(BLOG_DIR).filter((f) => f.endsWith('.md'))
 
-  const posts = files.map(file => {
+  const posts = files.map((file) => {
     const slug = file.replace(/\.md$/, '')
     const content = fs.readFileSync(path.join(BLOG_DIR, file), 'utf-8')
     const { data, content: body } = matter(content)
@@ -43,7 +43,7 @@ function _getAllPosts(): BlogMeta[] {
   })
 
   return posts
-    .filter(p => p.published)
+    .filter((p) => p.published)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 }
 
@@ -81,32 +81,37 @@ export function getAllSlugs() {
 
   return fs
     .readdirSync(BLOG_DIR)
-    .filter(f => f.endsWith('.md'))
-    .map(f => f.replace(/\.md$/, ''))
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => f.replace(/\.md$/, ''))
 }
 
 // Get related posts based on tag similarity (Jaccard index)
-export async function getRelatedPosts(currentSlug: string, limit: number = 3): Promise<BlogMeta[]> {
+export async function getRelatedPosts(
+  currentSlug: string,
+  limit: number = 3,
+): Promise<BlogMeta[]> {
   const allPosts = await getAllPosts()
-  const currentPost = allPosts.find(p => p.slug === currentSlug)
+  const currentPost = allPosts.find((p) => p.slug === currentSlug)
   if (!currentPost) return []
 
   const currentTags = new Set(currentPost.tags)
   if (currentTags.size === 0) return []
 
   const scored = allPosts
-    .filter(p => p.slug !== currentSlug && p.published)
-    .map(post => {
+    .filter((p) => p.slug !== currentSlug && p.published)
+    .map((post) => {
       const postTags = new Set(post.tags)
-      const intersection = new Set([...currentTags].filter(t => postTags.has(t)))
+      const intersection = new Set(
+        [...currentTags].filter((t) => postTags.has(t)),
+      )
       const union = new Set([...currentTags, ...postTags])
       const score = union.size > 0 ? intersection.size / union.size : 0
       return { post, score }
     })
-    .filter(item => item.score > 0)
+    .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
-    .map(item => item.post)
+    .map((item) => item.post)
 
   return scored
 }

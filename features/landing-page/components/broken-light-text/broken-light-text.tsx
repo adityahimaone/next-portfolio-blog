@@ -2,7 +2,11 @@
 
 import React from 'react'
 import { FlickerChar } from './flicker-char'
-import { useFlicker, usePrefersReducedMotion, type UseFlickerOptions } from './use-flicker'
+import {
+  useFlicker,
+  usePrefersReducedMotion,
+  type UseFlickerOptions,
+} from './use-flicker'
 import { cn } from '@/lib/utils'
 
 export interface BrokenLightTextProps extends UseFlickerOptions {
@@ -64,7 +68,7 @@ export function BrokenLightText({
                   mode={mode}
                   onSettled={() => handleCharSettled(charIdx)}
                 />
-              );
+              )
             })}
             {wordIndex < words.length - 1 && (
               <span aria-hidden="true">&nbsp;</span>

@@ -1,13 +1,9 @@
-import createMDX from '@next/mdx'
 import withBundleAnalyzerInit from '@next/bundle-analyzer'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md'],
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
@@ -54,18 +50,8 @@ const nextConfig = {
   },
 }
 
-const withMDX = createMDX({
-  extension: /\.mdx?$/,
-})
-
-// Create the base config with MDX
-const baseConfig = withMDX(nextConfig)
-
-// Only apply bundle analyzer when ANALYZE=true
-// This prevents it from running during normal development
-const finalConfig =
-  process.env.ANALYZE === 'true'
-    ? withBundleAnalyzerInit({ enabled: true })(baseConfig)
-    : baseConfig
-
-export default finalConfig
+// Only apply bundle analyzer when ANALYZE=true. This keeps it out of the
+// normal build path rather than measuring a plugin that is not measuring.
+export default process.env.ANALYZE === 'true'
+  ? withBundleAnalyzerInit({ enabled: true })(nextConfig)
+  : nextConfig

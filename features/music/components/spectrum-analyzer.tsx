@@ -207,9 +207,7 @@ export function SpectrumAnalyzer({ className }: { className?: string }) {
             <div className="text-xs font-bold tracking-wider text-zinc-700 uppercase dark:text-zinc-300">
               SPECTRUM ANALYZER
             </div>
-            <div className="text-[9px] text-zinc-500">
-              FFT / REAL-TIME
-            </div>
+            <div className="text-[9px] text-zinc-500">FFT / REAL-TIME</div>
           </div>
         </div>
 
@@ -281,7 +279,7 @@ export function SpectrumAnalyzer({ className }: { className?: string }) {
         />
 
         {/* Frequency labels */}
-        <div className="pointer-events-none absolute bottom-1 left-0 right-0 flex justify-between px-4 text-[9px] text-zinc-600">
+        <div className="pointer-events-none absolute right-0 bottom-1 left-0 flex justify-between px-4 text-[9px] text-zinc-600">
           <span>LOW</span>
           <span>MID</span>
           <span>HIGH</span>

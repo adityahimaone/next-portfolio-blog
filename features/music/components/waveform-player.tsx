@@ -10,7 +10,8 @@ function generateWaveform(length: number): number[] {
   const data: number[] = []
   for (let i = 0; i < length; i++) {
     const t = i / length
-    const val = Math.sin(t * Math.PI * 8) * 0.3 +
+    const val =
+      Math.sin(t * Math.PI * 8) * 0.3 +
       Math.sin(t * Math.PI * 16) * 0.2 +
       Math.sin(t * Math.PI * 32) * 0.1 +
       (Math.random() - 0.5) * 0.15
@@ -69,18 +70,24 @@ export function WaveformPlayer({ className }: { className?: string }) {
   const currentTime = progress * TRACK_INFO.duration
 
   return (
-    <div className={cn(
-      'relative overflow-hidden rounded-xl border border-zinc-300 bg-zinc-100 shadow-xl dark:border-zinc-700 dark:bg-zinc-950',
-      className
-    )}>
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-xl border border-zinc-300 bg-zinc-100 shadow-xl dark:border-zinc-700 dark:bg-zinc-950',
+        className,
+      )}
+    >
       <div className="flex items-center justify-between border-b border-zinc-300 bg-zinc-200/80 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900/80">
         <div className="flex items-center gap-3">
           <div className="flex h-7 w-7 items-center justify-center rounded border border-zinc-300 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800">
             <div className="h-2.5 w-2.5 rounded-full bg-pink-500" />
           </div>
           <div>
-            <div className="text-xs font-bold tracking-wider text-zinc-700 uppercase dark:text-zinc-300">WAVEFORM</div>
-            <div className="text-[9px] text-zinc-500">AUDIO PLAYER / SEEKABLE</div>
+            <div className="text-xs font-bold tracking-wider text-zinc-700 uppercase dark:text-zinc-300">
+              WAVEFORM
+            </div>
+            <div className="text-[9px] text-zinc-500">
+              AUDIO PLAYER / SEEKABLE
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -91,7 +98,7 @@ export function WaveformPlayer({ className }: { className?: string }) {
             max={100}
             value={volume}
             onChange={(e) => setVolume(Number(e.target.value))}
-            className="h-1.5 w-16 cursor-pointer appearance-none rounded-full bg-zinc-300 accent-primary dark:bg-zinc-700"
+            className="accent-primary h-1.5 w-16 cursor-pointer appearance-none rounded-full bg-zinc-300 dark:bg-zinc-700"
           />
         </div>
       </div>
@@ -102,7 +109,9 @@ export function WaveformPlayer({ className }: { className?: string }) {
           ♪
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-bold text-zinc-900 dark:text-white">{TRACK_INFO.title}</div>
+          <div className="truncate text-sm font-bold text-zinc-900 dark:text-white">
+            {TRACK_INFO.title}
+          </div>
           <div className="text-xs text-zinc-500">{TRACK_INFO.artist}</div>
         </div>
         <m.button
@@ -112,10 +121,14 @@ export function WaveformPlayer({ className }: { className?: string }) {
             'flex h-11 w-11 items-center justify-center rounded-full border-2 shadow-lg transition-colors',
             isPlaying
               ? 'border-pink-300 bg-pink-50 text-pink-600 dark:border-pink-800 dark:bg-pink-950/30 dark:text-pink-400'
-              : 'border-zinc-300 bg-white text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'
+              : 'border-zinc-300 bg-white text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200',
           )}
         >
-          {isPlaying ? <Pause size={18} /> : <Play size={18} className="ml-0.5" />}
+          {isPlaying ? (
+            <Pause size={18} />
+          ) : (
+            <Play size={18} className="ml-0.5" />
+          )}
         </m.button>
       </div>
 
@@ -136,7 +149,8 @@ export function WaveformPlayer({ className }: { className?: string }) {
             const x = (i / WAVEFORM.length) * 100
             const barHeight = Math.abs(val) * 80
             const isPlayed = i / WAVEFORM.length <= progress
-            const isHovered = hoverX !== null && Math.abs(i / WAVEFORM.length - hoverX) < 0.02
+            const isHovered =
+              hoverX !== null && Math.abs(i / WAVEFORM.length - hoverX) < 0.02
 
             return (
               <rect
@@ -151,7 +165,7 @@ export function WaveformPlayer({ className }: { className?: string }) {
                   isPlayed
                     ? 'fill-pink-500'
                     : 'fill-zinc-300 dark:fill-zinc-700',
-                  isHovered && 'fill-pink-400'
+                  isHovered && 'fill-pink-400',
                 )}
               />
             )
@@ -160,7 +174,7 @@ export function WaveformPlayer({ className }: { className?: string }) {
 
         {/* Playhead */}
         <div
-          className="absolute top-0 bottom-0 w-px bg-pink-500 shadow-[0_0_4px_rgba(236,72,153,0.6)] pointer-events-none"
+          className="pointer-events-none absolute top-0 bottom-0 w-px bg-pink-500 shadow-[0_0_4px_rgba(236,72,153,0.6)]"
           style={{ left: `${progress * 100}%` }}
         />
 
@@ -183,8 +197,15 @@ export function WaveformPlayer({ className }: { className?: string }) {
 
       <div className="flex items-center justify-between border-t border-zinc-300 bg-zinc-200/50 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-900/50">
         <div className="flex items-center gap-2">
-          <div className={cn('h-2 w-2 rounded-full', isPlaying ? 'animate-pulse bg-green-500' : 'bg-zinc-400')} />
-          <span className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">{isPlaying ? 'PLAYING' : 'STOPPED'}</span>
+          <div
+            className={cn(
+              'h-2 w-2 rounded-full',
+              isPlaying ? 'animate-pulse bg-green-500' : 'bg-zinc-400',
+            )}
+          />
+          <span className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">
+            {isPlaying ? 'PLAYING' : 'STOPPED'}
+          </span>
         </div>
         <span className="text-[9px] text-zinc-500">CLICK WAVEFORM TO SEEK</span>
       </div>

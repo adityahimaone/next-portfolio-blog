@@ -11,12 +11,7 @@ interface TransportButtonProps {
 }
 
 export const TransportButton = memo(
-  ({
-    label,
-    color,
-    isActive,
-    onClick,
-  }: TransportButtonProps) => {
+  ({ label, color, isActive, onClick }: TransportButtonProps) => {
     const colorMap = {
       amber:
         'bg-amber-500 border-amber-700 text-black shadow-[0_0_20px_rgba(245,158,11,0.5)]',

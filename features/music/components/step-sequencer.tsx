@@ -155,7 +155,7 @@ export function StepSequencer({ className }: { className?: string }) {
               max={180}
               value={bpm}
               onChange={(e) => setBpm(Number(e.target.value))}
-              className="h-1.5 w-20 cursor-pointer appearance-none rounded-full bg-zinc-300 accent-primary dark:bg-zinc-700"
+              className="accent-primary h-1.5 w-20 cursor-pointer appearance-none rounded-full bg-zinc-300 dark:bg-zinc-700"
             />
             <span className="w-8 text-right font-mono text-xs font-bold text-zinc-700 dark:text-zinc-300">
               {bpm}
@@ -203,7 +203,7 @@ export function StepSequencer({ className }: { className?: string }) {
           max={180}
           value={bpm}
           onChange={(e) => setBpm(Number(e.target.value))}
-          className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-300 accent-primary dark:bg-zinc-700"
+          className="accent-primary h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-300 dark:bg-zinc-700"
         />
         <span className="w-8 text-right font-mono text-xs font-bold text-zinc-700 dark:text-zinc-300">
           {bpm}

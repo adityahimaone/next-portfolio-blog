@@ -30,7 +30,7 @@ export function FlickerChar({
     if (mode !== 'loop' || char === ' ') return
 
     // Trigger occasional random single-blink flickers after initial reveal
-    const initialDelay = (schedule.startDelayMs + schedule.totalDurationMs) + 2000
+    const initialDelay = schedule.startDelayMs + schedule.totalDurationMs + 2000
     let timer: NodeJS.Timeout
 
     const scheduleNextFlicker = () => {

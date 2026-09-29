@@ -2,11 +2,7 @@ import {
   resolveActiveIndex,
   resolveTrackProgress,
 } from '@/features/landing-page/work/track-math'
-import {
-  formatProjectTime,
-  trackLabel,
-  WORK_PROJECTS,
-} from '@/data/projects'
+import { formatProjectTime, trackLabel, WORK_PROJECTS } from '@/data/projects'
 
 const COUNT = 6
 

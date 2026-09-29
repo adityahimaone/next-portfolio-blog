@@ -146,7 +146,10 @@ export function buildKeyframeArrays(
 
   for (const kf of schedule.keyframes) {
     const normTime = Math.min(1, Math.max(0, kf.time / totalDurationMs))
-    if (times.length > 0 && Math.abs(times[times.length - 1] - normTime) < 0.001) {
+    if (
+      times.length > 0 &&
+      Math.abs(times[times.length - 1] - normTime) < 0.001
+    ) {
       continue
     }
     const isOn = kf.state === 'on'

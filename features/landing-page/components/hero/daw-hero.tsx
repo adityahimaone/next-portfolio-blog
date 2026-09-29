@@ -129,7 +129,8 @@ export function DawHero({
   const [baseDelay, setBaseDelay] = useState(0)
   const [activeDevice, setActiveDevice] = useState<string | null>(null)
   const [bootIndex, setBootIndex] = useState<number | null>(0)
-  const [bootOrder, setBootOrder] = useState<readonly number[]>(BOOT_ORDER_FALLBACK)
+  const [bootOrder, setBootOrder] =
+    useState<readonly number[]>(BOOT_ORDER_FALLBACK)
   const shouldReduceMotion = useReducedMotion()
   const containerRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
@@ -325,8 +326,7 @@ function DeviceTile({
       <span
         className={cn(
           'pointer-events-none absolute right-2 bottom-2 z-10 h-1.5 w-1.5 rounded-full border border-black/20 bg-[var(--dev-ink-dim)] transition-[background-color,box-shadow] duration-150',
-          active &&
-            'bg-[var(--dev-accent)] shadow-[0_0_6px_var(--dev-accent)]',
+          active && 'bg-[var(--dev-accent)] shadow-[0_0_6px_var(--dev-accent)]',
         )}
       />
       {route && (
@@ -380,8 +380,7 @@ function Dap({ active }: { active: boolean }) {
           <div
             className={cn(
               'mt-[15%] ml-[8%] h-0.5 w-[58%] bg-[var(--dev-amber)] transition-[width,box-shadow] duration-200',
-              active &&
-                'w-[82%] shadow-[0_0_5px_var(--dev-amber)]',
+              active && 'w-[82%] shadow-[0_0_5px_var(--dev-amber)]',
             )}
           />
           <div

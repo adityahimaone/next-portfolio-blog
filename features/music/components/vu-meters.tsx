@@ -124,18 +124,24 @@ export function VUMeters({ className }: { className?: string }) {
   }, [stop])
 
   return (
-    <div className={cn(
-      'relative overflow-hidden rounded-xl border border-zinc-300 bg-zinc-100 shadow-xl dark:border-zinc-700 dark:bg-zinc-950',
-      className
-    )}>
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-xl border border-zinc-300 bg-zinc-100 shadow-xl dark:border-zinc-700 dark:bg-zinc-950',
+        className,
+      )}
+    >
       <div className="flex items-center justify-between border-b border-zinc-300 bg-zinc-200/80 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900/80">
         <div className="flex items-center gap-3">
           <div className="flex h-7 w-7 items-center justify-center rounded border border-zinc-300 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800">
             <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
           </div>
           <div>
-            <div className="text-xs font-bold tracking-wider text-zinc-700 uppercase dark:text-zinc-300">VU METERS</div>
-            <div className="text-[9px] text-zinc-500">ANALOG / PEAK DETECTION</div>
+            <div className="text-xs font-bold tracking-wider text-zinc-700 uppercase dark:text-zinc-300">
+              VU METERS
+            </div>
+            <div className="text-[9px] text-zinc-500">
+              ANALOG / PEAK DETECTION
+            </div>
           </div>
         </div>
         <m.button
@@ -145,7 +151,7 @@ export function VUMeters({ className }: { className?: string }) {
             'flex h-9 items-center gap-1.5 rounded border px-3 shadow-sm transition-colors',
             isActive
               ? 'border-red-300 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400'
-              : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
+              : 'border-zinc-300 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
           )}
         >
           {isActive ? <MicOff size={14} /> : <Mic size={14} />}
@@ -154,7 +160,11 @@ export function VUMeters({ className }: { className?: string }) {
       </div>
 
       <div className="relative h-48 w-full bg-zinc-950 sm:h-56">
-        <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" style={{ width: '100%', height: '100%' }} />
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 h-full w-full"
+          style={{ width: '100%', height: '100%' }}
+        />
       </div>
 
       {error && (
@@ -165,8 +175,15 @@ export function VUMeters({ className }: { className?: string }) {
 
       <div className="flex items-center justify-between border-t border-zinc-300 bg-zinc-200/50 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-900/50">
         <div className="flex items-center gap-2">
-          <div className={cn('h-2 w-2 rounded-full', isActive ? 'animate-pulse bg-green-500' : 'bg-zinc-400')} />
-          <span className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">{isActive ? 'ACTIVE' : 'STANDBY'}</span>
+          <div
+            className={cn(
+              'h-2 w-2 rounded-full',
+              isActive ? 'animate-pulse bg-green-500' : 'bg-zinc-400',
+            )}
+          />
+          <span className="text-[9px] font-bold tracking-wider text-zinc-500 uppercase">
+            {isActive ? 'ACTIVE' : 'STANDBY'}
+          </span>
         </div>
         <span className="text-[9px] text-zinc-500">LEFT / RIGHT CHANNELS</span>
       </div>
@@ -181,7 +198,7 @@ function drawMeter(
   w: number,
   h: number,
   value: number,
-  label: string
+  label: string,
 ) {
   const radius = Math.min(w, h) * 0.8
   const startAngle = Math.PI * 0.8
@@ -246,7 +263,10 @@ function drawMeter(
   const needleLen = radius - 4
   ctx.beginPath()
   ctx.moveTo(cx, cy)
-  ctx.lineTo(cx + Math.cos(needleAngle) * needleLen, cy + Math.sin(needleAngle) * needleLen)
+  ctx.lineTo(
+    cx + Math.cos(needleAngle) * needleLen,
+    cy + Math.sin(needleAngle) * needleLen,
+  )
   ctx.lineWidth = 2
   ctx.strokeStyle = '#ef4444'
   ctx.stroke()

@@ -233,9 +233,9 @@ function Hero() {
               Built for the moment after launch.
             </strong>
             <p>
-              Frontend systems for products that need to work clearly,
-              reliably, and at scale. React, Next.js, and TypeScript across
-              products used by more than 15,000 people.
+              Frontend systems for products that need to work clearly, reliably,
+              and at scale. React, Next.js, and TypeScript across products used
+              by more than 15,000 people.
             </p>
             <div className={styles.heroActions}>
               <a href="#work" className={styles.primaryButton}>
@@ -453,86 +453,86 @@ function About({
                 </div>
               </div>
               <div className={styles.timelineArrangement}>
-              <div className={styles.timelineRuler}>
-                <div className={styles.timelineRulerHeader}>
-                  <span>TRK</span>
+                <div className={styles.timelineRuler}>
+                  <div className={styles.timelineRulerHeader}>
+                    <span>TRK</span>
+                  </div>
+                  <div className={styles.timelineRulerLanes}>
+                    {Array.from({ length: 8 }, (_, i) => (
+                      <span key={i}>{i + 1}</span>
+                    ))}
+                  </div>
                 </div>
-                <div className={styles.timelineRulerLanes}>
-                  {Array.from({ length: 8 }, (_, i) => (
-                    <span key={i}>{i + 1}</span>
-                  ))}
-                </div>
-              </div>
-              <div
-                className={styles.playhead}
-                style={{ '--playhead': `${playhead}` } as React.CSSProperties}
-                aria-hidden="true"
-              />
-              {ABOUT_TRACKS.map((item, index) => (
                 <div
-                  className={`${styles.track} ${
-                    index === ABOUT_TRACKS.length - 1 ? styles.trackLast : ''
-                  } ${
-                    mutedTracks.has(index) ||
-                    (soloedTrack !== null && soloedTrack !== index)
-                      ? styles.trackMuted
-                      : ''
-                  }`}
-                  key={item.title}
-                  style={
-                    {
-                      '--track-color': item.surface,
-                      '--track-ink': item.ink,
-                      '--track-accent': item.accent,
-                    } as React.CSSProperties
-                  }
-                >
-                  <div className={styles.trackHeader}>
-                    <span>{String(index + 1).padStart(2, '0')}</span>
-                    <strong>{item.title}</strong>
-                    <span className={styles.trackActions}>
+                  className={styles.playhead}
+                  style={{ '--playhead': `${playhead}` } as React.CSSProperties}
+                  aria-hidden="true"
+                />
+                {ABOUT_TRACKS.map((item, index) => (
+                  <div
+                    className={`${styles.track} ${
+                      index === ABOUT_TRACKS.length - 1 ? styles.trackLast : ''
+                    } ${
+                      mutedTracks.has(index) ||
+                      (soloedTrack !== null && soloedTrack !== index)
+                        ? styles.trackMuted
+                        : ''
+                    }`}
+                    key={item.title}
+                    style={
+                      {
+                        '--track-color': item.surface,
+                        '--track-ink': item.ink,
+                        '--track-accent': item.accent,
+                      } as React.CSSProperties
+                    }
+                  >
+                    <div className={styles.trackHeader}>
+                      <span>{String(index + 1).padStart(2, '0')}</span>
+                      <strong>{item.title}</strong>
+                      <span className={styles.trackActions}>
+                        <button
+                          type="button"
+                          aria-label={`${mutedTracks.has(index) ? 'Unmute' : 'Mute'} ${item.title}`}
+                          aria-pressed={mutedTracks.has(index)}
+                          onClick={() => toggleMuted(index)}
+                        >
+                          M
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`${soloedTrack === index ? 'Unsolo' : 'Solo'} ${item.title}`}
+                          aria-pressed={soloedTrack === index}
+                          onClick={() =>
+                            setSoloedTrack((current) =>
+                              current === index ? null : index,
+                            )
+                          }
+                        >
+                          S
+                        </button>
+                      </span>
+                    </div>
+                    <div className={styles.trackLane}>
                       <button
                         type="button"
-                        aria-label={`${mutedTracks.has(index) ? 'Unmute' : 'Mute'} ${item.title}`}
-                        aria-pressed={mutedTracks.has(index)}
-                        onClick={() => toggleMuted(index)}
-                      >
-                        M
-                      </button>
-                      <button
-                        type="button"
-                        aria-label={`${soloedTrack === index ? 'Unsolo' : 'Solo'} ${item.title}`}
-                        aria-pressed={soloedTrack === index}
-                        onClick={() =>
-                          setSoloedTrack((current) =>
-                            current === index ? null : index,
-                          )
+                        className={`${styles.clip} ${
+                          selected === index ? styles.clipActive : ''
+                        }`}
+                        style={
+                          {
+                            '--clip-offset': `${index * 12.5}%`,
+                          } as React.CSSProperties
                         }
+                        onClick={() => setSelected(index)}
+                        aria-pressed={selected === index}
                       >
-                        S
+                        <span>{item.note}</span>
+                        <i />
                       </button>
-                    </span>
+                    </div>
                   </div>
-                  <div className={styles.trackLane}>
-                    <button
-                      type="button"
-                      className={`${styles.clip} ${
-                        selected === index ? styles.clipActive : ''
-                      }`}
-                      style={
-                        {
-                          '--clip-offset': `${index * 12.5}%`,
-                        } as React.CSSProperties
-                      }
-                      onClick={() => setSelected(index)}
-                      aria-pressed={selected === index}
-                    >
-                      <span>{item.note}</span>
-                      <i />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
               </div>
               <div className={styles.clipDetail} aria-live="polite">
                 <SilkscreenLabel>
@@ -549,10 +549,8 @@ function About({
 }
 
 function SignalDivider() {
-  const topStory =
-    'Frontend systems / clear interfaces.'
-  const bottomStory =
-    'React / Next.js / product work.'
+  const topStory = 'Frontend systems / clear interfaces.'
+  const bottomStory = 'React / Next.js / product work.'
 
   return (
     <section
@@ -1433,7 +1431,6 @@ const STATIONS = [88.5, 94.2, 100.8, 106.5]
 const NEEDLE_POSITIONS = [8, 36, 64, 92]
 const KNOB_ROTATIONS = [0, 135, 270, 405]
 
-
 function Experience({
   selected,
   setSelected,
@@ -2219,12 +2216,15 @@ export default function Rack01LandingPage() {
               heroSweepOrder,
               {
                 xPercent: (_, element) =>
-                  Number((element as HTMLElement).dataset.collapseX ?? 0) * 0.72,
+                  Number((element as HTMLElement).dataset.collapseX ?? 0) *
+                  0.72,
                 yPercent: (_, element) =>
-                  Number((element as HTMLElement).dataset.collapseY ?? 0) * 0.72,
+                  Number((element as HTMLElement).dataset.collapseY ?? 0) *
+                  0.72,
                 rotation: (_, element) =>
-                  Number((element as HTMLElement).dataset.collapseRotation ?? 0) *
-                  0.7,
+                  Number(
+                    (element as HTMLElement).dataset.collapseRotation ?? 0,
+                  ) * 0.7,
                 scale: 0.88,
                 opacity: 0,
               },
@@ -2373,8 +2373,8 @@ export default function Rack01LandingPage() {
             })
           })
 
-          const storyHeadings = gsap
-            .utils.toArray<HTMLElement>(`.${styles.sectionHeading}`)
+          const storyHeadings = gsap.utils
+            .toArray<HTMLElement>(`.${styles.sectionHeading}`)
             .filter((heading) => !heading.closest('[data-no-heading-reveal]'))
           storyHeadings.forEach((heading) => {
             const label = heading.querySelector(`.${styles.silkscreen}`)
@@ -2832,17 +2832,13 @@ export default function Rack01LandingPage() {
               { scaleX: 1, opacity: 1, duration: 0.3 },
               0.1,
             )
-            .to(
-              `.${styles.handoffRibbon}`,
-              { scaleY: 4, duration: 0.12 },
-              0.42,
+            .to(`.${styles.handoffRibbon}`, { scaleY: 4, duration: 0.12 }, 0.42)
+            .fromTo(
+              `.${styles.handoffScreen}`,
+              { clipPath: 'inset(100% 0 0 0)', opacity: 0 },
+              { clipPath: 'inset(0% 0 0 0)', opacity: 1, duration: 0.24 },
+              0.58,
             )
-              .fromTo(
-                `.${styles.handoffScreen}`,
-                { clipPath: 'inset(100% 0 0 0)', opacity: 0 },
-                { clipPath: 'inset(0% 0 0 0)', opacity: 1, duration: 0.24 },
-                0.58,
-              )
         })
 
         return () => media.revert()
@@ -2854,7 +2850,6 @@ export default function Rack01LandingPage() {
       cancelled = true
       context?.revert()
       smoothScrollCleanup?.()
-
     }
   }, [])
 

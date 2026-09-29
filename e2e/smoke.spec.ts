@@ -29,7 +29,9 @@ for (const route of ROUTES.slice(1)) {
   test(`${route} serves without a server error`, async ({ page }) => {
     const res = await page.goto(route)
     expect(res, `${route} returned no response`).not.toBeNull()
-    expect(res!.status(), `${route} returned ${res!.status()}`).toBeLessThan(500)
+    expect(res!.status(), `${route} returned ${res!.status()}`).toBeLessThan(
+      500,
+    )
     await expect(page.locator('body')).toBeVisible()
   })
 }
@@ -41,7 +43,9 @@ test('page has no console errors on load', async ({ page }) => {
   })
   // A stylesheet served as text/html means the server was still starting, not
   // that the page is broken. Assert on real script/runtime errors instead.
-  const real = errors.filter((e) => !/Failed to load resource|MIME type|net::ERR_/.test(e))
+  const real = errors.filter(
+    (e) => !/Failed to load resource|MIME type|net::ERR_/.test(e),
+  )
   expect(real, 'console errors on home: ' + real.join(' | ')).toHaveLength(0)
 })
 
@@ -67,7 +71,10 @@ test('theme toggle flips the document class', async ({ page }) => {
 
 test('dock renders its navigation items on a booth route', async ({ page }) => {
   await page.goto('/projects')
-  const dock = page.getByLabel('Primary').or(page.getByLabel('Quick navigation')).first()
+  const dock = page
+    .getByLabel('Primary')
+    .or(page.getByLabel('Quick navigation'))
+    .first()
   await expect(dock, 'no dock rendered').toBeVisible()
 
   // The dock exists to reach the other routes; if it is empty there is
@@ -99,9 +106,7 @@ test('bookmarks j/k moves the active row', async ({ page }) => {
 })
 
 test('a blog post renders its content', async ({ page }) => {
-  const res = await page.goto(
-    '/blog/deploy-nextjs-vps-nginx-pm2-custom-domain',
-  )
+  const res = await page.goto('/blog/deploy-nextjs-vps-nginx-pm2-custom-domain')
   expect(res!.status(), 'blog post returned an error').toBeLessThan(400)
 
   // The MDX content itself, not the chrome — a post that 404s still renders a

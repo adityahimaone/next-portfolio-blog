@@ -112,13 +112,21 @@ const cormorantGaramond = Cormorant_Garamond({
   display: 'swap',
 })
 
+/**
+ * `data-scroll-behavior="smooth"` on <html> opts back into overriding
+ * `scroll-behavior` during route changes. globals.css sets
+ * `scroll-behavior: smooth` on html, and as of Next 16 the framework no
+ * longer suppresses it for navigations by default — which would animate every
+ * page transition into a jump-to-top scroll. This attribute restores the
+ * previous behaviour: instant navigation, smooth scrolling within a page.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body
         className={`${geist.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${syne.variable} ${orbitron.variable} ${inter.variable} ${cormorantGaramond.variable} bg-background text-foreground tracking-tight antialiased`}
       >

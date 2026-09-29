@@ -4,7 +4,8 @@
   width: 100%;
   max-width: 1280px;
   margin-inline: auto;
-  /* Clears the fixed dock (min-height 64px at bottom 1.25rem). */
+  /* Clears the fixed dock. The magnetic magnify grows a 44px icon to ~61px,
+     so the capsule is ~68px tall before the 1.25rem offset. */
   padding: 4rem 1.5rem 10rem;
   background: var(--room-base);
 }
@@ -773,15 +774,34 @@
   cursor: pointer;
 }
 
+/* A readout, not a floating string. Grown into a chip that matches the dock's
+   control surface so it fills the slot instead of leaving a gap beside the
+   buttons. The text is dynamic (a chapter title on the reader, counts on the
+   list), so it has a hard ceiling and ellipsises rather than pushing the
+   scrubber out of the capsule. */
 .scrubMeta {
-  flex-shrink: 0;
-  max-width: 15rem;
+  display: inline-flex;
+  min-width: 0;
+  max-width: 16rem;
+  height: 38px;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.7rem;
   overflow: hidden;
+  border: 1px solid var(--glass-edge);
+  border-radius: 12px;
+  background: var(--flat-fill);
   color: var(--booth-ink-muted);
   font: var(--silkscreen);
   font-size: 0.6875rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.scrubMeta:hover {
+  background: var(--flat-fill-hover);
+  color: var(--booth-ink);
 }
 
 .scrubBtn {
@@ -790,16 +810,28 @@
   width: 38px;
   height: 38px;
   flex-shrink: 0;
-  border: 0;
-  border-radius: 50%;
+  /* Matches the dock's chip radius, so the reading scrubber reads as part of
+     the control layer rather than a loose set of circles. */
+  border: 1px solid transparent;
+  border-radius: 12px;
   background: transparent;
   color: var(--booth-ink-muted);
   cursor: pointer;
+  transition:
+    color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
 }
 
 .scrubBtn:hover {
   color: var(--booth-ink);
   background: var(--flat-fill-hover);
+  border-color: var(--glass-edge);
+}
+
+.scrubBtn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 @media (max-width: 720px) {

@@ -16,6 +16,19 @@
   box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.7);
 }
 
+/* Declared here rather than only in each container's stylesheet.
+   `.record` ships in the shared layout bundle while a container's override
+   lives in a page's CSS module, so when the container only set `position`
+   through its own class, stylesheet order decided the winner and the disc fell
+   into normal flow. Setting it on the element itself removes the dependency. */
+.record[data-position='absolute'] {
+  position: absolute;
+}
+
+.record[data-position='flow'] {
+  position: relative;
+}
+
 .grooves {
   position: absolute;
   border-radius: 50%;

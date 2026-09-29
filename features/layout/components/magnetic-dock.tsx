@@ -12,31 +12,12 @@ import {
   useTransform,
   type MotionValue,
 } from 'motion/react'
-import {
-  Bookmark,
-  FolderGit2,
-  Home,
-  Music,
-  Newspaper,
-  type LucideIcon,
-} from 'lucide-react'
+import { NAV_ITEMS, isActiveNavItem } from '@/components/booth/nav-items'
 import { cn } from '@/lib/utils'
 
-type DockItem = {
-  label: string
-  href: string
-  Icon: LucideIcon
-}
+type DockItem = (typeof NAV_ITEMS)[number]
 
-const DOCK_ITEMS: DockItem[] = [
-  { label: 'Home', href: '/', Icon: Home },
-  { label: 'Projects', href: '/projects', Icon: FolderGit2 },
-  { label: 'Bookmarks', href: '/bookmarks', Icon: Bookmark },
-  { label: 'Blog', href: '/blog', Icon: Newspaper },
-  { label: 'Mixtape', href: '/music', Icon: Music },
-]
-
-const DOCK_ROUTES = ['/', '/projects', '/bookmarks', '/blog', '/music']
+const DOCK_ROUTES = NAV_ITEMS.map((item) => item.href)
 
 const ICON_SIZE = 44
 const MAX_SCALE = 1.38
@@ -49,11 +30,6 @@ function isDockRoute(pathname: string) {
   return DOCK_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   )
-}
-
-function isActiveItem(href: string, pathname: string) {
-  if (href === '/') return pathname === '/'
-  return pathname === href || pathname.startsWith(`${href}/`)
 }
 
 /**
@@ -90,13 +66,13 @@ export function MagneticDock() {
           'shadow-[0_18px_45px_-22px_rgba(0,0,0,0.6)] backdrop-blur-xl',
         )}
       >
-        {DOCK_ITEMS.map((item) => (
+        {NAV_ITEMS.map((item) => (
           <DockIcon
             key={item.href}
             {...item}
             mouseX={mouseX}
             magnify={active}
-            isActive={isActiveItem(item.href, pathname)}
+            isActive={isActiveNavItem(item.href, pathname)}
           />
         ))}
       </nav>

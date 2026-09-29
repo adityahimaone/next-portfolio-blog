@@ -155,6 +155,7 @@ export function ProjectsPage({
                 <Record
                   className={styles.nsRecord}
                   label={project.palette.b}
+                  position="absolute"
                   spinning={playing}
                 />
                 <Cover

@@ -61,7 +61,17 @@ export function Cover({
   return (
     <div
       className={className}
-      style={{ position: 'relative', aspectRatio: '1 / 1', overflow: 'hidden' }}
+      /* A definite width matters here: `aspect-ratio` alone resolves against
+         whatever the content measures, so a cover whose image has not loaded
+         yet collapses to zero and then snaps to full size — which is what made
+         the sleeve art drop below the record on a fresh page load. `width:
+         100%` plus the parent's padding gives a stable square either way. */
+      style={{
+        position: 'relative',
+        width: '100%',
+        aspectRatio: '1 / 1',
+        overflow: 'hidden',
+      }}
     >
       {src ? (
         <Image

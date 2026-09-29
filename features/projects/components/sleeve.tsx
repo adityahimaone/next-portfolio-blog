@@ -37,6 +37,7 @@ export function Sleeve({ project, index, active, onPromote }: SleeveProps) {
         <Record
           className={styles.sleevePeek}
           label={project.palette.b}
+          position="absolute"
           spinning={active}
         />
         <Cover

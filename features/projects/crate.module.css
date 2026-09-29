@@ -5,7 +5,8 @@
   width: 100%;
   max-width: 1280px;
   margin-inline: auto;
-  /* Clears the fixed dock (min-height 64px at bottom 1.25rem). */
+  /* Clears the fixed dock. The magnetic magnify grows a 44px icon to ~61px,
+     so the capsule is ~68px tall before the 1.25rem offset. */
   padding: 4rem 1.5rem 10rem;
   background: var(--room-base);
 }
@@ -40,22 +41,51 @@
   }
 }
 
+/* The sleeve: one explicit square, with the cover filling it and the record
+   derived from it as a percentage of that square.
+
+   Previously neither child carried a width — the cover relied on its
+   `aspect-ratio` resolving against whatever the parent happened to measure,
+   and the record was the only one with a definite size. That made the square's
+   height depend on content that had not loaded yet, so on a cold mount the
+   cover collapsed and the record dropped below it. Declaring the square here
+   and letting both children follow it removes the dependency on load order.
+
+   `overflow: hidden` clips the record, and `z-index: 0` gives this a stacking
+   context so the disc's own z-index cannot escape to the root. */
 .nsArt {
   position: relative;
+  z-index: 0;
   width: clamp(150px, 20vw, 230px);
   flex-shrink: 0;
+  /* The height comes from the width, not from the children. */
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
   border-radius: var(--booth-r-cover);
+  background: var(--flat-fill);
   box-shadow:
     0 20px 50px -20px rgba(0, 0, 0, 0.7),
     inset 0 0 0 1px rgba(255, 255, 255, 0.14);
 }
 
+/* The cover fills the sleeve and inherits its radius, so the artwork corners
+   are rounded rather than square inside a rounded frame. */
+.nsArt > :not(.nsRecord) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
 .nsRecord {
-  position: absolute;
-  z-index: -1;
+  /* Offset over the cover. `position: absolute` comes from the Record's own
+     data-position attribute, not from here — see record.module.css. */
   top: 8%;
   left: 14%;
   width: 92%;
+  /* The record's own aspect-ratio gives it no height once it is out of flow,
+     so the height is declared here to match the width. */
+  height: 92%;
   opacity: 0.9;
   transition: transform var(--booth-dur-med) var(--booth-ease);
 }
@@ -70,6 +100,15 @@
   gap: 0.5rem;
   color: var(--booth-ink-muted);
   font: var(--silkscreen);
+}
+
+/* The star sits in its own flex item, so it cannot be pushed to a new line by
+   the SVG's intrinsic baseline. Without this the count drops below the genre. */
+.nsKicker > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 0 0 auto;
 }
 
 .nsTitle {
@@ -189,8 +228,18 @@
   cursor: pointer;
 }
 
+/* Deliberately not overflow:hidden. The record is meant to slide out from
+   behind the sleeve on hover, which is what .sleevePeek does. The grid's
+   gutter at .sleeveGrid keeps it inside the viewport.
+
+   This is a span, so `display: block` and `width: 100%` are what give it a
+   box at all; as an inline element the cover's aspect-ratio had nothing to
+   resolve against and dropped to a new line below the record. */
 .sleeveArtWrap {
   position: relative;
+  z-index: 0;
+  display: block;
+  width: 100%;
   border-radius: var(--booth-r-cover);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.14),
@@ -198,6 +247,15 @@
   transition:
     transform var(--booth-dur-med) var(--booth-ease),
     box-shadow var(--booth-dur-med) var(--booth-ease);
+}
+
+/* The cover fills the sleeve and inherits its radius, so the artwork corners
+   are rounded rather than sitting square inside a rounded frame. The record
+   is excluded: it is out of flow and circular. */
+.sleeveArtWrap > :not(.sleevePeek) {
+  display: block;
+  width: 100%;
+  border-radius: inherit;
 }
 
 .sleeve:hover .sleeveArtWrap,
@@ -210,11 +268,14 @@
 }
 
 .sleevePeek {
-  position: absolute;
-  z-index: -1;
+  /* Offset over the cover. `position: absolute` comes from the Record's own
+     data-position attribute, not from here — see record.module.css. */
   top: 5%;
   left: 12%;
   width: 90%;
+  /* Out of flow, so the record's own aspect-ratio no longer supplies a
+     height; declare it to match the width. */
+  height: 90%;
   opacity: 0.85;
   transition: transform var(--booth-dur-med) var(--booth-ease);
 }
@@ -349,19 +410,28 @@
   width: 38px;
   height: 38px;
   flex-shrink: 0;
-  border: 0;
-  border-radius: 50%;
+  border: 1px solid transparent;
+  border-radius: 12px;
   background: transparent;
   color: var(--booth-ink-muted);
+  /* The transport is the page's only control inside the dock, so it gets the
+     same surface language as the nav icons rather than bare circles. */
   cursor: pointer;
   transition:
     color var(--dur-fast) ease,
-    background-color var(--dur-fast) ease;
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
 }
 
 .transportBtn:hover {
   color: var(--booth-ink);
   background: var(--flat-fill-hover);
+  border-color: var(--glass-edge);
+}
+
+.transportBtn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .transportPlay {
@@ -373,18 +443,25 @@
   filter: brightness(1.08);
 }
 
+/* The readout is dynamic — the project title and elapsed time both change — so
+   it needs a hard ceiling rather than trusting its content to fit. It is the
+   one flexible item: it takes the free space up to the cap, then ellipsises
+   rather than pushing the play controls out of the capsule. */
 .transportMeta {
+  min-width: 0;
+  max-width: 18rem;
+  flex: 1 1 auto;
+  overflow: hidden;
   color: var(--booth-ink-muted);
   font: var(--silkscreen);
   font-size: 0.6875rem;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 @media (max-width: 720px) {
   .transportMeta {
     max-width: 38vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 }
 

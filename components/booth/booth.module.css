@@ -50,8 +50,9 @@
   width: 100%;
   max-width: 1280px;
   margin-inline: auto;
-  /* Clears the fixed dock (min-height 64px at bottom 1.25rem) plus breathing
-     room, so the last row is never trapped underneath it. */
+  /* Clears the fixed dock. The magnetic magnify grows a 44px icon to ~61px,
+     so the capsule is ~68px tall before the 1.25rem offset, plus breathing
+     room so the last row is never trapped underneath it. */
   padding: 5.5rem 1.5rem 10rem;
 }
 

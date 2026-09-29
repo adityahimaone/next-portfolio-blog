@@ -5,7 +5,8 @@
   width: 100%;
   max-width: 1280px;
   margin-inline: auto;
-  /* Clears the fixed dock (min-height 64px at bottom 1.25rem). */
+  /* Clears the fixed dock. The magnetic magnify grows a 44px icon to ~61px,
+     so the capsule is ~68px tall before the 1.25rem offset. */
   padding: 4rem 1.5rem 10rem;
   background: var(--room-base);
 }
@@ -131,17 +132,35 @@
 
 .chip {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 40px;
   flex-shrink: 0;
   align-items: center;
   gap: 0.4rem;
   padding: 0 0.85rem;
-  border-radius: var(--booth-r-control);
+  border: 1px solid var(--glass-edge);
+  border-radius: 12px;
+  background: var(--flat-fill);
   color: var(--booth-ink-muted);
   font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
+  /* Matches the dock's chip surface: a 12px card with the same rim and fill,
+     so the shuffle control reads as part of the control layer. */
+  transition:
+    color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
+}
+
+.chip:hover {
+  color: var(--booth-ink);
+  background: var(--flat-fill-hover);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .chip[aria-pressed='true'] {
@@ -199,13 +218,23 @@
   object-fit: contain;
 }
 
+/* The star overhangs the tile by 4px on both axes. It was positioned at
+   top/right -4px inside a container that scrolls, which clipped the top and
+   right edges. Pulling it inside the tile's own bounds and inset to the edge
+   keeps it fully visible while still reading as a corner badge. */
 .pinnedStar {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--card);
   color: var(--primary);
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   line-height: 1;
+  place-items: center;
 }
 
 /* ─── Search ─────────────────────────────────────────────────── */

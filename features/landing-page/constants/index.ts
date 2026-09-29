@@ -1,10 +1,4 @@
-import {
-  Globe,
-  Zap,
-  Cpu,
-  Database,
-  Layers,
-} from 'lucide-react'
+import { Globe, Zap, Cpu, Database, Layers } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────
@@ -44,8 +38,20 @@ export interface MixerGroup {
   readonly id: string
   readonly label: string
   readonly type: string
-  readonly channels: readonly { readonly name: string; readonly level: number }[]
+  readonly channels: readonly {
+    readonly name: string
+    readonly level: number
+  }[]
 }
+
+export interface ProjectPalette {
+  readonly a: string
+  readonly b: string
+  readonly accent: string
+}
+
+/** Alias used by the work section's components. */
+export type Project = ProjectShowcaseItem
 
 export interface ProjectShowcaseItem {
   readonly id: number
@@ -57,7 +63,27 @@ export interface ProjectShowcaseItem {
   readonly year?: string
   readonly vinylColor: string
   readonly vinylIcon: LucideIcon
+  /** 1:1 artwork. Same source as `image`; rendered in square frames. */
+  readonly cover: string
+  readonly role: string
+  readonly stack: readonly string[]
+  readonly highlights: readonly string[]
+  readonly palette: ProjectPalette
 }
+
+// ─── Work track helpers ──────────────────────────────────
+
+/** Nominal runtime, in seconds, of one "track" in the work section. */
+export const PROJECT_TRACK_DURATION = 185
+
+export const formatProjectTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = Math.floor(seconds % 60)
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+/** 1-based catalog number, e.g. 01..10. The library outgrew the A/B sides. */
+export const trackLabel = (index: number) => String(index + 1).padStart(2, '0')
 
 // ─── Work Experience ─────────────────────────────────────
 export const WORK_EXPERIENCE: WorkExperience[] = [
@@ -230,6 +256,15 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     year: '2024',
     vinylColor: 'from-blue-600 to-cyan-500',
     vinylIcon: Globe,
+    cover: '/assets/thumbnail-switchyard-2.webp',
+    role: 'Design engineer, solo build',
+    stack: ['Next.js', 'TypeScript', 'Tailwind', 'PostgreSQL', 'Docker'],
+    highlights: [
+      'One operational flow from board to dispatch to review',
+      'Task routing that keeps agent runs observable',
+      'Workspace state that survives a reload',
+    ],
+    palette: { a: '#315d72', b: '#7eb8c7', accent: '#7eb8c7' },
   },
   {
     id: 1,
@@ -242,6 +277,15 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     year: '2024',
     vinylColor: 'from-blue-600 to-cyan-500',
     vinylIcon: Globe,
+    cover: '/assets/thumbnail-primarindo-2.webp',
+    role: 'Frontend developer, with Niqcode',
+    stack: ['Next.js', 'TypeScript', 'Tailwind'],
+    highlights: [
+      'Manufacturing capability split into scannable sections',
+      'Product lines presented on a consistent grid',
+      'Company information that reads without a sales rep',
+    ],
+    palette: { a: '#1f4a63', b: '#6fa6c4', accent: '#6fa6c4' },
   },
   {
     id: 2,
@@ -254,6 +298,15 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     year: '2026',
     vinylColor: 'from-green-500 to-emerald-500',
     vinylIcon: Zap,
+    cover: '/assets/thumbnail-habit-tracker-2.webp',
+    role: 'Design engineer, solo build',
+    stack: ['Next.js', 'TypeScript', 'PostgreSQL', 'Tailwind'],
+    highlights: [
+      'Daily logging reduced to a single tap',
+      'Streaks that survive a missed day',
+      'Weekly overview without a dashboard sprawl',
+    ],
+    palette: { a: '#476b50', b: '#8fc49a', accent: '#8fc49a' },
   },
   {
     id: 3,
@@ -267,6 +320,16 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     year: '2022',
     vinylColor: 'from-purple-600 to-pink-600',
     vinylIcon: Cpu,
+    cover:
+      'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/y2l1g36bjudgsf6yr0eg.webp',
+    role: 'Frontend developer, contract',
+    stack: ['React', 'Tailwind', 'Web3.js'],
+    highlights: [
+      'NFT collections introduced without a wall of jargon',
+      'Responsive from the first breakpoint up',
+      'A clear path from landing to the live product',
+    ],
+    palette: { a: '#563f70', b: '#9c7fbd', accent: '#d17da4' },
   },
   {
     id: 4,
@@ -280,6 +343,16 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     year: '2022',
     vinylColor: 'from-indigo-600 to-violet-600',
     vinylIcon: Database,
+    cover:
+      'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/fphb7ddemp4ixeutav1b.webp',
+    role: 'Frontend developer, contract',
+    stack: ['React', 'TypeScript', 'TanStack Query'],
+    highlights: [
+      'Account states made legible at a glance',
+      'Trade actions that confirm before they commit',
+      'Interface feedback on every pending state',
+    ],
+    palette: { a: '#36466f', b: '#7489bd', accent: '#9b83c4' },
   },
   {
     id: 5,
@@ -293,5 +366,15 @@ export const PROJECTS_SHOWCASE: ProjectShowcaseItem[] = [
     year: '2022',
     vinylColor: 'from-red-500 to-rose-500',
     vinylIcon: Layers,
+    cover:
+      'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/mqprcb6todunicq4cg0a.webp',
+    role: 'Frontend developer, contract',
+    stack: ['React', 'Tailwind', 'Sanity'],
+    highlights: [
+      'Company work explained without a sales call',
+      'Case studies ordered by what the visitor came for',
+      'A profile site that a small team can actually maintain',
+    ],
+    palette: { a: '#743f3f', b: '#b96862', accent: '#d08168' },
   },
 ]

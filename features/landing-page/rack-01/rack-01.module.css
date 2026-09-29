@@ -102,8 +102,7 @@
   transform-origin: center;
   backface-visibility: hidden;
   will-change: transform, opacity;
-}
-/* ponytail: keep chassis solid; add liquid-glass only to controls. */
+}/* ponytail: keep chassis solid; add liquid-glass only to controls. */
 .heroDeviceWall [data-hero-device] [class*="rounded-full"],
 .heroDeviceWall [data-hero-device] [class*="bg-[#101719]"],
 .heroDeviceWall [data-hero-device] [class*="bg-[#11191b]"],
@@ -1691,72 +1690,6 @@
   font-size: 12px;
   line-height: 1.35;
 }
-.work {
-  height: 280svh;
-  background: var(--lcd-black);
-  color: var(--chassis);
-}
-.workStage {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  min-height: 700px;
-  overflow: hidden;
-  padding: 38px 0 25px;
-}
-.workHeader {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding: 0 clamp(20px, 5vw, 78px);
-}
-.workHeader .sectionHeading {
-  display: block;
-  margin: 0;
-}
-.workHeader .sectionHeading .silkscreen {
-  margin-bottom: 12px;
-  color: var(--signal-orange);
-}
-.workHeader .sectionHeading h2 {
-  max-width: 1100px;
-  font-size: clamp(37px, 5.5vw, 80px);
-}
-.workHint {
-  display: flex;
-  gap: 30px;
-  padding-bottom: 8px;
-  color: var(--slate);
-  font: 9px var(--font-geist-mono);
-}
-.workViewport {
-  overflow: visible;
-  margin-top: 30px;
-  padding-left: clamp(20px, 5vw, 78px);
-}
-.workRail {
-  display: flex;
-  width: max-content;
-  gap: 28px;
-  padding-right: 8vw;
-  will-change: transform;
-}
-.projectModule {
-  position: relative;
-  display: grid;
-  grid-template-rows: auto minmax(250px, 1fr) auto;
-  width: min(54vw, 720px);
-  height: min(62vh, 650px);
-  padding: 20px;
-  border: 1px solid #77766f;
-  border-radius: 5px;
-  background: var(--chassis);
-  box-shadow:
-    0 16px 38px rgba(0, 0, 0, 0.28),
-    0 2px 4px rgba(0, 0, 0, 0.3),
-    inset 0 1px rgba(255, 255, 255, 0.75);
-  color: var(--graphite);
-}
 .projectScrewLeft {
   top: 9px;
   left: 9px;
@@ -1764,77 +1697,6 @@
 .projectScrewRight {
   top: 9px;
   right: 9px;
-}
-.projectMeta {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 20px 14px 20px;
-}
-.projectMeta > span {
-  font: 8px var(--font-geist-mono);
-  text-transform: uppercase;
-}
-.projectImage {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--graphite);
-  background: var(--field-navy);
-  filter: saturate(0.55) contrast(1.08);
-}
-.projectImage img {
-  object-fit: cover;
-  transition:
-    transform 500ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 300ms ease;
-}
-.projectModule:hover .projectImage img {
-  transform: scale(1.035);
-  filter: saturate(1.2);
-}
-.imageScan {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.11) 0 1px,
-    transparent 1px 4px
-  );
-}
-.projectCopy {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 5px 30px;
-  align-items: end;
-  padding-top: 14px;
-}
-.projectCopy h3 {
-  margin: 0;
-  font: 650 clamp(25px, 3vw, 43px) var(--font-space-grotesk);
-  letter-spacing: -0.04em;
-}
-.projectCopy p {
-  grid-column: 1;
-  max-width: 540px;
-  margin: 0;
-  overflow: hidden;
-  color: #575953;
-  font-size: 11px;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  line-clamp: 2;
-  -webkit-line-clamp: 2;
-}
-.projectCopy a {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid;
-  padding-bottom: 4px;
-  font: 9px var(--font-geist-mono);
 }
 
 .contact {
@@ -2041,9 +1903,7 @@
   .pitchControls {
     display: none;
   }
-}
-
-/* ── Redesigned Bottom Navigation Bar ("Master Transport Console") ── */
+}/* ── Redesigned Bottom Navigation Bar ("Master Transport Console") ── */
 .transport {
   position: fixed;
   z-index: 100;
@@ -2076,9 +1936,7 @@
   left: 0;
   height: 1px;
   pointer-events: none;
-}
-
-/* ── Docked / Hero State (Full Width, Crisp Dock, No Rounded Corners) ── */
+}/* ── Docked / Hero State (Full Width, Crisp Dock, No Rounded Corners) ── */
 .transportDocked {
   bottom: 0;
   width: 100vw;
@@ -2093,9 +1951,7 @@
   box-shadow:
     0 -8px 30px rgba(0, 0, 0, 0.34),
     inset 0 1px rgba(255, 255, 255, 0.1);
-}
-
-/* ── Compact / Scrolled State (Floating Rounded Capsule) ── */
+}/* ── Compact / Scrolled State (Floating Rounded Capsule) ── */
 .transportCompact {
   bottom: clamp(14px, 2.5vh, 24px);
   width: max-content;
@@ -2171,9 +2027,7 @@
   color: var(--lcd-green);
   font-size: 10px;
   text-shadow: 0 0 6px rgba(92, 214, 163, 0.4);
-}
-
-/* ── Section Nav Wrapper (Isolated Hover / Fixed Width on Compact) ── */
+}/* ── Section Nav Wrapper (Isolated Hover / Fixed Width on Compact) ── */
 .sectionNavWrapper {
   display: flex;
   align-items: center;
@@ -2429,9 +2283,7 @@
   50% {
     opacity: 1;
   }
-}
-
-/* RACK—01 hardware family */
+}/* RACK—01 hardware family */
 .heroViewfinderReadout {
   position: absolute;
   z-index: 4;
@@ -2762,9 +2614,7 @@
   direction: rtl;
   writing-mode: vertical-lr;
   outline: none;
-}
-
-/* Webkit Track */
+}/* Webkit Track */
 .faderBank input::-webkit-slider-runnable-track {
   width: 6px;
   height: 100%;
@@ -2774,9 +2624,7 @@
   box-shadow:
     inset 0 2px 4px rgba(0, 0, 0, 0.85),
     0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-/* Webkit Thumb (Realistic Metallic Studio Fader Cap) */
+}/* Webkit Thumb (Realistic Metallic Studio Fader Cap) */
 .faderBank input::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -2810,9 +2658,7 @@
     0 4px 10px rgba(0, 0, 0, 0.8),
     0 0 6px rgba(255, 90, 31, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-/* Firefox Track */
+}/* Firefox Track */
 .faderBank input::-moz-range-track {
   width: 6px;
   height: 100%;
@@ -2820,9 +2666,7 @@
   background: #080a08;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85);
-}
-
-/* Firefox Thumb */
+}/* Firefox Thumb */
 .faderBank input::-moz-range-thumb {
   width: 24px;
   height: 16px;
@@ -3607,9 +3451,7 @@
   background: transparent;
   cursor: ew-resize;
   outline: none;
-}
-
-/* Webkit Track */
+}/* Webkit Track */
 .launchpadTransport input::-webkit-slider-runnable-track {
   width: 100%;
   height: 6px;
@@ -3619,9 +3461,7 @@
   box-shadow:
     inset 0 2px 4px rgba(0, 0, 0, 0.85),
     0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-/* Webkit Thumb (Horizontal Fader Cap) */
+}/* Webkit Thumb (Horizontal Fader Cap) */
 .launchpadTransport input::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -3655,9 +3495,7 @@
     0 4px 10px rgba(0, 0, 0, 0.8),
     0 0 6px rgba(255, 90, 31, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-/* Firefox Track */
+}/* Firefox Track */
 .launchpadTransport input::-moz-range-track {
   width: 100%;
   height: 6px;
@@ -3665,9 +3503,7 @@
   background: #080a08;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85);
-}
-
-/* Firefox Thumb */
+}/* Firefox Thumb */
 .launchpadTransport input::-moz-range-thumb {
   width: 16px;
   height: 20px;
@@ -3922,9 +3758,7 @@
   to {
     transform: scaleY(1);
   }
-}
-
-/* Studio rack refinement */
+}/* Studio rack refinement */
 .root {
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0
@@ -3934,11 +3768,9 @@
 }
 .section,
 .experience,
-.work,
 .contact {
   isolation: isolate;
 }
-/*.work::before,*/
 .contact::before {
   position: absolute;
   z-index: 4;
@@ -4138,8 +3970,7 @@
     0 20px 42px rgba(29, 30, 28, 0.28),
     inset 0 1px rgba(255, 255, 255, 0.55),
     inset 5px 0 var(--about-accent);
-}
-/* ponytail: card rail stays plain; only workstation device gets glass. */
+}/* ponytail: card rail stays plain; only workstation device gets glass. */
 .aboutCardRail {
   padding: 10px;
   border: 1px solid rgba(112, 111, 104, 0.45);
@@ -4178,629 +4009,7 @@
     -webkit-backdrop-filter: none;
     background-image: none;
   }
-}
-
-/* Compact release player and detail modal. */
-.work .projectModule {
-  flex-basis: clamp(264px, 23vw, 320px);
-  width: clamp(264px, 23vw, 320px);
-  padding: 10px;
-  border-radius: 17px;
-  cursor: pointer;
-}
-
-.work .projectModule:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--record-accent) 72%, white);
-  outline-offset: 4px;
-}
-
-.work .projectModule::before {
-  inset: 6px;
-  border-radius: 12px;
-}
-
-.work .projectPlayerHeader {
-  min-height: 66px;
-  padding: 10px 2px 7px;
-}
-
-.work .projectPlayerIdentity b,
-.work .projectPlayerDescription {
-  text-transform: none;
-}
-
-.work .projectPlayerIdentity b {
-  font-family: var(--font-space-grotesk);
-  font-size: clamp(13px, 1.05vw, 16px);
-  letter-spacing: -0.015em;
-}
-
-.work .projectPlayerIdentity small {
-  font-size: clamp(8px, 0.72vw, 9px);
-}
-
-.work .projectControls {
-  padding-top: 9px;
-}
-
-.work .projectProgressTrack {
-  height: 6px;
-  margin-top: 5px;
-}
-
-.work .projectPlaybackControls {
-  margin-top: 5px;
-}
-
-.work .projectPlaybackControls .projectPlayButton {
-  width: 44px;
-  height: 44px;
-}
-
-.work .projectDetailBackdrop {
-  position: fixed;
-  z-index: 100;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(5, 7, 6, 0.68);
-  backdrop-filter: blur(14px) saturate(1.15);
-  -webkit-backdrop-filter: blur(14px) saturate(1.15);
-}
-
-.work .projectDetailModal {
-  position: relative;
-  display: grid;
-  width: min(760px, 100%);
-  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1fr);
-  gap: clamp(18px, 3vw, 32px);
-  padding: clamp(14px, 2vw, 22px);
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  border-radius: 18px;
-  background:
-    radial-gradient(100% 70% at 10% 0, rgba(255, 255, 255, 0.22), transparent 48%),
-    radial-gradient(80% 80% at 100% 100%, color-mix(in srgb, var(--record-accent, #8fc49a) 16%, transparent), transparent 62%),
-    linear-gradient(145deg, rgba(43, 47, 44, 0.96), rgba(9, 12, 11, 0.98));
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.42),
-    0 34px 90px rgba(0, 0, 0, 0.58);
-  color: #f4f0e8;
-  backdrop-filter: blur(18px) saturate(1.45);
-  -webkit-backdrop-filter: blur(18px) saturate(1.45);
-}
-
-.work .projectDetailClose {
-  position: absolute;
-  z-index: 2;
-  top: 12px;
-  right: 12px;
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  border-radius: 10px;
-  background: rgba(10, 13, 11, 0.5);
-  color: #f4f0e8;
-  cursor: pointer;
-  transition: transform 160ms ease-out, background-color 160ms ease, border-color 160ms ease;
-}
-
-.work .projectDetailClose:hover,
-.work .projectDetailClose:focus-visible {
-  border-color: rgba(255, 255, 255, 0.62);
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.work .projectDetailClose:active {
-  transform: scale(0.97);
-}
-
-.work .projectDetailImage {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  background: #111512;
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.3);
-}
-
-.work .projectDetailImage img {
-  object-fit: cover;
-}
-
-.work .projectDetailContent {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  justify-content: center;
-  padding: 22px 26px 18px 0;
-}
-
-.work .projectDetailMeta {
-  color: color-mix(in srgb, var(--record-accent, #8fc49a) 72%, #f4f0e8);
-  font: 700 8px/1.3 var(--font-geist-mono);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.work .projectDetailContent h3 {
-  margin: 10px 0 12px;
-  color: #f4f0e8;
-  font-family: var(--font-space-grotesk);
-  font-size: clamp(26px, 4vw, 44px);
-  letter-spacing: -0.045em;
-  line-height: 0.98;
-}
-
-.work .projectDetailContent p {
-  max-width: 42ch;
-  margin: 0;
-  color: rgba(219, 224, 216, 0.72);
-  font-size: 13px;
-  line-height: 1.55;
-}
-
-.work .projectDetailLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  margin-top: 24px;
-  padding: 0 13px;
-  border: 1px solid color-mix(in srgb, var(--record-accent, #8fc49a) 58%, rgba(255, 255, 255, 0.34));
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--record-accent, #8fc49a) 18%, rgba(255, 255, 255, 0.08));
-  color: #f4f0e8;
-  font: 700 9px var(--font-geist-mono);
-  letter-spacing: 0.08em;
-  text-decoration: none;
-  text-transform: uppercase;
-  transition: transform 160ms ease-out, background-color 160ms ease, border-color 160ms ease;
-}
-
-.work .projectDetailLink:hover,
-.work .projectDetailLink:focus-visible {
-  border-color: rgba(255, 255, 255, 0.72);
-  background: color-mix(in srgb, var(--record-accent, #8fc49a) 30%, rgba(255, 255, 255, 0.12));
-  transform: translateY(-1px);
-}
-
-@media (min-width: 1440px) {
-  .work .projectModule {
-    flex-basis: 320px;
-    width: 320px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .work .projectModule {
-    flex-basis: min(36vw, 310px);
-    width: min(36vw, 310px);
-  }
-}
-
-@media (max-width: 768px) {
-  .work .projectModule {
-    flex-basis: min(78vw, 330px);
-    width: min(78vw, 330px);
-    padding: 9px;
-  }
-
-  .work .projectPlayerHeader {
-    min-height: 68px;
-    padding-top: 9px;
-  }
-
-  .work .projectDetailBackdrop {
-    align-items: end;
-    padding: 10px;
-  }
-
-  .work .projectDetailModal {
-    width: min(100%, 420px);
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 10px;
-    border-radius: 16px;
-  }
-
-  .work .projectDetailImage {
-    width: min(100%, 320px);
-    margin-inline: auto;
-  }
-
-  .work .projectDetailContent {
-    padding: 2px 10px 12px;
-  }
-
-  .work .projectDetailContent h3 {
-    margin-top: 7px;
-    font-size: 30px;
-  }
-
-  .work .projectDetailContent p {
-    font-size: 12px;
-  }
-
-  .work .projectDetailLink {
-    width: 100%;
-    justify-content: center;
-    margin-top: 18px;
-  }
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .work .projectDetailBackdrop,
-  .work .projectDetailModal,
-  .work .projectDetailClose,
-  .work .projectDetailLink {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background-image: none;
-  }
-}
-
-/* Project releases: a responsive liquid-glass music player surface. */
-.work .workStage {
-  overflow: visible;
-}
-
-.work .workViewport {
-  overflow-x: auto;
-  overflow-y: visible;
-  padding: 20px 0 34px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(244, 240, 232, 0.28) transparent;
-}
-
-.work .workRail {
-  display: flex;
-  width: max-content;
-  min-width: 100%;
-  --project-rail-gap: clamp(14px, 2vw, 24px);
-  gap: var(--project-rail-gap);
-  padding-inline: var(--project-rail-gap);
-}
-
-.work .projectModule {
-  position: relative;
-  isolation: isolate;
-  display: block;
-  flex: 0 0 clamp(292px, 28vw, 370px);
-  width: clamp(292px, 28vw, 370px);
-  min-height: 0;
-  padding: 12px;
-  overflow: visible;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 20px;
-  background:
-    radial-gradient(110% 72% at 12% 0, rgba(255, 255, 255, 0.18), transparent 48%),
-    radial-gradient(80% 80% at 100% 100%, color-mix(in srgb, var(--record-accent) 18%, transparent), transparent 62%),
-    linear-gradient(145deg, rgba(43, 47, 44, 0.9), rgba(9, 12, 11, 0.96));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    inset 0 -26px 30px -24px rgba(0, 0, 0, 0.8),
-    0 24px 50px -28px rgba(0, 0, 0, 0.74);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  transition:
-    transform 180ms cubic-bezier(0.23, 1, 0.32, 1),
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.work .projectModule::before {
-  position: absolute;
-  z-index: -1;
-  inset: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 14px;
-  content: '';
-  pointer-events: none;
-}
-
-.work .projectModuleExpanded {
-  border-color: color-mix(in srgb, var(--record-accent) 66%, rgba(255, 255, 255, 0.46));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -26px 30px -24px rgba(0, 0, 0, 0.8),
-    0 24px 50px -28px color-mix(in srgb, var(--record-accent) 34%, rgba(0, 0, 0, 0.8));
-}
-
-.work .projectMedia {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-height: 0;
-  margin: 0;
-  overflow: visible;
-}
-
-.work .projectImage {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  margin: 0;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.34);
-  border-radius: 12px;
-  background: #111512;
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.32),
-    0 12px 24px -18px rgba(0, 0, 0, 0.86);
-}
-
-.work .projectImage img {
-  object-fit: cover;
-  transition: transform 240ms cubic-bezier(0.23, 1, 0.32, 1), filter 240ms ease;
-}
-
-.work .projectModule:hover .projectImage img,
-.work .projectModule:focus-within .projectImage img {
-  filter: saturate(1.08) contrast(1.04);
-  transform: scale(1.025);
-}
-
-.work .projectImage .imageScan {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent 34%);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.16);
-  pointer-events: none;
-}
-
-.work .projectPlayerHeader {
-  order: 2;
-  display: flex;
-  align-items: flex-start;
-  width: 100%;
-  min-height: 74px;
-  margin: 0;
-  padding: 14px 2px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-  color: rgba(219, 224, 216, 0.64);
-}
-
-.work .projectPlayerIdentity {
-  align-items: flex-start;
-  gap: 9px;
-}
-
-.work .projectPlayerIdentity > span:last-child {
-  gap: 4px;
-}
-
-.work .projectTrackMeta {
-  overflow: hidden;
-  color: color-mix(in srgb, var(--record-accent) 68%, rgba(244, 240, 232, 0.72));
-  font: 700 7px/1.2 var(--font-geist-mono);
-  letter-spacing: 0.1em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.work .projectPlayerIdentity b {
-  color: rgba(244, 240, 232, 0.94);
-  font-size: clamp(12px, 1.25vw, 15px);
-  letter-spacing: 0.06em;
-}
-
-.work .projectPlayerIdentity small {
-  display: -webkit-box;
-  overflow: hidden;
-  color: rgba(219, 224, 216, 0.62);
-  font-size: clamp(8px, 0.82vw, 10px);
-  line-height: 1.45;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.work .projectPlayerDescriptionExpanded {
-  display: block;
-  overflow: visible;
-  -webkit-line-clamp: unset;
-}
-
-.work .projectPlayerActions {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 4px;
-}
-
-.work .projectAction,
-.work .projectExpandAction {
-  display: grid;
-  width: 44px;
-  min-width: 44px;
-  height: 44px;
-  min-height: 44px;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(244, 240, 232, 0.8);
-  cursor: pointer;
-  text-decoration: none;
-  transition: transform 160ms ease-out, border-color 160ms ease, background-color 160ms ease, color 160ms ease;
-}
-
-.work .projectAction:hover,
-.work .projectAction:focus-visible,
-.work .projectExpandAction:hover,
-.work .projectExpandAction:focus-visible {
-  border-color: color-mix(in srgb, var(--record-accent) 68%, white);
-  background: color-mix(in srgb, var(--record-accent) 22%, rgba(255, 255, 255, 0.12));
-  color: #f4f0e8;
-}
-
-.work .projectAction:active,
-.work .projectExpandAction:active,
-.work .projectPlaybackControls button:active {
-  transform: scale(0.97);
-}
-
-.work .projectExpandAction svg {
-  transition: transform 160ms ease-out;
-}
-
-.work .projectExpandAction[aria-expanded='true'] svg {
-  transform: rotate(180deg);
-}
-
-.work .projectControls {
-  order: 3;
-  position: static;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-height: 0;
-  margin: 0;
-  padding: 12px 2px 2px;
-  background: transparent;
-  color: #f4f0e8;
-}
-
-.work .projectProgressLabels {
-  color: rgba(244, 240, 232, 0.68);
-  font-variant-numeric: tabular-nums;
-}
-
-.work .projectProgressTrack {
-  height: 8px;
-  margin-top: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  outline: none;
-}
-
-.work .projectProgressTrack:focus-visible {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--record-accent) 42%, transparent);
-}
-
-.work .projectProgressTrack > span {
-  background: linear-gradient(90deg, var(--record-label), var(--record-accent));
-  box-shadow: 0 0 10px color-mix(in srgb, var(--record-accent) 36%, transparent);
-}
-
-.work .projectPlaybackControls {
-  grid-template-columns: 1fr 56px 1fr;
-  margin-top: 8px;
-}
-
-.work .projectPlaybackControls button {
-  width: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  color: rgba(244, 240, 232, 0.76);
-  transition: transform 160ms ease-out, border-color 160ms ease, background-color 160ms ease, color 160ms ease;
-}
-
-.work .projectPlaybackControls button:hover,
-.work .projectPlaybackControls button:focus-visible {
-  border-color: rgba(255, 255, 255, 0.24);
-  background: rgba(255, 255, 255, 0.1);
-  color: #f4f0e8;
-}
-
-.work .projectPlaybackControls .projectPlayButton {
-  width: 48px;
-  height: 48px;
-  border-color: color-mix(in srgb, var(--record-accent) 62%, rgba(255, 255, 255, 0.5));
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.24), transparent 30%),
-    color-mix(in srgb, var(--record-accent) 34%, rgba(13, 16, 14, 0.84));
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.34), 0 8px 18px -12px color-mix(in srgb, var(--record-accent) 60%, rgba(0, 0, 0, 0.8));
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .work .projectModule:hover {
-    border-color: color-mix(in srgb, var(--record-accent) 48%, rgba(255, 255, 255, 0.38));
-    transform: translateY(-3px);
-  }
-}
-
-@media (min-width: 1440px) {
-  .work .workRail {
-    --project-rail-gap: 26px;
-  }
-
-  .work .projectModule {
-    flex-basis: 380px;
-    width: 380px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .work .projectModule {
-    flex-basis: min(42vw, 350px);
-    width: min(42vw, 350px);
-  }
-}
-
-@media (max-width: 768px) {
-  .work .workViewport {
-    padding: 16px 0 28px;
-  }
-
-  .work .workRail {
-    --project-rail-gap: 12px;
-  }
-
-  .work .projectModule {
-    flex-basis: min(86vw, 390px);
-    width: min(86vw, 390px);
-    padding: 10px;
-    border-radius: 17px;
-  }
-
-  .work .projectModule::before {
-    inset: 6px;
-    border-radius: 12px;
-  }
-
-  .work .projectPlayerHeader {
-    min-height: 78px;
-    padding-top: 12px;
-  }
-
-  .work .projectPlayerIdentity b {
-    font-size: 12px;
-  }
-
-  .work .projectPlayerIdentity small {
-    font-size: 9px;
-  }
-
-  .work .projectControls {
-    padding-top: 10px;
-  }
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .work .projectModule,
-  .work .projectAction,
-  .work .projectExpandAction,
-  .work .projectPlaybackControls button {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background-image: none;
-  }
-}
-
-/* Contact pad material: one glass instrument, with dark readouts and tactile controls. */
+}/* Compact release player and detail modal. *//* Project releases: a responsive liquid-glass music player surface. *//* Contact pad material: one glass instrument, with dark readouts and tactile controls. */
 .contact {
   perspective: 1400px;
 }
@@ -5004,9 +4213,7 @@
     -webkit-backdrop-filter: none;
     background-image: none;
   }
-}
-
-/* Final radio material: glass surfaces, dark functional islands, crisp controls. */
+}/* Final radio material: glass surfaces, dark functional islands, crisp controls. */
 .experience .radioFace,
 .experience .radioSpeaker,
 .experience .radioLevel,
@@ -5151,9 +4358,7 @@
     -webkit-backdrop-filter: none;
     background-image: none;
   }
-}
-
-/* Timeline workstation: one liquid-glass device with quieter internal layers. */
+}/* Timeline workstation: one liquid-glass device with quieter internal layers. */
 .about .timelineWorkspace {
   overflow: visible;
   padding: 0;
@@ -5508,9 +4713,7 @@
     -webkit-backdrop-filter: none;
     background-image: none;
   }
-}
-
-/* Keep the radio silhouette complete at every breakpoint. */
+}/* Keep the radio silhouette complete at every breakpoint. */
 .experience .radioHandle {
   z-index: 3;
   display: block;
@@ -5580,9 +4783,7 @@
     height: 230px;
     min-height: 230px;
   }
-}
-
-/* Experience radio material: the hero's glass language, kept to the device. */
+}/* Experience radio material: the hero's glass language, kept to the device. */
 .experience .cassetteDeck {
   overflow: visible;
   border-color: rgba(255, 255, 255, 0.56);
@@ -5911,9 +5112,7 @@
 .signalDividerGlyphBottom {
   color: var(--signal-orange);
   text-shadow: 0 0 6px rgba(255, 90, 31, 0.6);
-}
-
-/* ── Central Studio Signal Router Bridge Console ── */
+}/* ── Central Studio Signal Router Bridge Console ── */
 .signalBridgeConsole {
   position: relative;
   z-index: 3;
@@ -6172,16 +5371,14 @@
   height: 50%;
   content: '';
   pointer-events: none;
-}
-/* Top 50%: Solid Black (#171917) with grid pattern */
+}/* Top 50%: Solid Black (#171917) with grid pattern */
 .cableDivider::before {
   top: 0;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0
       0 / 32px 32px,
     #171917;
-}
-/* Bottom 50%: Solid Tan (#c8a474) with grid pattern */
+}/* Bottom 50%: Solid Tan (#c8a474) with grid pattern */
 .cableDivider::after {
   bottom: 0;
   background:
@@ -6387,9 +5584,7 @@
     opacity: 0;
     transform: scale(2.1);
   }
-}
-
-/* Minimal signal handoff: the moving tracks carry the transition. */
+}/* Minimal signal handoff: the moving tracks carry the transition. */
 .signalDivider {
   background: #111310;
 }
@@ -6457,43 +5652,10 @@
 }
 .signalBridgeMeter i:nth-child(-n + 7) {
   background: #111310;
-}
-
-/* Project releases: flat sleeves, restrained hardware, clear reading order. */
-.work {
-  background: #0d0f0d;
-}
-.workStage::after {
-  display: none;
-}
-.workRail {
-  gap: clamp(16px, 2vw, 28px);
-}
-.projectModule {
-  width: min(38vw, 520px);
-  height: min(64vh, 610px);
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid #74756f;
-  border-radius: 2px;
-  background: #c9c7bf;
-  box-shadow: none;
-}
-.projectMeta {
-  align-items: center;
-  min-height: 42px;
-  padding: 0 14px;
-  border-bottom: 1px solid rgba(35, 37, 34, 0.24);
-}
+}/* Project releases: flat sleeves, restrained hardware, clear reading order. */
 .projectScrewLeft,
 .projectScrewRight {
   display: none;
-}
-.projectMedia {
-  min-height: 0;
-  overflow: visible;
-  margin: 14px 14px 0;
-  aspect-ratio: 4 / 3;
 }
 .projectSleeve {
   width: 76%;
@@ -6502,39 +5664,11 @@
   background: #d8d5cc;
   box-shadow: none;
 }
-.projectImage {
-  filter: saturate(0.7) contrast(1.04);
-}
-.imageScan {
-  opacity: 0.12;
-}
-.projectCoverLabel {
-  right: 9px;
-  bottom: 9px;
-  padding: 6px 8px;
-  border: 1px solid rgba(24, 26, 24, 0.42);
-  background: var(--record-label);
-  box-shadow: none;
-}
 .projectTurntable {
   top: 5%;
   left: 32%;
   width: 62%;
   filter: none;
-}
-.projectVinyl {
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
-}
-.projectCopy {
-  position: relative;
-  z-index: 3;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  gap: 7px 18px;
-  align-items: end;
-  padding: 14px;
-  border-top: 1px solid rgba(35, 37, 34, 0.24);
-  background: #c9c7bf;
 }
 .projectTitleBlock {
   grid-column: 1;
@@ -6542,31 +5676,6 @@
 }
 .projectTitleBlock > span {
   display: none;
-}
-.projectCopy h3 {
-  font-size: clamp(22px, 2vw, 30px);
-}
-.projectCopy p {
-  grid-column: 1;
-  grid-row: 2;
-  max-width: 52ch;
-  font-size: 10px;
-  line-height: 1.45;
-}
-.projectCopy a {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  align-self: end;
-  min-height: 44px;
-  padding: 0 10px;
-  border: 1px solid #3c3e3a;
-  background: transparent;
-  color: #252724;
-}
-.projectCopy a:hover {
-  border-color: #252724;
-  background: #252724;
-  color: #f0ede4;
 }
 
 @media (max-width: 768px) {
@@ -6589,28 +5698,7 @@
   .signalBridgeRight strong {
     font-size: 7px;
   }
-  .projectModule {
-    width: min(86vw, 390px);
-    height: auto;
-    min-height: 520px;
-  }
-  .projectMedia {
-    aspect-ratio: 4 / 3;
-  }
-  .projectCopy {
-    grid-template-columns: 1fr auto;
-  }
-  .projectCopy p {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-  .projectCopy a {
-    grid-column: 2;
-    grid-row: 1;
-  }
-}
-
-/* Responsive Rack Collapse: same hierarchy, fewer columns. */
+}/* Responsive Rack Collapse: same hierarchy, fewer columns. */
 @media (max-width: 768px) {
   .heroStage {
     min-height: 100svh;
@@ -6694,9 +5782,7 @@
   .heroBottomRail {
     display: none;
   }
-}
-
-/* Continue the adjoining section calibration lines through the handoff. */
+}/* Continue the adjoining section calibration lines through the handoff. */
 .signalDividerStage::before {
   background:
     radial-gradient(
@@ -6945,53 +6031,6 @@
 .experienceNotes::-webkit-scrollbar-track {
   background: transparent;
 }
-.work {
-  background:
-    radial-gradient(circle at 25% 20%, rgba(49, 93, 114, 0.2), transparent 30%),
-    radial-gradient(
-      circle at 85% 75%,
-      rgba(165, 91, 53, 0.14),
-      transparent 28%
-    ),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0
-      0 / 28px 28px,
-    #0b0d0c;
-}
-.workStage::after {
-  position: absolute;
-  z-index: -1;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 38%;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, #181a18, #101210);
-  content: '';
-}
-.projectModule {
-  width: min(34vw, 460px);
-  height: auto;
-  grid-template-rows: auto auto auto;
-  padding: 13px;
-  border-color: #72746f;
-  background: radial-gradient(
-      circle at 12% 0,
-      rgba(255, 255, 255, 0.86),
-      transparent 26%
-    ),
-    linear-gradient(145deg, #dedbd3, #b8b7b1);
-  box-shadow:
-    0 28px 64px rgba(0, 0, 0, 0.44),
-    0 5px 10px rgba(0, 0, 0, 0.32),
-    inset 0 1px rgba(255, 255, 255, 0.88);
-  will-change: transform, opacity;
-}
-.projectMedia {
-  position: relative;
-  display: block;
-  min-height: 0;
-  aspect-ratio: 5 / 4;
-}
 .projectSleeve {
   position: absolute;
   z-index: 2;
@@ -7006,29 +6045,6 @@
   box-shadow:
     0 5px 12px rgba(0, 0, 0, 0.25),
     inset 0 1px rgba(255, 255, 255, 0.72);
-}
-.projectImage {
-  height: 100%;
-  min-height: 0;
-  border: 0;
-  filter: saturate(0.72) contrast(1.06);
-}
-.projectCoverLabel {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  display: grid;
-  max-width: 52%;
-  gap: 3px;
-  padding: 8px 10px;
-  background: color-mix(in srgb, var(--record-label) 88%, #eee);
-  color: #181a18;
-  box-shadow: 4px 4px 0 var(--record-accent);
-  font: 7px var(--font-geist-mono);
-  text-transform: uppercase;
-}
-.projectCoverLabel b {
-  font-size: 18px;
 }
 .projectSleeveSpine {
   position: absolute;
@@ -7054,71 +6070,6 @@
   place-items: center;
   filter: drop-shadow(14px 18px 15px rgba(18, 15, 12, 0.42));
 }
-.projectVinyl {
-  position: relative;
-  display: grid;
-  width: 100%;
-  aspect-ratio: 1;
-  place-items: center;
-  border-radius: 50%;
-  background: repeating-radial-gradient(
-      circle,
-      transparent 0 4px,
-      rgba(255, 255, 255, 0.08) 4px 5px
-    ),
-    radial-gradient(
-      circle,
-      var(--record-label) 0 18%,
-      #141614 18.5% 21%,
-      var(--record-color) 21.5% 100%
-    );
-  box-shadow:
-    0 18px 30px rgba(0, 0, 0, 0.58),
-    0 4px 8px rgba(0, 0, 0, 0.48),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-    inset -12px -8px 24px rgba(0, 0, 0, 0.2);
-  will-change: transform;
-}
-.projectVinyl::before {
-  position: absolute;
-  inset: 3%;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 18deg,
-    transparent 0 12%,
-    rgba(255, 255, 255, 0.18) 15%,
-    transparent 20% 58%,
-    rgba(255, 255, 255, 0.1) 62%,
-    transparent 68%
-  );
-  content: '';
-  pointer-events: none;
-}
-.projectVinyl::after {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #d8d6cf;
-  content: '';
-}
-.projectVinyl b {
-  position: absolute;
-  color: #181a18;
-  font: 700 7px/0.95 var(--font-geist-mono);
-  text-align: center;
-}
-.projectVinyl i {
-  position: absolute;
-  inset: 6%;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 50%;
-}
-
-.projectCopy {
-  grid-template-columns: minmax(0, 1fr) minmax(105px, 0.48fr) auto;
-  gap: 6px 16px;
-  padding: 11px 3px 0;
-}
 .projectTitleBlock {
   min-width: 0;
 }
@@ -7129,18 +6080,6 @@
   font: 7px var(--font-geist-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-.projectCopy h3 {
-  overflow: hidden;
-  font-size: clamp(21px, 2vw, 31px);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.projectCopy p {
-  grid-column: 2;
-  align-self: center;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
 }
 .projectWaveform {
   display: none;
@@ -7188,24 +6127,6 @@
     100% 48%
   );
   opacity: 0.7;
-}
-.projectCopy a {
-  grid-column: 3;
-  grid-row: 1 / 2;
-  align-self: end;
-  min-height: 42px;
-  padding: 0 12px;
-  border: 1px solid #4b4d49;
-  border-radius: 2px;
-  background: #252724;
-  color: #f1eee7;
-  transition:
-    transform 120ms ease,
-    background-color 120ms ease;
-}
-.projectCopy a:hover {
-  background: var(--record-color);
-  transform: translateY(-2px);
 }
 .contact {
   background:
@@ -7407,9 +6328,6 @@
   }
   .faderBank input {
     height: 95px;
-  }
-  .projectModule {
-    width: min(42vw, 440px);
   }
   .aboutDeck {
     grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr);
@@ -8107,88 +7025,16 @@
   .experienceSelector button small {
     display: none;
   }
-  .work {
-    height: auto;
-    padding: 90px 0;
-  }
-  .workStage {
-    position: relative;
-    height: auto;
-    min-height: 0;
-    overflow: visible;
-    padding: 0;
-  }
-  .workHeader {
-    display: block;
-  }
-  .workHeader .sectionHeading h2 {
-    max-width: 100%;
-  }
-  .workHint {
-    margin-top: 20px;
-  }
-  .workViewport {
-    overflow-x: auto;
-    padding: 10px 20px 20px;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(224, 183, 90, 0.45) transparent;
-  }
-  .workViewport::-webkit-scrollbar {
-    height: 4px;
-  }
-  .workViewport::-webkit-scrollbar-thumb {
-    background: rgba(224, 183, 90, 0.4);
-    border-radius: 2px;
-  }
-  .workViewport::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .workRail {
-    gap: 16px;
-    padding-right: 20px;
-    transform: none !important;
-  }
-  .projectModule {
-    width: min(76vw, 380px);
-    height: auto;
-    flex: 0 0 auto;
-    grid-template-rows: auto auto auto;
-    scroll-snap-align: start;
-  }
-  .projectMedia {
-    aspect-ratio: 5 / 4;
-  }
   .projectSleeve {
     padding: 7px 7px 20px;
   }
-  .projectVinyl {
-    width: 100%;
-  }
-  .projectCopy {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px 14px;
-  }
-  .projectTitleBlock,
-  .projectCopy p {
+  .projectTitleBlock {
     grid-column: 1 / -1;
-  }
-  .projectCopy p {
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
   }
   .projectWaveform {
     grid-column: 1;
     grid-row: 3;
     width: min(100%, 210px);
-  }
-  .projectCopy a {
-    grid-column: 2;
-    grid-row: 3;
-    justify-self: end;
-    margin-top: 0;
   }
   .contact {
     padding: 90px 20px 0;
@@ -8275,8 +7121,7 @@
     flex-direction: column;
     gap: 12px;
     margin-top: 0;
-  }
-  /* ── Mobile Navigation (Section Dropdown Trigger + Direct Route Links) ── */
+  }/* ── Mobile Navigation (Section Dropdown Trigger + Direct Route Links) ── */
   .transportStatus {
     display: none !important;
   }
@@ -8321,9 +7166,7 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.14);
     overflow: visible;
     justify-content: center;
-  }
-
-  /* ── Mobile Section Trigger Button (Consistent Fixed Width) ── */
+  }/* ── Mobile Section Trigger Button (Consistent Fixed Width) ── */
   .mobileSectionTrigger {
     display: inline-flex;
     align-items: flex-start;
@@ -8375,9 +7218,7 @@
 
   .mobileMenuChevron.chevronOpen {
     transform: rotate(180deg);
-  }
-
-  /* ── Direct Mobile Routes (Zero Extra Spaces) ── */
+  }/* ── Direct Mobile Routes (Zero Extra Spaces) ── */
   .routeNavGroup {
     display: flex !important;
     align-items: center;
@@ -8407,9 +7248,7 @@
   .routeDot {
     width: 4px;
     height: 4px;
-  }
-
-  /* ── Upward Mobile Dropdown Menu for Sections ── */
+  }/* ── Upward Mobile Dropdown Menu for Sections ── */
   .mobileDropdown {
     position: absolute;
     bottom: calc(100% + 10px);
@@ -8508,9 +7347,7 @@
     border-radius: 50%;
     background: var(--signal-orange);
     box-shadow: 0 0 6px var(--signal-orange);
-  }
-
-  /* Signal divider rails: same GSAP scroll scrub as desktop — no CSS
+  }/* Signal divider rails: same GSAP scroll scrub as desktop — no CSS
      marquee loop on mobile. */
   .signalDividerRail {
     will-change: transform;
@@ -8621,21 +7458,6 @@
   .launchpadTransport label {
     display: none;
   }
-  .projectModule {
-    width: 84vw;
-    height: auto;
-    grid-template-rows: auto auto auto;
-    padding: 11px;
-  }
-  .projectMedia {
-    aspect-ratio: 5 / 4;
-  }
-  .projectCopy h3 {
-    font-size: clamp(21px, 7vw, 28px);
-  }
-  .projectCoverLabel {
-    max-width: 62%;
-  }
   .launchpadGrid {
     gap: 6px;
   }
@@ -8662,8 +7484,7 @@
   .about,
   .signalDivider,
   .skills,
-  .experience,
-  .work {
+  .experience {
     height: auto;
     min-height: 0;
   }
@@ -8691,8 +7512,7 @@
   .heroStage,
   .aboutStage,
   .skillsStage,
-  .experienceStage,
-  .workStage {
+  .experienceStage {
     position: relative;
     height: auto;
     min-height: 100svh;
@@ -8717,18 +7537,6 @@
     right: auto;
     margin-bottom: 40px;
   }
-  .work {
-    padding: 90px 0;
-  }
-  .workViewport {
-    overflow-x: auto;
-  }
-  .workRail {
-    transform: none !important;
-  }
-  .projectModule {
-    width: min(76vw, 460px);
-  }
   .heroDeviceWall,
   .heroViewfinderReadout,
   .controller {
@@ -8738,8 +7546,7 @@
   .heroViewfinderReadout {
     will-change: auto;
   }
-}
-/* Minimal section marker and performance controller */
+}/* Minimal section marker and performance controller */
 .sectionHeading {
   display: grid;
   grid-template-columns: 136px minmax(0, 1fr);
@@ -9089,9 +7896,7 @@
     margin-inline: 40px;
     line-height: 1.45;
   }
-}
-/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4 */
-/* Hero redesign: the device wall supplies the identity; the interface stays quiet. */
+}/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4 *//* Hero redesign: the device wall supplies the identity; the interface stays quiet. */
 .heroStage {
   --hero-pointer-x: 68%;
   --hero-pointer-y: 38%;
@@ -9482,8 +8287,7 @@
   .heroAtmosphere {
     transition: none;
   }
-}
-/* Rack Collapse: one machine assembles, separates, then clears the stage. */
+}/* Rack Collapse: one machine assembles, separates, then clears the stage. */
 .heroDeviceWall {
   isolation: isolate;
 }
@@ -9781,10 +8585,7 @@
   .heroBootSequence i {
     animation: none;
   }
-}
-
-
-/* Final surface continuity overrides. */
+}/* Final surface continuity overrides. */
 .signalDividerStage::before {
   background:
     radial-gradient(
@@ -9821,9 +8622,7 @@
 .signalBridgeConsole {
   background: var(--signal-orange);
   box-shadow: none;
-}
-
-/* About to Skills: two restrained rails dock around one center rule. */
+}/* About to Skills: two restrained rails dock around one center rule. */
 .signalDivider {
   background: transparent;
 }
@@ -9978,33 +8777,6 @@
     transform: translateY(-50%) !important;
   }
 }
-
-.work {
-  background: #0d0f0d;
-}
-.workStage::after {
-  display: none;
-}
-.projectModule {
-  width: min(38vw, 520px);
-  height: min(64vh, 610px);
-  padding: 0;
-  overflow: hidden;
-  border-radius: 2px;
-  background: #c9c7bf;
-  box-shadow: none;
-}
-.projectMeta {
-  min-height: 42px;
-  padding: 0 14px;
-  border-bottom: 1px solid rgba(35, 37, 34, 0.24);
-}
-.projectMedia {
-  min-height: 0;
-  overflow: visible;
-  margin: 14px 14px 0;
-  aspect-ratio: 4 / 3;
-}
 .projectSleeve {
   width: 76%;
   padding: 0 0 20px;
@@ -10016,33 +8788,12 @@
   width: 62%;
   filter: none;
 }
-.projectCopy {
-  position: relative;
-  z-index: 3;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  gap: 7px 18px;
-  align-items: end;
-  padding: 14px;
-  border-top: 1px solid rgba(35, 37, 34, 0.24);
-  background: #c9c7bf;
-}
 .projectTitleBlock {
   grid-column: 1;
   grid-row: 1;
 }
 .projectTitleBlock > span {
   display: none;
-}
-.projectCopy p {
-  grid-column: 1;
-  grid-row: 2;
-  max-width: 52ch;
-}
-.projectCopy a {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  align-self: end;
 }
 
 @media (max-width: 768px) {
@@ -10054,25 +8805,7 @@
     padding-right: 18px;
     font-size: clamp(15px, 4.6vw, 20px);
   }
-  .projectModule {
-    width: min(86vw, 390px);
-    height: auto;
-    min-height: 520px;
-  }
-  .projectMedia {
-    aspect-ratio: 4 / 3;
-  }
-  .projectCopy p {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-  .projectCopy a {
-    grid-column: 2;
-    grid-row: 1;
-  }
-}
-
-/* Final mobile hero alignment. */
+}/* Final mobile hero alignment. */
 @media (max-width: 768px) {
   .heroStage {
     min-height: 100svh;
@@ -10153,9 +8886,7 @@
     padding-top: 2px;
     font-size: 7px;
   }
-}
-
-/* Mobile transport: one compact row with overflow contained inside the dock. */
+}/* Mobile transport: one compact row with overflow contained inside the dock. */
 @media (max-width: 768px) {
   .transportDocked,
   .transportCompact {
@@ -10245,9 +8976,7 @@
   .heroEditorialPanel .heroResumeLink {
     justify-content: flex-start;
   }
-}
-
-/* Scroll choreography for the Skills instrument. */
+}/* Scroll choreography for the Skills instrument. */
 .skillsSequenceActive {
   position: relative;
   z-index: 2;
@@ -10282,9 +9011,7 @@
     filter: none;
     transform: none;
   }
-}
-
-/* Experience to projects: the master cassette becomes the first release. */
+}/* Experience to projects: the master cassette becomes the first release. */
 .experienceContent {
   position: relative;
   z-index: 1;
@@ -10672,9 +9399,7 @@
     transform: none !important;
     clip-path: none !important;
   }
-}
-
-/* The handoff is a typographic scene marker. It leaves the project rail untouched. */
+}/* The handoff is a typographic scene marker. It leaves the project rail untouched. */
 .handoffSleeve {
   position: absolute;
   z-index: 2;
@@ -10797,9 +9522,7 @@
   color: #181a18;
   font: 700 7px/0.95 var(--font-geist-mono);
   text-align: center;
-}
-
-/* The handoff is a typographic scene marker. It leaves the project rail untouched. */
+}/* The handoff is a typographic scene marker. It leaves the project rail untouched. */
 .handoffEditorial {
   position: absolute;
   z-index: 2;
@@ -10854,19 +9577,6 @@
   .experience {
     position: relative;
     z-index: 2;
-  }
-
-  .work {
-    position: relative;
-    z-index: 3;
-    margin-top: -100svh;
-    background: transparent;
-  }
-
-  .workStage {
-    background: var(--lcd-black);
-    transform-style: preserve-3d;
-    will-change: transform, opacity, clip-path;
   }
 }
 
@@ -10966,173 +9676,7 @@
     will-change: auto;
   }
 
-  .work {
-    margin-top: 0;
-  }
-
-}
-
-/* Compact release cards keep copy readable without a fixed-height crop. */
-.workStage { overflow: visible; }
-.projectModule { height: auto; min-height: 0; grid-template-rows: auto auto; }
-.projectCopy { min-height: 78px; }
-.projectCopy h3 { overflow: visible; text-overflow: clip; white-space: normal; }
-.projectCoverLabel { min-width: 52px; overflow-wrap: anywhere; }
-.projectImage {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1;
-  border: 1px solid #6f706b;
-  background: #d2cec4;
-  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
-}
-.projectPlayerHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-  color: #646661;
-  font: 7px var(--font-geist-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.projectPlayerIdentity {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 8px;
-}
-.projectPlayerIdentity > span:last-child {
-  display: grid;
-  flex: 1 1 auto;
-  gap: 1px;
-  min-width: 0;
-}
-.projectPlayerIdentity b {
-  overflow: hidden;
-  color: #252724;
-  font: 700 clamp(10px, 1.2vw, 14px) var(--font-geist-mono);
-  letter-spacing: 0.05em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.projectPlayerIdentity small {
-  color: #646661;
-  font: clamp(8px, 0.9vw, 11px) / 1.35 var(--font-geist-mono);
-  letter-spacing: 0.05em;
-}
-.projectPlayerActions {
-  display: flex;
-  gap: 2px;
-}
-.projectPlayerActions button,
-.projectPlaybackControls button {
-  display: grid;
-  min-width: 44px;
-  min-height: 44px;
-  place-items: center;
-  border: 0;
-  background: transparent;
-  color: #646661;
-  cursor: pointer;
-  transition: color 160ms ease, background-color 160ms ease;
-}
-.projectPlayerActions button:hover,
-.projectPlaybackControls button:hover {
-  background: rgba(37, 39, 36, 0.08);
-  color: #252724;
-}
-.projectPlayerActions .projectLiked {
-  color: var(--record-accent);
-}
-.projectImage {
-  position: relative;
-  overflow: hidden;
-}
-.projectControls {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 14px;
-  background: linear-gradient(180deg, transparent 38%, rgba(11, 13, 12, 0.86));
-  color: #f4f0e8;
-}
-.projectProgressLabels {
-  display: flex;
-  justify-content: space-between;
-  color: rgba(244, 240, 232, 0.88);
-  font: 8px var(--font-geist-mono);
-}
-.projectProgressTrack {
-  position: relative;
-  height: 6px;
-  margin-top: 5px;
-  border-radius: 999px;
-  background: rgba(244, 240, 232, 0.26);
-  cursor: pointer;
-}
-.projectProgressTrack > span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #f4f0e8;
-  transition: width 200ms linear;
-}
-.projectPlaybackControls {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: center;
-  margin-top: 4px;
-}
-.projectPlaybackControls button {
-  justify-self: center;
-  color: #f4f0e8;
-}
-.projectPlaybackControls button:hover {
-  background: rgba(244, 240, 232, 0.12);
-  color: #f4f0e8;
-}
-.projectPlaybackControls .projectPlayButton {
-  width: 42px;
-  height: 42px;
-  border: 1px solid rgba(244, 240, 232, 0.8);
-  border-radius: 50%;
-  background: rgba(11, 13, 12, 0.48);
-}
-.projectPlayMark {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  border: 1px solid rgba(244, 240, 232, 0.82);
-  border-radius: 50%;
-  background: rgba(11, 13, 12, 0.62);
-  color: #f4f0e8;
-  transform: translate(-50%, -50%);
-  transition: background-color 160ms ease, transform 160ms ease;
-}
-.projectModule:hover .projectPlayMark {
-  background: var(--record-accent);
-  transform: translate(-50%, -50%) scale(1.06);
-}
-.projectCopy {
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto 1fr;
-  gap: 8px 16px;
-  min-height: 190px;
-  align-content: stretch;
-  padding: 14px;
-  border-top: 1px solid rgba(35, 37, 34, 0.24);
-  background: #c9c7bf;
-}
+}/* Compact release cards keep copy readable without a fixed-height crop. */
 .projectTitleBlock {
   grid-column: 1;
   grid-row: 1;
@@ -11145,32 +9689,6 @@
   font: 7px var(--font-geist-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-.projectMetaLine::before {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 6px;
-  border: 1px solid var(--record-accent);
-  border-radius: 50%;
-  background: var(--record-label);
-  box-shadow: inset 0 0 0 2px #c9c7bf;
-  content: '';
-  vertical-align: -1px;
-}
-.projectCopy h3 {
-  overflow: hidden;
-  font-size: clamp(22px, 2vw, 30px);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.projectCopy p {
-  grid-column: 1;
-  grid-row: 2;
-  height: 4.35em;
-  max-width: 52ch;
-  font-size: 10px;
-  line-height: 1.45;
 }
 .projectDescription {
   display: block;
@@ -11185,153 +9703,7 @@
   overflow: visible;
   text-overflow: clip;
   white-space: normal;
-}
-.projectModuleExpanded .projectCopy {
-  min-height: 226px;
-}
-.projectCopy a {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  align-self: end;
-  min-height: 44px;
-}
-@media (min-width: 769px) {
-  .projectModule { width: min(310px, 28vw); }
-  .projectMedia { aspect-ratio: auto; }
-}
-@media (max-width: 768px) {
-  .projectMedia {
-    aspect-ratio: 1;
-  }
-  .projectCopy {
-    min-height: 172px;
-  }
-  .projectCopy p {
-    grid-column: 1 / -1;
-  }
-  .projectCopy a {
-    grid-column: 2;
-    grid-row: 1;
-  }
-}
-
-.projectModule {
-  grid-template-rows: auto;
-  min-height: 0;
-  overflow: visible;
-  padding: 14px;
-  border: 1px solid #454744;
-  border-radius: 12px;
-  background: #111311;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38), inset 0 1px rgba(255, 255, 255, 0.08);
-}
-.projectMedia {
-  margin: 0;
-}
-.projectPlayerHeader {
-  align-items: center;
-  min-height: 60px;
-  margin-bottom: 10px;
-  padding: 0 2px 4px;
-  color: #a8aaa4;
-}
-.projectPlayerIdentity b {
-  color: #f4f0e8;
-}
-.projectPlayerIdentity small {
-  color: #a8aaa4;
-}
-.projectPlayerDescription {
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-}
-.projectPlayerDescriptionExpanded {
-  overflow: visible;
-  text-overflow: clip;
-  display: block;
-  white-space: normal;
-}
-.projectAction {
-  position: relative;
-  display: grid;
-  min-width: 44px;
-  min-height: 44px;
-  place-items: center;
-  text-decoration: none;
-}
-.projectAction::after {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 7px);
-  z-index: 10;
-  width: max-content;
-  max-width: 140px;
-  padding: 5px 7px;
-  border: 1px solid rgba(244, 240, 232, 0.2);
-  border-radius: 5px;
-  background: #171916;
-  color: #f4f0e8;
-  content: attr(data-tooltip);
-  font: 8px var(--font-geist-mono);
-  letter-spacing: 0.04em;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(3px);
-  transition: opacity 140ms ease, transform 140ms ease;
-  white-space: nowrap;
-}
-.projectAction:hover::after,
-.projectAction:focus-visible::after {
-  opacity: 1;
-  transform: translateY(0);
-}
-.projectImage {
-  width: calc(100% - 8px);
-  margin-inline: auto;
-  border-radius: 12px;
-}
-.projectModuleExpanded {
-  border-color: var(--record-accent);
-}
-
-/* Compact vertical music-player card: square artwork, metadata, controls. */
-.projectMedia {
-  display: flex;
-  flex-direction: column;
-  aspect-ratio: auto;
-  gap: 0;
-}
-.projectImage {
-  width: min(calc(100% - 28px), 260px);
-  aspect-ratio: 1;
-  margin: 0 auto;
-  border-radius: 10px;
-}
-.projectControls {
-  position: static;
-  display: flex;
-  flex-direction: column;
-  width: min(calc(100% - 28px), 260px);
-  margin-inline: auto;
-  padding: 0 2px 2px;
-  background: transparent;
-  color: #f4f0e8;
-}
-.projectPlayerHeader {
-  order: 2;
-  width: min(calc(100% - 28px), 260px);
-  margin: 14px auto 0;
-}
-.projectControls {
-  order: 3;
-}
-
-/* Story rails: a quiet pause between the profile and the toolkit. */
+}/* Compact vertical music-player card: square artwork, metadata, controls. *//* Story rails: a quiet pause between the profile and the toolkit. */
 .signalDivider {
   background: transparent;
 }
@@ -11456,9 +9828,7 @@
     animation: none;
     transform: none !important;
   }
-}
-
-/* Compact profile records keep the three ideas visible as one sequence. */
+}/* Compact profile records keep the three ideas visible as one sequence. */
 .aboutCardRail {
   grid-auto-rows: clamp(280px, 29vh, 340px);
   gap: 10px;
@@ -11470,10 +9840,7 @@
 
 .aboutCard strong {
   font-size: clamp(22px, 2.2vw, 34px);
-}
-
-
-/* Give the Skills title more room before the controller arrives. */
+}/* Give the Skills title more room before the controller arrives. */
 @media (min-width: 769px) {
   .skills .sectionHeading h2 {
     font-size: clamp(24px, 3vw, 44px);
@@ -11482,9 +9849,7 @@
   .skills .controller {
     margin-top: clamp(18px, 2.5vh, 32px);
   }
-}
-
-/* Profile records share the same chassis language as the arrangement workstation. */
+}/* Profile records share the same chassis language as the arrangement workstation. */
 .aboutCard {
   border-color: #85847e;
   border-radius: 5px;
@@ -11553,9 +9918,7 @@
     0 18px 36px rgba(29, 30, 28, 0.24),
     inset 0 1px rgba(255, 255, 255, 0.8),
     inset 4px 0 var(--about-accent);
-}
-
-/* Arrangement Workstation: whole device uses liquid glass; card rail stays plain. */
+}/* Arrangement Workstation: whole device uses liquid glass; card rail stays plain. */
 .timelinePanel {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.56);
@@ -11635,9 +9998,7 @@
     -webkit-backdrop-filter: none;
     background-image: none;
   }
-}
-
-/* Final timeline material: glass belongs to device content, never rail. */
+}/* Final timeline material: glass belongs to device content, never rail. */
 .timelinePanel {
   border-color: rgba(255, 255, 255, 0.58);
   background:
@@ -11772,163 +10133,7 @@
     -webkit-backdrop-filter: none;
     background-image: none;
   }
-}
-
-/* Final compact sizing override for the project release player. */
-.work .projectModule {
-  flex-basis: clamp(264px, 23vw, 320px);
-  width: clamp(264px, 23vw, 320px);
-  padding: 10px;
-  border-radius: 17px;
-}
-
-.work .projectModule::before {
-  inset: 6px;
-  border-radius: 12px;
-}
-
-.work .projectPlayerHeader {
-  min-height: 66px;
-  padding: 10px 2px 7px;
-}
-
-.work .projectPlayerIdentity b,
-.work .projectPlayerDescription {
-  text-transform: none;
-}
-
-.work .projectPlayerIdentity b {
-  font-family: var(--font-space-grotesk);
-  font-size: clamp(13px, 1.05vw, 16px);
-  letter-spacing: -0.015em;
-}
-
-.work .projectPlayerIdentity small {
-  font-size: clamp(8px, 0.72vw, 9px);
-}
-
-.work .projectControls {
-  padding-top: 9px;
-}
-
-.work .projectProgressTrack {
-  height: 6px;
-  margin-top: 5px;
-}
-
-.work .projectPlaybackControls {
-  margin-top: 5px;
-}
-
-.work .projectPlaybackControls .projectPlayButton {
-  width: 44px;
-  height: 44px;
-}
-
-@media (min-width: 1440px) {
-  .work .projectModule {
-    flex-basis: 320px;
-    width: 320px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .work .projectModule {
-    flex-basis: min(36vw, 310px);
-    width: min(36vw, 310px);
-  }
-}
-
-@media (max-width: 768px) {
-  .work .projectModule {
-    flex-basis: min(78vw, 330px);
-    width: min(78vw, 330px);
-    padding: 9px;
-  }
-
-  .work .projectPlayerHeader {
-    min-height: 68px;
-    padding-top: 9px;
-  }
-}
-
-@media (min-width: 769px) {
-  .work .workHeader,
-  .work .workViewport {
-    width: min(1320px, calc(100% - clamp(24px, 4vw, 64px)));
-    margin-inline: auto;
-  }
-
-  .work .workStage {
-    display: flex;
-    min-height: 0;
-    flex-direction: column;
-    overflow: visible;
-  }
-
-  .work .workHeader {
-    flex: 0 0 auto;
-  }
-
-  .work .workViewport {
-    display: flex;
-    flex: 1 1 auto;
-    height: auto;
-    min-height: 0;
-    margin-top: clamp(18px, 3vh, 30px);
-    overflow-x: hidden;
-    overflow-y: visible;
-    padding: 20px 0 0;
-    -webkit-mask-image: linear-gradient(
-      90deg,
-      transparent,
-      #000 5%,
-      #000 95%,
-      transparent
-    );
-    mask-image: linear-gradient(
-      90deg,
-      transparent,
-      #000 5%,
-      #000 95%,
-      transparent
-    );
-  }
-
-  .work .workRail {
-    min-width: 0;
-    align-items: flex-start;
-    padding-inline: 0;
-  }
-
-  .work .projectModule {
-    flex: 0 0 clamp(300px, 21vw, 380px);
-    width: clamp(300px, 21vw, 380px);
-    height: auto;
-    min-height: 0;
-    grid-template-rows: auto auto;
-  }
-
-  .work .projectMedia {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-
-  .work .projectCopy {
-    min-height: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .work .workHeader,
-  .work .workViewport {
-    width: auto;
-    margin-inline: 0;
-  }
-}
-
-/* Skills device material pass: preserve the existing palette, add glass only
+}/* Final compact sizing override for the project release player. *//* Skills device material pass: preserve the existing palette, add glass only
    to the component groups so the instrument reads as one object. */
 .controller {
   --skills-glass-border: rgba(255, 255, 255, 0.42);
@@ -12098,9 +10303,7 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-}
-
-/* ═══════════════════════════════════════════════════════════════
+}/* ═══════════════════════════════════════════════════════════════
    GLASS DOCK REDESIGN — theme-aware frosted transport bar
    Light = frosted aluminium · Dark = smoked graphite
    Adds a sliding orange active indicator + simplified route chips.
@@ -12369,9 +10572,7 @@
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
-}
-
-/* ─────────────────────────────────────────────────────────────
+}/* ─────────────────────────────────────────────────────────────
    FOOTER OUTPUT UNIT — a rack device driving the signal tangle
    ───────────────────────────────────────────────────────────── */
 .footerDeck {

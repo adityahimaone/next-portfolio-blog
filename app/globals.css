@@ -59,6 +59,17 @@
     overflow: clip;
   }
 
+  /* Liquid glass tokens for the work section's listening booth. Declared here
+     rather than on the section because the liner-notes panel portals to
+     document.body and lands outside .root. */
+  :root {
+    --glass-tint-1: rgba(255, 255, 255, 0.14);
+    --glass-tint-2: rgba(255, 255, 255, 0.04);
+    --glass-rim-hi: rgba(255, 255, 255, 0.55);
+    --glass-rim-lo: rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  }
+
   body {
     @apply bg-background text-foreground;
     margin: 0;

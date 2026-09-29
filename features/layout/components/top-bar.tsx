@@ -52,7 +52,7 @@ export function TopBar() {
   return (
     <div
       className={cn(
-        'pointer-events-none fixed inset-x-0 top-0 z-50 flex items-center gap-3 px-4 pt-4 sm:px-6',
+        'pointer-events-none flex items-center gap-3 px-4 pt-4 sm:px-6',
         'justify-between',
       )}
     >

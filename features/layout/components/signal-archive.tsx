@@ -56,7 +56,7 @@ export function SignalArchiveHeader({
       <div className={styles.transport}>
         <Link href="/" className={styles.back}>
           <ArrowLeft size={16} aria-hidden="true" />
-          <span>AH Studio</span>
+          <span>Aditya Himawan</span>
         </Link>
         <nav className={styles.nav} aria-label="Archive sections">
           {sections.map((section, index) => (

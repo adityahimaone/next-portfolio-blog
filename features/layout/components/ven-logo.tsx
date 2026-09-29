@@ -18,7 +18,7 @@ export function VenLogo({ className }: { className?: string }) {
       viewBox="0 0 64 64"
       fill="none"
       role="img"
-      aria-label="AH Studio"
+      aria-label="Aditya Himawan"
     >
       <defs>
         <clipPath id={clipId}>

@@ -29,7 +29,7 @@ export function VenLogo() {
       height="96"
       fill="none"
       role="img"
-      aria-label="AH Studio loading mark"
+      aria-label="Aditya Himawan loading mark"
     >
       <defs>
         <clipPath id="ven-disc">

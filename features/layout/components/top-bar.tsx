@@ -30,7 +30,7 @@ export function TopBar() {
       <div className={styles.topBar}>
         <Link
           href="/"
-          aria-label="AH Studio home"
+          aria-label="Aditya Himawan, home"
           className={cn(styles.mark, 'pointer-events-auto shrink-0')}
         >
           <VenLogo />
@@ -53,7 +53,7 @@ export function TopBar() {
     >
       <Link
         href="/"
-        aria-label="AH Studio home"
+        aria-label="Aditya Himawan, home"
         className={cn(PILL_CLASS, 'size-9 justify-center')}
       >
         <VenLogo className="size-5" />

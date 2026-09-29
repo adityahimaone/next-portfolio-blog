@@ -1,4 +1,14 @@
+/* The rack is a physical object photographed in one of two rooms.
+
+   Light = the daylight studio: cream chassis, aluminium devices, tan
+   cassette wall. Dark = the same rack at night: graphite casing, dark
+   modules, one dark floor. Same convention as --booth-* in globals.css:
+   the light block is the base and .dark only restates what differs.
+
+   The floor under the hero and the skills room stays dark in both — a
+   backlit device wall has no daylight reading. */
 .root {
+  /* Daylight studio. */
   --chassis: #e7e2d8;
   --chassis-hi: #f4f0e8;
   --graphite: #1d1e1c;
@@ -8,11 +18,137 @@
   --field-tan: #c9a574;
   --slate: #8b8d8a;
   --lcd-green: #5cd6a3;
+
+  --room-base: #14161a;
+  --room-ink: #f1eee5;
+  --room-ink-muted: #b6b3a9;
+  --room-fill: rgb(255 255 255 / 0.035);
+
+  /* The tan band. Warm and pale by day, absorbed into the room at night. */
+  --band-tan: #c8a474;
+  --band-tan-wash: rgba(123, 39, 53, 0.18);
+
+  /* Ink for the cream bands (about, contact). These sit on --chassis, so they
+     follow it rather than following the room, which stays dark. */
+  --panel-ink: #101211;
+  --panel-ink-muted: #5e625c;
+  --panel-hairline: rgba(29, 30, 28, 0.12);
+  --panel-fill: rgba(29, 30, 28, 0.04);
+
+  /* Eyebrow labels. The hairline under them was a light rgba, so on cream it
+     was invisible in daylight; both halves now carry real contrast. */
+  --label-ink: #5e625c;
+  --label-hair: rgba(29, 30, 28, 0.34);
+
+  /* The ruled-grid overlay shared by the two tan bands. A single 1px line
+     drawn at 30px pitch, sized with background-size so it never scales with
+     the viewport — the same rule the about and contact panels use. */
+  --band-grid-pitch: 30px;
+  --band-grid-line: rgb(29 30 28 / 0.05);
+  --band-grid-line-dark: rgb(255 255 255 / 0.022);
+  --band-grid:
+    linear-gradient(90deg, var(--band-grid-line) 1px, transparent 1px) 0 0 /
+    var(--band-grid-pitch) var(--band-grid-pitch);
+  --band-grid-dark:
+    linear-gradient(90deg, var(--band-grid-line-dark) 1px, transparent 1px) 0 0 /
+    var(--band-grid-pitch) var(--band-grid-pitch);
+
+  /* Ink for the permanently dark panels — LCD screens, patch bays, the
+     transport dock, the work client. These surfaces are dark in BOTH themes,
+     so their text must be light in both. It is deliberately NOT --chassis:
+     that token now describes a panel surface and follows the theme, so using
+     it as ink here made light-on-dark text dark-on-dark. */
+  --on-dark-ink: #f1eee5;
+  --on-dark-ink-muted: #b6b3a9;
+
+  /* Hero device wall: milled aluminium. The colour is in the accents and
+     readouts, not the casing. */
+  --dev-face: #d7d5cd;
+  --dev-face-hi: #d9d7cf;
+  --dev-face-top: #e4e1d8;
+  --dev-face-mid: #cbc9c1;
+  --dev-face-lo: #b6b4ad;
+  --dev-slot: #c5c3bb;
+  --dev-edge: #a7a8a2;
+  --dev-edge-soft: #a3a29c;
+  --dev-edge-dim: #8f928e;
+  --dev-edge-deep: #777c7b;
+  --dev-screen: #101719;
+  --dev-ink: rgba(38, 49, 58, 0.65);
+  --dev-ink-strong: #1b242a;
+  --dev-ink-dim: #8a8d87;
+  --dev-accent: #df6d36;
+  --dev-amber: #d6aa65;
+  --dev-amber-deep: #b3a27f;
+  --dev-teal: #7d8e8c;
+  --dev-navy: #34424d;
+  --dev-navy-deep: #29343e;
+  --dev-jog: #303b44;
+  --dev-tile-edge: #252b2d;
+  --dev-tile-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.55), 0 1px 3px rgba(0, 0, 0, 0.28);
+  --dev-tile-shadow-active:
+    inset 0 0 0 1px rgba(217, 104, 53, 0.72),
+    inset 0 1px rgba(255, 255, 255, 0.65), 0 2px 7px rgba(0, 0, 0, 0.32);
+  --dev-route-hair: rgba(39, 48, 54, 0.45);
+
   min-height: 100vh;
   overflow: clip;
-  background: var(--graphite);
-  color: var(--graphite);
+  background: var(--room-base);
+  color: var(--room-ink);
   font-family: var(--font-inter), sans-serif;
+}
+
+:global(.dark) .root {
+  /* Smoked graphite. Only the values that differ are restated; the floor
+     and its ink are identical, because the device wall does not daylight. */
+  --chassis: #23262a;
+  --chassis-hi: #2e3237;
+  --slate: #8b8d8a;
+  --lcd-green: #5cd6a3;
+
+  --room-base: #0b0d0c;
+
+  --band-tan: #14161a;
+  --band-tan-wash: rgba(123, 39, 53, 0.34);
+
+  --panel-ink: #f1eee5;
+  --panel-ink-muted: #b6b3a9;
+  --panel-hairline: rgba(255, 255, 255, 0.09);
+  --panel-fill: rgba(255, 255, 255, 0.035);
+
+  --label-ink: #b6b3a9;
+  --label-hair: rgba(241, 238, 229, 0.42);
+
+  --band-grid-line: rgb(255 255 255 / 0.022);
+  --band-grid-line-dark: rgb(29, 30, 28 / 0.05);
+
+  --dev-face: #23262a;
+  --dev-face-hi: #2b2f34;
+  --dev-face-top: #2e3237;
+  --dev-face-mid: #1a1c1f;
+  --dev-face-lo: #141618;
+  --dev-slot: #1a1c1f;
+  --dev-edge: #3a4046;
+  --dev-edge-soft: #2b2f34;
+  --dev-edge-dim: #4a5056;
+  --dev-edge-deep: #4a5056;
+  --dev-screen: #0b0f11;
+  --dev-ink: #8d8f8a;
+  --dev-ink-strong: #d9d6cd;
+  --dev-ink-dim: #4a4f55;
+  --dev-accent: #ff5a1f;
+  --dev-amber-deep: #5c4a30;
+  --dev-teal: #6e8c8a;
+  --dev-navy-deep: #141618;
+  --dev-jog: #1a1c1f;
+  --dev-tile-edge: #3a4046;
+  --dev-tile-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.09), 0 1px 3px rgba(0, 0, 0, 0.5);
+  --dev-tile-shadow-active:
+    inset 0 0 0 1px rgba(255, 90, 31, 0.55),
+    inset 0 1px rgba(255, 255, 255, 0.14), 0 2px 7px rgba(0, 0, 0, 0.55);
+  --dev-route-hair: rgba(58, 64, 70, 0.7);
 }
 
 .root *,
@@ -956,18 +1092,19 @@
 
 .about .sectionHeading > .silkscreen,
 .contact .sectionHeading > .silkscreen {
-  border-top-color: rgba(18, 20, 19, 0.4);
-  color: #0b0d0c;
+  border-top-color: var(--label-hair);
+  color: var(--label-ink);
 }
 
+/* The syscode orange was tuned for dark text on cream and fell under 4.5:1.
+   Two tones, one per theme, both clearing the threshold. */
 .about .sectionHeading > .silkscreen .sectionSysCode,
 .contact .sectionHeading > .silkscreen .sectionSysCode {
-  color: #c94412;
+  color: #b8400f;
 }
-
-.about .sectionHeading h2,
-.contact .sectionHeading h2 {
-  color: #101211;
+:global(.dark) .about .sectionHeading > .silkscreen .sectionSysCode,
+:global(.dark) .contact .sectionHeading > .silkscreen .sectionSysCode {
+  color: #ff7a45;
 }
 .about {
   background: var(--chassis-hi);
@@ -5371,20 +5508,21 @@
   height: 50%;
   content: '';
   pointer-events: none;
-}/* Top 50%: Solid Black (#171917) with grid pattern */
+}
+
+/* Top half: the room the skills section hands off from. This was a hardcoded
+   #171917, which is the room colour in dark mode only — in light mode it read
+   as a black band sitting on the tan. --room-base follows the theme, so the
+   seam now meets the actual floor in both. */
 .cableDivider::before {
   top: 0;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0
-      0 / 32px 32px,
-    #171917;
-}/* Bottom 50%: Solid Tan (#c8a474) with grid pattern */
+  background: var(--band-grid-dark), var(--room-base);
+}
+
+/* Bottom half: the tan wall the experience section continues on. */
 .cableDivider::after {
   bottom: 0;
-  background:
-    linear-gradient(90deg, rgba(48, 39, 27, 0.05) 1px, transparent 1px) 0 0 /
-      30px 30px,
-    #c8a474;
+  background: var(--band-grid), var(--band-tan);
 }
 .cableDividerInner {
   --cable-gutter: clamp(20px, 5vw, 78px);
@@ -10304,52 +10442,12 @@
     -webkit-backdrop-filter: none;
   }
 }/* ═══════════════════════════════════════════════════════════════
-   GLASS DOCK REDESIGN — theme-aware frosted transport bar
-   Light = frosted aluminium · Dark = smoked graphite
+   GLASS DOCK REDESIGN — frosted transport bar over the shared room.
+   Smoked graphite in both themes: the dock floats over a room that no
+   longer changes, so there is nothing left for a light variant to track.
    Adds a sliding orange active indicator + simplified route chips.
    ═══════════════════════════════════════════════════════════════ */
 .transport {
-  --dock-accent: #b84716;
-  --dock-text: #1d1e1c;
-  --dock-text-dim: rgba(29, 30, 28, 0.6);
-  --dock-hair: rgba(29, 30, 28, 0.14);
-  --dock-glass: linear-gradient(
-    135deg,
-    rgba(244, 240, 232, 0.78),
-    rgba(231, 226, 216, 0.6)
-  );
-  --dock-docked-glass: rgba(244, 240, 232, 0.72);
-  --dock-shadow:
-    0 18px 44px rgba(29, 30, 28, 0.18),
-    0 2px 6px rgba(29, 30, 28, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    inset 0 -1px 0 rgba(29, 30, 28, 0.06);
-  --dock-docked-shadow:
-    0 -10px 30px rgba(29, 30, 28, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  --dock-panel-shadow:
-    0 20px 48px rgba(29, 30, 28, 0.24),
-    0 4px 12px rgba(29, 30, 28, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  --dock-chip-bg: rgba(29, 30, 28, 0.05);
-  --dock-chip-bg-hover: rgba(29, 30, 28, 0.09);
-  --dock-chip-border: rgba(29, 30, 28, 0.1);
-  --dock-chip-border-hover: rgba(29, 30, 28, 0.22);
-  --dock-divider: rgba(29, 30, 28, 0.16);
-  --dock-active-bg: rgba(200, 71, 22, 0.14);
-  --dock-active-border: rgba(200, 71, 22, 0.5);
-  --dock-active-text: #7a2c08;
-  --dock-active-glow:
-    0 0 14px rgba(200, 71, 22, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  --dock-panel: rgba(244, 240, 232, 0.94);
-  --dock-panel-border: rgba(29, 30, 28, 0.14);
-  color: var(--dock-text);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  backdrop-filter: blur(20px) saturate(1.5);
-}
-
-:global(.dark) .transport {
   --dock-accent: #ff5a1f;
   --dock-text: #f4f0e8;
   --dock-text-dim: rgba(244, 240, 232, 0.62);
@@ -10385,7 +10483,14 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.16);
   --dock-panel: rgba(18, 20, 19, 0.94);
   --dock-panel-border: rgba(244, 240, 232, 0.18);
+  color: var(--dock-text);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
 }
+
+/* The dock is smoked glass in both themes — it floats over the room, and the
+   room no longer changes. The old light block was frosted aluminium, which
+   only made sense while the page underneath it did too. */
 
 .transportDocked {
   border-top: 1px solid var(--dock-hair);
@@ -11134,4 +11239,286 @@
   .footerPanel {
     background: #0e100f;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ONE ROOM — the landing page's shared scheme.
+
+   The theme toggle is chrome-only here: every band below is dark in
+   both light and dark, so these rules carry no theme qualifier. They
+   exist because several bands are still hardcoded light surfaces left
+   over from the aluminium era (about, experience, contact, the
+   dividers). The booth pages under /projects, /blog and /bookmarks
+   follow the room instead — this page is the object they are viewed
+   through, not a surface that follows it.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* The hero stage is the real viewport background: DawHero is mounted with
+   backgroundOnly, so it paints nothing and this floor shows through. */
+.heroStage {
+  background: var(--room-base);
+}
+
+/* The device wall is lit hardware, so it is not dimmed or brown-filtered
+   the way it was when it sat on a near-black room. */
+.heroDeviceWall {
+  filter: saturate(1) contrast(1.02) brightness(1);
+}
+
+/* The scrim exists to keep chrome legible over the wall. On the shared dark
+   room it fades to a whisper so it stops muddying the modules. */
+.heroDeviceWall::after {
+  background: linear-gradient(
+      90deg,
+      rgb(11 13 12 / 0.5) 0%,
+      rgb(11 13 12 / 0.2) 48%,
+      rgb(11 13 12 / 0.06) 74%
+    ),
+    linear-gradient(0deg, rgb(11 13 12 / 0.55) 0%, transparent 36%),
+    radial-gradient(
+      circle at var(--hero-pointer-x) var(--hero-pointer-y),
+      transparent 0 8%,
+      rgb(11 13 12 / 0.16) 34%,
+      rgb(11 13 12 / 0.42) 100%
+    );
+}
+
+.heroAtmosphere {
+  background: radial-gradient(
+      circle at var(--hero-pointer-x) var(--hero-pointer-y),
+      rgb(255 116 56 / 0.12),
+      transparent 15%
+    ),
+    linear-gradient(180deg, rgb(11 13 12 / 0.06), rgb(11 13 12 / 0.14));
+}
+
+.heroAboutHandoff {
+  color: var(--room-ink);
+}
+
+/* The viewfinder is camera chrome drawn on cream; it needs light ink. */
+.heroViewfinder {
+  border-color: rgb(241 238 229 / 0.2);
+  color: rgb(241 238 229 / 0.78);
+}
+.heroViewfinderReticle {
+  border-color: rgb(241 238 229 / 0.42);
+}
+.heroViewfinderCornerTopLeft,
+.heroViewfinderCornerTopRight,
+.heroViewfinderCornerBottomLeft,
+.heroViewfinderCornerBottomRight {
+  border-color: rgb(241 238 229 / 0.86);
+}
+.heroViewfinderReticle::before,
+.heroViewfinderReticle::after {
+  background: rgb(241 238 229 / 0.68);
+}
+
+/* The skills room. The warm/cool radials stay put — they are stage lighting,
+   not surface color — so only the floor and the ink on it are pinned. */
+.skills {
+  color: var(--room-ink);
+  background:
+    radial-gradient(circle at 10% 15%, rgba(46, 63, 92, 0.34), transparent 28%),
+    radial-gradient(
+      circle at 90% 72%,
+      rgba(201, 165, 116, 0.12),
+      transparent 28%
+    ),
+    linear-gradient(90deg, var(--room-fill) 1px, transparent 1px) 0 0 / 32px 32px,
+    var(--room-base);
+}
+
+/* Copy that sits directly on the room floor. The panels keep their own
+   backgrounds and are left alone. */
+.skills .skillsIntro,
+.skills .sectionHeading,
+.skills .sectionHeading h2,
+.skills .silkscreen {
+  color: var(--room-ink);
+}
+.skills .skillsIntro p,
+.skills .sectionHeading p {
+  color: var(--room-ink-muted);
+}
+
+/* Section headings sit on the cream bands (about, contact), so they follow
+   the panel ink, not the room ink — the room stays dark in both themes. */
+.about .sectionHeading h2,
+.contact .sectionHeading h2 {
+  color: var(--panel-ink);
+}
+.about .sectionHeading p,
+.contact .sectionHeading p {
+  color: var(--panel-ink-muted);
+}
+
+/* The signal stage stacks a light rail over a dark one. The stage background
+   now follows --chassis-hi, which flips with the theme, so each lane's ink has
+   to flip with it — the top rail cannot keep --graphite (a near-black that was
+   only ever readable on cream) and the bottom rail cannot keep --chassis-hi,
+   since that token is the surface it sits on. */
+.signalDividerLaneTop {
+  color: var(--panel-ink);
+}
+.signalDividerLaneBottom {
+  color: var(--room-ink);
+}
+
+/* The badge and track index on the top rail were a dark chip with dark ink,
+   and a dark ink on a translucent dark fill. Both take --panel-* now. */
+.signalDividerLaneBadge {
+  background: var(--panel-fill);
+  border-color: var(--panel-hairline);
+  color: var(--panel-ink);
+}
+.signalDividerTrackIndex {
+  background: var(--panel-fill);
+  color: var(--panel-ink-muted);
+}
+
+/* ── Ink on the permanently dark surfaces ────────────────────────
+   Each of these printed in var(--chassis) or var(--chassis-hi), which used to
+   be cream and read correctly against a black panel. Both tokens now follow
+   the theme to describe panel *surfaces*, so as ink they made light-on-dark
+   text dark-on-dark in dark mode. They take --on-dark-ink instead: the panel
+   is dark in both themes, so the ink is light in both. */
+.panelHeader,
+.controllerDisplay,
+.cassetteWindow,
+.patchScreen,
+.contactDeckControls,
+.heroResumeLink,
+.heroImmersiveContent,
+.heroEditorialPanel {
+  color: var(--on-dark-ink);
+}
+
+/* The signal bridge console sits on the orange bar, where near-black is the
+   correct ink — it is the one place dark text is still right. */
+.signalBridgeConsole {
+  color: #111310;
+}
+
+/* The work client is a dark window in both themes, so its own chrome is
+   light in both. */
+.work {
+  color: var(--on-dark-ink);
+}
+
+/* The hero title chip is a frosted panel floating over the dark device wall. */
+.heroPanelTitle {
+  color: var(--on-dark-ink);
+}
+
+/* The contact deck and the editorial panel copy both print dark rgba over a
+   surface that follows --chassis, so they follow the panel ink. */
+.contactFreshHeader > p {
+  color: var(--panel-ink-muted);
+}
+.heroEditorialPanel > p {
+  color: var(--on-dark-ink-muted);
+}
+
+/* ── Controller ink ───────────────────────────────────────────
+   The controller is a physical DAW surface whose casing stays light aluminium
+   in BOTH themes, so every label silkscreened onto that casing is dark in
+   both. Scoped to the casing sub-panels only: the screen (.controllerDisplay),
+   the VU bars and the backlit buttons inside it are lit elements and keep
+   their light ink. */
+.controller .controlBank .silkscreen,
+.controller .keyboardBed .silkscreen,
+.controller .wheelLabel,
+.controller .wheelTickCenter {
+  color: #3a3d39;
+}
+
+/* ── Ink on the permanently LIGHT panels ──────────────────────
+   The mirror of the --on-dark-ink rules above. The timeline panel and the
+   controller casing are light in BOTH themes, so text on them is dark in
+   both. These inherited --on-dark-ink from the .skills / .root ink and went
+   light-on-light. */
+.clipDetail,
+.clipDetail p,
+.clipDetail strong,
+.clipDetail b {
+  color: #2b2e2a;
+}
+.timelinePanel .clipDetail .silkscreen {
+  color: #3a3d39;
+}
+
+/* The notes column sits on the cassette deck, which is light glass in both
+   themes. It was inheriting the room ink and going light-on-light. */
+.experienceNotes,
+.experienceNotes li,
+.experienceNotes p,
+.experienceNotes strong {
+  color: #2b2e2a;
+}
+.experienceNotes .silkscreen {
+  color: #3a3d39;
+}
+
+/* The cable divider and the cassette wall were the last tan bands. Both take
+   --band-tan so they are warm and pale by day and absorbed into the room at
+   night; only the wash over them changes. */
+.cableDivider {
+  background: var(--band-tan);
+}
+
+/* The split lives on the inner panel rather than the section, because the
+   section is 100% of the viewport but the panel is the visible object. Top
+   half is the room the skills section hands off from, bottom half is the tan
+   wall the experience section continues on — so the divider reads as the
+   seam between the two. Both halves carry the ruled grid, pitched to match
+   the about and contact panels. */
+.cableDividerInner {
+  /* Anchors the seam rule in ::after. */
+  position: relative;
+  background:
+    linear-gradient(
+      to bottom,
+      var(--room-base) 0 50%,
+      transparent 50% 100%
+    ),
+    var(--band-grid-dark),
+    var(--band-grid),
+    var(--band-tan);
+}
+
+/* A hairline at the seam so the two grounds meet on a rule rather than a
+   soft edge. --room-hairline is not defined, so it borrows the panel rule,
+   which is the correct weight in both themes. */
+.cableDividerInner::after {
+  position: absolute;
+  z-index: 2;
+  right: var(--cable-gutter);
+  bottom: 50%;
+  left: var(--cable-gutter);
+  height: 1px;
+  background: var(--panel-hairline);
+  content: '';
+  pointer-events: none;
+}
+
+.cableDividerLabel span {
+  color: var(--label-ink);
+}
+.cableDividerLabel strong {
+  color: var(--room-ink);
+}
+.experience {
+  /* The wine radial is stage light; the ruled grid is the same one the
+     cable divider now carries, so the two bands read as one surface
+     treatment meeting at the seam. */
+  background:
+    radial-gradient(
+      circle at 14% 22%,
+      var(--band-tan-wash),
+      transparent 25%
+    ),
+    var(--band-grid),
+    var(--band-tan);
 }

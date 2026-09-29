@@ -51,6 +51,10 @@ export function TrackRow({
         rel="noopener noreferrer"
         title={bookmark.description || bookmark.url}
         className={styles.track}
+        // The active-row treatment (LED rail, number→play swap, title colour,
+        // arrow) is keyed off this attribute on the anchor. It is mirrored on
+        // the <li> for the list-level hooks.
+        data-active={active || undefined}
         style={{ ['--led' as string]: channelColor(bookmark.category) }}
         onMouseEnter={() => canHover && setHovered(true)}
         onMouseLeave={() => setHovered(false)}

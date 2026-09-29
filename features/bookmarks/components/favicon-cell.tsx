@@ -2,7 +2,7 @@
 
 import { Globe } from 'lucide-react'
 
-import { ScanLoader } from '@/components/scan-loader'
+import { VolLoader } from '@/components/vol-loader'
 import { cn } from '@/lib/utils'
 
 import { getFaviconUrl } from '../utils/favicon'
@@ -39,9 +39,9 @@ export function FaviconCell({
   return (
     <span className={cn(styles.faviconCell, className)}>
       {state === 'loading' && (
-        <ScanLoader
+        <VolLoader
           className={styles.faviconLoader}
-          rate={1.6}
+          rate={1.4}
           label="Loading icon"
         />
       )}

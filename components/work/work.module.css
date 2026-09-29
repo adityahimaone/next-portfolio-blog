@@ -1,7 +1,10 @@
 .work {
   position: relative;
   background: var(--lcd-black);
-  color: var(--chassis);
+  /* The client is a dark window in both themes, so its ink is light in both.
+     This was var(--chassis), which used to be cream and only read correctly
+     because --chassis has since become a themed panel-surface token. */
+  color: var(--on-dark-ink);
 } /* ─── Stage ────────────────────────────────────────────── */
 
 .stage {
@@ -81,7 +84,10 @@
    smaller — which is what clipped this before. */
 .workTitle {
   margin: 0;
-  color: var(--chassis);
+  /* Light in both themes: this heading sits on the client's own dark chrome,
+     which does not change with the theme. It inherited the themed --chassis
+     and went dark-on-dark in dark mode. */
+  color: var(--on-dark-ink);
   font-family: var(--font-space-grotesk);
   font-size: clamp(19px, min(5.6vh, 3.4vw), 48px);
   font-weight: 650;

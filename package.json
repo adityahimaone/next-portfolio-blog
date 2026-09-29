@@ -10,7 +10,8 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:performance": "jest tests/performance-bug-condition.test.ts --verbose"
+    "test:performance": "jest tests/performance-bug-condition.test.ts --verbose",
+    "test:e2e": "playwright test"
   },
   "browserslist": [
     "chrome >= 109",
@@ -48,6 +49,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "3",
     "@next/bundle-analyzer": "^16.2.4",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "4.2.2",
     "@tailwindcss/typography": "0.5.19",
     "@testing-library/jest-dom": "^6.9.1",

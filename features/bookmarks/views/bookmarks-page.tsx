@@ -123,10 +123,18 @@ export function BookmarksPage({
     setHue(channel === 'All' ? DEFAULT_HUE : channelColor(channel))
   }, [channel, setHue])
 
-  const { active, setActive } = useListKeys(tracks.length, (index) => {
-    const target = tracks[index]
-    if (target) window.open(target.url, '_blank', 'noopener,noreferrer')
-  })
+  // The third argument is the list's identity, not its length. Category and
+  // query both rebuild `tracks`, so the keyboard selection has to be dropped
+  // when either changes — an index into the old list points at a different
+  // bookmark in the new one, and Enter would open the wrong link.
+  const { active } = useListKeys(
+    tracks.length,
+    (index) => {
+      const target = tracks[index]
+      if (target) window.open(target.url, '_blank', 'noopener,noreferrer')
+    },
+    `${channel}::${query}`,
+  )
 
   const shuffle = useCallback(() => {
     if (tracks.length === 0) return
@@ -233,7 +241,10 @@ export function BookmarksPage({
                   aria-pressed={channel === name}
                   onClick={() => {
                     setChannel(name)
-                    setActive(0)
+                    // No setActive here: the listKey effect in useListKeys
+                    // already clears the selection when the list is replaced.
+                    // Calling setActive(0) re-lit row one on every category
+                    // switch, which is the bug this replaced.
                   }}
                   className={styles.playlist}
                   style={{
@@ -285,7 +296,6 @@ export function BookmarksPage({
                 value={channel}
                 onChange={(next) => {
                   setChannel((next || 'All') as BookmarkCategory)
-                  setActive(0)
                 }}
                 options={channels.map((name) => ({
                   value: name,

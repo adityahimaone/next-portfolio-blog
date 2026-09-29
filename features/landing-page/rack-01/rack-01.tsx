@@ -193,6 +193,10 @@ function Hero() {
   return (
     <section id="home" className={styles.hero} data-rack-section>
       <div className={styles.heroStage} onPointerMove={handlePointerMove}>
+        {/* Inside the stage so the bar scrolls away with the hero instead of
+            sitting above it. Placed before the wall in the DOM; .topBar is
+            z-50 and the wall is z-0, so it still paints on top. */}
+        <TopBar />
         <div className={styles.heroBootSequence} aria-hidden="true">
           <i />
           <span>Routing signal</span>
@@ -2859,7 +2863,6 @@ export default function Rack01LandingPage() {
       <a className={styles.skipLink} href="#about">
         Skip to content
       </a>
-      <TopBar />
       <Hero />
       <About
         selected={aboutIndex}

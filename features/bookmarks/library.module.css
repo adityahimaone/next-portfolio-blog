@@ -97,8 +97,8 @@
   text-align: left;
   cursor: pointer;
   transition:
-    background-color var(--dur-fast) ease,
-    color var(--dur-fast) ease;
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
 .playlist:hover {
@@ -118,7 +118,11 @@
   border-radius: 50%;
   background: var(--led, var(--primary));
   opacity: 0.5;
-  transition: opacity var(--dur-fast) ease;
+  /* The glow was un-animated, so the selected playlist's halo popped from
+     nothing to full in one frame while the opacity crossfaded. */
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
 }
 
 .playlist[aria-pressed='true'] .playlistLed {
@@ -170,9 +174,9 @@
   /* Matches the dock's chip surface: a 12px card with the same rim and fill,
      so the shuffle control reads as part of the control layer. */
   transition:
-    color var(--dur-fast) ease,
-    background-color var(--dur-fast) ease,
-    border-color var(--dur-fast) ease;
+    color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 
 .chip:hover {
@@ -225,13 +229,31 @@
   background: var(--flat-fill);
   text-decoration: none;
   transition:
-    background-color var(--dur-fast) ease,
-    transform var(--dur-fast) ease;
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
-.pinnedTile:hover {
-  background: var(--flat-fill-hover);
-  transform: translateY(-2px);
+/* Press feedback: the tile is a link, so it needs to acknowledge the press the
+   way the rest of the sheet does. Gated on a real pointer — on touch, :hover
+   sticks after the first tap and the lift would stay raised. */
+@media (hover: hover) and (pointer: fine) {
+  .pinnedTile:hover {
+    background: var(--flat-fill-hover);
+    transform: translateY(-2px);
+  }
+
+  .track:hover {
+    background: transparent;
+  }
+}
+
+.pinnedTile:active {
+  transform: scale(0.96);
+}
+
+.pinnedTile:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* The star overhangs the tile by 4px on both axes. It was positioned at
@@ -278,6 +300,13 @@
   background: var(--flat-fill);
   color: var(--booth-ink);
   font-size: 0.9375rem;
+  /* The field had no transition at all, so its focus snapped on and off while
+     every other control on the page crossfaded. It is also the primary entry
+     point into the feature — the `/` shortcut focuses it — so that snap is the
+     first thing a visitor meets. */
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 
 .search::placeholder {
@@ -301,10 +330,24 @@
   background: transparent;
   color: var(--booth-ink-muted);
   cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    transform 120ms var(--ease-out);
 }
 
 .searchClear:hover {
   color: var(--booth-ink);
+  background: var(--flat-fill-hover);
+}
+
+.searchClear:active {
+  transform: scale(0.94);
+}
+
+.searchClear:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* ─── Track rows ─────────────────────────────────────────────── */
@@ -345,6 +388,9 @@
 
 .track {
   position: relative;
+  /* Establishes a stacking context so the ::after plate sits behind this row's
+     own content without escaping behind the list behind it. */
+  isolation: isolate;
   display: grid;
   grid-template-columns: 26px 32px minmax(0, 1fr) minmax(7rem, 11rem) 16px;
   gap: 0.85rem;
@@ -354,7 +400,38 @@
   border-radius: 10px;
   color: inherit;
   text-decoration: none;
-  transition: background-color var(--dur-fast) ease;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+/*
+  The frosted plate lives on a pseudo-element, not on .track itself. A row
+  carrying its own backdrop-filter would force the browser to re-sample the
+  whole list every time the pointer moves down it. Painting the plate on
+  ::after means only the row under the pointer is ever composited.
+
+  --glass-fill and --glass-blur are the booth's own tokens, so this matches the
+  dock and the sidebar and needs no light/dark branch of its own.
+*/
+.track::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: var(--glass-fill);
+  box-shadow: var(--glass-shadow);
+  /* A slow, near-linear ramp reads as the glass resolving rather than a
+     switch flipping. The ease-out on the short tokens decelerated into the
+     hover so hard that the plate looked like it arrived in the first 100ms
+     and then sat there. */
+  opacity: 0;
+  pointer-events: none;
+  content: '';
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  transition: opacity 420ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .track::before {
@@ -367,17 +444,39 @@
   border-radius: 2px;
   background: var(--led, var(--primary));
   opacity: 0;
-  transition: opacity var(--dur-fast) ease;
+  transition: opacity var(--dur-fast) var(--ease-out);
 }
 
-.track:hover,
+/* The frosted plate rises in rather than snapping, and the flat tint underneath
+   fades out at the same time. A single ::after means the two never disagree:
+   opacity 0 is the row's resting state, so the flat background can be dropped
+   entirely from the hover rule.
+
+   data-active is not gated on the hover media query: a row selected with the
+   keyboard has no pointer over it, and that state still has to read. */
 .track[data-active='true'] {
-  background: var(--flat-fill-hover);
+  background: transparent;
 }
 
-.track:hover::before,
+.track[data-active='true']::after {
+  opacity: 1;
+}
+
 .track[data-active='true']::before {
   opacity: 1;
+}
+
+/* Gated on a real pointer: on touch, :hover sticks after the first tap and a
+   frosted row would stay lit while the user scrolls. */
+@media (hover: hover) and (pointer: fine) {
+  .track:hover {
+    background: transparent;
+  }
+
+  .track:hover::after,
+  .track:hover::before {
+    opacity: 1;
+  }
 }
 
 .index {
@@ -418,38 +517,48 @@
 /* All three favicon states share one centred cell, so swapping between them
    never reflows the row. The image stays mounted underneath the loader and
    the fallback rather than being replaced, which keeps its decode and its
-   hover transition. */
+   hover transition.
+
+   Sizes and tint are variables so the pinned tile can scale the cell and show
+   the icon in full colour from one place. */
 .faviconCell {
   position: relative;
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
+  --favicon-size: 20px;
+  --favicon-loader-size: 18px;
+  --favicon-fallback-size: 15px;
+  /* Rows desaturate to a single ink so 550 of them read as one list; the
+     pinned tiles invert that and show the real mark. */
+  --favicon-filter: grayscale(1);
+  --favicon-opacity: 0.75;
 }
 
 .faviconImg {
   grid-area: 1 / 1;
-  width: 20px;
-  height: 20px;
+  width: var(--favicon-size);
+  height: var(--favicon-size);
   object-fit: contain;
-  filter: grayscale(1);
-  opacity: 0.75;
+  filter: var(--favicon-filter);
+  opacity: var(--favicon-opacity);
   transition:
-    filter var(--dur-fast) ease,
-    opacity var(--dur-fast) ease;
+    filter var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
 }
 
 .faviconLoader {
   grid-area: 1 / 1;
-  width: 18px;
-  height: 18px;
+  width: var(--favicon-loader-size);
+  height: var(--favicon-loader-size);
   color: var(--booth-ink-dim);
 }
 
 .faviconFallback {
   grid-area: 1 / 1;
-  width: 15px;
-  height: 15px;
+  width: var(--favicon-fallback-size);
+  height: var(--favicon-fallback-size);
   color: var(--booth-ink-dim);
   opacity: 0.7;
 }
@@ -464,6 +573,8 @@
   display: none;
 }
 
+/* Hover reveals the mark in full colour, which is why the base is desaturated
+   rather than merely dimmed: the reveal has somewhere to go. */
 .track:hover .faviconImg,
 .track[data-active='true'] .faviconImg {
   filter: none;
@@ -482,8 +593,8 @@
   text-decoration-color: transparent;
   text-underline-offset: 3px;
   transition:
-    color var(--dur-fast) ease,
-    text-decoration-color var(--dur-fast) ease;
+    color var(--dur-fast) var(--ease-out),
+    text-decoration-color var(--dur-fast) var(--ease-out);
 }
 
 .nameText {
@@ -520,7 +631,7 @@
 .arrow {
   color: var(--booth-ink-dim);
   opacity: 0;
-  transition: opacity var(--dur-fast) ease;
+  transition: opacity var(--dur-fast) var(--ease-out);
 }
 
 .track:hover .arrow,
@@ -532,7 +643,7 @@
   display: flex;
   gap: 0.15rem;
   opacity: 0;
-  transition: opacity var(--dur-fast) ease;
+  transition: opacity var(--dur-fast) var(--ease-out);
 }
 
 .track:hover .rowActions,
@@ -550,7 +661,7 @@
   background: transparent;
   color: var(--booth-ink-dim);
   cursor: pointer;
-  transition: color var(--dur-fast) ease;
+  transition: color var(--dur-fast) var(--ease-out);
 }
 
 .rowAction:hover {
@@ -636,7 +747,7 @@
   background: var(--flat-fill);
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.32);
   pointer-events: none;
-  animation: peek-in var(--dur-fast) ease;
+  animation: peek-in var(--dur-fast) var(--ease-out);
 }
 
 .peekFrame {
@@ -705,6 +816,42 @@
   .peekWindow {
     animation: none;
     opacity: 1;
+  }
+
+  /* Every motion in this sheet is a hover response, which is exactly what
+     reduced-motion asks to keep as an instant state change. */
+  .track,
+  .track::after,
+  .track::before,
+  .pinnedTile,
+  .playlist,
+  .playlistLed,
+  .faviconImg,
+  .name,
+  .arrow,
+  .rowActions {
+    transition-duration: 0.01ms;
+  }
+}
+
+/*
+  Glass is decoration. Reduced transparency and increased contrast both drop the
+  blur; the row keeps a flat tint so the hover state is still legible.
+*/
+@media (prefers-reduced-transparency: reduce) {
+  .track::after {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--flat-fill-hover);
+  }
+}
+
+@media (prefers-contrast: more) {
+  .track::after {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--flat-fill-hover);
+    border-color: currentColor;
   }
 }
 
@@ -932,20 +1079,17 @@ textarea.input {
 }
 
 /* ─── Pinned favicon sizing ────────────────────────────────────
-   Appended at the end deliberately. The base `.faviconImg` etc. are declared
-   lower down the sheet than the pinned tile's own block, so a rule up there
-   loses on order and the 64px tile ends up with a 20px icon. */
-.pinnedFavicon .faviconImg {
-  width: 32px;
-  height: 32px;
-}
+   The tile modifier lands on the FaviconCell, so these scale the cell's own
+   children. Pinned tiles are 64px rather than the row's 32px, and the loader
+   has to grow with the tile or it reads as a list-row spinner on a hero tile.
 
-.pinnedFavicon .faviconLoader {
-  width: 28px;
-  height: 28px;
-}
-
-.pinnedFavicon .faviconFallback {
-  width: 22px;
-  height: 22px;
+   These are the few marks on the page shown in full colour: a pinned tile is
+   an individual showcase, and a handful of them in a row is what the desaturate
+   on list rows exists to make legible. */
+.pinnedFavicon {
+  --favicon-size: 32px;
+  --favicon-loader-size: 28px;
+  --favicon-fallback-size: 22px;
+  --favicon-filter: none;
+  --favicon-opacity: 1;
 }

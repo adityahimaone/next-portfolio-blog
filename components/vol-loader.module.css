@@ -1,0 +1,76 @@
+/*
+  Two knobs: colour is the ink (currentColor, so light and dark need no
+  branch), and --rate multiplies every duration. The dash and the rotation use
+  different rates so the trace does not sit still relative to the turn.
+*/
+
+.vol {
+  --dur: 3.4s;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ghost,
+.line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+}
+
+.ghost {
+  stroke-width: 0.8;
+  opacity: 0.14;
+}
+
+.rig {
+  transform-box: view-box;
+  transform-origin: center;
+  animation: vol-turn calc(var(--dur) * var(--rate, 1) * 2.4) linear infinite;
+}
+
+/* One dash as long as the path: running its offset past zero makes the tail eat
+   exactly what the head drew, so there is no seam and no second element to
+   keep in sync. */
+.line {
+  stroke-width: 1.9;
+  stroke-dasharray: 100 100;
+  stroke-dashoffset: 100;
+  animation: vol-draw calc(var(--dur) * var(--rate, 1)) infinite;
+}
+
+@keyframes vol-draw {
+  0% {
+    stroke-dashoffset: 100;
+    animation-timing-function: cubic-bezier(0.5, 0, 0.5, 1);
+  }
+  50% {
+    stroke-dashoffset: 0;
+    animation-timing-function: cubic-bezier(0.5, 0, 0.5, 1);
+  }
+  100% {
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes vol-turn {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Motion is the whole effect here, so the still frame has to carry the load:
+   the dash parks fully drawn and the turn stops. */
+@media (prefers-reduced-motion: reduce) {
+  .line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .rig {
+    animation: none;
+  }
+}

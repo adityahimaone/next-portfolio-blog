@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { Room } from './room'
 import { Dock } from './dock'
+import { Footer } from './footer'
 import { DockSlotProvider } from './dock-slot'
 import { FloatingThemeToggle } from '@/features/layout'
 import styles from './booth.module.css'
@@ -77,6 +78,9 @@ export function BoothShell({ hue, children }: BoothShellProps) {
         <GlassFilters />
         <div className={styles.shell} data-booth>
           {children}
+          {/* The archive footer, so all three routes close the same way. The
+              landing page renders its own and is not routed through here. */}
+          <Footer />
         </div>
         <FloatingThemeToggle />
         <Dock />

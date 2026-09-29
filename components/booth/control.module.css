@@ -10,9 +10,10 @@
   background: var(--flat-fill);
   color: var(--booth-ink);
   transition:
-    color var(--dur-fast) ease,
-    background-color var(--dur-fast) ease,
-    border-color var(--dur-fast) ease,
+    color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    filter var(--dur-fast) var(--ease-out),
     transform var(--dur-fast) var(--booth-ease);
 }
 
@@ -48,4 +49,10 @@
   background: var(--primary);
   color: var(--primary-foreground);
   filter: brightness(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booth-control {
+    transition: none;
+  }
 }

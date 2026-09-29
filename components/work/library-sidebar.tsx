@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
 import { motion, useSpring, useTransform } from 'motion/react'
+import { Cover } from '@/components/booth/cover'
 import {
   ARCHIVE_TRACKS,
   GITHUB_URL,
@@ -173,8 +174,19 @@ function ArchiveRow({ item }: { item: ArchiveTrack }) {
         target="_blank"
         rel="noreferrer"
       >
+        {/* Same 1:1 unit the blog lead art and the project sleeves use, so the
+            archive rows read as one catalogue rather than a second language.
+            Seeded by the repo slug, so a row never changes art between
+            builds. `item.cover` is still passed so any project that does ship
+            a real image keeps it. */}
         <span className={styles.archiveArt}>
-          <Image src={item.cover} alt="" fill sizes="28px" />
+          <Cover
+            seed={item.slug}
+            title={item.name}
+            catalog="SRC"
+            src={item.cover}
+            sizes="26px"
+          />
         </span>
         <span className={styles.archiveMeta}>
           <span className={styles.archiveName}>{item.name}</span>

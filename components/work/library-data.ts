@@ -86,6 +86,8 @@ export type ArchiveTrack = {
   readonly url: string
   readonly tech: readonly string[]
   readonly cover: string
+  /** Seeds the generated cover art, so a row always draws the same art. */
+  readonly slug: string
 }
 
 /**
@@ -109,6 +111,7 @@ export const ARCHIVE_TRACKS: readonly ArchiveTrack[] = FEATURED_PROJECTS.map(
       project.demo ?? `https://github.com/adityahimaone/${project.githubSlug}`,
     tech: project.tech,
     cover: ARCHIVE_COVERS[index % ARCHIVE_COVERS.length] as string,
+    slug: project.githubSlug,
   }),
 )
 

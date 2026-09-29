@@ -1,30 +1,7 @@
 .topBar {
-  --topbar-hair: rgba(244, 240, 232, 0.22);
-  --topbar-chip: linear-gradient(
-    145deg,
-    rgba(22, 27, 25, 0.9),
-    rgba(8, 11, 10, 0.82)
-  );
-  --topbar-chip-border: rgba(255, 255, 255, 0.82);
-  --topbar-chip-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -8px 14px -10px rgba(255, 142, 92, 0.72),
-    0 0 0 1px rgba(7, 10, 9, 0.74), 0 8px 18px -8px rgba(0, 0, 0, 0.72);
-  --topbar-chip-blur: blur(8px) saturate(1.5) brightness(0.86);
-  --topbar-mark: #ff8a58;
-  --topbar-mark-glow: drop-shadow(0 0 6px rgba(255, 90, 31, 0.62));
-  --topbar-toggle: rgba(244, 240, 232, 0.78);
-  /* Explicitly requested as a normal-flow bar rather than a fixed overlay. */
-  position: relative;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px clamp(20px, 4vw, 64px) 10px;
-}
-
-:global(.dark) .topBar {
   --topbar-hair: rgba(244, 240, 232, 0.18);
+  /* Smoked graphite in both themes. The chip floats over the landing room,
+     which no longer changes, so there is no light variant to track. */
   --topbar-chip: linear-gradient(
     145deg,
     rgba(40, 45, 43, 0.42),
@@ -38,6 +15,19 @@
   --topbar-mark: #ff7a45;
   --topbar-mark-glow: drop-shadow(0 0 8px rgba(255, 90, 31, 0.7));
   --topbar-toggle: rgba(244, 240, 232, 0.9);
+  /* Explicitly requested as a normal-flow bar rather than a fixed overlay.
+     On the landing page this is the first child of .heroStage, which has its
+     own top gutter; the bar's padding would stack on top of it. Pull it back
+     out to the stage edge so the two read as one header. The horizontal
+     padding is kept — the stage's side gutter is what the bar aligns to. */
+  position: relative;
+  z-index: 50;
+  margin-top: calc(clamp(24px, 3vw, 44px) * -1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px clamp(20px, 4vw, 64px) 10px;
 }
 
 /* The hairline runs beneath both chips, preserving the retired hero nav rule. */
@@ -83,5 +73,15 @@
   .mark {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    /* Opaque stand-in, since the frosted gradient carries the fill. */
+    background: rgba(40, 45, 43, 0.92);
+  }
+}
+
+@media (prefers-contrast: more) {
+  .mark {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: currentColor;
   }
 }

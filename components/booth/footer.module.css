@@ -1,0 +1,177 @@
+/* Archive furniture. Same material as the rest of the booth: the silkscreen
+   eyebrow, the hairline rule, and one glass control layer for the address. The
+   room behind it is already washed by BoothShell, so the footer itself adds no
+   surface — only the address panel is glass, and it is the one interactive
+   object here. */
+
+.footer {
+  position: relative;
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  /* Clears the fixed dock, same as .page in booth.module.css. */
+  padding: 1rem 1.5rem 8rem;
+}
+
+@media (min-width: 768px) {
+  .footer {
+    padding: 2rem 2.5rem 7.5rem;
+  }
+}
+
+.inner {
+  display: grid;
+  gap: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--hairline);
+}
+
+@media (min-width: 900px) {
+  .inner {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 4rem;
+  }
+}
+
+/* ─── Address ─────────────────────────────────────────────────── */
+
+.eyebrow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--primary);
+  font: var(--silkscreen);
+}
+
+.eyebrowIndex {
+  opacity: 0.75;
+}
+
+.email {
+  display: inline-flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  padding: 0 1.15rem;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--booth-r-control);
+  background: var(--flat-fill);
+  color: var(--booth-ink);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform 120ms var(--ease-out);
+}
+
+.email:hover {
+  border-color: color-mix(in srgb, var(--primary) 60%, var(--glass-edge));
+  background: var(--flat-fill-hover);
+  color: var(--primary);
+}
+
+.email:active {
+  transform: scale(0.99);
+}
+
+.email:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.note {
+  max-width: 42ch;
+  margin: 0.9rem 0 0;
+  color: var(--booth-ink-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* ─── Link columns ────────────────────────────────────────────── */
+
+.columns {
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.col {
+  min-width: 0;
+}
+
+.colTitle {
+  margin: 0 0 0.5rem;
+  color: var(--booth-ink-dim);
+  font: var(--silkscreen);
+}
+
+.list {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  color: var(--booth-ink-muted);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    transform 140ms var(--ease-out);
+}
+
+/* Nudges rather than underlines: the footer is a list of destinations, and a
+   border sliding in on every hover makes the whole block feel like a set of
+   tabs. */
+.link:hover {
+  color: var(--booth-ink);
+  transform: translateX(3px);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Baseline ────────────────────────────────────────────────── */
+
+.base {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.hair {
+  flex: 1;
+  height: 1px;
+  background: var(--hairline);
+}
+
+.year {
+  color: var(--booth-ink-dim);
+  font: var(--silkscreen);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .email,
+  .link {
+    transition: none;
+  }
+}

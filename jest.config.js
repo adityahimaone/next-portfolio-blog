@@ -10,6 +10,10 @@ module.exports = {
     '<rootDir>/**/*.test.(ts|tsx|js|jsx)',
     '<rootDir>/**/*.spec.(ts|tsx|js|jsx)',
   ],
+  // Playwright specs live in e2e/ and run via `pnpm test:e2e` against a real
+  // server. Jest's testMatch would otherwise sweep them up, where they fail to
+  // load on Playwright's own runtime rather than on anything project-specific.
+  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/e2e/'],
   transform: {
     '^.+\\.(ts|tsx)$': [
       'ts-jest',

@@ -164,27 +164,6 @@
     position: relative;
   }
 
-  body.e-ink-mode {
-    background-color: #f4f1ea !important;
-  }
-
-  .dark body.e-ink-mode {
-    background-color: #1a1a1a !important;
-  }
-
-  body.e-ink-mode::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 999999;
-    pointer-events: none;
-    backdrop-filter: grayscale(100%) sepia(20%) contrast(1.15);
-    -webkit-backdrop-filter: grayscale(100%) sepia(20%) contrast(1.15);
-  }
-
   /* Marquee animation */
   .marquee {
     position: relative;
@@ -1164,4 +1143,124 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ─── SIGNAL archive system (design.md §0.2) ───────────────────
+   Liquid glass is a material for controls only, never for content
+   surfaces. Light mode stays solid: blur engages in dark mode only.
+   Values are promoted from features/bookmarks/bookmarks.module.css
+   and features/layout/components/top-bar.module.css. */
+:root {
+  --glass-fill: var(--muted);
+  --glass-fill-hover: color-mix(in srgb, var(--primary) 12%, var(--muted));
+  --glass-edge: var(--border);
+  --glass-blur: none;
+  --glass-spec: none;
+  --glass-shadow: none;
+  --lift: -1px;
+
+  --shell-max: 1280px;
+  --r-panel: 0.75rem;
+  --r-control: 0.5rem;
+  --r-sleeve: 1rem;
+
+  --dur-fast: 160ms;
+  --dur-med: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --silkscreen: 650 0.6875rem/1.2 var(--font-geist-mono), monospace;
+  --silkscreen-tracking: 0.12em;
+}
+
+.dark {
+  --glass-fill: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.11),
+    rgba(255, 255, 255, 0.03) 42%,
+    rgba(255, 255, 255, 0.06)
+  );
+  --glass-fill-hover: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.18),
+    rgba(255, 255, 255, 0.06) 42%,
+    rgba(255, 255, 255, 0.1)
+  );
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-blur: blur(14px) saturate(1.7);
+  --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  --glass-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -10px 18px -14px rgba(255, 112, 64, 0.55),
+    0 8px 22px -14px rgba(0, 0, 0, 0.6);
+  --lift: -2px;
+}
+
+@layer components {
+  /* Controls: chips, buttons, inputs, icon buttons. */
+  .glass-1 {
+    position: relative;
+    border: 1px solid var(--glass-edge);
+    border-radius: var(--r-control);
+    background: var(--glass-fill);
+    box-shadow: var(--glass-shadow), var(--glass-spec);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    transition:
+      color var(--dur-fast) ease,
+      border-color var(--dur-fast) ease,
+      background-color var(--dur-fast) ease,
+      box-shadow var(--dur-fast) ease,
+      transform var(--dur-fast) ease;
+  }
+
+  .glass-1:hover {
+    border-color: var(--primary);
+    background-color: var(--glass-fill-hover);
+    transform: translateY(var(--lift));
+  }
+
+  .glass-1:active {
+    transform: scale(0.96);
+  }
+
+  /* Floating surfaces: sticky docks, cue sheets, modals, dialogs. */
+  .glass-2 {
+    position: relative;
+    border: 1px solid var(--glass-edge);
+    border-radius: var(--r-panel);
+    background: var(--glass-fill);
+    box-shadow:
+      var(--glass-spec),
+      0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    -webkit-backdrop-filter: blur(18px) saturate(1.8);
+    backdrop-filter: blur(18px) saturate(1.8);
+  }
+
+  /* Machine-printed data only: catalogue no, runtime, host, count. */
+  .silkscreen {
+    font: var(--silkscreen);
+    letter-spacing: var(--silkscreen-tracking);
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Guarded once, globally, instead of per component (design.md §0.2). */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-1,
+  .glass-2 {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--card);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -5,7 +5,7 @@ import type { Bookmark, BookmarkFormData } from '../types'
 import { CHANNEL_CATEGORIES } from '../constants/categories'
 import { extractDomain, getFaviconUrl } from '../utils/favicon'
 import { X, Lock, Save, AlertCircle } from 'lucide-react'
-import styles from '../bookmarks.module.css'
+import styles from '../library.module.css'
 
 interface BookmarkAdminModalProps {
   isOpen: boolean
@@ -117,7 +117,7 @@ export function BookmarkAdminModal({
   return (
     <div className={styles.dialogBackdrop} role="presentation">
       <div
-        className={`${styles.modal} glass-2`}
+        className={`${styles.modal} glass`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="bookmark-modal-title"

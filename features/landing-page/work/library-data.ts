@@ -1,8 +1,10 @@
 import { WORK_PROJECTS, type WorkProject } from '@/data/projects'
+import { formatRelative } from '@/lib/date'
 // Imported from the deep path, not the `features/projects` barrel: the barrel
 // re-exports `getRepos`, which would drag the GitHub fetch into the client
 // bundle graph.
 import { FEATURED_PROJECTS } from '@/features/projects/constants'
+import type { GitHubRepo } from '@/features/projects/lib/github'
 
 /**
  * A playable release. Always a real client project — these are the rows that
@@ -36,35 +38,57 @@ export type ArchiveTrack = {
   readonly description: string
   readonly url: string
   readonly tech: readonly string[]
+  /** Empty means "draw the generated cover" — see the Cover fallback. */
   readonly cover: string
   /** Seeds the generated cover art, so a row always draws the same art. */
   readonly slug: string
 }
 
 /**
- * Sourced from FEATURED_PROJECTS so the archive reflects real repositories
- * rather than invented rows. Read-only: listed for reference and deliberately
- * not playable, so these never enter the scroll sequence.
+ * Repos that are already represented elsewhere on the page, so they are not
+ * repeated in the archive.
+ *
+ * The six playable releases match on their own repository slug, and the older
+ * FEATURED_PROJECTS entries match on the repo they point at. Without this the
+ * archive listed three of the six projects that are already one scroll away.
  */
-const ARCHIVE_COVERS: readonly string[] = [
-  '/assets/frontend-resources.png',
-  '/assets/thumbnail-habit-tracker.png',
-  '/assets/thumbnail-fe-resources.png',
-  '/assets/quick-chat-wa.png',
-  '/assets/primarindo.png',
-]
+const ALREADY_SHOWN = new Set([
+  ...WORK_PROJECTS.map(
+    (project) =>
+      // A project url is either its repo or its demo site; the repo name is the
+      // last path segment in either case.
+      project.url.split('/').filter(Boolean).pop()?.toLowerCase() ?? '',
+  ),
+  ...FEATURED_PROJECTS.map((project) => project.githubSlug.toLowerCase()),
+])
 
-export const ARCHIVE_TRACKS: readonly ArchiveTrack[] = FEATURED_PROJECTS.map(
-  (project, index) => ({
-    name: project.name,
-    description: project.description,
-    url:
-      project.demo ?? `https://github.com/adityahimaone/${project.githubSlug}`,
-    tech: project.tech,
-    cover: ARCHIVE_COVERS[index % ARCHIVE_COVERS.length] as string,
-    slug: project.githubSlug,
-  }),
-)
+/**
+ * Builds the archive from live repositories, most recently pushed first — the
+ * same feed and ordering the /projects session log reads, so both surfaces show
+ * one set of rows in one order rather than two hand-maintained lists.
+ *
+ * Read-only by design: these are not playable, so they never enter the scroll
+ * sequence. Rows are only a hint at what else exists, which is why the panel
+ * caps the list and points at /projects for the rest.
+ */
+export function buildArchiveTracks(
+  repos: readonly GitHubRepo[],
+): readonly ArchiveTrack[] {
+  return repos
+    .filter((repo) => !ALREADY_SHOWN.has(repo.name.toLowerCase()))
+    .map((repo) => ({
+      name: repo.name,
+      // A repo without a description reads better as its language than as an
+      // empty second line.
+      description: repo.description ?? `${repo.language ?? 'Project'} · ${formatRelative(repo.pushed_at)}`,
+      url: repo.html_url,
+      tech: repo.language ? [repo.language] : [],
+      // No real image exists for a repo, so the generated cover is the only
+      // honest option. Seeding by repo name means a row's art is stable.
+      cover: '',
+      slug: repo.name,
+    }))
+}
 
 export type ArtistRow = {
   readonly id: number

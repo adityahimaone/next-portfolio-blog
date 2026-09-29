@@ -1,15 +1,11 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import { motion, useSpring, useTransform } from 'motion/react'
 import { Cover } from '@/features/booth/cover'
-import {
-  ARCHIVE_TRACKS,
-  GITHUB_URL,
-  type ArchiveTrack,
-  type LibraryTrack,
-} from './library-data'
+import { GITHUB_URL, type ArchiveTrack, type LibraryTrack } from './library-data'
 import styles from './work.module.css'
 
 /** Keeps the archive a hint rather than a second list. */
@@ -17,6 +13,8 @@ const ARCHIVE_LIMIT = 3
 
 type LibrarySidebarProps = {
   tracks: readonly LibraryTrack[]
+  /** Live repositories, newest push first. Built by work-section.tsx. */
+  archiveTracks: readonly ArchiveTrack[]
   activeIndex: number
   query: string
   onSelect: (index: number) => void
@@ -24,6 +22,7 @@ type LibrarySidebarProps = {
 
 export function LibrarySidebar({
   tracks,
+  archiveTracks,
   activeIndex,
   query,
   onSelect,
@@ -84,28 +83,27 @@ export function LibrarySidebar({
       </ul>
 
       {/* Read-only. Not selectable, and not part of the scroll sequence.
-          Capped at three so the column stays compact; the rest live on GitHub. */}
-      <div className={styles.archive}>
-        <div className={styles.archiveHead}>
-          <span>More on GitHub</span>
+          Capped at three so the column stays compact; the rest live on
+          /projects, which lists the same repositories. */}
+      {archiveTracks.length > 0 && (
+        <div className={styles.archive}>
+          <div className={styles.archiveHead}>
+            <span>More on GitHub</span>
+          </div>
+          <ul className={styles.archiveList}>
+            {archiveTracks.slice(0, ARCHIVE_LIMIT).map((item) => (
+              <ArchiveRow key={item.slug} item={item} />
+            ))}
+          </ul>
+          {/* The full set stays reachable without widening the column. Internal
+              rather than out to GitHub: this is a portfolio, and /projects is
+              the page that actually shows the work. */}
+          <Link className={styles.archiveMore} href="/projects">
+            All projects
+            <ExternalLink size={11} aria-hidden="true" />
+          </Link>
         </div>
-        <ul className={styles.archiveList}>
-          {ARCHIVE_TRACKS.slice(0, ARCHIVE_LIMIT).map((item) => (
-            <ArchiveRow key={item.name} item={item} />
-          ))}
-        </ul>
-        {/* The full set stays reachable without widening the column. */}
-        {ARCHIVE_TRACKS.length > ARCHIVE_LIMIT && (
-          <a
-            className={styles.archiveMore}
-            href={GITHUB_URL}
-            target="_blank"
-            rel="noreferrer"
-          >
-            +{ARCHIVE_TRACKS.length - ARCHIVE_LIMIT} more
-          </a>
-        )}
-      </div>
+      )}
     </aside>
   )
 }
@@ -178,23 +176,25 @@ function ArchiveRow({ item }: { item: ArchiveTrack }) {
         target="_blank"
         rel="noreferrer"
       >
-        {/* Same 1:1 unit the blog lead art and the project sleeves use, so the
-            archive rows read as one catalogue rather than a second language.
-            Seeded by the repo slug, so a row never changes art between
-            builds. `item.cover` is still passed so any project that does ship
-            a real image keeps it. */}
+        {/* The same 1:1 unit the blog lead art and the project sleeves use, so
+            the archive rows read as one catalogue rather than a second
+            language. A repository has no artwork, so this always draws the
+            generated cover; it is seeded by repo name, so a row never changes
+            art between builds. */}
         <span className={styles.archiveArt}>
           <Cover
             seed={item.slug}
             title={item.name}
             catalog="SRC"
-            src={item.cover}
+            src={item.cover || undefined}
             sizes="26px"
           />
         </span>
         <span className={styles.archiveMeta}>
           <span className={styles.archiveName}>{item.name}</span>
-          <span className={styles.archiveSub}>{item.tech[0]}</span>
+          <span className={styles.archiveSub}>
+            {item.tech[0] ?? item.description}
+          </span>
         </span>
         <ExternalLink
           size={11}

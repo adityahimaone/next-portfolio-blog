@@ -174,22 +174,47 @@ const SEEDS: Seed[] = [
 ]
 
 /**
- * Newest first, which is what the section heading promises the visitor.
- * Sorting here rather than hand-ordering SEEDS means a new project added at
- * the bottom lands in the right place without anyone remembering to move it —
- * SEEDS order is 2024, 2024, 2026, 2022, so the raw order was the one place
- * this could silently drift from the copy again.
+ * The order the six releases are presented in, by slug.
  *
- * The spread-then-sort keeps SEEDS first, so two projects sharing a year stay
- * in the order they were written rather than flipping between builds.
+ * Explicit rather than sorted by year: the section is a curated set, not a
+ * changelog, and Switchyard leads because it is the strongest thing here. A
+ * year sort put Habit Tracker (2026) first and demoted everything else, and
+ * the heading's "newest first" then had to be reworded instead of the data
+ * being fixed. Listing the order here means a new project goes where it
+ * belongs by being added to this array, and the A1/B1 labels, the sleeve
+ * tags and the turntable all follow from it.
  */
-export const WORK_PROJECTS: WorkProject[] = SEEDS.map((seed, index) => ({
-  ...seed,
-  id: index,
-  palette: palette(index),
-}))
-  .sort((a, b) => b.year - a.year)
-  .map((project, index) => ({ ...project, id: index }))
+const ORDER: readonly string[] = [
+  'switchyard',
+  'primarindo-asia',
+  'habit-tracker',
+  'seaphantom',
+  'seaphantom-p2p',
+  'labgrownbeasts',
+]
+
+const ORDERED_SEEDS = ORDER.map((slug) => {
+  const seed = SEEDS.find((candidate) => candidate.slug === slug)
+  if (!seed) throw new Error(`ORDER lists "${slug}", which is not in SEEDS`)
+  return seed
+})
+
+// Anything added to SEEDS without being added to ORDER would silently vanish
+// from the site, so fail loudly rather than dropping it.
+const missing = SEEDS.filter(
+  (seed) => !ORDER.includes(seed.slug),
+).map((seed) => seed.slug)
+if (missing.length > 0) {
+  throw new Error(`SEEDS entries missing from ORDER: ${missing.join(', ')}`)
+}
+
+export const WORK_PROJECTS: WorkProject[] = ORDERED_SEEDS.map(
+  (seed, index) => ({
+    ...seed,
+    id: index,
+    palette: palette(index),
+  }),
+)
 
 /** Seconds of "playback" each project gets in the turntable preview. */
 export const PROJECT_PREVIEW_DURATION = 185

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 
-import { Work } from '../work/work'
+import { WorkSection } from '../work/work-section'
 import { About } from './section-about'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
@@ -55,7 +55,7 @@ export default function Rack01LandingPage() {
         setSelected={setExperienceIndex}
         projectDividerRef={projectDividerRef}
       />
-      <Work />
+      <WorkSection />
       <Contact />
     </div>
   )

@@ -10,6 +10,7 @@ import { LibrarySidebar } from './library-sidebar'
 import {
   ARTIST_ROWS,
   LIBRARY_TRACKS,
+  buildArchiveTracks,
   nowPlayingArtist,
   type LibraryTrack,
 } from './library-data'
@@ -17,6 +18,7 @@ import { NowCentre } from './now-centre'
 import { PlayerBar } from './player-bar'
 import { PlayerBanner, PlayerChrome } from './player-chrome'
 import { useMediaQuery, useRefraction } from '@/hooks/use-media'
+import type { GitHubRepo } from '@/features/projects/lib/github'
 import { useWorkScroll } from './use-work-scroll'
 import styles from './work.module.css'
 
@@ -39,7 +41,7 @@ const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
  */
 const SCROLL_PER_TRACK = 30
 
-export function Work() {
+export function Work({ archiveRepos }: { archiveRepos: GitHubRepo[] }) {
   const sectionRef = useRef<HTMLElement>(null)
   const coverButtonRef = useRef<HTMLButtonElement>(null)
   const reducedMotion = useMediaQuery(REDUCED_MOTION)
@@ -170,6 +172,7 @@ export function Work() {
           <div className={styles.columns}>
             <LibrarySidebar
               tracks={LIBRARY_TRACKS}
+              archiveTracks={buildArchiveTracks(archiveRepos)}
               activeIndex={activeIndex}
               query={query}
               onSelect={selectTrack}

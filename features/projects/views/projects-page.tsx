@@ -135,7 +135,7 @@ export function ProjectsPage({
           index="05"
           eyebrow="Selected work"
           title="Proof in the product."
-          description="Six shipped releases, newest first. Pick one to put it on the turntable."
+          description="Six shipped releases, strongest first. Pick one to put it on the turntable."
           hint={
             <>
               SIDE {trackLabel(index)[0]} · {trackLabel(index)} /{' '}

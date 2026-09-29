@@ -1,7 +1,8 @@
 ---
 title: "Deploying My Portfolio Website: From Zero to Production with VPS, Staging, and GitHub Actions"
 description: "A complete guide to deploying a Next.js portfolio website on a VPS (Tencent Cloud Lighthouse) with staging environment, PM2, Nginx, SSL, and automated CI/CD via GitHub Actions."
-published: "2026-05-02"
+date: "2026-05-02"
+published: true
 tags: ["deployment", "nextjs", "vps", "devops", "portfolio", "github-actions", "staging"]
 ---
 

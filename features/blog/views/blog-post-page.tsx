@@ -3,7 +3,7 @@ import { TopBar, Footer } from '@/features/layout'
 import type { BlogMeta } from '../lib/blog'
 
 interface BlogPostPageProps {
-  meta: any
+  meta: BlogMeta
   content: string
   relatedPosts?: BlogMeta[]
 }

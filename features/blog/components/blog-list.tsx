@@ -1,139 +1,241 @@
 'use client'
 
-import { useState } from 'react'
-import { Tag, Calendar, ArrowDown, ArrowUp, Search } from 'lucide-react'
+import { useMemo } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Search, X, RefreshCw } from 'lucide-react'
 import type { BlogMeta } from '../lib/blog'
 import { BlogCard } from './blog-card'
-import { BlogCardPinned } from './blog-card-pinned'
+import { TagChip } from '@/components/tag-chip'
 import { SignalArchiveHeader } from '@/features/layout'
+import styles from '../blog.module.css'
+
+type SortOrder = 'desc' | 'asc'
+
+/** Rows per side of the record. */
+const SIDE_SIZE = 6
 
 export function BlogList({ posts }: { posts: BlogMeta[] }) {
-  const [selectedTag, setSelectedTag] = useState<string | null>(null)
-  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc')
-  const [searchQuery, setSearchQuery] = useState('')
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
-  // Extract all unique tags
-  const allTags = Array.from(new Set(posts.flatMap((post) => post.tags))).sort()
+  const query = searchParams.get('q') ?? ''
+  const tag = searchParams.get('tag')
+  const sort = (
+    searchParams.get('sort') === 'asc' ? 'asc' : 'desc'
+  ) as SortOrder
 
-  // Filter by tag and search query
-  const filteredPosts = posts.filter((post) => {
-    const matchesTag = selectedTag ? post.tags.includes(selectedTag) : true
-    const searchLower = searchQuery.toLowerCase()
-    const matchesSearch = searchLower === '' || 
-      post.title.toLowerCase().includes(searchLower) || 
-      post.description.toLowerCase().includes(searchLower) ||
-      post.tags.some(t => t.toLowerCase().includes(searchLower))
-      
-    return matchesTag && matchesSearch
-  })
+  const isFiltered = Boolean(query || tag)
 
-  // Sort by date
-  const sortedFilteredPosts = [...filteredPosts].sort((a, b) => {
-    const timeA = new Date(a.date).getTime()
-    const timeB = new Date(b.date).getTime()
-    return sortOrder === 'desc' ? timeB - timeA : timeA - timeB
-  })
+  function updateParam(key: string, value: string | null) {
+    const next = new URLSearchParams(searchParams.toString())
+    if (value) next.set(key, value)
+    else next.delete(key)
+    const search = next.toString()
+    router.replace(search ? `${pathname}?${search}` : pathname, {
+      scroll: false,
+    })
+  }
 
-  // Separate pinned vs regular
-  const pinnedPosts = sortedFilteredPosts.filter(p => p.pinned)
-  const regularPosts = sortedFilteredPosts.filter(p => !p.pinned)
+  const tagCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const post of posts) {
+      for (const t of post.tags) counts.set(t, (counts.get(t) ?? 0) + 1)
+    }
+    return [...counts.entries()].sort(
+      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+    )
+  }, [posts])
+
+  const sorted = useMemo(() => {
+    const list = [...posts]
+    list.sort((a, b) => {
+      const diff = new Date(b.date).getTime() - new Date(a.date).getTime()
+      return sort === 'desc' ? diff : -diff
+    })
+    return list
+  }, [posts, sort])
+
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase().trim()
+    return sorted.filter((post) => {
+      if (tag && !post.tags.includes(tag)) return false
+      if (!q) return true
+      return (
+        post.title.toLowerCase().includes(q) ||
+        post.description.toLowerCase().includes(q) ||
+        post.tags.some((t) => t.toLowerCase().includes(q))
+      )
+    })
+  }, [sorted, query, tag])
+
+  const showLeads = !isFiltered
+  const leadPosts = showLeads ? filtered.filter((p) => p.pinned) : []
+  const tracks = showLeads ? filtered.filter((p) => !p.pinned) : filtered
+
+  const sideA = tracks.slice(0, SIDE_SIZE)
+  const sideB = tracks.slice(SIDE_SIZE)
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-20 pt-0">
+    <div className={styles.main}>
       <SignalArchiveHeader
         activeSection="blog"
+        meterCount={posts.length}
         label="Notes 03 / Recorded ideas"
         title="Field notes"
         description="Practical writing about frontend engineering, interface systems, and the decisions behind the work."
       />
 
-      {/* Filter and Search System */}
-      <div className="mb-8 flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
-        {/* Search Bar */}
-        <div className="relative w-full max-w-md rounded-lg transition-shadow focus-within:ring-2 focus-within:ring-primary/20">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-          <input 
-            type="text"
-            placeholder="Search articles, tags, or topics..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-11 w-full rounded-lg border border-border bg-card pr-4 pl-11 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
-          />
-        </div>
-
-        {allTags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="mr-1 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Tag size={16} />
-            </div>
-            <button
-              type="button"
-              onClick={() => setSelectedTag(null)}
-              className={`inline-flex h-11 items-center rounded-lg border px-4 text-xs font-semibold transition-[color,background-color,border-color,transform] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-                selectedTag === null
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-muted text-foreground hover:border-primary/50 hover:bg-primary/10'
-              }`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-              className="flex h-11 items-center gap-1.5 rounded-lg border border-border bg-muted px-4 text-xs font-bold text-foreground transition-[color,background-color,border-color,transform] hover:border-primary/50 hover:bg-primary/10 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-            >
-              <Calendar size={14} className="hidden sm:block" />
-              {sortOrder === 'desc' ? 'Latest' : 'Oldest'}
-              {sortOrder === 'desc' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
-            </button>
-            {allTags.map((tag) => (
+      <div className={`${styles.dock} glass-2`}>
+        <div className={styles.dockTop}>
+          <div className={styles.search}>
+            <Search
+              className={styles.searchIcon}
+              size={16}
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => updateParam('q', event.target.value || null)}
+              className={styles.searchInput}
+              aria-label="Search notes"
+              placeholder="Search titles, descriptions and tags…"
+            />
+            {query && (
               <button
-                key={tag}
                 type="button"
-                onClick={() => setSelectedTag(tag)}
-                className={`inline-flex h-11 items-center rounded-lg border px-4 text-xs font-semibold transition-[color,background-color,border-color,transform] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-                  selectedTag === tag
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-muted text-foreground hover:border-primary/50 hover:bg-primary/10'
-                }`}
+                onClick={() => updateParam('q', null)}
+                className={styles.clear}
+                aria-label="Clear search"
               >
-                {tag}
+                <X size={15} />
               </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Grid List matching projects layout */}
-      <div className="flex flex-col gap-8">
-        {pinnedPosts.length > 0 && selectedTag === null && searchQuery === '' && (
-          <div>
-            <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold tracking-tight text-foreground">
-              Featured 
-            </h2>
-            <div className="grid gap-3">
-              {pinnedPosts.map((post) => <BlogCardPinned key={post.slug} post={post} />)}
-            </div>
-          </div>
-        )}
-
-        <div>
-          {((pinnedPosts.length > 0 && selectedTag === null && searchQuery === '') || pinnedPosts.length > 0) && (
-             <h2 className="mb-4 mt-2 flex items-center gap-2 border-t border-border pt-6 text-xl font-semibold tracking-tight text-foreground">
-               All Posts
-             </h2>
-          )}
-          <div className="grid gap-3">
-            {regularPosts.length > 0 || (pinnedPosts.length > 0 && (selectedTag !== null || searchQuery !== '')) ? (
-              [...((selectedTag !== null || searchQuery !== '') ? pinnedPosts : []), ...regularPosts].map((post, index) => <BlogCard key={post.slug} post={post} index={index} />)
-            ) : (
-              <p className="col-span-full text-muted-foreground">
-                No posts found for the selected filter.
-              </p>
             )}
           </div>
+          <button
+            type="button"
+            onClick={() =>
+              updateParam('sort', sort === 'desc' ? 'asc' : 'desc')
+            }
+            className={`${styles.sort} glass-1`}
+          >
+            {sort === 'desc' ? 'Latest' : 'Oldest'}
+          </button>
+        </div>
+
+        <div className={styles.tagRow}>
+          <span className={styles.tagLead}>Filter</span>
+          <TagChip
+            tag="All"
+            active={!tag}
+            onClick={() => updateParam('tag', null)}
+          />
+          {tagCounts.map(([name, count]) => (
+            <TagChip
+              key={name}
+              tag={name}
+              count={count}
+              active={tag === name}
+              onClick={() => updateParam('tag', tag === name ? null : name)}
+            />
+          ))}
         </div>
       </div>
+
+      {leadPosts.length > 0 && (
+        <section>
+          <div className={styles.sectionHead}>
+            <h2 className={styles.sectionTitle}>Lead singles</h2>
+            <span className={`${styles.sectionCount} silkscreen`}>
+              {leadPosts.length} pinned
+            </span>
+          </div>
+          <div className={styles.tracks}>
+            {leadPosts.map((post) => (
+              <BlogCard key={post.slug} post={post} code="LEAD" lead />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {tracks.length > 0 ? (
+        <>
+          <TrackSide
+            title="Side A"
+            posts={sideA}
+            offset={0}
+            code="A"
+            total={filtered.length}
+          />
+          {sideB.length > 0 && (
+            <TrackSide
+              title="Side B"
+              posts={sideB}
+              offset={SIDE_SIZE}
+              code="B"
+              total={filtered.length}
+            />
+          )}
+        </>
+      ) : (
+        leadPosts.length === 0 && (
+          <div className={styles.empty}>
+            <p className={styles.emptyTitle}>No notes match that filter</p>
+            <p>
+              {filtered.length === 0 && posts.length > 0
+                ? 'Try another search, or clear the filters to see all notes.'
+                : 'There are no published notes yet.'}
+            </p>
+            {isFiltered && (
+              <button
+                type="button"
+                onClick={() => router.replace(pathname, { scroll: false })}
+                className={`${styles.reset} glass-1`}
+              >
+                <RefreshCw size={14} />
+                Clear filters
+              </button>
+            )}
+          </div>
+        )
+      )}
     </div>
+  )
+}
+
+function TrackSide({
+  title,
+  posts,
+  offset,
+  code,
+  total,
+}: {
+  title: string
+  posts: BlogMeta[]
+  offset: number
+  code: string
+  total: number
+}) {
+  if (posts.length === 0) return null
+
+  return (
+    <section>
+      <div className={styles.sectionHead}>
+        <h2 className={styles.sectionTitle}>{title}</h2>
+        <span className={`${styles.sectionCount} silkscreen`}>
+          {posts.length} of {total} tracks
+        </span>
+      </div>
+      <div className={styles.tracks}>
+        {posts.map((post, index) => (
+          <BlogCard
+            key={post.slug}
+            post={post}
+            code={`${code}${offset + index + 1}`}
+          />
+        ))}
+      </div>
+    </section>
   )
 }

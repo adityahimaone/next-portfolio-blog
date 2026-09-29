@@ -1,0 +1,933 @@
+/* Liner notes — /blog and /blog/[slug] (design.md §3).
+   Theme tokens only: the zinc-* palette this replaces never matched the
+   warm aluminium brand. Every motif here reports a real value. */
+
+.main {
+  width: 100%;
+  max-width: var(--shell-max);
+  margin-inline: auto;
+  min-height: 100vh;
+  /* Bottom padding clears the fixed MagneticDock (h-14 at bottom-5). */
+  padding: 4rem clamp(1rem, 3vw, 2rem) 7rem;
+  background: var(--background);
+}
+
+/* ─── Filter dock ────────────────────────────────────────────── */
+
+.dock {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 2rem;
+  padding: 0.6rem;
+}
+
+.dockTop {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.7rem;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 2.3rem;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-control);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.875rem;
+}
+
+.searchInput::placeholder {
+  color: var(--muted-foreground);
+}
+
+.searchInput:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.clear {
+  position: absolute;
+  right: 0.4rem;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.clear:hover {
+  color: var(--foreground);
+}
+
+.sort {
+  display: inline-flex;
+  min-height: 44px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.8rem;
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tagRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scrollbar-width: none;
+}
+
+.tagRow::-webkit-scrollbar {
+  display: none;
+}
+
+.tagLead {
+  flex-shrink: 0;
+  padding-right: 0.25rem;
+  color: var(--muted-foreground);
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 0 0 0.85rem;
+}
+
+.sectionTitle {
+  color: var(--foreground);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: clamp(1.125rem, 2vw, 1.5rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.sectionCount {
+  color: var(--muted-foreground);
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+}
+
+.tracks {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 2.5rem;
+}
+
+/* ─── Track row ──────────────────────────────────────────────── */
+
+.track {
+  position: relative;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sleeve);
+  background: var(--card);
+  text-decoration: none;
+  transition: border-color var(--dur-fast) ease;
+}
+
+@media (min-width: 900px) {
+  .track {
+    grid-template-columns: 52px minmax(0, 1fr) clamp(120px, 14vw, 190px);
+  }
+}
+
+.track:hover {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+}
+
+.track:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.gutter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 55%, var(--card));
+  color: var(--primary);
+  font: var(--silkscreen);
+}
+
+@media (max-width: 899px) {
+  .gutter {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+.leadGutter {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 1rem clamp(0.9rem, 2vw, 1.35rem);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.leadBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--r-control);
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font: var(--silkscreen);
+  font-size: 0.5875rem;
+}
+
+.title {
+  margin: 0.4rem 0 0;
+  color: var(--foreground);
+  font-family: var(--font-syne), var(--font-geist), sans-serif;
+  font-size: 1.2rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  transition: color var(--dur-fast) ease;
+}
+
+.lead .title {
+  font-size: 1.5rem;
+}
+
+.track:hover .title {
+  color: var(--primary);
+}
+
+.description {
+  margin: 0.35rem 0 0;
+  max-width: 62ch;
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+/* ─── Trace plate: the waveform IS the article length ────────── */
+
+.plate {
+  position: relative;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 0.85rem;
+  border-left: 1px solid var(--border);
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+@media (min-width: 900px) {
+  .plate {
+    display: flex;
+  }
+}
+
+.bars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 44px;
+}
+
+.bars span {
+  display: block;
+  flex: 1;
+  min-height: 3px;
+  height: var(--h, 30%);
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--primary) 62%, transparent);
+}
+
+.runtime {
+  color: var(--muted-foreground);
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+  text-align: right;
+}
+
+/* ─── Empty ──────────────────────────────────────────────────── */
+
+.empty {
+  padding: 3rem 1.25rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-panel);
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+.emptyTitle {
+  color: var(--foreground);
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.reset {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding: 0 0.9rem;
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ─── Article ────────────────────────────────────────────────── */
+
+.articleShell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.5rem;
+}
+
+@media (min-width: 1280px) {
+  .articleShell {
+    grid-template-columns: minmax(0, 1fr) 15rem;
+  }
+}
+
+.article {
+  min-width: 0;
+  max-width: 68ch;
+  margin-inline: auto;
+  transition: filter var(--dur-med) ease;
+}
+
+.headline {
+  padding-top: 1rem;
+}
+
+.headlineMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.headlineTitle {
+  margin: 0.7rem 0 0;
+  color: var(--foreground);
+  font-family: var(--font-syne), var(--font-geist), sans-serif;
+  font-size: clamp(2rem, 4.4vw, 2.9rem);
+  font-weight: 750;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.standfirst {
+  margin: 0.9rem 0 0;
+  color: var(--muted-foreground);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+
+.tagLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 1.1rem;
+}
+
+/* Article body. Element selectors are global by design; .articleBody scopes them. */
+.articleBody {
+  margin-top: 2.5rem;
+  color: color-mix(in srgb, var(--foreground) 92%, var(--muted-foreground));
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+.articleBody p {
+  margin: 0 0 1.4rem;
+}
+
+.articleBody h2,
+.articleBody h3,
+.articleBody h4 {
+  scroll-margin-top: 6rem;
+  color: var(--foreground);
+  font-family: var(--font-syne), var(--font-geist), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.articleBody h2 {
+  margin: 2.75rem 0 1rem;
+  font-size: 1.6rem;
+}
+
+.articleBody h3 {
+  margin: 2.1rem 0 0.8rem;
+  font-size: 1.25rem;
+}
+
+.articleBody h4 {
+  margin: 1.75rem 0 0.6rem;
+  font-size: 1.0625rem;
+}
+
+.articleBody a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--primary) 35%, transparent);
+  text-underline-offset: 3px;
+  transition:
+    text-decoration-color var(--dur-fast) ease,
+    text-underline-offset var(--dur-fast) ease;
+}
+
+.articleBody a:hover {
+  text-decoration-color: var(--primary);
+  text-underline-offset: 5px;
+}
+
+.articleBody ul,
+.articleBody ol {
+  margin: 0 0 1.4rem;
+  padding-left: 1.35rem;
+}
+
+.articleBody ul {
+  list-style: disc;
+}
+
+.articleBody ol {
+  list-style: decimal;
+}
+
+.articleBody li {
+  margin-bottom: 0.5rem;
+}
+
+.articleBody li::marker {
+  color: var(--primary);
+}
+
+.articleBody blockquote {
+  margin: 1.9rem 0;
+  padding: 0.2rem 0 0.2rem 1.1rem;
+  border-left: 2px solid var(--primary);
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.articleBody hr {
+  margin: 2.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.articleBody img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--r-panel);
+}
+
+.articleBody strong {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.articleBody code:not(pre code) {
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.9em;
+}
+
+.articleBody table {
+  width: 100%;
+  margin: 1.6rem 0;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.articleBody th,
+.articleBody td {
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.articleBody th {
+  color: var(--foreground);
+  font: var(--silkscreen);
+  font-size: 0.6875rem;
+}
+
+/* Code block as an LCD channel strip. */
+.codeShell {
+  margin: 1.8rem 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  border-radius: var(--r-panel);
+  background: var(--lcd-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.codeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.85rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--lcd-text) 22%, transparent);
+  background: color-mix(in srgb, var(--lcd-text) 6%, transparent);
+}
+
+.codeLang {
+  color: var(--lcd-text);
+  font: var(--silkscreen);
+  opacity: 0.8;
+}
+
+.codeCopy {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in srgb, var(--lcd-text) 25%, transparent);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--lcd-text);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease;
+}
+
+.codeCopy:hover {
+  background: color-mix(in srgb, var(--lcd-text) 14%, transparent);
+}
+
+.codeBody {
+  padding: 1.1rem 1.15rem;
+  overflow-x: auto;
+  color: #e6e6e6;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  tab-size: 2;
+}
+
+/* ─── Transport: reading progress as a scrub bar ─────────────── */
+
+.transport {
+  position: fixed;
+  z-index: 40;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem clamp(1rem, 3vw, 2rem);
+  border-bottom: 1px solid var(--glass-edge);
+  background: var(--glass-fill);
+  box-shadow: var(--glass-spec);
+  -webkit-backdrop-filter: blur(18px) saturate(1.8);
+  backdrop-filter: blur(18px) saturate(1.8);
+}
+
+.transportBars {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 2px;
+  height: 22px;
+  overflow: hidden;
+}
+
+.transportBars span {
+  display: block;
+  flex: 1;
+  min-height: 2px;
+  height: var(--h, 30%);
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--foreground) 26%, transparent);
+}
+
+.transportFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--progress, 0%);
+  overflow: hidden;
+}
+
+.transportFill span {
+  background: var(--primary);
+}
+
+.transportTrack {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+}
+
+.transportHead {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: var(--progress, 0%);
+  width: 2px;
+  background: var(--primary);
+  transition: left 80ms linear;
+}
+
+.transportTime {
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Cue sheet ──────────────────────────────────────────────── */
+
+.cue {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .cue {
+    display: block;
+    position: sticky;
+    top: 5.5rem;
+    align-self: start;
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+    padding: 0.85rem;
+    scrollbar-width: none;
+  }
+}
+
+.cueTitle {
+  color: var(--muted-foreground);
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+}
+
+.cueList {
+  display: grid;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  border-left: 1px solid var(--border);
+}
+
+.cueItem {
+  position: relative;
+  display: block;
+  padding: 0.28rem 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  text-align: left;
+  overflow-wrap: anywhere;
+  transition: color var(--dur-fast) ease;
+}
+
+.cueItem:hover {
+  color: var(--foreground);
+}
+
+.cueSub {
+  padding-left: 1.1rem;
+}
+
+.cueActive {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.cueActive::before {
+  content: '';
+  position: absolute;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  left: -1px;
+  width: 2px;
+  background: var(--primary);
+}
+
+.cueFoot {
+  margin-top: 0.7rem;
+  color: var(--muted-foreground);
+  font: var(--silkscreen);
+  font-size: 0.5875rem;
+}
+
+.cueFab {
+  position: fixed;
+  right: 1rem;
+  bottom: 5.5rem;
+  z-index: 44;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.cueCount {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font: var(--silkscreen);
+  font-size: 0.5875rem;
+}
+
+.drawerBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: color-mix(in srgb, var(--background) 60%, transparent);
+}
+
+.drawer {
+  position: fixed;
+  z-index: 56;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 1rem 1.1rem 1.75rem;
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+}
+
+.drawerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.drawerClose {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.drawerClose:hover {
+  color: var(--foreground);
+}
+
+/* ─── Related rows ───────────────────────────────────────────── */
+
+.related {
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.relatedList {
+  display: grid;
+  gap: 0.15rem;
+  margin-top: 0.75rem;
+}
+
+.relatedRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  min-height: 44px;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--r-control);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--dur-fast) ease;
+}
+
+.relatedRow:hover {
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+}
+
+.relatedDate {
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+}
+
+.relatedTitle {
+  min-width: 0;
+  flex: 1;
+  color: var(--foreground);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.relatedRow:hover .relatedTitle {
+  color: var(--primary);
+}
+
+/* ─── Paper (Kindle) mode, scoped to the article ─────────────── */
+
+.paper {
+  background: #f4f1ea;
+}
+
+.paper .article {
+  filter: grayscale(1) sepia(0.18) contrast(1.06);
+}
+
+.dark .paper {
+  background: #1a1a1a;
+}
+
+/* ─── Paper toggle ───────────────────────────────────────────── */
+
+/* Paper toggle: parked mid-left so it clears both the footer copy and the
+   MagneticDock (h-14 at bottom-5) when scrolled to the end of an article. */
+.togglePod {
+  position: fixed;
+  bottom: 11rem;
+  left: 1rem;
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  padding: 0 0.8rem;
+  border-radius: 999px;
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.switch {
+  position: relative;
+  width: 42px;
+  height: 22px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 22%, transparent);
+  transition: background-color var(--dur-fast) ease;
+}
+
+.switchOn {
+  background: var(--primary);
+}
+
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--card);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.switchOn .knob {
+  transform: translateX(20px);
+}
+
+@media (max-width: 640px) {
+  .main {
+    padding-top: 4.5rem;
+  }
+
+  .dock {
+    position: sticky;
+    z-index: 30;
+    top: 3.75rem;
+  }
+
+  .dockTop {
+    flex-wrap: wrap;
+  }
+
+  .transportTime {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .transport,
+  .dock {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--card);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .transportHead {
+    transition: none;
+  }
+}

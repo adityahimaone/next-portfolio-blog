@@ -1,25 +1,27 @@
-'use client'
-
 import { Github } from 'lucide-react'
 import type { FeaturedProject } from '../constants'
 import type { GitHubRepo } from '../lib/github'
 import { ProjectCard } from '../components/project-card'
-import { ProjectCardMini } from '../components/project-card-mini'
+import { SessionLog } from '../components/session-log'
 import { SignalArchiveHeader, TopBar, Footer } from '@/features/layout'
+import styles from '../projects.module.css'
 
-interface ProjectsPageContentProps {
+interface ProjectsPageProps {
   repos: GitHubRepo[]
   featuredProjects: FeaturedProject[]
+  /** Distinguishes an empty GitHub feed from a failed one. */
+  feedFailed?: boolean
 }
 
 export function ProjectsPage({
   repos,
   featuredProjects,
-}: ProjectsPageContentProps) {
-  const featured = featuredProjects.map((fp) => {
-    const repo = repos.find((r) => r.name === fp.githubSlug)
-    return { project: fp, repo }
-  })
+  feedFailed = false,
+}: ProjectsPageProps) {
+  const featured = featuredProjects.map((project) => ({
+    project,
+    repo: repos.find((r) => r.name === project.githubSlug),
+  }))
 
   const recent = repos
     .filter((r) => !featuredProjects.some((fp) => fp.githubSlug === r.name))
@@ -28,59 +30,54 @@ export function ProjectsPage({
   return (
     <>
       <TopBar />
-      <main
-        id="main-content"
-        className="bg-background mx-auto min-h-screen max-w-7xl px-4 pt-16 pb-20"
-      >
+      <main id="main-content" className={styles.main}>
         <SignalArchiveHeader
           activeSection="projects"
+          meterCount={featuredProjects.length}
           label="Output 01 / Released work"
           title="Shipped work"
           description="Production frontend systems, interfaces, and experiments built from architecture through interaction."
         />
 
-        {/* Featured */}
-        <section className="mb-12">
-          <h2 className="text-foreground mb-4 text-xl font-semibold">
-            Featured
-          </h2>
-          <div className="grid gap-3">
+        <section className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h2 className={styles.sectionTitle}>A-side</h2>
+            <span className={`${styles.sectionCount} silkscreen`}>
+              {featured.length} releases
+            </span>
+          </div>
+          <div className={styles.shelf}>
             {featured.map(({ project, repo }, index) => (
               <ProjectCard
                 key={project.slug}
                 project={project}
                 repo={repo}
                 index={index}
-                session
               />
             ))}
           </div>
         </section>
 
-        {/* Recent from GitHub */}
-        {recent.length > 0 && (
-          <section>
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 className="text-foreground text-xl font-semibold">
-                Recent Activity
-              </h2>
+        <section className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h2 className={styles.sectionTitle}>Session log</h2>
+            <span className={`${styles.sectionCount} silkscreen`}>
+              recent pushes
+            </span>
+            <div className={styles.sectionAside}>
               <a
                 href="https://github.com/adityahimaone"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary flex items-center gap-2 text-sm transition-colors"
+                className={`${styles.githubLink} glass-1`}
               >
-                <Github size={16} />
-                View all on GitHub
+                <Github size={15} aria-hidden="true" />
+                All repositories
               </a>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {recent.map((repo) => (
-                <ProjectCardMini key={repo.name} repo={repo} />
-              ))}
-            </div>
-          </section>
-        )}
+          </div>
+          <SessionLog repos={recent} fetchFailed={feedFailed} />
+        </section>
       </main>
       <Footer />
     </>

@@ -1,3 +1,5 @@
 export { ProjectsPage } from './views/projects-page'
-export { getRepos, type GitHubRepo } from './lib/github'
+export { ProjectCard } from './components/project-card'
+export { SessionLog } from './components/session-log'
+export { getRepos, type GitHubRepo, type RepoFeed } from './lib/github'
 export * from './constants'

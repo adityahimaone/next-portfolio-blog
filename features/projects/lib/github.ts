@@ -15,25 +15,32 @@ export type GitHubRepo = {
   archived: boolean
 }
 
-export async function getRepos(): Promise<GitHubRepo[]> {
+export type RepoFeed = {
+  repos: GitHubRepo[]
+  /** Lets the session log tell "nothing pushed" apart from "the fetch failed". */
+  failed: boolean
+}
+
+export async function getRepos(): Promise<RepoFeed> {
   const res = await fetch(
     `${GITHUB_API}/users/${USERNAME}/repos?sort=pushed&per_page=30`,
-    { next: { revalidate: 3600 } } // Cache 1 hour
+    { next: { revalidate: 3600 } }, // Cache 1 hour
   )
 
   if (!res.ok) {
     console.error('Failed to fetch repos:', res.status)
-    return []
+    return { repos: [], failed: true }
   }
 
   const repos: GitHubRepo[] = await res.json()
 
-  return repos.filter(
-    r => !r.archived && r.name !== USERNAME && r.name !== USERNAME + '.github.io'
-  )
-}
-
-export async function getFeaturedRepos(slugs: string[]): Promise<GitHubRepo[]> {
-  const repos = await getRepos()
-  return repos.filter(r => slugs.includes(r.name))
+  return {
+    repos: repos.filter(
+      (r) =>
+        !r.archived &&
+        r.name !== USERNAME &&
+        r.name !== `${USERNAME}.github.io`,
+    ),
+    failed: false,
+  }
 }

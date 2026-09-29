@@ -1,200 +1,407 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { motion, useScroll, useSpring, useTransform } from 'motion/react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import dynamic from 'next/dynamic'
-import { Check, Copy, BookOpen } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
+import {
+  AnimatePresence,
+  motion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from 'motion/react'
+import { ChevronLeft, ChevronRight, List, X } from 'lucide-react'
 import type { BlogMeta } from '../lib/blog'
-import { BlogHeader } from './blog-header'
-import { TableOfContents } from './table-of-contents'
-import { RelatedPosts } from './related-posts'
+import { Cover, useDockSlot, useRoomChannel } from '@/components/booth'
 import {
   formatRuntime,
+  getWaveformBars,
   minutesFromReadingTime,
-  waveformFromReadingTime,
 } from '@/components/waveform-data'
-import styles from '../blog.module.css'
+import { formatDate } from '@/lib/date'
+import { ViewCounter } from './view-counter'
+import { Markdown } from './markdown'
+import styles from '../releases.module.css'
 
-const SyntaxHighlighter = dynamic(
-  () => import('react-syntax-highlighter').then((mod) => mod.Prism),
-  { ssr: false },
-)
-
-type PrismStyle = Record<string, React.CSSProperties>
-
-/** Props react-markdown hands a `code` override; `inline` marks a span. */
-type CodeBlockProps = {
-  inline?: boolean
-  className?: string
-  children?: React.ReactNode
-} & Omit<React.ComponentProps<'code'>, 'children'>
-
-/** Code block as an LCD channel strip: language left, copy control right. */
-function CodeBlock({ inline, className, children, ...props }: CodeBlockProps) {
-  const match = /language-(\w+)/.exec(className ?? '')
-  const [copied, setCopied] = useState(false)
-  const [style, setStyle] = useState<PrismStyle | null>(null)
-
-  useEffect(() => {
-    let active = true
-    import('react-syntax-highlighter/dist/esm/styles/prism')
-      .then((mod) => {
-        if (active) setStyle((mod as { vscDarkPlus: PrismStyle }).vscDarkPlus)
-      })
-      .catch(() => {
-        /* Highlighting is optional; the block still renders. */
-      })
-    return () => {
-      active = false
-    }
-  }, [])
-
-  if (inline || !match) {
-    return <code {...props}>{children}</code>
-  }
-
-  const source = String(children).replace(/\n$/, '')
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(source)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      /* Clipboard permission denied — nothing to report to the reader. */
-    }
-  }
-
-  return (
-    <div className={styles.codeShell}>
-      <div className={styles.codeHeader}>
-        <span className={`${styles.codeLang} silkscreen`}>{match[1]}</span>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className={styles.codeCopy}
-          aria-label="Copy code"
-        >
-          {copied ? <Check size={14} /> : <Copy size={14} />}
-        </button>
-      </div>
-      <div className={styles.codeBody}>
-        {style ? (
-          <SyntaxHighlighter
-            {...(props as Record<string, unknown>)}
-            style={style}
-            language={match[1]}
-            PreTag="div"
-            customStyle={{ background: 'transparent', margin: 0, padding: 0 }}
-            codeTagProps={{ style: { fontFamily: 'inherit' } }}
-          >
-            {source}
-          </SyntaxHighlighter>
-        ) : (
-          <pre style={{ margin: 0 }}>{source}</pre>
-        )}
-      </div>
-    </div>
-  )
+interface Chapter {
+  id: string
+  title: string
+  top: number
 }
+
+const COVER_HUES = [
+  '#ff5a1f',
+  '#5cd6a3',
+  '#c9a574',
+  '#9b6cff',
+  '#d9895b',
+  '#2e3f5c',
+]
 
 export function BlogPost({
   meta,
   content,
-  relatedPosts,
+  relatedPosts = [],
+  prevPost,
+  nextPost,
 }: {
   meta: BlogMeta
   content: string
   relatedPosts?: BlogMeta[]
+  prevPost?: BlogMeta
+  nextPost?: BlogMeta
 }) {
-  const [paperMode, setPaperMode] = useState(false)
+  const setHue = useRoomChannel()
+  const articleRef = useRef<HTMLElement>(null)
+  const [paper, setPaper] = useState(false)
+  const [chapters, setChapters] = useState<Chapter[]>([])
+  const [progress, setProgress] = useState(0)
+  const [open, setOpen] = useState(false)
+
+  const minutes = minutesFromReadingTime(meta.readingTime)
+  const bars = useMemo(
+    () => getWaveformBars(meta.slug, 40, { minHeight: 0.25, maxHeight: 1 }),
+    [meta.slug],
+  )
+
+  useEffect(() => {
+    setHue(COVER_HUES[(meta.tags.length || 1) % COVER_HUES.length])
+  }, [meta.tags.length, setHue])
+
   const { scrollYProgress } = useScroll()
-  const progress = useSpring(scrollYProgress, {
+  const smooth = useSpring(scrollYProgress, {
     stiffness: 120,
     damping: 30,
     restDelta: 0.001,
   })
+  const percent = useTransform(smooth, (value) => `${value * 100}%`)
 
-  const minutes = minutesFromReadingTime(meta.readingTime)
-  const trace = waveformFromReadingTime(meta.readingTime)
-  const percent = useTransform(progress, (value) => `${value * 100}%`)
-  const [elapsedLabel, setElapsedLabel] = useState('0:00')
+  // Chapter ticks are measured once the headings exist and ids are assigned.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const el = articleRef.current
+      if (!el) return
+
+      let h2 = 0
+      let h3 = 0
+      let lastH2 = 0
+      const next: Chapter[] = []
+
+      el.querySelectorAll('h2').forEach((node) => {
+        h2 += 1
+        h3 = 0
+        lastH2 = h2
+        const id = `chapter-${h2}`
+        node.id = id
+        next.push({
+          id,
+          title: node.textContent ?? '',
+          top: node.getBoundingClientRect().top + window.scrollY,
+        })
+      })
+
+      el.querySelectorAll('h3').forEach((node) => {
+        h3 += 1
+        const id = `chapter-${lastH2}-${h3}`
+        node.id = id
+        next.push({
+          id,
+          title: node.textContent ?? '',
+          top: node.getBoundingClientRect().top + window.scrollY,
+        })
+      })
+
+      setChapters(next)
+    }, 120)
+
+    return () => clearTimeout(timer)
+  }, [content])
+
+  // The readouts update a few times a second, not on every scroll frame.
+  useEffect(() => {
+    let last = 0
+    return smooth.on('change', (value) => {
+      const now = Date.now()
+      if (now - last < 220) return
+      last = now
+      setProgress(value)
+    })
+  }, [smooth])
 
   useEffect(() => {
-    return progress.on('change', (value) => {
-      setElapsedLabel(formatRuntime(value * minutes))
-    })
-  }, [progress, minutes])
+    if (!open) return
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
 
-  return (
-    <>
-      {/* Reading progress as a transport scrub bar (design.md §3.2). */}
-      <div className={styles.transport} aria-hidden="true">
-        <div className={styles.transportTrack}>
-          <div className={styles.transportBars}>
-            {trace.map((height, index) => (
-              <span key={index} style={{ ['--h' as string]: `${height}%` }} />
-            ))}
-            <motion.div
-              className={styles.transportFill}
-              style={{ width: percent }}
-            >
-              {trace.map((height, index) => (
-                <span key={index} style={{ ['--h' as string]: `${height}%` }} />
-              ))}
-            </motion.div>
-          </div>
-          <motion.span
-            className={styles.transportHead}
-            style={{ left: percent }}
+  const jumpTo = useCallback((top: number) => {
+    window.scrollTo({ top, behavior: 'smooth' })
+    setOpen(false)
+  }, [])
+
+  const current = useMemo(() => {
+    let found: Chapter | null = null
+    for (const chapter of chapters) {
+      if (chapter.top - 120 <= window.scrollY + 200) found = chapter
+    }
+    return found
+  }, [chapters, progress])
+
+  useDockSlot(
+    <div className={styles.scrubber} role="group" aria-label="Reading progress">
+      {prevPost && (
+        <Link
+          href={`/blog/${prevPost.slug}`}
+          className={styles.scrubBtn}
+          aria-label="Previous note"
+        >
+          <ChevronLeft size={16} />
+        </Link>
+      )}
+
+      <div className={styles.scrubWave} aria-hidden="true">
+        {bars.map((h, i) => (
+          <span key={i} style={{ ['--h' as string]: `${h * 100}%` }} />
+        ))}
+        <motion.div className={styles.scrubFill} style={{ width: percent }}>
+          {bars.map((h, i) => (
+            <span key={i} style={{ ['--h' as string]: `${h * 100}%` }} />
+          ))}
+        </motion.div>
+        <motion.span className={styles.scrubHead} style={{ left: percent }} />
+        {chapters.map((chapter) => (
+          <button
+            key={chapter.id}
+            type="button"
+            className={styles.scrubTick}
+            style={{
+              left: `${(chapter.top / Math.max(1, document.body.scrollHeight)) * 100}%`,
+            }}
+            onClick={() => jumpTo(chapter.top)}
+            tabIndex={-1}
+            aria-label={`Jump to ${chapter.title}`}
           />
-        </div>
-        <span className={styles.transportTime}>
-          {elapsedLabel} / {formatRuntime(minutes)}
-        </span>
+        ))}
       </div>
 
-      <div className={styles.main}>
-        <div className={styles.articleShell}>
-          <article
-            className={`${styles.article} ${paperMode ? styles.paper : ''}`}
-          >
-            <BlogHeader meta={meta} />
-
-            <div className={styles.articleBody}>
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{ code: CodeBlock }}
-              >
-                {content}
-              </ReactMarkdown>
-            </div>
-
-            {relatedPosts && relatedPosts.length > 0 && (
-              <RelatedPosts posts={relatedPosts} />
-            )}
-          </article>
-
-          <TableOfContents content={content} />
-        </div>
-      </div>
+      <span className={styles.scrubMeta}>
+        {current?.title ?? 'Intro'} · {formatRuntime(progress * minutes)} /{' '}
+        {formatRuntime(minutes)}
+      </span>
 
       <button
         type="button"
-        onClick={() => setPaperMode((prev) => !prev)}
-        aria-pressed={paperMode}
-        className={`${styles.togglePod} glass-1`}
+        onClick={() => setOpen((v) => !v)}
+        className={styles.scrubBtn}
+        aria-label="Chapters"
+        aria-expanded={open}
       >
-        <BookOpen size={15} aria-hidden="true" />
-        <span className="silkscreen">Paper</span>
-        <span
-          className={`${styles.switch} ${paperMode ? styles.switchOn : ''}`}
-        >
-          <span className={styles.knob} />
-        </span>
+        <List size={16} />
       </button>
+
+      {nextPost && (
+        <Link
+          href={`/blog/${nextPost.slug}`}
+          className={styles.scrubBtn}
+          aria-label="Next note"
+        >
+          <ChevronRight size={16} />
+        </Link>
+      )}
+    </div>,
+    [
+      bars,
+      chapters,
+      current,
+      meta.slug,
+      minutes,
+      nextPost,
+      open,
+      prevPost,
+      progress,
+    ],
+  )
+
+  return (
+    <>
+      <main className={styles.page} id="main-content">
+        <div className={styles.reader}>
+          <article
+            ref={articleRef}
+            className={`${styles.article} ${paper ? styles.paper : ''}`}
+          >
+            <div className={styles.headlineCover}>
+              <Cover
+                seed={meta.slug}
+                title={meta.title}
+                sizes="84px"
+                priority
+              />
+            </div>
+
+            <p className={styles.headlineMeta}>
+              {formatDate(meta.date, 'long')}
+              <span>·</span>
+              <span>{meta.readingTime}</span>
+              <span>·</span>
+              <ViewCounter slug={meta.slug} />
+            </p>
+
+            <h1 className={styles.headlineTitle}>{meta.title}</h1>
+            <p className={styles.headlineDesc}>{meta.description}</p>
+
+            <div className={styles.body}>
+              <Markdown content={content} />
+            </div>
+
+            <div className={styles.leadMeta} style={{ marginTop: '1.5rem' }}>
+              <button
+                type="button"
+                onClick={() => setPaper((v) => !v)}
+                aria-pressed={paper}
+                className={styles.tag}
+              >
+                Paper mode
+              </button>
+              {meta.tags.map((tag) => (
+                <Link
+                  key={tag}
+                  href={`/blog?tag=${encodeURIComponent(tag)}`}
+                  className={styles.tag}
+                  style={{ textDecoration: 'none' }}
+                >
+                  {tag}
+                </Link>
+              ))}
+            </div>
+
+            {relatedPosts.length > 0 && (
+              <section className={styles.related}>
+                <h2 className={styles.sideTitle}>Next in the crate</h2>
+                <ul
+                  className={styles.trackList}
+                  style={{ marginTop: '0.75rem' }}
+                >
+                  {relatedPosts.map((post) => (
+                    <li key={post.slug}>
+                      <Link
+                        href={`/blog/${post.slug}`}
+                        className={styles.track}
+                      >
+                        <span className={styles.trackIndex}>→</span>
+                        <span className={styles.trackArt}>
+                          <Cover
+                            seed={post.slug}
+                            title={post.title}
+                            sizes="44px"
+                          />
+                        </span>
+                        <span className={styles.trackBody}>
+                          <span className={styles.trackTitle}>
+                            {post.title}
+                          </span>
+                          <span className={styles.trackMeta}>
+                            {formatDate(post.date)} · {post.readingTime}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </article>
+
+          {chapters.length > 0 && (
+            <nav className={`${styles.chapters} glass`} aria-label="Chapters">
+              <p className={styles.chapterTitle}>Chapters</p>
+              <ul className={styles.chapterList}>
+                {chapters.map((chapter) => (
+                  <li key={chapter.id}>
+                    <button
+                      type="button"
+                      onClick={() => jumpTo(chapter.top)}
+                      aria-current={current?.id === chapter.id || undefined}
+                      className={`${styles.chapter} ${chapter.id.includes('-') && !chapter.id.match(/^chapter-\d+$/) ? styles.chapterSub : ''}`}
+                    >
+                      {chapter.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <p className={styles.chapterFoot}>{chapters.length} chapters</p>
+            </nav>
+          )}
+
+          {chapters.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className={styles.chapterFab}
+              aria-label="Open chapters"
+            >
+              <List size={15} aria-hidden="true" />
+              {chapters.length}
+            </button>
+          )}
+        </div>
+      </main>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 70,
+                background: 'rgba(0,0,0,0.55)',
+              }}
+            />
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Chapters"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+              className={`${styles.chapterDrawer} glass`}
+            >
+              <div className={styles.chapterDrawerHead}>
+                <p className={styles.chapterTitle}>Chapters</p>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className={styles.drawerClose}
+                  aria-label="Close chapters"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <ul className={styles.chapterList}>
+                {chapters.map((chapter) => (
+                  <li key={chapter.id}>
+                    <button
+                      type="button"
+                      onClick={() => jumpTo(chapter.top)}
+                      className={styles.chapter}
+                    >
+                      {chapter.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   )
 }

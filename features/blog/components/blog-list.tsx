@@ -1,31 +1,48 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { Search, X, RefreshCw } from 'lucide-react'
+import { RefreshCw, X } from 'lucide-react'
 import type { BlogMeta } from '../lib/blog'
-import { BlogCard } from './blog-card'
-import { TagChip } from '@/components/tag-chip'
-import { SignalArchiveHeader } from '@/features/layout'
-import styles from '../blog.module.css'
+import {
+  BoothControl,
+  Cover,
+  PageHeader,
+  useDockSlot,
+  useRoomChannel,
+} from '@/components/booth'
+import {
+  formatRuntime,
+  minutesFromReadingTime,
+  waveformFromReadingTime,
+} from '@/components/waveform-data'
+import { formatDate } from '@/lib/date'
+import { ViewCounter } from './view-counter'
+import styles from '../releases.module.css'
 
-type SortOrder = 'desc' | 'asc'
-
-/** Rows per side of the record. */
 const SIDE_SIZE = 6
+const COVER_HUES = [
+  '#ff5a1f',
+  '#5cd6a3',
+  '#c9a574',
+  '#9b6cff',
+  '#d9895b',
+  '#2e3f5c',
+]
+
+type Sort = 'desc' | 'asc'
 
 export function BlogList({ posts }: { posts: BlogMeta[] }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const setHue = useRoomChannel()
 
+  // Filters live in the URL, so a filtered view stays shareable.
   const query = searchParams.get('q') ?? ''
   const tag = searchParams.get('tag')
-  const sort = (
-    searchParams.get('sort') === 'asc' ? 'asc' : 'desc'
-  ) as SortOrder
-
-  const isFiltered = Boolean(query || tag)
+  const sort: Sort = searchParams.get('sort') === 'asc' ? 'asc' : 'desc'
 
   function updateParam(key: string, value: string | null) {
     const next = new URLSearchParams(searchParams.toString())
@@ -69,142 +86,184 @@ export function BlogList({ posts }: { posts: BlogMeta[] }) {
     })
   }, [sorted, query, tag])
 
-  const showLeads = !isFiltered
-  const leadPosts = showLeads ? filtered.filter((p) => p.pinned) : []
-  const tracks = showLeads ? filtered.filter((p) => !p.pinned) : filtered
+  const isFiltered = Boolean(query || tag)
+  const leads = isFiltered ? [] : filtered.filter((post) => post.pinned)
+  const tracks = isFiltered ? filtered : filtered.filter((post) => !post.pinned)
 
-  const sideA = tracks.slice(0, SIDE_SIZE)
-  const sideB = tracks.slice(SIDE_SIZE)
+  // The room takes a colour from the post currently in focus.
+  useEffect(() => {
+    const source = leads[0] ?? tracks[0]
+    if (!source) return
+    setHue(COVER_HUES[source.tags.length % COVER_HUES.length])
+  }, [leads, tracks, setHue])
+
+  useDockSlot(
+    <span className={styles.scrubMeta}>
+      {posts.length} posts · {tagCounts.length} tags
+    </span>,
+    [posts.length, tagCounts.length],
+  )
 
   return (
-    <div className={styles.main}>
-      <SignalArchiveHeader
-        activeSection="blog"
-        meterCount={posts.length}
-        label="Notes 03 / Recorded ideas"
-        title="Field notes"
-        description="Practical writing about frontend engineering, interface systems, and the decisions behind the work."
-      />
+    <>
+      <main className={styles.page} id="main-content">
+        <PageHeader
+          index="04"
+          eyebrow="Releases"
+          title="Notes from the build."
+          description="Frontend engineering, interface systems, and the decisions behind the work."
+          hint={
+            <>
+              {posts.length} posts · {tagCounts.length} tags
+            </>
+          }
+        />
 
-      <div className={`${styles.dock} glass-2`}>
-        <div className={styles.dockTop}>
-          <div className={styles.search}>
-            <Search
-              className={styles.searchIcon}
-              size={16}
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => updateParam('q', event.target.value || null)}
-              className={styles.searchInput}
-              aria-label="Search notes"
-              placeholder="Search titles, descriptions and tags…"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => updateParam('q', null)}
-                className={styles.clear}
-                aria-label="Clear search"
+        <div className={styles.releases}>
+          <div className={`${styles.dock} glass`}>
+            <div className={styles.searchWrap}>
+              <svg
+                className={styles.searchIcon}
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
               >
-                <X size={15} />
-              </button>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() =>
-              updateParam('sort', sort === 'desc' ? 'asc' : 'desc')
-            }
-            className={`${styles.sort} glass-1`}
-          >
-            {sort === 'desc' ? 'Latest' : 'Oldest'}
-          </button>
-        </div>
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+              <input
+                type="search"
+                value={query}
+                onChange={(event) =>
+                  updateParam('q', event.target.value || null)
+                }
+                className={styles.search}
+                aria-label="Search notes"
+                placeholder="Search titles and tags…"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => updateParam('q', null)}
+                  className={styles.searchClear}
+                  aria-label="Clear search"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
 
-        <div className={styles.tagRow}>
-          <span className={styles.tagLead}>Filter</span>
-          <TagChip
-            tag="All"
-            active={!tag}
-            onClick={() => updateParam('tag', null)}
-          />
-          {tagCounts.map(([name, count]) => (
-            <TagChip
-              key={name}
-              tag={name}
-              count={count}
-              active={tag === name}
-              onClick={() => updateParam('tag', tag === name ? null : name)}
-            />
-          ))}
-        </div>
-      </div>
-
-      {leadPosts.length > 0 && (
-        <section>
-          <div className={styles.sectionHead}>
-            <h2 className={styles.sectionTitle}>Lead singles</h2>
-            <span className={`${styles.sectionCount} silkscreen`}>
-              {leadPosts.length} pinned
-            </span>
+            <BoothControl
+              onClick={() =>
+                updateParam('sort', sort === 'desc' ? 'asc' : 'desc')
+              }
+              className={styles.sortBtn}
+            >
+              {sort === 'desc' ? 'Latest' : 'Oldest'}
+            </BoothControl>
           </div>
-          <div className={styles.tracks}>
-            {leadPosts.map((post) => (
-              <BlogCard key={post.slug} post={post} code="LEAD" lead />
+
+          <div className={styles.tagRow}>
+            <BoothControl
+              active={!tag}
+              onClick={() => updateParam('tag', null)}
+              className={styles.tag}
+            >
+              All
+            </BoothControl>
+            {tagCounts.map(([name, count]) => (
+              <BoothControl
+                key={name}
+                active={tag === name}
+                onClick={() => updateParam('tag', tag === name ? null : name)}
+                className={styles.tag}
+              >
+                {name} ({count})
+              </BoothControl>
             ))}
           </div>
-        </section>
-      )}
 
-      {tracks.length > 0 ? (
-        <>
-          <TrackSide
+          {leads.map((post) => (
+            <LeadRelease key={post.slug} post={post} />
+          ))}
+
+          <Side
             title="Side A"
-            posts={sideA}
+            posts={tracks.slice(0, SIDE_SIZE)}
             offset={0}
             code="A"
             total={filtered.length}
           />
-          {sideB.length > 0 && (
-            <TrackSide
-              title="Side B"
-              posts={sideB}
-              offset={SIDE_SIZE}
-              code="B"
-              total={filtered.length}
-            />
-          )}
-        </>
-      ) : (
-        leadPosts.length === 0 && (
-          <div className={styles.empty}>
-            <p className={styles.emptyTitle}>No notes match that filter</p>
-            <p>
-              {filtered.length === 0 && posts.length > 0
-                ? 'Try another search, or clear the filters to see all notes.'
-                : 'There are no published notes yet.'}
-            </p>
-            {isFiltered && (
+          <Side
+            title="Side B"
+            posts={tracks.slice(SIDE_SIZE)}
+            offset={SIDE_SIZE}
+            code="B"
+            total={filtered.length}
+          />
+
+          {filtered.length === 0 && (
+            <div className={styles.empty}>
+              <h2 className={styles.emptyTitle}>No notes match that filter</h2>
+              <p className={styles.emptyText}>
+                Try another search or tag, or clear the filters to see all
+                notes.
+              </p>
               <button
                 type="button"
                 onClick={() => router.replace(pathname, { scroll: false })}
-                className={`${styles.reset} glass-1`}
+                className={styles.resetBtn}
               >
                 <RefreshCw size={14} />
                 Clear filters
               </button>
-            )}
-          </div>
-        )
-      )}
-    </div>
+            </div>
+          )}
+        </div>
+      </main>
+    </>
   )
 }
 
-function TrackSide({
+function LeadRelease({ post }: { post: BlogMeta }) {
+  const minutes = minutesFromReadingTime(post.readingTime)
+  return (
+    <section className={styles.lead}>
+      <div className={styles.leadArt}>
+        <Cover
+          seed={post.slug}
+          title={post.title}
+          catalog="LEAD"
+          sizes="(max-width: 820px) 40vw, 190px"
+          priority
+        />
+      </div>
+      <div>
+        <p className={styles.leadKicker}>Lead release · {post.readingTime}</p>
+        <h2 className={styles.leadTitle}>
+          <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+        </h2>
+        <p className={styles.leadDesc}>{post.description}</p>
+        <p className={styles.leadMeta}>
+          <span>{formatDate(post.date)}</span>
+          <span className={styles.wave} aria-hidden="true">
+            {waveformFromReadingTime(post.readingTime).map((h, i) => (
+              <span key={i} style={{ height: `${h}%` }} />
+            ))}
+          </span>
+          <span>{formatRuntime(minutes)}</span>
+          <ViewCounter slug={post.slug} />
+        </p>
+      </div>
+    </section>
+  )
+}
+
+function Side({
   title,
   posts,
   offset,
@@ -221,21 +280,40 @@ function TrackSide({
 
   return (
     <section>
-      <div className={styles.sectionHead}>
-        <h2 className={styles.sectionTitle}>{title}</h2>
-        <span className={`${styles.sectionCount} silkscreen`}>
+      <div className={styles.sideHead}>
+        <h2 className={styles.sideTitle}>{title}</h2>
+        <span className={styles.sideCount}>
           {posts.length} of {total} tracks
         </span>
       </div>
-      <div className={styles.tracks}>
+      <ul className={styles.trackList}>
         {posts.map((post, index) => (
-          <BlogCard
-            key={post.slug}
-            post={post}
-            code={`${code}${offset + index + 1}`}
-          />
+          <li key={post.slug}>
+            <Link href={`/blog/${post.slug}`} className={styles.track}>
+              <span className={styles.trackIndex}>
+                {code}
+                {offset + index + 1}
+              </span>
+              <span className={styles.trackArt}>
+                <Cover seed={post.slug} title={post.title} sizes="44px" />
+              </span>
+              <span className={styles.trackBody}>
+                <span className={styles.trackTitle}>{post.title}</span>
+                <span className={styles.trackMeta}>
+                  {formatDate(post.date)}
+                  <ViewCounter slug={post.slug} />
+                </span>
+              </span>
+              <span className={styles.wave} aria-hidden="true">
+                {waveformFromReadingTime(post.readingTime).map((h, i) => (
+                  <span key={i} style={{ height: `${h}%` }} />
+                ))}
+              </span>
+              <span className={styles.runtime}>{post.readingTime}</span>
+            </Link>
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   )
 }

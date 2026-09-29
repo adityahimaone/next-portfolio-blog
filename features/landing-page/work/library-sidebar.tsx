@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
 import { motion, useSpring, useTransform } from 'motion/react'
-import { Cover } from '@/components/booth/cover'
+import { Cover } from '@/features/booth/cover'
 import {
   ARCHIVE_TRACKS,
   GITHUB_URL,

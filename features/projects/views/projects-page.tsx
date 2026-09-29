@@ -9,8 +9,8 @@ import {
   PageHeader,
   Record,
   useRoomChannel,
-} from '@/components/booth'
-import { useDockSlot } from '@/components/booth/dock-slot'
+} from '@/features/booth'
+import { useDockSlot } from '@/features/booth/dock-slot'
 import { formatRelative } from '@/lib/date'
 import {
   PROJECT_PREVIEW_DURATION,

@@ -12,12 +12,12 @@ import {
   PageHeader,
   useDockSlot,
   useRoomChannel,
-} from '@/components/booth'
+} from '@/features/booth'
 import {
   formatRuntime,
   minutesFromReadingTime,
   waveformFromReadingTime,
-} from '@/components/waveform-data'
+} from '@/lib/waveform-data'
 import { formatDate } from '@/lib/date'
 import { ViewCounter } from './view-counter'
 import styles from '../releases.module.css'

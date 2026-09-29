@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
-import { waveformBars } from '@/components/waveform-data'
+import { waveformBars } from '@/lib/waveform-data'
 import styles from './signal-archive.module.css'
 
 type ArchiveSection = 'projects' | 'bookmarks' | 'blog'

@@ -10,15 +10,15 @@ import {
   Play,
   Square,
 } from 'lucide-react'
-import { Screw } from '@/components/screw'
-import { ScanLoader } from '@/components/scan-loader'
+import { Screw } from '@/components/ui/screw'
+import { ScanLoader } from '@/features/landing-page/scan-loader'
 import { DawHero } from '../components/hero'
 import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
 import styles from './rack-01.module.css'
-import { TangleFooter } from '@/src/components/ui/tangle-footer'
-import { TextCascade } from '@/components/motion/text-cascade'
+import { TangleFooter } from '@/components/ui/tangle-footer'
+import { TextCascade } from '@/features/landing-page/components/text-cascade'
 import { TopBar } from '@/features/layout/components/top-bar'
-import { Work } from '@/components/work/work'
+import { Work } from '@/features/landing-page/work/work'
 import { SectionHeading } from './section-heading'
 import {
   registerSmoothScroll,

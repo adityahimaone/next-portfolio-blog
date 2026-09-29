@@ -12,7 +12,7 @@ import {
   useTransform,
   type MotionValue,
 } from 'motion/react'
-import { NAV_ITEMS, isActiveNavItem } from '@/components/booth/nav-items'
+import { NAV_ITEMS, isActiveNavItem } from '@/features/booth/nav-items'
 import { useInterfaceVisibility } from '@/hooks/use-hide-interface'
 import { cn } from '@/lib/utils'
 

@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 
-import { VenLogo } from '@/components/ven-logo'
-import { DarkInner } from '@/src/components/ui/dark-inner'
+import { VenLogo } from '@/features/layout/components/ven-logo'
+import { DarkInner } from '@/components/ui/dark-inner'
 import { FloatingThemeToggle } from './floating-theme-toggle'
 import { cn } from '@/lib/utils'
 

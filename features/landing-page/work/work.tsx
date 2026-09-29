@@ -16,7 +16,7 @@ import {
 import { NowCentre } from './now-centre'
 import { PlayerBar } from './player-bar'
 import { PlayerBanner, PlayerChrome } from './player-chrome'
-import { useMediaQuery, useRefraction } from './use-glass'
+import { useMediaQuery, useRefraction } from '@/hooks/use-media'
 import { useWorkScroll } from './use-work-scroll'
 import styles from './work.module.css'
 

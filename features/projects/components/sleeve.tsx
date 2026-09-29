@@ -1,7 +1,7 @@
 'use client'
 
-import { Cover } from '@/components/booth/cover'
-import { Record } from '@/components/booth/record'
+import { Cover } from '@/features/booth/cover'
+import { Record } from '@/features/booth/record'
 import type { WorkProject } from '@/data/projects'
 import { trackLabel } from '@/data/projects'
 import styles from '../crate.module.css'

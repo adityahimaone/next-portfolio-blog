@@ -7,8 +7,8 @@ import {
   useScroll,
   useTransform,
 } from 'motion/react'
-import { Screw } from '@/components/screw'
-import { BrokenLightText } from '@/components/broken-light-text'
+import { Screw } from '@/components/ui/screw'
+import { BrokenLightText } from '@/features/landing-page/components/broken-light-text'
 import {
   BOOT_ORDER_FALLBACK,
   heroSweepIndices,

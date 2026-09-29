@@ -3,10 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 
-import { DarkInner } from '@/src/components/ui/dark-inner'
-// Imported from the module, not the barrel: the barrel pulls in BoothShell,
-// which renders this component, so going through it would be a cycle.
-import { useRefraction } from '@/components/booth/hooks'
+import { DarkInner } from '@/components/ui/dark-inner'
+import { useRefraction } from '@/hooks/use-media'
 import { cn } from '@/lib/utils'
 
 import styles from './floating-theme-toggle.module.css'

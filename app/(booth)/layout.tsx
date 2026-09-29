@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { BoothShell } from '@/components/booth'
+import { BoothShell } from '@/features/booth'
 
 /**
  * The booth shell for the archive routes.

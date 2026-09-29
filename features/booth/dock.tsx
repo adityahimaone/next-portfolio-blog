@@ -15,12 +15,11 @@ import {
   LayoutGroup,
   motion,
   useMotionValue,
-  useReducedMotion,
   type MotionValue,
 } from 'motion/react'
 import { useDockSlotValue } from './dock-slot'
 import { useDockMagnify, useDockItemRef } from './dock-magnify'
-import { useRefraction } from './hooks'
+import { useReducedMotion, useRefraction } from '@/hooks/use-media'
 import { NAV_ITEMS, isActiveNavItem } from './nav-items'
 import styles from './dock.module.css'
 

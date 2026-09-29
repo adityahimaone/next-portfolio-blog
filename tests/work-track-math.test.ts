@@ -1,7 +1,7 @@
 import {
   resolveActiveIndex,
   resolveTrackProgress,
-} from '@/components/work/track-math'
+} from '@/features/landing-page/work/track-math'
 import {
   formatProjectTime,
   trackLabel,

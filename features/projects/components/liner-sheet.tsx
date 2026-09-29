@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ArrowUpRight, Github, X } from 'lucide-react'
-import { Cover } from '@/components/booth/cover'
+import { Cover } from '@/features/booth/cover'
 import type { WorkProject } from '@/data/projects'
 import { trackLabel } from '@/data/projects'
 import styles from '../crate.module.css'

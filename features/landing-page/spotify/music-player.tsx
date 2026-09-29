@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
-import { Slider } from '@/components/slider'
+import { Slider } from '@/components/ui/slider'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import useClickOutside from '@/hooks/use-click-outside'
 import { usePathname } from 'next/navigation'

@@ -11,12 +11,12 @@ import {
 } from 'motion/react'
 import { ArrowLeft, ChevronLeft, ChevronRight, List, X } from 'lucide-react'
 import type { BlogMeta } from '../lib/blog'
-import { Cover, useDockSlot, useRoomChannel } from '@/components/booth'
+import { Cover, useDockSlot, useRoomChannel } from '@/features/booth'
 import {
   formatRuntime,
   getWaveformBars,
   minutesFromReadingTime,
-} from '@/components/waveform-data'
+} from '@/lib/waveform-data'
 import { formatDate } from '@/lib/date'
 import { ViewCounter } from './view-counter'
 import { Markdown } from './markdown'

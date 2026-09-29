@@ -2,7 +2,7 @@
 
 import { useId } from 'react'
 import Image from 'next/image'
-import { hashSeed } from '@/components/waveform-data'
+import { hashSeed } from '@/lib/waveform-data'
 
 /** Deterministic album-art field, used when a project or post has no image. */
 const PALETTES: Array<[string, string]> = [

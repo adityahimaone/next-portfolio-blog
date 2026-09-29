@@ -1529,13 +1529,19 @@
 
 /* Keeps the truncated archive honest about what it is hiding. */
 .archiveMore {
-  display: block;
+  /* flex, not block: the label and the arrow are one control, and a block
+     container lets the icon wrap onto its own line in a narrow column. */
+  display: flex;
+  align-items: center;
+  gap: 5px;
   padding: 3px 10px 6px;
   color: var(--slate);
   font: 9px var(--font-geist-mono);
   letter-spacing: 0.08em;
   text-decoration: none;
   transition: color 160ms ease;
+  /* Never split the label across lines, however narrow the column gets. */
+  white-space: nowrap;
 }
 
 .archiveMore:focus-visible {

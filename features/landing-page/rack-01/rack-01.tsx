@@ -2,7 +2,8 @@
 
 import { useRef, useState } from 'react'
 
-import { WorkSection } from '../work/work-section'
+import { Work } from '../work/work'
+import type { GitHubRepo } from '@/features/projects/lib/github'
 import { About } from './section-about'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
@@ -21,8 +22,17 @@ import { useRackAnimations } from './use-rack-animations'
  * this file is only the composition. The section order matters — the about
  * and experience strips scrub off the same scroll position the hero hands off
  * from — so reordering the JSX changes the page, not just the markup.
+ *
+ * `archiveRepos` arrives from the page, the only server boundary above this
+ * client tree. It is passed down rather than fetched here because this
+ * component cannot await, and an async component rendered inside a client
+ * tree throws — taking the whole page's interactivity with it.
  */
-export default function Rack01LandingPage() {
+export default function Rack01LandingPage({
+  archiveRepos,
+}: {
+  archiveRepos: GitHubRepo[]
+}) {
   const rootRef = useRef<HTMLDivElement>(null)
   const projectDividerRef = useRef<HTMLDivElement>(null)
   const [aboutIndex, setAboutIndex] = useState(0)
@@ -55,7 +65,7 @@ export default function Rack01LandingPage() {
         setSelected={setExperienceIndex}
         projectDividerRef={projectDividerRef}
       />
-      <WorkSection />
+      <Work archiveRepos={archiveRepos} />
       <Contact />
     </div>
   )

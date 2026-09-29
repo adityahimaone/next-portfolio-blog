@@ -1,6 +1,7 @@
+import { getRepos } from '@/features/projects/lib/github'
 import { LandingPage } from '@/features/landing-page'
 
-export default function Home() {
+export default async function Home() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Person',
@@ -38,13 +39,21 @@ export default function Home() {
     ],
   }
 
+  // Fetched here, in the page's own server component, rather than in a wrapper
+  // inside the landing page. The landing page is a client component tree, so an
+  // async server component rendered inside it throws at runtime — which fails
+  // the whole subtree, leaving no hydrated handlers and no effects, so the page
+  // silently stops being clickable and the GSAP timelines never start.
+  // getRepos is cached for an hour by its own `next.revalidate`.
+  const { repos } = await getRepos()
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <LandingPage />
+      <LandingPage archiveRepos={repos} />
     </>
   )
 }

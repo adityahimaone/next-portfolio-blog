@@ -73,23 +73,33 @@ next-portfolio-blog/
 - Interactive Music/Spotify integration (now playing API, magnetic music player)
 - Hardware-styled smooth scrolling anchors
 
+### Shared Archive Chrome
+
+The `/projects`, `/bookmarks` and `/blog` pages share one system, specified in [`design.md`](./design.md):
+
+- Liquid-glass material (`.glass-1` for controls, `.glass-2` for floating surfaces) — dark mode only, with a two-layer blur budget
+- `SignalArchiveHeader` with a glass transport, a record that turns only while music is actually playing, and a data-derived timeline
+- Global `prefers-reduced-motion` and `prefers-reduced-transparency` guards
+
 ### Blog
 
-- Markdown-based posts in `content/blog/` utilizing automated syntax injection
-- Real-time text Search and category Tag filtering mechanisms natively parsed
-- Featured / Pinned article segregation via optimized UI overlays (`BlogCardPinned`)
-- Reading time estimation and responsive scroll-progress UI tracking built-in
-- Interactive "Kindle Mode" / E-Ink Monochrone emulation via non-destructive CSS overlays
-- Implements optimal typographical constraints via `max-w-[65ch]` and dynamic `<code/>` highlighting logic
-- Automatic component layouts syncing intelligently with native Projects parity
+- Markdown-based posts in `content/blog/` with a shared tracklist, filter dock, and `?tag=` / `?q=` / `?sort=` shareable URLs
+- Waveform traces generated deterministically from each article's reading time
+- Transport scrub bar with elapsed/total runtime, sticky cue-sheet TOC, and a scoped "Paper" reading mode
+- LCD-tinted code blocks with a copy control, `max-w-[68ch]` measure
 - Static generation (SSG)
 
 ### Projects
 
-- Featured projects with distinct, music-themed hover effects (Spinning Vinyl `/Disc3` watermark)
-- Auto-fetched recent repos from GitHub API presented on hardware-styled mini cards with Oversized Radio watermarks
-- Tech stack tags
-- GitHub stats (stars, language)
+- Featured projects as release-shelf rows: catalogue spine, typed credits, and a record that slides out of the sleeve on hover
+- Recent GitHub pushes presented as a session-log data table
+- GitHub stats (stars, language, last push)
+
+### Bookmarks
+
+- `content/bookmarks.json` grouped into channels, rendered as a dense index of link rows
+- Single search field (⌘K) across title, description, URL, category and tags
+- Admin add/edit/delete with a login-gated modal and in-page delete confirmation
 
 ## Adding Content
 

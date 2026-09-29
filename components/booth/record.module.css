@@ -1,0 +1,68 @@
+.record {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+      circle,
+      transparent 0 4px,
+      rgba(255, 255, 255, 0.08) 4px 5px
+    ),
+    radial-gradient(
+      circle,
+      var(--record-label, var(--primary)) 0 18%,
+      #141614 18.5% 21%,
+      #1a1d1c 21.5% 100%
+    );
+  box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.7);
+}
+
+.grooves {
+  position: absolute;
+  border-radius: 50%;
+  inset: 0;
+  background: repeating-radial-gradient(
+    circle,
+    transparent 0 3px,
+    rgba(255, 255, 255, 0.04) 3px 4px
+  );
+}
+
+.label {
+  position: absolute;
+  border-radius: 50%;
+  inset: 31%;
+  overflow: hidden;
+  background: var(--record-label, var(--primary));
+}
+
+.label:empty {
+  display: none;
+}
+
+.spindle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--card, #d9d6cc);
+  transform: translate(-50%, -50%);
+}
+
+.record[data-spinning] {
+  animation: booth-spin 6s linear infinite;
+  will-change: transform;
+}
+
+@keyframes booth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .record[data-spinning] {
+    animation: none;
+  }
+}

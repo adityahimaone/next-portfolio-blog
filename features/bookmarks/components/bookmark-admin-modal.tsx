@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bookmark, BookmarkFormData } from '../types'
-import { BOOKMARK_CATEGORIES } from '../constants/categories'
+import type { Bookmark, BookmarkFormData } from '../types'
+import { CHANNEL_CATEGORIES } from '../constants/categories'
 import { extractDomain, getFaviconUrl } from '../utils/favicon'
-import { X, Lock, Key, Save, AlertCircle } from 'lucide-react'
+import { X, Lock, Save, AlertCircle } from 'lucide-react'
+import styles from '../library.module.css'
 
 interface BookmarkAdminModalProps {
   isOpen: boolean
@@ -23,13 +24,11 @@ export function BookmarkAdminModal({
   editingBookmark,
   onSaveBookmark,
 }: BookmarkAdminModalProps) {
-  // Login Form state
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
   const [isLoggingIn, setIsLoggingIn] = useState(false)
 
-  // Bookmark Form state
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
@@ -64,9 +63,8 @@ export function BookmarkAdminModal({
 
   if (!isOpen) return null
 
-  // Handle Admin Login submit
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleLoginSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
     setIsLoggingIn(true)
     setLoginError('')
 
@@ -84,15 +82,14 @@ export function BookmarkAdminModal({
         setLoginError(data.message || 'Invalid admin credentials')
       }
     } catch {
-      setLoginError('Failed to connect to authentication server')
+      setLoginError('Failed to connect to the authentication route')
     } finally {
       setIsLoggingIn(false)
     }
   }
 
-  // Handle Save / Add / Edit Bookmark submit
-  const handleSaveSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSaveSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
     if (!title.trim() || !url.trim()) {
       setFormError('Title and URL are required')
       return
@@ -102,23 +99,15 @@ export function BookmarkAdminModal({
     setFormError('')
 
     const success = await onSaveBookmark(
-      {
-        title,
-        url,
-        description,
-        category,
-        tags,
-        featured,
-        customFaviconUrl,
-      },
-      editingBookmark?.id
+      { title, url, description, category, tags, featured, customFaviconUrl },
+      editingBookmark?.id,
     )
 
     setIsSubmitting(false)
     if (success) {
       onClose()
     } else {
-      setFormError('Failed to save bookmark. Please try again.')
+      setFormError('Could not save this bookmark. Try again.')
     }
   }
 
@@ -126,219 +115,265 @@ export function BookmarkAdminModal({
   const liveFavicon = url ? getFaviconUrl(url, customFaviconUrl) : ''
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-md border border-border bg-card p-6 text-card-foreground shadow-2xl">
-        {/* Header */}
-        <div className="mb-5 flex items-center justify-between border-b border-border pb-4">
-          <div className="flex items-center gap-2">
+    <div className={styles.dialogBackdrop} role="presentation">
+      <div
+        className={`${styles.modal} glass`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bookmark-modal-title"
+      >
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle} id="bookmark-modal-title">
             {isAdmin ? (
-            <Save className="h-5 w-5 text-primary" />
+              <Save size={18} aria-hidden="true" />
             ) : (
-            <Lock className="h-5 w-5 text-primary" />
+              <Lock size={18} aria-hidden="true" />
             )}
-            <h2 className="text-lg font-extrabold text-foreground">
-              {!isAdmin
-                ? 'Admin Authorization Required'
-                : editingBookmark
-                ? 'Edit Bookmark'
-                : 'Add New Curated Bookmark'}
-            </h2>
-          </div>
+            {!isAdmin
+              ? 'Admin sign-in required'
+              : editingBookmark
+                ? 'Edit bookmark'
+                : 'Add bookmark'}
+          </h2>
           <button
+            type="button"
             onClick={onClose}
-            className="rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className={styles.modalClose}
+            aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Step 1: Login Form (If Not Authenticated) */}
         {!isAdmin ? (
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            <p className="text-xs font-medium text-muted-foreground">
-              Please enter your administrator credentials to access bookmark controls.
+          <form onSubmit={handleLoginSubmit}>
+            <p className={styles.modalHint}>
+              Enter administrator credentials to unlock bookmark controls.
             </p>
 
             {loginError && (
-              <div className="flex items-center gap-2 p-3 rounded-lg border border-red-500/50 bg-red-950/60 text-red-300 text-xs font-mono font-bold">
-                <AlertCircle className="h-4 w-4 shrink-0" />
+              <p className={styles.error}>
+                <AlertCircle size={16} aria-hidden="true" />
                 <span>{loginError}</span>
-              </div>
+              </p>
             )}
 
-            <div>
-            <label className="mb-1 block text-xs font-mono font-bold text-muted-foreground">USERNAME</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="text"
-                  required
-                  placeholder="Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full rounded-sm border border-border bg-background py-2.5 pr-3 pl-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                />
-              </div>
+            <div className={styles.field}>
+              <label
+                className={`${styles.fieldLabel} silkscreen`}
+                htmlFor="bm-user"
+              >
+                Username
+              </label>
+              <input
+                id="bm-user"
+                type="text"
+                required
+                autoComplete="username"
+                placeholder="Username"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                className={styles.input}
+              />
             </div>
 
-            <div>
-            <label className="mb-1 block text-xs font-mono font-bold text-muted-foreground">PASSWORD</label>
-              <div className="relative">
-                <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="password"
-                  required
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-sm border border-border bg-background py-2.5 pr-3 pl-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                />
-              </div>
+            <div className={styles.field}>
+              <label
+                className={`${styles.fieldLabel} silkscreen`}
+                htmlFor="bm-pass"
+              >
+                Password
+              </label>
+              <input
+                id="bm-pass"
+                type="password"
+                required
+                autoComplete="current-password"
+                placeholder="Password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className={styles.input}
+              />
             </div>
 
-            <div className="pt-2">
+            <div className={styles.modalActions}>
               <button
                 type="submit"
+                className={styles.submit}
                 disabled={isLoggingIn}
-                className="w-full rounded-sm bg-primary py-2.5 text-xs font-bold text-primary-foreground transition-all hover:bg-primary-light disabled:opacity-50"
               >
-                {isLoggingIn ? 'Authenticating...' : 'Unlock Admin Panel'}
+                {isLoggingIn ? 'Signing in…' : 'Unlock admin panel'}
               </button>
             </div>
           </form>
         ) : (
-          /* Step 2: Add/Edit Bookmark Form */
-          <form onSubmit={handleSaveSubmit} className="space-y-4">
+          <form onSubmit={handleSaveSubmit}>
             {formError && (
-              <div className="flex items-center gap-2 p-3 rounded-lg border border-red-500/50 bg-red-950/60 text-red-300 text-xs font-mono font-bold">
-                <AlertCircle className="h-4 w-4 shrink-0" />
+              <p className={styles.error}>
+                <AlertCircle size={16} aria-hidden="true" />
                 <span>{formError}</span>
-              </div>
+              </p>
             )}
 
-            {/* Live Favicon & Domain Preview Bar */}
             {url && (
-              <div className="flex items-center gap-3 rounded-sm border border-primary/40 bg-primary/10 p-3 text-xs font-mono">
-                <div className="flex h-8 w-8 items-center justify-center rounded-sm border border-border bg-background">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={liveFavicon}
-                    alt="Preview favicon"
-                    className="h-4.5 w-4.5 object-contain"
-                    onError={(e) => {
-                      ;(e.target as HTMLElement).style.display = 'none'
-                    }}
-                  />
+              <div className={styles.preview}>
+                <div className={styles.previewValue}>
+                  <div className={`${styles.previewLabel} silkscreen`}>
+                    Host
+                  </div>
+                  <div>{liveDomain}</div>
                 </div>
-                <div>
-                  <div className="font-bold text-primary">PREVIEW FAVICON & DOMAIN:</div>
-                  <div className="text-foreground">{liveDomain}</div>
-                </div>
-              </div>
-            )}
-
-            {/* Title & URL */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-mono font-bold text-muted-foreground">
-                  TITLE <span className="text-primary">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Next.js Docs"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={liveFavicon}
+                  alt=""
+                  width={24}
+                  height={24}
+                  onError={(event) => {
+                    ;(event.target as HTMLElement).style.display = 'none'
+                  }}
                 />
               </div>
+            )}
 
-              <div>
-                <label className="mb-1 block text-xs font-mono font-bold text-muted-foreground">
-                  URL <span className="text-primary">*</span>
+            <div className={styles.grid2}>
+              <div className={styles.field}>
+                <label
+                  className={`${styles.fieldLabel} silkscreen`}
+                  htmlFor="bm-title"
+                >
+                  Title
                 </label>
                 <input
+                  id="bm-title"
+                  type="text"
+                  required
+                  placeholder="Next.js docs"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.field}>
+                <label
+                  className={`${styles.fieldLabel} silkscreen`}
+                  htmlFor="bm-url"
+                >
+                  URL
+                </label>
+                <input
+                  id="bm-url"
                   type="url"
                   required
-                  placeholder="https://..."
+                  placeholder="https://…"
                   value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                  onChange={(event) => setUrl(event.target.value)}
+                  className={styles.input}
                 />
               </div>
             </div>
 
-            {/* Category & Tags */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-mono font-bold text-muted-foreground">CATEGORY</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+            <div className={styles.grid2}>
+              <div className={styles.field}>
+                <label
+                  className={`${styles.fieldLabel} silkscreen`}
+                  htmlFor="bm-category"
                 >
-                  {BOOKMARK_CATEGORIES.filter((c) => c !== 'All').map((cat) => (
+                  Channel
+                </label>
+                <select
+                  id="bm-category"
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                  className={styles.input}
+                >
+                  {CHANNEL_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>
                   ))}
                 </select>
               </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-mono font-bold text-muted-foreground">TAGS (comma separated)</label>
+              <div className={styles.field}>
+                <label
+                  className={`${styles.fieldLabel} silkscreen`}
+                  htmlFor="bm-tags"
+                >
+                  Tags
+                </label>
                 <input
+                  id="bm-tags"
                   type="text"
                   placeholder="React, Frontend, Audio"
                   value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                  onChange={(event) => setTags(event.target.value)}
+                  className={styles.input}
                 />
               </div>
             </div>
 
-            {/* Description */}
-            <div>
-              <label className="mb-1 block text-xs font-mono font-bold text-muted-foreground">DESCRIPTION</label>
+            <div className={styles.field}>
+              <label
+                className={`${styles.fieldLabel} silkscreen`}
+                htmlFor="bm-desc"
+              >
+                Description
+              </label>
               <textarea
+                id="bm-desc"
                 rows={3}
-                placeholder="Brief summary of why this resource is useful..."
+                placeholder="Why this resource is useful"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full resize-none rounded-sm border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                onChange={(event) => setDescription(event.target.value)}
+                className={styles.input}
               />
             </div>
 
-            {/* Custom Favicon URL & Featured Switch */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
-              <label className="flex cursor-pointer items-center gap-2 text-xs font-mono font-bold text-foreground">
+            <div className={styles.field}>
+              <label
+                className={`${styles.fieldLabel} silkscreen`}
+                htmlFor="bm-favicon"
+              >
+                Custom favicon URL
+              </label>
+              <input
+                id="bm-favicon"
+                type="text"
+                placeholder="Leave empty to use the host favicon"
+                value={customFaviconUrl}
+                onChange={(event) => setCustomFaviconUrl(event.target.value)}
+                className={styles.input}
+              />
+            </div>
+
+            <div className={styles.checkRow}>
+              <label className={styles.check}>
                 <input
                   type="checkbox"
                   checked={featured}
-                  onChange={(e) => setFeatured(e.target.checked)}
-                  className="rounded border-border bg-background text-primary focus:ring-0"
+                  onChange={(event) => setFeatured(event.target.checked)}
                 />
-                <span>FEATURED RESOURCE</span>
+                Featured
               </label>
 
-              <div className="flex gap-2 justify-end">
+              <div className={styles.modalActions}>
                 <button
                   type="button"
                   onClick={onClose}
-                className="rounded-sm border border-border bg-background px-4 py-2 text-xs font-bold text-muted-foreground hover:text-foreground"
+                  className={styles.ghost}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
+                  className={styles.submit}
                   disabled={isSubmitting}
-                className="rounded-sm bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:bg-primary-light disabled:opacity-50"
                 >
                   {isSubmitting
-                    ? 'Saving...'
+                    ? 'Saving…'
                     : editingBookmark
-                    ? 'Update Bookmark'
-                    : 'Save Bookmark'}
+                      ? 'Update bookmark'
+                      : 'Save bookmark'}
                 </button>
               </div>
             </div>

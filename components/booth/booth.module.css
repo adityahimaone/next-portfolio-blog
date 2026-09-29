@@ -1,0 +1,181 @@
+/* Glass Booth primitives (docs/DESIGN_BOOTH.md §3).
+   `.glass` / `.flat` come from globals.css; this module only positions them. */
+
+.room {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  background: var(--room-base);
+  pointer-events: none;
+}
+
+.wash {
+  position: absolute;
+  inset: -10%;
+  will-change: opacity;
+}
+
+.grain {
+  position: absolute;
+  inset: 0;
+  background-image: url('/noise.png');
+  background-repeat: repeat;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 90% at 50% 42%,
+    transparent 52%,
+    rgba(0, 0, 0, 0.55)
+  );
+}
+
+/* ─── Shell ──────────────────────────────────────────────────── */
+
+.shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100vh;
+  background: transparent;
+  color: var(--booth-ink);
+}
+
+.page {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  /* Clears the fixed dock (min-height 64px at bottom 1.25rem) plus breathing
+     room, so the last row is never trapped underneath it. */
+  padding: 5.5rem 1.5rem 10rem;
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding: 6rem 2.5rem 9rem;
+  }
+}
+
+/* ─── Page header (rack style) ───────────────────────────────── */
+
+.headRule {
+  width: 44px;
+  height: 2px;
+  margin-bottom: 0.9rem;
+  border-radius: 2px;
+  background: var(--primary);
+  transform-origin: left;
+  animation: rule-draw 520ms var(--booth-ease) both;
+}
+
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.eyebrow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  color: var(--primary);
+  font: var(--silkscreen);
+  animation: head-rise 620ms var(--booth-ease) 60ms both;
+}
+
+.eyebrowIndex {
+  opacity: 0.75;
+}
+
+.headTitle {
+  max-width: 18ch;
+  margin: 0.6rem 0 0;
+  color: var(--booth-ink);
+  font:
+    750 clamp(2.1rem, 5.4vw, 4rem) / 0.98 var(--font-syne),
+    sans-serif;
+  letter-spacing: -0.05em;
+  animation: head-rise 620ms var(--booth-ease) 120ms both;
+}
+
+.headSub {
+  max-width: 46ch;
+  margin: 0.9rem 0 0;
+  color: var(--booth-ink-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+  animation: head-rise 620ms var(--booth-ease) 180ms both;
+}
+
+@keyframes head-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.headRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.headHint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.4rem;
+  color: var(--booth-ink-muted);
+  font: var(--silkscreen);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+.headAction {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.95rem;
+  border-radius: var(--booth-r-control);
+  color: var(--booth-ink);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.headAction:hover {
+  color: var(--primary);
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 5rem 1rem 8.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .headRule,
+  .eyebrow,
+  .headTitle,
+  .headSub {
+    animation: none;
+  }
+}

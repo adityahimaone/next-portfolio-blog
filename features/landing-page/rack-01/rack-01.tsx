@@ -17,7 +17,7 @@ import styles from './rack-01.module.css'
 import { TangleFooter } from '@/src/components/ui/tangle-footer'
 import { TextCascade } from '@/components/motion/text-cascade'
 import { TopBar } from '@/features/layout/components/top-bar'
-import { Work } from '../work/Work'
+import { Work } from '@/components/work/work'
 import { SectionHeading } from './section-heading'
 import {
   registerSmoothScroll,
@@ -1427,34 +1427,6 @@ const STATIONS = [88.5, 94.2, 100.8, 106.5]
 const NEEDLE_POSITIONS = [8, 36, 64, 92]
 const KNOB_ROTATIONS = [0, 135, 270, 405]
 
-function ReleaseTitleHandoff() {
-  return (
-    <div className={styles.experienceWorkHandoff} aria-hidden="true">
-      <span className={styles.handoffShade} />
-      <span className={styles.handoffRibbon} />
-      <div className={styles.handoffRoute}>
-        <span>EXPERIENCE / SIDE A</span>
-        <i />
-        <span>SIDE B / WORK</span>
-      </div>
-      <div className={styles.handoffScreen}>
-        <div className={styles.handoffScreenHeader}>
-          <span>05 / PROJECT RELEASE</span>
-          <span>LIVE SIGNAL</span>
-        </div>
-        <strong>PROJECT ARCHIVE</strong>
-        <div className={styles.handoffScreenWave}>
-          {Array.from({ length: 18 }, (_, index) => <i key={index} />)}
-        </div>
-      </div>
-      <div className={styles.handoffTelemetry}>
-        <span>SIGNAL ROUTED</span>
-        <span>04—05</span>
-        <span>FRONTEND SYSTEMS / PRODUCT WORK</span>
-      </div>
-    </div>
-  )
-}
 
 function Experience({
   selected,

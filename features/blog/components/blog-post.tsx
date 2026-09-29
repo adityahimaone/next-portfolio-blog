@@ -1,244 +1,407 @@
 'use client'
 
-import React, { useState, useEffect, Suspense } from 'react'
-import { motion, useScroll, useSpring } from 'motion/react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
+import {
+  AnimatePresence,
+  motion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from 'motion/react'
+import { ChevronLeft, ChevronRight, List, X } from 'lucide-react'
 import type { BlogMeta } from '../lib/blog'
-import { BlogHeader } from './blog-header'
-import { TableOfContents } from './table-of-contents'
-import { RelatedPosts } from './related-posts'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import dynamic from 'next/dynamic'
-import { Check, Copy, BookOpen } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Cover, useDockSlot, useRoomChannel } from '@/components/booth'
+import {
+  formatRuntime,
+  getWaveformBars,
+  minutesFromReadingTime,
+} from '@/components/waveform-data'
+import { formatDate } from '@/lib/date'
+import { ViewCounter } from './view-counter'
+import { Markdown } from './markdown'
+import styles from '../releases.module.css'
 
-// Dynamic import for react-syntax-highlighter with ssr: false to reduce initial bundle size
-const SyntaxHighlighter = dynamic(
-  () => import('react-syntax-highlighter').then((mod) => mod.Prism),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="relative my-6 overflow-hidden rounded-lg border border-white/20 bg-zinc-950 shadow-xl dark:border-white/10">
-        <div className="flex items-center justify-between border-b border-white/10 bg-zinc-900/50 px-4 py-2">
-          <span className="font-mono text-xs font-medium text-zinc-400 capitalize">
-            Loading...
-          </span>
-          <button
-            className="flex h-7 w-7 items-center justify-center rounded-md bg-white/5 text-zinc-400"
-            aria-label="Copy code"
-            disabled
-          >
-            <Copy size={14} />
-          </button>
-        </div>
-        <div className="p-5 text-sm text-zinc-400 sm:text-[15px]">
-          Loading syntax highlighting...
-        </div>
-      </div>
-    ),
-  },
-)
-
-const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
-  const match = /language-(\w+)/.exec(className || '')
-  const [copied, setCopied] = useState(false)
-  const [style, setStyle] = useState<any>(null)
-
-  useEffect(() => {
-    // Dynamically load the style when component mounts
-    import('react-syntax-highlighter/dist/esm/styles/prism')
-      .then((mod) => {
-        setStyle(mod.vscDarkPlus)
-      })
-      .catch((err) => {
-        console.error('Failed to load syntax highlighter style:', err)
-      })
-  }, [])
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(String(children).replace(/\n$/, ''))
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  if (!inline && match) {
-    return (
-      <div className="group relative my-6 overflow-hidden rounded-lg border border-white/20 bg-zinc-950 shadow-xl dark:border-white/10">
-        <div className="flex items-center justify-between border-b border-white/10 bg-zinc-900/50 px-4 py-2">
-          <span className="font-mono text-xs font-medium text-zinc-400 capitalize">
-            {match[1]}
-          </span>
-          <button
-            onClick={handleCopy}
-            className="hover:bg-primary/20 hover:text-primary flex h-7 w-7 items-center justify-center rounded-md bg-white/5 text-zinc-400 transition-all active:scale-95"
-            aria-label="Copy code"
-          >
-            {copied ? (
-              <Check size={14} className="text-green-500" />
-            ) : (
-              <Copy size={14} />
-            )}
-          </button>
-        </div>
-        <SyntaxHighlighter
-          {...props}
-          style={style || {}}
-          language={match[1]}
-          PreTag="div"
-          className="!m-0 !bg-transparent text-sm sm:text-[15px]"
-          customStyle={{ padding: '1.25rem' }}
-        >
-          {String(children).replace(/\n$/, '')}
-        </SyntaxHighlighter>
-      </div>
-    )
-  }
-  return (
-    <code
-      className={cn(
-        'text-primary mx-1 rounded bg-zinc-100 px-1.5 py-0.5 text-sm font-medium dark:bg-zinc-800',
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </code>
-  )
+interface Chapter {
+  id: string
+  title: string
+  top: number
 }
+
+const COVER_HUES = [
+  '#ff5a1f',
+  '#5cd6a3',
+  '#c9a574',
+  '#9b6cff',
+  '#d9895b',
+  '#2e3f5c',
+]
 
 export function BlogPost({
   meta,
   content,
-  relatedPosts,
+  relatedPosts = [],
+  prevPost,
+  nextPost,
 }: {
   meta: BlogMeta
   content: string
   relatedPosts?: BlogMeta[]
+  prevPost?: BlogMeta
+  nextPost?: BlogMeta
 }) {
-  const [isReaderMode, setIsReaderMode] = useState(false)
-  const { scrollYProgress } = useScroll()
+  const setHue = useRoomChannel()
+  const articleRef = useRef<HTMLElement>(null)
+  const [paper, setPaper] = useState(false)
+  const [chapters, setChapters] = useState<Chapter[]>([])
+  const [progress, setProgress] = useState(0)
+  const [open, setOpen] = useState(false)
+
+  const minutes = minutesFromReadingTime(meta.readingTime)
+  const bars = useMemo(
+    () => getWaveformBars(meta.slug, 40, { minHeight: 0.25, maxHeight: 1 }),
+    [meta.slug],
+  )
 
   useEffect(() => {
-    if (isReaderMode) {
-      document.body.classList.add('e-ink-mode')
-    } else {
-      document.body.classList.remove('e-ink-mode')
-    }
-    return () => {
-      document.body.classList.remove('e-ink-mode')
-    }
-  }, [isReaderMode])
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
+    setHue(COVER_HUES[(meta.tags.length || 1) % COVER_HUES.length])
+  }, [meta.tags.length, setHue])
+
+  const { scrollYProgress } = useScroll()
+  const smooth = useSpring(scrollYProgress, {
+    stiffness: 120,
     damping: 30,
     restDelta: 0.001,
   })
+  const percent = useTransform(smooth, (value) => `${value * 100}%`)
+
+  // Chapter ticks are measured once the headings exist and ids are assigned.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const el = articleRef.current
+      if (!el) return
+
+      let h2 = 0
+      let h3 = 0
+      let lastH2 = 0
+      const next: Chapter[] = []
+
+      el.querySelectorAll('h2').forEach((node) => {
+        h2 += 1
+        h3 = 0
+        lastH2 = h2
+        const id = `chapter-${h2}`
+        node.id = id
+        next.push({
+          id,
+          title: node.textContent ?? '',
+          top: node.getBoundingClientRect().top + window.scrollY,
+        })
+      })
+
+      el.querySelectorAll('h3').forEach((node) => {
+        h3 += 1
+        const id = `chapter-${lastH2}-${h3}`
+        node.id = id
+        next.push({
+          id,
+          title: node.textContent ?? '',
+          top: node.getBoundingClientRect().top + window.scrollY,
+        })
+      })
+
+      setChapters(next)
+    }, 120)
+
+    return () => clearTimeout(timer)
+  }, [content])
+
+  // The readouts update a few times a second, not on every scroll frame.
+  useEffect(() => {
+    let last = 0
+    return smooth.on('change', (value) => {
+      const now = Date.now()
+      if (now - last < 220) return
+      last = now
+      setProgress(value)
+    })
+  }, [smooth])
+
+  useEffect(() => {
+    if (!open) return
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+  const jumpTo = useCallback((top: number) => {
+    window.scrollTo({ top, behavior: 'smooth' })
+    setOpen(false)
+  }, [])
+
+  const current = useMemo(() => {
+    let found: Chapter | null = null
+    for (const chapter of chapters) {
+      if (chapter.top - 120 <= window.scrollY + 200) found = chapter
+    }
+    return found
+  }, [chapters, progress])
+
+  useDockSlot(
+    <div className={styles.scrubber} role="group" aria-label="Reading progress">
+      {prevPost && (
+        <Link
+          href={`/blog/${prevPost.slug}`}
+          className={styles.scrubBtn}
+          aria-label="Previous note"
+        >
+          <ChevronLeft size={16} />
+        </Link>
+      )}
+
+      <div className={styles.scrubWave} aria-hidden="true">
+        {bars.map((h, i) => (
+          <span key={i} style={{ ['--h' as string]: `${h * 100}%` }} />
+        ))}
+        <motion.div className={styles.scrubFill} style={{ width: percent }}>
+          {bars.map((h, i) => (
+            <span key={i} style={{ ['--h' as string]: `${h * 100}%` }} />
+          ))}
+        </motion.div>
+        <motion.span className={styles.scrubHead} style={{ left: percent }} />
+        {chapters.map((chapter) => (
+          <button
+            key={chapter.id}
+            type="button"
+            className={styles.scrubTick}
+            style={{
+              left: `${(chapter.top / Math.max(1, document.body.scrollHeight)) * 100}%`,
+            }}
+            onClick={() => jumpTo(chapter.top)}
+            tabIndex={-1}
+            aria-label={`Jump to ${chapter.title}`}
+          />
+        ))}
+      </div>
+
+      <span className={styles.scrubMeta}>
+        {current?.title ?? 'Intro'} · {formatRuntime(progress * minutes)} /{' '}
+        {formatRuntime(minutes)}
+      </span>
+
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={styles.scrubBtn}
+        aria-label="Chapters"
+        aria-expanded={open}
+      >
+        <List size={16} />
+      </button>
+
+      {nextPost && (
+        <Link
+          href={`/blog/${nextPost.slug}`}
+          className={styles.scrubBtn}
+          aria-label="Next note"
+        >
+          <ChevronRight size={16} />
+        </Link>
+      )}
+    </div>,
+    [
+      bars,
+      chapters,
+      current,
+      meta.slug,
+      minutes,
+      nextPost,
+      open,
+      prevPost,
+      progress,
+    ],
+  )
 
   return (
     <>
-      {/* Floating Reader Mode Toggle inside a compact pod */}
-      <div className="fixed bottom-8 left-4 z-40 flex items-center gap-3 rounded-full border border-zinc-200 bg-white/50 px-4 py-2.5 shadow-lg backdrop-blur-md md:left-8 dark:border-zinc-800 dark:bg-zinc-900/50">
-        <BookOpen size={16} className="text-zinc-600 dark:text-zinc-400" />
-        <span className="mr-1 text-xs font-semibold tracking-wide text-zinc-600 uppercase dark:text-zinc-400">
-          Kindle
-        </span>
-        <button
-          onClick={() => setIsReaderMode(!isReaderMode)}
-          className={cn(
-            'focus-visible:ring-primary relative inline-flex h-[22px] w-[42px] shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-            isReaderMode
-              ? 'bg-zinc-800 dark:bg-zinc-200'
-              : 'bg-zinc-300 dark:bg-zinc-700',
-          )}
-          aria-label="Toggle Reader Mode"
-        >
-          <span className="sr-only">Use reader mode</span>
-          <span
-            aria-hidden="true"
-            className={cn(
-              'pointer-events-none inline-block h-[16px] w-[16px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out dark:bg-zinc-900',
-              isReaderMode ? 'translate-x-5' : 'translate-x-[2px]',
-            )}
-          />
-        </button>
-      </div>
-
-      {/* Reading Progress Bar */}
-      <motion.div
-        className={cn(
-          'fixed top-0 right-0 left-0 z-50 h-[3px] origin-left transition-colors delay-100 duration-700',
-          isReaderMode
-            ? 'bg-zinc-500 shadow-none dark:bg-zinc-400'
-            : 'bg-primary shadow-[0_0_10px_rgba(var(--primary),0.8)]',
-        )}
-        style={{ scaleX }}
-      />
-
-      <div className="mx-auto flex max-w-7xl gap-8 px-4 pb-20 pt-0 sm:pb-24">
-        {/* Main content */}
-        <article className="min-w-0 flex-1">
-          <div className="mx-auto max-w-[65ch]">
-            <BlogHeader meta={meta} />
-
-            <div className="prose prose-zinc prose-lg dark:prose-invert prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary dark:prose-a:text-primary-light prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed prose-p:text-zinc-700 dark:prose-p:text-zinc-300 mt-12 max-w-none">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  code: CodeBlock,
-                  p: ({ node, children }) => (
-                    <p className="mb-6 leading-relaxed">{children}</p>
-                  ),
-                  h1: ({ node, children }) => (
-                    <h1 className="mt-10 mb-6 text-3xl font-bold">{children}</h1>
-                  ),
-                  h2: ({ node, children }) => (
-                    <h2 className="mt-10 mb-4 text-2xl font-bold">{children}</h2>
-                  ),
-                  h3: ({ node, children }) => (
-                    <h3 className="mt-8 mb-4 text-xl font-bold">{children}</h3>
-                  ),
-                  ul: ({ node, children }) => (
-                    <ul className="mb-6 list-disc space-y-2 pl-6">{children}</ul>
-                  ),
-                  ol: ({ node, children }) => (
-                    <ol className="mb-6 list-decimal space-y-2 pl-6">{children}</ol>
-                  ),
-                  li: ({ node, children }) => (
-                    <li className="text-zinc-700 dark:text-zinc-300">{children}</li>
-                  ),
-                  a: ({ node, href, children }) => (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary decoration-primary/30 hover:decoration-primary font-semibold underline-offset-4 transition-colors hover:underline"
-                    >
-                      {children}
-                    </a>
-                  ),
-                  blockquote: ({ node, children }) => (
-                    <blockquote className="border-primary bg-primary/5 my-8 rounded-r-lg border-l-4 p-4 text-zinc-700 italic shadow-sm dark:text-zinc-300">
-                      {children}
-                    </blockquote>
-                  ),
-                }}
-              >
-                {content}
-              </ReactMarkdown>
+      <main className={styles.page} id="main-content">
+        <div className={styles.reader}>
+          <article
+            ref={articleRef}
+            className={`${styles.article} ${paper ? styles.paper : ''}`}
+          >
+            <div className={styles.headlineCover}>
+              <Cover
+                seed={meta.slug}
+                title={meta.title}
+                sizes="84px"
+                priority
+              />
             </div>
 
-            {/* Related Posts */}
-            {relatedPosts && relatedPosts.length > 0 && (
-              <RelatedPosts posts={relatedPosts} />
-            )}
-          </div>
-        </article>
+            <p className={styles.headlineMeta}>
+              {formatDate(meta.date, 'long')}
+              <span>·</span>
+              <span>{meta.readingTime}</span>
+              <span>·</span>
+              <ViewCounter slug={meta.slug} />
+            </p>
 
-        {/* TOC Sidebar */}
-        <aside className="hidden xl:block w-64 shrink-0">
-          <TableOfContents content={content} />
-        </aside>
-      </div>
+            <h1 className={styles.headlineTitle}>{meta.title}</h1>
+            <p className={styles.headlineDesc}>{meta.description}</p>
+
+            <div className={styles.body}>
+              <Markdown content={content} />
+            </div>
+
+            <div className={styles.leadMeta} style={{ marginTop: '1.5rem' }}>
+              <button
+                type="button"
+                onClick={() => setPaper((v) => !v)}
+                aria-pressed={paper}
+                className={styles.tag}
+              >
+                Paper mode
+              </button>
+              {meta.tags.map((tag) => (
+                <Link
+                  key={tag}
+                  href={`/blog?tag=${encodeURIComponent(tag)}`}
+                  className={styles.tag}
+                  style={{ textDecoration: 'none' }}
+                >
+                  {tag}
+                </Link>
+              ))}
+            </div>
+
+            {relatedPosts.length > 0 && (
+              <section className={styles.related}>
+                <h2 className={styles.sideTitle}>Next in the crate</h2>
+                <ul
+                  className={styles.trackList}
+                  style={{ marginTop: '0.75rem' }}
+                >
+                  {relatedPosts.map((post) => (
+                    <li key={post.slug}>
+                      <Link
+                        href={`/blog/${post.slug}`}
+                        className={styles.track}
+                      >
+                        <span className={styles.trackIndex}>→</span>
+                        <span className={styles.trackArt}>
+                          <Cover
+                            seed={post.slug}
+                            title={post.title}
+                            sizes="44px"
+                          />
+                        </span>
+                        <span className={styles.trackBody}>
+                          <span className={styles.trackTitle}>
+                            {post.title}
+                          </span>
+                          <span className={styles.trackMeta}>
+                            {formatDate(post.date)} · {post.readingTime}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </article>
+
+          {chapters.length > 0 && (
+            <nav className={`${styles.chapters} glass`} aria-label="Chapters">
+              <p className={styles.chapterTitle}>Chapters</p>
+              <ul className={styles.chapterList}>
+                {chapters.map((chapter) => (
+                  <li key={chapter.id}>
+                    <button
+                      type="button"
+                      onClick={() => jumpTo(chapter.top)}
+                      aria-current={current?.id === chapter.id || undefined}
+                      className={`${styles.chapter} ${chapter.id.includes('-') && !chapter.id.match(/^chapter-\d+$/) ? styles.chapterSub : ''}`}
+                    >
+                      {chapter.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <p className={styles.chapterFoot}>{chapters.length} chapters</p>
+            </nav>
+          )}
+
+          {chapters.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className={styles.chapterFab}
+              aria-label="Open chapters"
+            >
+              <List size={15} aria-hidden="true" />
+              {chapters.length}
+            </button>
+          )}
+        </div>
+      </main>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 70,
+                background: 'rgba(0,0,0,0.55)',
+              }}
+            />
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Chapters"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+              className={`${styles.chapterDrawer} glass`}
+            >
+              <div className={styles.chapterDrawerHead}>
+                <p className={styles.chapterTitle}>Chapters</p>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className={styles.drawerClose}
+                  aria-label="Close chapters"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <ul className={styles.chapterList}>
+                {chapters.map((chapter) => (
+                  <li key={chapter.id}>
+                    <button
+                      type="button"
+                      onClick={() => jumpTo(chapter.top)}
+                      className={styles.chapter}
+                    >
+                      {chapter.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   )
 }

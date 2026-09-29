@@ -1,12 +1,12 @@
 import {
   resolveActiveIndex,
   resolveTrackProgress,
-} from '@/features/landing-page/work/track-math'
+} from '@/components/work/track-math'
 import {
   formatProjectTime,
   trackLabel,
-  PROJECTS_SHOWCASE,
-} from '@/features/landing-page/constants'
+  WORK_PROJECTS,
+} from '@/data/projects'
 
 const COUNT = 6
 
@@ -73,20 +73,21 @@ describe('resolveTrackProgress', () => {
 })
 
 describe('trackLabel', () => {
-  it('labels each library entry with a 1-based catalog number', () => {
-    expect(PROJECTS_SHOWCASE.map((_, index) => trackLabel(index))).toEqual([
-      '01',
-      '02',
-      '03',
-      '04',
-      '05',
-      '06',
+  it('splits the library across two sides', () => {
+    expect(WORK_PROJECTS.map((_, index) => trackLabel(index))).toEqual([
+      'A1',
+      'A2',
+      'A3',
+      'B1',
+      'B2',
+      'B3',
     ])
   })
 
-  it('keeps counting past the original six releases', () => {
-    expect(trackLabel(6)).toBe('07')
-    expect(trackLabel(9)).toBe('10')
+  it('derives the side from the count, not a fixed three', () => {
+    // Eight releases put four on side A and four on side B.
+    expect(trackLabel(3, 8)).toBe('A4')
+    expect(trackLabel(7, 8)).toBe('B4')
   })
 })
 
@@ -98,11 +99,15 @@ describe('formatProjectTime', () => {
     expect(formatProjectTime(60)).toBe('1:00')
     expect(formatProjectTime(185)).toBe('3:05')
   })
+
+  it('rounds fractional seconds rather than truncating', () => {
+    expect(formatProjectTime(9.6)).toBe('0:10')
+  })
 })
 
-describe('PROJECTS_SHOWCASE work metadata', () => {
+describe('WORK_PROJECTS work metadata', () => {
   it('gives every project the fields the section renders', () => {
-    for (const project of PROJECTS_SHOWCASE) {
+    for (const project of WORK_PROJECTS) {
       expect(project.cover).toBeTruthy()
       expect(project.role).toBeTruthy()
       expect(project.stack.length).toBeGreaterThan(0)

@@ -1,0 +1,115 @@
+/* The dock: one glass capsule, the only persistent blurred surface. */
+
+.dock {
+  position: fixed;
+  z-index: 60;
+  right: 0;
+  bottom: 1.25rem;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: max-content;
+  max-width: calc(100vw - 1.5rem);
+  min-height: 64px;
+  margin-inline: auto;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--booth-r-control);
+  color: var(--booth-ink);
+}
+
+/* Progressive enhancement: real refraction, only when the hook allows it. */
+.refract {
+  -webkit-backdrop-filter: url('#glass-refract') blur(8px) saturate(1.6);
+  backdrop-filter: url('#glass-refract') blur(8px) saturate(1.6);
+}
+
+.items {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  position: relative;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--booth-ink-muted);
+  text-decoration: none;
+  transition:
+    color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease;
+}
+
+.link:hover {
+  color: var(--booth-ink);
+  background: var(--flat-fill-hover);
+}
+
+.link[data-active] {
+  color: var(--primary);
+}
+
+.activePip {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+  transform: translateX(-50%);
+}
+
+.slot {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.slotRule {
+  width: 1px;
+  height: 28px;
+  flex-shrink: 0;
+  background: var(--hairline);
+}
+
+/* On narrow screens the transport expands upward as a sheet, not sideways. */
+@media (max-width: 720px) {
+  .dock {
+    bottom: 0.75rem;
+    min-height: 56px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0.35rem 0.4rem 0.5rem;
+  }
+
+  .link {
+    width: 44px;
+    height: 44px;
+  }
+
+  .slot {
+    width: 100%;
+    justify-content: center;
+    padding-top: 0.15rem;
+  }
+
+  .slotRule {
+    display: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .dock {
+    border-color: currentColor;
+  }
+}

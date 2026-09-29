@@ -47,10 +47,23 @@ export const FEATURED_PROJECTS: FeaturedProject[] = [
     name: 'Quick Chat WhatsApp',
     slug: 'quick-chat-wa',
     githubSlug: 'QuickChatWhatsapp',
-    description:
-      'Send WhatsApp messages without saving the number first.',
+    description: 'Send WhatsApp messages without saving the number first.',
     tech: ['TypeScript'],
   },
 ]
 
-export const FEATURED_SLUGS = FEATURED_PROJECTS.map(p => p.githubSlug)
+/**
+ * Record-label colours for the shelf, applied by position: a spine only reads
+ * as a spine when neighbouring releases differ (design.md §1).
+ */
+export const RELEASE_LABELS = [
+  '#e0b75a',
+  '#7abb5e',
+  '#ff8a5e',
+  '#c9a574',
+  '#5cd6a3',
+] as const
+
+export function releaseLabel(index: number): string {
+  return RELEASE_LABELS[index % RELEASE_LABELS.length]
+}

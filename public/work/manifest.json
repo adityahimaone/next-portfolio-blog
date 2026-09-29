@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "switchyard",
+    "cover": "/work/switchyard-cover.webp",
+    "mode": "generated 1:1 (80kb)"
+  },
+  {
+    "slug": "primarindo-asia",
+    "cover": "/work/primarindo-asia-cover.webp",
+    "mode": "generated 1:1 (99kb)"
+  },
+  {
+    "slug": "habit-tracker",
+    "cover": "/work/habit-tracker-cover.webp",
+    "mode": "generated 1:1 (89kb)"
+  },
+  {
+    "slug": "seaphantom",
+    "cover": "https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/y2l1g36bjudgsf6yr0eg.webp",
+    "mode": "remote (next/image)"
+  },
+  {
+    "slug": "seaphantom-p2p",
+    "cover": "https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/fphb7ddemp4ixeutav1b.webp",
+    "mode": "remote (next/image)"
+  },
+  {
+    "slug": "labgrownbeasts",
+    "cover": "https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/mqprcb6todunicq4cg0a.webp",
+    "mode": "remote (next/image)"
+  }
+]

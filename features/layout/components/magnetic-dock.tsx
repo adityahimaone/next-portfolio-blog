@@ -56,11 +56,25 @@ function isActiveItem(href: string, pathname: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
+/**
+ * Routes the booth layout owns. Those render their own Dock, so the legacy
+ * one stands down — otherwise two fixed glass bars composite in the same
+ * corner of the viewport and each costs a backdrop-filter layer.
+ */
+const BOOTH_ROUTES = ['/projects', '/bookmarks', '/blog']
+
+function isBoothRoute(pathname: string) {
+  return BOOTH_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  )
+}
+
 export function MagneticDock() {
   const pathname = usePathname()
   const mouseX = useMotionValue(Infinity)
   const shouldReduceMotion = useReducedMotion()
 
+  if (isBoothRoute(pathname)) return null
   if (!isDockRoute(pathname)) return null
 
   const active = !shouldReduceMotion

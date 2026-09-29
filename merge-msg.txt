@@ -1,0 +1,25 @@
+Merge origin/main and keep the music-player work section
+
+Resolves the 05 section conflict. The remote had rebuilt it as a turntable at
+components/work/; this keeps that path and the surrounding Glass Booth system,
+and ports the player design into it.
+
+Conflict resolution in features/landing-page/rack-01/rack-01.tsx:
+- Work import points at components/work/work
+- keep registerSmoothScroll/unregisterSmoothScroll from the Lenis bridge
+- keep SectionHeading for the other four sections
+- drop the workStage GSAP handoff: the merged stylesheet no longer defines
+  .workStage, so the query returned null and the block was dead
+
+Kept from the remote: the Glass Booth shell, dock and control, the blog
+releases reader, the projects crate, the bookmarks library, data/projects.ts
+with real 1:1 cover assets in public/work/, and scripts/generate-work-covers.mjs.
+
+Kept from this branch: the player's Lenis-aware scroll-to, the liner-notes
+focus trap and focus restore, and the reduced-transparency fallback that no
+longer strips glass to no background.
+
+Tests updated to the shared data contract: trackLabel derives its side from
+the count rather than a fixed three, and formatProjectTime rounds.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>

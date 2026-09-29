@@ -1,7 +1,4 @@
-export { Header } from './components/header'
-export { HeaderV2 } from './components/header-v2'
 export { TopBar } from './components/top-bar'
-export { Footer } from './components/footer'
 export { SignalArchiveHeader } from './components/signal-archive'
 export { MagneticDock } from './components/magnetic-dock'
 export { FloatingThemeToggle } from './components/floating-theme-toggle'

@@ -378,12 +378,35 @@ export function Skills() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    // The backing store is sized to the device pixel ratio. At 1x the CSS
+    // width already matches, but on a 2x or 3x phone a 260px store stretched
+    // into the same 260px of layout is a permanent blur — the phosphor grid and
+    // the readouts are the only moving thing in the whole section, so it has to
+    // be sharp. The element's layout size never changes; only the store does.
+    let dpr = 1
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect()
+      const next = Math.min(window.devicePixelRatio || 1, 3)
+      const w = Math.max(1, Math.round((rect.width || 260) * next))
+      const h = Math.max(1, Math.round((rect.height || 52) * next))
+      if (canvas.width === w && canvas.height === h) return
+      dpr = next
+      canvas.width = w
+      canvas.height = h
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    }
+    resize()
+
     let animId: number
     let phase = 0
+    let observer: ResizeObserver | undefined
 
     const render = () => {
-      const width = canvas.width
-      const height = canvas.height
+      // Drawing happens in CSS pixels — the context transform above carries the
+      // device pixel ratio — so the geometry below is the same numbers it was
+      // before the store grew, just on a denser grid.
+      const width = canvas.width / dpr
+      const height = canvas.height / dpr
       ctx.clearRect(0, 0, width, height)
 
       // CRT phosphor grid
@@ -478,7 +501,19 @@ export function Skills() {
     }
 
     render()
-    return () => cancelAnimationFrame(animId)
+
+    // The wrapper is a clamp()ed width, so a rotate or a resize can change it
+    // after mount. Re-deriving the store keeps the scope sharp on the same
+    // terms as the layout.
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(() => resize())
+      observer.observe(canvas)
+    }
+
+    return () => {
+      cancelAnimationFrame(animId)
+      observer?.disconnect()
+    }
   }, [isOn, displayMode, activeFrequency, activeSkill.name, levels, pitch])
 
   return (

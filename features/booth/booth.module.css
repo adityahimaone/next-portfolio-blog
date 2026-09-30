@@ -168,7 +168,22 @@
 
 @media (max-width: 640px) {
   .page {
-    padding: 5rem 1rem 8.5rem;
+    /* The 4rem top was a desktop gutter carried over: the eyebrow, rule and
+       title already carry their own leading, so on a phone it only pushed the
+       first row below the fold. The bottom reservation stays — it is what
+       clears the dock. */
+    padding: 2.5rem 1rem 7rem;
+  }
+
+  /* A wrapped header row put the hint on its own line, and at 1.5rem of row gap
+     plus its own 0.4rem of padding that read as a second band of air between
+     the description and the first control. */
+  .headRow {
+    gap: 0.75rem;
+  }
+
+  .headHint {
+    padding-bottom: 0;
   }
 }
 

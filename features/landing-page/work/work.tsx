@@ -17,7 +17,7 @@ import {
 import { NowCentre } from './now-centre'
 import { PlayerBar } from './player-bar'
 import { PlayerBanner, PlayerChrome } from './player-chrome'
-import { useMediaQuery, useRefraction } from '@/hooks/use-media'
+import { useMediaQuery, useIsMobile, useRefraction } from '@/hooks/use-media'
 import type { GitHubRepo } from '@/features/projects/lib/github'
 import { useWorkScroll } from './use-work-scroll'
 import styles from './work.module.css'
@@ -45,15 +45,19 @@ export function Work({ archiveRepos }: { archiveRepos: GitHubRepo[] }) {
   const sectionRef = useRef<HTMLElement>(null)
   const coverButtonRef = useRef<HTMLButtonElement>(null)
   const reducedMotion = useMediaQuery(REDUCED_MOTION)
+  const isMobile = useIsMobile()
   const refract = useRefraction()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => setMounted(true), [])
 
-  // Gated on mount so a reduced-motion visitor never sees the tall scroll-driven
-  // section render and then collapse — that reflow is what the preference exists
-  // to prevent.
-  const scrollDriven = mounted && !reducedMotion
+  // On a phone the transport is driven by its own buttons rather than by page
+  // scroll. Scroll-scrubbing a ~1500px track on a touch screen meant every
+  // attempt to read the library scrolled the section instead of the list, and
+  // the device was pinned for 30 viewport-heights to change one record. So the
+  // mobile branch drops the scroll track entirely and the player becomes
+  // tap-driven; the shared layout below still measures and renders the same.
+  const scrollDriven = mounted && !reducedMotion && !isMobile
 
   const [linerId, setLinerId] = useState<number | null>(null)
   const [manualIndex, setManualIndex] = useState(0)

@@ -21,15 +21,18 @@ const GAP = 12
  * mobile layout of every site — the peek looked like a phone screenshot inside
  * a desktop-shaped box. The frame is therefore rendered at a real desktop
  * width and scaled down into the card, so the site lays out responsively for a
- * desktop and we shrink the result. The scale is derived, not hard-coded, so
- * changing CARD_WIDTH cannot leave the two out of step.
+ * desktop and we shrink the result. The scale is derived from the card's width
+ * at render time, so a card that gives up width to a narrow viewport scales
+ * with it instead of cropping the previewed page.
  */
 const PAGE_WIDTH = 1280
 
-const SCALE = CARD_WIDTH / PAGE_WIDTH
-
-/** How much of the page the window shows once scaled down. */
-const VIEW_HEIGHT = CARD_HEIGHT / SCALE
+/** The card never grows, and on a narrow window it gives up width to the
+ *  viewport rather than claiming 320px of it. The caller is gated on
+ *  `(hover: hover)`, so this is the narrow-desktop-window case, not a phone. */
+function cardWidth(): number {
+  return Math.min(CARD_WIDTH, window.innerWidth - GAP * 2)
+}
 
 /**
  * The dock is a fixed capsule at the bottom of the viewport at the same
@@ -41,29 +44,35 @@ const DOCK_CLEARANCE = 92
 interface Position {
   left: number
   top: number
+  width: number
 }
 
 /**
  * Anchors the card to the right of the row's title rather than to the row's
  * right edge: the row spans the full column, so its edge lands the card far
  * from the text the pointer is actually over.
+ *
+ * The card measures the viewport it is being placed in, so a window narrower
+ * than the card plus its margins gets a narrower card rather than one pinned
+ * to the edge and overlapping the row it describes.
  */
 function placeBeside(rect: DOMRect): Position {
   const vw = window.innerWidth
   const vh = window.innerHeight
+  const width = cardWidth()
 
-  let left = rect.left + CARD_WIDTH
-  if (left + CARD_WIDTH > vw - GAP) {
-    const flipped = rect.left - GAP - CARD_WIDTH
+  let left = rect.left + width
+  if (left + width > vw - GAP) {
+    const flipped = rect.left - GAP - width
     left = flipped >= GAP ? flipped : Math.max(GAP, rect.left)
   }
-  left = Math.min(Math.max(GAP, left), Math.max(GAP, vw - CARD_WIDTH - GAP))
+  left = Math.min(Math.max(GAP, left), Math.max(GAP, vw - width - GAP))
 
   const centred = rect.top + rect.height / 2 - CARD_HEIGHT / 2
   const lowest = vh - DOCK_CLEARANCE - CARD_HEIGHT
   const top = Math.min(Math.max(GAP, centred), Math.max(GAP, lowest))
 
-  return { left, top }
+  return { left, top, width }
 }
 
 function hostnameOf(url: string): string | null {
@@ -172,7 +181,7 @@ export function SitePeek({
   return createPortal(
     <div
       className={styles.peek}
-      style={{ left: position.left, top: position.top }}
+      style={{ left: position.left, top: position.top, width: position.width }}
       aria-hidden="true"
     >
       <div className={styles.peekWindow}>
@@ -180,8 +189,11 @@ export function SitePeek({
           className={styles.peekFrame}
           style={{
             width: PAGE_WIDTH,
-            height: VIEW_HEIGHT,
-            transform: `scale(${SCALE})`,
+            // Scale is derived from the width the card actually got, and the
+            // height is the inverse: scale * height must still equal the card's
+            // fixed 208px, or the preview either crops or letterboxes.
+            height: (CARD_HEIGHT * PAGE_WIDTH) / position.width,
+            transform: `scale(${position.width / PAGE_WIDTH})`,
           }}
           src={url}
           title={`Live preview of ${host}`}

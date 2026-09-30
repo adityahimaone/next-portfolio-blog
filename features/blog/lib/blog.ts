@@ -18,6 +18,19 @@ export type BlogMeta = {
   readingTime: string
 }
 
+/**
+ * gray-matter hands back a JS `Date` for an unquoted YAML date, which typed as
+ * `string` but rendered as `[object Object]` wherever it was interpolated —
+ * every post shipped `article:published_time="[object Object]"` and a
+ * non-string `datePublished` into its JSON-LD. Normalise once, here, so the
+ * declared type is the type callers actually get.
+ */
+function toIsoDate(value: unknown): string {
+  if (value instanceof Date) return value.toISOString()
+  if (typeof value === 'string' && value) return value
+  return new Date().toISOString()
+}
+
 function _getAllPosts(): BlogMeta[] {
   if (!fs.existsSync(BLOG_DIR)) return []
 
@@ -32,7 +45,7 @@ function _getAllPosts(): BlogMeta[] {
     return {
       title: data.title ?? slug,
       slug,
-      date: data.date ?? new Date().toISOString(),
+      date: toIsoDate(data.date),
       description: data.description ?? '',
       tags: data.tags ?? [],
       cover: data.cover,
@@ -64,7 +77,7 @@ export function getPost(slug: string) {
     meta: {
       title: data.title ?? slug,
       slug,
-      date: data.date ?? new Date().toISOString(),
+      date: toIsoDate(data.date),
       description: data.description ?? '',
       tags: data.tags ?? [],
       cover: data.cover,

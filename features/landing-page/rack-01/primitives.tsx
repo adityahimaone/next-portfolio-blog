@@ -25,8 +25,6 @@ export function VenLogo() {
     <svg
       className={styles.venLogo}
       viewBox="0 0 64 64"
-      width="96"
-      height="96"
       fill="none"
       role="img"
       aria-label="Aditya Himawan loading mark"

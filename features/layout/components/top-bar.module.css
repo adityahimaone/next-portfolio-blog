@@ -42,6 +42,20 @@
   pointer-events: none;
 }
 
+/* On phones the stage gutter is only 18px and eats the whole width budget,
+   so the bar is pulled out to the stage edges and goes full-bleed. */
+@media (max-width: 768px) {
+  .topBar {
+    margin-inline: -18px;
+    padding-inline: 16px;
+  }
+
+  .topBar::after {
+    right: 16px;
+    left: 16px;
+  }
+}
+
 .mark {
   display: grid;
   width: 32px;

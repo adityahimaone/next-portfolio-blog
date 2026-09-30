@@ -14,6 +14,7 @@ import {
 } from 'motion/react'
 import { NAV_ITEMS, isActiveNavItem } from '@/features/booth/nav-items'
 import { useInterfaceVisibility } from '@/hooks/use-hide-interface'
+import { useIsMobile } from '@/hooks/use-media'
 import { cn } from '@/lib/utils'
 
 type DockItem = (typeof NAV_ITEMS)[number]
@@ -51,6 +52,7 @@ export function MagneticDock() {
   const mouseX = useMotionValue(Infinity)
   const shouldReduceMotion = useReducedMotion()
   const interfaceVisibility = useInterfaceVisibility()
+  const isMobile = useIsMobile()
 
   if (isBoothRoute(pathname)) return null
   if (!isDockRoute(pathname)) return null
@@ -59,17 +61,22 @@ export function MagneticDock() {
   // the page still costing a compositing pass.
   if (interfaceVisibility === 'hidden') return null
 
-  const active = !shouldReduceMotion
+  // A phone has no pointer to be near, so the magnify never fires there. The
+  // dock itself still earns its place — it is the only persistent way to reach
+  // the other four routes — but it drops to a static bar at the tap floor
+  // instead of a 56px one, and the icons stop resizing.
+  const magnify = !shouldReduceMotion && !isMobile
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-center px-4">
+    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 md:bottom-5">
       <nav
         aria-label="Quick navigation"
         onMouseMove={(event) => mouseX.set(event.clientX)}
         onMouseLeave={() => mouseX.set(Infinity)}
         className={cn(
-          'dock-rise border-border bg-background/85 pointer-events-auto flex h-14 items-end gap-1.5 rounded-2xl border p-1.5',
+          'dock-rise border-border bg-background/85 pointer-events-auto flex h-[52px] items-center gap-1 rounded-2xl border p-1',
           'shadow-[0_18px_45px_-22px_rgba(0,0,0,0.6)] backdrop-blur-xl',
+          'md:h-14 md:items-end md:gap-1.5 md:p-1.5',
         )}
       >
         {NAV_ITEMS.map((item) => (
@@ -77,8 +84,9 @@ export function MagneticDock() {
             key={item.href}
             {...item}
             mouseX={mouseX}
-            magnify={active}
+            magnify={magnify}
             isActive={isActiveNavItem(item.href, pathname)}
+            compact={isMobile}
           />
         ))}
       </nav>
@@ -90,6 +98,7 @@ type DockIconProps = DockItem & {
   mouseX: MotionValue<number>
   magnify: boolean
   isActive: boolean
+  compact: boolean
 }
 
 function DockIcon({
@@ -99,6 +108,7 @@ function DockIcon({
   mouseX,
   magnify,
   isActive,
+  compact,
 }: DockIconProps) {
   const ref = useRef<HTMLAnchorElement>(null)
   const [hovered, setHovered] = useState(false)
@@ -167,8 +177,11 @@ function DockIcon({
         )}
       </AnimatePresence>
 
+      {/* The tooltip is a pointer affordance. On touch a tap fires focus, so it
+          would flash above the dock on every navigation and linger over the
+          section you just landed on. */}
       <AnimatePresence>
-        {hovered && (
+        {hovered && !compact && (
           <motion.span
             initial={{ opacity: 0, y: 6, scale: 0.94, x: '-50%' }}
             animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}

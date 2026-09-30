@@ -9,7 +9,16 @@ import {
   useTransition,
 } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { FolderSearch, Plus, RefreshCw, Shuffle, Unlock, X } from 'lucide-react'
+import {
+  ChevronDown,
+  FolderSearch,
+  Plus,
+  RefreshCw,
+  Shuffle,
+  Unlock,
+  X,
+} from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import type { Bookmark, BookmarkFormData } from '../types'
 import type { BookmarkPage } from '../lib/bookmarks'
 import { PAGE_SIZE } from '../lib/bookmarks'
@@ -20,6 +29,7 @@ import { FaviconCell } from '../components/favicon-cell'
 import { TrackRow } from '../components/track-row'
 import { BookmarkAdminModal } from '../components/bookmark-admin-modal'
 import { useListKeys, useGlobalShortcuts } from '../hooks/use-list-keys'
+import { useIsMobile } from '@/hooks/use-media'
 import styles from '../library.module.css'
 
 // The crate's own wash. It matches the /bookmarks entry in the booth layout so
@@ -45,6 +55,15 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
   const [editing, setEditing] = useState<Bookmark | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Bookmark | null>(null)
   const [status, setStatus] = useState('')
+
+  // Below 1024px the vertical playlist panel gives way to a sheet behind a
+  // trigger in the filter row. Above it, the panel stays and the trigger is
+  // never rendered — so there is exactly one channel list on screen at a time,
+  // not the two the old markup showed side by side under 1024px.
+  const isMobile = useIsMobile()
+  const [isChannelSheetOpen, setIsChannelSheetOpen] = useState(false)
+  const channelSheetTriggerRef = useRef<HTMLButtonElement>(null)
+  const channelSheetRef = useRef<HTMLDivElement>(null)
 
   // The filters live in the URL, so a filtered view stays shareable and the
   // back button steps through it the way it does on /blog.
@@ -161,6 +180,43 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [deleteTarget, isAdminOpen])
+
+  // The channel sheet is a modal surface, so it owns Escape and returns focus
+  // to the control that opened it. Focus moves in on open so a keyboard or
+  // screen-reader user lands inside the list rather than behind it.
+  useEffect(() => {
+    if (!isChannelSheetOpen) return
+
+    channelSheetRef.current?.focus()
+    const trigger = channelSheetTriggerRef.current
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsChannelSheetOpen(false)
+        trigger?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      trigger?.focus()
+    }
+  }, [isChannelSheetOpen])
+
+  // The channel sheet is a modal layer, and the dock is not: the dock sits at
+  // z-index 60 under the sheet's z-index 70 backdrop, so it was being dimmed
+  // rather than dismissed, leaving a dead capsule on top of the dim that a tap
+  // could land on and route out of an open dialog. A body attribute is what
+  // lets two unrelated component trees agree on one modal's state, and the
+  // attribute is cleared on unmount so a closed sheet cannot strand it.
+  useEffect(() => {
+    if (!isChannelSheetOpen) return
+
+    document.body.dataset.channelSheet = 'open'
+    return () => {
+      delete document.body.dataset.channelSheet
+    }
+  }, [isChannelSheetOpen])
 
   // The sidebar lists every channel that holds rows, each with the count it
   // holds in total. Those counts come from the server over the whole catalogue,
@@ -572,6 +628,32 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
               )}
             </div>
 
+            {/* The full channel list, with the counts the desktop panel
+                carries, behind one control. Its own row rather than a control
+                inside the search field, which at 360px is already down to ~230px
+                of text. Not rendered at all from 1024px up, where the panel
+                itself is on screen. */}
+            {isMobile && (
+              <button
+                ref={channelSheetTriggerRef}
+                type="button"
+                onClick={() => setIsChannelSheetOpen(true)}
+                className={styles.channelTrigger}
+                aria-haspopup="dialog"
+                aria-expanded={isChannelSheetOpen}
+              >
+                <span className={styles.channelTriggerName}>
+                  {channel === 'All' ? 'All channels' : channel}
+                </span>
+                <span className={styles.channelTriggerCount}>
+                  {channel === 'All'
+                    ? page.totalAll
+                    : (counts.get(channel) ?? 0)}
+                </span>
+                <ChevronDown size={15} aria-hidden="true" />
+              </button>
+            )}
+
             {status && (
               <p className={styles.status} role="status" aria-live="polite">
                 {status}
@@ -723,6 +805,84 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
           </div>
         </div>
       )}
+
+      {/* The channel list as a bottom sheet, for widths where the desktop panel
+          is not on screen. Same list, same counts, same LEDs and same
+          updateParams call the panel makes — the panel is a different frame
+          around one list, not a different list.
+
+          Gated on isMobile as well as on the open flag: a rotate or a resize
+          across the breakpoint must not strand a dialog above a panel that is
+          already back on screen. The flag is left set, so rotating back brings
+          the sheet straight up again. */}
+      <AnimatePresence>
+        {isChannelSheetOpen && isMobile && (
+          <>
+            <motion.div
+              className={styles.channelSheetBackdrop}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsChannelSheetOpen(false)}
+              role="presentation"
+            />
+            <motion.div
+              ref={channelSheetRef}
+              className={`${styles.channelSheet} glass`}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="channel-sheet-title"
+              tabIndex={-1}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+            >
+              <div className={styles.channelSheetHead}>
+                <p
+                  id="channel-sheet-title"
+                  className={styles.channelSheetTitle}
+                >
+                  Channels
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsChannelSheetOpen(false)}
+                  className={styles.channelSheetClose}
+                  aria-label="Close channels"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className={styles.channelSheetList}>
+                {channels.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    aria-pressed={channel === name}
+                    onClick={() => {
+                      updateParams({ category: name })
+                      setIsChannelSheetOpen(false)
+                    }}
+                    className={styles.playlist}
+                    style={{
+                      ['--led' as string]:
+                        name === 'All' ? DEFAULT_HUE : channelColor(name),
+                    }}
+                  >
+                    <span className={styles.playlistLed} aria-hidden="true" />
+                    <span className={styles.playlistName}>{name}</span>
+                    <span className={styles.playlistCount}>
+                      {name === 'All' ? page.totalAll : (counts.get(name) ?? 0)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   )
 }

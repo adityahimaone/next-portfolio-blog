@@ -1,4 +1,4 @@
-import { WEBSITE_URL } from './constants'
+import { DEFAULT_ARTICLE_IMAGE, WEBSITE_URL } from './constants'
 
 /**
  * JSON-LD for the list routes.
@@ -57,6 +57,14 @@ export function itemList({
 /**
  * A single blog post.
  *
+ * `image` is required, not optional. Article rich results are ineligible
+ * without it, and no post sets a `cover` in frontmatter, so the `...(image ?)`
+ * guard this used to have never once fired — every post was declaring a
+ * BlogPosting with no image at all while the sibling `opengraph-image.tsx`
+ * rendered a perfectly good one for the OG tag. The two disagreed, and the
+ * graph is the one a crawler reads. Callers can pass a real cover; anything
+ * omitted falls back to the site-level article image.
+ *
  * `wordCount` is deliberately absent — nothing here reads the post body to
  * count it, and guessing a number for a field Google may use to judge article
  * depth is worse than omitting it.
@@ -83,14 +91,53 @@ export function blogPosting({
     description,
     datePublished,
     ...(tags.length ? { keywords: tags.join(', ') } : {}),
-    ...(image ? { image } : {}),
+    // Never omit this — see the note above on why the old guard was wrong.
+    image: image ?? DEFAULT_ARTICLE_IMAGE,
     author: {
       '@type': 'Person',
       name: 'Aditya Himawan',
       url: WEBSITE_URL,
     },
+    publisher: {
+      '@type': 'Person',
+      name: 'Aditya Himawan',
+      url: WEBSITE_URL,
+      image: `${WEBSITE_URL}/memoji-1.png`,
+    },
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     inLanguage: 'en',
+  }
+}
+
+/**
+ * The site itself, as its own entity.
+ *
+ * Without this the `Person` on the home page stands alone with nothing naming
+ * the site it belongs to, so a crawler had no `sitename` to attach to the
+ * domain. `potentialAction` describes the `/blog` search, which already exists.
+ */
+export function webSite(): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'adityahimaone',
+    alternateName: 'Aditya Himawan',
+    url: WEBSITE_URL,
+    inLanguage: 'en',
+    publisher: {
+      '@type': 'Person',
+      name: 'Aditya Himawan',
+      url: WEBSITE_URL,
+      image: `${WEBSITE_URL}/memoji-1.png`,
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${WEBSITE_URL}/blog?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
   }
 }
 

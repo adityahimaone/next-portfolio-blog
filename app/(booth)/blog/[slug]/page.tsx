@@ -28,8 +28,12 @@ export async function generateMetadata({
       description: meta.description,
       url,
       type: 'article',
+      // `meta.date` was a raw gray-matter `Date`, so this shipped
+      // `article:published_time="[object Object]"` on every post. blog.ts now
+      // normalises it to an ISO string.
       publishedTime: meta.date,
       tags: meta.tags,
+      authors: ['https://x.com/adityahimaone'],
       // No post sets `cover` in frontmatter, so this guard never fired and no
       // per-post image was ever declared here. The sibling
       // `opengraph-image.tsx` supplies one by convention instead.
@@ -64,6 +68,9 @@ export default async function Page({
     datePublished: meta.date,
     url,
     tags: meta.tags,
+    // No post sets a cover, so this was always undefined and the builder
+    // emitted a BlogPosting with no image — ineligible for Article rich
+    // results. The builder now falls back to a stable site image.
     image: meta.cover,
   })
 

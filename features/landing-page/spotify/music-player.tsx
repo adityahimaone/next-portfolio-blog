@@ -6,6 +6,7 @@ import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
 import { Slider } from '@/components/ui/slider'
 import { useAudio } from '@/features/landing-page/spotify/audio-context'
 import useClickOutside from '@/hooks/use-click-outside'
+import { useIsMobile } from '@/hooks/use-media'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
@@ -18,11 +19,39 @@ export function MusicPlayer() {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
+  const isMobile = useIsMobile()
 
   const isBlogPost = pathname.startsWith('/blog/') && pathname !== '/blog'
   const isMusicPage = pathname.startsWith('/music')
+  // The work module is a full client of its own: it carries a chrome row, a
+  // banner transport and a player bar with the same play and previous/next
+  // controls. The floating widget is fixed to the viewport and knows nothing
+  // about that section, so wherever the two coexist the widget lands on top of
+  // the chrome or the banner. Inside the section the module's own transport is
+  // the one that matches what is playing, so the widget stands down.
+  const [workInView, setWorkInView] = useState(false)
+  // A phone has no hover, so the volume slider, spectrum and mute button are
+  // unreachable — the only thing the widget offers there is a play toggle, at
+  // a 64px chassis that a thumb lands on by accident while scrolling. The
+  // booth routes get a bottom dock it would also collide with.
   const shouldRenderPlayer =
-    isVisible && !(isBlogPost && !isPlaying) && !isMusicPage
+    isVisible &&
+    !workInView &&
+    !(isBlogPost && !isPlaying) &&
+    !isMusicPage &&
+    !isMobile
+
+  useEffect(() => {
+    const work = document.getElementById('work')
+    if (!work) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setWorkInView(entry.isIntersecting),
+      { threshold: 0 },
+    )
+    observer.observe(work)
+    return () => observer.disconnect()
+  }, [])
 
   useClickOutside(containerRef, () => {
     setIsHovered(false)

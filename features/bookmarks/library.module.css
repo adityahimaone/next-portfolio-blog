@@ -17,10 +17,41 @@
   }
 }
 
+/* The dock wraps to two rows below 720px, so the reservation shrinks with it.
+   The 767px ceiling rather than 640px is deliberate: between the two the page
+   would have kept its 10rem reservation *and* picked up the footer's, which is
+   the stacking this is here to avoid. The footer that follows gives up its
+   half, so these two sum to one reservation rather than two. */
+@media (max-width: 767px) {
+  .page {
+    /* Matches the trim on /projects and /blog: the 4rem top gutter only pushed
+       the eyebrow below the fold on a phone. */
+    padding: 2.5rem 1rem 5.5rem;
+  }
+}
+
 .library {
   display: grid;
+  /* The single column below 1024px was implicit, which means it is sized by
+     its widest child rather than by the container. The chip row carries 24
+     channels of `white-space: nowrap`, so the column resolved to 2222px on a
+     360px screen and dragged the whole document out to that width — the
+     channel filter's own scroller never engaged because its parent was the
+     thing that had grown. minmax(0, 1fr) caps the column at the container and
+     hands the overflow back to .scroller, which is already overflow-x: auto. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 2.5rem;
   padding-top: 3rem;
+}
+
+/* The 3rem of leading belongs to a header that reads as a band of its own. On
+   a phone the header is already tight against the trimmed page padding, and the
+   grid gap below it compounds into a single tall gap before the first control. */
+@media (max-width: 767px) {
+  .library {
+    gap: 1.5rem;
+    padding-top: 1.5rem;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -154,6 +185,164 @@
   .chipRow {
     display: none;
   }
+}
+
+/* Below 1024px the panel and the chip row are two renderings of one filter,
+   and the panel was the wrong one to keep: twenty-four stacked buttons above
+   the search box, pushing the first result roughly a thousand pixels down. The
+   chip row stays as the glanceable filter, and the full list with its counts
+   moves into the sheet the trigger below opens. */
+@media (max-width: 1023px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+/* Below 1024px the sidebar, the chip row and the sheet's own list are three
+   renderings of one filter. The trigger is the only one that can be reached
+   without a horizontal swipe across twenty-four nowrap chips — a scroller the
+   reader cannot see has more than it has on screen — so on a phone it is the
+   one that stays and the chip row stands down.
+
+   Capped at 768px, not the 1024px the sidebar uses: the trigger is gated on
+   `useIsMobile()`, so between 769 and 1023 the chip row is still the only
+   filter on the page and hiding it there would leave none. */
+@media (max-width: 768px) {
+  .chipRow {
+    display: none;
+  }
+
+  /* The chip row used to sit between these two and carry the gap. With it gone
+     the search field and the trigger were separated by two stacked margins
+     that now read as one dead band, so the space is given back to the rhythm
+     below rather than left hanging above the results. */
+  .searchWrap {
+    margin-bottom: 0.75rem;
+  }
+
+  .channelTrigger {
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* The trigger stands in for the panel's title row. */
+.channelTrigger {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--booth-r-control);
+  background: var(--flat-fill);
+  color: var(--booth-ink);
+  font: var(--silkscreen);
+  text-align: left;
+  transition: background-color var(--dur-fast) ease;
+}
+
+.channelTrigger:hover {
+  background: var(--flat-fill-hover);
+}
+
+.channelTrigger:active {
+  transform: scale(0.99);
+}
+
+.channelTrigger:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.channelTriggerName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channelTriggerCount {
+  color: var(--booth-ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Channel sheet ────────────────────────────────────────────── */
+
+/* The second of the two permitted blurred surfaces, and only while it is open
+   — the dock is the other. Rows inside are flat, as everywhere else. */
+.channelSheetBackdrop {
+  position: fixed;
+  z-index: 70;
+  inset: 0;
+  background: color-mix(in srgb, #0b0c0b 52%, transparent);
+}
+
+.channelSheet {
+  position: fixed;
+  z-index: 71;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  /* Capped rather than full height: the list is twenty-four rows, and a sheet
+     that reaches the top of the screen stops reading as a sheet. */
+  max-height: 72svh;
+  padding: 0.5rem 0.9rem calc(0.9rem + env(safe-area-inset-bottom));
+  border-radius: var(--booth-r-panel) var(--booth-r-panel) 0 0;
+  color: var(--booth-ink);
+  /* The list scrolls; the page behind must not, or a flick past the end of the
+     list scrolls the library out from under the sheet. */
+  overscroll-behavior: contain;
+}
+
+.channelSheet:focus-visible {
+  outline: none;
+}
+
+.channelSheetHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.15rem 0.7rem;
+}
+
+.channelSheetTitle {
+  color: var(--booth-ink-muted);
+  font: var(--silkscreen);
+}
+
+.channelSheetClose {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--booth-r-control);
+  background: transparent;
+  color: var(--booth-ink);
+}
+
+.channelSheetClose:hover {
+  background: var(--flat-fill-hover);
+}
+
+.channelSheetClose:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.channelSheetList {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0.2rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .chip {
@@ -348,6 +537,24 @@
 .searchClear:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* The field reserves 2.6rem on each side for the search glyph and the clear
+   button. On a 360px screen that is ~230px of actual text, which cuts the
+   placeholder mid-word. Below 480px the reservations come in to 2rem and the
+   glyph moves with them. */
+@media (max-width: 480px) {
+  .search {
+    padding: 0 2rem;
+  }
+
+  .searchIcon {
+    left: 0.6rem;
+  }
+
+  .searchClear {
+    right: 0.35rem;
+  }
 }
 
 /* ─── Track rows ─────────────────────────────────────────────── */
@@ -848,6 +1055,9 @@
 .peek {
   position: fixed;
   z-index: 60;
+  /* Width is set inline from the measured viewport, so the card can give up
+     width on a narrow window instead of claiming 320px of a 360px screen.
+     Height stays fixed, and the frame's scale is derived from that width. */
   width: 320px;
   height: 208px;
   overflow: hidden;
@@ -963,13 +1173,35 @@
   }
 }
 
-@media (max-width: 720px) {
+/* The row's five tracks carry 74px of fixed columns, a 7rem (112px) host
+   column and 40px of gaps — 226px of chrome before the name gets a single
+   pixel. That fits a 360px phone but not comfortably, and this block used to
+   start at 720px, so between 720 and 768 the host column was still there and
+   the name was squeezed to an ellipsis on the narrow tablets and large phones
+   that the booth shell already treats as mobile at 768. Aligned to 767. */
+@media (max-width: 767px) {
+  /* Three columns, not four: the host and the trailing affordance both go,
+     so the name runs to the row's right edge. */
   .track {
-    grid-template-columns: 22px 28px minmax(0, 1fr) 16px;
+    grid-template-columns: 22px 28px minmax(0, 1fr);
     gap: 0.6rem;
   }
 
   .host {
+    display: none;
+  }
+
+  /* The last column was a decorative arrow for readers and an edit/delete pair
+     for the admin. Neither is reachable by hover on touch, and the arrow
+     spends a 16px track plus 0.6rem of gap to say nothing.
+
+     The admin pair is hidden rather than resized because it is `opacity: 0`
+     until focus-within: a 32px-wide pair of invisible tap targets is worse
+     than no targets, because the reader taps, nothing appears, and the row
+     navigates instead. Admin edits are a desktop activity, and the row is not
+     the place to reach them from a phone. */
+  .arrow,
+  .rowActions {
     display: none;
   }
 }
@@ -987,8 +1219,14 @@
 
 .modal {
   width: min(34rem, 100%);
-  max-height: calc(100vh - 3rem);
+  /* dvh, not vh: on a phone the vh unit is the height with the browser chrome
+     retracted, so a vh-based cap lets the bottom of the dialog sit under the
+     toolbar and under the dock. */
+  max-height: calc(100dvh - 3rem);
   overflow-y: auto;
+  /* A flick that runs past the end of a dialog should not scroll the page
+     behind it. */
+  overscroll-behavior: contain;
   padding: 1.5rem;
   color: var(--booth-ink);
 }
@@ -1047,6 +1285,24 @@
 
 @media (min-width: 620px) {
   .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The admin modal's paired fields — title with URL, channel with tags — ask
+   for a two-column pair on a wide screen and a stacked one on a phone. That
+   rule lived in bookmarks.module.css, which nothing imports, so
+   `styles.grid2` resolved to undefined and the pairs rendered as bare block
+   stacks at every width. */
+.grid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+@media (min-width: 620px) {
+  .grid2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1200,4 +1456,23 @@ textarea.input {
   --favicon-fallback-size: 22px;
   --favicon-filter: none;
   --favicon-opacity: 1;
+}
+
+/* ─── Phones: the dialogs stop paying for a margin they cannot spare ──
+   The backdrop reserves 1.5rem on every side before the dialog is even sized,
+   so a 360x640 phone gives the dialog 552px of height and 312px of width, and
+   the dialog then spends another 1.5rem of that on its own padding. Below
+   480px both come in, and the dialog runs to the bottom edge the way a phone
+   dialog should. */
+@media (max-width: 480px) {
+  .dialogBackdrop {
+    align-items: end;
+    padding: 0.75rem;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 1.5rem);
+    padding: 1.1rem;
+    border-radius: var(--booth-r-panel) var(--booth-r-panel) 0 0;
+  }
 }

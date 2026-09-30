@@ -16,12 +16,34 @@
   }
 }
 
+/* This file never had a small-screen reservation, so a phone kept the desktop
+   10rem *and* the footer's 8rem — the deepest empty floor of the three booth
+   routes. The dock wraps to two rows below 720px, so the capsule is shorter
+   here anyway; the footer gives up its own half, so these sum to one. */
+@media (max-width: 767px) {
+  .page {
+    /* Same top-gutter trim as the other two booth routes: 4rem on a phone only
+       pushed the eyebrow below the fold, since the header brings its own
+       leading. The bottom is what clears the dock and stays. */
+    padding: 2.5rem 1rem 5.5rem;
+  }
+}
+
 .releases {
+  /* Capped at the container. As an implicit single column it was sized by its
+     widest child, and the lead panel's own two-column grid contributed to that,
+     so the section measured wider than the page on a phone. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   padding-top: 3rem;
 }
 
 .lead {
   display: grid;
+  /* Same cap as .releases: the artwork and the copy are two grid items, and an
+     uncapped 1fr column resolves to their max-content rather than to the
+     panel's own width. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.75rem;
   /* The side heading below owns the gap to the tracklist, so the lead keeps no
      margin of its own and cannot double it. */
@@ -39,6 +61,15 @@
   }
 }
 
+/* Compact on phones. Stacked, the lead was 475px tall: a 130px cover on its own
+   row, then the copy, with 24px of panel padding and a 28px row gap around
+   both. The cover only needs to be a landmark, so it shrinks and the copy keeps
+   the rest of the width; the padding tightens to match the page's own 1rem
+   gutter instead of adding another 24px inside it.
+
+   The rules themselves live further down, after the base `.leadArt` they
+   override — see the note there. */
+
 .leadArt {
   position: relative;
   width: clamp(130px, 18vw, 190px);
@@ -46,6 +77,37 @@
   box-shadow:
     0 18px 44px -18px rgba(0, 0, 0, 0.7),
     inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+/* The phone override for the two rules above has to come *after* them. Placed
+   up beside the `.lead` fork it was silently lost to the base `.leadArt` width
+   on source order, which left a 260px cover overlapping the copy. */
+@media (max-width: 819px) {
+  .lead {
+    grid-template-columns: 92px minmax(0, 1fr);
+    align-items: start;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .leadArt {
+    width: 92px;
+  }
+
+  .leadTitle {
+    margin-top: 0.35rem;
+    font-size: clamp(1.125rem, 4.9vw, 1.4rem);
+  }
+
+  .leadDesc {
+    margin-top: 0.45rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .leadMeta {
+    margin-top: 0.7rem;
+  }
 }
 
 .leadKicker {
@@ -260,8 +322,16 @@
 }
 
 .trackTitle {
-  /* Same grid-item default as .leadTitle: without min-width:0 the track is
-     measured at its content width and pushes the row wider than the list. */
+  /* `display: block` is what actually makes the ellipsis work here, and it
+     was missing. This is a <span>, so it computed to `display: inline` — and
+     overflow/text-overflow have no effect on an inline box, so the title was
+     measured at its full 752px and pushed the row out past the viewport. The
+     min-width: 0 alongside it is a no-op on a non-flex/grid item, which is why
+     adding it earlier did not fix the overflow.
+
+     display: block matches .trackBody, which the markup already relies on for
+     the same reason. */
+  display: block;
   min-width: 0;
   color: var(--booth-ink);
   font:
@@ -453,6 +523,9 @@
     750 clamp(2rem, 4.4vw, 2.9rem) / 1.05 var(--font-syne),
     sans-serif;
   letter-spacing: -0.045em;
+  /* Syne at -0.045em tracking leaves an unbalanced last line at narrow
+     measures, where a long title wraps to three lines and strands a word. */
+  text-wrap: balance;
 }
 
 .headlineDesc {
@@ -471,6 +544,9 @@
 
 .body p {
   margin: 0 0 1.4rem;
+  /* Keeps a single orphan word off the end of a paragraph. The reader is
+     narrower here than the measure asks for, so it matters more than usual. */
+  text-wrap: pretty;
 }
 
 .body h2,
@@ -552,6 +628,54 @@
   font-size: 0.9em;
 }
 
+/* GFM gives us tables and images, and neither had a rule here — they were
+   written once in blog.module.css, which nothing imports. An unstyled image
+   rendered at its intrinsic width and pushed the 68ch measure out of the
+   article; an unstyled table did the same, with no container to scroll. */
+.body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--booth-r-panel);
+}
+
+.body table {
+  width: 100%;
+  margin: 1.6rem 0;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.body th,
+.body td {
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+}
+
+.body th {
+  color: var(--booth-ink);
+  font: var(--silkscreen);
+}
+
+/* A table is the one block wider than the measure on a phone, so it becomes
+   its own scroll container rather than stretching the article. display:block
+   is what lets a table scroll at all; the cells keep their intrinsic widths
+   and the wrapper clips to the measure. */
+@media (max-width: 720px) {
+  .body table {
+    display: block;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .body th,
+  .body td {
+    padding: 0.5rem 0.6rem;
+    white-space: nowrap;
+  }
+}
+
 /* ─── Code: the LCD family ───────────────────────────────────── */
 
 .codeShell {
@@ -596,6 +720,11 @@
 
 .codeBody {
   overflow-x: auto;
+  /* Without this, a horizontal drag inside the code block is read as the
+     browser's back-swipe: the gesture belongs to the page's vertical scroll
+     and the block's horizontal one competes with it. */
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 1.1rem 1.15rem;
   color: #e6e6e6;
   font-family: var(--font-geist-mono), monospace;
@@ -859,7 +988,12 @@
 
 @media (max-width: 720px) {
   .scrubMeta {
-    max-width: 40vw;
+    /* Same call as the projects transport, for the same reason: the scrubber
+       is a chapter readout beside the previous/play/next controls, and on a
+       phone the text is the part that cannot be acted on. Hidden rather than
+       capped, so the capsule gives up a whole row instead of rendering an
+       ellipsis into space the nav icons need. */
+    display: none;
   }
 }
 
@@ -883,6 +1017,11 @@
   background: #1a1a1a;
 }
 
+/* The five-column row carries 34px + 44px + 58px of fixed tracks, a
+   clamp(70px, 12vw, 130px) waveform and four 0.9rem gaps — 263px of chrome
+   before the title. Collapsed to four columns here, and the waveform goes
+   with it: it is aria-hidden decoration, and the reading time it visualises is
+   still in the row's own runtime column at this width. */
 @media (max-width: 900px) {
   .track {
     grid-template-columns: 30px 40px minmax(0, 1fr) 52px;
@@ -891,6 +1030,30 @@
 
   .wave {
     display: none;
+  }
+}
+
+/* Four columns still cost 30 + 40 + 52 = 122px of fixed tracks plus 29px of
+   gaps, which is 151px before the title on a 360px screen. The reading time
+   is already in the lead panel and in the row's own title attribute, and it
+   is the only column that is pure metadata — so below 768 the row is three
+   columns and the title runs to the edge. */
+@media (max-width: 767px) {
+  .track {
+    grid-template-columns: 26px 38px minmax(0, 1fr);
+  }
+
+  .runtime {
+    display: none;
+  }
+
+  /* The search field's 12rem floor is 192px, so on a 360px screen the filter
+     row cannot hold it beside the sort control and wraps — pushing the tags
+     onto a third line. Dropping the floor lets the field take the full measure
+     instead, and the placeholder stops being clipped mid-word. */
+  .searchWrap {
+    min-width: 0;
+    flex-basis: 100%;
   }
 }
 

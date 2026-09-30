@@ -730,48 +730,6 @@ export function useRackAnimations({
             )
         }
 
-        media.add('(max-width: 768px)', () => {
-          gsap
-            .timeline({
-              scrollTrigger: {
-                trigger: `.${styles.experienceWorkHandoff}`,
-                start: 'top 88%',
-                end: 'bottom 28%',
-                scrub: 0.75,
-              },
-              defaults: { ease: 'none' },
-            })
-            .to(
-              `.${styles.experienceContent}`,
-              { opacity: 0.2, scale: 0.99, duration: 0.3 },
-              0,
-            )
-            .fromTo(
-              `.${styles.handoffShade}`,
-              { opacity: 0 },
-              { opacity: 1, duration: 0.2 },
-              0.08,
-            )
-            .fromTo(
-              `.${styles.handoffRibbon}`,
-              {
-                scaleX: 0,
-                scaleY: 1,
-                opacity: 0,
-                transformOrigin: '0% 50%',
-              },
-              { scaleX: 1, opacity: 1, duration: 0.3 },
-              0.1,
-            )
-            .to(`.${styles.handoffRibbon}`, { scaleY: 4, duration: 0.12 }, 0.42)
-            .fromTo(
-              `.${styles.handoffScreen}`,
-              { clipPath: 'inset(100% 0 0 0)', opacity: 0 },
-              { clipPath: 'inset(0% 0 0 0)', opacity: 1, duration: 0.24 },
-              0.58,
-            )
-        })
-
         return () => media.revert()
       }, rootRef)
     }

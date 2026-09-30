@@ -19,6 +19,17 @@
   }
 }
 
+/* The footer closes every booth route, so the .page above it has already
+   reserved the dock's height — this second reservation stacked on the first
+   and left a phone with 264px of empty floor below the last row. The page owns
+   the clearance; this keeps just enough that the copyright baseline clears the
+   capsule rather than sitting under it. */
+@media (max-width: 767px) {
+  .footer {
+    padding: 1rem 1.5rem 2rem;
+  }
+}
+
 .inner {
   display: grid;
   gap: 2.5rem;

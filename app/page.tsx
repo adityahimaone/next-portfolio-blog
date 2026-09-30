@@ -1,12 +1,17 @@
 import { getRepos } from '@/features/projects/lib/github'
 import { LandingPage } from '@/features/landing-page'
+import { JsonLd, webSite } from '@/lib/structured-data'
+import { WEBSITE_URL } from '@/lib/constants'
 
 export default async function Home() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Person',
     name: 'Aditya Himawan',
-    url: 'https://adityahimaone.space',
+    url: WEBSITE_URL,
+    // Without an `image` a Person entity has nothing for a knowledge panel to
+    // show, and the site already has a public avatar to point at.
+    image: `${WEBSITE_URL}/memoji-1.png`,
     jobTitle: 'Frontend Engineer',
     email: 'adityahimaone@gmail.com',
     address: {
@@ -36,6 +41,7 @@ export default async function Home() {
     sameAs: [
       'https://github.com/adityahimaone',
       'https://linkedin.com/in/adityahimaone',
+      'https://x.com/adityahimaone',
     ],
   }
 
@@ -49,10 +55,10 @@ export default async function Home() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {/* `JsonLd` escapes `<` before the payload reaches the script tag; the
+          inline script this replaced did not. */}
+      <JsonLd data={jsonLd} />
+      <JsonLd data={webSite()} />
       <LandingPage archiveRepos={repos} />
     </>
   )

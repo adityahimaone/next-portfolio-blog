@@ -1121,61 +1121,55 @@
 
 @media (max-width: 860px) {
   .stage {
+    /* No longer a scroll track on a phone — `scrollDriven` is off at this width,
+       so the section has no extra height to scrub through and nothing to pin.
+       The device sits in normal flow at its natural size. */
     position: static;
     height: auto;
     min-height: 0;
     overflow: visible;
+    padding-bottom: 0;
   }
 
   .shell {
-    /* Must clear the desktop cap, or the stacked layout gets clipped. */
     height: auto;
     overflow: visible;
+    /* Every row sized by its content, so nothing parks a slack band under the
+       player bar. */
+    grid-template-rows: auto auto auto auto;
   }
 
   .columns {
     grid-template-columns: 1fr;
+    min-height: 0;
   }
 
-  /* Stacks so the heading and banner each get the full width instead of
-     competing for it. */
-  .bannerRow {
-    grid-template-columns: 1fr;
-    gap: clamp(10px, 2vw, 16px);
+  /* The transport is tap-driven here, so the list is not a scrub cursor and
+     scrolling it would fight the page. Show it whole, capped, and scroll only
+     inside the list itself. */
+  .sidebar {
+    max-height: 46svh;
+    overflow: hidden;
   }
 
-  .chrome {
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  .libraryList {
+    max-height: 40svh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
-  /* Tabs are the first thing to become useless at this width. */
-  .tabs {
-    display: none;
+  /* Breathing room around the transport so the art and the controls are not
+     pressed against the device edges. */
+  .playerBar {
+    margin-top: clamp(10px, 3svh, 20px);
+    margin-bottom: clamp(10px, 3svh, 20px);
+    padding-block: clamp(9px, 2.4svh, 14px);
   }
 
-  .centre {
-    grid-template-rows: auto auto;
-  }
-
-  /* Rows are `auto` here, so `height: 100%` on the art has nothing to resolve
-     against. Pin a definite size for the stacked layout instead. */
-  .centreArtWrap {
-    height: auto;
-  }
-
-  .centreArt {
-    width: auto;
-    height: auto;
-    max-height: none;
-  }
-
-  .centreTop {
-    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
-  }
-
-  .lyricStage {
-    padding-block: clamp(20px, 4vw, 34px);
-  }
+  /* NOTE: `.chrome`, `.tabs`, `.bannerRow` and `.centre` are forked at the end
+     of this file instead, because their base rules are declared after this
+     block and would otherwise win on source order. */
 
   .playerBar {
     grid-template-columns: 1fr;
@@ -1188,20 +1182,6 @@
 }
 
 @media (max-width: 620px) {
-  .centreTop {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
-  }
-
-  /* Width-driven at this size: the stacked column has no band height to
-     measure, so the viewport width is what bounds the art. */
-  .centreArt {
-    width: min(56vw, 240px);
-    height: auto;
-    max-width: none;
-  }
-
   .lyricLine {
     text-align: center;
   }
@@ -1693,3 +1673,48 @@
   outline: 2px solid var(--work-accent);
   outline-offset: 2px;
 }
+
+/* ─── Mobile, restated after the base rules ────────────────
+   The base `.chrome`, `.tabs` and `.bannerRow` rules are declared *below* the
+   first `max-width: 860px` block in this file. Same specificity, so source
+   order decides and the base rules were silently winning — which is why the
+   mobile forks below never took effect. These restatements live at the end of
+   the sheet so they actually apply. Keep any mobile fork for these selectors
+   here rather than in the earlier block. */
+@media (max-width: 860px) {
+  /* Six pieces on one row is the collision: window controls and disc are
+     fixed-width, tabs claim the slack, and chromeActions is fixed-width, so the
+     search field collapses and its icon overlaps its neighbours. */
+  .chrome {
+    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-auto-flow: row;
+    align-items: center;
+    gap: 8px 10px;
+    padding-bottom: 8px;
+  }
+  .tabs {
+    display: none;
+  }
+  .chrome .searchWrap {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .chrome .chromeActions {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .bannerRow {
+    grid-template-columns: 1fr;
+    grid-auto-flow: row;
+    gap: clamp(10px, 2vw, 16px);
+  }
+
+  /* A desktop-sized client stacked is taller than the section is useful for,
+     and the lyric stage is the tallest part of it. */
+  .centre {
+    display: none;
+  }
+}
+

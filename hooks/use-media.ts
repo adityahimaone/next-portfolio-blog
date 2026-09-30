@@ -35,6 +35,19 @@ export function useReducedMotion(): boolean {
   return useMediaQuery('(prefers-reduced-motion: reduce)')
 }
 
+/**
+ * The one breakpoint the features branch on in JS. It matches the
+ * `max-width: 768px` blocks the booth and rack modules already ship, so the
+ * imperative forks and the stylesheet never disagree about where "mobile"
+ * starts. Styling still belongs in the modules; this is for the cases a
+ * stylesheet cannot express, like swapping a sidebar for a sheet.
+ */
+export const MOBILE_MQ = '(max-width: 768px)'
+
+export function useIsMobile(): boolean {
+  return useMediaQuery(MOBILE_MQ)
+}
+
 let refractionCache: boolean | null = null
 
 /**

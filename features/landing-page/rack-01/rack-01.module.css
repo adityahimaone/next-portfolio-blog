@@ -1992,6 +1992,12 @@
   background: #0b0d0c;
   color: #f4f0e8;
   --footer-gap: clamp(30px, 5vw, 68px);
+  /* The lead connector spans from the panel's edge to the band. Its height is
+     measured up from the band, so it has to cover the gap *plus* whatever
+     padding `.footerDeck` adds below the panel — a value that differs per
+     breakpoint (48px on desktop, 0 on a phone) and so cannot be guessed here.
+     It is restated inside the deck's own mobile fork, which is the only rule
+     that knows the number. */
   gap: 0;
 }
 .footer::before {
@@ -2031,10 +2037,6 @@
 @media (max-width: 768px) {
   .footer {
     margin-top: 72px;
-  }
-
-  .footerTangle {
-    height: 220px !important;
   }
 
   .pitchControls {
@@ -4928,6 +4930,12 @@
     radial-gradient(120% 80% at 12% 0, rgba(255, 255, 255, 0.62), transparent 44%),
     radial-gradient(100% 90% at 88% 100%, rgba(255, 191, 170, 0.18), transparent 58%),
     linear-gradient(145deg, rgba(235, 231, 222, 0.76), rgba(201, 197, 188, 0.62));
+  /* The gradients above are all translucent, so the deck composited against
+     whatever happened to be behind it — the tan band on desktop, the skills
+     room on a phone, where the stage is `overflow: visible` and the section
+     has no z-index. The device read as a sheet of glass rather than a chassis.
+     An opaque base under the gradients is what makes it a solid object. */
+  background-color: #d5d1c8;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.86),
     inset 0 -18px 30px -24px rgba(255, 210, 230, 0.48),
@@ -4954,6 +4962,7 @@
   background:
     radial-gradient(120% 90% at 18% 5%, rgba(255, 255, 255, 0.38), transparent 46%),
     rgba(42, 48, 43, 0.78);
+  background-color: #2c302b;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.44),
     0 5px 12px -9px rgba(15, 23, 42, 0.52);
@@ -4970,6 +4979,7 @@
   background:
     radial-gradient(120% 90% at 12% 2%, rgba(255, 255, 255, 0.52), transparent 40%),
     linear-gradient(145deg, rgba(235, 231, 222, 0.55), rgba(201, 197, 188, 0.38));
+  background-color: #d2cec5;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.78),
     inset 0 -12px 24px -20px rgba(255, 210, 230, 0.44),
@@ -4983,6 +4993,7 @@
   background:
     radial-gradient(120% 90% at 18% 8%, rgba(255, 255, 255, 0.28), transparent 48%),
     rgba(137, 139, 132, 0.46);
+  background-color: #8e9089;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.58),
     inset 0 2px 7px rgba(0, 0, 0, 0.2),
@@ -5007,6 +5018,10 @@
   background:
     radial-gradient(120% 90% at 18% 5%, rgba(255, 255, 255, 0.3), transparent 46%),
     rgba(255, 255, 255, 0.14);
+  /* A 0.14-alpha fill over a 0.76-alpha deck over an unknown backdrop: three
+     translucent layers stacked, so the panel the dial sits on had no floor and
+     the page read straight through it on a phone. */
+  background-color: #c4c1b9;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.46),
     inset 0 -8px 16px -14px rgba(255, 210, 230, 0.38),
@@ -5019,6 +5034,7 @@
   padding: 4px 3px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.11);
+  background-color: #b8b5ad;
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.18);
 }
 
@@ -5038,6 +5054,7 @@
   background:
     radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.12), transparent 34%),
     rgba(17, 20, 18, 0.78);
+  background-color: #121513;
   backdrop-filter: blur(8px) saturate(1.35);
   -webkit-backdrop-filter: blur(8px) saturate(1.35);
 }
@@ -7258,7 +7275,11 @@
   .footer {
     align-items: flex-start;
     flex-direction: column;
-    gap: 12px;
+    /* No gap. This column already spaces itself with `--footer-gap` on
+       `.footerSignal`, and a row gap here silently added to it — so the band
+       sat 12px further from the panel than the connector was drawn, leaving the
+       lead's top 12px short of the panel it is meant to leave. */
+    gap: 0;
     margin-top: 0;
   }/* ── Mobile Navigation (Section Dropdown Trigger + Direct Route Links) ── */
   .transportStatus {
@@ -7856,10 +7877,27 @@
   font-size: 7px;
 }
 .contactPerformanceArea {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) 42px;
-  gap: clamp(10px, 2vw, 18px);
-  align-items: stretch;
+  display: block;
+}
+/* Both rails are fixed-position controls rather than columns of the pad grid, so
+   they dock under it in one row instead of eating a 42px gutter each beside
+   sixteen pads — on a phone that gutter was a third of the grid's width. */
+.contactModeRailDocks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(8px, 1.6vw, 16px);
+  margin-top: clamp(8px, 1.4vw, 14px);
+}
+.contactModeRailDocks .contactModeRail {
+  flex-direction: row;
+  align-items: center;
+}
+.contactModeRailDocks .contactModeRail > span {
+  display: flex;
+  margin-top: 0;
+  align-items: center;
 }
 .contactModeRail {
   display: flex;
@@ -7896,6 +7934,7 @@
 .contactPadGrid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(8px, 1.5vw, 13px);
+  padding-inline: clamp(8px, 1.4vw, 16px);
 }
 .contactPad {
   aspect-ratio: 1;
@@ -8006,16 +8045,25 @@
     display: none;
   }
   .contactPerformanceArea {
-    grid-template-columns: 34px minmax(0, 1fr) 34px;
-    gap: 7px;
+    display: block;
+  }
+  .contactModeRailDocks {
+    /* Both rails in a row is 76px of buttons plus two labels; below ~360px that
+       overflows, so they stack instead. */
+    justify-content: center;
+    gap: 10px;
   }
   .contactModeRail button,
   .contactModeRail a {
     width: 34px;
     min-height: 38px;
   }
+  /* Two columns, not four. This block used to re-widen the grid to four,
+     silently overriding the earlier 2-column rule in the same media query and
+     leaving sixteen pads at ~57px each with their labels at the 8px floor. The
+     column count now stays where the earlier rule put it; only the gutter is
+     tightened here. */
   .contactPadGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
   }
   .contactPad {
@@ -8027,11 +8075,13 @@
   .contactPad small {
     display: none;
   }
+  /* Silkscreen is machine-printed data, so the size is the machine's floor —
+     12px, not 8. Two columns leave room for it. */
   .contactPad strong {
-    font-size: clamp(8px, 2.7vw, 12px);
+    font-size: 12px;
   }
   .contactDeckNote {
-    margin-inline: 40px;
+    margin-inline: 1.5rem;
     line-height: 1.45;
   }
 }/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4 *//* Hero redesign: the device wall supplies the identity; the interface stays quiet. */
@@ -9100,19 +9150,31 @@
   }
 
   .heroEditorialPanel .heroActions {
-    width: fit-content;
-    justify-self: start;
+    width: 100%;
+    justify-self: stretch;
     justify-content: flex-start;
-    align-items: center;
+    align-items: stretch;
+    flex-direction: row;
+    gap: 8px;
   }
   .heroEditorialPanel .primaryButton,
   .heroEditorialPanel .heroResumeLink {
-    width: fit-content !important;
-    max-width: 100%;
+    flex: 1 1 0;
+    width: 50% !important;
+    max-width: 50%;
     margin-inline: 0 !important;
+    min-height: 46px;
+    padding-inline: 12px;
+    gap: 6px;
+    justify-content: space-between;
   }
+  .heroEditorialPanel .primaryButton > span,
   .heroEditorialPanel .heroResumeLink {
-    justify-content: flex-start;
+    white-space: nowrap;
+  }
+  .heroEditorialPanel .primaryButton > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }/* Scroll choreography for the Skills instrument. */
 .skillsSequenceActive {
@@ -9157,14 +9219,6 @@
   will-change: transform, opacity;
 }
 
-.experienceWorkHandoff {
-  position: absolute;
-  z-index: 3;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
 .archiveEjectProxy {
   position: fixed !important;
   z-index: 100 !important;
@@ -9178,36 +9232,6 @@
 .archiveEjectProxy.cassetteActive,
 .archiveEjectProxy .cassetteActive {
   transform: none;
-}
-
-.handoffShade {
-  position: absolute;
-  inset: 0;
-  background-color: rgba(13, 15, 13, 0.72);
-  background-image: radial-gradient(
-    circle,
-    rgba(244, 240, 232, 0.16) 1px,
-    transparent 1.5px
-  );
-  background-position: 0 0;
-  background-size: 18px 18px;
-  opacity: 0;
-}
-
-.handoffRibbon {
-  position: absolute;
-  z-index: 3;
-  top: 50%;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  margin-top: -1.5px;
-  background: var(--signal-orange);
-  box-shadow: 0 0 14px rgba(255, 90, 31, 0.45);
-  border-radius: 0%;
-  opacity: 0;
-  will-change: transform, border-radius, opacity;
-  transform-origin: 0% 50%;
 }
 
 .handoffDisc {
@@ -9711,11 +9735,13 @@
   justify-self: end;
 }
 
-@media (min-width: 769px) {
-  .experience {
-    position: relative;
-    z-index: 2;
-  }
+/* The deck is a physical object, so it has to sit above the band it stands
+   on at every width — not just above 768px. The mobile stage is
+   `overflow: visible`, so without this the deck's glass composites directly
+   over the skills room behind it. */
+.experience {
+  position: relative;
+  z-index: 2;
 }
 
 @media (max-width: 768px) {
@@ -9726,14 +9752,6 @@
 
   .experienceContent {
     will-change: auto;
-  }
-
-  .experienceWorkHandoff {
-    position: relative;
-    width: calc(100% + 40px);
-    height: clamp(280px, 62svh, 440px);
-    margin: 72px -20px -90px;
-    background: #c8a474;
   }
 
   .handoffEditorial {
@@ -9768,8 +9786,10 @@
     margin-top: 56px;
   }
 
+  /* Mobile only, and only while the band itself is hidden above — a height on a
+     display:none element is inert, but leaving it here would resurrect the band
+     the moment the hide is ever scoped down. */
   .root .footerTangle {
-    height: clamp(180px, 50vw, 350px) !important;
     margin-top: 12px;
   }
 }
@@ -9783,24 +9803,6 @@
     opacity: 1 !important;
     transform: none !important;
     will-change: auto;
-  }
-
-  .experienceWorkHandoff {
-    position: relative;
-    width: calc(100% + (2 * clamp(20px, 5vw, 78px)));
-    height: clamp(220px, 34vw, 340px);
-    margin: 64px calc(clamp(20px, 5vw, 78px) * -1)
-      calc(clamp(40px, 5vw, 78px) * -1);
-    background: #0d0f0d;
-  }
-
-  .handoffShade,
-  .handoffEditorial {
-    opacity: 1 !important;
-  }
-
-  .handoffRibbon {
-    display: none;
   }
 
   .handoffDisc {
@@ -10680,13 +10682,16 @@
 }/* ─────────────────────────────────────────────────────────────
    FOOTER OUTPUT UNIT — a rack device driving the signal tangle
    ───────────────────────────────────────────────────────────── */
+/* The tangle band used to close the foot of the page, so the deck's flush
+   bottom now needs the breathing room it was borrowing. */
 .footerDeck {
   position: relative;
   z-index: 2;
   width: 100%;
   max-width: 1240px;
   margin: 0 auto;
-  padding: clamp(28px, 3.6vw, 48px) clamp(20px, 5vw, 78px) 0;
+  padding: clamp(28px, 3.6vw, 48px) clamp(20px, 5vw, 78px)
+    clamp(28px, 3.6vw, 48px);
 }
 
 .footerPanel {
@@ -10822,6 +10827,12 @@
   position: relative;
   z-index: 1;
   margin-top: var(--footer-gap);
+  /* Distance from the band back to the panel's own edge. The lead is measured
+     up from here, so it has to cross this as well as the gap — without it the
+     line stops at the deck's padding and reads as floating clear of the panel.
+     The deck is a sibling, so its padding is mirrored here rather than
+     inherited; the mobile fork at the end of this file sets the phone value. */
+  --footer-inset: clamp(28px, 3.6vw, 48px);
 }
 
 .footerLead {
@@ -10830,7 +10841,9 @@
   top: 0;
   left: 50%;
   width: 1px;
-  height: var(--footer-gap);
+  /* The line spans the gap *and* the inset back to the panel's edge, so it
+     actually connects the two rather than stopping short of the panel. */
+  height: calc(var(--footer-gap) + var(--footer-inset));
   transform: translate(-50%, -100%);
   background: linear-gradient(
     to bottom,
@@ -10857,16 +10870,32 @@
     padding: 26px 18px 0;
   }
 
+  /* Stacked and centred, but tightened: three stacked bands plus a fixed dock
+     is the whole viewport, and at 22px of panel padding the back-to-top control
+     ended up underneath the dock rather than above it. The gaps are what shrink,
+     not the type. */
   .footerPanel {
     grid-template-columns: 1fr;
     justify-items: center;
-    gap: 20px;
-    padding: 22px 18px;
+    gap: 12px;
+    padding: 16px 18px;
     text-align: center;
+  }
+
+  .footerBrand {
+    gap: 4px;
   }
 
   .footerControls {
     justify-self: center;
+    margin-top: 2px;
+  }
+
+  /* Clear the fixed dock: 52px docked, up to 24px of float plus its own height
+     when the compact capsule is showing. The tangle band now closes the page
+     below this, so the reservation is the dock's alone. */
+  .footer {
+    padding-bottom: clamp(64px, 10svh, 84px);
   }
 }
 
@@ -11292,8 +11321,20 @@
     linear-gradient(180deg, rgb(11 13 12 / 0.06), rgb(11 13 12 / 0.14));
 }
 
+/* The handoff reads as printed-on-paper at every breakpoint, so the ink and
+   the plate it sits on are both pinned: --chassis-hi flips to graphite in dark
+   mode and would swallow dark ink, and --room-ink is light in both themes. */
 .heroAboutHandoff {
-  color: var(--room-ink);
+  color: #101211;
+}
+.heroAboutHandoff::before {
+  background:
+    linear-gradient(90deg, rgba(29, 30, 28, 0.035) 1px, transparent 1px) 0 0 /
+      28px 28px,
+    #f4f0e8;
+}
+.heroAboutHandoff span {
+  color: #5e625c;
 }
 
 /* The viewfinder is camera chrome drawn on cream; it needs light ink. */
@@ -11522,3 +11563,222 @@
     var(--band-grid),
     var(--band-tan);
 }
+
+/* ─── Phones: the console stops pretending to be a console ───────────────
+   Everything below lives in a max-width: 768px block and overrides nothing
+   above 768px, so the desktop rack is untouched.
+
+   The rack is hardware drawn in CSS, and on a 390px screen some of that
+   hardware stops being legible or tappable no matter how it is scaled. Two
+   things earn their place on a phone and two do not:
+
+     kept and repaired — the encoder bank, the fader bank, the contact pad
+     grid. They are legible, and the pads carry the only outbound links on the
+     page, so they have to stay tappable.
+
+     hidden — the fourteen-key bed and the eight-lane arrangement timeline.
+     At 360px a key is 23px wide against a 44px tap-target floor, and the bed's
+     own pitch controls are already display:none at this width, so it is a row
+     of dead buttons. The timeline holds a min-height of 540px and an 82px track
+     header: 540px of scroll to show an arrangement nobody can read. The copy
+     in both sections already carries the content.
+   */
+
+@media (max-width: 768px) {
+  /* Faders: four vertical range inputs across 360px is ~68px each, and the
+     silkscreen labels sit at 7px. Two columns give the label room to be the
+     machine's 12px floor and lift each fader's travel above the tap floor. */
+  .faderBank > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 150px;
+  }
+
+  /* 7px is below every legibility floor. The two-column grid above is what
+     buys the room for the machine's 12px. */
+  .faderBank label {
+    font-size: 12px;
+  }
+
+  /* Encoders are already two-up; only the 23px row gap needs to come down so
+     the two 42px knobs and their scales have room to breathe. */
+  .encoderBank > div {
+    gap: 16px 8px;
+  }
+
+  .encoderBank .knob {
+    width: 52px;
+    height: 52px;
+  }
+
+  .encoderBank .knobScale {
+    width: 60px;
+    height: 60px;
+  }
+
+  /* Fourteen keys, 23px apiece, with the pitch controls already hidden by the
+     max-width: 420px block above. Nothing left to play. */
+  .keyboardBed {
+    display: none;
+  }
+
+  /* 540px of 360px-wide arrangement. The About copy stands on its own. */
+  .timelinePanel {
+    display: none;
+  }
+
+  /* width: 100vw includes the scrollbar gutter, which is the classic cause of
+     a one-column horizontal scroll on a phone. The dock spans the viewport for
+     us already. */
+  .transportDocked {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* 100.4mm resolves to ~379px, which can out-rank the percentage branch
+     between roughly 420px and 500px of viewport. Keep the millimetre sizing
+     above the phone range and let the percentage take the narrow end. */
+  .cassette {
+    width: 92%;
+  }
+
+  /* The radio: at 360px the deck is a single column with a 180px speaker, a
+     130px grille and a 230px carousel stacked under a 145px tuner, and the
+     deck itself has no floor to sit on. Two changes make it read as one
+     object rather than a pile of panes: the speaker drops to a short band and
+     the carousel shrinks, which together take ~120px off the section, and
+     the whole device gets an opaque chassis so the skills room behind it is
+     no longer part of the picture.
+
+     Scoped through .experience because the base rules at the top of the file
+     are written that way, and an unscoped `.radioSpeaker` here would lose on
+     specificity and never apply. */
+  .experience .radioSpeaker {
+    min-height: 132px;
+  }
+
+  .experience .speakerGrille {
+    width: 104px;
+  }
+
+  .experience .radioLevel {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    height: 16px;
+  }
+
+  .experience .tapeCarousel {
+    height: 190px;
+    min-height: 190px;
+  }
+
+  /* The carry handle comes back on phones. It was hidden because a 52%-wide
+     grip scaled to a 360px chassis read as a stray tab, not a handle — so it is
+     kept but tightened to 44%, and the grip bar is given a second mount at each
+     end so the silhouette closes rather than floating above the case. */
+  .experience .radioHandle {
+    display: block;
+    top: -24px;
+    width: 44%;
+    height: 28px;
+    border-width: 5px;
+    border-bottom-width: 0;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .experience .radioHandle span {
+    inset: 4px 8px auto;
+    height: 6px;
+  }
+
+  /* 100vw includes the scrollbar gutter, so it can measure wider than the
+     visible column and produce a one-column horizontal scroll on a phone. */
+  .controller {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* The "SKILLS" backdrop is nowrap decorative type clipped by its stage. At
+     the 420px clamp it still cut mid-glyph, so the floor drops. */
+  .skillsBackdrop {
+    font-size: clamp(72px, 22vw, 120px);
+  }
+
+  /* The stage stops being a sticky viewport-height box on phones and becomes
+     plain document flow. Absolute positioning then anchors the type to the foot
+     of the section, where it sits *behind* the controller and ghosts through its
+     translucent body — which is what "in the controller" looked like. Re-enter it
+     into the flow and place it last, so it reads as a caption closing the
+     section rather than a label buried inside the device. */
+  .skillsStage {
+    display: flex;
+    flex-direction: column;
+  }
+  .skillsIntro {
+    order: 0;
+  }
+  .controller {
+    order: 1;
+  }
+  .skillsBackdrop {
+    position: static;
+    order: 2;
+    margin: clamp(10px, 3vh, 22px) 0 0;
+  }
+}
+
+/* The 768px block above only changes the track header, which buys the ruler a
+   little room but does nothing for the eight lanes themselves. Between 769px
+   and 1100px the arrangement is a strip no wider than the About copy, so the
+   panel gives up its fixed 540px height and takes the height its tracks need.
+   Above 1100px it is a room, not a strip, and stays exactly as designed. */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .timelinePanel {
+    --timeline-header-w: 72px;
+    min-height: 0;
+  }
+}
+
+/* ─── Footer tangle, restated after the base rules ───────────
+   `.footerSignal` and `.footerTangle` are declared around line 2023 and 10848,
+   *after* every mobile fork for them, so at equal specificity the base rules
+   kept winning. That is why the band could not be given a mobile height or a
+   stretch: the values were being discarded on source order rather than
+   conflicting. This block is last so it actually applies. */
+@media (max-width: 768px) {
+  .footerSignal {
+    display: block;
+    /* `--footer-gap` is 30-68px and belongs to the desktop composition. The
+       lead is a connector that spans this gap exactly, so the two must read
+       from one value or the line stops short and the band looks unattached.
+       Declared here, on the element that owns both the margin and the lead's
+       height, so they cannot drift apart. */
+    --footer-gap: clamp(30px, 9vw, 48px);
+    margin-top: var(--footer-gap);
+    /* `.footer` is a flex column, so this wrapper is a flex item sized by its
+       content — and the band's content is an SVG the component only renders once
+       it has measured a non-zero width. With no width, no SVG, and the flex item
+       collapsing to 0px forever. Stretching breaks the circular dependency by
+       taking the width from the container instead of from itself. */
+    align-self: stretch;
+    width: 100%;
+  }
+
+  .footerTangle {
+    display: block !important;
+    width: 100%;
+    /* No forced height: the component derives the band from its own width, and
+       pinning one here would re-crop the semicircle it is meant to fit. */
+    margin-top: 0;
+  }
+
+  /* Reaches from the band's top edge back to the panel's bottom edge. On a
+     phone the deck's bottom padding is 0, so the panel's edge *is* the deck's
+     edge and the inset is nothing — the panel's own 16px sits inside its box
+     and is already counted. Desktop's inset is the deck's 48px, declared on
+     `.footerSignal` above. */
+  .footerSignal {
+    --footer-inset: 0px;
+  }
+}
+

@@ -318,25 +318,6 @@ export function Contact() {
         </div>
 
         <div className={styles.contactPerformanceArea}>
-          <div className={styles.contactModeRail}>
-            <button
-              type="button"
-              aria-pressed={bank === 'A'}
-              aria-label="Use bank A"
-              onClick={() => setBank('A')}
-            >
-              A
-            </button>
-            <button
-              type="button"
-              aria-pressed={bank === 'B'}
-              aria-label="Use bank B"
-              onClick={() => setBank('B')}
-            >
-              B
-            </button>
-            <span>Bank</span>
-          </div>
           <div className={styles.contactPadGrid}>
             {CONTACT_PADS.map((pad, index) => {
               const content = (
@@ -385,6 +366,27 @@ export function Contact() {
                 </button>
               )
             })}
+          </div>
+        </div>
+        <div className={styles.contactModeRailDocks}>
+          <div className={styles.contactModeRail}>
+            <button
+              type="button"
+              aria-pressed={bank === 'A'}
+              aria-label="Use bank A"
+              onClick={() => setBank('A')}
+            >
+              A
+            </button>
+            <button
+              type="button"
+              aria-pressed={bank === 'B'}
+              aria-label="Use bank B"
+              onClick={() => setBank('B')}
+            >
+              B
+            </button>
+            <span>Bank</span>
           </div>
           <div className={styles.contactModeRail}>
             <a href={`mailto:${EMAIL}`} aria-label="Email Aditya">

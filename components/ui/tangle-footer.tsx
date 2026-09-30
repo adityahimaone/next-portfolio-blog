@@ -217,7 +217,20 @@ export function TangleFooter({
     return () => io.disconnect()
   }, [])
 
-  const bandHeight = height ?? (width > 0 ? width / 2 : 0)
+  /*
+   * The rings are drawn as full circles centred on the band's bottom edge, so
+   * only the upper semicircle is ever meant to show. When a caller pins a height
+   * shorter than the rings' own diameter, `preserveAspectRatio="xMidYMax slice"`
+   * scales the drawing until it covers the box and crops the sides — which is
+   * what turned a 190px band into a few enormous clipped arcs.
+   *
+   * So a capped band derives its own height from the width instead of honouring
+   * the requested one: the nest keeps its `width / 2` proportion, the semicircle
+   * fits, and nothing is cropped. Desktop still passes an explicit height and is
+   * untouched.
+   */
+  const capBand = height != null && height > 0 && width > 0 && width / 2 < height
+  const bandHeight = capBand ? Math.round(width / 2) : (height ?? (width > 0 ? width / 2 : 0))
   const rings = useMemo(
     () =>
       width > 0 && bandHeight > 0
@@ -246,6 +259,8 @@ export function TangleFooter({
       style={{
         background,
         height: bandHeight > 0 ? bandHeight : undefined,
+        // Only claimed when the height was not supplied; a derived band already
+        // carries its own proportion and must not be re-sliced on top of it.
         aspectRatio: height == null ? '2 / 1' : undefined,
       }}
     >

@@ -6,6 +6,9 @@ set -e
 
 APP_DIR="/home/adityahimaone/apps/next-portfolio-blog"
 LOG_FILE="$HOME/portfolio-deploy.log"
+# This project installs with pnpm (pnpm-lock.yaml is the real lockfile).
+# Running `npm ci` here fails outright against the stale package-lock.json.
+PKG_MANAGER="pnpm"
 ROLLBACK_DIR="$HOME/portfolio-rollback"
 TELEGRAM_BOT_TOKEN="$1"  # passed from GitHub Actions
 TELEGRAM_CHAT_ID="$2"    # passed from GitHub Actions
@@ -143,19 +146,19 @@ fi
 
 # ── Install dependencies ────────────────────────────────────────────────────
 log "Installing dependencies..."
-npm ci
+$PKG_MANAGER install --frozen-lockfile
 
 # ── Build ───────────────────────────────────────────────────────────────────
 log "Building Next.js app..."
-if ! npm run build; then
+if ! $PKG_MANAGER run build; then
     log "❌ Build failed! Initiating rollback..."
     send_telegram "🚨 *Deploy Failed - Build Error*\nCommit: \`$NEW_COMMIT\`\nRolling back to \`$CURRENT_COMMIT\`"
 
     # Rollback
     git reset --hard "$CURRENT_COMMIT"
-    npm ci
-    npm run build
-    pm2 reload portfolio-blog
+    $PKG_MANAGER install --frozen-lockfile
+    $PKG_MANAGER run build
+    pm2 reload ecosystem.config.js --only portfolio-blog --update-env
     log "✓ Rollback completed"
     send_telegram "✅ *Rollback Complete*\nRestored to \`$CURRENT_COMMIT\`"
     exit 1
@@ -172,11 +175,21 @@ fi
 
 # ── Restart PM2 ─────────────────────────────────────────────────────────────
 log "Reloading PM2 process (zero-downtime)..."
-pm2 reload portfolio-blog
+pm2 reload ecosystem.config.js --only portfolio-blog --update-env
 
 # ── Post-deploy health check ────────────────────────────────────────────────
-sleep 3
-HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" http://127.0.0.1:3000)
+# Retry: on a cold start Next needs a moment to bind the port, and a single
+# failed probe here would trigger a pointless rollback.
+HTTP_CODE="000"
+for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    HTTP_CODE=$(curl -s -o /dev/null -m 10 -w "%{http_code}" http://127.0.0.1:3000 || echo "000")
+    if [[ "$HTTP_CODE" =~ ^2 ]]; then
+        break
+    fi
+    log "Health check attempt ${attempt}/10 -> HTTP ${HTTP_CODE}, retrying in 3s..."
+    sleep 3
+done
+
 if [[ "$HTTP_CODE" =~ ^2 ]]; then
     log "✅ Deploy SUCCESS - Portfolio responding (HTTP $HTTP_CODE)"
     send_telegram "✅ *Portfolio Deploy Success*\nCommit: \`$NEW_COMMIT\`\nHTTP Status: $HTTP_CODE\nURL: https://adityahimaone.space"
@@ -186,9 +199,9 @@ else
 
     # Rollback
     git reset --hard "$CURRENT_COMMIT"
-    npm ci
-    npm run build
-    pm2 reload portfolio-blog
+    $PKG_MANAGER install --frozen-lockfile
+    $PKG_MANAGER run build
+    pm2 reload ecosystem.config.js --only portfolio-blog --update-env
     log "✓ Rollback completed"
     send_telegram "✅ *Rollback Complete*\nRestored to \`$CURRENT_COMMIT\`"
     exit 1

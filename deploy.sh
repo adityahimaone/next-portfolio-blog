@@ -4,6 +4,15 @@ set -e
 # Portfolio Auto-Deploy Script with Rollback & Notifications
 # Triggered by GitHub Actions
 
+# pnpm and node are installed through nvm, so they only exist on the PATH of an
+# interactive login shell. GitHub Actions reaches this script over a bare SSH
+# command, which is not one, and `pnpm` came back "command not found" and failed
+# the deploy. Prepending the nvm bin directory makes the script find its own
+# tools whether or not a login profile was sourced. The version is spelled out
+# rather than globbed so this cannot silently bind to a different toolchain.
+NVM_BIN_DIR="/home/adityahimaone/.nvm/versions/node/v24.19.0/bin"
+export PATH="$NVM_BIN_DIR:$PATH"
+
 APP_DIR="/home/adityahimaone/apps/next-portfolio-blog"
 LOG_FILE="$HOME/portfolio-deploy.log"
 # This project installs with pnpm (pnpm-lock.yaml is the real lockfile).

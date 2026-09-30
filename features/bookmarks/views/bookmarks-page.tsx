@@ -1,10 +1,19 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { FolderSearch, Plus, RefreshCw, Shuffle, Unlock, X } from 'lucide-react'
-import type { Bookmark, BookmarkCategory, BookmarkFormData } from '../types'
-import { BOOKMARK_CATEGORIES, channelColor } from '../constants/categories'
+import type { Bookmark, BookmarkFormData } from '../types'
+import type { BookmarkPage } from '../lib/bookmarks'
+import { PAGE_SIZE } from '../lib/bookmarks'
+import { channelColor } from '../constants/categories'
 import { FilterRow, PageHeader, useRoomChannel } from '@/features/booth'
 import { useDockSlot } from '@/features/booth/dock-slot'
 import { FaviconCell } from '../components/favicon-cell'
@@ -18,32 +27,118 @@ import styles from '../library.module.css'
 // colour — the one the room falls back to before a channel is picked.
 const DEFAULT_HUE = '#2dd4bf'
 
-/** Featured first, then alphabetical — an index reads best in a fixed order. */
-function indexOrder(a: Bookmark, b: Bookmark): number {
-  if (Boolean(b.featured) !== Boolean(a.featured)) {
-    return Boolean(b.featured) ? 1 : -1
-  }
-  return a.title.localeCompare(b.title)
-}
+// How long the search box waits after a keystroke before it asks the server for
+// a new list. Filtering used to be a local array scan, so every keystroke was
+// free; now each one is a server round trip, and without this a five-letter
+// word fires five navigations.
+const SEARCH_DEBOUNCE_MS = 250
 
-export function BookmarksPage({
-  initialBookmarks,
-}: {
-  initialBookmarks: Bookmark[]
-}) {
+export function BookmarksPage({ page }: { page: BookmarkPage }) {
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const setHue = useRoomChannel()
+  const [isPending, startTransition] = useTransition()
 
-  const [bookmarks, setBookmarks] = useState(initialBookmarks)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isAdminOpen, setIsAdminOpen] = useState(false)
   const [editing, setEditing] = useState<Bookmark | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Bookmark | null>(null)
   const [status, setStatus] = useState('')
-  const [query, setQuery] = useState('')
-  const [channel, setChannel] = useState<BookmarkCategory>('All')
+
+  // The filters live in the URL, so a filtered view stays shareable and the
+  // back button steps through it the way it does on /blog.
+  const channel = searchParams.get('category') ?? 'All'
+  const urlQuery = searchParams.get('q') ?? ''
 
   const searchRef = useRef<HTMLInputElement>(null)
+
+  // Adopt the server's rows when the route re-renders. Filtered views are
+  // held one page per entry rather than as a flat list, because "Load more"
+  // appends a page and the back button has to be able to *remove* one again —
+  // with a single flat array there is no way to tell "page 3 arrived" from
+  // "the reader went back to page 1".
+  const filterKey = `${channel}::${urlQuery}`
+
+  // Rows already on screen, one entry per loaded page so a step backwards
+  // through the history can drop the page it added.
+  //
+  // A filter change does not go through an effect. When the key no longer
+  // matches, the server has already sent the new first page, so the stale
+  // accumulation is simply not read — deriving during render is the React
+  // documented way to reset state on a changed input, and an effect here would
+  // paint the previous filter's rows for a frame first.
+  const [accumulated, setAccumulated] = useState<{
+    key: string
+    pages: Bookmark[][]
+  }>({ key: filterKey, pages: [page.items] })
+
+  const loaded = useMemo(
+    () =>
+      accumulated.key === filterKey
+        ? accumulated
+        : { key: filterKey, pages: [page.items] },
+    [accumulated, filterKey, page.items],
+  )
+
+  const tracks = useMemo(() => loaded.pages.flat(), [loaded])
+
+  // The next page is one past the highest page already on screen, not one past
+  // `page.page`. After two auto-appends the reader is looking at pages 1-3
+  // while the URL still names page one, and a reader who lands on ?page=5
+  // from a shared link is already past four — `loaded.pages.length` alone would
+  // ask for page 2, skip everything between, and then keep re-requesting the
+  // same page forever. `Math.max` covers both cases with one number.
+  const highestPage = Math.max(loaded.pages.length, page.page)
+  const hasMore = highestPage < page.pageCount
+  const nextPage = highestPage + 1
+
+  // The search box keeps its own draft so typing stays responsive, but the
+  // draft is only trusted while it belongs to the current URL. Change the
+  // filter in the sidebar and the box reverts to what the URL says, without an
+  // effect and without the reader's half-typed word reappearing.
+  const [draft, setDraft] = useState({ base: urlQuery, value: urlQuery })
+  const queryInput = draft.base === urlQuery ? draft.value : urlQuery
+  function setQueryInput(next: string) {
+    setDraft({ base: urlQuery, value: next })
+  }
+
+  function updateParams(next: { q?: string; category?: string }) {
+    const params = new URLSearchParams(searchParams.toString())
+    if (next.q !== undefined) {
+      if (next.q) params.set('q', next.q)
+      else params.delete('q')
+    }
+    if (next.category !== undefined) {
+      if (next.category && next.category !== 'All') {
+        params.set('category', next.category)
+      } else {
+        params.delete('category')
+      }
+    }
+    // Any filter change returns to the first page: page 4 of the old result set
+    // is meaningless against the new one, and silently clamping would show a
+    // half-empty page with no explanation.
+    params.delete('page')
+    const search = params.toString()
+    startTransition(() => {
+      router.push(search ? `${pathname}?${search}` : pathname, {
+        scroll: false,
+      })
+    })
+  }
+
+  // Debounce the search box into the URL. The raw keystrokes stay in local
+  // state so typing stays responsive; only the settled value is requested.
+  useEffect(() => {
+    if (queryInput === urlQuery) return
+    const timer = setTimeout(
+      () => updateParams({ q: queryInput }),
+      SEARCH_DEBOUNCE_MS,
+    )
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryInput])
 
   // One listener for the whole list. The row preview needs a pointer that can
   // rest before it opens, which touch never provides.
@@ -57,19 +152,6 @@ export function BookmarksPage({
   }, [])
 
   useEffect(() => {
-    fetch('/api/bookmarks')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.bookmarks)) {
-          setBookmarks(data.bookmarks)
-        }
-      })
-      .catch(() =>
-        setStatus('Could not refresh the library. Showing the saved copy.'),
-      )
-  }, [])
-
-  useEffect(() => {
     if (!deleteTarget && !isAdminOpen) return
     function onKey(event: KeyboardEvent) {
       if (event.key !== 'Escape') return
@@ -80,43 +162,21 @@ export function BookmarksPage({
     return () => window.removeEventListener('keydown', onKey)
   }, [deleteTarget, isAdminOpen])
 
+  // The sidebar lists every channel that holds rows, each with the count it
+  // holds in total. Those counts come from the server over the whole catalogue,
+  // so they stay correct on page 7 instead of describing the visible slice.
   const counts = useMemo(() => {
     const map = new Map<string, number>()
-    for (const bookmark of bookmarks) {
-      map.set(bookmark.category, (map.get(bookmark.category) ?? 0) + 1)
-    }
+    for (const facet of page.facets) map.set(facet.name, facet.count)
     return map
-  }, [bookmarks])
+  }, [page.facets])
 
   const channels = useMemo(
-    () =>
-      BOOKMARK_CATEGORIES.filter(
-        (name) => name === 'All' || (counts.get(name) ?? 0) > 0,
-      ),
-    [counts],
+    () => ['All', ...page.facets.map((facet) => facet.name)],
+    [page.facets],
   )
 
-  const tracks = useMemo(() => {
-    const q = query.toLowerCase().trim()
-    return bookmarks
-      .filter((bookmark) => channel === 'All' || bookmark.category === channel)
-      .filter((bookmark) => {
-        if (!q) return true
-        return (
-          bookmark.title.toLowerCase().includes(q) ||
-          bookmark.description.toLowerCase().includes(q) ||
-          bookmark.url.toLowerCase().includes(q) ||
-          bookmark.category.toLowerCase().includes(q) ||
-          bookmark.tags.some((tag) => tag.toLowerCase().includes(q))
-        )
-      })
-      .sort(indexOrder)
-  }, [bookmarks, channel, query])
-
-  const pinned = useMemo(
-    () => bookmarks.filter((bookmark) => bookmark.featured).sort(indexOrder),
-    [bookmarks],
-  )
+  const pinned = page.pinned
 
   // The room retints to whichever playlist is open.
   useEffect(() => {
@@ -124,17 +184,137 @@ export function BookmarksPage({
   }, [channel, setHue])
 
   // The third argument is the list's identity, not its length. Category and
-  // query both rebuild `tracks`, so the keyboard selection has to be dropped
+  // query both rebuild the rows, so the keyboard selection has to be dropped
   // when either changes — an index into the old list points at a different
-  // bookmark in the new one, and Enter would open the wrong link.
+  // bookmark in the new one, and Enter would open the wrong link. Appending a
+  // page deliberately leaves this key alone: the list is extended, not
+  // replaced, so a selection mid-list should survive a "Load more".
   const { active } = useListKeys(
     tracks.length,
     (index) => {
       const target = tracks[index]
       if (target) window.open(target.url, '_blank', 'noopener,noreferrer')
     },
-    `${channel}::${query}`,
+    filterKey,
   )
+
+  // One in-flight request at a time, tagged with the filter it was issued for
+  // so a filter change mid-fetch does not splice the old results into the new
+  // list.
+  const loadingRef = useRef<{ key: string } | null>(null)
+
+  const loadMore = useCallback(() => {
+    // The sentinel and the button can both fire on a fast scroll. Without this
+    // a second request goes out mid-flight and the same page lands in the list
+    // twice, so the reader sees 120 rows with 60 of them duplicated and the
+    // deduped React keys warn.
+    if (loadingRef.current || !hasMore) return
+    loadingRef.current = { key: filterKey }
+
+    const params = new URLSearchParams()
+    if (urlQuery) params.set('q', urlQuery)
+    if (channel !== 'All') params.set('category', channel)
+    params.set('page', String(nextPage))
+
+    setStatus('')
+    startTransition(async () => {
+      try {
+        // Fetched rather than navigated. A navigation would re-render the
+        // whole route to hand back rows we already have, and its RSC payload
+        // is the same 200KB the page cost to begin with. The API answers with
+        // just the next slice.
+        //
+        // The URL is deliberately left alone. It keeps naming the page the
+        // reader arrived on, so a refresh or a shared link reproduces that
+        // page exactly rather than dropping them on page seven of ten.
+        const res = await fetch(`/api/bookmarks?${params.toString()}`)
+        const data = await res.json()
+        if (!data.success || !Array.isArray(data.bookmarks)) {
+          setStatus('Could not load more links. Try again in a moment.')
+          return
+        }
+        if (data.bookmarks.length === 0) {
+          // A short read means the catalogue shrank underneath us. Appending
+          // an empty page would leave the sentinel permanently visible and the
+          // observer would refire on every scroll event.
+          setStatus('That is the whole library.')
+          return
+        }
+        setAccumulated((prev) =>
+          prev.key === filterKey
+            ? { key: filterKey, pages: [...prev.pages, data.bookmarks] }
+            : { key: filterKey, pages: [page.items, data.bookmarks] },
+        )
+      } catch {
+        setStatus('Could not reach the bookmarks API.')
+      } finally {
+        // Released only if this is still the request the list is waiting on.
+        // A filter change that cleared `loadingRef` has already armed a fresh
+        // fetch, and unconditionally nulling here would let that one overlap
+        // with the next trigger.
+        if (loadingRef.current?.key === filterKey) loadingRef.current = null
+      }
+    })
+  }, [
+    hasMore,
+    filterKey,
+    nextPage,
+    urlQuery,
+    channel,
+    page.items,
+    loadingRef,
+    setAccumulated,
+    setStatus,
+    startTransition,
+  ])
+
+  // The list appends itself as the reader approaches the end. The observer is
+  // the only trigger; the button below stays for anyone on a keyboard, a
+  // screen reader, or a browser where the observer never fires.
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel || !hasMore) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadMore()
+      },
+      // A screen early rather than at the true bottom. The fetch is ~15KB of
+      // JSON and the append is a re-render, not a navigation, so there is time
+      // to have the rows in place before the reader arrives — bottom-triggered
+      // loading shows an empty patch to anyone who scrolls faster than the
+      // network.
+      { rootMargin: '600px 0px' },
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+    // Re-arms whenever `loadMore` does, which is on every change to the filter
+    // and to the page it would fetch. Without this the observer holds the
+    // first render's closure and keeps appending page N of a search the reader
+    // has already replaced.
+  }, [hasMore, loadMore])
+
+  // A filter change invalidates any request still in flight: its rows belong to
+  // a list that no longer exists, and the lock it holds would otherwise block
+  // the new filter's first append until the stale response landed. The stale
+  // response is still discarded on arrival — `setAccumulated`'s functional
+  // update writes only when the key matches.
+  useEffect(() => {
+    loadingRef.current = null
+  }, [filterKey])
+
+  // The `rel="next"` target. Built the same way the server builds its
+  // canonical, so the link a crawler follows and the canonical it then reads
+  // describe the same document.
+  const crawlParams = useMemo(() => {
+    const params = new URLSearchParams()
+    if (urlQuery) params.set('q', urlQuery)
+    if (channel !== 'All') params.set('category', channel)
+    params.set('page', String(nextPage))
+    return params.toString()
+  }, [urlQuery, channel, nextPage])
 
   const shuffle = useCallback(() => {
     if (tracks.length === 0) return
@@ -171,6 +351,35 @@ export function BookmarksPage({
     ),
   )
 
+  // Appends or replaces a single row across every loaded page, so an edit
+  // lands in the right place in the accumulated list instead of needing a
+  // refetch. Ids are unique across pages, so this cannot hit two rows at once.
+  function patchRow(id: string, update: (row: Bookmark) => Bookmark) {
+    setAccumulated((prev) =>
+      prev.key === filterKey
+        ? {
+            key: prev.key,
+            pages: prev.pages.map((rows) =>
+              rows.map((row) => (row.id === id ? update(row) : row)),
+            ),
+          }
+        : prev,
+    )
+  }
+
+  function removeRow(id: string) {
+    setAccumulated((prev) =>
+      prev.key === filterKey
+        ? {
+            key: prev.key,
+            pages: prev.pages
+              .map((rows) => rows.filter((row) => row.id !== id))
+              .filter((rows) => rows.length > 0),
+          }
+        : prev,
+    )
+  }
+
   async function confirmDelete() {
     if (!deleteTarget) return
     try {
@@ -179,7 +388,7 @@ export function BookmarksPage({
       })
       const data = await res.json()
       if (data.success) {
-        setBookmarks((prev) => prev.filter((b) => b.id !== deleteTarget.id))
+        removeRow(deleteTarget.id)
         setDeleteTarget(null)
       } else {
         setStatus(data.message || 'Could not delete that bookmark')
@@ -201,11 +410,15 @@ export function BookmarksPage({
       })
       const data = await res.json()
       if (data.success && data.bookmark) {
-        setBookmarks((prev) =>
-          id
-            ? prev.map((b) => (b.id === id ? data.bookmark : b))
-            : [data.bookmark, ...prev],
-        )
+        if (id) {
+          patchRow(id, () => data.bookmark)
+        } else {
+          setAccumulated((prev) =>
+            prev.key === filterKey
+              ? { key: prev.key, pages: [data.bookmark, ...prev.pages[0]] }
+              : prev,
+          )
+        }
         return true
       }
       return false
@@ -225,7 +438,7 @@ export function BookmarksPage({
           hint={
             <>
               <Shuffle size={14} aria-hidden="true" />
-              {bookmarks.length} saved
+              {page.totalAll} saved
             </>
           }
         />
@@ -239,13 +452,7 @@ export function BookmarksPage({
                   key={name}
                   type="button"
                   aria-pressed={channel === name}
-                  onClick={() => {
-                    setChannel(name)
-                    // No setActive here: the listKey effect in useListKeys
-                    // already clears the selection when the list is replaced.
-                    // Calling setActive(0) re-lit row one on every category
-                    // switch, which is the bug this replaced.
-                  }}
+                  onClick={() => updateParams({ category: name })}
                   className={styles.playlist}
                   style={{
                     ['--led' as string]:
@@ -255,9 +462,7 @@ export function BookmarksPage({
                   <span className={styles.playlistLed} aria-hidden="true" />
                   <span className={styles.playlistName}>{name}</span>
                   <span className={styles.playlistCount}>
-                    {name === 'All'
-                      ? bookmarks.length
-                      : (counts.get(name) ?? 0)}
+                    {name === 'All' ? page.totalAll : (counts.get(name) ?? 0)}
                   </span>
                 </button>
               ))}
@@ -294,14 +499,12 @@ export function BookmarksPage({
               <FilterRow
                 label="Channels"
                 value={channel}
-                onChange={(next) => {
-                  setChannel((next || 'All') as BookmarkCategory)
-                }}
+                onChange={(next) => updateParams({ category: next || 'All' })}
                 options={channels.map((name) => ({
                   value: name,
                   label: name,
                   count:
-                    name === 'All' ? bookmarks.length : (counts.get(name) ?? 0),
+                    name === 'All' ? page.totalAll : (counts.get(name) ?? 0),
                 }))}
               />
             </div>
@@ -351,16 +554,16 @@ export function BookmarksPage({
               <input
                 ref={searchRef}
                 type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                value={queryInput}
+                onChange={(event) => setQueryInput(event.target.value)}
                 className={styles.search}
                 aria-label="Search bookmarks"
                 placeholder="Search title, domain, tag… ( / )"
               />
-              {query && (
+              {queryInput && (
                 <button
                   type="button"
-                  onClick={() => setQuery('')}
+                  onClick={() => setQueryInput('')}
                   className={styles.searchClear}
                   aria-label="Clear search"
                 >
@@ -382,7 +585,7 @@ export function BookmarksPage({
                     {channel === 'All' ? 'All saved' : channel}
                   </h2>
                   <span className={styles.trackCount}>
-                    {tracks.length} {tracks.length === 1 ? 'link' : 'links'}
+                    {page.total} {page.total === 1 ? 'link' : 'links'}
                   </span>
                 </div>
                 <ul className={styles.trackList}>
@@ -402,6 +605,54 @@ export function BookmarksPage({
                     />
                   ))}
                 </ul>
+
+                {hasMore && (
+                  <div className={styles.loadMore}>
+                    {/*
+                      The observer watches this, not the list. It is the one
+                      node that reliably reaches the viewport only when the
+                      reader nears the end of the rows above it.
+                    */}
+                    <div ref={sentinelRef} aria-hidden="true" />
+
+                    {/*
+                      The crawl path. Appends happen without touching the URL,
+                      so without this nothing anywhere links to `?page=2` and
+                      every page past the first becomes unreachable to a
+                      crawler — the rows are real and server-rendered, but
+                      undiscoverable. `rel="next"` is the signal, and it is in
+                      the raw HTML rather than injected after hydration.
+
+                      Visually hidden, but focusable: a keyboard reader can
+                      still reach it and jump to a real page, which is the
+                      same reason the Load more button below stays.
+                    */}
+                    <a
+                      href={`${pathname}?${crawlParams}`}
+                      rel="next"
+                      className={styles.srOnly}
+                    >
+                      Next page of bookmarks
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={loadMore}
+                      disabled={isPending}
+                      className={styles.loadMoreButton}
+                    >
+                      {isPending
+                        ? 'Loading…'
+                        : `Load ${Math.min(
+                            PAGE_SIZE,
+                            page.total - tracks.length,
+                          )} more`}
+                    </button>
+                    <p className={styles.loadMoreMeta} aria-live="polite">
+                      Showing {tracks.length} of {page.total}
+                    </p>
+                  </div>
+                )}
               </section>
             ) : (
               <div className={styles.empty}>
@@ -413,8 +664,8 @@ export function BookmarksPage({
                 <button
                   type="button"
                   onClick={() => {
-                    setQuery('')
-                    setChannel('All')
+                    setQueryInput('')
+                    updateParams({ q: '', category: 'All' })
                   }}
                   className={styles.adminButton}
                 >

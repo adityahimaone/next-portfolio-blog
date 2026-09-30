@@ -5,6 +5,7 @@ import {
   CHANNEL_CATEGORIES,
 } from '../features/bookmarks/constants/categories'
 import { PREVIEWABLE_HOSTS } from '../features/bookmarks/constants/previewable'
+import { queryBookmarks, PAGE_SIZE } from '../features/bookmarks/lib/bookmarks'
 import type { Bookmark } from '../features/bookmarks/types'
 
 /**
@@ -82,6 +83,18 @@ describe('content/bookmarks.json', () => {
     for (const bookmark of imported) {
       expect(bookmark.tags).toContain('designeer')
     }
+  })
+
+  it('stays reachable now that the library is paginated', () => {
+    // /bookmarks renders PAGE_SIZE rows at a time behind a "Load more"
+    // button, so a catalogue that outgrew a page has to still be walkable to
+    // the end. The paging arithmetic itself is covered in
+    // bookmarks-query.test.ts; this is the check that it holds for the real
+    // file, and would fail if PAGE_SIZE were ever raised past the catalogue.
+    const first = queryBookmarks(bookmarks, { page: 1 })
+    expect(first.total).toBe(bookmarks.length)
+    expect(first.pageCount).toBe(Math.ceil(bookmarks.length / PAGE_SIZE))
+    expect(first.pageCount * PAGE_SIZE).toBeGreaterThanOrEqual(bookmarks.length)
   })
 
   it('pins exactly twelve links', () => {

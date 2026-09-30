@@ -3,6 +3,11 @@ import fs from 'fs'
 import { timingSafeEqual } from 'node:crypto'
 import path from 'path'
 import { Bookmark } from '@/features/bookmarks/types'
+import {
+  queryBookmarks,
+  parsePage,
+  PAGE_SIZE,
+} from '@/features/bookmarks/lib/bookmarks'
 
 const FILE_PATH = path.join(process.cwd(), 'content', 'bookmarks.json')
 
@@ -52,10 +57,7 @@ function verifyAuth(req: NextRequest): boolean {
     if (authHeader.startsWith('Basic ')) {
       return matches(authHeader.substring(6).trim())
     }
-    if (
-      matches(authHeader) ||
-      authHeader === `${creds.user}:${creds.pass}`
-    ) {
+    if (matches(authHeader) || authHeader === `${creds.user}:${creds.pass}`) {
       return true
     }
   }
@@ -84,9 +86,44 @@ function writeBookmarks(bookmarks: Bookmark[]): void {
 }
 
 // GET /api/bookmarks
-export async function GET() {
-  const bookmarks = readBookmarks()
-  return NextResponse.json({ success: true, bookmarks })
+//
+// Paged by default. "Load more" on /bookmarks fetches the next page from here
+// and appends it, so this used to be the only reader of the catalogue on a
+// client-side navigation — and it was re-sending all 559 rows on every mount.
+// `?all=1` is the escape hatch for anything that genuinely needs the whole set.
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const all = searchParams.get('all') === '1'
+
+  if (all) {
+    return NextResponse.json({ success: true, bookmarks: readBookmarks() })
+  }
+
+  const result = queryBookmarks(readBookmarks(), {
+    q: searchParams.get('q') ?? undefined,
+    category: searchParams.get('category') ?? undefined,
+    page: parsePage(searchParams.get('page') ?? undefined),
+  })
+
+  return NextResponse.json(
+    {
+      success: true,
+      bookmarks: result.items,
+      total: result.total,
+      page: result.page,
+      pageCount: result.pageCount,
+      hasMore: result.page < result.pageCount,
+      pageSize: PAGE_SIZE,
+    },
+    {
+      // The catalogue is a file in the repo and only changes on deploy, but a
+      // minute is enough to absorb the burst of appends one "Load more" click
+      // makes without ever serving a stale count for long.
+      headers: {
+        'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
+      },
+    },
+  )
 }
 
 // POST /api/bookmarks (Add or Login Check)
@@ -182,7 +219,10 @@ export async function PUT(req: NextRequest) {
   try {
     if (!verifyAuth(req)) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized. Admin credentials required.' },
+        {
+          success: false,
+          message: 'Unauthorized. Admin credentials required.',
+        },
         { status: 401 },
       )
     }
@@ -250,7 +290,10 @@ export async function DELETE(req: NextRequest) {
   try {
     if (!verifyAuth(req)) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized. Admin credentials required.' },
+        {
+          success: false,
+          message: 'Unauthorized. Admin credentials required.',
+        },
         { status: 401 },
       )
     }

@@ -54,3 +54,6 @@ next-env.d.ts
 
 # local agent tooling state
 .commandcode/
+
+# generated repo snapshots
+artifacts/

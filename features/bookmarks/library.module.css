@@ -380,10 +380,18 @@
 }
 
 /* The imported catalogue runs to 550+ rows. Letting the browser skip layout and
-   paint for off-screen rows keeps the list scrollable without windowing it. */
+   paint for off-screen rows keeps the list scrollable without windowing it.
+
+   The intrinsic height must match what a row actually renders at. It said 52px
+   while a row is 44px (min-height 44 with box-sizing: border-box already
+   includes the padding), so every off-screen row was laid out 8px too tall and
+   then snapped 8px shorter the moment it scrolled into view. At 60 rows a page
+   that is a 480px hole moving under the reader, and the document height churned
+   on every append — which is exactly the jitter reported on fast scrolls.
+   `auto 44px` records the real size after the first paint and keeps it. */
 .trackList > li {
   content-visibility: auto;
-  contain-intrinsic-size: auto 52px;
+  contain-intrinsic-size: auto 44px;
 }
 
 .track {
@@ -731,6 +739,106 @@
 
 .solidButton:hover {
   filter: brightness(1.06);
+}
+
+/* ─── Load more ───────────────────────────────────────────────── */
+
+.loadMore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0 2.5rem;
+}
+
+/* The observer's target. No pixels of its own — it only has to occupy a point
+   the reader reaches after the rows above it, and taking layout space here
+   would push the button down for everyone who is waiting to see it. */
+.loadMore > [aria-hidden='true'] {
+  width: 1px;
+  height: 1px;
+}
+
+/* Off-screen rather than `display: none` or `visibility: hidden`, both of
+   which would drop the link from the accessibility tree and take the crawl
+   path with it. It stays focusable, so a keyboard reader can jump to a real
+   page — the same reason the button beside it is not `aria-hidden`. */
+.srOnly {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  margin: -1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.loadMoreButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 1.5rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--booth-r-control);
+  background: var(--flat-fill);
+  color: var(--booth-ink);
+  font: var(--silkscreen);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.loadMoreButton:hover:not(:disabled) {
+  border-color: var(--booth-ink-muted);
+}
+
+.loadMoreButton:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.loadMoreMeta {
+  margin: 0;
+  color: var(--booth-ink-dim);
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+}
+
+/* ─── Loading skeleton ────────────────────────────────────────── */
+
+/* A neutral block in the shape of a row. `currentColor` at low opacity rather
+   than a fixed grey, so it sits correctly in both themes without a second
+   rule, and it pulses once rather than looping — a permanently animating
+   loading state is noise for anyone who lands on a slow page. */
+.skeletonRow {
+  height: 52px;
+  margin-bottom: 0.5rem;
+  border-radius: var(--booth-r-control);
+  background: currentColor;
+  opacity: 0.08;
+  animation: skeleton-pulse 1.2s var(--ease-out) both;
+}
+
+@keyframes skeleton-pulse {
+  from {
+    opacity: 0.04;
+  }
+  to {
+    opacity: 0.1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonRow {
+    animation: none;
+    opacity: 0.08;
+  }
 }
 
 /* ─── Live site peek ─────────────────────────────────────────── */

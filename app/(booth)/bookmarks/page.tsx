@@ -1,20 +1,25 @@
 import fs from 'fs'
 import path from 'path'
-import { BookmarksPage, Bookmark } from '@/features/bookmarks'
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
+import { BookmarksPage } from '@/features/bookmarks'
+import {
+  queryBookmarks,
+  parsePage,
+  PAGE_SIZE,
+} from '@/features/bookmarks/lib/bookmarks'
+import { itemList, JsonLd } from '@/lib/structured-data'
+import type { Bookmark } from '@/features/bookmarks/types'
 
-export const metadata: Metadata = {
-  title: 'Curated Bookmarks | Web Resources & Tools',
-  description:
-    'A curated list of developer tools, design resources, audio synthesis frameworks, and articles collected by Aditya.',
-}
+const FILE_PATH = path.join(process.cwd(), 'content', 'bookmarks.json')
+
+// The catalogue is a file in the repo, so it only changes on deploy. An hour
+// matches the rest of the site's cached reads.
+export const revalidate = 3600
 
 function getBookmarks(): Bookmark[] {
   try {
-    const filePath = path.join(process.cwd(), 'content', 'bookmarks.json')
-    if (fs.existsSync(filePath)) {
-      const content = fs.readFileSync(filePath, 'utf-8')
-      return JSON.parse(content) as Bookmark[]
+    if (fs.existsSync(FILE_PATH)) {
+      return JSON.parse(fs.readFileSync(FILE_PATH, 'utf-8')) as Bookmark[]
     }
   } catch (error) {
     console.error('Failed to load initial bookmarks:', error)
@@ -22,8 +27,90 @@ function getBookmarks(): Bookmark[] {
   return []
 }
 
-export default function Page() {
-  const initialBookmarks = getBookmarks()
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}): Promise<Metadata> {
+  const params = await searchParams
+  const q = typeof params.q === 'string' ? params.q.trim() : ''
+  const category = typeof params.category === 'string' ? params.category : ''
 
-  return <BookmarksPage initialBookmarks={initialBookmarks} />
+  // A filtered view is a distinct page and gets its own title, so the pages
+  // competing in search each describe what they actually show. Page one of an
+  // unfiltered view keeps the canonical home title.
+  const unfiltered = !q && (!category || category === 'All')
+  const page = parsePage(
+    typeof params.page === 'string' ? params.page : undefined,
+  )
+
+  if (unfiltered && page === 1) {
+    return {
+      title: 'Curated Bookmarks | Web Resources & Tools',
+      description:
+        'A curated list of developer tools, design resources, audio synthesis frameworks, and articles collected by Aditya.',
+      alternates: { canonical: '/bookmarks' },
+    }
+  }
+
+  const described = [q && `“${q}”`, category && category !== 'All' && category]
+    .filter(Boolean)
+    .join(' · ')
+
+  return {
+    title: described ? `${described} | Bookmarks` : `Bookmarks — page ${page}`,
+    description: described
+      ? `Bookmarks matching ${described} from a curated library of developer tools, design resources and references.`
+      : 'A curated list of developer tools, design resources, audio synthesis frameworks, and articles collected by Aditya.',
+    // Self-referential on page two onwards. Collapsing every page onto page one
+    // would tell the index that pages 2-10 are duplicates, which is exactly
+    // what deindexes a paginated set.
+    alternates: {
+      canonical: `/bookmarks${q ? `?q=${encodeURIComponent(q)}` : ''}${
+        category && category !== 'All'
+          ? `&category=${encodeURIComponent(category)}`
+          : ''
+      }${page > 1 ? `${q || category ? '&' : '?'}page=${page}` : ''}`,
+    },
+    // Filter permutations are combinatorially many and thin on content. They
+    // are linkable and crawlable, just not each worth an index slot.
+    robots: { index: false, follow: true },
+  }
+}
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = await searchParams
+  const q = typeof params.q === 'string' ? params.q : ''
+  const category = typeof params.category === 'string' ? params.category : 'All'
+  const page = parsePage(
+    typeof params.page === 'string' ? params.page : undefined,
+  )
+
+  const bookmarks = queryBookmarks(getBookmarks(), { q, category, page })
+
+  // Describes this page's rows only. Claiming all 559 on page one would be
+  // listing items the page does not contain; positions start at this page's
+  // true offset so the numbering stays unique across the whole set.
+  const jsonLd = itemList({
+    name: 'Curated Bookmarks',
+    description:
+      'A curated list of developer tools, design resources, audio synthesis frameworks, and articles collected by Aditya.',
+    startAt: (bookmarks.page - 1) * PAGE_SIZE + 1,
+    items: bookmarks.items.map((bookmark) => ({
+      name: bookmark.title,
+      url: bookmark.url,
+      description: bookmark.description,
+    })),
+  })
+
+  return (
+    <>
+      <JsonLd data={jsonLd} />
+      <BookmarksPage page={bookmarks} />
+    </>
+  )
 }

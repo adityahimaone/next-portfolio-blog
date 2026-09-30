@@ -50,12 +50,18 @@ export function FaviconCell({
         <Globe className={styles.faviconFallback} aria-hidden="true" />
       )}
 
-      {}
+      {/*
+        Kept mounted in all three states so the tile never reflows, and
+        `loading="lazy"` so off-screen rows cost nothing. Once the state is
+        settled the browser serves this from the decoded cache the hook already
+        warmed, so it is a paint rather than a second network round trip.
+      */}
       <img
         className={styles.faviconImg}
         src={src}
         alt={alt}
         loading="lazy"
+        decoding="async"
         data-state={state}
         aria-hidden={alt ? undefined : true}
       />

@@ -20,9 +20,6 @@ export async function GET() {
     { url: '/', changefreq: 'daily', priority: 1.0 },
     { url: '/blog', changefreq: 'daily', priority: 0.9 },
     { url: '/projects', changefreq: 'monthly', priority: 0.8 },
-    { url: '/guides', changefreq: 'monthly', priority: 0.8 },
-    { url: '/about', changefreq: 'monthly', priority: 0.8 },
-    { url: '/work', changefreq: 'monthly', priority: 0.8 },
     {
       url: '/guides/self-hosting-nextjs',
       changefreq: 'monthly',
@@ -31,9 +28,10 @@ export async function GET() {
     { url: '/guides/vps-vs-vercel', changefreq: 'monthly', priority: 0.7 },
     { url: '/bookmarks', changefreq: 'weekly', priority: 0.8 },
     { url: '/music', changefreq: 'monthly', priority: 0.8 },
-    // /contact is a real page a visitor can reach from the footer, so it
-    // belongs in the sitemap. It was missing while every other route was here.
-    { url: '/contact', changefreq: 'monthly', priority: 0.6 },
+    // /contact, /about, /work and /guides are absent on purpose. Their content
+    // was folded into the landing profile deck, the landing contact section,
+    // the projects filter and the blog index, and those routes now redirect.
+    // Listing them would submit a sitemap of permanent redirects.
   ].map((page) => ({ ...page, lastmod: fallbackLastmod }))
 
   const blogEntries = posts.map(

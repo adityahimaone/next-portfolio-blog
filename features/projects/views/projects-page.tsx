@@ -39,26 +39,47 @@ export function ProjectsPage({
   const setHue = useRoomChannel()
   const [activeId, setActiveId] = useState(WORK_PROJECTS[0].id)
   const [playing, setPlaying] = useState(true)
-  const [genre, setGenre] = useState('All')
+  // Filters by problem shape rather than by genre. Every project's `genre` is
+  // unique, so the old genre filter rendered seven chips for six projects and
+  // each one narrowed the crate to a single sleeve — a control that looked like
+  // a filter but could not group anything.
+  const [problem, setProblem] = useState('All')
   const [elapsed, setElapsed] = useState(0)
   const [linerId, setLinerId] = useState<number | null>(null)
 
-  const project =
-    WORK_PROJECTS.find((p) => p.id === activeId) ?? WORK_PROJECTS[0]
-  const index = WORK_PROJECTS.indexOf(project)
-  const repo = repos.find((r) => r.name === featuredProjects[index]?.githubSlug)
-
-  const genres = useMemo(
-    () => ['All', ...new Set(WORK_PROJECTS.map((p) => p.genre))],
-    [],
-  )
   const visible = useMemo(
     () =>
-      genre === 'All'
+      problem === 'All'
         ? WORK_PROJECTS
-        : WORK_PROJECTS.filter((p) => p.genre === genre),
-    [genre],
+        : WORK_PROJECTS.filter((p) => p.problem === problem),
+    [problem],
   )
+
+  // Ordered by size so the buckets read as a shape rather than alphabetically,
+  // and counted so each chip can show how much is behind it.
+  const problems = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const p of WORK_PROJECTS) {
+      counts.set(p.problem, (counts.get(p.problem) ?? 0) + 1)
+    }
+    return [...counts.entries()].sort(
+      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+    )
+  }, [])
+
+  // The selection follows the filter during render rather than being corrected
+  // in an effect. An effect needed a second pass to notice the active project
+  // had been filtered out, so the panel showed a sleeve that was no longer in
+  // the crate for one frame; deriving it here is correct on the first paint and
+  // costs no extra render.
+  const selectedId = visible.some((p) => p.id === activeId)
+    ? activeId
+    : (visible[0]?.id ?? WORK_PROJECTS[0].id)
+
+  const project =
+    WORK_PROJECTS.find((p) => p.id === selectedId) ?? WORK_PROJECTS[0]
+  const index = WORK_PROJECTS.indexOf(project)
+  const repo = repos.find((r) => r.name === featuredProjects[index]?.githubSlug)
 
   useEffect(() => {
     setHue(project.palette.a)
@@ -186,7 +207,7 @@ export function ProjectsPage({
                 transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
               >
                 <p className={styles.nsKicker}>
-                  {project.genre} · {project.year}
+                  {project.problem} · {project.genre} · {project.year}
                   {repo && repo.stargazers_count > 0 && (
                     <span>
                       <Star size={12} aria-hidden="true" />{' '}
@@ -252,10 +273,17 @@ export function ProjectsPage({
                 </span>
               </h2>
               <FilterRow
-                label="Filter by genre"
-                value={genre}
-                onChange={(next) => setGenre(next || 'All')}
-                options={genres.map((name) => ({ value: name, label: name }))}
+                label="Filter by problem"
+                value={problem}
+                onChange={(next) => setProblem(next || 'All')}
+                options={[
+                  { value: 'All', label: 'All', count: WORK_PROJECTS.length },
+                  ...problems.map(([name, count]) => ({
+                    value: name,
+                    label: name,
+                    count,
+                  })),
+                ]}
               />
             </div>
 
@@ -267,7 +295,7 @@ export function ProjectsPage({
                     key={item.slug}
                     project={item}
                     index={i}
-                    active={item.id === activeId}
+                    active={item.id === selectedId}
                     onPromote={() => select(item.id)}
                   />
                 )

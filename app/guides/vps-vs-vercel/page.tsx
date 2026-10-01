@@ -221,7 +221,7 @@ export default function VpsVsVercel() {
 
         <p className="border-border text-muted-foreground border-t pt-6">
           Disagree with something here?{' '}
-          <Link href="/contact" className="text-primary hover:underline">
+          <Link href="/#contact" className="text-primary hover:underline">
             Tell me
           </Link>
           .

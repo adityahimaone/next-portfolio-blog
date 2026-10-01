@@ -62,7 +62,7 @@ export default function GlobalError({
           Back to home
         </Link>
         <Link
-          href="/contact"
+          href="/#contact"
           className="text-primary underline underline-offset-4"
         >
           Report it

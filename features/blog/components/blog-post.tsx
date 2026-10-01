@@ -263,7 +263,7 @@ export function BlogPost({
                 Links to the contact page, which gives the name an internal link
                 of its own.
               */}
-              <Link href="/contact" className={styles.tag}>
+              <Link href="/#contact" className={styles.tag}>
                 Aditya Himawan
               </Link>
               <span>·</span>

@@ -34,6 +34,57 @@ const COVER_HUES = [
 
 type Sort = 'desc' | 'asc'
 
+/**
+ * The guide paths, surfaced on the blog index rather than behind their own
+ * route. The guide pages themselves stay — the links below resolve to them —
+ * but the index no longer treats them as somewhere else to go.
+ */
+const GUIDES = [
+  {
+    href: '/guides/self-hosting-nextjs',
+    title: 'Self-hosting a Next.js app on a VPS',
+    description:
+      'From an empty server to a monitored production app: Nginx, PM2, SSL, and the deployment pipeline.',
+    steps: 4,
+  },
+  {
+    href: '/guides/vps-vs-vercel',
+    title: 'VPS vs Vercel vs Netlify',
+    description:
+      'Side by side, including the case for not self-hosting at all. Most projects should not.',
+    steps: 3,
+  },
+] as const
+
+/**
+ * The questions these notes keep getting asked, answered on the page rather
+ * than behind a separate route. `details`/`summary` means the answer is in the
+ * DOM for a crawler and for anyone reading with JS disabled, without paying for
+ * an accordion component in a file that is already a client component.
+ */
+const BLOG_FAQ = [
+  {
+    question: 'How much does it cost to self-host Next.js on a VPS?',
+    answer:
+      'A $5/month VPS with 1GB RAM and 1 vCPU comfortably serves a typical Next.js app and a few side services. Equivalent traffic on Vercel Pro starts around $20/month, and the gap widens with scale.',
+  },
+  {
+    question: 'Is a VPS cheaper than Vercel?',
+    answer:
+      'At small scale, roughly comparable. A VPS wins when you need custom middleware, specific Node flags, background jobs, or when you want to avoid vendor lock-in. You trade the platform fee for being the operations team.',
+  },
+  {
+    question: 'Should I self-host at all?',
+    answer:
+      'For most projects, no. Managed platforms are cheaper in time and the failure modes you take on are real. It is worth it when you need custom middleware, specific Node flags, or persistent background jobs. This site runs on a VPS, which is the exception rather than the rule.',
+  },
+  {
+    question: 'Why write about DevOps on a frontend site?',
+    answer:
+      'Because the frontend is what breaks when the infrastructure is wrong, and because the alternative is pretending the deployment is someone else’s problem. Every post here is something that actually went wrong and got written down.',
+  },
+] as const
+
 export function BlogList({ posts }: { posts: BlogMeta[] }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -182,6 +233,44 @@ export function BlogList({ posts }: { posts: BlogMeta[] }) {
             ]}
           />
 
+          {/*
+                    The guide cluster that used to live on a standalone `/guides` route,
+                    surfaced here because the posts it assembles are on this page. The
+                    links still resolve to the guide pages — only the index moved.
+
+                    Hidden while a filter is active: a filtered list of two posts sitting
+                    under a block of unrelated guides reads as broken rather than as
+                    context, and the filter's own empty state already explains itself.
+                  */}
+          {!isFiltered && (
+            <section className={styles.guides} aria-labelledby="guides-title">
+              <div className={styles.guidesHead}>
+                <h2 id="guides-title" className={styles.guidesTitle}>
+                  Start here
+                </h2>
+                <p className={styles.guidesNote}>
+                  Ordered paths through the notes, for when a search is not the
+                  thing you want.
+                </p>
+              </div>
+              <ul className={styles.guidesList}>
+                {GUIDES.map((guide) => (
+                  <li key={guide.href}>
+                    <Link href={guide.href} className={styles.guide}>
+                      <span className={styles.guideMeta}>
+                        {guide.steps} steps
+                      </span>
+                      <b>{guide.title}</b>
+                      <span className={styles.guideDesc}>
+                        {guide.description}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {leads.map((post) => (
             <LeadRelease key={post.slug} post={post} />
           ))}
@@ -200,6 +289,35 @@ export function BlogList({ posts }: { posts: BlogMeta[] }) {
             code="B"
             total={filtered.length}
           />
+
+          {/*
+            The questions that were answering "should I self-host?" on a
+            separate page, asked on the page where the writing is. Native
+            `<details>` rather than a state-driven accordion: it works before
+            hydration, is keyboard-reachable for free, and needs no client
+            state in a list that is already a client component.
+          */}
+          {!isFiltered && (
+            <section className={styles.faq} aria-labelledby="faq-title">
+              <h2 id="faq-title" className={styles.faqTitle}>
+                Common questions
+              </h2>
+              <dl className={styles.faqList}>
+                {BLOG_FAQ.map((entry) => (
+                  <div key={entry.question} className={styles.faqItem}>
+                    <dt>
+                      <details className={styles.faqDetails}>
+                        <summary className={styles.faqSummary}>
+                          {entry.question}
+                        </summary>
+                        <dd className={styles.faqAnswer}>{entry.answer}</dd>
+                      </details>
+                    </dt>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
 
           {filtered.length === 0 && (
             <div className={styles.empty}>

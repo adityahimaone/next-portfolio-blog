@@ -29,10 +29,18 @@ const nextConfig = {
     // is content-hashed by query string, so a week is safe.
     minimumCacheTTL: 604800,
   },
-  // Legacy paths from before the App Router rewrite. `docs/structure.md` still
-  // documents `/spotify` and `/v2`, and both were removed without a redirect, so
-  // any external link or bookmark to them is a hard 404. `permanent` is correct
-  // here: these have no replacement at the same URL and will not come back.
+  // Legacy paths from before the App Router rewrite, plus the four routes whose
+  // content was folded back into the sections that already existed.
+  //
+  // `/about` and `/work` now live in the landing profile deck and in the
+  // projects filter; `/contact` is the landing page's contact section, whose id
+  // is `contact`; `/guides` is listed on the blog index. The routes themselves
+  // still exist so these have something to point at, but nothing in the app
+  // links to them any more.
+  //
+  // Every one of these is `permanent`, including the anchor destinations: the
+  // content is not coming back at these addresses, and an external link or a
+  // bookmark should land on the content rather than a 404.
   async redirects() {
     return [
       { source: '/spotify', destination: '/music', permanent: true },
@@ -40,6 +48,11 @@ const nextConfig = {
       // One hop, not a chain: /contact used to answer on a trailing slash and
       // Next would 308 that to the clean path.
       { source: '/contact/', destination: '/contact', permanent: true },
+      // Folded content.
+      { source: '/about', destination: '/#about', permanent: true },
+      { source: '/work', destination: '/projects', permanent: true },
+      { source: '/contact', destination: '/#contact', permanent: true },
+      { source: '/guides', destination: '/blog', permanent: true },
     ]
   },
   headers: async () => {

@@ -12,6 +12,7 @@ import {
   Play,
   Square,
 } from 'lucide-react'
+import { RESUME_URL } from './shared'
 import { Screw } from '@/components/ui/screw'
 import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
 const ABOUT_TRACKS = [
@@ -21,12 +22,21 @@ const ABOUT_TRACKS = [
     metric: '04+',
     metricLabel: 'YEARS IN FRONTEND',
     heading: 'Start with the user.',
-    body: 'I begin with the interaction, not the component. The interface should make the next decision clear.',
     signal: 'PRIMARY PRACTICE',
     surface: '#d7b36f',
     ink: '#2c251b',
     accent: '#8a432d',
     detail: 'Understand the interaction before shaping the interface.',
+    // The card's whole prose, one block. It used to be two: a `body` sentence
+    // and a `story` paragraph that opened by restating it. RANGE was the worst
+    // case — the body appeared word for word at the start of the story. The body
+    // is gone and its one good sentence now opens the story instead.
+    story:
+      'I begin with the interaction, not the component, because the component is the cheap part to get right. Four years of production frontends, most of them React and Next.js on systems where the interface is load-bearing rather than decorative.',
+    credits: [
+      { name: 'Bisadaya', note: 'Job platform · 15K users' },
+      { name: '80&Company', note: 'HR management · Kyoto' },
+    ],
   },
   {
     title: 'SYSTEMS',
@@ -34,12 +44,17 @@ const ABOUT_TRACKS = [
     metric: 'SSR',
     metricLabel: 'RENDERING',
     heading: 'Build the system.',
-    body: 'I use React, Next.js, and TypeScript to create reusable structures that keep new features consistent.',
     signal: 'FRONTEND ARCHITECTURE',
     surface: '#8199ad',
     ink: '#17252d',
     accent: '#315d72',
     detail: 'Create a frontend system that can carry the next feature.',
+    story:
+      'I use React, Next.js, and TypeScript to create reusable structures that keep new features consistent. The structure underneath the first screen decides whether the next six months are cheap or expensive: typed data at the boundary, rendering chosen per route rather than by default.',
+    credits: [
+      { name: 'Primarindo Asia', note: 'Manufacturing · Jakarta' },
+      { name: 'Niqcode', note: 'Product studio · Partner' },
+    ],
   },
   {
     title: 'RANGE',
@@ -47,12 +62,42 @@ const ABOUT_TRACKS = [
     metric: 'VPS',
     metricLabel: 'SELF-HOSTED',
     heading: 'Stay close to production.',
-    body: 'I work across application data, deployment, and monitoring when the frontend needs more than a polished screen.',
     signal: 'ADDITIONAL EXPERIENCE',
     surface: '#b68ba5',
     ink: '#30212a',
     accent: '#70415d',
     detail: 'Keep the product visible and dependable after it ships.',
+    // Trimmed to fit the card. At the previous wording this story measured 87px
+    // of text against an 83px row, so the last line was being cut off behind the
+    // foot's internal scroll. Four characters shorter per line is the whole
+    // difference; the meaning is unchanged.
+    story:
+      'I work across application data, deployment and monitoring when the frontend needs more than a polished screen. This site runs on a VPS behind Nginx, watched by Prometheus and Grafana, which is why the writing here is about what broke.',
+    // No credits row on this card, and that is deliberate.
+    //
+    // It carries the availability line and the résumé as well, which makes its
+    // foot 89px against 46px on the other two. Because the rail is uniform and
+    // the story row is `1fr`, that extra 43px came straight out of the story:
+    // RANGE got a 29px slot for 87px of copy and the last two lines printed
+    // through the credits. Measured, not eyeballed.
+    //
+    // Unzyp Solusi and Campus Connect are not lost — they appear in the
+    // experience cassettes above and in the Work section's credits, which is
+    // where a reader looks for an employer rather than a track label.
+    //
+    // The availability line: on exactly one card. Repeating it on all three is
+    // the redundancy this move was meant to remove, and it sits on the last
+    // track because that is where a reader has finished reading and is deciding
+    // what to do next.
+    aside: (
+      <>
+        Based in Jakarta. Available for frontend, design engineering and hard
+        interface work.{' '}
+        <a href={RESUME_URL} target="_blank" rel="noreferrer">
+          Résumé (PDF)
+        </a>
+      </>
+    ),
   },
 ]
 
@@ -138,7 +183,38 @@ export function About({
                     <small>{track.metricLabel}</small>
                   </span>
                   <strong>{track.heading}</strong>
-                  <p>{track.body}</p>
+                  {/*
+                    The card's prose, credits and availability line.
+
+                    These used to be split three ways: a `body` sentence here, the
+                    longer story in the shared clip panel, and the résumé line
+                    beside it. A reader saw the same idea in the card and then
+                    again in the panel below, and the body sentence was restated
+                    at the top of the story. Now there is one block per card and
+                    the panel is back to being the clip readout it was built as.
+
+                    Order inside the card: story, then the foot on the bottom
+                    edge. The foot is whatever that track has — two credits on
+                    FOCUS and SYSTEMS, the availability line and résumé on
+                    RANGE, and never both, because a taller foot on one card
+                    squeezes the shared `1fr` story row on that card alone.
+                  */}
+                  <p className={styles.aboutCardStory}>{track.story}</p>
+                  <div className={styles.aboutCardFoot}>
+                    {track.credits ? (
+                      <ul className={styles.aboutCardCredits}>
+                        {track.credits.map((credit) => (
+                          <li key={credit.name}>
+                            <b>{credit.name}</b>
+                            <span>{credit.note}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {track.aside ? (
+                      <p className={styles.aboutCardAside}>{track.aside}</p>
+                    ) : null}
+                  </div>
                   <span className={styles.aboutCardLabel}>{track.title}</span>
                 </button>
               ))}
@@ -269,6 +345,12 @@ export function About({
                   CLIP {String(selected + 1).padStart(2, '0')} / SELECTED
                 </SilkscreenLabel>
                 <p>{ABOUT_TRACKS[selected].detail}</p>
+                {/*
+                  The story, credits and résumé line used to sit here as well,
+                  which meant every card said one thing and this panel said it
+                  again. They now live on the card that owns them; the panel is
+                  back to being the clip readout it was designed as.
+                */}
               </div>
             </div>
           </div>

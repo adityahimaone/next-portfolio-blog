@@ -17,6 +17,41 @@ import {
   Square,
 } from 'lucide-react'
 import { Screw } from '@/components/ui/screw'
+import { SilkscreenLabel } from './primitives'
+
+/**
+ * The questions people actually ask before emailing, answered honestly.
+ *
+ * Written as straight answers rather than a sales pitch: the "React Native"
+ * line is a no, because a portfolio that hedges on what it cannot do wastes the
+ * reader's time and the writer's.
+ *
+ * No links live here. Pads 01 to 04 are Email, LinkedIn, GitHub and Résumé,
+ * and a second list of the same four destinations below the deck made the pad
+ * grid look like an oversight rather than the point.
+ */
+const CONTACT_QUESTIONS = [
+  {
+    question: 'What kind of work do you take on?',
+    answer:
+      'Frontend work where the hard part is the state or the edge cases rather than the styling: internal tools, content-heavy public sites, and products that need to work on a phone or on a bad connection.',
+  },
+  {
+    question: 'Do you work with existing backends?',
+    answer:
+      'Mostly. Most of the shipped work is a frontend over an existing service. Running the infrastructure too is something I do when the product genuinely needs it.',
+  },
+  {
+    question: 'Do you do React Native or native mobile?',
+    answer:
+      'No. The mobile work here is responsive web. The habit that matters transfers, but the stack does not, and I would rather say so than take it and hand it back.',
+  },
+  {
+    question: 'What is your availability?',
+    answer:
+      'Frontend work, design engineering, and hard interface problems. Replies usually land within a couple of days.',
+  },
+] as const
 
 const CONTACT_PADS = [
   { label: 'Email', detail: EMAIL, href: `mailto:${EMAIL}`, note: 261.63 },
@@ -45,6 +80,22 @@ const CONTACT_PADS = [
   { label: 'Hat', detail: 'Bright noise', note: 1200 },
   { label: 'Minor', detail: 'A minor', note: 220 },
   { label: 'Bell', detail: 'Metal tone', note: 1046.5 },
+  /*
+    X, appended rather than inserted.
+
+    The four link pads were Email, LinkedIn, GitHub and Résumé, which left X
+    with nowhere to live once the duplicate link list below the deck was removed.
+    Appending is the only safe way to add a pad: `triggerSound` special-cases
+    absolute indices (5, 13 for the noise buffers) and the sweep derives its
+    order from the array, so inserting at index 4 would re-map every note after
+    it. The grid is `repeat(4, ...)` so this lands on a new row on its own.
+  */
+  {
+    label: 'X',
+    detail: 'Short-form notes',
+    href: 'https://x.com/adityahimaone',
+    note: 1174.66,
+  },
 ] as const
 
 const CONTACT_PAD_COLORS = [
@@ -64,6 +115,9 @@ const CONTACT_PAD_COLORS = [
   '#cf62c3',
   '#746fe8',
   '#4bafd1',
+  // Pad 17 (X). The array indexes by pad number, so a new pad needs a colour
+  // at its own index or it renders with the previous pad's `--pad-color`.
+  '#8a9199',
 ] as const
 
 /**
@@ -455,6 +509,41 @@ export function Contact() {
         <p className={styles.contactDeckNote}>
           Pads 01 to 04 open a channel. Pads 05 to 16 play the instrument.
         </p>
+      </div>
+
+      {/*
+        What used to be the standalone `/contact` route: the questions people
+        actually ask before emailing, answered where the deck is.
+
+        The four link channels this block used to carry are gone. Pads 01 to 04
+        are already Email, LinkedIn, GitHub and Résumé, in the same controller,
+        with the same numbers on them — so a second list below the deck said
+        the same four things twice and made the pad grid look like an accident.
+        One copy of a link is the point.
+
+        The FAQ is a single column now rather than a two-up with that list. It
+        has the deck to itself, so it can carry the contact section's whole
+        subject instead of sharing a row with a duplicate.
+
+        Placement is deliberate: between `.contactDeck` and `<footer>`, because
+        `use-rack-animations.ts:444-522` queries specific children of
+        `.contactDeck` by class name and applies 3D transforms to each. A child
+        added in there would sit unanimated inside a moving container.
+
+        `CONTACT_PADS` is untouched: its indices are hardcoded in `triggerSound`
+        (5, 6, 10, 13, 4, 8, 12) and in the sweep order, so reordering or
+        padding the array would re-map the audio.
+      */}
+      <div className={styles.contactBrief}>
+        <SilkscreenLabel>BEFORE YOU WRITE</SilkscreenLabel>
+        <dl className={styles.contactBriefFaq}>
+          {CONTACT_QUESTIONS.map((entry) => (
+            <div key={entry.question} className={styles.contactBriefFaqItem}>
+              <dt>{entry.question}</dt>
+              <dd>{entry.answer}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
 
       <footer className={styles.footer}>

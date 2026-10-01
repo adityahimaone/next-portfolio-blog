@@ -205,7 +205,7 @@ export default function SelfHostingGuide() {
 
         <p className="border-border text-muted-foreground border-t pt-6">
           Something here out of date?{' '}
-          <Link href="/contact" className="text-primary hover:underline">
+          <Link href="/#contact" className="text-primary hover:underline">
             Send a note
           </Link>{' '}
           — corrections are welcome.

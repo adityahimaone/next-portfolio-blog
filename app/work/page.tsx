@@ -216,11 +216,11 @@ export default function WorkPage() {
 
         <p className="border-border text-muted-foreground border-t pt-6">
           Have something that does not fit a category above?{' '}
-          <Link href="/contact" className="text-primary hover:underline">
+          <Link href="/#contact" className="text-primary hover:underline">
             Tell me about it
           </Link>{' '}
           — the{' '}
-          <Link href="/about" className="hover:underline">
+          <Link href="/#about" className="hover:underline">
             about page
           </Link>{' '}
           has the longer version, and{' '}

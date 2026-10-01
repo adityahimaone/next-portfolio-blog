@@ -18,6 +18,18 @@ export type WorkProject = {
   url: string
   /** Reads as the genre on a sleeve. */
   genre: string
+  /**
+   * The shape of problem this project solved, which is not the same thing as
+   * `genre`.
+   *
+   * `genre` is deliberately one-per-release — Developer tools, Corporate,
+   * Utility, Web3, DeFi, Biotech — so it works as a sleeve label and as an
+   * identity, but grouping by it produces six buckets of one, which is what the
+   * existing genre filter on /projects already does. This field is what makes
+   * "can you build the thing I need?" answerable, because it buckets the work
+   * by what was hard rather than by what it was.
+   */
+  problem: string
   year: number
   /** Liner notes: personnel line. */
   role: string
@@ -56,6 +68,7 @@ const SEEDS: Seed[] = [
     cover: '/work/switchyard-cover.webp',
     url: 'https://github.com/adityahimaone/switchyard',
     genre: 'Developer tools',
+    problem: 'Internal tools',
     year: 2024,
     role: 'Design and build',
     stack: ['Go', 'SQLite', 'React', 'Vite', 'gRPC'],
@@ -76,6 +89,7 @@ const SEEDS: Seed[] = [
     cover: '/work/primarindo-asia-cover.webp',
     url: 'https://primarindo.niqcode.com/',
     genre: 'Corporate',
+    problem: 'Marketing sites',
     year: 2024,
     role: 'Frontend lead',
     stack: ['Next.js', 'TypeScript', 'CMS'],
@@ -96,6 +110,7 @@ const SEEDS: Seed[] = [
     cover: '/work/habit-tracker-cover.webp',
     url: 'https://habit.adityahimaone.space/',
     genre: 'Utility',
+    problem: 'Offline-capable products',
     year: 2026,
     role: 'Design and build',
     stack: ['Next.js', 'TypeScript', 'Tailwind CSS'],
@@ -117,6 +132,7 @@ const SEEDS: Seed[] = [
       'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/y2l1g36bjudgsf6yr0eg.webp',
     url: 'https://seaphantom.com',
     genre: 'Web3',
+    problem: 'Wallet-connected UI',
     year: 2022,
     role: 'Frontend engineer',
     stack: ['React', 'Web3.js', 'Tailwind CSS'],
@@ -139,6 +155,7 @@ const SEEDS: Seed[] = [
     cover: '',
     url: 'https://auth.seaphantom.com/',
     genre: 'DeFi',
+    problem: 'Wallet-connected UI',
     year: 2022,
     role: 'Frontend engineer',
     stack: ['React', 'TypeScript', 'Web3.js'],
@@ -160,6 +177,7 @@ const SEEDS: Seed[] = [
     cover: '',
     url: 'https://labgrownbeasts.com/',
     genre: 'Biotech',
+    problem: 'Marketing sites',
     year: 2022,
     role: 'Frontend engineer',
     stack: ['Next.js', 'CMS', 'Tailwind CSS'],

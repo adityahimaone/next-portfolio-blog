@@ -4006,22 +4006,42 @@
 }
 .aboutCardRail {
   display: grid;
-  grid-auto-rows: minmax(310px, 1fr);
+  /* Content-sized rows, not a fixed height.
+   *
+   * Three passes failed here in a row. A fixed height gave the story a `1fr`
+   * row, and every pixel the card did not need became a void between the story
+   * and the credits. Shrinking the card then made the story collide with the
+   * foot, because a `1fr` track has a content floor.
+   *
+   * Sizing the rows to their content removes both failure modes at once: the
+   * story gets exactly its lines, the foot sits directly beneath it, and there
+   * is nothing left to collide with or to leave a gap. `align-items: start`
+   * stops the cards stretching to a common height, which is what was converting
+   * the tallest card's slack into a void on the shorter two. */
+  grid-auto-rows: auto;
+  align-items: start;
   gap: var(--about-card-gap);
 }
 .aboutCard {
   position: relative;
   display: grid;
   width: 100%;
-  height: 100%;
+  /* No `height: 100%`. It stretched every card to the tallest one's height,
+     which is what turned the tallest card's slack into a void on the other two.
+     Rows are sized by their content instead, so the card is as tall as it needs
+     to be and no taller. */
   min-height: 0;
   box-sizing: border-box;
   grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  /* Content-sized rows throughout — no `1fr`. A flexible row needs a fixed card
+     height to flex into, and a fixed height is what produced both the void and
+     the collision. `auto` gives the story exactly its lines and the foot sits
+     directly beneath it, so neither can overlap nor leave a gap. */
+  grid-template-rows: auto auto auto auto;
   align-items: start;
-  gap: 8px 18px;
+  gap: 6px 18px;
   overflow: hidden;
-  padding: clamp(22px, 2.7vw, 38px);
+  padding: clamp(16px, 2vw, 28px);
   border: 1px solid color-mix(in srgb, var(--about-ink) 58%, transparent);
   border-radius: 4px;
   background: repeating-linear-gradient(
@@ -4044,6 +4064,32 @@
     filter 260ms ease,
     opacity 260ms ease,
     box-shadow 220ms ease;
+}
+/* Story and credits as separate rows rather than one scrolling block, so the
+   credits sit directly beneath the story on every card.
+   Both rows are content-sized, so this needs no scroll: an earlier version
+   gave the story a `1fr` row inside a fixed-height card, which meant either a
+   void above the credits or, once the card was shortened, the last line of the
+   story printing through them. */
+.aboutCardStory {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  max-width: 62ch;
+  margin: 0;
+  font-size: clamp(12px, 1vw, 14px);
+  line-height: 1.55;
+  opacity: 1;
+  text-wrap: pretty;
+}
+.aboutCardFoot {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  /* Column 1 only: the foot's row also holds the track badge in column 2, and a
+     full-width foot ran its credits straight underneath it. */
+  grid-column: 1;
+  grid-row: 4;
+  align-content: end;
 }
 .aboutCard:hover {
   transform: translateY(-3px);
@@ -4083,26 +4129,24 @@
   grid-column: 1;
   grid-row: 2;
   align-self: end;
-  padding: 8px 0 0.08em;
+  padding: 4px 0 0.08em;
   overflow: visible;
-  font: 650 clamp(24px, 2.5vw, 40px) / 1 var(--font-space-grotesk);
+  font: 650 clamp(22px, 2.2vw, 34px) / 1 var(--font-space-grotesk);
   letter-spacing: -0.045em;
   text-wrap: balance;
 }
-.aboutCard p {
-  max-width: 540px;
-  grid-column: 1;
-  grid-row: 3;
-  align-self: end;
-  margin: 0;
-  font-size: clamp(12px, 1vw, 14px);
-  line-height: 1.5;
-  opacity: 1;
-  text-wrap: pretty;
-}
+/* The track's name badge.
+   Row 4, column 2 — the metric occupies column 2 across rows 1-2, so there is no
+   free cell to move it into.
+
+   It used to be at row 3's end corner, which is the story's row, so on a card
+   whose story ran three lines the badge printed straight through the last line
+   ("RANGE" over "actually broke"). Row 4's column 2 sits beside the credits,
+   where the column is otherwise empty and the badge reads as a label for the
+   foot of the card. */
 .aboutCardLabel {
   grid-column: 2;
-  grid-row: 3;
+  grid-row: 4;
   align-self: end;
   justify-self: end;
   padding: 5px 7px;
@@ -4143,6 +4187,43 @@
   min-height: 84px;
   padding: 14px 18px;
   border-top: 1px solid rgba(255, 255, 255, 0.55);
+}
+/* Credits and the availability line, pinned to the foot of each profile card.
+   The biography they came from with lives on the card itself now: the clip panel
+   is a readout for the selected track, so putting prose there meant saying the
+   same thing twice, once on the card and once below it. */
+.aboutCardCredits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 18px;
+  margin: 0;
+  padding: 8px 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--about-ink) 20%, transparent);
+  list-style: none;
+}
+.aboutCardCredits li {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+.aboutCardCredits b {
+  font-weight: 600;
+}
+.aboutCardCredits span {
+  opacity: 0.62;
+}
+.aboutCardAside {
+  max-width: 62ch;
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  opacity: 0.72;
+}
+.aboutCardAside a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 @media (prefers-reduced-transparency: reduce) {
   .heroDeviceWall [data-hero-device] [class*="rounded-full"],
@@ -8048,6 +8129,66 @@
   letter-spacing: 0.04em;
   text-align: center;
 }
+/* The questions that used to sit in a standalone /contact route, asked on the
+   page where the deck is. Sits between the deck and the footer, so it is
+   outside the container the scroll choreography transforms.
+
+   Single column by design. It was a two-up sharing a row with a link list, but
+   pads 01 to 04 already carry those four destinations — so this block now has
+   the section's subject to itself instead of half a row and a duplicate. */
+.contactBrief {
+  width: 100%;
+  max-width: 1180px;
+  margin: clamp(40px, 6vh, 76px) auto 0;
+  padding: 0 clamp(20px, 4vw, 48px);
+}
+.contactBriefFaq {
+  display: grid;
+  /* Two columns of question-and-answer pairs on a wide screen: four questions
+     is exactly four cells, so there is no ragged trailing gap. One column
+     below 768px. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: clamp(20px, 2.6vw, 40px);
+  margin: clamp(18px, 2vw, 26px) 0 0;
+}
+.contactBriefFaqItem {
+  min-width: 0;
+}
+/* The question is the heading, not body copy: brighter ink and a rule above it,
+   matching how the deck's own readouts are set. */
+.contactBriefFaqItem dt {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(244, 240, 232, 0.16);
+  color: #f1eee5;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: clamp(15px, 1.5vw, 19px);
+  font-weight: 560;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.contactBriefFaqItem dd {
+  max-width: 60ch;
+  margin: 8px 0 0;
+  color: #b6b3a9;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+@media (max-width: 768px) {
+  .contactBrief {
+    margin-top: 32px;
+    padding: 0 20px;
+  }
+  .contactBriefFaq {
+    gap: 18px;
+  }
+  .contactBriefFaqItem dt {
+    font-size: 15px;
+  }
+}
 
 @media (max-width: 768px) {
   .sectionHeading,
@@ -8688,6 +8829,21 @@
   justify-content: flex-start;
   padding-bottom: clamp(12px, 2.2vh, 24px);
 }
+/* The magnetic dock is fixed to the bottom of the viewport (52px tall plus
+   `bottom-4`), and the hero panel is bottom-aligned inside a 100dvh section —
+   so on a phone the hero's own content ends underneath the dock. Measured at
+   390x844 the second row of hero actions was covered by 32px, and 172px at
+   320x568.
+
+   Pre-existing rather than caused by the two-row CTA layout, but the CTA change
+   made it visible: a full-width primary plus a second row pushed the actions far
+   enough down to sit behind the bar. The clearance is mobile-only because the
+   dock hides itself at desktop widths where there is room. */
+@media (max-width: 768px) {
+  .heroImmersiveContent {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
 .heroEditorialPanel {
   display: grid;
   width: 100%;
@@ -9264,32 +9420,64 @@
     overflow: visible;
   }
 
+  /* Two rows on a phone: the primary action takes the full width on top, and the
+     two secondary links split the row beneath it.
+
+     The previous rule laid all three out in one row at `width: 50%`, which meant
+     three controls competing for a phone's width, two of them truncating to
+     "Read the..." and "Open re...". One full-width target plus two equal halves
+     gives every control a label that fits and a tap area that clears 44px.
+   */
   .heroEditorialPanel .heroActions {
+    display: grid;
     width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-self: stretch;
-    justify-content: flex-start;
     align-items: stretch;
-    flex-direction: row;
     gap: 8px;
   }
-  .heroEditorialPanel .primaryButton,
+  /* Primary: spans both columns, sits on its own row. */
+  .heroEditorialPanel .primaryButton {
+    grid-column: 1 / -1;
+    width: 100% !important;
+    max-width: none;
+    margin-inline: 0 !important;
+    min-height: 50px;
+    padding-inline: 16px;
+    justify-content: center;
+  }
+  /* Secondary: one per column, sharing the row below. */
   .heroEditorialPanel .heroResumeLink {
+    grid-column: auto;
     flex: 1 1 0;
-    width: 50% !important;
-    max-width: 50%;
+    width: auto !important;
+    max-width: none;
     margin-inline: 0 !important;
     min-height: 46px;
-    padding-inline: 12px;
-    gap: 6px;
-    justify-content: space-between;
+    padding-inline: 10px;
+    gap: 5px;
+    justify-content: center;
   }
   .heroEditorialPanel .primaryButton > span,
   .heroEditorialPanel .heroResumeLink {
     white-space: nowrap;
-  }
-  .heroEditorialPanel .primaryButton > span {
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  /* The arrow is the first thing to go when a label is tight; the label itself
+     never should be. */
+  .heroEditorialPanel .heroResumeLink svg {
+    flex-shrink: 0;
+  }
+  /* Below ~360px even two halves get tight, so stack the secondaries rather
+     than let them truncate. */
+  @media (max-width: 359px) {
+    .heroEditorialPanel .heroActions {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .heroEditorialPanel .heroResumeLink {
+      grid-column: 1 / -1;
+    }
   }
 }/* Scroll choreography for the Skills instrument. */
 .skillsSequenceActive {
@@ -10085,7 +10273,11 @@
   }
 }/* Compact profile records keep the three ideas visible as one sequence. */
 .aboutCardRail {
-  grid-auto-rows: clamp(280px, 29vh, 340px);
+  /* Was clamp(280px, 29vh, 340px), then taller and shorter passes chasing the
+     void and then the collision, then a 398px content-derived pass. All of them
+     fought the same bug: a fixed card height with a `1fr` row inside it. Cards
+     are content-sized now, so there is nothing to set here. Kept as a comment
+     so the next person does not re-add a magic number. */
   gap: 10px;
 }
 

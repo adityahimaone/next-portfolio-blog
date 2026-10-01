@@ -134,8 +134,9 @@ const SEEDS: Seed[] = [
     title: 'SeaPhantom P2P',
     description:
       'The peer-to-peer trading desk for the same collection: escrow, live order book and settlement states, designed to be readable at a glance.',
-    cover:
-      'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/fphb7ddemp4ixeutav1b.webp',
+    // No artwork for this one: an empty cover draws the generated album-art
+    // fallback, the same treatment the "More on GitHub" archive rows use.
+    cover: '',
     url: 'https://auth.seaphantom.com/',
     genre: 'DeFi',
     year: 2022,
@@ -155,8 +156,8 @@ const SEEDS: Seed[] = [
     title: 'Labgrownbeasts',
     description:
       'A biotech brand site built to make a hard subject feel plain: long-form science, clear structure, and a gallery that loads before you scroll to it.',
-    cover:
-      'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/mqprcb6todunicq4cg0a.webp',
+    // Generated cover, for the same reason as SeaPhantom P2P above.
+    cover: '',
     url: 'https://labgrownbeasts.com/',
     genre: 'Biotech',
     year: 2022,
@@ -201,9 +202,9 @@ const ORDERED_SEEDS = ORDER.map((slug) => {
 
 // Anything added to SEEDS without being added to ORDER would silently vanish
 // from the site, so fail loudly rather than dropping it.
-const missing = SEEDS.filter(
-  (seed) => !ORDER.includes(seed.slug),
-).map((seed) => seed.slug)
+const missing = SEEDS.filter((seed) => !ORDER.includes(seed.slug)).map(
+  (seed) => seed.slug,
+)
 if (missing.length > 0) {
   throw new Error(`SEEDS entries missing from ORDER: ${missing.join(', ')}`)
 }

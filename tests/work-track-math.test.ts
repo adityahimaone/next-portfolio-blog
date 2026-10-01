@@ -104,7 +104,14 @@ describe('formatProjectTime', () => {
 describe('WORK_PROJECTS work metadata', () => {
   it('gives every project the fields the section renders', () => {
     for (const project of WORK_PROJECTS) {
-      expect(project.cover).toBeTruthy()
+      // A cover is either empty or a real path/URL. Empty is not a missing
+      // field: `Cover` draws the seeded generated album art for those, which
+      // is how the "More on GitHub" archive rows and SeaPhantom P2P and
+      // Labgrownbeasts are all rendered. What must not happen is a cover that
+      // is neither empty nor something `next/image` could load.
+      if (project.cover) {
+        expect(project.cover).toMatch(/^(\/|https:\/\/res\.cloudinary\.com\/)/)
+      }
       expect(project.role).toBeTruthy()
       expect(project.stack.length).toBeGreaterThan(0)
       expect(project.highlights.length).toBeGreaterThanOrEqual(3)

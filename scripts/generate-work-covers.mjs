@@ -35,16 +35,12 @@ const SOURCES = [
     remote:
       'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/y2l1g36bjudgsf6yr0eg.webp',
   },
-  {
-    slug: 'seaphantom-p2p',
-    remote:
-      'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/fphb7ddemp4ixeutav1b.webp',
-  },
-  {
-    slug: 'labgrownbeasts',
-    remote:
-      'https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/mqprcb6todunicq4cg0a.webp',
-  },
+  // seaphantom-p2p and labgrownbeasts used to be listed here against their
+  // Cloudinary originals. Their `cover` is now empty in data/projects.ts, which
+  // makes Cover draw the seeded generated art at runtime — the same treatment
+  // the "More on GitHub" archive rows use, and the reason no local file is
+  // generated for them. Adding one here would put the cover back on the network
+  // path this was meant to leave.
 ]
 
 async function buildLocal(slug, src) {

@@ -1,11 +1,14 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import { motion, useSpring, useTransform } from 'motion/react'
 import { Cover } from '@/features/booth/cover'
-import { GITHUB_URL, type ArchiveTrack, type LibraryTrack } from './library-data'
+import {
+  GITHUB_URL,
+  type ArchiveTrack,
+  type LibraryTrack,
+} from './library-data'
 import styles from './work.module.css'
 
 /** Keeps the archive a hint rather than a second list. */
@@ -149,7 +152,16 @@ function LibraryRow({
         onClick={onSelect}
       >
         <span className={styles.libraryArt}>
-          <Image src={track.cover} alt="" fill sizes="44px" />
+          {/* Through Cover rather than next/image: a project with no artwork
+              (SeaPhantom P2P, Labgrownbeasts) has an empty `cover`, and
+              next/image throws on an empty src. Cover draws the generated
+              art in that case. */}
+          <Cover
+            seed={track.slug}
+            title={track.title}
+            src={track.cover || undefined}
+            sizes="30px"
+          />
         </span>
         <span className={styles.libraryMeta}>
           <span className={styles.libraryName}>{track.title}</span>

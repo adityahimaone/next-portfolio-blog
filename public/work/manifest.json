@@ -18,15 +18,5 @@
     "slug": "seaphantom",
     "cover": "https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/y2l1g36bjudgsf6yr0eg.webp",
     "mode": "remote (next/image)"
-  },
-  {
-    "slug": "seaphantom-p2p",
-    "cover": "https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/fphb7ddemp4ixeutav1b.webp",
-    "mode": "remote (next/image)"
-  },
-  {
-    "slug": "labgrownbeasts",
-    "cover": "https://res.cloudinary.com/deselamak/image/upload/v1699777135/portofolio/mqprcb6todunicq4cg0a.webp",
-    "mode": "remote (next/image)"
   }
 ]

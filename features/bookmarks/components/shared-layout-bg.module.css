@@ -1,0 +1,68 @@
+/*
+ * The pill behind the playlist rows.
+ *
+ * `--led` is set per row by the caller, so the pill picks up the channel's own
+ * colour as it glides between rows rather than a single fixed tint.
+ */
+
+/*
+  No display of its own. The pill is absolutely positioned inside whichever item
+  is active, so the container's layout is never involved — and imposing one
+  would fight the caller's list: `flex` on the bookmark <ul> changes how its
+  `content-visibility: auto` rows are laid out, and the playlist rows are
+  already full-width blocks. Block flow is correct for both.
+*/
+.list {
+  width: 100%;
+}
+
+.item {
+  position: relative;
+}
+
+/*
+ * The pill's frame. It is stretched to the row by the inline left/right insets
+ * and stays behind the row's own content, which is why it is painted before the
+ * children and carries no pointer events.
+ *
+ * `overflow` must stay visible: the pill overhangs the row by `inset` on each
+ * side, and clipping it here would silently discard that inset and make the pill
+ * exactly row-width.
+ */
+.pillContainer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* The item background used to sit on the row itself; now it comes from the
+     pill, so it has to paint under the row's own content. */
+  z-index: 0;
+  /*
+    Deliberately NOT `will-change: transform`.
+
+    Promoting the pill to its own compositor layer looks like the obvious fix for
+    a moving overlay, and it was tried: with the layer, the playlist sidebar's
+    sweep went from 1-2 dropped frames to 6 (median over 6 runs, production
+    build). A promoted layer is allocated and kept for as long as the element
+    lives, and on a 920x44 pill that cost more than the repaint it avoided. The
+    pill unmounts on leave, so the layer would only ever be transient — but
+    transient per hover is still every hover. Dropped: the blur and the row's
+    containment below are where the measurable win actually was.
+  */
+  border-radius: var(--booth-r-control);
+  /* A tint of the row's own LED colour, so the hover fill carries the channel
+     it is hovering rather than one flat grey. */
+  background: color-mix(in srgb, var(--led, var(--primary)) 16%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--led, var(--primary)) 28%, transparent);
+}
+
+.item > :not(.pillContainer) {
+  position: relative;
+  z-index: 1;
+}

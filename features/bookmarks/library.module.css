@@ -127,16 +127,15 @@
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition:
-    background-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+  /* The hover fill moved to the shared-layout pill, which glides between rows
+     instead of crossfading in place. What is left to transition here is the
+     ink, which the pill cannot do. */
+  transition: color var(--dur-fast) var(--ease-out);
 }
 
-.playlist:hover {
-  background: var(--flat-fill-hover);
-  color: var(--booth-ink);
-}
-
+/* Only the selected row keeps its own background. `:hover` deliberately does
+   not — if it filled in place as well as moving the pill, the row would flash a
+   second fill underneath the pill arriving over it. */
 .playlist[aria-pressed='true'] {
   background: var(--flat-fill-hover);
   color: var(--booth-ink);
@@ -580,6 +579,33 @@
   font-size: 0.625rem;
 }
 
+/*
+  The pill for the bookmark row list.
+
+  The row's own radius is 10px, not the pill-shaped --booth-r-control the
+  shared-layout component defaults to, and the tint has to read as the row
+  filling rather than as a floating capsule. The frosted ::after this replaces
+  used `border-radius: inherit` off the row, so 10px is the radius that matches
+  what the row looked like before.
+
+  `!important` is needed only because both classes land on the same node and the
+  component's own `.pill` rule is the one that has to lose. CSS modules emit both
+  selectors at equal specificity, so without it the winner is decided by which
+  stylesheet comes later, not by which rule is meant to apply.
+*/
+.trackPill {
+  border-radius: 10px !important;
+  /* Slightly stronger than the sidebar pill: a bookmark row is a wide, sparse
+     target, so the fill has to carry further to read as a hover at all. */
+  background: color-mix(
+    in srgb,
+    var(--led, var(--primary)) 10%,
+    transparent
+  ) !important;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--led, var(--primary)) 24%, transparent) !important;
+}
+
 .trackList {
   margin: 0 0 2rem;
   padding: 0;
@@ -595,16 +621,28 @@
    then snapped 8px shorter the moment it scrolled into view. At 60 rows a page
    that is a 480px hole moving under the reader, and the document height churned
    on every append — which is exactly the jitter reported on fast scrolls.
-   `auto 44px` records the real size after the first paint and keeps it. */
+   `auto 44px` records the real size after the first paint and keeps it.
+
+   `is-content-visibility: hidden` was tried here, to keep that skipping while
+   dropping the re-measure a row pays every time it becomes relevant — which is
+   what the pill does on each hover. It measured no better in the built app (15
+   dropped frames per sweep either way) despite looking like a 24 -> 10 win when
+   injected as a stylesheet override. Not kept: no measured benefit, and it is
+   one more containment rule between the row and its own layout. */
 .trackList > li {
+  /* The shared-layout item. `position: relative` is what the pill is positioned
+     against; it was harmless to leave off before because the row's plate was a
+     pseudo-element of the anchor and measured the anchor instead. */
+  position: relative;
   content-visibility: auto;
   contain-intrinsic-size: auto 44px;
 }
 
 .track {
   position: relative;
-  /* Establishes a stacking context so the ::after plate sits behind this row's
-     own content without escaping behind the list behind it. */
+  /* Establishes a stacking context so the shared-layout pill (a sibling, on
+     the <li>) stays behind this row's own content without escaping behind the
+     list behind it. */
   isolation: isolate;
   display: grid;
   grid-template-columns: 26px 32px minmax(0, 1fr) minmax(7rem, 11rem) 16px;
@@ -615,39 +653,21 @@
   border-radius: 10px;
   color: inherit;
   text-decoration: none;
-  transition:
-    background-color var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out);
 }
 
 /*
-  The frosted plate lives on a pseudo-element, not on .track itself. A row
-  carrying its own backdrop-filter would force the browser to re-sample the
-  whole list every time the pointer moves down it. Painting the plate on
-  ::after means only the row under the pointer is ever composited.
+  The hover plate used to be a frosted ::after on the row itself. It is now the
+  shared-layout pill rendered on the <li> by SharedLayoutBg, which glides between
+  rows rather than fading in under each one.
 
-  --glass-fill and --glass-blur are the booth's own tokens, so this matches the
-  dock and the sidebar and needs no light/dark branch of its own.
+  The two cannot coexist: the ::after was a filled, rounded plate at the row's
+  own bounds, so a pill arriving over it would show a second fill edge sitting a
+  few pixels proud of the first. The frosted ::after is therefore removed rather
+  than supplemented, and the row itself keeps only the ::before rail.
+
+  `.trackList > li` below is the item the pill is injected into, so it needs the
+  same `position: relative` the pill is positioned against.
 */
-.track::after {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  border: 1px solid transparent;
-  border-radius: inherit;
-  background: var(--glass-fill);
-  box-shadow: var(--glass-shadow);
-  /* A slow, near-linear ramp reads as the glass resolving rather than a
-     switch flipping. The ease-out on the short tokens decelerated into the
-     hover so hard that the plate looked like it arrived in the first 100ms
-     and then sat there. */
-  opacity: 0;
-  pointer-events: none;
-  content: '';
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  transition: opacity 420ms cubic-bezier(0.4, 0, 0.2, 1);
-}
 
 .track::before {
   content: '';
@@ -662,33 +682,13 @@
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 
-/* The frosted plate rises in rather than snapping, and the flat tint underneath
-   fades out at the same time. A single ::after means the two never disagree:
-   opacity 0 is the row's resting state, so the flat background can be dropped
-   entirely from the hover rule.
-
-   data-active is not gated on the hover media query: a row selected with the
-   keyboard has no pointer over it, and that state still has to read. */
-.track[data-active='true'] {
-  background: transparent;
-}
-
-.track[data-active='true']::after {
-  opacity: 1;
-}
-
+/* The keyboard-selected row has no pointer over it, so its rail still has to
+   read. This is not gated on the hover media query. */
 .track[data-active='true']::before {
   opacity: 1;
 }
 
-/* Gated on a real pointer: on touch, :hover sticks after the first tap and a
-   frosted row would stay lit while the user scrolls. */
 @media (hover: hover) and (pointer: fine) {
-  .track:hover {
-    background: transparent;
-  }
-
-  .track:hover::after,
   .track:hover::before {
     opacity: 1;
   }
@@ -1139,7 +1139,6 @@
   /* Every motion in this sheet is a hover response, which is exactly what
      reduced-motion asks to keep as an instant state change. */
   .track,
-  .track::after,
   .track::before,
   .pinnedTile,
   .playlist,
@@ -1153,25 +1152,11 @@
 }
 
 /*
-  Glass is decoration. Reduced transparency and increased contrast both drop the
-  blur; the row keeps a flat tint so the hover state is still legible.
+  Glass is decoration. The row's frosted ::after is gone, so these branches used
+  to strip the blur off it no longer have one to strip — the shared-layout pill
+  it replaced is a flat tint with no backdrop-filter at all, which is already the
+  reduced-transparency appearance. Nothing to override here.
 */
-@media (prefers-reduced-transparency: reduce) {
-  .track::after {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    background: var(--flat-fill-hover);
-  }
-}
-
-@media (prefers-contrast: more) {
-  .track::after {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    background: var(--flat-fill-hover);
-    border-color: currentColor;
-  }
-}
 
 /* The row's five tracks carry 74px of fixed columns, a 7rem (112px) host
    column and 40px of gaps — 226px of chrome before the name gets a single

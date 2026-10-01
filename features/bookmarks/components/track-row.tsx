@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useCallback, useRef, useState } from 'react'
+import { memo, useCallback, useRef, useState, type ReactNode } from 'react'
 import { ArrowUpRight, Pencil, Play, Star, Trash2 } from 'lucide-react'
 import type { Bookmark } from '../types'
 import { channelColor } from '../constants/categories'
@@ -18,6 +18,23 @@ interface TrackRowProps {
   canHover?: boolean
   onEdit: (bookmark: Bookmark) => void
   onDelete: (bookmark: Bookmark) => void
+  /**
+   * Forwarded to the <li> by SharedLayoutBg, which instruments the list's
+   * direct children to place the moving pill. A custom component receives those
+   * props but ignores them unless it spreads them, and the pill lands nowhere
+   * if it does not.
+   */
+  className?: string
+  onMouseEnter?: () => void
+  /**
+   * The injected pill container, rendered as the <li>'s first child.
+   *
+   * SharedLayoutBg injects the pill by wrapping each item's children, which
+   * works for a plain <li> because React replaces its children. This component
+   * builds its own content instead, so it has to render what it was handed or
+   * the pill container is silently dropped.
+   */
+  children?: ReactNode
 }
 
 /**
@@ -49,6 +66,9 @@ export const TrackRow = memo(function TrackRow({
   canHover = true,
   onEdit,
   onDelete,
+  className,
+  onMouseEnter,
+  children,
 }: TrackRowProps) {
   const rowRef = useRef<HTMLAnchorElement>(null)
   const [hovered, setHovered] = useState(false)
@@ -61,19 +81,44 @@ export const TrackRow = memo(function TrackRow({
     onDelete(bookmark)
   }, [onDelete, bookmark])
 
-  // Stable across renders so memo actually holds: `canHover` is the only thing
-  // these read besides the row's own state, and it changes only on a pointer
-  // capability change.
+  /*
+    The hover that the pill replaces is this handler's only real job now, so it
+    is kept for the SitePeek iframe alone. `canHover` still gates it: on touch
+    the peek never opens, because `:hover` sticks after the first tap.
+
+    Memo does not re-run on `onMouseEnter` changing identity — `memo`'s default
+    comparison is shallow, and SharedLayoutBg hands out one cached closure per
+    row key, so it stays stable for the life of the list.
+  */
   const handleEnter = useCallback(() => {
     if (canHover) setHovered(true)
-  }, [canHover])
+    onMouseEnter?.()
+  }, [canHover, onMouseEnter])
 
   const handleLeave = useCallback(() => {
     setHovered(false)
   }, [])
 
+  /*
+    The <li> is the shared-layout item, not the <a>: the pill is injected here
+    as a sibling of the anchor, and a pill inside the anchor would put an empty
+    span inside the thing the reader is clicking.
+
+    `--led` moves up from the anchor to the <li> so the pill — which is a
+    sibling of the anchor, not a descendant — resolves the same channel colour.
+    The anchor keeps it too, for the ::before rail and the number tint.
+  */
   return (
-    <li data-active={active || undefined}>
+    <li
+      className={className}
+      data-active={active || undefined}
+      style={{ ['--led' as string]: channelColor(bookmark.category) }}
+      onMouseEnter={handleEnter}
+    >
+      {/* The shared-layout pill container SharedLayoutBg injects here, as a
+          sibling of the anchor rather than inside it. */}
+      {children}
+
       <a
         ref={rowRef}
         href={bookmark.url}
@@ -85,8 +130,10 @@ export const TrackRow = memo(function TrackRow({
         // arrow) is keyed off this attribute on the anchor. It is mirrored on
         // the <li> for the list-level hooks.
         data-active={active || undefined}
+        // The <li> also carries --led, but the pill is a sibling of this
+        // anchor and the rail is a pseudo-element of it — neither inherits from
+        // the other, so both declare it.
         style={{ ['--led' as string]: channelColor(bookmark.category) }}
-        onMouseEnter={handleEnter}
         onMouseLeave={handleLeave}
       >
         <span className={styles.index}>

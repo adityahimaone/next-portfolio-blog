@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import { Cover } from '@/features/booth/cover'
 import {
   Pause,
   Play,
@@ -58,7 +58,14 @@ export function PlayerBar({
     >
       <div className={styles.playerIdentity}>
         <span className={styles.playerArt}>
-          <Image src={track.cover} alt="" fill sizes="52px" />
+          {/* Cover, not next/image: an empty `cover` throws in next/image, and
+              two of the six releases have no artwork. */}
+          <Cover
+            seed={track.slug}
+            title={track.title}
+            src={track.cover || undefined}
+            sizes="34px"
+          />
         </span>
         <span className={styles.playerMeta}>
           <span className={styles.playerTitle}>{track.title}</span>

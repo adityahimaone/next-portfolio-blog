@@ -1,11 +1,11 @@
 'use client'
 
-import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowUpRight, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { trackLabel } from '@/data/projects'
+import { Cover } from '@/features/booth/cover'
 import {
   lockScroll,
   unlockScroll,
@@ -126,10 +126,12 @@ export function LinerNotes({
               </button>
 
               <div className={styles.linerArt}>
-                <Image
-                  src={project.cover}
-                  alt={`${project.title} cover`}
-                  fill
+                {/* Cover, not next/image: an empty `cover` throws in
+                    next/image, and two of the six releases have no artwork. */}
+                <Cover
+                  seed={project.slug}
+                  title={project.title}
+                  src={project.cover || undefined}
                   sizes="(max-width: 768px) 70vw, 360px"
                 />
               </div>

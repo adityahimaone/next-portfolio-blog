@@ -1,8 +1,8 @@
 'use client'
 
-import Image from 'next/image'
 import { motion, useMotionValueEvent, type MotionValue } from 'motion/react'
 import { useState } from 'react'
+import { Cover } from '@/features/booth/cover'
 import type { LibraryTrack } from './library-data'
 import styles from './work.module.css'
 
@@ -46,10 +46,13 @@ export function NowCentre({
             onClick={onOpenLiner}
             aria-label={`Open liner notes for ${track.title}`}
           >
-            <Image
-              src={track.cover}
-              alt={`${track.title} cover`}
-              fill
+            {/* Cover, not next/image: an empty `cover` throws in next/image,
+                and two of the six releases have no artwork. The button is
+                already 1:1, so Cover fills it exactly. */}
+            <Cover
+              seed={track.slug}
+              title={track.title}
+              src={track.cover || undefined}
               sizes="(max-width: 900px) 60vw, 360px"
               priority={track.id === 0}
             />

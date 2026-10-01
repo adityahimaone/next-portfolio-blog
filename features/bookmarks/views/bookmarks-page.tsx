@@ -27,6 +27,7 @@ import { FilterRow, PageHeader, useRoomChannel } from '@/features/booth'
 import { useDockSlot } from '@/features/booth/dock-slot'
 import { FaviconCell } from '../components/favicon-cell'
 import { TrackRow } from '../components/track-row'
+import { SharedLayoutBg } from '../components/shared-layout-bg'
 import { BookmarkAdminModal } from '../components/bookmark-admin-modal'
 import { useListKeys, useGlobalShortcuts } from '../hooks/use-list-keys'
 import { useIsMobile } from '@/hooks/use-media'
@@ -517,25 +518,29 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
           <aside className={`${styles.sidebar} glass`} aria-label="Playlists">
             <p className={styles.sidebarTitle}>Playlists</p>
             <div className={styles.sidebarScroll}>
-              {channels.map((name) => (
-                <button
-                  key={name}
-                  type="button"
-                  aria-pressed={channel === name}
-                  onClick={() => updateParams({ category: name })}
-                  className={styles.playlist}
-                  style={{
-                    ['--led' as string]:
-                      name === 'All' ? DEFAULT_HUE : channelColor(name),
-                  }}
-                >
-                  <span className={styles.playlistLed} aria-hidden="true" />
-                  <span className={styles.playlistName}>{name}</span>
-                  <span className={styles.playlistCount}>
-                    {name === 'All' ? page.totalAll : (counts.get(name) ?? 0)}
-                  </span>
-                </button>
-              ))}
+              {/* The pill glides between rows on hover, so the row backgrounds
+                  themselves must stay transparent — see `.playlist`. */}
+              <SharedLayoutBg inset={4}>
+                {channels.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    aria-pressed={channel === name}
+                    onClick={() => updateParams({ category: name })}
+                    className={styles.playlist}
+                    style={{
+                      ['--led' as string]:
+                        name === 'All' ? DEFAULT_HUE : channelColor(name),
+                    }}
+                  >
+                    <span className={styles.playlistLed} aria-hidden="true" />
+                    <span className={styles.playlistName}>{name}</span>
+                    <span className={styles.playlistCount}>
+                      {name === 'All' ? page.totalAll : (counts.get(name) ?? 0)}
+                    </span>
+                  </button>
+                ))}
+              </SharedLayoutBg>
             </div>
 
             {isAdmin && (
@@ -684,7 +689,34 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
                     {page.total} {page.total === 1 ? 'link' : 'links'}
                   </span>
                 </div>
-                <ul className={styles.trackList}>
+                {/*
+                  The pill replaces the row's frosted ::after, so the list is
+                  the shared-layout root. `disabled` on touch: `:hover` sticks
+                  after the first tap, so the pill would stay lit over one row
+                  while the reader scrolls the rest of the list past it.
+                */}
+                <SharedLayoutBg
+                  as="ul"
+                  className={styles.trackList}
+                  pillClassName={styles.trackPill}
+                  disabled={!canHover}
+                  // No inset. The playlist rows are inset pills, but these
+                  // rows are full-width: the pill already spans the whole row,
+                  // and the default 20px overhang pushed it past both edges of
+                  // the list.
+                  inset={0}
+                  // No blur. The blur is the one part of the pill that costs
+                  // real frames here. A `filter` does not stay inside the pill:
+                  // a gaussian blur re-samples everything painted behind it in
+                  // the same backdrop root, and this pill is 920x44 — four
+                  // times the sidebar's area — sitting beside the sidebar's
+                  // blur(18px) glass. Measured with the same protocol in the
+                  // production build (4 warm-up sweeps discarded, 6 measured,
+                  // each read off the DOM's inline filter to confirm the build):
+                  // 24 dropped frames per sweep with the blur, 15 without. The
+                  // sidebar's own pill keeps its blur and still measures 2.
+                  blur={false}
+                >
                   {tracks.map((bookmark, index) => (
                     <TrackRow
                       key={bookmark.id}
@@ -697,7 +729,7 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
                       onDelete={handleDelete}
                     />
                   ))}
-                </ul>
+                </SharedLayoutBg>
 
                 {hasMore && (
                   <div className={styles.loadMore}>
@@ -867,28 +899,32 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
                 </button>
               </div>
               <div className={styles.channelSheetList}>
-                {channels.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    aria-pressed={channel === name}
-                    onClick={() => {
-                      updateParams({ category: name })
-                      setIsChannelSheetOpen(false)
-                    }}
-                    className={styles.playlist}
-                    style={{
-                      ['--led' as string]:
-                        name === 'All' ? DEFAULT_HUE : channelColor(name),
-                    }}
-                  >
-                    <span className={styles.playlistLed} aria-hidden="true" />
-                    <span className={styles.playlistName}>{name}</span>
-                    <span className={styles.playlistCount}>
-                      {name === 'All' ? page.totalAll : (counts.get(name) ?? 0)}
-                    </span>
-                  </button>
-                ))}
+                <SharedLayoutBg inset={4}>
+                  {channels.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      aria-pressed={channel === name}
+                      onClick={() => {
+                        updateParams({ category: name })
+                        setIsChannelSheetOpen(false)
+                      }}
+                      className={styles.playlist}
+                      style={{
+                        ['--led' as string]:
+                          name === 'All' ? DEFAULT_HUE : channelColor(name),
+                      }}
+                    >
+                      <span className={styles.playlistLed} aria-hidden="true" />
+                      <span className={styles.playlistName}>{name}</span>
+                      <span className={styles.playlistCount}>
+                        {name === 'All'
+                          ? page.totalAll
+                          : (counts.get(name) ?? 0)}
+                      </span>
+                    </button>
+                  ))}
+                </SharedLayoutBg>
               </div>
             </motion.div>
           </>

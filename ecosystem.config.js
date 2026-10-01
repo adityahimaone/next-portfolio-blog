@@ -13,7 +13,32 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 3000,
         HOSTNAME: '127.0.0.1',
+        // The host has 1.9GB total and roughly 1.2GB is already held by other
+        // services, so V8's default old-space limit of ~1GB on this box let a
+        // single page render expand the heap until the process swapped instead
+        // of collecting.
+        //
+        // --max-semi-space-size is the other half of the story and was worth
+        // more than the old-space cap alone. V8 sizes the young generation from
+        // available system memory, so on a large host each semi-space grows to
+        // 16MB+ and two of them stay committed as scratch space across every
+        // request. Measured on this box across a full 21-route sweep:
+        //
+        //   --max-old-space-size=128                        -> 181MB RSS
+        //   --max-old-space-size=128 --max-semi-space-size=2 -> 134MB RSS
+        //
+        // i.e. ~47MB, more than the cap itself saved. Short-lived render
+        // garbage is collected in a much smaller nursery, so less of it is
+        // promoted into old space and far less scratch is committed. 2MB is
+        // deliberately at the low end: it costs a few more scavenges, which is
+        // CPU this box has spare, in exchange for the memory it buys back.
+        NODE_OPTIONS:
+          '--max-old-space-size=128 --max-semi-space-size=2',
       },
+      // Runaway backstop. The heap cap above makes the app collect rather than
+      // grow; this catches anything that grows outside the JS heap (native
+      // buffers, a leak in a dependency) so the OS never has to swap.
+      max_memory_restart: '350M',
       // Back off instead of hot-looping when the app fails to boot.
       exp_backoff_restart_delay: 5000,
       restart_delay: 5000,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { memo, useCallback, useRef, useState } from 'react'
 import { ArrowUpRight, Pencil, Play, Star, Trash2 } from 'lucide-react'
 import type { Bookmark } from '../types'
 import { channelColor } from '../constants/categories'
@@ -16,8 +16,8 @@ interface TrackRowProps {
   isAdmin?: boolean
   /** False on touch, where there is no hover to preview from. */
   canHover?: boolean
-  onEdit?: () => void
-  onDelete?: () => void
+  onEdit: (bookmark: Bookmark) => void
+  onDelete: (bookmark: Bookmark) => void
 }
 
 /**
@@ -29,8 +29,19 @@ interface TrackRowProps {
  * link would consume the click the row exists to make. Preview is bound to
  * hover only, never to `active`, so arrowing the list with j/k does not fire a
  * request per row.
+ *
+ * Memoized, and the reason is the pagination. Appending a page re-renders the
+ * list, and without this every row already on screen re-renders too — so a
+ * reader who has loaded four pages pays for 240 rows to gain 60, five times
+ * over, and each row carries a favicon hook and two peek effects. That is what
+ * reads as a hitch when the sentinel fires repeatedly during a fast scroll.
+ *
+ * Memo only pays off because the props are stable. The two callbacks take the
+ * bookmark as an argument rather than closing over it, so a row's identity
+ * across renders is its bookmark object, not a fresh arrow function; the
+ * parent memoizes them on the state they actually read.
  */
-export function TrackRow({
+export const TrackRow = memo(function TrackRow({
   bookmark,
   index,
   active,
@@ -41,6 +52,25 @@ export function TrackRow({
 }: TrackRowProps) {
   const rowRef = useRef<HTMLAnchorElement>(null)
   const [hovered, setHovered] = useState(false)
+
+  const handleEdit = useCallback(() => {
+    onEdit(bookmark)
+  }, [onEdit, bookmark])
+
+  const handleDelete = useCallback(() => {
+    onDelete(bookmark)
+  }, [onDelete, bookmark])
+
+  // Stable across renders so memo actually holds: `canHover` is the only thing
+  // these read besides the row's own state, and it changes only on a pointer
+  // capability change.
+  const handleEnter = useCallback(() => {
+    if (canHover) setHovered(true)
+  }, [canHover])
+
+  const handleLeave = useCallback(() => {
+    setHovered(false)
+  }, [])
 
   return (
     <li data-active={active || undefined}>
@@ -56,8 +86,8 @@ export function TrackRow({
         // the <li> for the list-level hooks.
         data-active={active || undefined}
         style={{ ['--led' as string]: channelColor(bookmark.category) }}
-        onMouseEnter={() => canHover && setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
       >
         <span className={styles.index}>
           <span className={styles.num}>{index + 1}</span>
@@ -80,7 +110,7 @@ export function TrackRow({
           <span className={styles.rowActions}>
             <button
               type="button"
-              onClick={onEdit}
+              onClick={handleEdit}
               className={styles.rowAction}
               aria-label={`Edit ${bookmark.title}`}
             >
@@ -88,7 +118,7 @@ export function TrackRow({
             </button>
             <button
               type="button"
-              onClick={onDelete}
+              onClick={handleDelete}
               className={styles.rowAction}
               aria-label={`Delete ${bookmark.title}`}
             >
@@ -103,4 +133,4 @@ export function TrackRow({
       <SitePeek url={bookmark.url} anchorRef={rowRef} hovered={hovered} />
     </li>
   )
-}
+})

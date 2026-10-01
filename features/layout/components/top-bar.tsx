@@ -28,18 +28,29 @@ export function TopBar() {
   if (isHome) {
     return (
       <div className={styles.topBar}>
-        <Link
-          href="/"
-          aria-label="Aditya Himawan, home"
-          className={cn(styles.mark, 'pointer-events-auto shrink-0')}
-        >
-          <VenLogo />
-        </Link>
+        {/* The inner row is capped to the same 1500px box as the hairline and
+            the hero panel. The bar itself still fills the stage, because the
+            line is its top edge and is measured against its padding box — so
+            capping the bar would have moved the line too, and capping only the
+            chips is what keeps the logo and the toggle inside the line's two
+            ends at every width. */}
+        <div className={styles.topBarInner}>
+          <Link
+            href="/"
+            aria-label="Aditya Himawan, home"
+            className={cn(styles.mark, 'pointer-events-auto shrink-0')}
+          >
+            <VenLogo />
+          </Link>
 
-        {/* Same control the booth routes render, so the two are one
-            component rather than two lookalikes. `inFlow` drops the fixed
-            positioning so it lands in the top bar's flex row. */}
-        <FloatingThemeToggle inFlow className={cn(styles.toggle, 'size-9')} />
+          {/* Same control the booth routes render, so the two are one
+              component rather than two lookalikes. `inFlow` drops the fixed
+              positioning so it lands in this flex row. */}
+          <FloatingThemeToggle
+            inFlow
+            className={cn(styles.toggle, 'size-9 shrink-0')}
+          />
+        </div>
       </div>
     )
   }

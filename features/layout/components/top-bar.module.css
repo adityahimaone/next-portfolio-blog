@@ -15,44 +15,104 @@
   --topbar-mark: #ff7a45;
   --topbar-mark-glow: drop-shadow(0 0 8px rgba(255, 90, 31, 0.7));
   --topbar-toggle: rgba(244, 240, 232, 0.9);
-  /* Explicitly requested as a normal-flow bar rather than a fixed overlay.
-     On the landing page this is the first child of .heroStage, which has its
-     own top gutter; the bar's padding would stack on top of it. Pull it back
-     out to the stage edge so the two read as one header. The horizontal
-     padding is kept — the stage's side gutter is what the bar aligns to. */
+  /* A normal-flow bar rather than a fixed overlay, and the first child of
+     .heroStage so it scrolls away with the hero. It shares the stage's gutter
+     rather than cancelling it: the horizontal padding is what aligns the chips
+     and the hairline to the hero panel's own box, and the vertical gutter is
+     the stage's to own. */
   position: relative;
   z-index: 50;
-  margin-top: calc(clamp(24px, 3vw, 44px) * -1);
+  /* No negative margin. It used to pull the bar up by exactly the stage's top
+     padding, which put the hairline at y = -6 on a phone and y = 0 on a
+     desktop — painted above the viewport, so the line the report called
+     deleted was in the DOM and invisible. Cancelling a gutter with a negative
+     margin is also what stacked the two in the first place. */
+  margin-top: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px clamp(20px, 4vw, 64px) 10px;
+  /* Top padding is the band's depth: the hairline is this box's top edge, so
+     everything below it — the chips included — sits inside the band, the same
+     relationship the hero panel's content has to its own border-top. */
+  padding: 18px clamp(20px, 4vw, 64px) 16px;
 }
 
-/* The hairline runs beneath both chips, preserving the retired hero nav rule. */
-.topBar::after {
+/* The chips are capped to the same 1500px box as the hairline and the hero
+   panel, and centred inside the bar.
+
+   The rule and the panel already were; the bar's own content box was not. It
+   filled the stage's content width, so past a 1628px viewport the two stopped
+   describing the same geometry: the line stayed at 1500px and centred while
+   the chips kept travelling to the stage's 64px gutter, leaving the Ven logo
+   82px to the LEFT of the line's left end at 1920 and 842px at 3440, with the
+   theme toggle mirrored past the other end. The chips were not misaligned —
+   they were outside the line they are supposed to sit inside.
+
+   An inner wrapper rather than a max-width on the bar: the bar has to keep
+   filling the stage, because the hairline is its top edge and is measured
+   against the bar's padding box. Capping the bar would have moved the line as
+   well as the chips. */
+.topBarInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 1500px;
+  margin-inline: auto;
+}
+
+/* At and past the cap the bar's box IS the 1500px content box, so the stage
+   gutter inside it is the one thing separating the chips from the line's ends —
+   the logo sat 64px in from the left end and the toggle 64px in from the right
+   at exactly 1628px, which is the same overhang the report named, just at its
+   smallest. Past that width the gutter is the leftover space outside the cap
+   and the bar needs no padding of its own: the inner row already fills the
+   bar, so the two boxes coincide and the chips land on the line's ends.
+
+   1628px is the exact crossover — stage gutter 64px on each side plus 1500px of
+   content — so this is a `min-width` on the cap, not an approximation. */
+@media (min-width: 1628px) {
+  .topBar {
+    padding-inline: 0;
+  }
+}
+
+/* The hairline is the band's top edge, so the chips sit below it, inside.
+   It has to land on the same box as the hero panel's own border-top:
+   `left: 0` / `right: 0` span the stage's content box (this bar has no border,
+   so its padding box IS that box), and the cap plus auto margins reproduce
+   .heroImmersiveContent's max-width/margin: auto box so the two rules stop
+   growing at the same viewport. */
+.topBar::before {
   position: absolute;
-  right: clamp(20px, 4vw, 64px);
-  bottom: 6px;
-  left: clamp(20px, 4vw, 64px);
+  top: 0;
+  right: 0;
+  left: 0;
+  max-width: 1500px;
   height: 1px;
+  margin-inline: auto;
   background: var(--topbar-hair);
   content: '';
   pointer-events: none;
 }
 
-/* On phones the stage gutter is only 18px and eats the whole width budget,
-   so the bar is pulled out to the stage edges and goes full-bleed. */
+/* On phones the stage gutter is 18px and the hero panel is inset by exactly
+   that, so the bar's own padding is 18px and its `::before` carries no further
+   inset. The bar used to pull itself out to the stage edges with
+   `margin-inline: -18px` and go full-bleed, which cost it the alignment the
+   line depends on and pushed the bar's box 18px out on each side of the panel
+   it is meant to continue. The rule's own insets are 0 so its width and left
+   edge track the panel at every width rather than drifting by a double gutter. */
 @media (max-width: 768px) {
   .topBar {
-    margin-inline: -18px;
-    padding-inline: 16px;
+    padding-inline: 18px;
   }
 
-  .topBar::after {
-    right: 16px;
-    left: 16px;
+  .topBar::before {
+    right: 0;
+    left: 0;
   }
 }
 

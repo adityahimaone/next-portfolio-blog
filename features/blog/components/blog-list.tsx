@@ -109,7 +109,7 @@ export function BlogList({ posts }: { posts: BlogMeta[] }) {
     <>
       <main className={styles.page} id="main-content">
         <PageHeader
-          index="04"
+          index="03"
           eyebrow="Releases"
           title="Notes from the build."
           description="Frontend engineering, interface systems, and the decisions behind the work."

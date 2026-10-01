@@ -66,6 +66,59 @@ const CONTACT_PAD_COLORS = [
   '#4bafd1',
 ] as const
 
+/**
+ * The Bank A/B selector.
+ *
+ * Extracted so the desktop rail and the phone's bottom bar render the same
+ * controls rather than two hand-copied blocks that can drift. It is a plain
+ * presentational component over the deck's state — no rail measurement lives
+ * here, so nothing about it depends on which layout it lands in.
+ */
+function BankCluster({
+  bank,
+  onSelect,
+}: {
+  bank: 'A' | 'B'
+  onSelect: (next: 'A' | 'B') => void
+}) {
+  return (
+    <div className={styles.contactModeRail}>
+      <button
+        type="button"
+        aria-pressed={bank === 'A'}
+        aria-label="Use bank A"
+        onClick={() => onSelect('A')}
+      >
+        A
+      </button>
+      <button
+        type="button"
+        aria-pressed={bank === 'B'}
+        aria-label="Use bank B"
+        onClick={() => onSelect('B')}
+      >
+        B
+      </button>
+      <span>Bank</span>
+    </div>
+  )
+}
+
+/** The mail link and the clear-pad key. Extracted for the same reason. */
+function OutCluster({ onClear }: { onClear: () => void }) {
+  return (
+    <div className={styles.contactModeRail}>
+      <a href={`mailto:${EMAIL}`} aria-label="Email Aditya">
+        <Mail size={16} />
+      </a>
+      <button type="button" onClick={onClear} aria-label="Clear active pad">
+        <Square size={14} />
+      </button>
+      <span>Out</span>
+    </div>
+  )
+}
+
 export function Contact() {
   const currentYear = new Date().getFullYear()
   const [activePad, setActivePad] = useState<number | null>(null)
@@ -318,88 +371,85 @@ export function Contact() {
         </div>
 
         <div className={styles.contactPerformanceArea}>
-          <div className={styles.contactPadGrid}>
-            {CONTACT_PADS.map((pad, index) => {
-              const content = (
-                <>
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <strong>{pad.label}</strong>
-                  <small>{pad.detail}</small>
-                </>
-              )
-              const className = `${styles.contactPad} ${
-                loopingPads.has(index) ? styles.contactPadActive : ''
-              } ${sweepingPads.has(index) ? styles.contactPadSweeping : ''}`
+          {/*
+            On a desktop the rails flank the pad grid, one on each side, so the
+            Bank and Out clusters read as the two ends of the grid rather than
+            as a footnote under it.
 
-              return 'href' in pad ? (
-                <a
-                  key={pad.label}
-                  className={className}
-                  href={pad.href}
-                  target={pad.href.startsWith('mailto:') ? undefined : '_blank'}
-                  rel={
-                    pad.href.startsWith('mailto:') ? undefined : 'noreferrer'
-                  }
-                  onClick={() => togglePad(index)}
-                  style={
-                    {
-                      '--pad-color': CONTACT_PAD_COLORS[index],
-                    } as React.CSSProperties
-                  }
-                >
-                  {content}
-                </a>
-              ) : (
-                <button
-                  key={pad.label}
-                  type="button"
-                  className={className}
-                  aria-pressed={loopingPads.has(index)}
-                  onClick={() => togglePad(index)}
-                  style={
-                    {
-                      '--pad-color': CONTACT_PAD_COLORS[index],
-                    } as React.CSSProperties
-                  }
-                >
-                  {content}
-                </button>
-              )
-            })}
+            On a phone both clusters move to a single bar UNDER the grid — the
+            side docks are hidden and this bar takes their place, so there is
+            exactly one Bank and one Out on screen at any width. It is a second
+            render of the same two components rather than a second copy of their
+            markup, which is what `BankCluster` and `OutCluster` are for.
+          */}
+          <div className={styles.contactPerformanceRow}>
+            <div className={styles.contactModeRailDock}>
+              <BankCluster bank={bank} onSelect={setBank} />
+            </div>
+
+            <div className={styles.contactPadGrid}>
+              {CONTACT_PADS.map((pad, index) => {
+                const content = (
+                  <>
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <strong>{pad.label}</strong>
+                    <small>{pad.detail}</small>
+                  </>
+                )
+                const className = `${styles.contactPad} ${
+                  loopingPads.has(index) ? styles.contactPadActive : ''
+                } ${sweepingPads.has(index) ? styles.contactPadSweeping : ''}`
+
+                return 'href' in pad ? (
+                  <a
+                    key={pad.label}
+                    className={className}
+                    href={pad.href}
+                    target={
+                      pad.href.startsWith('mailto:') ? undefined : '_blank'
+                    }
+                    rel={
+                      pad.href.startsWith('mailto:') ? undefined : 'noreferrer'
+                    }
+                    onClick={() => togglePad(index)}
+                    style={
+                      {
+                        '--pad-color': CONTACT_PAD_COLORS[index],
+                      } as React.CSSProperties
+                    }
+                  >
+                    {content}
+                  </a>
+                ) : (
+                  <button
+                    key={pad.label}
+                    type="button"
+                    className={className}
+                    aria-pressed={loopingPads.has(index)}
+                    onClick={() => togglePad(index)}
+                    style={
+                      {
+                        '--pad-color': CONTACT_PAD_COLORS[index],
+                      } as React.CSSProperties
+                    }
+                  >
+                    {content}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className={styles.contactModeRailDock}>
+              <OutCluster onClear={clearPads} />
+            </div>
           </div>
-        </div>
-        <div className={styles.contactModeRailDocks}>
-          <div className={styles.contactModeRail}>
-            <button
-              type="button"
-              aria-pressed={bank === 'A'}
-              aria-label="Use bank A"
-              onClick={() => setBank('A')}
-            >
-              A
-            </button>
-            <button
-              type="button"
-              aria-pressed={bank === 'B'}
-              aria-label="Use bank B"
-              onClick={() => setBank('B')}
-            >
-              B
-            </button>
-            <span>Bank</span>
-          </div>
-          <div className={styles.contactModeRail}>
-            <a href={`mailto:${EMAIL}`} aria-label="Email Aditya">
-              <Mail size={16} />
-            </a>
-            <button
-              type="button"
-              onClick={clearPads}
-              aria-label="Clear active pad"
-            >
-              <Square size={14} />
-            </button>
-            <span>Out</span>
+
+          {/* The phone's control bar: both clusters in one row under the grid.
+              `display: none` above 768px, where the flanking docks are the ones
+              on screen. */}
+          <div className={styles.contactPadRailBar}>
+            <BankCluster bank={bank} onSelect={setBank} />
+            <OutCluster onClear={clearPads} />
           </div>
         </div>
         <p className={styles.contactDeckNote}>
@@ -442,13 +492,21 @@ export function Contact() {
 
         <div className={styles.footerSignal}>
           <span className={styles.footerLead} aria-hidden="true" />
+          {/*
+            No `height` prop. Passing 350 fixed the band at 350px on a desktop
+            and let the component cap it to `width / 2` on a narrow one — which
+            is correct geometry, but it left the rings' own 350px-tall drawing
+            cropped to 195px at 390px wide, so the arcs were sliced through
+            mid-ring. Deriving the band from its own width instead keeps the
+            `width / 2` proportion the rings are built around, so the nest
+            always fits the box and the page still closes on it.
+          */}
           <TangleFooter
             className={styles.footerTangle}
             lines={[...FOOTER_TANGLE_LINES]}
             background="#0b0d0c"
             ribbon="#e7e2d8"
             textColor="#0b0d0c"
-            height={350}
             seed={23}
             label="Rotating portfolio footer signal"
           />

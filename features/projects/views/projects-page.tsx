@@ -132,7 +132,7 @@ export function ProjectsPage({
     <>
       <main className={styles.page} id="main-content">
         <PageHeader
-          index="05"
+          index="01"
           eyebrow="Selected work"
           title="Proof in the product."
           description="Six shipped releases, strongest first. Pick one to put it on the turntable."

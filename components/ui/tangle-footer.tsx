@@ -61,7 +61,6 @@ export type TangleFooterOptions = {
 export const RING_COUNT = 5
 
 export const K = 0.5522847498
-export const STROKE = 28
 
 /** Mulberry32 — deterministic PRNG so rings stay stable across re-renders. */
 export function mulberry32(seed: number) {
@@ -109,9 +108,19 @@ export function buildRingCopy(
 
 /**
  * Five concentric circles nested as an upper semicircle.
- * Outer radius fits both width and band height so a short band
- * still shows complete arches instead of an equatorial clip.
+ *
+ * The radii still spread across the band's half-height, so a wide band gets a
+ * wide arc with no black at the sides. What changed is the RIBBON: a fixed 28px
+ * stroke against a pitch that grows with the band left the gaps looking empty
+ * — 79px of bare black between every pair on a desktop, against 28px of ribbon,
+ * a 1:2.8 ratio that reads as five thin hoops rather than a nest. The stroke
+ * now tracks the pitch at roughly half of it, which keeps the ribbon-to-gap
+ * proportion constant at every width instead of letting the voids grow with the
+ * viewport. A floor keeps the phone's ribbons readable when its pitch is small.
  */
+export const RIBBON_RATIO = 0.5
+export const STROKE_MIN = 24
+
 export function buildRings(
   width: number,
   bandHeight: number,
@@ -121,16 +130,17 @@ export function buildRings(
   const rand = mulberry32(seed)
   const cx = width / 2
   const cy = bandHeight
-  const strokePad = STROKE / 2 + 2
   // Full-width nest needs height ≈ width/2; if the band is shorter,
   // shrink the nest so the upper semicircle stays fully visible.
   const outer = Math.max(
-    Math.min(width / 2 - strokePad, bandHeight - strokePad),
-    STROKE * 4,
+    Math.min(width / 2 - 4, bandHeight - 4),
+    STROKE_MIN * 4,
   )
+  const pitch = outer / RING_COUNT
+  const stroke = Math.max(STROKE_MIN, Math.round(pitch * RIBBON_RATIO))
   const radii = Array.from(
     { length: RING_COUNT },
-    (_, i) => (outer * (i + 1)) / RING_COUNT,
+    (_, i) => stroke / 2 + pitch * i + pitch / 2,
   )
 
   const fontSize = Math.min(24, Math.max(16, width * 0.022))
@@ -152,7 +162,10 @@ export function buildRings(
       d: circlePath(cx, cy, r),
       cx,
       cy,
-      strokeWidth: STROKE,
+      // Per ring, and scaled with the pitch — see the note above. A single
+      // fixed stroke here is what left the desktop's ribbons 28px wide
+      // against 79px gaps.
+      strokeWidth: stroke,
       fontSize,
       text,
       // Keep angular pace lively but readable; outer rings a touch slower.
@@ -226,11 +239,17 @@ export function TangleFooter({
    *
    * So a capped band derives its own height from the width instead of honouring
    * the requested one: the nest keeps its `width / 2` proportion, the semicircle
-   * fits, and nothing is cropped. Desktop still passes an explicit height and is
-   * untouched.
+   * fits, and nothing is cropped. The "extra space" in the report was not the
+   * band's height — it was the ratio between a fixed 28px ribbon and a pitch
+   * that grew with the viewport, and that is now `buildRings`' problem rather
+   * than this box's.
    */
-  const capBand = height != null && height > 0 && width > 0 && width / 2 < height
-  const bandHeight = capBand ? Math.round(width / 2) : (height ?? (width > 0 ? width / 2 : 0))
+  const capBand =
+    height != null && height > 0 && width > 0 && width / 2 < height
+  const bandHeight = capBand
+    ? Math.round(width / 2)
+    : (height ?? (width > 0 ? width / 2 : 0))
+
   const rings = useMemo(
     () =>
       width > 0 && bandHeight > 0
@@ -259,9 +278,14 @@ export function TangleFooter({
       style={{
         background,
         height: bandHeight > 0 ? bandHeight : undefined,
-        // Only claimed when the height was not supplied; a derived band already
-        // carries its own proportion and must not be re-sliced on top of it.
-        aspectRatio: height == null ? '2 / 1' : undefined,
+        // Width and no aspect ratio, both deliberate. An inline `width: 100%`
+        // would outrank the caller's own width cap on the element and undo it —
+        // the band went back to the full viewport instead of the capped 1100px.
+        // The `w-full` utility already fills the container, and an unlayered
+        // class beats a layered utility, so a caller can still cap it. And
+        // `2 / 1` is gone: the band is clamped to the nest's own height rather
+        // than tracking the width, so a ratio would re-inflate the space the
+        // clamp just removed on every width above 552px.
       }}
     >
       <style>{`@keyframes ${spinName}{to{transform:rotate(360deg)}}`}</style>
@@ -270,6 +294,13 @@ export function TangleFooter({
         <motion.svg
           className="absolute inset-0 size-full"
           viewBox={`0 0 ${width} ${bandHeight}`}
+          // `slice` scales the drawing up until it covers the box and crops
+          // the sides, which is correct here because the viewBox and the band
+          // are the same size: the arc fills the band's width exactly and the
+          // outermost ring stays inside it. An interim `meet` fitted the whole
+          // 1100px drawing inside the band and shrank the arc to a third of its
+          // intended width — the drawing being scaled down to fit a box it
+          // already matched.
           preserveAspectRatio="xMidYMax slice"
           xmlns="http://www.w3.org/2000/svg"
           initial={reduce ? false : { opacity: 0, y: 12 }}

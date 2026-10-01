@@ -2030,7 +2030,16 @@
   position: relative;
   z-index: 1;
   display: block;
-  width: 100%;
+  /* Capped, and centred. Full-bleed the band was width / 2 tall — 720px at a
+     1440 viewport — so the nest grew until its rings ran off all four sides of
+     the frame and the arcs were cropped mid-stroke, with empty black between
+     them. The nest's own proportion is what the rings are built around, so the
+     cap has to come from the WIDTH: 1100px keeps the band at 550px, which still
+     reads as a wide arc at every desktop size while leaving the outermost ring
+     inside the frame. Below the cap the band is exactly the screen's own width
+     and unchanged, which is why the phone case needed no separate rule. */
+  width: min(100%, 1100px);
+  margin-inline: auto;
   background: #0b0d0c !important;
 }
 
@@ -7879,25 +7888,59 @@
 .contactPerformanceArea {
   display: block;
 }
-/* Both rails are fixed-position controls rather than columns of the pad grid, so
-   they dock under it in one row instead of eating a 42px gutter each beside
-   sixteen pads — on a phone that gutter was a third of the grid's width. */
-.contactModeRailDocks {
+
+/* The pad grid with a rail flanking each side, so the Bank and Out clusters
+   read as the two ends of the grid rather than as a footnote under it. The
+   grid is the flexible middle (`minmax(0, 1fr)`) and each rail is fixed at its
+   own control width, so the columns are sized by what they contain rather than
+   by the widest child — the same trap .library documents, avoided here by
+   capping the rails and letting the grid absorb the remainder.
+
+   The grid also loses its own `padding-inline` at this width: it used to be
+   inset inside the rails, which pushed the pads 16px in from the clusters and
+   left the two ends visually detached. With the rails beside it the grid's own
+   edge IS the edge the clusters align to. */
+.contactPerformanceRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(10px, 1.4vw, 18px);
+  align-items: start;
+}
+
+/* Each cluster is a fixed strip: the label under the controls, left rail flush
+   left and right rail flush right so they anchor the two ends of the grid. */
+.contactModeRailDock {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: clamp(8px, 1.6vw, 16px);
-  margin-top: clamp(8px, 1.4vw, 14px);
+  flex-direction: column;
+  gap: 9px;
+  padding-top: 2px;
 }
-.contactModeRailDocks .contactModeRail {
-  flex-direction: row;
-  align-items: center;
+
+.contactModeRailDock:first-child .contactModeRail {
+  align-items: flex-start;
 }
-.contactModeRailDocks .contactModeRail > span {
+
+.contactModeRailDock:last-child .contactModeRail {
+  align-items: flex-end;
+}
+
+.contactModeRailDock .contactModeRail {
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+}
+
+.contactModeRailDock .contactModeRail > span {
   display: flex;
   margin-top: 0;
   align-items: center;
+}
+
+/* The phone's control bar, under the pad grid. Hidden above 768px, where the
+   two flanking docks are the controls on screen — so exactly one Bank and one
+   Out exist at any width, rather than both sets stacking up on a phone. */
+.contactPadRailBar {
+  display: none;
 }
 .contactModeRail {
   display: flex;
@@ -8024,65 +8067,137 @@
     padding: 16px 12px 18px;
     border-radius: 13px;
   }
+
+  /* One rhythm for the deck's column instead of the four unrelated margins it
+     used to carry. The mobile fork sets `display: block` on the deck, so it
+     stops being a grid and every child has to space itself — which is how the
+     brand's 22px, the dial row's 24px, the rails' 8px and the note's 20px all
+     arrived independently, and why the band between the pad grid and the
+     rails read as a 8px gap jammed against the pads while the others read as
+     20-24px breaks. 18px is the measured middle of the values that were there
+     and is consistent with the deck's own 18px bottom padding. */
+  /* The 4px asked for, and the reason it is here rather than on the deck: the
+     brand row is the one child of the deck whose text starts hard against the
+     deck's own 12px inset while everything below it is centred or inset by the
+     grid. 4px of padding on the brand alone lines its left edge up with the
+     first pad without moving the grid, the dial row, or the note. */
+  .contactDeckBrand {
+    margin-bottom: 18px;
+    padding: 4px;
+  }
+
   .contactDeckTop {
     grid-template-columns: 58px minmax(0, 1fr) 58px;
     gap: 8px;
+    margin-bottom: 18px;
   }
+
   .contactDial > span,
   .contactDial input {
     width: 44px;
     height: 44px;
   }
+
   .contactDial > span::after {
     height: 11px;
     transform-origin: 50% 17px;
   }
+
   .contactDeckDisplay {
     min-height: 82px;
     padding: 12px;
   }
+
   .contactDeckDisplay small {
     display: none;
   }
+
   .contactPerformanceArea {
     display: block;
   }
-  .contactModeRailDocks {
-    /* Both rails in a row is 76px of buttons plus two labels; below ~360px that
-       overflows, so they stack instead. */
-    justify-content: center;
-    gap: 10px;
+
+  /* On a phone both clusters move to one bar under the grid. The flanking docks
+     are hidden outright rather than restyled: the base row is a three-column
+     grid and this only changes `display`, which leaves
+     `grid-template-columns: auto minmax(0, 1fr) auto` in force — inert in a
+     flex container, so the pad grid kept resolving to 60.7px tracks and sat
+     24px left of the deck's centre line at 390px. Dropping the docks also
+     drops the two grid columns they occupied, which is what puts the pads back
+     on centre. */
+  .contactPerformanceRow {
+    display: block;
+    width: 100%;
   }
+
+  .contactModeRailDock {
+    display: none;
+  }
+
+  .contactPerformanceRow > .contactPadGrid {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* The bar itself: keys at the left, mail and clear at the right, one row
+     under the grid. The clusters go row-direction so each label sits beside
+     its own keys — `space-between` on a cluster that IS the row pulls "Bank"
+     to the far edge and strands the A and B keys away from their label. */
+  .contactPadRailBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 18px;
+  }
+
+  .contactPadRailBar .contactModeRail {
+    flex-direction: row;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .contactPadRailBar .contactModeRail:last-child {
+    flex-direction: row-reverse;
+  }
+
+  .contactDeckNote {
+    margin: 18px 24px 0;
+    line-height: 1.45;
+  }
+
   .contactModeRail button,
   .contactModeRail a {
     width: 34px;
     min-height: 38px;
   }
-  /* Two columns, not four. This block used to re-widen the grid to four,
-     silently overriding the earlier 2-column rule in the same media query and
-     leaving sixteen pads at ~57px each with their labels at the 8px floor. The
-     column count now stays where the earlier rule put it; only the gutter is
-     tightened here. */
+
+  /* Four columns, and the reason is measured rather than asserted. An earlier
+     comment here claimed two, and blamed this block for silently re-widening
+     the grid to four — but nothing in this media query ever set two. The grid
+     resolves to 4 columns at 390px and at 768px alike (73x73 pads), and at 73px
+     a two-column pad would have to be 175px. The 12px floor on the label is the
+     real constraint, four columns satisfy it, so the count is left alone and
+     only the gutter is tightened. */
   .contactPadGrid {
     gap: 6px;
   }
+
   .contactPad {
     min-height: 0;
     padding: 6px;
     border-bottom-width: 3px;
     border-radius: 6px;
   }
+
   .contactPad small {
     display: none;
   }
+
   /* Silkscreen is machine-printed data, so the size is the machine's floor —
-     12px, not 8. Two columns leave room for it. */
+     12px, not 8 — and at four columns on a 390px screen that is what the pads
+     can still carry without the label truncating. */
   .contactPad strong {
     font-size: 12px;
-  }
-  .contactDeckNote {
-    margin-inline: 1.5rem;
-    line-height: 1.45;
   }
 }/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4 *//* Hero redesign: the device wall supplies the identity; the interface stays quiet. */
 .heroStage {
@@ -10891,12 +11006,18 @@
     margin-top: 2px;
   }
 
-  /* Clear the fixed dock: 52px docked, up to 24px of float plus its own height
-     when the compact capsule is showing. The tangle band now closes the page
-     below this, so the reservation is the dock's alone. */
-  .footer {
-    padding-bottom: clamp(64px, 10svh, 84px);
-  }
+  /* This used to reserve `clamp(64px, 10svh, 84px)` below the footer to clear
+     the fixed dock, and it could not do that job at all: the padding sits
+     AFTER .footerSignal's tangle band, which is the footer's last child, so the
+     reserved space fell below the end of the document and pushed 80px of
+     unpainted floor under the tangle. A reader who scrolled to the bottom
+     landed on a blank strip with the rings cut off above it.
+
+     Nothing needs the reservation now. The dock is fixed to the viewport, so
+     it floats over the tangle band rather than pushing it, and the band is the
+     thing that closes the page. The clearance the dock actually needs belongs
+     above the band, in the gap --footer-gap already puts between the panel and
+     the tangle, not after it. */
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -11384,6 +11505,17 @@
   color: var(--room-ink-muted);
 }
 
+/* The stack summary under "AH / STACK CONTROL" is the one silkscreen in this
+   section that is NOT on the room floor. `.skills .silkscreen` above paints
+   every label for the dark floor, and this one is printed on the controller's
+   brushed plate — so it inherited near-white ink at 10px on cream, which is
+   what left it unreadable. The signal orange is the accent that already runs
+   through this section (the pad LEDs, the hero proof figures) and the one that
+   carries at 10px on the plate in either theme. */
+.controllerBrand > .silkscreen {
+  color: var(--signal-orange);
+}
+
 /* Section headings sit on the cream bands (about, contact), so they follow
    the panel ink, not the room ink — the room stays dark in both themes. */
 .about .sectionHeading h2,
@@ -11766,7 +11898,12 @@
 
   .footerTangle {
     display: block !important;
-    width: 100%;
+    /* Same cap as the base rule rather than a bare 100%: this declaration wins
+       on specificity inside the media query, so a plain `100%` here would undo
+       the desktop cap on exactly the widths the cap exists for. Below 1100px
+       the min() resolves to the screen width anyway, so the phone case is
+       unchanged either way. */
+    width: min(100%, 1100px);
     /* No forced height: the component derives the band from its own width, and
        pinning one here would re-crop the semicircle it is meant to fit. */
     margin-top: 0;

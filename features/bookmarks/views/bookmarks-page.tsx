@@ -483,6 +483,20 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
     }
   }
 
+  // The two row actions, defined once rather than inline in the map. TrackRow is
+  // memoized, and a fresh arrow function per row per render would give every
+  // row a new prop identity on every append — which is the same as not
+  // memoizing it at all. Each reads only setter state, so it never needs to be
+  // rebuilt when a page arrives.
+  const handleEdit = useCallback((bookmark: Bookmark) => {
+    setEditing(bookmark)
+    setIsAdminOpen(true)
+  }, [])
+
+  const handleDelete = useCallback((bookmark: Bookmark) => {
+    setDeleteTarget(bookmark)
+  }, [])
+
   return (
     <>
       <main className={styles.page} id="main-content">
@@ -679,11 +693,8 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
                       active={index === active}
                       isAdmin={isAdmin}
                       canHover={canHover}
-                      onEdit={() => {
-                        setEditing(bookmark)
-                        setIsAdminOpen(true)
-                      }}
-                      onDelete={() => setDeleteTarget(bookmark)}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
                     />
                   ))}
                 </ul>

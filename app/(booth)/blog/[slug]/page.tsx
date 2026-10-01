@@ -18,7 +18,7 @@ export async function generateMetadata({
   const { meta } = getPost(slug)
   const url = `${WEBSITE_URL}/blog/${slug}`
   return {
-    title: `${meta.title} — adityahimaone`,
+    title: meta.title,
     description: meta.description,
     // Post pages were the one route serving the same prose at two addresses,
     // since nothing told the index which of them was canonical.
@@ -32,6 +32,7 @@ export async function generateMetadata({
       // `article:published_time="[object Object]"` on every post. blog.ts now
       // normalises it to an ISO string.
       publishedTime: meta.date,
+      modifiedTime: meta.dateModified,
       tags: meta.tags,
       authors: ['https://x.com/adityahimaone'],
       // No post sets `cover` in frontmatter, so this guard never fired and no
@@ -66,6 +67,7 @@ export default async function Page({
     title: meta.title,
     description: meta.description,
     datePublished: meta.date,
+    dateModified: meta.dateModified,
     url,
     tags: meta.tags,
     // No post sets a cover, so this was always undefined and the builder

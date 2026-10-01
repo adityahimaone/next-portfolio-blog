@@ -3,11 +3,11 @@ import { getRepos } from '@/features/projects/lib/github'
 import { FEATURED_PROJECTS } from '@/features/projects/constants'
 import { ProjectsPage } from '@/features/projects'
 import { WORK_PROJECTS } from '@/data/projects'
-import { itemList, JsonLd } from '@/lib/structured-data'
+import { breadcrumbList, itemList, JsonLd } from '@/lib/structured-data'
 import { WEBSITE_URL } from '@/lib/constants'
 
 export const metadata: Metadata = {
-  title: 'Shipped Work — Projects',
+  title: 'Shipped Work',
   description:
     'Production frontend systems, interfaces and experiments built with Next.js, React and TypeScript — including the code behind this portfolio.',
   alternates: { canonical: '/projects' },
@@ -40,16 +40,26 @@ export default async function Page() {
       'Production frontend systems, interfaces and experiments built with Next.js, React and TypeScript.',
     items: WORK_PROJECTS.map((project) => ({
       name: project.title,
-      url: project.url.startsWith('http')
-        ? project.url
-        : `${WEBSITE_URL}${project.url}`,
+      // Points at the local case study, not the off-site artefact. The ItemList
+      // is a list of *this site's* pages; linking the external URL here meant
+      // the site's own index listed nothing that belonged to it, and the detail
+      // pages it now has were discoverable from neither the list nor the sitemap.
+      url: `${WEBSITE_URL}/projects/${project.slug}`,
       description: project.description,
     })),
   })
 
+  // Breadcrumbs were emitted only on blog posts. `/projects` is one level deep
+  // and was eligible all along.
+  const breadcrumbs = breadcrumbList([
+    { name: 'Home', path: '/' },
+    { name: 'Projects', path: '/projects' },
+  ])
+
   return (
     <>
       <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbs} />
       <ProjectsPage
         repos={repos}
         featuredProjects={FEATURED_PROJECTS}

@@ -1,4 +1,5 @@
 import { getAllPosts } from '@/features/blog'
+import { WORK_PROJECTS } from '@/data/projects'
 import { WEBSITE_URL } from '@/lib/constants'
 
 export async function GET() {
@@ -19,6 +20,15 @@ export async function GET() {
     { url: '/', changefreq: 'daily', priority: 1.0 },
     { url: '/blog', changefreq: 'daily', priority: 0.9 },
     { url: '/projects', changefreq: 'monthly', priority: 0.8 },
+    { url: '/guides', changefreq: 'monthly', priority: 0.8 },
+    { url: '/about', changefreq: 'monthly', priority: 0.8 },
+    { url: '/work', changefreq: 'monthly', priority: 0.8 },
+    {
+      url: '/guides/self-hosting-nextjs',
+      changefreq: 'monthly',
+      priority: 0.8,
+    },
+    { url: '/guides/vps-vs-vercel', changefreq: 'monthly', priority: 0.7 },
     { url: '/bookmarks', changefreq: 'weekly', priority: 0.8 },
     { url: '/music', changefreq: 'monthly', priority: 0.8 },
     // /contact is a real page a visitor can reach from the footer, so it
@@ -26,14 +36,28 @@ export async function GET() {
     { url: '/contact', changefreq: 'monthly', priority: 0.6 },
   ].map((page) => ({ ...page, lastmod: fallbackLastmod }))
 
-  const blogEntries = posts.map((post: { slug: string; date: string }) => ({
-    url: `/blog/${post.slug}`,
-    lastmod: post.date,
-    changefreq: 'monthly',
+  const blogEntries = posts.map(
+    (post: { slug: string; date: string; dateModified?: string }) => ({
+      url: `/blog/${post.slug}`,
+      // The post's own last change, falling back to its publish date. Echoing
+      // `date` unconditionally was indistinguishable from omitting the field.
+      lastmod: post.dateModified ?? post.date,
+      changefreq: 'monthly',
+      priority: 0.7,
+    }),
+  )
+
+  const projectEntries = WORK_PROJECTS.map((project) => ({
+    url: `/projects/${project.slug}`,
+    // No per-project lastmod exists — the data file is hand-curated and a
+    // project entry changes when the project does, not on a schedule. Omitting
+    // the field is more honest than stamping every one with the newest post's
+    // date, which is what the index pages do.
+    changefreq: 'yearly',
     priority: 0.7,
   }))
 
-  const allUrls = [...pages, ...blogEntries]
+  const allUrls = [...pages, ...blogEntries, ...projectEntries]
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

@@ -1,5 +1,5 @@
 ---
-title: "Dunia Parallel: Ketika Sains Bertemu Git"
+title: "Dunia Parallel: Sains Bertemu Git"
 slug: dunia-parallel-quantum-git
 date: 2026-05-02
 description: "Interpretasi Many-Worlds Everett dalam fisika kuantum, difahami lewat analogi git branching yang familiar untuk developer."

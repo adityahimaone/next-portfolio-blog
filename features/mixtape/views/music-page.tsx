@@ -1,6 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'motion/react'
 import {
@@ -26,6 +32,18 @@ import { MIXTAPES, YOUTUBE_TRACKS } from '../constants/music-data'
 
 export function MusicPageView() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  // The audio node itself, mirrored into state so `useAudioFrequency` can take
+  // it as an effect dependency.
+  //
+  // It used to be passed as `audioRef.current`, which is null on every render
+  // that does not happen to follow some other state update — so the hook's
+  // effect saw `null`, returned early, and the visualiser only ever worked by
+  // luck. Reading a ref during render is also what React forbids: a ref is not
+  // part of a component's output. The callback ref sets state exactly once,
+  // when the node mounts.
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
+    null,
+  )
 
   // Audio States
   const [activeDeck, setActiveDeck] = useState<'local' | 'youtube'>('local')
@@ -33,21 +51,33 @@ export function MusicPageView() {
   const [ytTrack, setYtTrack] = useState(YOUTUBE_TRACKS[0])
   const [isPlayingLocal, setIsPlayingLocal] = useState(false)
   const [isPlayingYt, setIsPlayingYt] = useState(false)
-  const frequencyData = useAudioFrequency(audioRef.current)
+  // Whether the component has hydrated on the client.
+  //
+  // `next-themes` cannot know the resolved theme during SSR, so reading `theme`
+  // on the server yields `undefined` and every `mounted && theme === 'light'`
+  // branch below renders the dark variant — a visible flash of the wrong
+  // background on first paint.
+  //
+  // This was `useState(false)` + `useEffect(() => setMounted(true), [])`, which
+  // is the same idea with an extra render and an extra pass.
+  // `useSyncExternalStore` answers it during the hydration render instead of
+  // after it: the store returns `false` on the server and `true` on the client,
+  // so the first client render already knows and no state update is needed.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  )
+  const frequencyData = useAudioFrequency(audioElement)
   const [simulatedData, setSimulatedData] = useState<Uint8Array>(
     new Uint8Array(24),
   )
   const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
   const [isScreenExpanded, setIsScreenExpanded] = useState(false)
   // Stealth mode. Owned here and published to the document, because the
   // magnetic dock that has to stand down with it lives in the root layout —
   // a different React tree, so no local ref or querySelector can reach it.
   const [isInterfaceVisible, setIsInterfaceVisible] = useState(true)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   useEffect(() => {
     setInterfaceVisibility(isInterfaceVisible ? 'visible' : 'hidden')
@@ -57,6 +87,15 @@ export function MusicPageView() {
   useEffect(() => () => setInterfaceVisibility('visible'), [])
 
   // Simulated frequency data for YouTube
+  //
+  // The reset in the inactive branch used to be a bare `setSimulatedData(...)`
+  // in the effect body. That is a synchronous setState during an effect: it
+  // fires a second render on every one of the dependency changes, and React
+  // flags it because it cannot distinguish "sync state to a prop" from "cascading
+  // renders". Deriving the same thing during render costs nothing and cannot
+  // loop — the empty array is only the fallback when nothing is playing.
+  const simulatedEmpty = useMemo(() => new Uint8Array(24), [])
+
   useEffect(() => {
     if (isPlayingYt && activeDeck === 'youtube') {
       const interval = setInterval(() => {
@@ -66,10 +105,11 @@ export function MusicPageView() {
         setSimulatedData(newData)
       }, 200) // Throttled from 100ms for performance
       return () => clearInterval(interval)
-    } else {
-      setSimulatedData(new Uint8Array(24))
     }
   }, [isPlayingYt, activeDeck])
+
+  const activeSimulatedData =
+    isPlayingYt && activeDeck === 'youtube' ? simulatedData : simulatedEmpty
 
   // Sync YouTube Player Play/Pause
   useEffect(() => {
@@ -143,6 +183,14 @@ export function MusicPageView() {
         mounted && theme === 'light' ? 'bg-zinc-200' : 'bg-[#050505]',
       )}
     >
+      {/* The page rendered no <h1> at all — the deck is built entirely from
+          controls, labels and an <h3>, so the one indexable route under
+          /music declared no subject for itself. Visually hidden rather than
+          styled into the layout: the deck has no room for a heading, and
+          introducing one would move every control below it. */}
+      <h1 className="sr-only">
+        Mixtape — coding playlists and audio experiments by Aditya Himawan
+      </h1>
       {/* Bottom Left Utility Controls - Vertical Stack */}
       <div className="fixed bottom-10 left-6 z-[100] flex flex-col-reverse items-center gap-4">
         {/* Toggle Interface Button */}
@@ -207,12 +255,21 @@ export function MusicPageView() {
       {/* Dynamic Background Visualizer (Local / YouTube) */}
       <div className="absolute inset-x-0 bottom-0 z-0 h-[600px] opacity-30 blur-md transition-opacity">
         <ReactiveVisualizer
-          frequencyData={activeDeck === 'local' ? frequencyData : simulatedData}
+          frequencyData={
+            activeDeck === 'local' ? frequencyData : activeSimulatedData
+          }
         />
       </div>
 
       <audio
-        ref={audioRef}
+        ref={(node) => {
+          // Sets both the ref the imperative handlers use (`audioRef.current`)
+          // and the state the visualiser's effect depends on. React 19 still
+          // allows returning a cleanup from a callback ref, but there is nothing
+          // to clean up here beyond the state reset, which mount already handles.
+          audioRef.current = node
+          setAudioElement(node)
+        }}
         src={localTrack.src}
         crossOrigin="anonymous"
         onPause={() => setIsPlayingLocal(false)}

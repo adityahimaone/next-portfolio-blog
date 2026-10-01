@@ -2,12 +2,12 @@
 title: "Why I Rebuilt My Portfolio"
 slug: why-i-rebuilt-my-portfolio
 date: 2026-04-15
+dateModified: 2026-10-01
 description: "My old portfolio was a mess. Here's how I rebuilt it with Next.js 15, Tailwind v4, and a feature-based architecture."
 tags: [nextjs, tailwind, portfolio, web-dev]
 published: true
 ---
 
-# Why I Rebuilt My Portfolio
 
 Last year I built my portfolio in a rush. It worked, but the codebase was not something I was proud of. I had 30 dead component files sitting in the repo, versioned names like `hero-2025-v2.tsx` that told a story of failed experiments I never cleaned up, and a single `data.ts` file that contained everything — projects, blog posts, social links, experience data, all jammed into one 200-line export.
 

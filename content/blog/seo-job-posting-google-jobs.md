@@ -1,5 +1,5 @@
 ---
-title: "Cara Membuat Lowongan Kerja Terindex di Google Jobs"
+title: "Lowongan Kerja Terindex di Google Jobs"
 slug: seo-job-posting-google-jobs
 date: 2026-05-06
 description: "Panduan praktis menggunakan structured data JobPosting agar lowongan kerja muncul di Google Jobs dan menjangkau lebih banyak pelamar."

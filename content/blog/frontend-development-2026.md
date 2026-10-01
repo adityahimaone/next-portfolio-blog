@@ -1,13 +1,13 @@
 ---
-title: "Frontend Development in 2026 — What's Changed"
+title: "Frontend Development in 2026 — What Changed"
 slug: frontend-development-2026
 date: 2026-01-10
+dateModified: 2026-10-01
 description: "A look at how frontend development has evolved — from React Server Components to AI-assisted coding."
 tags: [frontend, react, trends, ai]
 published: true
 ---
 
-# Frontend Development in 2026 — What's Changed
 
 The frontend landscape moves faster than most developers can keep up with. I have been building with the current stack for the past year and watching how the ecosystem settles around a few clear winners while the rest fades into noise. Here is what actually matters right now.
 

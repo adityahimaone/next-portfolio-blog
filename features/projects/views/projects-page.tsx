@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { AnimatePresence, motion } from 'motion/react'
 import { ArrowUpRight, Github, Pause, Play, Star } from 'lucide-react'
 import {
@@ -198,6 +199,25 @@ export function ProjectsPage({
                 <p className={styles.nsCredits}>{project.stack.join(' · ')}</p>
 
                 <div className={styles.nsActions}>
+                  {/* Two destinations, deliberately separate. This link is the
+                      internal case study at /projects/[slug]; the one beside it
+                      is the artefact itself. Before the detail pages existed the
+                      only link out was "Open", which sent every visitor off-site
+                      and left nothing on this domain describing the work.
+
+                      Anchor text carries the project name and, for the outbound
+                      link, what is actually on the other end. Six identical
+                      "Open" labels read as six identical links to a crawler,
+                      which is a weaker signal than six named ones — and "read the
+                      Switchyard case study" is also a better label for anyone
+                      scanning the page. */}
+                  <Link
+                    href={`/projects/${project.slug}`}
+                    className={styles.genre}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    {project.title} case study
+                  </Link>
                   <a
                     href={project.url}
                     target="_blank"
@@ -206,7 +226,9 @@ export function ProjectsPage({
                     style={{ textDecoration: 'none' }}
                   >
                     <ArrowUpRight size={14} aria-hidden="true" />
-                    Open
+                    {project.url.includes('github.com')
+                      ? `${project.title} on GitHub`
+                      : `${project.title} live`}
                   </a>
                   <button
                     type="button"

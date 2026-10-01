@@ -10,6 +10,13 @@ export type BlogMeta = {
   title: string
   slug: string
   date: string
+  /**
+   * When the post was last substantively updated. Absent on every post today,
+   * which is why `BlogPosting.dateModified` had nothing to report and the
+   * sitemap could only echo `date`. Defaults to the publish date so a post that
+   * is never edited still declares a coherent pair.
+   */
+  dateModified?: string
   description: string
   tags: string[]
   cover?: string
@@ -46,6 +53,9 @@ function _getAllPosts(): BlogMeta[] {
       title: data.title ?? slug,
       slug,
       date: toIsoDate(data.date),
+      dateModified: data.dateModified
+        ? toIsoDate(data.dateModified)
+        : toIsoDate(data.date),
       description: data.description ?? '',
       tags: data.tags ?? [],
       cover: data.cover,

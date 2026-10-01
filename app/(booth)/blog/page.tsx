@@ -3,7 +3,13 @@ import { BlogPage, getAllPosts } from '@/features/blog'
 import { itemList, JsonLd } from '@/lib/structured-data'
 import { WEBSITE_URL } from '@/lib/constants'
 
-const DESCRIPTION = 'Thoughts on frontend development, design, and code.'
+// The posts here are overwhelmingly self-hosting, VPS and infrastructure
+// writing — Nginx, PM2, Prometheus, Tailscale, AI gateways — so the index is
+// described around that. The previous copy promised "frontend development,
+// design, and code" and matched almost nothing published here, which is a
+// mismatch between what the page claims and what a visitor finds.
+const DESCRIPTION =
+  'Notes on self-hosting, VPS deployment, Nginx, PM2, Prometheus and Docker, written while running production infrastructure.'
 
 function first(value: string | string[] | undefined): string {
   if (typeof value === 'string') return value.trim()
@@ -36,7 +42,7 @@ export async function generateMetadata({
 
   if (unfiltered) {
     return {
-      title: 'Blog — adityahimaone',
+      title: 'Blog',
       description: DESCRIPTION,
       alternates: {
         canonical: '/blog',
@@ -45,22 +51,19 @@ export async function generateMetadata({
         types: { 'application/rss+xml': `${WEBSITE_URL}/rss.xml` },
       },
       openGraph: {
-        title: 'Blog — adityahimaone',
+        title: 'Blog — Aditya Himawan',
         description: DESCRIPTION,
         url: `${WEBSITE_URL}/blog`,
         type: 'website',
-        images: [
-          'https://ucarecdn.com/b624aa7d-978f-44ef-8e45-bf3c12f1e846/memojilaptop1.png',
-        ],
+        // The sibling `opengraph-image.tsx` supplies this by convention; the
+        // previous value was a third-party ucarecdn hotlink, which put the most
+        // shared asset for the whole blog behind someone else's CDN.
       },
       twitter: {
         card: 'summary_large_image',
         site: '@adityahimaone',
-        title: 'Blog — adityahimaone',
+        title: 'Blog — Aditya Himawan',
         description: DESCRIPTION,
-        images: [
-          'https://ucarecdn.com/b624aa7d-978f-44ef-8e45-bf3c12f1e846/memojilaptop1.png',
-        ],
       },
     }
   }

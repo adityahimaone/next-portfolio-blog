@@ -177,6 +177,7 @@ export default function SpotifySetupPage() {
                           <a
                             href="https://developer.spotify.com/dashboard"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-amber-500 hover:underline"
                           >
                             Spotify Developer Dashboard{' '}

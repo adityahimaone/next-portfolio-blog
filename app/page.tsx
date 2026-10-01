@@ -1,24 +1,9 @@
 import { getRepos } from '@/features/projects/lib/github'
 import { LandingPage } from '@/features/landing-page'
-import { JsonLd, webSite } from '@/lib/structured-data'
-import { WEBSITE_URL } from '@/lib/constants'
+import { JsonLd, person, webSite } from '@/lib/structured-data'
 
 export default async function Home() {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    name: 'Aditya Himawan',
-    url: WEBSITE_URL,
-    // Without an `image` a Person entity has nothing for a knowledge panel to
-    // show, and the site already has a public avatar to point at.
-    image: `${WEBSITE_URL}/memoji-1.png`,
-    jobTitle: 'Frontend Engineer',
-    email: 'adityahimaone@gmail.com',
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'Jakarta',
-      addressCountry: 'ID',
-    },
+  const jsonLd = person({
     knowsAbout: [
       'React',
       'Next.js',
@@ -32,18 +17,18 @@ export default async function Home() {
       'PostgreSQL',
       'MySQL',
     ],
-    alumniOf: [
-      { '@type': 'CollegeOrUniversity', name: 'Universitas AMIKOM Yogyakarta' },
-      { '@type': 'EducationalOrganization', name: 'Binar Academy' },
-      { '@type': 'EducationalOrganization', name: 'Alterra Academy' },
-      { '@type': 'EducationalOrganization', name: 'Bangkit Academy' },
-    ],
     sameAs: [
       'https://github.com/adityahimaone',
       'https://linkedin.com/in/adityahimaone',
       'https://x.com/adityahimaone',
     ],
-  }
+    alumniOf: [
+      'Universitas AMIKOM Yogyakarta',
+      'Binar Academy',
+      'Alterra Academy',
+      'Bangkit Academy',
+    ],
+  })
 
   // Fetched here, in the page's own server component, rather than in a wrapper
   // inside the landing page. The landing page is a client component tree, so an

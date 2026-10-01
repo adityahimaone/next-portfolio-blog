@@ -7,9 +7,20 @@
  * first.
  */
 
-/** Google Drive link to the CV, used by the hero and the contact panel. */
-export const RESUME_URL =
-  'https://drive.google.com/file/d/17x3GuEkZxbt9ZeLilXx1ShBHV_CZTfSq/view?usp=sharing'
+/**
+ * The CV, used by the hero and the contact panel.
+ *
+ * This used to point at a Google Drive preview URL. Two problems with that: a
+ * Drive-hosted file sits behind a viewer page rather than serving the PDF, and
+ * crawlers and AI assistants frequently cannot reach it at all — which made
+ * the one document a recruiter most wants invisible to exactly the systems
+ * likely to read it.
+ *
+ * The file is served from this origin now, at `/resume.pdf`, and is the same
+ * PDF the Drive link pointed to. Update it by replacing `public/resume.pdf`; no
+ * link needs touching.
+ */
+export const RESUME_URL = '/resume.pdf'
 
 /** The struts the footer tangle is drawn from. */
 export const FOOTER_TANGLE_LINES = [

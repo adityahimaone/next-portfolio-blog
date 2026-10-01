@@ -1,5 +1,5 @@
 ---
-title: "Stop Paying for Notes — Obsidian + Syncthing Is All You Need"
+title: "Free Notes Sync with Obsidian"
 slug: stop-paying-for-notes-obsidian-syncthing
 date: 2026-04-16
 description: "A free, private, cross-platform note-taking system using Obsidian and Syncthing — with setup guides for macOS, Windows, and Android. No subscriptions, no cloud, no compromises."
@@ -8,7 +8,6 @@ published: true
 pinned: true
 ---
 
-# Stop Paying for Notes — Obsidian + Syncthing Is All You Need
 
 I have tried most of the popular note apps. Notion, Apple Notes, Google Keep, Bear, even a plain folder of markdown files synced with Dropbox. They all had the same problem: either I was locked into someone else's ecosystem, paying a subscription for basic features, or giving up control of my data. When I found the combination of Obsidian and Syncthing, I stopped looking.
 

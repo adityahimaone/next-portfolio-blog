@@ -14,7 +14,12 @@ import { ThemeProvider } from 'next-themes'
 import { AudioProvider } from '@/features/landing-page/spotify/audio-context'
 import { MusicPlayer } from '@/features/landing-page/spotify/music-player'
 import { MagneticDock } from '@/features/layout/components/magnetic-dock'
-import { Analytics } from '@vercel/analytics/next'
+import Script from 'next/script'
+import {
+  WEBSITE_URL,
+  GA_MEASUREMENT_ID,
+  GSC_VERIFICATION,
+} from '@/lib/constants'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -26,8 +31,11 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://adityahimaone.space'),
-  title: 'Aditya Himawan — Frontend Engineer | React, Next.js, TypeScript',
+  metadataBase: new URL(WEBSITE_URL),
+  title: {
+    default: 'Aditya Himawan — Frontend Engineer',
+    template: '%s | Aditya Himawan',
+  },
   description:
     'Frontend Engineer with 4+ years building production web apps with React, Next.js, and TypeScript — leading platforms serving 15K+ users. Music-themed interactive portfolio.',
   icons: {
@@ -44,12 +52,20 @@ export const metadata: Metadata = {
       },
     ],
   },
+  alternates: {
+    canonical: '/',
+  },
+  // Search Console cannot verify site ownership without this, and every
+  // "cannot verify" verdict in docs/seo-audit.md traces back to it being unset.
+  ...(GSC_VERIFICATION
+    ? {
+        verification: { google: GSC_VERIFICATION },
+      }
+    : {}),
   openGraph: {
     title: 'Aditya Himawan — Frontend Engineer',
     type: 'website',
-    images:
-      'https://ucarecdn.com/b624aa7d-978f-44ef-8e45-bf3c12f1e846/memojilaptop1.png',
-    url: 'https://adityahimaone.space/',
+    images: ['/opengraph-image'],
     description:
       'Frontend Engineer with 4+ years building production web apps with React, Next.js, and TypeScript — leading platforms serving 15K+ users.',
   },
@@ -59,8 +75,7 @@ export const metadata: Metadata = {
     title: 'Aditya Himawan — Frontend Engineer',
     description:
       'Frontend Engineer with 4+ years building production web apps with React, Next.js, and TypeScript.',
-    images:
-      'https://ucarecdn.com/b624aa7d-978f-44ef-8e45-bf3c12f1e846/memojilaptop1.png',
+    images: ['/opengraph-image'],
   },
 }
 
@@ -145,7 +160,28 @@ export default function RootLayout({
             </div>
           </AudioProvider>
         </ThemeProvider>
-        <Analytics />
+        {/* @vercel/analytics was removed here.
+
+            It shipped a `<script src="/_vercel/insights/script.js">`, which is
+            a same-origin path that only resolves behind a Vercel proxy. This
+            site runs `next start` under PM2 behind its own Nginx (see
+            deploy.sh / ecosystem.config.js), and the path returns 404 in
+            production — verified with curl against the live domain. So it was
+            a failed request on every pageview, and no data was ever collected.
+
+            GA4 below is the replacement. It is an absolute third-party URL, so
+            it resolves the same way on a VPS as it would on Vercel. */}
+        {GA_MEASUREMENT_ID ? (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_MEASUREMENT_ID}')`}
+            </Script>
+          </>
+        ) : null}
       </body>
     </html>
   )

@@ -1,3 +1,15 @@
+import type {
+  BreadcrumbList,
+  BlogPosting,
+  CreativeWork,
+  FAQPage,
+  ItemList,
+  Person,
+  Question,
+  SearchActionLeaf,
+  WebSite,
+} from 'schema-dts'
+
 import { DEFAULT_ARTICLE_IMAGE, WEBSITE_URL } from './constants'
 
 /**
@@ -12,7 +24,25 @@ import { DEFAULT_ARTICLE_IMAGE, WEBSITE_URL } from './constants'
  * testable, and the one component that renders it keeps the same
  * `application/ld+json` + `dangerouslySetInnerHTML` pattern the home page
  * already established.
+ *
+ * The return types are `schema-dts` types rather than `Record<string, unknown>`.
+ * That is the point: a typo like `dateModifed`, or a `BreadcrumbList` whose
+ * items are missing `position`, is now a type error rather than invalid JSON-LD
+ * that only a Rich Results validator would ever notice.
  */
+
+/** Anything this module emits goes through this, whatever its shape. */
+export type Graph = WithContext<
+  | ItemList
+  | BlogPosting
+  | CreativeWork
+  | BreadcrumbList
+  | WebSite
+  | Person
+  | FAQPage
+>
+
+type WithContext<T> = T & { '@context': 'https://schema.org' }
 
 export type ListEntry = {
   name: string
@@ -37,7 +67,7 @@ export function itemList({
   name: string
   description: string
   startAt?: number
-}): Record<string, unknown> {
+}): Graph {
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -73,6 +103,7 @@ export function blogPosting({
   title,
   description,
   datePublished,
+  dateModified,
   url,
   tags,
   image,
@@ -80,16 +111,21 @@ export function blogPosting({
   title: string
   description: string
   datePublished: string
+  dateModified?: string
   url: string
   tags: readonly string[]
   image?: string
-}): Record<string, unknown> {
+}): Graph {
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: title,
     description,
     datePublished,
+    // Only claim a modification date when one is actually known. Omitting the
+    // field is honest; defaulting it to `datePublished` on every post would put
+    // a freshness signal on 13 posts that have never been edited since.
+    ...(dateModified ? { dateModified } : {}),
     ...(tags.length ? { keywords: tags.join(', ') } : {}),
     // Never omit this — see the note above on why the old guard was wrong.
     image: image ?? DEFAULT_ARTICLE_IMAGE,
@@ -116,7 +152,7 @@ export function blogPosting({
  * the site it belongs to, so a crawler had no `sitename` to attach to the
  * domain. `potentialAction` describes the `/blog` search, which already exists.
  */
-export function webSite(): Record<string, unknown> {
+export function webSite(): Graph {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -136,8 +172,12 @@ export function webSite(): Record<string, unknown> {
         '@type': 'EntryPoint',
         urlTemplate: `${WEBSITE_URL}/blog?q={search_term_string}`,
       },
+      // `query-input` is a Google extension rather than a schema.org property,
+      // so `schema-dts` rejects it on `SearchAction`. Google still documents it
+      // and still reads it, so it stays — declared explicitly here instead of
+      // via a blanket cast, so the one place this happens is visible.
       'query-input': 'required name=search_term_string',
-    },
+    } as SearchActionLeaf & { 'query-input': string },
   }
 }
 
@@ -150,7 +190,7 @@ export function webSite(): Record<string, unknown> {
  */
 export function breadcrumbList(
   crumbs: readonly { name: string; path: string }[],
-): Record<string, unknown> {
+): Graph {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -164,13 +204,131 @@ export function breadcrumbList(
 }
 
 /**
+ * One shipped project.
+ *
+ * `/projects` describes its six entries as `ItemList` name/url/description
+ * strings, which is the correct type for a listing but says nothing about the
+ * work itself — no author, no date, no genre. Every project's `url` is also
+ * off-site, so before `/projects/[slug]` existed there was no URL on this domain
+ * that described any of it in a form a crawler could read.
+ *
+ * `image` is required for the same reason it is on `blogPosting`: a CreativeWork
+ * with no image is ineligible for rich results. Falls back to the site image
+ * when a project ships no cover — two of the six currently have none.
+ */
+export function creativeWork({
+  title,
+  description,
+  url,
+  image,
+  genre,
+  year,
+  stack,
+}: {
+  title: string
+  description: string
+  url: string
+  image?: string
+  genre?: string
+  year?: number
+  stack?: readonly string[]
+}): Graph {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    name: title,
+    description,
+    url,
+    image: image ?? DEFAULT_ARTICLE_IMAGE,
+    ...(genre ? { genre } : {}),
+    ...(year ? { dateCreated: String(year) } : {}),
+    ...(stack?.length ? { keywords: stack.join(', ') } : {}),
+    creator: {
+      '@type': 'Person',
+      name: 'Aditya Himawan',
+      url: WEBSITE_URL,
+    },
+  }
+}
+
+/**
+ * The person this site belongs to.
+ *
+ * Was inlined in `app/page.tsx` and again in the new `/about` page, which is
+ * exactly the arrangement that lets two copies of a name, an email and a list of
+ * schools drift apart without anything failing. One builder, one Person.
+ *
+ * `mainEntity` on the home page's `WebSite` already points here, so the two
+ * are describing the same entity rather than two similar ones.
+ */
+export function person({
+  description,
+  knowsAbout,
+  sameAs,
+  alumniOf,
+  email = 'adityahimaone@gmail.com',
+}: {
+  description?: string
+  knowsAbout: readonly string[]
+  sameAs: readonly string[]
+  alumniOf: readonly string[]
+  email?: string
+}): Graph {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Aditya Himawan',
+    url: WEBSITE_URL,
+    // Without an `image` a Person entity has nothing for a knowledge panel to
+    // show, and the site already has a public avatar to point at.
+    image: `${WEBSITE_URL}/memoji-1.png`,
+    jobTitle: 'Frontend Engineer',
+    email,
+    ...(description ? { description } : {}),
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Jakarta',
+      addressCountry: 'ID',
+    },
+    knowsAbout: [...knowsAbout],
+    alumniOf: alumniOf.map((name) => ({
+      '@type': 'EducationalOrganization',
+      name,
+    })),
+    sameAs: [...sameAs],
+  }
+}
+
+/**
+ * A set of questions and answers, for the "People also ask" surface.
+ *
+ * Only valid on a page that visibly shows the same questions and answers — the
+ * markup is a claim about what is on the page, not a place to stash keywords.
+ */
+export function faqPage(
+  entries: readonly { question: string; answer: string }[],
+): Graph {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: entries.map(
+      (entry): Question => ({
+        '@type': 'Question',
+        name: entry.question,
+        acceptedAnswer: { '@type': 'Answer', text: entry.answer },
+      }),
+    ),
+  }
+}
+
+/**
  * Renders a graph into a script tag.
  *
  * `<` is escaped so a title containing one cannot close the script element and
  * inject markup — the JSON is data, and this is the one place that boundary
  * is crossed.
  */
-export function JsonLd({ data }: { data: Record<string, unknown> }) {
+export function JsonLd({ data }: { data: Graph }) {
   return (
     <script
       type="application/ld+json"

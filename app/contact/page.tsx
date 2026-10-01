@@ -1,9 +1,19 @@
 import Link from 'next/link'
 import { Metadata } from 'next'
+import { WEBSITE_URL } from '@/lib/constants'
 
 export const metadata: Metadata = {
-  title: 'Contact - adityahimaone',
-  description: 'Get in touch with adityahimaone - frontend developer.',
+  title: 'Contact',
+  description:
+    'Get in touch with Aditya Himawan — frontend engineer. Available for frontend, design engineering and interface work.',
+  alternates: { canonical: '/contact' },
+  openGraph: {
+    title: 'Contact — Aditya Himawan',
+    description:
+      'Frontend, design engineering and interface work. Get in touch with Aditya Himawan.',
+    url: `${WEBSITE_URL}/contact`,
+    type: 'website',
+  },
 }
 
 const socialLinks = [

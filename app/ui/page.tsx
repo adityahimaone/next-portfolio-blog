@@ -15,8 +15,12 @@ import {
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'UI Components — adityahimaone',
+  title: 'UI Components',
   description: 'Interactive music components playground.',
+  alternates: { canonical: '/ui' },
+  // A dev playground, not a destination. It stays reachable by URL but is kept
+  // out of the index so it cannot compete with the pages that are meant to rank.
+  robots: { index: false, follow: true },
 }
 
 function ComponentSection({

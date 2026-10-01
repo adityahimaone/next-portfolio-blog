@@ -1,5 +1,5 @@
 ---
-title: "VPS Monitoring Stack — Grafana, Prometheus & Blackbox Exporter"
+title: "VPS Monitoring: Prometheus + Grafana"
 slug: vps-monitoring-grafana-prometheus-blackbox
 date: 2026-05-05
 description: "How I built a full-stack monitoring system on Ubuntu VPS with Grafana, Prometheus, Blackbox Exporter, and automated uptime tracking with Telegram alerts."
@@ -8,7 +8,6 @@ published: true
 pinned: false
 ---
 
-# VPS Monitoring Stack — Grafana, Prometheus & Blackbox Exporter
 
 Managing a VPS (Virtual Private Server) itu kayak jagain rumah sendiri — lu harus tahu apa yang terjadi di dalam, kapan saja. Setelah beberapa kali service tiba-tiba mati tanpa tau sebabnya, I decided to build a proper monitoring stack.
 

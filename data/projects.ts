@@ -217,6 +217,19 @@ export const WORK_PROJECTS: WorkProject[] = ORDERED_SEEDS.map(
   }),
 )
 
+/**
+ * Look up one project by slug, for `/projects/[slug]`.
+ *
+ * Every project's `url` points off-site — a repo or a live client site — so the
+ * detail pages are the only place any of this work was ever indexable. Until
+ * this existed the six projects were reachable solely as outbound links from
+ * `/projects`, which means the work itself earned its authority for whichever
+ * host it happened to sit on.
+ */
+export function getProject(slug: string): WorkProject | undefined {
+  return WORK_PROJECTS.find((project) => project.slug === slug)
+}
+
 /** Seconds of "playback" each project gets in the turntable preview. */
 export const PROJECT_PREVIEW_DURATION = 185
 

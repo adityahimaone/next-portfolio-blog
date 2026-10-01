@@ -1,5 +1,5 @@
 ---
-title: "Black Hole: Tempat di Mana Fisika yang Kita Pelajari Bikin No Sense Lagi"
+title: "Black Hole: Fisika yang Terlihat Aneh"
 slug: black-hole-fisika-bikin-no-sense
 date: 2026-05-15
 description: "Kenapa black hole itu absurd, gimana kita bisa foto sesuatu yang nggak bikin cahaya bisa kabur, dan apa yang terjadi kalo kamu (maaf) jatuh ke dalamnya."
@@ -7,7 +7,6 @@ tags: [black-hole, astrophysics, science, physics]
 published: false
 ---
 
-# Black Hole: Tempat di Mana Fisika yang Kita Pelajari Bikin No Sense Lagi
 
 Awalnya gw kira black hole itu kayak lubang. Ya namanya juga "black hole". Tapi ternyata bukan. Ini bukan lubang, ini benda. Benda yang massanya gede banget sampe ruang dan waktu di sekitarnya literally kelakuannya beda.
 

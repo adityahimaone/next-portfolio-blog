@@ -1,13 +1,15 @@
 ---
-title: "Deploying Next.js to a VPS: Nginx, PM2, and Custom Domains"
+title: "Deploying Next.js to a VPS with Nginx"
 slug: deploy-nextjs-vps-nginx-pm2-custom-domain
 date: 2026-05-08
-description: "A practical guide to deploying Next.js applications on a VPS with Nginx reverse proxy, PM2 process management, and custom domain setup."
+description: "Deploy any Next.js app to a VPS: choosing a host, Nginx reverse proxy, PM2 process management, custom domains and SSL."
 tags: [nextjs, vps, deployment, nginx, pm2, devops]
 published: true
 ---
 
 Deploying a Next.js application to a VPS gives you control that managed platforms can't match. You decide the runtime, the caching strategy, the security posture, and the cost. The trade-off is you also decide the failure modes. I've run production Next.js apps on a $5/month VPS for years, and the setup is simpler than most tutorials make it seem.
+
+> This is the general guide: any Next.js app, any host, no CI/CD assumed. For the specific case of shipping a portfolio with a staging environment, GitHub Actions, and automated rollback, see [Deploying a Next.js Portfolio to a VPS](/blog/deploying-portfolio-from-zero-to-production) — that one builds on this setup.
 
 ## Why a VPS over Vercel or Netlify
 

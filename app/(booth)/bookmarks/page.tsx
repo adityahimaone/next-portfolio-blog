@@ -7,7 +7,7 @@ import {
   parsePage,
   PAGE_SIZE,
 } from '@/features/bookmarks/lib/bookmarks'
-import { itemList, JsonLd } from '@/lib/structured-data'
+import { breadcrumbList, itemList, JsonLd } from '@/lib/structured-data'
 import type { Bookmark } from '@/features/bookmarks/types'
 
 const FILE_PATH = path.join(process.cwd(), 'content', 'bookmarks.json')
@@ -107,9 +107,15 @@ export default async function Page({
     })),
   })
 
+  const breadcrumbs = breadcrumbList([
+    { name: 'Home', path: '/' },
+    { name: 'Bookmarks', path: '/bookmarks' },
+  ])
+
   return (
     <>
       <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbs} />
       <BookmarksPage page={bookmarks} />
     </>
   )

@@ -1,11 +1,28 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { AudioLines, Zap } from 'lucide-react'
 import { NowPlayingResponse } from '@/types'
 import Image from 'next/image'
 import { m as motion } from 'motion/react'
 import { cn } from '@/lib/utils'
+
+/* Visualizer bar heights.
+ *
+ * Fixed per component instance rather than regenerated on every render. The
+ * `Math.random()` this replaces was called during render, which is impure — and
+ * visibly so: the now-playing poller re-fetches every 10s and sets state, so
+ * each poll produced 30 new random values and the whole bar row jumped for no
+ * reason. The randomiser is still a randomiser; it just only runs once, when the
+ * component mounts, so each bar has a stable resting height to animate between.
+ *
+ * Deliberately not `useMemo` — a memo over `Math.random` would still recompute
+ * whenever the deps changed, which is the same bug with extra steps. */
+const VISUALIZER_LOW = Array.from({ length: 15 }, () => 18 + Math.random() * 34)
+const VISUALIZER_HIGH = Array.from(
+  { length: 15 },
+  () => 55 + Math.random() * 45,
+)
 
 export default function NowPlaying() {
   const [data, setData] = useState<NowPlayingResponse | null>(null)
@@ -131,7 +148,7 @@ export default function NowPlaying() {
                   className="flex-1 bg-amber-500/50"
                   animate={{
                     height: isPlaying
-                      ? [`${Math.random() * 100}%`, `${Math.random() * 100}%`]
+                      ? [`${VISUALIZER_LOW[i]}%`, `${VISUALIZER_HIGH[i]}%`]
                       : '5%',
                   }}
                   transition={{
@@ -163,6 +180,7 @@ export default function NowPlaying() {
           <a
             href={data?.songUrl || '#'}
             target="_blank"
+            rel="noopener noreferrer"
             className={cn(
               'flex h-8 items-center justify-center rounded bg-zinc-200 px-4 shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-colors hover:bg-white',
               !isPlaying && 'pointer-events-none opacity-50',

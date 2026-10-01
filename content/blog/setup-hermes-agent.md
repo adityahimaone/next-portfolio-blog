@@ -1,5 +1,5 @@
 ---
-title: "Setting Up Hermes Agent — My AI-Powered Dev Assistant"
+title: "Setting Up Hermes Agent as a Dev Assistant"
 slug: setup-hermes-agent
 date: 2026-04-16
 description: "How I set up Hermes Agent with 40+ custom skills, RTK token optimization, and automated workflows for finance, development, and productivity."
@@ -8,7 +8,6 @@ published: true
 pinned: true
 ---
 
-# Setting Up Hermes Agent — My AI-Powered Dev Assistant
 
 I got tired of copy-pasting terminal output into browser tabs. Every debugging session meant switching between ChatGPT, my editor, and my terminal, losing context every time I switched windows. I wanted something that lived where I already worked and remembered how I liked things done. That is how I ended up building and configuring Hermes Agent.
 

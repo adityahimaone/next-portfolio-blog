@@ -255,6 +255,18 @@ export function BlogPost({
             </div>
 
             <p className={styles.headlineMeta}>
+              {/*
+                The byline was missing entirely: a post showed date, reading
+                time and view count, but nothing identifying who wrote it. The
+                Person JSON-LD said "Aditya Himawan" and the page never did, so
+                the on-page authorship signal and the structured one disagreed.
+                Links to the contact page, which gives the name an internal link
+                of its own.
+              */}
+              <Link href="/contact" className={styles.tag}>
+                Aditya Himawan
+              </Link>
+              <span>·</span>
               {formatDate(meta.date, 'long')}
               <span>·</span>
               <span>{meta.readingTime}</span>

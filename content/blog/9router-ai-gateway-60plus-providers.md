@@ -1,5 +1,5 @@
 ---
-title: "9Router — One Gateway to 60+ AI Providers with Smart Fallback"
+title: "9Router: One Gateway to 60+ AI Providers"
 slug: 9router-ai-gateway-60plus-providers
 date: 2026-05-05
 description: "How I set up 9Router as a local AI gateway with 3-tier fallback, RTK token compression, and seamless integration with Claude Code, Codex, and Hermes Agent."
@@ -8,7 +8,6 @@ published: true
 pinned: false
 ---
 
-# 9Router — One Gateway to 60+ AI Providers with Smart Fallback
 
 Managing multiple AI subscriptions udah jadi masalah sendiri. Tiap bulan gw ada Claude, OpenAI, Gemini, plus some free-tier accounts. Tiap CLI tool (Claude Code, Codex, Cursor) butuh config berbeda. Too many API keys, too many endpoints.
 

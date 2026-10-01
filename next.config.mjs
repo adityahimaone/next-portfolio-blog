@@ -3,6 +3,7 @@ import withBundleAnalyzerInit from '@next/bundle-analyzer'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md'],
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
@@ -19,9 +20,27 @@ const nextConfig = {
       { protocol: 'https', hostname: 'cdn.sanity.io' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'i.scdn.co' },
-      { protocol: 'https', hostname: 'ucarecdn.com' },
       { protocol: 'https', hostname: 'img.youtube.com' },
     ],
+    // AVIF alongside the default WebP. Covers and the one site-wide noise
+    // texture are the largest images served, so they take the biggest win here.
+    formats: ['image/avif', 'image/webp'],
+    // The default 60s revalidates a stable asset on every crawl. Nothing here
+    // is content-hashed by query string, so a week is safe.
+    minimumCacheTTL: 604800,
+  },
+  // Legacy paths from before the App Router rewrite. `docs/structure.md` still
+  // documents `/spotify` and `/v2`, and both were removed without a redirect, so
+  // any external link or bookmark to them is a hard 404. `permanent` is correct
+  // here: these have no replacement at the same URL and will not come back.
+  async redirects() {
+    return [
+      { source: '/spotify', destination: '/music', permanent: true },
+      { source: '/v2', destination: '/', permanent: true },
+      // One hop, not a chain: /contact used to answer on a trailing slash and
+      // Next would 308 that to the clean path.
+      { source: '/contact/', destination: '/contact', permanent: true },
+    ]
   },
   headers: async () => {
     return [
@@ -43,6 +62,12 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
+          },
+          {
+            // The other three security headers were here; HSTS was not, so a
+            // first visit negotiated plain HTTP before being redirected.
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
         ],
       },

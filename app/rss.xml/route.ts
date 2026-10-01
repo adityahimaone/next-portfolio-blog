@@ -1,15 +1,18 @@
 import { getAllPosts } from '@/features/blog/lib/blog'
+import { WEBSITE_URL } from '@/lib/constants'
 
 export async function GET() {
   const posts = await getAllPosts()
-  const siteUrl = 'https://adityahimaone.space'
+  // Was a third hardcoded copy of the domain. A domain change now means editing
+  // lib/constants.ts once, not hunting three files for the string.
+  const siteUrl = WEBSITE_URL
 
   const rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>adityahimaone — Blog</title>
+    <title>Aditya Himawan — Blog</title>
     <link>${siteUrl}/blog</link>
-    <description>Thoughts on frontend development, design, and code.</description>
+    <description>Notes on self-hosting, VPS deployment, Nginx, PM2, Prometheus and Docker, written while running production infrastructure.</description>
     <language>en</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml" />

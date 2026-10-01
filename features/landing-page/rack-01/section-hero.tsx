@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { RESUME_URL } from './shared'
 import { useEffect, useState } from 'react'
 import { DawHero } from '../components/hero'
@@ -106,6 +107,9 @@ export function Hero() {
                 <span>See the works</span>
                 <ArrowDownRight size={18} aria-hidden="true" />
               </a>
+              <Link href="/blog" className={styles.heroResumeLink}>
+                Read the notes <ArrowUpRight size={15} aria-hidden="true" />
+              </Link>
               <a
                 href={RESUME_URL}
                 target="_blank"

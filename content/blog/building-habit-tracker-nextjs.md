@@ -1,5 +1,5 @@
 ---
-title: "Building a Habit Tracker with Next.js 16, Tailwind v4 & shadcn/ui"
+title: "Building a Habit Tracker with Next.js"
 slug: building-habit-tracker-nextjs
 date: 2026-05-02
 description: "A deep dive into building a mobile-first habit tracker with modern Next.js, shadcn/ui components, framer-motion animations, and a localStorage-first architecture for offline-first personal tracking."
@@ -7,7 +7,6 @@ tags: [nextjs, tailwind, shadcn, typescript, side-project, productivity, localst
 published: true
 ---
 
-# Building a Habit Tracker with Next.js 16, Tailwind v4 & shadcn/ui
 
 I've always struggled with consistency. Whether it's coding, exercising, or reading — I start strong but fizzle out after a week. So I built a habit tracker to solve my own problem, deployed it locally with PM2, and iterated through several architectural decisions along the way.
 

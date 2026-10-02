@@ -37,10 +37,18 @@ jobs:
       # NEXT_PUBLIC_* values are inlined into the client bundle at build time, so
       # they are passed here rather than as Workers secrets -- setting them at
       # runtime would have no effect on the shipped JS.
+      #
+      # The critical-CSS pass runs as its own step after the OpenNext build, not
+      # as part of `npm run build`: CI invokes `opennextjs-cloudflare build`
+      # directly, so anything chained onto the npm script alone would be skipped
+      # in production. It edits the built HTML in place, so ordering matters.
       - name: Build with OpenNext
         env:
           NEXT_PUBLIC_SITE_URL: https://adityahimaone.space
         run: pnpm exec opennextjs-cloudflare build
+
+      - name: Inline critical CSS
+        run: pnpm exec node scripts/inline-critical-css.mjs
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3

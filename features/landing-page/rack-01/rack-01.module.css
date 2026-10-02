@@ -3399,8 +3399,8 @@
 .cassetteMechanism::after {
   position: absolute;
   top: 50%;
-  width: 9px;
-  height: 9px;
+  width: 2.4cqw;
+  height: 2.4cqw;
   border-radius: 50%;
   background: #0f100f;
   box-shadow: inset 0 1px 2px #000;
@@ -3408,28 +3408,28 @@
   transform: translateY(-50%);
 }
 .cassetteMechanism::before {
-  left: -16px;
+  left: -4.2cqw;
 }
 .cassetteMechanism::after {
-  right: -16px;
+  right: -4.2cqw;
 }
 .tapeWheel {
   position: relative;
-  width: 46px;
-  height: 46px;
-  border: 4px solid #d8d5cd;
+  width: 10.9cqw;
+  height: 10.9cqw;
+  border: 1.1cqw solid #d8d5cd;
   border-radius: 50%;
   background: repeating-conic-gradient(#d8d5cd 0 7deg, #777872 7deg 14deg),
     #3b3d39;
   box-shadow:
-    0 0 0 5px #4a2f21,
-    inset 0 0 0 7px #171917,
-    0 0 0 6px rgba(12, 13, 12, 0.72);
+    0 0 0 1.3cqw #4a2f21,
+    inset 0 0 0 1.8cqw #171917,
+    0 0 0 1.6cqw rgba(12, 13, 12, 0.72);
   will-change: transform;
 }
 .tapeWheel::after {
   position: absolute;
-  inset: 12px;
+  inset: 26%;
   border: 1px solid #8e8e88;
   border-radius: 50%;
   background: #171817;
@@ -3468,40 +3468,40 @@
 .cassetteTapePath {
   position: relative;
   align-self: stretch;
-  min-width: 38px;
+  min-width: 0;
 }
 .cassetteTapePath i {
   position: absolute;
-  top: 19px;
-  right: -8px;
-  left: -8px;
-  height: 7px;
-  border-top: 2px solid #6d422b;
-  border-bottom: 2px solid #261b15;
+  top: 5cqw;
+  right: -2.1cqw;
+  left: -2.1cqw;
+  height: 1.85cqw;
+  border-top: 0.5cqw solid #6d422b;
+  border-bottom: 0.5cqw solid #261b15;
   background: #3b2418;
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0.5cqw 0.8cqw rgba(0, 0, 0, 0.7);
 }
 .cassetteTapePath b {
   position: absolute;
   right: 5%;
-  bottom: 6px;
+  bottom: 1.6cqw;
   left: 5%;
-  height: 14px;
-  border-right: 2px solid #543321;
-  border-bottom: 3px solid #543321;
-  border-left: 2px solid #543321;
+  height: 3.7cqw;
+  border-right: 0.5cqw solid #543321;
+  border-bottom: 0.8cqw solid #543321;
+  border-left: 0.5cqw solid #543321;
   border-radius: 0 0 50% 50%;
 }
 .cassetteHeadAssembly {
   position: relative;
   display: flex;
-  width: min(55%, 220px);
-  height: 22px;
+  width: 54%;
+  height: 5.3cqw;
   align-items: center;
   justify-content: space-around;
   justify-self: center;
-  margin-top: -2px;
-  padding: 3px 20%;
+  margin-top: -0.5cqw;
+  padding: 0.8cqw 20%;
   border: 1px solid #77766f;
   background: linear-gradient(#aaa79f, #7e7d77);
   box-shadow:
@@ -3510,22 +3510,22 @@
   clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
 }
 .cassetteHeadAssembly i {
-  width: 8px;
-  height: 8px;
-  border: 2px solid #242523;
+  width: 2.1cqw;
+  height: 2.1cqw;
+  border: 0.5cqw solid #242523;
   border-radius: 50%;
   background: #bbb8b0;
 }
 .cassetteHeadAssembly b {
-  width: 15px;
-  height: 10px;
+  width: 4cqw;
+  height: 2.6cqw;
   border: 1px solid #333432;
   border-radius: 1px 1px 4px 4px;
   background: linear-gradient(#e0ddd5, #71716c);
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.74);
 }
 .cassetteFooter {
-  margin-top: 3px;
+  margin-top: 0.8cqw;
   justify-self: end;
 }
 
@@ -5153,9 +5153,14 @@
     0 8px 18px -14px rgba(15, 23, 42, 0.48);
 }
 
+/* 340px made the tape 476px wide, which filled the bay so completely that it
+   stopped reading as a tape in a well and started reading as a card. The
+   cassette derives its width from this height, so 300px brings it back to
+   ~420px — still far larger than the 379px it started at, but with the black
+   well visible around it again so the two neighbours have somewhere to sit. */
 .experience .tapeCarousel {
-  height: 260px;
-  min-height: 260px;
+  height: 300px;
+  min-height: 300px;
   background:
     radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.12), transparent 34%),
     rgba(17, 20, 18, 0.78);
@@ -6128,8 +6133,11 @@
 .radioSpeaker {
   min-height: 270px;
 }
+/* Must track the 300px set above: this declaration comes later in the cascade
+   and would otherwise win, leaving the cassette sized for a taller bay than the
+   one it is rendered in. */
 .tapeCarousel {
-  height: 214px;
+  height: 300px;
   background: linear-gradient(
       90deg,
       transparent 49.7%,
@@ -6149,11 +6157,39 @@
   --cassette-label: #d9895b;
   --cassette-ink: #25231f;
   --cassette-accent: #7b2735;
-  width: min(100.4mm, calc(100% - 92px));
+  /* Sized by the bay's HEIGHT, not by a millimetre figure. `width: min(100.4mm,
+     ...)` pinned the tape to a physical ~379px while the well around it grew,
+     so the cassette sat in the middle of a black well using well under half the
+     space. Deriving the width from the resolved height lets one rule fill the
+     bay at any size, and `max-width` still stops it from reaching the flanks,
+     which is what keeps the two stacked neighbours from colliding with it.
+
+     /* The interior is drawn in `cqw` so every part scales with the tape. A
+     descendant's `cqw` resolves against this container's content box, which is
+     exactly the behaviour needed here.
+
+     The shell's own PADDING cannot be expressed in `cqw` for the same reason:
+     a container's own `cqw` resolves against its ANCESTOR, so `4.75cqw` there
+     resolved against the 1440px viewport (68px a side) instead of the tape's
+     476px. That ate 29% of the tape's width and shrank the very content box
+     every interior unit below is measured against, which is what collapsed the
+     label, reels and head into the top third of an oversized body. Padding is
+     therefore a percentage of the bay — the shell's containing block — which
+     carries no feedback loop. */
+  container-type: inline-size;
+  width: auto;
+  height: calc(100% - 20px);
+  max-width: calc(100% - 84px);
   min-height: 0;
   aspect-ratio: 100.4 / 63.8;
-  grid-template-rows: auto auto minmax(48px, 1fr) auto auto;
-  padding: 13px 18px 10px;
+  /* Every row is `auto` and the slack is shared between them, so the drawing
+     stays inside the shell at any size rather than stranding its contents in
+     the top third of a tall tape. */
+  grid-template-rows: auto auto auto auto auto;
+  align-content: space-between;
+  /* 4% of the 570px bay is ~23px on the tape, matching the original 18px on a
+     379px shell at the same proportion. */
+  padding: 2.5% 4% 2%;
   border: 1px solid color-mix(in srgb, var(--cassette-shell-deep) 76%, #292a27);
   border-radius: 5px;
   background: linear-gradient(
@@ -6185,14 +6221,16 @@
   align-items: baseline;
   justify-content: space-between;
   color: var(--cassette-ink);
+  /* 7px on the original 379px shell. */
+  font-size: 1.95cqw;
 }
 .cassetteBrand b {
-  font-size: 9px;
+  font-size: 2.5cqw;
 }
 .cassetteLabel {
   position: relative;
-  margin: 7px 0 8px;
-  padding: 7px 12px 8px;
+  margin: 1.95cqw 0 2.15cqw;
+  padding: 1.95cqw 3.4cqw 2.15cqw;
   border-color: color-mix(in srgb, var(--cassette-accent) 54%, #68645d);
   background: repeating-linear-gradient(
       0deg,
@@ -6212,17 +6250,23 @@
   content: '';
 }
 .cassetteLabel strong {
-  font-size: clamp(13px, 1.45vw, 19px);
+  /* 19px on the original 379px shell, held at both ends so the title stays
+     legible on a phone and does not run long on a desktop tape. */
+  font-size: clamp(10px, 5cqw, 30px);
 }
 .cassetteMechanism {
-  width: min(80%, 292px);
-  height: 51px;
-  grid-template-columns: 43px minmax(38px, 1fr) 43px;
+  /* 292x51 on the original 379px shell. A percentage of the shell would be
+     measured against this container's content box, so `cqw` states the same
+     proportion directly and reads the same as the rest of the drawing. */
+  width: 82%;
+  height: 14.5cqw;
+  grid-template-columns: 12.1cqw minmax(0, 1fr) 12.1cqw;
   border-color: color-mix(in srgb, var(--cassette-accent) 45%, #3d3e3a);
 }
 .tapeWheel {
-  width: 41px;
-  height: 41px;
+  width: 11.6cqw;
+  height: 11.6cqw;
+  border-width: 1.15cqw;
   border-color: color-mix(in srgb, var(--cassette-shell) 75%, #fff);
   background: repeating-conic-gradient(
       color-mix(in srgb, var(--cassette-shell) 80%, white) 0 7deg,
@@ -6234,8 +6278,8 @@
   background: color-mix(in srgb, var(--cassette-shell) 75%, white);
 }
 .cassetteHeadAssembly {
-  width: min(57%, 205px);
-  height: 20px;
+  width: 57%;
+  height: 5.6cqw;
   border-color: color-mix(in srgb, var(--cassette-accent) 35%, #77766f);
   background: linear-gradient(
     color-mix(in srgb, var(--cassette-shell) 60%, #aaa),
@@ -6722,42 +6766,14 @@
     width: min(185px, 72%);
   }
   .tapeCarousel {
-    height: 184px;
+    height: 260px;
   }
+  /* The cassette's parts are sized in `cqw` against its own width, so they
+     scale themselves at any cassette size and need no fork here. The tape only
+     needs to stop growing past the bay at this height, where the shorter
+     carousel makes a taller tape wider than the well. */
   .cassette {
-    width: min(260px, 64%);
-    padding: 10px 15px 8px;
-  }
-  .cassetteLabel {
-    margin: 5px 0;
-    padding: 5px 10px;
-  }
-  .cassetteMechanism {
-    width: min(78%, 290px);
-    height: 42px;
-    grid-template-columns: 34px 1fr 34px;
-  }
-  .tapeWheel {
-    width: 33px;
-    height: 33px;
-    border-width: 3px;
-    box-shadow:
-      0 0 0 3px #4a2f21,
-      inset 0 0 0 5px #171917,
-      0 0 0 4px rgba(12, 13, 12, 0.72);
-  }
-  .tapeWheel::after {
-    inset: 9px;
-  }
-  .cassetteTapePath i {
-    top: 13px;
-  }
-  .cassetteTapePath b {
-    bottom: 3px;
-    height: 10px;
-  }
-  .cassetteHeadAssembly {
-    height: 16px;
+    max-width: calc(100% - 64px);
   }
   .experienceBody {
     height: 120px;
@@ -8467,7 +8483,14 @@
 .heroStage {
   --hero-pointer-x: 68%;
   --hero-pointer-y: 38%;
-  padding: clamp(24px, 3vw, 44px) clamp(20px, 4vw, 64px) 24px;
+  /* The top inset was `clamp(24px, 3vw, 44px)` — 43px at desktop — and its
+     only in-flow occupant at the top of the stage is the top bar, whose own
+     padding adds to it. That stacked 53px of empty room above the logo while
+     the device wall behind it is `inset: 0` and does not consult the padding
+     at all. 18px is enough to clear the viewport edge; the panel is
+     bottom-anchored and gains the reclaimed height as content room rather than
+     losing any. */
+  padding: 18px clamp(20px, 4vw, 64px) 24px;
   background: #111311;
 }
 .heroDeviceWall {
@@ -12081,11 +12104,13 @@
     max-width: 100%;
   }
 
-  /* 100.4mm resolves to ~379px, which can out-rank the percentage branch
-     between roughly 420px and 500px of viewport. Keep the millimetre sizing
-     above the phone range and let the percentage take the narrow end. */
+  /* The base rule derives the width from the bay's height, so nothing is needed
+     here for width; only the max-width is capped so the phone's narrow bay
+     cannot be overrun. The old `width: 92%` would have re-pinned the tape to
+     the bay's width and undone the height-driven sizing on exactly the widths
+     that have least vertical room for it. */
   .cassette {
-    width: 92%;
+    max-width: 92%;
   }
 
   /* The radio: at 360px the deck is a single column with a 180px speaker, a
@@ -12115,8 +12140,12 @@
   }
 
   .experience .tapeCarousel {
-    height: 190px;
-    min-height: 190px;
+    /* Taller than the old 190px because the tape's width now follows the bay's
+       height: a shorter bay shrinks the cassette as well as the well, so the
+       two would have dropped together. This trades the speaker band instead,
+       which is the piece with slack to spare on a phone. */
+    height: 230px;
+    min-height: 230px;
   }
 
   /* The carry handle comes back on phones. It was hidden because a 52%-wide

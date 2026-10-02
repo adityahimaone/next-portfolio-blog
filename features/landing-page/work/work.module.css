@@ -101,9 +101,16 @@
 } /* Left library · centre now-playing · right credits. */
 .columns {
   display: grid;
-  grid-template-columns: minmax(190px, 0.9fr) minmax(0, 2.2fr) minmax(
-      170px,
-      0.9fr
+  /* Both rails were taking a share sized for prose that neither of them holds:
+     the library is a list of short names and the credits are four rows. They
+     kept 0.9fr each while the centre — the only column with a square artwork
+     and a six-line lyric field in it — was squeezed into 2.2fr. Rebalancing
+     the same three columns toward the centre gives the art its width back
+     without touching either rail's own minimum, so neither can collapse into
+     its content at the narrow end of the desktop range. */
+  grid-template-columns: minmax(178px, 0.72fr) minmax(0, 2.6fr) minmax(
+      165px,
+      0.72fr
     );
   gap: clamp(7px, 0.7vw, 12px);
   min-height: 0;
@@ -638,7 +645,13 @@
   display: grid;
   min-height: 0;
   overflow: hidden;
-  grid-template-rows: 1fr 2fr;
+  /* Was 1fr / 2fr. The lyric field sets seven lines that occupy ~184px inside a
+     320px stage, so it held ~136px of slack the art could never reach: the
+     square is limited by the band's HEIGHT, not the column's width, so raising
+     this ratio is the only thing that makes it bigger. 1.4 / 1.6 keeps the
+     stage taller than its own content at every desktop height, so no lyric is
+     clipped to buy the art its size. */
+  grid-template-rows: 1.4fr 1.6fr;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.04);
@@ -647,10 +660,10 @@
 .centreTop {
   display: grid;
   min-height: 0;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: clamp(14px, 1.6vw, 24px);
   align-items: center;
-  padding: clamp(14px, 1.8vh, 22px);
+  padding: clamp(12px, 1.4vh, 18px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -669,10 +682,16 @@
   overflow: hidden;
   /* Sized by the space the band actually has, not by the viewport. `height:
      100%` plus `aspect-ratio` derives the width, and `max-width` still caps it,
-     so the art can never outgrow its row and cross the divider below it. */
+     so the art can never outgrow its row and cross the divider below it.
+
+     The old cap was `min(22vh, 190px)` — a viewport-derived ceiling that is
+     smaller than the art's own column at every desktop height, so it was the
+     binding constraint, not the band. It is now measured against the band's
+     height, which is the axis a square is actually limited by, so the art
+     grows with the row and can never exceed it. */
   width: auto;
   height: 100%;
-  max-width: min(22vh, 190px);
+  max-width: min(38vh, 300px);
   max-height: 100%;
   padding: 0;
   aspect-ratio: 1 / 1;

@@ -37,11 +37,15 @@
   /* Top padding is the band's depth: the hairline is this box's bottom edge,
      so everything above it — the chips included — sits inside the band, the
      same relationship the hero panel's content has to its own border-top.
-     The horizontal padding is 0 on desktop because the inner row is already
-     capped to the same 1500px box as the hairline and centred inside it: a
-     gutter here would only pull the chips in from the line's two ends and
-     reintroduce the overhang the cap exists to remove. */
-  padding: 18px 0 16px;
+     The top padding is 10px rather than 18px to lift the chips: the stage
+     above this bar carries its own `clamp(24px, 3vw, 44px)` inset, so the bar
+     was already starting 43px down the viewport with only empty room behind it
+     — the two paddings stacked and pushed the logo away from the top edge for
+     nothing. The horizontal padding is 0 on desktop because the inner row is
+     already capped to the same 1500px box as the hairline and centred inside
+     it: a gutter here would only pull the chips in from the line's two ends
+     and reintroduce the overhang the cap exists to remove. */
+  padding: 10px 0 16px;
 }
 
 /* The chips are capped to the same 1500px box as the hairline and the hero

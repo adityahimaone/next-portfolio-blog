@@ -53,7 +53,7 @@ export function NowCentre({
               seed={track.slug}
               title={track.title}
               src={track.cover || undefined}
-              sizes="(max-width: 900px) 60vw, 360px"
+              sizes="(max-width: 900px) 60vw, 320px"
               priority={track.id === 0}
             />
             <span className={styles.centreArtScrim} />

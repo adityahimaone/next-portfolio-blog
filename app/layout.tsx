@@ -3,11 +3,9 @@ import {
   Geist,
   Geist_Mono,
   Space_Grotesk,
-  JetBrains_Mono,
   Syne,
   Orbitron,
   Inter,
-  Cormorant_Garamond,
 } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from 'next-themes'
@@ -79,53 +77,62 @@ export const metadata: Metadata = {
   },
 }
 
+/* `preload: false` on everything except Geist. Each font family emits a
+   `<link rel="preload">`, and they were all competing for the same head
+   bandwidth as the first contentful paint: eight families meant eight preloads
+   queued ahead of the CSS and the hero, which is most of the 430ms render
+   block PageSpeed reported. Only Geist is preload-worthy — it is the body face
+   and paints every glyph on the page. The rest are section-level faces
+   (Orbitron reads a frequency readout, Space Grotesk a heading) that `swap`
+   into place a beat later without anyone noticing a swap on a label. */
 const geist = Geist({
   variable: '--font-geist',
   subsets: ['latin'],
+  display: 'swap',
 })
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+  display: 'swap',
+  preload: false,
 })
 
 const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
   subsets: ['latin'],
   display: 'swap',
-})
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: '--font-jetbrains-mono',
-  subsets: ['latin'],
-  display: 'swap',
+  preload: false,
 })
 
 const syne = Syne({
   variable: '--font-syne',
   subsets: ['latin'],
   display: 'swap',
+  preload: false,
 })
 
 const orbitron = Orbitron({
   variable: '--font-orbitron',
   subsets: ['latin'],
   display: 'swap',
+  preload: false,
 })
 
 const inter = Inter({
   variable: '--font-inter',
   subsets: ['latin'],
   display: 'swap',
+  preload: false,
 })
 
-const cormorantGaramond = Cormorant_Garamond({
-  variable: '--font-cormorant-garamond',
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  style: ['normal', 'italic'],
-  display: 'swap',
-})
+/* JetBrains Mono and Cormorant Garamond were removed. They were reachable only
+   through the `--font-whyte-inktrap-mono` and `--font-grandslang` aliases,
+   which no rule in the app reads, and Cormorant was additionally asking for
+   five weights in both normal and italic — ten font files, downloaded and
+   preloaded on every page load, for a family nothing rendered. If either face
+   is ever wanted, re-add it here and give it a real consumer in the same
+   change. */
 
 /**
  * `data-scroll-behavior="smooth"` on <html> opts back into overriding
@@ -143,7 +150,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body
-        className={`${geist.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${syne.variable} ${orbitron.variable} ${inter.variable} ${cormorantGaramond.variable} bg-background text-foreground tracking-tight antialiased`}
+        className={`${geist.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${syne.variable} ${orbitron.variable} ${inter.variable} bg-background text-foreground tracking-tight antialiased`}
       >
         <ThemeProvider
           enableSystem={false}

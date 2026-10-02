@@ -507,11 +507,14 @@
   --input: #c9c9be;
   --ring: #b84716;
 
-  /* Font mapping fallbacks */
+  /* Font mapping fallbacks. `--font-syne` used to read `var(--font-syne)`,
+     which is a self-reference: a custom property that refers to itself is
+     invalid at computed-value time, so it resolved to the guaranteed-invalid
+     value rather than the face. Syne still works because `daw-hero.tsx`
+     references the `next/font` variable directly, but anything reading the
+     `:root` alias got nothing. Cormorant Garamond and JetBrains Mono are gone
+     from `layout.tsx`, so their aliases went with them. */
   --font-whyte-inktrap: var(--font-inter);
-  --font-whyte-inktrap-mono: var(--font-jetbrains-mono);
-  --font-grandslang: var(--font-cormorant-garamond);
-  --font-syne: var(--font-syne);
 
   /* Chart colors */
   --chart-1: #b84716;
@@ -666,11 +669,12 @@
   --color-storm-gray: var(--color-storm-gray);
   --color-lavender-wash: var(--color-lavender-wash);
 
-  /* Typography Pairing */
+  /* Typography Pairing. This block re-declares the aliases by reading themselves
+     (`--font-syne: var(--font-syne)`), which is the same self-reference as in
+     `:root` above: under `@theme inline` it inlines the value rather than
+     deferring, so the utilities Tailwind generates here resolve to nothing. The
+     two aliases whose fonts are gone were removed with them. */
   --font-whyte-inktrap: var(--font-whyte-inktrap);
-  --font-whyte-inktrap-mono: var(--font-whyte-inktrap-mono);
-  --font-grandslang: var(--font-grandslang);
-  --font-syne: var(--font-syne);
 
   /* Migrated from tailwind.config.js */
   --color-primary-light: var(--primary-light);

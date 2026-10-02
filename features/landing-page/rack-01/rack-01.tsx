@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 
 import { Work } from '../work/work'
-import type { GitHubRepo } from '@/features/projects/lib/github'
+import type { ArchiveRepo } from '@/features/projects/lib/github'
 import { About } from './section-about'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
@@ -31,7 +31,7 @@ import { useRackAnimations } from './use-rack-animations'
 export default function Rack01LandingPage({
   archiveRepos,
 }: {
-  archiveRepos: GitHubRepo[]
+  archiveRepos: readonly ArchiveRepo[]
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const projectDividerRef = useRef<HTMLDivElement>(null)

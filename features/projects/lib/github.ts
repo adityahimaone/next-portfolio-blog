@@ -44,3 +44,35 @@ export async function getRepos(): Promise<RepoFeed> {
     failed: false,
   }
 }
+
+/**
+ * The subset the landing page actually reads, for passing into the client
+ * rack.
+ *
+ * The GitHub response carries ~30 fields per repo — `node_id`, `owner`,
+ * `avatar_url`, eleven `*_url` variants, `permissions`, and so on. The landing
+ * archive uses four of them. Because the rack is a client tree, whatever the
+ * page passes gets serialised into the RSC payload inlined in the HTML: 58
+ * repos' worth of full objects was ~180KB of the document that had to be
+ * received, parsed and walked before the first paint, which is most of the
+ * mobile LCP. Mapping to the four fields used takes that to a few KB.
+ *
+ * /projects keeps the full objects — it renders more of them and is not on the
+ * landing critical path.
+ */
+export type ArchiveRepo = Pick<
+  GitHubRepo,
+  'name' | 'description' | 'html_url' | 'language' | 'pushed_at'
+>
+
+export function toArchiveRepos(
+  repos: readonly GitHubRepo[],
+): readonly ArchiveRepo[] {
+  return repos.map((repo) => ({
+    name: repo.name,
+    description: repo.description,
+    html_url: repo.html_url,
+    language: repo.language,
+    pushed_at: repo.pushed_at,
+  }))
+}

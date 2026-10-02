@@ -18,7 +18,7 @@ import { NowCentre } from './now-centre'
 import { PlayerBar } from './player-bar'
 import { PlayerBanner, PlayerChrome } from './player-chrome'
 import { useMediaQuery, useIsMobile, useRefraction } from '@/hooks/use-media'
-import type { GitHubRepo } from '@/features/projects/lib/github'
+import type { ArchiveRepo } from '@/features/projects/lib/github'
 import { useWorkScroll } from './use-work-scroll'
 import styles from './work.module.css'
 
@@ -41,7 +41,11 @@ const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
  */
 const SCROLL_PER_TRACK = 30
 
-export function Work({ archiveRepos }: { archiveRepos: GitHubRepo[] }) {
+export function Work({
+  archiveRepos,
+}: {
+  archiveRepos: readonly ArchiveRepo[]
+}) {
   const sectionRef = useRef<HTMLElement>(null)
   const coverButtonRef = useRef<HTMLButtonElement>(null)
   const reducedMotion = useMediaQuery(REDUCED_MOTION)

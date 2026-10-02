@@ -7,8 +7,58 @@ import dynamic from 'next/dynamic'
 import { Check, Copy } from 'lucide-react'
 import styles from '../releases.module.css'
 
+/* `PrismLight` and the named languages, not the `Prism` barrel.
+
+   `import('react-syntax-highlighter')` resolves to the full build, which carries
+   all ~297 Prism grammars — over 1MB of JS split across two of the largest
+   chunks on the site, for markdown that uses nine languages.
+
+   The grammar imports live INSIDE the dynamic loader, not at module scope:
+   a top-level `void import(...)` would start nine fetches as soon as this
+   module is evaluated, which is on every page that renders the shell — the
+   grammars should arrive with the highlighter, and only on a page that has a
+   code block. These are the complete set found in content/blog; `bash` covers
+   `sh`/`shell` and `javascript` covers `js`. */
 const SyntaxHighlighter = dynamic(
-  () => import('react-syntax-highlighter').then((mod) => mod.Prism),
+  async () => {
+    const [
+      { default: Prism },
+      bash,
+      powershell,
+      yaml,
+      promql,
+      nginx,
+      typescript,
+      javascript,
+      markup,
+      css,
+    ] = await Promise.all([
+      import('react-syntax-highlighter/dist/esm/prism-light'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/bash'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/powershell'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/yaml'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/promql'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/nginx'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/typescript'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/javascript'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/markup'),
+      import('react-syntax-highlighter/dist/esm/languages/prism/css'),
+    ])
+    for (const lang of [
+      bash,
+      powershell,
+      yaml,
+      promql,
+      nginx,
+      typescript,
+      javascript,
+      markup,
+      css,
+    ]) {
+      Prism.registerLanguage(lang.default.name, lang.default)
+    }
+    return Prism
+  },
   { ssr: false },
 )
 

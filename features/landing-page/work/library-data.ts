@@ -4,7 +4,7 @@ import { formatRelative } from '@/lib/date'
 // re-exports `getRepos`, which would drag the GitHub fetch into the client
 // bundle graph.
 import { FEATURED_PROJECTS } from '@/features/projects/constants'
-import type { GitHubRepo } from '@/features/projects/lib/github'
+import type { ArchiveRepo } from '@/features/projects/lib/github'
 
 /**
  * A playable release. Always a real client project — these are the rows that
@@ -15,8 +15,6 @@ export type LibraryTrack = WorkProject & {
   /** Synced lines for the lyric view. */
   readonly lyrics: readonly string[]
 }
-
-
 
 const ALBUMS = [
   'Selected Work',
@@ -72,7 +70,7 @@ const ALREADY_SHOWN = new Set([
  * caps the list and points at /projects for the rest.
  */
 export function buildArchiveTracks(
-  repos: readonly GitHubRepo[],
+  repos: readonly ArchiveRepo[],
 ): readonly ArchiveTrack[] {
   return repos
     .filter((repo) => !ALREADY_SHOWN.has(repo.name.toLowerCase()))
@@ -80,7 +78,9 @@ export function buildArchiveTracks(
       name: repo.name,
       // A repo without a description reads better as its language than as an
       // empty second line.
-      description: repo.description ?? `${repo.language ?? 'Project'} · ${formatRelative(repo.pushed_at)}`,
+      description:
+        repo.description ??
+        `${repo.language ?? 'Project'} · ${formatRelative(repo.pushed_at)}`,
       url: repo.html_url,
       tech: repo.language ? [repo.language] : [],
       // No real image exists for a repo, so the generated cover is the only

@@ -1656,6 +1656,27 @@
   height: 190svh;
   background: var(--field-tan);
 }
+/* Skip layout and paint for every section past the hero until it is near the
+   viewport.
+
+   The rack is ~12k lines of CSS over seven sections, and each one is a large
+   subtree the browser otherwise lays out and paints during the initial load —
+   work that is invisible until the reader scrolls to it, and that has to
+   finish before the hero's first paint. `content-visibility: auto` defers it
+   and applies the size containment that keeps it cheap. `contain-intrinsic-size`
+   reserves the height up front so the scrollbar does not jump as each section
+   resolves.
+
+   The hero is deliberately absent: it is the first thing on the page, so
+   skipping it would only add a containment pass to the critical path. */
+.about,
+.skills,
+.experience,
+.work,
+.contact {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100svh;
+}
 .experienceStage {
   position: sticky;
   top: 0;

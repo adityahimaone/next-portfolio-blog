@@ -1,4 +1,4 @@
-import { getRepos } from '@/features/projects/lib/github'
+import { getRepos, toArchiveRepos } from '@/features/projects/lib/github'
 import { LandingPage } from '@/features/landing-page'
 import { JsonLd, person, webSite } from '@/lib/structured-data'
 
@@ -44,7 +44,11 @@ export default async function Home() {
           inline script this replaced did not. */}
       <JsonLd data={jsonLd} />
       <JsonLd data={webSite()} />
-      <LandingPage archiveRepos={repos} />
+      {/* Narrowed to the five fields the archive reads. Passing the full repo
+          objects put ~180KB of unused GitHub fields into the RSC payload that
+          ships inline in this HTML, all of which is received and parsed before
+          the first paint. */}
+      <LandingPage archiveRepos={toArchiveRepos(repos)} />
     </>
   )
 }

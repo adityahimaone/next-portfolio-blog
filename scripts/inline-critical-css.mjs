@@ -41,14 +41,15 @@
  * for the failure behaviour when it cannot find what it expects.
  */
 
-import { readFile, writeFile } from 'node:fs/promises'
+import { readdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 const ROOT = process.cwd()
-const OUT_DIR = path.join(ROOT, '.next', 'server', 'app')
 
-/** Only the landing route. Other routes keep their cached stylesheets. */
-const TARGETS = ['index.html']
+/**
+ * Only the landing route. Other routes keep their normal linked stylesheets —
+ * they are not the critical path and inlining would cost them their cache.
+ */
 
 /**
  * Ceiling on the inline block.
@@ -168,15 +169,14 @@ function isCritical(rule, used) {
   return classes.some((c) => used.has(c))
 }
 
-async function processTarget(file) {
-  const filePath = path.join(OUT_DIR, file)
-  let html
-  try {
-    html = await readFile(filePath, 'utf8')
-  } catch {
-    return { skipped: 'not found' }
-  }
-
+/**
+ * Rewrites the stylesheet links in one HTML document.
+ *
+ * Shared by both output shapes — the plain file `next build` leaves in
+ * `.next/server/app`, and the JSON cache entry `opennextjs-cloudflare build`
+ * produces — so the rule selection cannot drift between them.
+ */
+async function inlineIntoHtml(html) {
   const linkRe = /<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*\/?>/g
   const links = [...html.matchAll(linkRe)]
   if (links.length === 0) return { skipped: 'no stylesheet links' }
@@ -199,18 +199,14 @@ async function processTarget(file) {
   if (sheets.length === 0) return { skipped: 'no readable sheets' }
 
   const used = collectClassNames(html)
-  log(`${file}: ${used.size} class names in use, ${sheets.length} sheets`)
+  log(`${used.size} class names in use, ${sheets.length} sheets`)
 
   let kept = []
   let total = 0
-  let keptCount = 0
   for (const { css } of sheets) {
     for (const rule of splitRules(css)) {
       total++
-      if (isCritical(rule, used)) {
-        kept.push(rule)
-        keptCount++
-      }
+      if (isCritical(rule, used)) kept.push(rule)
     }
   }
 
@@ -237,7 +233,7 @@ async function processTarget(file) {
   }
 
   log(
-    `kept ${keptCount}/${total} rules, ${Math.round(inline.length / 1024)}KB inline`,
+    `kept ${kept.length}/${total} rules, ${Math.round(inline.length / 1024)}KB inline`,
   )
 
   // Replace the <link>s with the inline block.
@@ -254,28 +250,99 @@ async function processTarget(file) {
     out = out.replace('</head>', `${styleTag}</head>`)
   else if (out.includes('<body')) out = out.replace('<body', `${styleTag}<body`)
 
-  await writeFile(filePath, out, 'utf8')
   return {
-    rules: keptCount,
+    html: out,
+    rules: kept.length,
     total,
     kb: Math.round(inline.length / 1024),
     trimmed,
   }
 }
 
-async function main() {
-  let touched = 0
-  for (const t of TARGETS) {
-    const r = await processTarget(t)
-    if (r.skipped) log(`${t}: skipped (${r.skipped})`)
-    else {
-      log(
-        `${t}: ${r.kb}KB inline from ${r.rules}/${r.total} rules${r.trimmed ? ' (trimmed)' : ''}`,
-      )
-      touched++
-    }
+/** `next build` leaves a plain HTML file here. */
+async function processHtmlFile(file) {
+  const filePath = path.join(ROOT, '.next', 'server', 'app', file)
+  let html
+  try {
+    html = await readFile(filePath, 'utf8')
+  } catch {
+    return { skipped: 'not found' }
   }
-  if (touched === 0) {
+  const r = await inlineIntoHtml(html)
+  if (r.skipped) return r
+  await writeFile(filePath, r.html, 'utf8')
+  return r
+}
+
+/**
+ * `opennextjs-cloudflare build` leaves no `.html` to edit — the prerendered
+ * route lives in a JSON `.cache` entry under `.open-next/cache/<build>/`, with
+ * the document in `html` and the flight payload in `rsc`.
+ *
+ * This is the one that matters for production. Editing `.next/server/app`
+ * instead would have no effect at all, because CI builds with OpenNext and it
+ * reads that cache — which is why the first push of this change deployed
+ * without any of the inline CSS.
+ */
+async function processOpenNextCache() {
+  const cacheRoot = path.join(ROOT, '.open-next', 'cache')
+  let dirs = []
+  try {
+    dirs = (await readdir(cacheRoot, { withFileTypes: true })).filter((e) =>
+      e.isDirectory(),
+    )
+  } catch {
+    return { skipped: 'no .open-next/cache' }
+  }
+
+  let touched = 0
+  for (const d of dirs) {
+    const file = path.join(cacheRoot, d.name, 'index.cache')
+    let raw
+    try {
+      raw = await readFile(file, 'utf8')
+    } catch {
+      continue
+    }
+    let json
+    try {
+      json = JSON.parse(raw)
+    } catch {
+      continue
+    }
+    if (typeof json.html !== 'string') continue
+
+    const r = await inlineIntoHtml(json.html)
+    if (r.skipped) {
+      log(`${path.relative(ROOT, file)}: skipped (${r.skipped})`)
+      continue
+    }
+    json.html = r.html
+    // `rsc` and `segmentData` carry the same class names and are what the
+    // client hydrates from; they are not what paints, so they are left alone.
+    await writeFile(file, JSON.stringify(json), 'utf8')
+    log(
+      `${path.relative(ROOT, file)}: ${r.kb}KB inline from ${r.rules}/${r.total} rules${r.trimmed ? ' (trimmed)' : ''}`,
+    )
+    touched++
+  }
+  return touched ? { touched } : { skipped: 'no prerendered index cache' }
+}
+
+async function main() {
+  const html = await processHtmlFile('index.html')
+  if (html.skipped) log(`next build output: skipped (${html.skipped})`)
+  else
+    log(
+      `next build output: ${html.kb}KB inline from ${html.rules}/${html.total} rules`,
+    )
+
+  // Only one of these exists per pipeline: `next build` locally and for the
+  // standalone server, OpenNext for the deployed Workers bundle.
+  const on = await processOpenNextCache()
+  if (on.skipped) log(`opennext cache: skipped (${on.skipped})`)
+
+  if (html.skipped && on.skipped) {
     console.log(
       '  [critical-css] nothing inlined — leaving the build untouched',
     )

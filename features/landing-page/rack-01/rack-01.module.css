@@ -6402,8 +6402,12 @@
     0 28px 70px rgba(55, 38, 22, 0.3),
     0 5px 10px rgba(55, 38, 22, 0.18),
     inset 0 1px #fff;
-  transform: none !important;
-  opacity: 1 !important;
+  /* No `!important` lock here, unlike `.experienceBody` above which used to
+     carry one. Nothing in the seam animates this deck: the seam is an uncover,
+     so the deck holds opacity 1 and scrolls off the top while the player
+     beneath it brightens. Recorded because the two sections being the same kind
+     of object makes this the natural place to look if a future change does try
+     to animate this box. */
 }
 .radioFace {
   grid-template-columns: minmax(175px, 0.62fr) minmax(0, 1.55fr);
@@ -6589,9 +6593,23 @@
   height: 140px;
   min-height: 140px;
   overflow: hidden;
-  transform: none !important;
-  opacity: 1 !important;
 }
+
+/* This rule, and `.experienceBody` below, used to carry `transform: none
+   !important; opacity: 1 !important` at top level.
+
+   Those were removed. They were not reduced-motion scoped — they sat at the
+   root of a 12k-line sheet and applied to everyone — and while the seam
+   cross-faded `.experienceBody` against the player's transport bar they would
+   have silently beaten GSAP's `to({ opacity: 0 })` with no error anywhere: the
+   band would just stay lit while the rest of the deck changed.
+
+   The seam is now an uncover rather than a cross-fade, so nothing animates
+   either band and the locks would be inert. But "inert today" is exactly how a
+   stale `opacity: 1` becomes the next invisible-element bug, so they are gone
+   rather than left behind — and if a future change animates these again, it
+   will fail visibly instead of quietly not working. */
+
 .experienceSelector,
 .experienceNotes {
   min-height: 0;
@@ -9950,7 +9968,12 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  will-change: transform, opacity;
+  /* Nothing in the seam writes a transform to this box any more — it used to be
+     the deck's slide-up-and-blur. The frame growth that briefly lived here was
+     removed once measurement showed the deck and the work shell are 138px apart
+     and never overlap, so there is no shared box to grow between. Kept as
+     `opacity` only, which is what the band's cross-fade actually needs. */
+  will-change: opacity;
 }
 
 .archiveEjectProxy {

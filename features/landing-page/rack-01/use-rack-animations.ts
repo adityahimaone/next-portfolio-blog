@@ -608,13 +608,27 @@ export function useRackAnimations({
             },
           })
 
-          // ── Experience → Work: the tape threads across ──
+          // ── Experience → Work: uncover, don't arrive ──
           //
-          // One timeline owns the seam so both sides share a clock. Previously
-          // experience faded out here while the work section ran its own
-          // Motion `useScroll` entrance — two runtimes, one scroll, different
-          // smoothing — and the last ~42vh of the experience band animated
-          // nothing at all.
+          // The deck and the player are the same KIND of object at nearly the
+          // same width — 1296px and 1340px — and the same four-band structure.
+          // It is tempting to treat the seam as one growing into the other.
+          //
+          // Measured, they are 138px apart and never overlap: at the start of
+          // the window the deck's top is at 74px and the player's at 963px; at
+          // the end they are -826px and 63px. The gap is constant. They scroll
+          // in sequence, one leaving as the other appears, and there is no
+          // shared frame for a scale to bridge.
+          //
+          // So the seam does the only honest thing: the deck holds its opacity
+          // and simply scrolls off the top, and the player — already there,
+          // already unlit — brightens in place. The cassette flight is
+          // unchanged, and the tuning needle hands over to the playhead.
+          //
+          // Nothing in this window translates. That is the whole fix: the
+          // previous version had the deck sliding up and blurring out while the
+          // shell rose 18px into frame, and those two opposing moves are what
+          // made the boundary read as one section scrolling past another.
           const experienceSection = rootRef.current?.querySelector<HTMLElement>(
             `.${styles.experience}`,
           )
@@ -633,11 +647,22 @@ export function useRackAnimations({
           // not reachable from here. It marks the parts the seam drives instead.
           const workShell =
             workSection?.querySelector<HTMLElement>('[data-work-shell]')
-          const workEyebrow = workSection?.querySelector<HTMLElement>(
-            '[data-work-eyebrow]',
-          )
-          const workTitle =
-            workSection?.querySelector<HTMLElement>('[data-work-title]')
+
+          /* The tuning needle. Its twin is the player's playhead: both are a
+             thin warm bar whose position along a horizontal track encodes where
+             you are, and the seam cross-fades one into the other at the same
+             fraction so it reads as one mark re-scaling.
+
+             This survives the uncover because it is not a "reveal" — it is a
+             handover between two instruments that are both present the whole
+             time, and it is the one piece of genuine continuity in the window. */
+          const deckNeedle =
+            experienceContent?.querySelector<HTMLElement>(
+              `.${styles.frequencyScale} i`,
+            ) ?? null
+          /* Its other half. In the work module, so addressed by attribute. */
+          const workPlayhead =
+            workSection?.querySelector<HTMLElement>('[data-playhead]')
 
           const ejectCassette = ejectProxy?.querySelector<HTMLElement>(
             `.${styles.ejectCassette}`,
@@ -661,9 +686,7 @@ export function useRackAnimations({
             ejectLabel &&
             ejectMechanism &&
             workSection &&
-            workShell &&
-            workEyebrow &&
-            workTitle
+            workShell
           ) {
             /* A Type I shell's proportion, in millimetres. The CSS states the same value
                as `aspect-ratio`; this is only used to centre the box on the
@@ -806,70 +829,114 @@ export function useRackAnimations({
               defaults: { ease: 'none' },
             })
 
-            // The deck dissolves out from under the cassette as it leaves, so
-            // the two cross-dissolve instead of the deck simply vanishing.
-            seam
-              .to(
-                [experienceContent],
-                {
-                  opacity: 0,
-                  scale: 0.94,
-                  yPercent: -6,
-                  filter: 'blur(3px)',
-                  transformOrigin: '50% 50%',
-                  duration: 0.4,
-                },
-                0.02,
-              )
-              .fromTo(
-                ejectProxy,
-                { opacity: 0 },
-                { opacity: 1, duration: 0.1 },
-                0.02,
-              )
-              /* The destination is a small square, and the shell keeps its own
-                 1.574:1 ratio all the way in — so at the end it is a wide, short
-                 sliver sitting inside a square. Its printed detail is dropped
-                 before it lands, or it reads as squashed text rather than as a
-                 tape whose label has gone dark. */
-              .to(
-                [ejectLabel, ejectMechanism],
-                { opacity: 0, duration: 0.22 },
-                0.5,
-              )
-              /* The tape has to clear well before the trigger ends. A fade that
-                 starts at 0.92 only has the last 8% of the track to run in, so
-                 the proxy was still ~0.8 opaque when the seam released it. */
-              .to(ejectProxy, { opacity: 0, duration: 0.14 }, 0.84)
-              // Work now enters on the same clock as everything above it.
-              .fromTo(
-                workShell,
-                { opacity: 0, scale: 0.94, y: 18 },
-                {
-                  opacity: 1,
-                  scale: 1,
-                  y: 0,
-                  transformOrigin: '50% 50%',
-                  duration: 0.65,
-                },
-                0.35,
-              )
+            /* ── Uncover, don't arrive ────────────────────────────────
 
-            // The house masked-slot rise. Work is `data-no-heading-reveal`, so
-            // it had never received the reveal the other sections share.
-            seam
-              .fromTo(
-                workEyebrow,
-                { yPercent: 105, opacity: 0 },
-                { yPercent: 0, opacity: 1, duration: 0.18 },
-                0.62,
-              )
-              .fromTo(
-                workTitle,
-                { yPercent: 105, opacity: 0 },
-                { yPercent: 0, opacity: 1, duration: 0.18 },
-                0.66,
-              )
+               The deck does not fade. It never fades. It holds opacity 1 for
+               the whole window and simply scrolls off the top of the frame as
+               the player scrolls up into place beneath it — because that is
+               what an object on a surface does when you scroll past it, and
+               anything else is performance.
+
+               The player is already there. It is dark and unlit from the
+               moment the window opens and brightens in place across it. So the
+               read is lifting one machine off another, not waiting for
+               something to arrive.
+
+               This is the correction to a wrong idea: the deck and the shell
+               are the same KIND of object at nearly the same width (1296 vs
+               1340) but they are 138px apart and never overlap at any point in
+               the window — measured, not assumed. There is no shared frame for
+               one to grow into, so the earlier "one frame grows into the other"
+               pass was animating a relationship that does not exist. */
+
+            seam.fromTo(
+              workShell,
+              { opacity: 0.25 },
+              /* Most of the brightening happens early and the rest arrives as
+                 the deck clears, so the player is already legible behind the
+                 deck before the deck is gone. Starting it at 0.25 rather than 0
+                 is what makes it read as uncovered rather than as about to
+                 appear — at 0 there is nothing to uncover. */
+              { opacity: 1, duration: 0.9, ease: 'none' },
+              0.05,
+            )
+
+            /* ── The needle becomes the playhead ─────────────────
+
+               The one element pair in either section that is genuinely the same
+               gesture: a thin warm bar whose position along a horizontal track
+               encodes where you are. A tuner needle finding a station and a
+               playhead finding a position in a record are the same instrument
+               reading a different scale, and the seam is the moment the scale
+               changes.
+
+               They overlap rather than cross-fade — the needle fades out over
+               0.2 while the playhead fades in across the same 0.2, so for that
+               window both are partly visible and the visitor sees one mark
+               re-scaling rather than one leaving and another arriving. A clean
+               hand-off would leave a moment with neither, which reads as the
+               mark vanishing.
+
+               The playhead's resting width is Motion's `trackProgress`, so its
+               opacity is animated on the wrapper and the width keeps being
+               driven normally underneath. */
+            if (deckNeedle && workPlayhead) {
+              seam
+                .to(
+                  [deckNeedle],
+                  { opacity: 0, duration: 0.2, ease: 'none' },
+                  0.5,
+                )
+                .fromTo(
+                  [workPlayhead],
+                  { opacity: 0 },
+                  { opacity: 1, duration: 0.2, ease: 'none' },
+                  0.5,
+                )
+            }
+
+            /* The cassette flight is untouched. It measures the deck's live
+               active cassette and the artwork every frame and writes the
+               transform directly, because both endpoints move across the window
+               and a frozen `fromTo` would miss both. */
+
+            seam.fromTo(
+              ejectProxy,
+              { opacity: 0 },
+              { opacity: 1, duration: 0.1 },
+              0.02,
+            )
+
+            /* The destination is a small square, and the shell keeps its own
+               1.574:1 ratio all the way in — so at the end it is a wide, short
+               sliver sitting inside a square. Its printed detail is dropped
+               before it lands, or it reads as squashed text rather than as a
+               tape whose label has gone dark. */
+            seam.to(
+              [ejectLabel, ejectMechanism],
+              { opacity: 0, duration: 0.22 },
+              0.5,
+            )
+
+            /* The tape has to clear well before the trigger ends. A fade that
+               starts at 0.92 only has the last 8% of the track to run in, so
+               the proxy was still ~0.8 opaque when the seam released it. */
+            seam.to(ejectProxy, { opacity: 0, duration: 0.14 }, 0.84)
+
+            /* The masked-slot rise is gone.
+
+               Work is `data-no-heading-reveal`, so the seam had been giving
+               its heading the house reveal — a `yPercent: 105 → 0` slide out
+               of a clipped slot at 0.62 and 0.66. That is an arrival, and an
+               arrival is the one thing this seam is no longer doing: the player
+               is already there, dark, and simply gets brighter. Having its own
+               title then spring up out of a clip two thirds of the way through
+               the window contradicted that — it told the visitor something was
+               arriving at the same moment as the rest of the machine was
+               revealed to have been there all along.
+
+               The heading now brightens with everything else, which is what
+               `data-no-heading-reveal` means everywhere else on the page. */
           }
         })
 

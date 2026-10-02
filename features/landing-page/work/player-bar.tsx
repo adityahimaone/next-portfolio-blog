@@ -136,7 +136,13 @@ export function PlayerBar({
             aria-readonly="true"
             tabIndex={0}
           >
-            <motion.span style={{ width }} />
+            {/* The seam hands the radio's tuning needle over to this mark: both are a thin
+                warm bar whose position along a track encodes "where you are", and
+                the seam cross-fades one into the other at the same fraction so it
+                reads as one mark re-scaling rather than one leaving and another
+                arriving. `data-playhead` because the class is hashed and lives in
+                the work module, so it is not reachable from the rack's stylesheet. */}
+            <motion.span data-playhead="" style={{ width }} />
           </div>
           <span className={styles.playerTime}>
             -{formatProjectTime(remaining)}

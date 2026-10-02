@@ -399,7 +399,12 @@
   padding: 0.7rem 1rem;
   border-bottom: 1px solid var(--hairline);
   background: color-mix(in srgb, var(--flat-fill) 60%, transparent);
-  color: var(--booth-ink-dim);
+  /* `--booth-ink-dim`, like the rest of the table, sits on a row tinted with
+     --flat-fill rather than on the flat room base, and that tint drops the
+     ratio to 4.02:1. `--booth-ink-muted` clears it on the flat base but the
+     tinted header row still measured 4.38:1, so the header takes --booth-ink
+     directly — the one place in this table that states its column meanings. */
+  color: var(--booth-ink);
   font: var(--silkscreen);
   font-size: 0.625rem;
   text-align: left;

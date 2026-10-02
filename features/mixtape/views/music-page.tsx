@@ -177,7 +177,11 @@ export function MusicPageView() {
   }
 
   return (
-    <div
+    /* `<main>`: the route rendered its whole deck inside a plain div, so it was
+       the only page in the app with no main landmark — a screen reader had no
+       way to skip the decorative chrome to reach the content. The inner div
+       keeps every class, so the layout is untouched. */
+    <main
       className={cn(
         'relative flex min-h-screen items-center justify-center overflow-x-hidden p-2 pt-20 pb-24 font-sans transition-colors duration-700 selection:bg-amber-500/30 sm:p-4 lg:p-6',
         mounted && theme === 'light' ? 'bg-zinc-200' : 'bg-[#050505]',
@@ -197,19 +201,32 @@ export function MusicPageView() {
         <div className="group relative">
           <button
             onClick={() => setIsInterfaceVisible(!isInterfaceVisible)}
+            /* The only text this button had was inside a hover-only tooltip,
+               which is invisible to a screen reader, to keyboard focus, and to
+               anyone not using a mouse — the control was announced as an
+               unlabelled button. `aria-label` follows the toggle's own state,
+               and the tooltip is hidden from the tree so it is not read twice. */
+            aria-label={
+              isInterfaceVisible ? 'Hide interface' : 'Show interface'
+            }
+            aria-expanded={isInterfaceVisible}
+            aria-pressed={!isInterfaceVisible}
             className={cn(
               'flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 shadow-lg backdrop-blur-md transition-all',
               isInterfaceVisible
                 ? mounted && theme === 'light'
                   ? 'border-zinc-200 bg-white/80 text-zinc-600 shadow-sm hover:bg-zinc-50'
-                  : 'bg-zinc-900/50 text-zinc-500 hover:bg-zinc-800'
+                  : 'bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800'
                 : 'border-amber-500/20 bg-amber-500/10 text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-amber-500/20',
             )}
           >
             {isInterfaceVisible ? <Eye size={16} /> : <EyeOff size={16} />}
           </button>
           {/* Tooltip */}
-          <div className="pointer-events-none absolute left-full ml-3 rounded-md border border-white/5 bg-[#18181b] px-2 py-1 text-[9px] font-bold tracking-widest whitespace-nowrap text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-full ml-3 rounded-md border border-white/5 bg-[#18181b] px-2 py-1 text-[9px] font-bold tracking-widest whitespace-nowrap text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100"
+          >
             {isInterfaceVisible ? 'HIDE INTERFACE' : 'SHOW INTERFACE'}
           </div>
         </div>
@@ -235,7 +252,10 @@ export function MusicPageView() {
                 <Home size={16} />
               </Link>
               {/* Tooltip */}
-              <div className="pointer-events-none absolute left-full ml-3 rounded-md border border-white/5 bg-[#18181b] px-2 py-1 text-[9px] font-bold tracking-widest whitespace-nowrap text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-full ml-3 rounded-md border border-white/5 bg-[#18181b] px-2 py-1 text-[9px] font-bold tracking-widest whitespace-nowrap text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100"
+              >
                 RETURN HOME
               </div>
             </motion.div>
@@ -456,9 +476,9 @@ export function MusicPageView() {
                         className="rounded-lg border-2 border-white/20 shadow-2xl"
                       />
                       <div className="flex flex-col gap-0.5">
-                        <h3 className="text-xs font-black tracking-tighter text-white uppercase">
+                        <h2 className="text-xs font-black tracking-tighter text-white uppercase">
                           {localTrack.title}
-                        </h3>
+                        </h2>
                         <p className="font-mono text-[9px] font-bold text-amber-500">
                           {localTrack.artist}
                         </p>
@@ -725,6 +745,6 @@ export function MusicPageView() {
           </motion.div>
         </motion.div>
       </div>
-    </div>
+    </main>
   )
 }

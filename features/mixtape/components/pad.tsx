@@ -31,7 +31,7 @@ export const Pad = memo(({ label, isActive, color, onClick }: PadProps) => {
       <span
         className={cn(
           'relative z-10 px-1 text-center font-mono text-[8px] leading-tight font-bold tracking-widest drop-shadow-md transition-colors',
-          isActive ? 'text-white' : 'text-zinc-500',
+          isActive ? 'text-white' : 'text-zinc-400',
         )}
       >
         {label}

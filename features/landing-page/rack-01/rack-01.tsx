@@ -47,7 +47,13 @@ export default function Rack01LandingPage({
   })
 
   return (
-    <div ref={rootRef} className={styles.root}>
+    /* `<main>` rather than a plain div: this wrapper holds every section of the
+       page, and as a div all of it sat outside any landmark — a screen-reader
+       user had no single place to jump to, and axe flagged 60 nodes as content
+       outside landmarks. It is also what the skip link below targets. The
+       ref and className are unchanged, so neither the scroll-scrubbing nor the
+       layout depends on the element name. */
+    <main ref={rootRef} className={styles.root}>
       <a className={styles.skipLink} href="#about">
         Skip to content
       </a>
@@ -67,6 +73,6 @@ export default function Rack01LandingPage({
       />
       <Work archiveRepos={archiveRepos} />
       <Contact />
-    </div>
+    </main>
   )
 }

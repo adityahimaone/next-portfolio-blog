@@ -39,7 +39,12 @@ export function ViewCounter({ slug }: { slug: string }) {
           {views.toLocaleString()} views
         </span>
       ) : (
-        <span style={{ opacity: 0.55 }}>views —</span>
+        /* Was `opacity: 0.55`, which put this at 2.09:1. It now carries no
+           opacity of its own: the parent already sets --booth-ink-dim, and
+           fading a dim ink again is what pushed it under. `aria-hidden`
+           because the real count replaces this placeholder, so announcing both
+           would read the number twice. */
+        <span aria-hidden="true">views —</span>
       )}
     </span>
   )

@@ -86,7 +86,12 @@ export function Hero() {
         </div>
         <div className={styles.heroAtmosphere} aria-hidden="true" />
 
-        <main className={styles.heroImmersiveContent}>
+        <div className={styles.heroImmersiveContent}>
+          {/* This was a <main>, which was right when the rack had no landmark
+              of its own. The rack root is the page's single <main> now, so
+              keeping one here nested inside it made two main landmarks on one
+              page — which screen readers treat as a broken document. The
+              classes are unchanged, so the layout is identical. */}
           <div className={styles.heroEditorialPanel}>
             <div className={styles.heroKicker}>
               <span>Frontend Engineer</span>
@@ -134,7 +139,7 @@ export function Hero() {
               </span>
             </div>
           </div>
-        </main>
+        </div>
 
         <div className={styles.heroBottomRail}>
           <span>Interactive device wall</span>

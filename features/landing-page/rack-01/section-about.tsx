@@ -89,15 +89,17 @@ const ABOUT_TRACKS = [
     // the redundancy this move was meant to remove, and it sits on the last
     // track because that is where a reader has finished reading and is deciding
     // what to do next.
+    //
+    // The résumé is separate from the prose because it is a link, and a link
+    // cannot live inside the card's button — that made it unreachable by
+    // keyboard and screen reader. It renders beside the card instead.
     aside: (
       <>
         Based in Jakarta. Available for frontend, design engineering and hard
-        interface work.{' '}
-        <a href={RESUME_URL} target="_blank" rel="noreferrer">
-          Résumé (PDF)
-        </a>
+        interface work.
       </>
     ),
+    resumeLink: RESUME_URL,
   },
 ]
 
@@ -157,66 +159,87 @@ export function About({
           <div className={styles.aboutCardStack}>
             <div className={styles.aboutCardRail} aria-live="polite">
               {ABOUT_TRACKS.map((track, index) => (
-                <button
-                  type="button"
-                  key={track.title}
-                  className={`${styles.aboutCard} ${
-                    selected === index ? styles.aboutCardActive : ''
-                  }`}
-                  style={
-                    {
-                      '--about-card': track.surface,
-                      '--about-ink': track.ink,
-                      '--about-accent': track.accent,
-                    } as React.CSSProperties
-                  }
-                  aria-label={`${track.title}. Select this phase`}
-                  aria-pressed={selected === index}
-                  onClick={() => setSelected(index)}
-                >
-                  <SilkscreenLabel>
-                    ARRANGEMENT / {String(index + 1).padStart(2, '0')} /{' '}
-                    {track.signal}
-                  </SilkscreenLabel>
-                  <span className={styles.aboutMetric}>
-                    <b>{track.metric}</b>
-                    <small>{track.metricLabel}</small>
-                  </span>
-                  <strong>{track.heading}</strong>
-                  {/*
-                    The card's prose, credits and availability line.
+                /* The card is a button with the résumé link as its only real
+                   action, so the link used to be rendered INSIDE it. A focusable
+                   descendant of a button is not reachable — screen readers
+                   announce the button as one control and the link is skipped
+                   entirely, and axe flags it as nested-interactive. So the link
+                   is lifted out here, beside the card rather than inside it.
 
-                    These used to be split three ways: a `body` sentence here, the
-                    longer story in the shared clip panel, and the résumé line
-                    beside it. A reader saw the same idea in the card and then
-                    again in the panel below, and the body sentence was restated
-                    at the top of the story. Now there is one block per card and
-                    the panel is back to being the clip readout it was built as.
+                   `aside` is split into the prose (which stays in the button, so
+                   selecting the card still reads as selecting the whole track)
+                   and `resumeLink`, which renders as its own control. */
+                <div className={styles.aboutCardSlot} key={track.title}>
+                  <button
+                    type="button"
+                    className={`${styles.aboutCard} ${
+                      selected === index ? styles.aboutCardActive : ''
+                    }`}
+                    style={
+                      {
+                        '--about-card': track.surface,
+                        '--about-ink': track.ink,
+                        '--about-accent': track.accent,
+                      } as React.CSSProperties
+                    }
+                    aria-label={`${track.title}. Select this phase`}
+                    aria-pressed={selected === index}
+                    onClick={() => setSelected(index)}
+                  >
+                    <SilkscreenLabel>
+                      ARRANGEMENT / {String(index + 1).padStart(2, '0')} /{' '}
+                      {track.signal}
+                    </SilkscreenLabel>
+                    <span className={styles.aboutMetric}>
+                      <b>{track.metric}</b>
+                      <small>{track.metricLabel}</small>
+                    </span>
+                    <strong>{track.heading}</strong>
+                    {/*
+                      The card's prose, credits and availability line.
 
-                    Order inside the card: story, then the foot on the bottom
-                    edge. The foot is whatever that track has — two credits on
-                    FOCUS and SYSTEMS, the availability line and résumé on
-                    RANGE, and never both, because a taller foot on one card
-                    squeezes the shared `1fr` story row on that card alone.
-                  */}
-                  <p className={styles.aboutCardStory}>{track.story}</p>
-                  <div className={styles.aboutCardFoot}>
-                    {track.credits ? (
-                      <ul className={styles.aboutCardCredits}>
-                        {track.credits.map((credit) => (
-                          <li key={credit.name}>
-                            <b>{credit.name}</b>
-                            <span>{credit.note}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                    {track.aside ? (
-                      <p className={styles.aboutCardAside}>{track.aside}</p>
-                    ) : null}
-                  </div>
-                  <span className={styles.aboutCardLabel}>{track.title}</span>
-                </button>
+                      These used to be split three ways: a `body` sentence here, the
+                      longer story in the shared clip panel, and the résumé line
+                      beside it. A reader saw the same idea in the card and then
+                      again in the panel below, and the body sentence was restated
+                      at the top of the story. Now there is one block per card and
+                      the panel is back to being the clip readout it was built as.
+
+                      Order inside the card: story, then the foot on the bottom
+                      edge. The foot is whatever that track has — two credits on
+                      FOCUS and SYSTEMS, the availability line on RANGE, and never
+                      both, because a taller foot on one card squeezes the shared
+                      `1fr` story row on that card alone.
+                    */}
+                    <p className={styles.aboutCardStory}>{track.story}</p>
+                    <div className={styles.aboutCardFoot}>
+                      {track.credits ? (
+                        <ul className={styles.aboutCardCredits}>
+                          {track.credits.map((credit) => (
+                            <li key={credit.name}>
+                              <b>{credit.name}</b>
+                              <span>{credit.note}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      {track.aside ? (
+                        <p className={styles.aboutCardAside}>{track.aside}</p>
+                      ) : null}
+                    </div>
+                    <span className={styles.aboutCardLabel}>{track.title}</span>
+                  </button>
+                  {track.resumeLink ? (
+                    <a
+                      className={styles.aboutCardResume}
+                      href={track.resumeLink}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Résumé (PDF)
+                    </a>
+                  ) : null}
+                </div>
               ))}
             </div>
           </div>

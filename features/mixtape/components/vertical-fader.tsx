@@ -31,6 +31,13 @@ export const VerticalFader = memo(
           <div className="absolute top-1/2 left-1/2 h-[1px] w-4 -translate-x-1/2 -translate-y-1/2 bg-white/20" />
           <input
             type="range"
+            /* The visible label is rendered below as text, which does not
+               label the control — a range input with no accessible name is
+               announced only as a slider with a number. `aria-label` binds the
+               existing label to the control, and `aria-valuetext` speaks the
+               percentage instead of the raw 0–100 value. */
+            aria-label={label}
+            aria-valuetext={`${value}%`}
             min="0"
             max="100"
             value={value}
@@ -40,7 +47,7 @@ export const VerticalFader = memo(
           />
         </div>
         {!hideValue && (
-          <span className="font-mono text-[7px] font-bold tracking-widest text-zinc-500">
+          <span className="font-mono text-[7px] font-bold tracking-widest text-zinc-400">
             {label}
           </span>
         )}

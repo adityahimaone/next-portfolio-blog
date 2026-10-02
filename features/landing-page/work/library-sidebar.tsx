@@ -137,45 +137,52 @@ function LibraryRow({
   )
 
   return (
-    <motion.li
+    /* The button carries the option role and is the listbox's DIRECT child.
+       An option has to be a direct child of its listbox, and a list item
+       cannot sit between the two — a `<li>` wrapper broke the required-parent
+       and required-children relationship in both directions.
+
+       So the row is a button rather than an `<li>`. The list semantics live on
+       the button's own `role="option"`, which supersedes its implicit listitem
+       role, and `<li>` would additionally be an interactive role containing a
+       focusable descendant. `list-style: none` on the list already suppresses
+       the markers, and the ul/li pairing carries no meaning here that the
+       explicit roles do not already state. */
+    <motion.button
       id={`library-item-${track.id}`}
+      type="button"
+      role="option"
+      aria-selected={isActive}
+      aria-posinset={position + 1}
+      aria-setsize={total}
       style={{ transform }}
-      className={styles.libraryItem}
+      className={`${styles.libraryItem} ${styles.libraryRow}`}
+      onClick={onSelect}
     >
-      <button
-        type="button"
-        role="option"
-        aria-selected={isActive}
-        aria-posinset={position + 1}
-        aria-setsize={total}
-        className={styles.libraryRow}
-        onClick={onSelect}
-      >
-        <span className={styles.libraryArt}>
-          {/* Through Cover rather than next/image: a project with no artwork
-              (SeaPhantom P2P, Labgrownbeasts) has an empty `cover`, and
-              next/image throws on an empty src. Cover draws the generated
-              art in that case. */}
-          <Cover
-            seed={track.slug}
-            title={track.title}
-            src={track.cover || undefined}
-            sizes="30px"
-          />
+      <span className={styles.libraryArt}>
+        {/* Through Cover rather than next/image: a project with no artwork
+            (SeaPhantom P2P, Labgrownbeasts) has an empty `cover`, and
+            next/image throws on an empty src. Cover draws the generated
+            art in that case. */}
+        <Cover
+          seed={track.slug}
+          title={track.title}
+          src={track.cover || undefined}
+          sizes="30px"
+        />
+      </span>
+      <span className={styles.libraryMeta}>
+        <span className={styles.libraryName}>{track.title}</span>
+        <span className={styles.librarySub}>{track.genre}</span>
+      </span>
+      {isActive && (
+        <span className={styles.equaliser} aria-label="Now playing">
+          <i />
+          <i />
+          <i />
         </span>
-        <span className={styles.libraryMeta}>
-          <span className={styles.libraryName}>{track.title}</span>
-          <span className={styles.librarySub}>{track.genre}</span>
-        </span>
-        {isActive && (
-          <span className={styles.equaliser} aria-label="Now playing">
-            <i />
-            <i />
-            <i />
-          </span>
-        )}
-      </button>
-    </motion.li>
+      )}
+    </motion.button>
   )
 }
 

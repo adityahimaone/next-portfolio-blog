@@ -234,7 +234,19 @@ export function Experience({
                   )
                 })}
               </div>
-              <div className={styles.experienceNotes} role="tabpanel">
+              <div
+                className={styles.experienceNotes}
+                role="tabpanel"
+                /* The panel scrolls when a long note list overflows its 140px
+                   band, and it holds no focusable children — so a keyboard user
+                   had no way to scroll it and could only reach what already fit.
+                   `tabindex="0"` makes the scrollbar itself focusable, which is
+                   what lets arrow keys move the content. `aria-label` names it
+                   for the same reason: a tabpanel with no accessible name is
+                   announced as an unlabelled group. */
+                tabIndex={0}
+                aria-label={`${experience.type} details`}
+              >
                 <div>
                   <SilkscreenLabel>
                     {experience.type} / {experience.location}

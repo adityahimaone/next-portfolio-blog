@@ -1668,7 +1668,12 @@
   line-height: 1.5;
 }
 
-.artistPromoCta {
+/* `.root a { color: inherit }` in the rack module resets every link inside the
+   landing page, and it wins on source order over this file's rule — so the CTA
+   was rendering the rack's light ink on its own mid-tone accent, at 2.9:1. The
+   two classes are stacked to outrank the reset (0,2,0) rather than editing the
+   reset, which every other link in the section depends on. */
+.artistPromoCta.artistPromoCta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1676,6 +1681,8 @@
   padding: 8px 12px;
   border-radius: 8px;
   background: var(--work-accent);
+  /* Dark ink on the accent, not the light ink the reset was supplying. Every
+     track palette is a mid-tone, so light-on-accent fails across all six. */
   color: #0b0d0c;
   font: 10px var(--font-geist-mono);
   letter-spacing: 0.08em;

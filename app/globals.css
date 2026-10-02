@@ -485,10 +485,17 @@
   --popover: #f4f1e6;
   --popover-foreground: #1a1d1c;
 
-  /* AH / STUDIO signal palette: orange is the primary channel, moss is the monitor channel. */
-  --primary: #b84716;
+  /* AH / STUDIO signal palette: orange is the primary channel, moss is the monitor channel.
+
+     `--primary` was #b84716, which is 4.24:1 as text on the room base and so
+     failed AA on every orange link and index in the booth — the blog, projects
+     and bookmarks routes all inherited it. #a03d12 clears 5.29:1 as text and
+     also RAISES the reverse ratio against --primary-foreground (5.22 -> 6.51),
+     so the buttons that use it as a background get better too. `--primary-dark`
+     is darkened to match so the light/dark ramp stays monotonic. */
+  --primary: #a03d12;
   --primary-light: #d95f25;
-  --primary-dark: #84310f;
+  --primary-dark: #7a2c0c;
   --primary-foreground: #fffdf6;
 
   --secondary: #36564d;
@@ -1327,7 +1334,12 @@
   --hairline: rgba(29, 30, 28, 0.12);
   --booth-ink: #1a1d1c;
   --booth-ink-muted: #5e625c;
-  --booth-ink-dim: #8a8f87;
+  /* Was #8a8f87, which is 2.64:1 on --room-base and failed WCAG AA everywhere
+     it was used — 60+ nodes across the blog index, the project crate and the
+     footer, all of it metadata (dates, counts, descriptions). #636862 is the
+     lightest step that clears 4.5:1 on the room base (4.55) and keeps the
+     dim/muted distinction the token exists to make: muted is 4.96, dim 4.55. */
+  --booth-ink-dim: #636862;
   --room-base: #e7e6dd;
   --wash-opacity: 0.12;
 }

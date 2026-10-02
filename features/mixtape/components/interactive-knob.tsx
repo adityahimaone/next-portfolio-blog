@@ -49,6 +49,12 @@ export const InteractiveKnob = memo(
           </motion.div>
           <input
             type="range"
+            /* The label below is a sibling span, so it does not name this
+               control — the input is opacity-0 over the drawn knob, which means
+               nothing about it is visible either. Without `aria-label` a screen
+               reader announces only a nameless slider. */
+            aria-label={label}
+            aria-valuetext={`${val}%`}
             min="0"
             max="100"
             value={val}
@@ -56,7 +62,7 @@ export const InteractiveKnob = memo(
             className="absolute inset-0 z-10 h-full w-full cursor-ew-resize opacity-0"
           />
         </div>
-        <span className="font-mono text-[7px] font-bold tracking-widest whitespace-nowrap text-zinc-500 uppercase transition-colors group-hover:text-zinc-300">
+        <span className="font-mono text-[7px] font-bold tracking-widest whitespace-nowrap text-zinc-400 uppercase transition-colors group-hover:text-zinc-300">
           {label}
         </span>
       </div>

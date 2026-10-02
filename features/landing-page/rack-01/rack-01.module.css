@@ -3268,6 +3268,10 @@
   gap: 3px;
   justify-items: center;
   font: 6px var(--font-geist-mono);
+  /* The VOL/TUNE captions were light ink on the radio's light chassis at
+     1.76:1. They sit below the knob on the face plate, so they take the same
+     graphite the surrounding chassis legends use. */
+  color: var(--graphite);
 }
 .radioDials span > i {
   width: 38px;
@@ -4037,6 +4041,35 @@
   align-items: start;
   gap: var(--about-card-gap);
 }
+/* The rail's grid child is now a slot rather than the card itself: the résumé
+   link has to sit BESIDE the card, because a link inside the card's button is
+   unreachable by keyboard and screen reader. `align-items: start` on the rail
+   keeps each slot content-sized, and the slot's own `gap` is what separates the
+   card from its link. */
+.aboutCardSlot {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.aboutCardResume {
+  justify-self: start;
+  padding: 2px 0;
+  border-bottom: 1px solid currentColor;
+  /* `color: inherit` was invisible here: the slot sits outside the card, so it
+     inherited the rail's light-on-dark ink (#f1eee5) against the tan page
+     instead of the dark ink the room uses. Same token as the section heading. */
+  color: var(--graphite);
+  font: 700 9px var(--font-geist-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.aboutCardResume:hover {
+  opacity: 0.7;
+}
+.aboutCardResume:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
 .aboutCard {
   position: relative;
   display: grid;
@@ -4072,7 +4105,13 @@
   color: var(--about-ink);
   text-align: left;
   cursor: pointer;
-  opacity: 0.56;
+  /* Was 0.56. `opacity` fades the card's TEXT along with its surface, so the
+     badge label it carries was measured at 3.51:1 — every unselected card's
+     label failed AA while the selected one passed at 13.7:1. The depth cue this
+     draws comes mostly from `filter` and the shadow, so the surface can stay
+     receded at a value the text survives: 0.82 keeps the three cards reading as
+     a stack with the active one lifted, and puts the label back above 4.5:1. */
+  opacity: 0.82;
   filter: saturate(0.68) brightness(0.94);
   transition:
     transform 180ms ease,
@@ -6324,6 +6363,12 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(224, 183, 90, 0.55) transparent;
   overscroll-behavior: contain;
+}
+/* The panel is focusable so its scrollbar can be driven from the keyboard; it
+   needs a visible focus ring for the same reason every other control does. */
+.experienceNotes:focus-visible {
+  outline: 2px solid var(--signal-orange, #b84716);
+  outline-offset: -2px;
 }
 .experienceNotes::-webkit-scrollbar {
   width: 6px;

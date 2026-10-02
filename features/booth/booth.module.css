@@ -94,7 +94,11 @@
 }
 
 .eyebrowIndex {
-  opacity: 0.75;
+  /* Was 0.75, which faded the orange index to #c46f48 and left it at 2.93:1 on
+     the room base. Opacity can only ever move a colour toward its background,
+     so the value has to be high enough that the RESULT still passes — 0.92
+     keeps the index visibly secondary to the label beside it at 4.5:1. */
+  opacity: 0.92;
 }
 
 .headTitle {

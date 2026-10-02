@@ -27,7 +27,12 @@ export function TopBar() {
 
   if (isHome) {
     return (
-      <div className={styles.topBar}>
+      /* `<header>` rather than a plain div: the bar holds the site-wide home
+         link, which is exactly what a banner landmark is for. As a div its
+         contents sat outside every landmark, so a screen-reader user had no
+         landmark list entry for the one piece of global navigation on the
+         page. The className is unchanged, so the layout is untouched. */
+      <header className={styles.topBar}>
         {/* The inner row is capped to the same 1500px box as the hairline and
             the hero panel. The bar itself still fills the stage, because the
             line is its top edge and is measured against its padding box — so
@@ -51,7 +56,7 @@ export function TopBar() {
             className={cn(styles.toggle, 'size-9 shrink-0')}
           />
         </div>
-      </div>
+      </header>
     )
   }
 

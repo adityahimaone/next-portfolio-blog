@@ -18,6 +18,11 @@ export const HorizontalFader = memo(
           <div className="absolute top-1/2 left-1/2 h-4 w-[1px] -translate-x-1/2 -translate-y-1/2 bg-white/20" />
           <input
             type="range"
+            /* The visible label below is a sibling, not a `<label for>`, so it
+               does not name the control. Binding it here is what lets a screen
+               reader announce the fader rather than a bare slider. */
+            aria-label={label}
+            aria-valuetext={`${value}%`}
             min="0"
             max="100"
             value={value}

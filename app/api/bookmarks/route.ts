@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
 import { timingSafeEqual } from 'node:crypto'
-import path from 'path'
 import { Bookmark } from '@/features/bookmarks/types'
 import {
   queryBookmarks,
   parsePage,
   PAGE_SIZE,
 } from '@/features/bookmarks/lib/bookmarks'
-
-const FILE_PATH = path.join(process.cwd(), 'content', 'bookmarks.json')
+import {
+  readBookmarks,
+  insertBookmark,
+  updateBookmark,
+  deleteBookmark,
+} from '@/lib/d1'
 
 /**
  * Admin credentials come from the environment. They used to be literals in
@@ -64,27 +66,6 @@ function verifyAuth(req: NextRequest): boolean {
   return false
 }
 
-function readBookmarks(): Bookmark[] {
-  try {
-    if (!fs.existsSync(FILE_PATH)) {
-      return []
-    }
-    const raw = fs.readFileSync(FILE_PATH, 'utf-8')
-    return JSON.parse(raw) as Bookmark[]
-  } catch (error) {
-    console.error('Error reading bookmarks JSON:', error)
-    return []
-  }
-}
-
-function writeBookmarks(bookmarks: Bookmark[]): void {
-  const dirPath = path.dirname(FILE_PATH)
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true })
-  }
-  fs.writeFileSync(FILE_PATH, JSON.stringify(bookmarks, null, 2), 'utf-8')
-}
-
 // GET /api/bookmarks
 //
 // Paged by default. "Load more" on /bookmarks fetches the next page from here
@@ -94,12 +75,13 @@ function writeBookmarks(bookmarks: Bookmark[]): void {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const all = searchParams.get('all') === '1'
+  const bookmarks = await readBookmarks()
 
   if (all) {
-    return NextResponse.json({ success: true, bookmarks: readBookmarks() })
+    return NextResponse.json({ success: true, bookmarks })
   }
 
-  const result = queryBookmarks(readBookmarks(), {
+  const result = queryBookmarks(bookmarks, {
     q: searchParams.get('q') ?? undefined,
     category: searchParams.get('category') ?? undefined,
     page: parsePage(searchParams.get('page') ?? undefined),
@@ -179,7 +161,6 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const bookmarks = readBookmarks()
     const newBookmark: Bookmark = {
       id: `bm-${Date.now()}`,
       title,
@@ -201,8 +182,7 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString(),
     }
 
-    bookmarks.unshift(newBookmark)
-    writeBookmarks(bookmarks)
+    await insertBookmark(newBookmark)
 
     return NextResponse.json({ success: true, bookmark: newBookmark })
   } catch (error) {
@@ -246,7 +226,7 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    const bookmarks = readBookmarks()
+    const bookmarks = await readBookmarks()
     const index = bookmarks.findIndex((b) => b.id === id)
     if (index === -1) {
       return NextResponse.json(
@@ -274,7 +254,16 @@ export async function PUT(req: NextRequest) {
         featured !== undefined ? Boolean(featured) : bookmarks[index].featured,
     }
 
-    writeBookmarks(bookmarks)
+    // Single-row UPDATE rather than rewrite-everything-then-persist, so a
+    // concurrent add during the read above is not silently reverted.
+    const updated = await updateBookmark(id, bookmarks[index])
+    if (!updated) {
+      return NextResponse.json(
+        { success: false, message: 'Bookmark not found' },
+        { status: 404 },
+      )
+    }
+
     return NextResponse.json({ success: true, bookmark: bookmarks[index] })
   } catch (error) {
     console.error('Error updating bookmark:', error)
@@ -308,17 +297,14 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    const bookmarks = readBookmarks()
-    const filtered = bookmarks.filter((b) => b.id !== id)
-
-    if (filtered.length === bookmarks.length) {
+    const deleted = await deleteBookmark(id)
+    if (!deleted) {
       return NextResponse.json(
         { success: false, message: 'Bookmark not found' },
         { status: 404 },
       )
     }
 
-    writeBookmarks(filtered)
     return NextResponse.json({ success: true, message: 'Deleted successfully' })
   } catch (error) {
     console.error('Error deleting bookmark:', error)

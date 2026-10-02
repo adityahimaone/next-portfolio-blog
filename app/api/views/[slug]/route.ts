@@ -1,34 +1,19 @@
 import { NextRequest } from 'next/server'
-import fs from 'fs'
-import path from 'path'
+import { incrementViews, readViews } from '@/lib/d1'
 
-const VIEWS_FILE = path.join(process.cwd(), '.views.json')
-
-function readViews(): Record<string, number> {
-  try {
-    if (fs.existsSync(VIEWS_FILE)) {
-      return JSON.parse(fs.readFileSync(VIEWS_FILE, 'utf-8'))
-    }
-  } catch {
-    // ignore
-  }
-  return {}
-}
-
-function writeViews(views: Record<string, number>) {
-  fs.writeFileSync(VIEWS_FILE, JSON.stringify(views, null, 2))
-}
+// Was a `.views.json` file rewritten with fs.writeFileSync on every request.
+// Workers have a read-only ephemeral filesystem, so the counter lives in D1 now.
+// The increment is a single upsert rather than read-modify-write, which also
+// fixes the lost counts the file version had under concurrent requests.
 
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params
-  const views = readViews()
-  views[slug] = (views[slug] || 0) + 1
-  writeViews(views)
+  const views = await incrementViews(slug)
 
-  return Response.json({ views: views[slug] })
+  return Response.json({ views })
 }
 
 export async function GET(
@@ -36,7 +21,7 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params
-  const views = readViews()
+  const views = await readViews(slug)
 
-  return Response.json({ views: views[slug] || 0 })
+  return Response.json({ views })
 }

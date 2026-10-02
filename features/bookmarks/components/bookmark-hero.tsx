@@ -1,6 +1,6 @@
 'use client'
 
-import { Lock, Unlock, Plus } from 'lucide-react'
+import { Unlock, Plus } from 'lucide-react'
 import { SignalArchiveHeader } from '@/features/layout'
 import type { Bookmark } from '../types'
 import styles from '../bookmarks.module.css'
@@ -67,16 +67,7 @@ export function BookmarkHero({
                     <span>adityahimaone</span>
                   </button>
                 </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onToggleAdminLogin}
-                  className={styles.adminLock}
-                >
-                  <Lock size={14} aria-hidden="true" />
-                  Admin panel
-                </button>
-              )}
+              ) : null}
             </div>
           </div>
         }

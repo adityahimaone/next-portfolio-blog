@@ -157,19 +157,65 @@ fi
 log "Installing dependencies..."
 $PKG_MANAGER install --frozen-lockfile
 
+# ── Snapshot the running server before building ─────────────────────────────
+# `prebuild` deletes .next outright, and with output:'standalone' the running
+# server lives inside .next/standalone. PM2 is not restarted until after the
+# build finishes, so for the whole duration of the build the live process is
+# running from a directory that no longer exists -- a rollback build failure
+# would leave nothing to restart. Keep the assembled bundle aside and put it
+# back if the build fails.
+LIVE_STANDALONE="$ROLLBACK_DIR/standalone"
+log "Snapshotting current standalone bundle for rollback..."
+rm -rf "$LIVE_STANDALONE"
+if [[ -d "$APP_DIR/.next/standalone" ]]; then
+    cp -r "$APP_DIR/.next/standalone" "$LIVE_STANDALONE"
+    log "✓ Snapshot saved ($(du -sh "$LIVE_STANDALONE" | cut -f1))"
+else
+    log "⚠️  No existing standalone bundle (first standalone deploy?)"
+fi
+
+restore_standalone() {
+    if [[ -d "$LIVE_STANDALONE" ]]; then
+        rm -rf "$APP_DIR/.next/standalone"
+        mkdir -p "$APP_DIR/.next"
+        cp -r "$LIVE_STANDALONE" "$APP_DIR/.next/standalone"
+        log "✓ Restored the previous standalone bundle"
+    fi
+}
+
 # ── Build ───────────────────────────────────────────────────────────────────
-log "Building Next.js app..."
-if ! $PKG_MANAGER run build; then
+# The build is the memory peak on this host, not the running app. V8 would
+# otherwise size old space against total system RAM and grow into swap, which
+# is slower than collecting and stalls every other service on the box while it
+# happens. Cap it and let V8 collect early instead. next.config.mjs also pins
+# experimental.cpus and staticGenerationMaxConcurrency for the same reason.
+log "Building Next.js app (max-old-space-size=1536)..."
+if ! NODE_OPTIONS="--max-old-space-size=1536" $PKG_MANAGER run build; then
     log "❌ Build failed! Initiating rollback..."
     send_telegram "🚨 *Deploy Failed - Build Error*\nCommit: \`$NEW_COMMIT\`\nRolling back to \`$CURRENT_COMMIT\`"
 
     # Rollback
     git reset --hard "$CURRENT_COMMIT"
     $PKG_MANAGER install --frozen-lockfile
-    $PKG_MANAGER run build
-    pm2 reload ecosystem.config.js --only portfolio-blog --update-env
+    if NODE_OPTIONS="--max-old-space-size=1536" $PKG_MANAGER run build; then
+        log "✓ Rollback build succeeded"
+    else
+        # Even a rollback build failed, so there is no new bundle to serve. The
+        # pre-build snapshot is the last thing that was known to work.
+        log "❌ Rollback build also failed, restoring the last known good bundle"
+        restore_standalone
+    fi
+    pm2 restart ecosystem.config.js --only portfolio-blog --update-env
     log "✓ Rollback completed"
     send_telegram "✅ *Rollback Complete*\nRestored to \`$CURRENT_COMMIT\`"
+    exit 1
+fi
+
+if [[ ! -f "$APP_DIR/.next/standalone/server.js" ]]; then
+    log "❌ Build reported success but .next/standalone/server.js is missing!"
+    restore_standalone
+    pm2 restart ecosystem.config.js --only portfolio-blog --update-env
+    send_telegram "🚨 *Deploy Failed - No standalone server.js*\nCommit: \`$NEW_COMMIT\`\nServing the previous bundle"
     exit 1
 fi
 
@@ -206,11 +252,18 @@ else
     log "❌ Deploy FAILED - Portfolio NOT responding (HTTP $HTTP_CODE)"
     send_telegram "🚨 *Deploy Failed - Health Check*\nCommit: \`$NEW_COMMIT\`\nHTTP Status: $HTTP_CODE\nInitiating rollback..."
 
-    # Rollback
+    # Rollback. The health check failed on the bundle we just built, so rebuild
+    # the previous commit; if even that build fails, fall back to the snapshot
+    # taken before this build started rather than leaving nothing to serve.
     git reset --hard "$CURRENT_COMMIT"
     $PKG_MANAGER install --frozen-lockfile
-    $PKG_MANAGER run build
-    pm2 reload ecosystem.config.js --only portfolio-blog --update-env
+    if NODE_OPTIONS="--max-old-space-size=1536" $PKG_MANAGER run build; then
+        log "✓ Rollback build succeeded"
+    else
+        log "❌ Rollback build also failed, restoring the last known good bundle"
+        restore_standalone
+    fi
+    pm2 restart ecosystem.config.js --only portfolio-blog --update-env
     log "✓ Rollback completed"
     send_telegram "✅ *Rollback Complete*\nRestored to \`$CURRENT_COMMIT\`"
     exit 1

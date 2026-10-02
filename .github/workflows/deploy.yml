@@ -1,8 +1,19 @@
 name: Deploy Portfolio
 
+# Cloudflare Workers owns this deploy now. The previous workflow SSH'd to the VPS
+# and ran deploy.sh against a PM2 process that no longer exists, so a push to
+# main would have failed on every run.
 on:
   push:
     branches: [main]
+  # Deploys from the dashboard need a dispatch trigger too.
+  workflow_dispatch:
+
+concurrency:
+  # A second push while a build is running cancels the older one. Without this,
+  # two builds race to write .open-next and the newer commit can lose.
+  group: portfolio-production
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -11,15 +22,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - uses: pnpm/action-setup@v4
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: 22
-          script: |
-            /home/adityahimaone/apps/next-portfolio-blog/deploy.sh "${{ secrets.TELEGRAM_BOT_TOKEN }}" "${{ secrets.TELEGRAM_CHAT_ID }}"
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # NEXT_PUBLIC_* values are inlined into the client bundle at build time, so
+      # they are passed here rather than as Workers secrets -- setting them at
+      # runtime would have no effect on the shipped JS.
+      - name: Build with OpenNext
+        env:
+          NEXT_PUBLIC_SITE_URL: https://adityahimaone.space
+        run: pnpm exec opennextjs-cloudflare build
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
   notify-failure:
     runs-on: ubuntu-latest
@@ -32,8 +59,8 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
           message: |
-            🚨 *Portfolio Deploy FAILED*
+            🚨 *Portfolio Deploy FAILED (Cloudflare)*
             Branch: `main`
-            Commit: \`${{ github.sha }}\`
+            Commit: `${{ github.sha }}`
             Repository: ${{ github.repository }}
             Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

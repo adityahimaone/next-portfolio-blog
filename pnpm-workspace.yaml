@@ -1,6 +1,12 @@
 allowBuilds:
   sharp: false
   unrs-resolver: false
+  # wrangler depends on esbuild (its bundler) and workerd (the local Workers
+  # runtime used by `opennextjs-cloudflare preview`). Both ship prebuilt
+  # binaries in their postinstall and are skipped without this, which fails the
+  # adapter build rather than degrading gracefully.
+  esbuild: true
+  workerd: true
 minimumReleaseAgeExclude:
   - '@next/env@16.3.7'
   - '@next/swc-darwin-arm64@16.3.7'

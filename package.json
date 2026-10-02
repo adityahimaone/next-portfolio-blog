@@ -5,8 +5,14 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "node -e \"const fs=require('fs'); fs.rmSync('.next', {recursive: true, force: true});\"",
-    "build": "next build",
+    "generate:content": "node scripts/generate-blog-content.mjs",
+    "build": "node scripts/generate-blog-content.mjs && next build",
+    "build:standalone": "CF_DEPLOY=1 node scripts/generate-blog-content.mjs && next build && node scripts/prepare-standalone.mjs",
     "start": "next start",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "lint": "eslint .",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -42,6 +48,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "3",
     "@next/bundle-analyzer": "^16.2.4",
+    "@opennextjs/cloudflare": "^1.20.7",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "4.2.2",
     "@tailwindcss/typography": "0.5.19",
@@ -65,6 +72,7 @@
     "prettier-plugin-tailwindcss": "0.6.10",
     "tailwindcss": "4.2.2",
     "ts-jest": "^29.4.9",
-    "typescript": "5"
+    "typescript": "5",
+    "wrangler": "^4.146.0"
   }
 }

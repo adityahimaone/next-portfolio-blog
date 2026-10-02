@@ -1,10 +1,5 @@
-import fs from 'fs'
-import path from 'path'
-import matter from 'gray-matter'
-import readingTime from 'reading-time'
 import { unstable_cache } from 'next/cache'
-
-const BLOG_DIR = path.join(process.cwd(), 'content/blog')
+import { POSTS } from './generated-content'
 
 export type BlogMeta = {
   title: string
@@ -26,51 +21,32 @@ export type BlogMeta = {
 }
 
 /**
- * gray-matter hands back a JS `Date` for an unquoted YAML date, which typed as
- * `string` but rendered as `[object Object]` wherever it was interpolated —
- * every post shipped `article:published_time="[object Object]"` and a
- * non-string `datePublished` into its JSON-LD. Normalise once, here, so the
- * declared type is the type callers actually get.
+ * The posts are generated into a module at build time
+ * (scripts/generate-blog-content.mjs) rather than read from disk. The old
+ * `fs.readdirSync` version could not run on Workers at all, and the reads it did
+ * on the VPS happened on every request, behind an `unstable_cache` that hid
+ * them until the first miss.
  */
-function toIsoDate(value: unknown): string {
-  if (value instanceof Date) return value.toISOString()
-  if (typeof value === 'string' && value) return value
-  return new Date().toISOString()
-}
-
 function _getAllPosts(): BlogMeta[] {
-  if (!fs.existsSync(BLOG_DIR)) return []
-
-  const files = fs.readdirSync(BLOG_DIR).filter((f) => f.endsWith('.md'))
-
-  const posts = files.map((file) => {
-    const slug = file.replace(/\.md$/, '')
-    const content = fs.readFileSync(path.join(BLOG_DIR, file), 'utf-8')
-    const { data, content: body } = matter(content)
-    const stats = readingTime(body)
-
-    return {
-      title: data.title ?? slug,
-      slug,
-      date: toIsoDate(data.date),
-      dateModified: data.dateModified
-        ? toIsoDate(data.dateModified)
-        : toIsoDate(data.date),
-      description: data.description ?? '',
-      tags: data.tags ?? [],
-      cover: data.cover,
-      published: data.published ?? true,
-      pinned: data.pinned ?? false,
-      readingTime: stats.text,
-    } as BlogMeta
-  })
-
-  return posts
-    .filter((p) => p.published)
+  return POSTS.filter((p) => p.published)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .map((p) => ({
+      title: p.title,
+      slug: p.slug,
+      date: p.date,
+      dateModified: p.dateModified ?? p.date,
+      description: p.description,
+      tags: p.tags,
+      cover: p.cover,
+      published: p.published,
+      pinned: p.pinned,
+      readingTime: p.readingTime,
+    }))
 }
 
-// Cached version — reads from disk only once per hour
+// Still cached: these are read by the blog index, the sitemap and the RSS feed,
+// all of which want the same list. R2 backs the incremental cache via the
+// NEXT_INC_CACHE_R2_BUCKET binding, so this survives between requests.
 export const getAllPosts = unstable_cache(
   async () => _getAllPosts(),
   ['blog-posts'],
@@ -78,34 +54,29 @@ export const getAllPosts = unstable_cache(
 )
 
 export function getPost(slug: string) {
-  const filePath = path.join(BLOG_DIR, `${slug}.md`)
-  const content = fs.readFileSync(filePath, 'utf-8')
-  const { data, content: body } = matter(content)
-  const stats = readingTime(body)
+  const post = POSTS.find((p) => p.slug === slug)
+  if (!post) {
+    throw new Error(`Unknown blog post: ${slug}`)
+  }
 
   return {
     meta: {
-      title: data.title ?? slug,
-      slug,
-      date: toIsoDate(data.date),
-      description: data.description ?? '',
-      tags: data.tags ?? [],
-      cover: data.cover,
-      published: data.published ?? true,
-      pinned: data.pinned ?? false,
-      readingTime: stats.text,
+      title: post.title,
+      slug: post.slug,
+      date: post.date,
+      description: post.description,
+      tags: post.tags,
+      cover: post.cover,
+      published: post.published,
+      pinned: post.pinned,
+      readingTime: post.readingTime,
     } as BlogMeta,
-    content: body,
+    content: post.body,
   }
 }
 
 export function getAllSlugs() {
-  if (!fs.existsSync(BLOG_DIR)) return []
-
-  return fs
-    .readdirSync(BLOG_DIR)
-    .filter((f) => f.endsWith('.md'))
-    .map((f) => f.replace(/\.md$/, ''))
+  return POSTS.map((p) => p.slug)
 }
 
 // Get related posts based on tag similarity (Jaccard index)

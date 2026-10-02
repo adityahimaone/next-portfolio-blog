@@ -1,5 +1,3 @@
-import fs from 'fs'
-import path from 'path'
 import type { Metadata } from 'next'
 import { BookmarksPage } from '@/features/bookmarks'
 import {
@@ -8,42 +6,12 @@ import {
   PAGE_SIZE,
 } from '@/features/bookmarks/lib/bookmarks'
 import { breadcrumbList, itemList, JsonLd } from '@/lib/structured-data'
-import type { Bookmark } from '@/features/bookmarks/types'
+import { readBookmarks } from '@/lib/d1'
 
-const FILE_PATH = path.join(process.cwd(), 'content', 'bookmarks.json')
-
-// The catalogue is a file in the repo, so it only changes on deploy. An hour
-// matches the rest of the site's cached reads.
+// The catalogue lives in D1 rather than a JSON file, so an hour is no longer
+// the ceiling on staleness. Kept as-is because these pages are revalidated
+// through the incremental cache anyway.
 export const revalidate = 3600
-
-/**
- * Read and parsed once per process, not once per request.
- *
- * The catalogue is ~200KB of JSON. Reading and `JSON.parse`-ing it on every
- * `/bookmarks` hit produced a fresh ~550-object graph per request, which the
- * GC then had to chase — measured at roughly 14MB of retained growth over 20
- * requests on a low-heap run. `queryBookmarks` below never mutates its input
- * (it filters/sorts into new arrays), so one shared immutable instance is safe
- * for every concurrent render.
- *
- * A module-level cache is correct here specifically because the file ships in
- * the repo: the only way its contents change is a new deploy, which restarts
- * the process and repopulates this on the first request.
- */
-let cache: Bookmark[] | null = null
-
-function getBookmarks(): Bookmark[] {
-  if (cache) return cache
-  try {
-    if (fs.existsSync(FILE_PATH)) {
-      cache = JSON.parse(fs.readFileSync(FILE_PATH, 'utf-8')) as Bookmark[]
-      return cache
-    }
-  } catch (error) {
-    console.error('Failed to load initial bookmarks:', error)
-  }
-  return []
-}
 
 export async function generateMetadata({
   searchParams,
@@ -108,7 +76,7 @@ export default async function Page({
     typeof params.page === 'string' ? params.page : undefined,
   )
 
-  const bookmarks = queryBookmarks(getBookmarks(), { q, category, page })
+  const bookmarks = queryBookmarks(await readBookmarks(), { q, category, page })
 
   // Describes this page's rows only. Claiming all 559 on page one would be
   // listing items the page does not contain; positions start at this page's

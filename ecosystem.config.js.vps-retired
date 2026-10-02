@@ -2,13 +2,24 @@ module.exports = {
   apps: [
     {
       name: 'portfolio-blog',
-      // Absolute path to the real JS entrypoint, not the .bin/next shell shim.
-      // pm2 launches scripts with `node`, and .bin/next is a POSIX shell
-      // script, which crashes with a SyntaxError -> 502 Bad Gateway.
-      script: '/home/adityahimaone/apps/next-portfolio-blog/node_modules/next/dist/bin/next',
-      args: 'start -p 3000',
-      cwd: '/home/adityahimaone/apps/next-portfolio-blog',
+      // Absolute path to the standalone server.js, not the .bin/next shell shim.
+      // Two reasons, both learned the hard way:
+      // 1. pm2 launches scripts with `node`, and .bin/next is a POSIX shell
+      //    script, which crashes with a SyntaxError -> 502 Bad Gateway.
+      // 2. `next start` does not work at all with `output: 'standalone'`;
+      //    Next logs a warning and serves nothing.
+      // scripts/prepare-standalone.mjs (run by `pnpm build`) copies public/ and
+      // .next/static into this directory, which is what makes it self-contained.
+      script:
+        '/home/adityahimaone/apps/next-portfolio-blog/.next/standalone/server.js',
       interpreter: 'node',
+      cwd: '/home/adityahimaone/apps/next-portfolio-blog/.next/standalone',
+      // fork, single instance. There is no benefit to cluster here: the site is
+      // statically generated, so each worker would hold its own copy of the same
+      // pages in its own heap, which is the wrong direction for a 1.9GB host
+      // running alongside other services.
+      exec_mode: 'fork',
+      instances: 1,
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
@@ -32,8 +43,7 @@ module.exports = {
         // promoted into old space and far less scratch is committed. 2MB is
         // deliberately at the low end: it costs a few more scavenges, which is
         // CPU this box has spare, in exchange for the memory it buys back.
-        NODE_OPTIONS:
-          '--max-old-space-size=128 --max-semi-space-size=2',
+        NODE_OPTIONS: '--max-old-space-size=128 --max-semi-space-size=2',
       },
       // Runaway backstop. The heap cap above makes the app collect rather than
       // grow; this catches anything that grows outside the JS heap (native

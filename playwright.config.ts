@@ -17,8 +17,11 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  // Starts `next start` only when nothing healthy is already serving the
-  // port, which is what stops the EADDRINUSE failure.
+  // Starts the server only when nothing healthy is already serving the port,
+  // which is what stops the EADDRINUSE failure. `npm run start` is the
+  // standalone server (next.config.mjs sets output: 'standalone'), so this
+  // needs `pnpm build` to have run first -- same as it did when this pointed at
+  // `next start`.
   webServer: {
     command: 'npm run start',
     url: 'http://127.0.0.1:3000',

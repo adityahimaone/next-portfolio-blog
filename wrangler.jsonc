@@ -1,0 +1,84 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "next-portfolio-blog",
+  "compatibility_date": "2025-03-25",
+  "compatibility_flags": [
+    // Required by @opennextjs/cloudflare: the adapter uses Node builtins
+    // (Buffer, node:crypto for the bookmarks auth check, gray-matter).
+    "nodejs_compat",
+    // Keeps process.env reads from reaching out to arbitrary hosts. The app
+    // only fetches Spotify and GitHub, both public.
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      // OpenNext self-invokes the worker to purge the incremental cache.
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "next-portfolio-blog"
+    }
+  ],
+  "r2_buckets": [
+    {
+      // Backs Next's incremental cache (ISR + unstable_cache), so revalidated
+      // pages persist between requests instead of re-rendering each time.
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "portfolio-2026-opennext-cache"
+    }
+  ],
+  "d1_databases": [
+    {
+      // Replaces the two endpoints that used to read and write JSON files on
+      // disk. Workers have a read-only ephemeral filesystem, so D1 is the only
+      // durable option.
+      "binding": "DB",
+      "database_name": "portfolio-blog",
+      "database_id": "ecb6d648-d173-4fff-a70c-e3bd26e8ca57"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  },
+  // Keeps the workers.dev URL serving as a fallback. It had been left at
+  // enabled:false by the deploy whose custom-domain attach was rejected, which
+  // made the whole worker return error 1042 on workers.dev even though it
+  // deployed cleanly and served 200 under `wrangler dev --local`. Pinning this
+  // true on every deploy keeps that from sticking.
+  "workers_dev": true,
+  // A plain Worker route, deliberately NOT `custom_domain: true`.
+  //
+  // custom_domain makes Cloudflare create the DNS record itself, and the API
+  // rejects that while the hostname still has an external A record — which is
+  // why the first cutover attempt failed with "already has externally managed
+  // DNS records" and, as a side effect, left subdomain:false so the whole
+  // worker 404'd with error 1042. A plain route works alongside the existing A
+  // record instead.
+  //
+  // The apex is still DNS-only, so traffic reaches the VPS. Turning on the
+  // orange cloud for just these two hostnames is what sends it to the worker.
+  //
+  // Do NOT proxy the `*.adityahimaone.space` wildcard record. It resolves all
+  // 14 subdomains to the VPS, and Cloudflare does not hold their certificate,
+  // so proxying it would fail TLS validation on monitor/grafana/9router/etc.
+  // Config routes carry { pattern, zone_name } only — the script name is implied
+  // by the worker's own name. Passing `script` here fails validation with
+  // "Expected routes to be an array of either strings or objects with the
+  // shape { pattern, custom_domain, zone_id | zone_name, ... }".
+  "routes": [
+    {
+      "pattern": "adityahimaone.space/*",
+      "zone_name": "adityahimaone.space"
+    },
+    {
+      "pattern": "www.adityahimaone.space/*",
+      "zone_name": "adityahimaone.space"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

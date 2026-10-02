@@ -24,6 +24,13 @@
 /\.next.failed-*/
 /out/
 
+# opennext build output (Cloudflare Workers)
+/.open-next/
+/.cloudflare/
+
+# wrangler's generated local state
+/.wrangler/
+
 # production
 /build
 
@@ -41,9 +48,21 @@ yarn-error.log*
 .env*
 # ...except the committed template that documents which variables are required
 !.env.example
+# wrangler local secrets for `wrangler dev` / opennextjs-cloudflare preview.
+# Only NEXTJS_ENV lives here today, but it is the same class of file and would
+# be the obvious place to paste a real secret by accident.
+.dev.vars
+.dev.vars.*
 
 # runtime data
 .views.json
+
+# generated blog content (rebuilt by scripts/generate-blog-content.mjs on build)
+/features/blog/lib/generated-content.ts
+
+# generated D1 seed input (one-off migration artifact)
+/.bookmarks-seed.sql
+/.bookmarks-seed.json
 
 # vercel
 .vercel

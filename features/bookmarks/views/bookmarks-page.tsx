@@ -57,6 +57,15 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
   const [deleteTarget, setDeleteTarget] = useState<Bookmark | null>(null)
   const [status, setStatus] = useState('')
 
+  // The admin login is reachable at /bookmarks?admin=1 rather than from a
+  // button in the hero. The button was hidden, which left no way to reach the
+  // panel at all: the modal is only mounted by this page, so the URL is the
+  // only entry point left. Credentials are still required -- this just opens
+  // the form.
+  useEffect(() => {
+    if (searchParams.get('admin') === '1') setIsAdminOpen(true)
+  }, [searchParams])
+
   // Below 1024px the vertical playlist panel gives way to a sheet behind a
   // trigger in the filter row. Above it, the panel stays and the trigger is
   // never rendered — so there is exactly one channel list on screen at a time,

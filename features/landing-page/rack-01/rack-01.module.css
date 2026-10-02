@@ -2043,6 +2043,21 @@
   background: #0b0d0c !important;
 }
 
+/* The band's height is derived from its own width, so the width cap IS the
+   height cap — 1100px produced a 550px band, which is more than half a
+   1000px-tall viewport spent on decoration at the bottom of the page.
+   Narrowing the nest to 720px on a desktop drops the band to 360px without
+   touching the geometry: the rings still fill the box edge to edge at their
+   own `width / 2` proportion, so nothing is cropped and no black opens up
+   between the outermost arc and the frame. Below 1024px the base cap still
+   stands, which is the tablet and phone case the original 1100px was sized
+   for. */
+@media (min-width: 1024px) {
+  .footerTangle {
+    width: min(100%, 720px);
+  }
+}
+
 @media (max-width: 768px) {
   .footer {
     margin-top: 72px;
@@ -12198,11 +12213,11 @@
 
   .footerTangle {
     display: block !important;
-    /* Same cap as the base rule rather than a bare 100%: this declaration wins
-       on specificity inside the media query, so a plain `100%` here would undo
-       the desktop cap on exactly the widths the cap exists for. Below 1100px
-       the min() resolves to the screen width anyway, so the phone case is
-       unchanged either way. */
+    /* `min(100%, 1100px)` rather than the desktop's narrower 720px cap: this
+       block is restated *after* the base rules, so at equal specificity it wins
+       regardless of viewport — including on the desktop widths the 720px cap
+       exists for. Only the phone range reaches this fork, where 1100px resolves
+       to the screen width anyway, so the two never actually disagree. */
     width: min(100%, 1100px);
     /* No forced height: the component derives the band from its own width, and
        pinning one here would re-crop the semicircle it is meant to fit. */

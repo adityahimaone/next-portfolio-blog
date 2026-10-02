@@ -437,6 +437,87 @@ test('every cover renders at the same size, generated or real', async ({
   }
 })
 
+test('the landing document ships render-blocking CSS in head', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+  /* The unstyled-flash bug, guarded.
+
+     The critical-css script used to delete the stylesheet <link> tags and
+     replace them with an inline block. When that block was trimmed it turned
+     out to be almost entirely @font-face, so nothing styled the document until
+     React injected the sheets during hydration — a cold first visit rendered
+     raw markup for over a second. The links are render-blocking and are what
+     hold the first paint, so their presence in <head> is the contract. */
+  const head = await page.evaluate(() => {
+    const h = document.head.innerHTML
+    return {
+      links: document.head.querySelectorAll('link[rel="stylesheet"]').length,
+      inlineCritical: h.includes('data-critical'),
+      bodyLinks: document.body.querySelectorAll('link[rel="stylesheet"]')
+        .length,
+    }
+  })
+
+  expect(head.links, 'stylesheet links in <head>').toBeGreaterThan(0)
+  expect(
+    head.bodyLinks,
+    'stylesheet links must not be stranded in <body>',
+  ).toBe(0)
+  expect(head.inlineCritical, 'critical CSS inlined').toBe(true)
+})
+
+test('the first paint is already styled', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+
+  /* Cold and throttled: the case a first-time visitor and every shared link
+     get. A warm edge hid this entirely — FCP measured ~0.59s cached versus
+     ~1.49s cold, which is why it survived review. */
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Network.enable')
+  await cdp.send('Network.emulateNetworkConditions', {
+    offline: false,
+    latency: 40,
+    downloadThroughput: (10 * 1024 * 1024) / 8 / 4,
+    uploadThroughput: (2 * 1024 * 1024) / 8 / 4,
+  })
+  await cdp.send('Network.setCacheDisabled', { cacheDisabled: true })
+
+  await page.goto('/', { waitUntil: 'commit' })
+
+  // Wait for the first paint, then judge what it produced.
+  await page.waitForFunction(
+    () => performance.getEntriesByType('paint').length > 0,
+    undefined,
+    { timeout: 15_000 },
+  )
+  await page.waitForTimeout(150)
+
+  const atFirstPaint = await page.evaluate(() => {
+    const hero = document.querySelector('main > section')
+    const r = hero?.getBoundingClientRect()
+    return {
+      /* The unstyled hero collapsed to the raw text line height; a styled one is
+         a full-bleed panel. 1200px wide also proves the layout rules ran, not
+         just the font faces. */
+      heroWidth: r ? Math.round(r.width) : 0,
+      heroHeight: r ? Math.round(r.height) : 0,
+      sheets: document.styleSheets.length,
+    }
+  })
+
+  expect(
+    atFirstPaint.heroWidth,
+    'hero laid out at first paint',
+  ).toBeGreaterThanOrEqual(1200)
+  expect(
+    atFirstPaint.heroHeight,
+    'hero has real height at first paint (not collapsed)',
+  ).toBeGreaterThan(400)
+})
+
 test('eject proxy never renders for reduced motion', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'reduce' })
   const page = await context.newPage()

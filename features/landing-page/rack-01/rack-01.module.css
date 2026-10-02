@@ -9992,21 +9992,26 @@
    positioned and centred by `translate(-50%, -50%)`; here it is driven entirely
    by the seam timeline, which writes both the size and the transform.
 
-   The deck's rule sets `max-height: calc(100% - 16px)`, which resolves against
-   a parent this element does not have — dropped, along with the `top/left`
-   centring, or the box collapses and the timeline has nothing to move. */
-.ejectCassette {
+/* The deck's `.cassette` rule sets `max-height: calc(100% - 16px)` and
+   `max-width`, which resolve against the carousel bay. Those have to be undone
+   here or the shell collapses against this element's zero-sized parent.
+
+   Doubled class for specificity, not for style: `.cassette` is defined at the
+   top of a 12k-line file and this rule sits ~200KB later in the bundle, so at
+   equal specificity the deck's declarations won on source order and the flying
+   cassette rendered 2x2 — the `max-width: calc(100% - 84px)` resolved against
+   the portalled wrapper's zero width. Moving this rule would work today and
+   break again on the next reordering. */
+.ejectProxy .ejectCassette {
   position: absolute;
   top: 0;
   left: 0;
-  /* The deck sizes its shell with `height: 100%` against the carousel bay. This
-     box has no such parent, so that declaration resolves against an indefinite
-     height and the shell collapses to a sliver — the measured ratio came out at
-     199:1 instead of 1.574:1. `height: auto` hands sizing back to
-     `aspect-ratio` + the width the timeline writes each frame. */
-  height: auto;
+  right: auto;
+  bottom: auto;
+  /* Sized by the timeline, which writes `width` inline each frame. */
   width: 240px;
   max-width: none;
+  height: auto;
   max-height: none;
   aspect-ratio: 100.4 / 63.8;
   /* The interior is drawn in `cqw`, so it needs a container to resolve

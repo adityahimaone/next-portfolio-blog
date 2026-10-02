@@ -529,7 +529,25 @@
   will-change: transform;
 }
 
+/* The travelling rule. `layoutId` moves this between rows, so it has to be
+   absolutely positioned against the row rather than participating in its
+   layout — otherwise Motion would be measuring a box that shifts every time it
+   is added or removed. */
+.libraryIndicator {
+  position: absolute;
+  top: 50%;
+  left: -6px;
+  width: 2px;
+  height: 60%;
+  border-radius: 1px;
+  background: var(--work-accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--work-accent) 60%, transparent);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
 .libraryRow {
+  position: relative;
   display: grid;
   width: 100%;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -675,6 +693,28 @@
   min-height: 0;
   place-items: center;
   height: 100%;
+  /* The row is declared rather than implicit. With `place-items: center` and an
+     implicit row, the row is sized to its content — and the generated covers,
+     being an inline `<svg viewBox>` with no intrinsic height, contributed their
+     own intrinsic 300px. The row then overflowed this 220px box and the art
+     rendered larger than every photograph beside it. An explicit `minmax(0,
+     1fr)` row cannot be pushed open by content. */
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.centreArtLayer {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  place-items: center;
+  /* Both sleeves occupy the same grid cell during a swap, so the incoming one
+     has to sit above the outgoing one. */
+  grid-area: 1 / 1;
+  /* Same reason: this layer must not be able to grow the cell it sits in. */
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
 }
 
 .centreArt {
@@ -688,11 +728,19 @@
      smaller than the art's own column at every desktop height, so it was the
      binding constraint, not the band. It is now measured against the band's
      height, which is the axis a square is actually limited by, so the art
-     grows with the row and can never exceed it. */
+     grows with the row and can never exceed it.
+
+     `min()` against the row height as well as the viewport: a square in a
+     246px band must not resolve to 300px. The generated covers rendered at
+     300 while every photograph rendered at 246, purely because an inline
+     `<svg viewBox>` has no intrinsic height and so escaped the band's limit,
+     and the two visibly did not match. Capping both axes here is what makes
+     them identical. */
   width: auto;
   height: 100%;
   max-width: min(38vh, 300px);
   max-height: 100%;
+  min-height: 0;
   padding: 0;
   aspect-ratio: 1 / 1;
   border: 0;
@@ -718,7 +766,16 @@
 .centreArtScrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 46%, rgba(0, 0, 0, 0.5));
+  /* The generated covers carry a wordmark along the bottom, and at this size it
+     was landing on top of the description text bleeding under the art. The fade
+     now starts higher and reaches further, so a caption printed into the lower
+     band of any cover has a dark ground to sit on. */
+  background: linear-gradient(
+    180deg,
+    transparent 38%,
+    rgba(0, 0, 0, 0.42) 62%,
+    rgba(0, 0, 0, 0.78)
+  );
   pointer-events: none;
 }
 
@@ -1408,6 +1465,15 @@
   flex: 1 1 auto;
 }
 
+.bannerTitleMask {
+  /* The rise has to be clipped to its own line box or the title is seen
+     travelling through the copy above and below it. */
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  /* A descender on a project name would otherwise be sliced at the mask edge. */
+  margin-bottom: -0.08em;
+}
+
 .bannerTitle {
   margin: 0;
   font-family: var(--font-space-grotesk);
@@ -1743,4 +1809,3 @@
     display: none;
   }
 }
-

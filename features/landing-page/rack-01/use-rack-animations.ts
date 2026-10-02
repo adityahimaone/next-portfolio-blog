@@ -58,6 +58,13 @@ export function useRackAnimations({
       if (cancelled || !rootRef.current) return
       gsap.registerPlugin(ScrollTrigger)
 
+      // The eject proxy is portalled and only mounts in its own effect, which
+      // may not have run yet when this dynamic import resolves. Give it a frame
+      // before any selector reaches for it, or the seam bails out and the
+      // handoff silently never runs.
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)))
+      if (cancelled || !rootRef.current) return
+
       const lenis = new Lenis({
         lerp: 0.085,
         smoothWheel: true,
@@ -601,38 +608,267 @@ export function useRackAnimations({
             },
           })
 
+          // ── Experience → Work: the tape threads across ──
+          //
+          // One timeline owns the seam so both sides share a clock. Previously
+          // experience faded out here while the work section ran its own
+          // Motion `useScroll` entrance — two runtimes, one scroll, different
+          // smoothing — and the last ~42vh of the experience band animated
+          // nothing at all.
           const experienceSection = rootRef.current?.querySelector<HTMLElement>(
             `.${styles.experience}`,
           )
           const experienceContent = rootRef.current?.querySelector<HTMLElement>(
             `.${styles.experienceContent}`,
           )
+          const ejectProxy = document.querySelector<HTMLElement>(
+            `.${styles.ejectProxy}`,
+          )
+          // Addressed by id, not by class: the rack's own `.work` rule only sets
+          // `color` on a descendant, and the section element itself carries the
+          // work module's class name, so a class lookup here finds nothing.
+          const workSection =
+            rootRef.current?.querySelector<HTMLElement>('#work')
+          // The player chrome lives in the work module, so its class names are
+          // not reachable from here. It marks the parts the seam drives instead.
+          const workShell =
+            workSection?.querySelector<HTMLElement>('[data-work-shell]')
+          const workEyebrow = workSection?.querySelector<HTMLElement>(
+            '[data-work-eyebrow]',
+          )
+          const workTitle =
+            workSection?.querySelector<HTMLElement>('[data-work-title]')
 
-          // Only the experience side animates here. The work section runs its
-          // own scroll-linked entrance, so there is no stage to hand off to.
-          if (experienceSection && experienceContent) {
-            gsap
-              .timeline({
-                scrollTrigger: {
-                  trigger: experienceSection,
-                  start: 'top top',
-                  end: 'bottom bottom',
-                  scrub: 0.8,
-                  invalidateOnRefresh: true,
-                },
-                defaults: { ease: 'none' },
+          const ejectCassette = ejectProxy?.querySelector<HTMLElement>(
+            `.${styles.ejectCassette}`,
+          )
+          /* The clone is drawn by the deck's own components, so its interior carries the
+               deck's class names — `cassetteLabel` and `cassetteMechanism`, not
+               an `eject`-prefixed pair. Reaching for the wrong prefix silently
+               found nothing and the whole seam stood still. */
+          const ejectLabel = ejectProxy?.querySelector<HTMLElement>(
+            `.${styles.cassetteLabel}`,
+          )
+          const ejectMechanism = ejectProxy?.querySelector<HTMLElement>(
+            `.${styles.cassetteMechanism}`,
+          )
+
+          if (
+            experienceSection &&
+            experienceContent &&
+            ejectProxy &&
+            ejectCassette &&
+            ejectLabel &&
+            ejectMechanism &&
+            workSection &&
+            workShell &&
+            workEyebrow &&
+            workTitle
+          ) {
+            /* A Type I shell's proportion, in millimetres. The CSS states the same value
+               as `aspect-ratio`; this is only used to centre the box on the
+               point the flight computes, since height follows from width. */
+            const CASSETTE_RATIO = 100.4 / 63.8
+
+            /* Where the proxy is picked up from.
+
+               This was frozen once on entry, which is wrong: the deck's stage is
+               sticky but it is also scrolling up and out of view across exactly
+               this window, so a frozen source left the proxy parked down near the
+               fold after the real cassette had already left — the proxy was
+               briefly the only cassette on screen, sitting below the fold. So the
+               source is followed live for as long as the deck's own cassette is
+               substantially on screen, and frozen only after it goes. That also
+               makes the hand-off continuous rather than a jump on the first
+               frame. */
+            const source = { x: 0, y: 0, width: 0, frozen: false }
+
+            const readSource = (freeze: boolean) => {
+              if (source.frozen) return
+              const cassette = rootRef.current?.querySelector<HTMLElement>(
+                `.${styles.cassetteActive}`,
+              )
+              if (!cassette) return
+              const rect = cassette.getBoundingClientRect()
+              source.x = rect.left + rect.width / 2
+              source.y = rect.top + rect.height / 2
+              source.width = rect.width
+              if (freeze) source.frozen = true
+            }
+
+            // Release the source again on the way back up, so reversing the seam
+            // re-attaches to the deck rather than replaying a stale origin.
+            const releaseSource = () => {
+              source.frozen = false
+            }
+
+            /* The artwork is not static: the work stage travels a full viewport
+               height during this very window, so the destination moves every
+               frame and a frozen `fromTo` would miss it. The target rect is read
+               BEFORE the proxy's box is written — reading after would flush a
+               layout we just invalidated. */
+            const placeCassette = (progress: number) => {
+              const target = rootRef.current?.querySelector<HTMLElement>(
+                '[data-handoff-target]',
+              )
+              if (!target) return
+
+              /* Follow the deck's own cassette while it is still substantially
+                 on screen, then freeze. Measuring it is one layout read against
+                 the one already being done for the target below. */
+              const deckCassette = rootRef.current?.querySelector<HTMLElement>(
+                `.${styles.cassetteActive}`,
+              )
+              if (deckCassette && !source.frozen) {
+                const r = deckCassette.getBoundingClientRect()
+                const stillVisible = r.bottom > window.innerHeight * 0.45
+                if (!stillVisible) {
+                  readSource(true)
+                } else {
+                  source.x = r.left + r.width / 2
+                  source.y = r.top + r.height / 2
+                  source.width = r.width
+                }
+              }
+              if (source.width === 0) return
+
+              const rect = target.getBoundingClientRect()
+              // `content-visibility: auto` can leave a section holding its
+              // `contain-intrinsic-size` placeholder, so an unrendered target
+              // can still measure. Skip rather than fly to the wrong box.
+              if (rect.width === 0) return
+
+              const toX = rect.left + rect.width / 2
+              const toY = rect.top + rect.height / 2
+
+              /* Linear in position. This was an ease-out, which front-loads the
+                 movement — combined with the deck travelling up underneath, the
+                 cassette visibly overshot the bottom of the viewport and slid
+                 back, which is the "scrolling up" read this whole change set out
+                 to remove. */
+              const flight = Math.min(1, progress / 0.72)
+
+              const x = source.x + (toX - source.x) * flight
+              const y = source.y + (toY - source.y) * flight
+
+              /* Sized along the way it travels, NOT to the artwork's own
+                 dimensions. The artwork is a 1:1 square and the cassette is
+                 100.4:63.8, so driving width and height independently to meet
+                 it would squash the shell by a third on the way in and turn a
+                 tape into a card. Instead the shell keeps its own ratio at every
+                 frame and simply gets smaller — which is also why the interior,
+                 drawn in `cqw`, stays in proportion the whole way down. */
+              const width = source.width + (rect.width - source.width) * flight
+
+              ejectCassette.style.width = `${width}px`
+
+              /* Zero for the first stretch, so the cassette leaves the bay at
+                 exactly the angle it was sitting at and the hand-off has no
+                 jump in it. The tilt only starts once it is clear of the deck,
+                 peaks mid-flight, and unwinds to flat as it seats — which is
+                 what reads as being inserted rather than dropped.
+
+                 `sin(flight * PI)` alone would be tilted from the first frame,
+                 because flight is already non-zero as soon as progress is. The
+                 dead zone is what holds it flat while it overlaps its own
+                 original position. */
+              const TILT_START = 0.18
+              const tiltPhase = Math.max(
+                0,
+                (flight - TILT_START) / (1 - TILT_START),
+              )
+              const tilt = Math.sin(tiltPhase * Math.PI) * -5
+
+              gsap.set(ejectCassette, {
+                x: x - width / 2,
+                y: y - width / CASSETTE_RATIO / 2,
+                rotate: tilt,
               })
+            }
+
+            const seam = gsap.timeline({
+              scrollTrigger: {
+                // The window work spends entering the viewport: it is exactly
+                // where experience's sticky stage releases and work's engages.
+                trigger: workSection,
+                start: 'top bottom',
+                end: 'top top',
+                scrub: 0.8,
+                invalidateOnRefresh: true,
+                onEnter: () => releaseSource(),
+                onEnterBack: () => releaseSource(),
+                onRefresh: () => {
+                  releaseSource()
+                  readSource(false)
+                },
+                onUpdate: (self) => placeCassette(self.progress),
+              },
+              defaults: { ease: 'none' },
+            })
+
+            // The deck dissolves out from under the cassette as it leaves, so
+            // the two cross-dissolve instead of the deck simply vanishing.
+            seam
               .to(
-                experienceContent,
+                [experienceContent],
                 {
                   opacity: 0,
-                  yPercent: 12,
-                  scale: 0.88,
-                  filter: 'blur(4px)',
+                  scale: 0.94,
+                  yPercent: -6,
+                  filter: 'blur(3px)',
                   transformOrigin: '50% 50%',
-                  duration: 0.3,
+                  duration: 0.4,
                 },
-                0.48,
+                0.02,
+              )
+              .fromTo(
+                ejectProxy,
+                { opacity: 0 },
+                { opacity: 1, duration: 0.1 },
+                0.02,
+              )
+              /* The destination is a small square, and the shell keeps its own
+                 1.574:1 ratio all the way in — so at the end it is a wide, short
+                 sliver sitting inside a square. Its printed detail is dropped
+                 before it lands, or it reads as squashed text rather than as a
+                 tape whose label has gone dark. */
+              .to(
+                [ejectLabel, ejectMechanism],
+                { opacity: 0, duration: 0.22 },
+                0.5,
+              )
+              /* The tape has to clear well before the trigger ends. A fade that
+                 starts at 0.92 only has the last 8% of the track to run in, so
+                 the proxy was still ~0.8 opaque when the seam released it. */
+              .to(ejectProxy, { opacity: 0, duration: 0.14 }, 0.84)
+              // Work now enters on the same clock as everything above it.
+              .fromTo(
+                workShell,
+                { opacity: 0, scale: 0.94, y: 18 },
+                {
+                  opacity: 1,
+                  scale: 1,
+                  y: 0,
+                  transformOrigin: '50% 50%',
+                  duration: 0.65,
+                },
+                0.35,
+              )
+
+            // The house masked-slot rise. Work is `data-no-heading-reveal`, so
+            // it had never received the reveal the other sections share.
+            seam
+              .fromTo(
+                workEyebrow,
+                { yPercent: 105, opacity: 0 },
+                { yPercent: 0, opacity: 1, duration: 0.18 },
+                0.62,
+              )
+              .fromTo(
+                workTitle,
+                { yPercent: 105, opacity: 0 },
+                { yPercent: 0, opacity: 1, duration: 0.18 },
+                0.66,
               )
           }
         })

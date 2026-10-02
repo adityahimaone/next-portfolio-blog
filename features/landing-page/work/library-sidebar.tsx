@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
-import { motion, useSpring, useTransform } from 'motion/react'
+import { motion } from 'motion/react'
 import { Cover } from '@/features/booth/cover'
 import {
   GITHUB_URL,
@@ -116,6 +116,8 @@ type LibraryRowProps = {
   position: number
   total: number
   isActive: boolean
+  /** True for the row the scroll is travelling toward, before it arrives. */
+  isPending?: boolean
   onSelect: () => void
 }
 
@@ -124,18 +126,14 @@ function LibraryRow({
   position,
   total,
   isActive,
+  isPending,
   onSelect,
 }: LibraryRowProps) {
-  // Springs, then written as one transform string so the row stays on the GPU.
-  const lift = useSpring(isActive ? -2 : 0, {
-    stiffness: 320,
-    damping: 26,
-  })
-  const transform = useTransform(
-    lift,
-    (value) => `translate3d(0, ${value}px, 0)`,
-  )
-
+  /* The active row used to lift itself 2px while each of the others sat still,
+     so changing track read as two rows twitching rather than as one thing moving
+     down the list. Now the rows hold still and a single rule travels between
+     them — the same reading as a playhead on a tape deck, and it means the
+     distance between track 01 and track 04 is legible as distance. */
   return (
     /* The button carries the option role and is the listbox's DIRECT child.
        An option has to be a direct child of its listbox, and a list item
@@ -148,17 +146,41 @@ function LibraryRow({
        focusable descendant. `list-style: none` on the list already suppresses
        the markers, and the ul/li pairing carries no meaning here that the
        explicit roles do not already state. */
-    <motion.button
+    <button
       id={`library-item-${track.id}`}
       type="button"
       role="option"
       aria-selected={isActive}
       aria-posinset={position + 1}
       aria-setsize={total}
-      style={{ transform }}
-      className={`${styles.libraryItem} ${styles.libraryRow}`}
+      data-pending={isPending || undefined}
+      className={`${styles.libraryItem} ${styles.libraryRow} ${
+        isActive ? styles.libraryRowActive : ''
+      }`}
       onClick={onSelect}
     >
+      {/* One rule that travels between rows. Previously each row lifted itself
+          2px, so a change read as two rows twitching rather than as one thing
+          moving down the list. `layoutId` hands Motion the old box and the new
+          one and it interpolates between them, which also makes the gap between
+          track 01 and track 04 legible as distance.
+
+          Rendered only on the active row: that is what gives layoutId the second
+          box to measure, and it keeps the element out of the listbox's own
+          children, which the role requires to be options. */}
+      {isActive && (
+        <motion.span
+          aria-hidden="true"
+          className={styles.libraryIndicator}
+          layoutId="library-indicator"
+          transition={{
+            type: 'spring',
+            stiffness: 420,
+            damping: 34,
+            mass: 0.6,
+          }}
+        />
+      )}
       <span className={styles.libraryArt}>
         {/* Through Cover rather than next/image: a project with no artwork
             (SeaPhantom P2P, Labgrownbeasts) has an empty `cover`, and
@@ -182,7 +204,7 @@ function LibraryRow({
           <i />
         </span>
       )}
-    </motion.button>
+    </button>
   )
 }
 

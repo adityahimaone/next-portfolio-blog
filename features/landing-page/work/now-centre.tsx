@@ -1,6 +1,11 @@
 'use client'
 
-import { motion, useMotionValueEvent, type MotionValue } from 'motion/react'
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  type MotionValue,
+} from 'motion/react'
 import { useState } from 'react'
 import { Cover } from '@/features/booth/cover'
 import type { LibraryTrack } from './library-data'
@@ -33,39 +38,58 @@ export function NowCentre({
     <div className={styles.centre}>
       {/* Top band: 1fr of the 1fr/2fr split — artwork, metadata. */}
       <div className={styles.centreTop}>
-        <motion.div
-          key={`art-${track.id}`}
-          className={styles.centreArtWrap}
-          initial={{ opacity: 0, transform: 'translate3d(0, 10px, 0)' }}
-          animate={{ opacity: 1, transform: 'translate3d(0, 0, 0)' }}
-          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <button
-            type="button"
-            className={styles.centreArt}
-            onClick={onOpenLiner}
-            aria-label={`Open liner notes for ${track.title}`}
-          >
-            {/* Cover, not next/image: an empty `cover` throws in next/image,
-                and two of the six releases have no artwork. The button is
-                already 1:1, so Cover fills it exactly. */}
-            <Cover
-              seed={track.slug}
-              title={track.title}
-              src={track.cover || undefined}
-              sizes="(max-width: 900px) 60vw, 320px"
-              priority={track.id === 0}
-            />
-            <span className={styles.centreArtScrim} />
-          </button>
-        </motion.div>
+        {/* A sleeve swap, not a cross-dissolve. The outgoing sleeve scales down
+            and blurs as it goes, the incoming one arrives slightly oversized and
+            settles — so at no point are two half-legible covers stacked on top of
+            each other, which is what a plain AnimatePresence crossfade does to a
+            square. Both live in one grid cell and overlap only in the frames
+            where neither is readable. */}
+        <div className={styles.centreArtWrap}>
+          {/* The eject handoff's destination. The seam timeline in
+              useRackAnimations measures this box every frame while the cassette
+              is in flight, and the class name is not reachable from the rack's
+              stylesheet, so it is addressed by attribute. */}
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={`out-${track.id}`}
+              className={styles.centreArtLayer}
+              initial={{ opacity: 0, scale: 1.06 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.92, filter: 'blur(3px)' }}
+              transition={{
+                duration: 0.34,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+            >
+              <button
+                type="button"
+                className={styles.centreArt}
+                data-handoff-target=""
+                onClick={onOpenLiner}
+                aria-label={`Open liner notes for ${track.title}`}
+              >
+                {/* Cover, not next/image: an empty `cover` throws in next/image,
+                    and two of the six releases have no artwork. The button is
+                    already 1:1, so Cover fills it exactly. */}
+                <Cover
+                  seed={track.slug}
+                  title={track.title}
+                  src={track.cover || undefined}
+                  sizes="(max-width: 900px) 60vw, 320px"
+                  priority={track.id === 0}
+                />
+                <span className={styles.centreArtScrim} />
+              </button>
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
         <motion.div
           key={`meta-${track.id}`}
           className={styles.centreMeta}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.24, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         >
           {/* The title already headlines the banner above, so this block carries
               the supporting metadata instead of repeating it. */}

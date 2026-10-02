@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { motion, useScroll, useTransform } from 'motion/react'
 import { AmbientBackdrop } from './ambient-backdrop'
 import { ArtistPanel } from './artist-panel'
 import { GlassFilters } from './glass-filters'
@@ -74,16 +73,6 @@ export function Work({
 
   const track: LibraryTrack = LIBRARY_TRACKS[activeIndex] ?? LIBRARY_TRACKS[0]
   const linerTrack = LIBRARY_TRACKS.find((item) => item.id === linerId) ?? null
-
-  const { scrollYProgress: entrance } = useScroll({
-    target: sectionRef,
-    offset: ['start end', 'start start'],
-  })
-  const entranceStyle = useTransform(
-    entrance,
-    (value) => `scale(${0.97 + value * 0.03})`,
-  )
-  const entranceOpacity = useTransform(entrance, [0, 0.55, 1], [0, 1, 1])
 
   useEffect(() => {
     if (!scrollDriven) setIsPlaying(false)
@@ -160,14 +149,13 @@ export function Work({
       <div className={styles.stage}>
         <AmbientBackdrop palette={track.palette} />
 
-        <motion.div
-          className={styles.shell}
-          style={
-            scrollDriven
-              ? { transform: entranceStyle, opacity: entranceOpacity }
-              : undefined
-          }
-        >
+        {/* The entrance is scrubbed by the seam timeline in useRackAnimations,
+            which reaches this node through the data attribute — the class lives
+            in this module and is not visible from the rack's stylesheet. Motion
+            used to own the entrance, but it read raw window scroll while the
+            experience section above ran on Lenis-smoothed GSAP, so the two
+            sides of the handoff ran on different clocks. */}
+        <div className={styles.shell} data-work-shell>
           <PlayerChrome query={query} onQueryChange={setQuery} />
 
           <PlayerBanner
@@ -205,7 +193,7 @@ export function Work({
             onPrev={() => go(-1)}
             onNext={() => go(1)}
           />
-        </motion.div>
+        </div>
 
         {/* Keeps every project as real text for crawlers, since the sidebar rows
             are icon-plus-label only. */}

@@ -1,7 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CASSETTE_THEMES } from './shared'
+import {
+  CassetteFace,
+  cassetteAccentVars,
+  cassetteThemeVars,
+} from './cassette-face'
 import { SilkscreenLabel } from './primitives'
 import styles from './rack-01.module.css'
 import { SectionHeading } from './section-heading'
@@ -25,11 +29,9 @@ const KNOB_ROTATIONS = [0, 135, 270, 405]
 export function Experience({
   selected,
   setSelected,
-  projectDividerRef,
 }: {
   selected: number
   setSelected: React.Dispatch<React.SetStateAction<number>>
-  projectDividerRef: React.RefObject<HTMLDivElement | null>
 }) {
   const experience = EXPERIENCES[selected]
   const description =
@@ -140,8 +142,6 @@ export function Experience({
                       (selected + offset + EXPERIENCES.length) %
                       EXPERIENCES.length
                     const item = EXPERIENCES[index]
-                    const theme =
-                      CASSETTE_THEMES[index % CASSETTE_THEMES.length]
                     return (
                       <button
                         type="button"
@@ -149,56 +149,12 @@ export function Experience({
                         onClick={() => setSelected(index)}
                         aria-pressed={offset === 0}
                         className={`${styles.cassette} ${offset === 0 ? styles.cassetteActive : offset < 0 ? styles.cassettePrevious : styles.cassetteNext}`}
-                        style={
-                          {
-                            '--cassette-shell': theme.shell,
-                            '--cassette-shell-deep': theme.shellDeep,
-                            '--cassette-label': theme.label,
-                            '--cassette-ink': theme.ink,
-                            '--cassette-accent': theme.accent,
-                          } as React.CSSProperties
-                        }
+                        style={cassetteThemeVars(index)}
                       >
-                        <span className={styles.cassetteBrand}>
-                          <b>AH / STUDIO</b> / TYPE II · HIGH BIAS 70μs
-                        </span>
-                        <div className={styles.cassetteLabel}>
-                          <small>
-                            {item.type} / {String(index + 1).padStart(2, '0')}
-                          </small>
-                          <strong>{item.company}</strong>
-                          <span>{item.role}</span>
-                        </div>
-                        <div
-                          className={styles.cassetteMechanism}
-                          aria-hidden="true"
-                        >
-                          <span className={styles.tapeWheel}>
-                            {Array.from({ length: 6 }, (_, i) => (
-                              <i key={i} />
-                            ))}
-                          </span>
-                          <span className={styles.cassetteTapePath}>
-                            <i />
-                            <b />
-                          </span>
-                          <span className={styles.tapeWheel}>
-                            {Array.from({ length: 6 }, (_, i) => (
-                              <i key={i} />
-                            ))}
-                          </span>
-                        </div>
-                        <div
-                          className={styles.cassetteHeadAssembly}
-                          aria-hidden="true"
-                        >
-                          <i />
-                          <b />
-                          <i />
-                        </div>
-                        <span className={styles.cassetteFooter}>
-                          {item.period}
-                        </span>
+                        {/* The same face the eject handoff clones, so the
+                            cassette that leaves the bay is drawn by the same
+                            markup as the one sitting in it. */}
+                        <CassetteFace index={index} />
                       </button>
                     )
                   })}
@@ -212,7 +168,6 @@ export function Experience({
                 aria-label="Experience recordings"
               >
                 {EXPERIENCES.map((item, index) => {
-                  const theme = CASSETTE_THEMES[index % CASSETTE_THEMES.length]
                   return (
                     <button
                       type="button"
@@ -220,12 +175,7 @@ export function Experience({
                       aria-selected={selected === index}
                       key={item.id}
                       onClick={() => setSelected(index)}
-                      style={
-                        {
-                          '--cassette-label': theme.label,
-                          '--cassette-accent': theme.accent,
-                        } as React.CSSProperties
-                      }
+                      style={cassetteAccentVars(index)}
                     >
                       <span>{String(index + 1).padStart(2, '0')}</span>
                       <strong>{item.company}</strong>

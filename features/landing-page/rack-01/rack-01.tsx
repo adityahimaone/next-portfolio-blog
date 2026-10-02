@@ -7,6 +7,7 @@ import type { ArchiveRepo } from '@/features/projects/lib/github'
 import { About } from './section-about'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
+import { EjectProxy } from './eject-proxy'
 import { Experience } from './section-experience'
 import { Hero } from './section-hero'
 import { SignalDivider } from './section-signaldivider'
@@ -34,7 +35,6 @@ export default function Rack01LandingPage({
   archiveRepos: readonly ArchiveRepo[]
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const projectDividerRef = useRef<HTMLDivElement>(null)
   const [aboutIndex, setAboutIndex] = useState(0)
   const [aboutProgress, setAboutProgress] = useState(0)
   const [experienceIndex, setExperienceIndex] = useState(0)
@@ -66,12 +66,11 @@ export default function Rack01LandingPage({
       <SignalDivider />
       <Skills />
       <CableDivider />
-      <Experience
-        selected={experienceIndex}
-        setSelected={setExperienceIndex}
-        projectDividerRef={projectDividerRef}
-      />
+      <Experience selected={experienceIndex} setSelected={setExperienceIndex} />
       <Work archiveRepos={archiveRepos} />
+      {/* Portalled to the body: the handoff has to cross two `overflow: hidden`
+          sticky stages, so it cannot live inside either of them. */}
+      <EjectProxy />
       <Contact />
     </main>
   )

@@ -103,22 +103,66 @@ export function PlayerBanner({
         Work that ships.
       </WorkHeading>
 
+      {/* The banner used to fade up with its own children, which meant the
+          title, the supporting line and the play button all arrived together as
+          a flat wash. The title now uses the rack's masked-slot rise — it comes
+          up out of its own line box, the same motif every other section heading
+          uses — and the supporting copy stays as a quiet fade behind it. */}
       <motion.div
         key={track.id}
         className={styles.banner}
-        initial={{ opacity: 0, transform: 'translate3d(0, 10px, 0)' }}
-        animate={{ opacity: 1, transform: 'translate3d(0, 0, 0)' }}
-        transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+        initial="hidden"
+        animate="shown"
+        variants={{
+          hidden: {},
+          shown: { transition: { staggerChildren: 0.06 } },
+        }}
       >
         <div className={styles.bannerBody}>
-          <span className={styles.silkscreen}>
-            {trackLabel(activeIndex)} / {String(total).padStart(2, '0')} ·{' '}
+          <motion.span
+            className={styles.silkscreen}
+            variants={{
+              hidden: { opacity: 0 },
+              shown: { opacity: 1, transition: { duration: 0.2 } },
+            }}
+          >
+            {trackLabel(activeIndex)} / {String(total).padStart(2, '0')} ·{''}
             {track.album}
-          </span>
-          <h3 className={styles.bannerTitle}>{track.title}</h3>
-          <p className={styles.bannerSub}>
+          </motion.span>
+          <div className={styles.bannerTitleMask}>
+            {/* Motion's variant type does not admit `yPercent`, so the rise is
+                expressed as an em offset. The title's font-size is a clamp, so
+                `1.08em` tracks whatever size it resolved to and the start stays
+                just below the mask edge at every viewport. */}
+            <motion.h3
+              className={styles.bannerTitle}
+              variants={{
+                hidden: { y: '1.08em' },
+                shown: {
+                  y: '0em',
+                  transition: {
+                    duration: 0.42,
+                    ease: [0.16, 1, 0.3, 1],
+                  },
+                },
+              }}
+            >
+              {track.title}
+            </motion.h3>
+          </div>
+          <motion.p
+            className={styles.bannerSub}
+            variants={{
+              hidden: { opacity: 0, y: 6 },
+              shown: {
+                opacity: 1,
+                y: 0,
+                transition: { duration: 0.26, delay: 0.08 },
+              },
+            }}
+          >
             {track.role} · {track.genre} · {track.year}
-          </p>
+          </motion.p>
         </div>
         <button
           type="button"

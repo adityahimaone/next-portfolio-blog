@@ -21,7 +21,10 @@ export function WorkHeading({
 }) {
   return (
     <div className={styles.workHeading}>
-      <p className={styles.workEyebrow}>
+      {/* Read by the seam timeline in useRackAnimations. The class names here
+          are not reachable from the rack's stylesheet, so the masked rise that
+          every other section heading gets is wired up by data attribute. */}
+      <p className={styles.workEyebrow} data-work-eyebrow>
         <span className={styles.workIndex}>{index}</span>
         <span aria-hidden="true" className={styles.workSlash}>
           /
@@ -30,7 +33,9 @@ export function WorkHeading({
       </p>
       {/* vh-based so the heading always fits the fixed 100svh stage, and
           balanced so a two-word title breaks evenly instead of orphaning. */}
-      <h2 className={styles.workTitle}>{children}</h2>
+      <h2 className={styles.workTitle} data-work-title>
+        {children}
+      </h2>
     </div>
   )
 }

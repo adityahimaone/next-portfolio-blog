@@ -8133,60 +8133,168 @@
    page where the deck is. Sits between the deck and the footer, so it is
    outside the container the scroll choreography transforms.
 
-   Single column by design. It was a two-up sharing a row with a link list, but
-   pads 01 to 04 already carry those four destinations — so this block now has
-   the section's subject to itself instead of half a row and a duplicate. */
+   The accordion's ink comes from `--panel-ink*`, not `--room-ink*`. The room
+   tokens are light (`#f1eee5`) because the room is dark, but this band is
+   `--chassis` — cream — so the old hardcoded `#f1eee5` questions were light
+   ink on a cream field and washed out. Collapsed, a trigger is all the reader
+   sees, so it has to carry the same dark ink the deck note and the section
+   header use. */
 .contactBrief {
   width: 100%;
   max-width: 1180px;
   margin: clamp(40px, 6vh, 76px) auto 0;
   padding: 0 clamp(20px, 4vw, 48px);
 }
-.contactBriefFaq {
-  display: grid;
-  /* Two columns of question-and-answer pairs on a wide screen: four questions
-     is exactly four cells, so there is no ragged trailing gap. One column
-     below 768px. */
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-  gap: clamp(20px, 2.6vw, 40px);
+/* The silkscreen base rule ends in `color: #ffffff`, and the per-section
+   override only reaches `.sectionHeading > .silkscreen`. This label is a bare
+   child of `.contactBrief`, so it matched neither and rendered white-on-cream
+   in the light theme — which is why the heading read as missing. It takes the
+   same `--label-ink` the other section labels use, so it also carries the top
+   rule and the tracking those have. */
+.contactBrief > .silkscreen {
+  display: inline-flex;
+  width: fit-content;
+  padding-top: 6px;
+  border-top: 1.5px solid var(--label-hair);
+  color: var(--label-ink);
+  font: 750 10.5px var(--font-geist-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.contactBriefAccordion {
   margin: clamp(18px, 2vw, 26px) 0 0;
 }
-.contactBriefFaqItem {
-  min-width: 0;
+/* Each row owns its own hairline, so the open panel does not push a rule down
+   with it. `border-b` from the shadcn primitive is kept on the last child and
+   overridden to transparent mid-list by the rule below. */
+.contactBriefAccordionItem {
+  border-bottom: 1px solid var(--panel-hairline);
 }
-/* The question is the heading, not body copy: brighter ink and a rule above it,
-   matching how the deck's own readouts are set. */
-.contactBriefFaqItem dt {
-  display: grid;
-  gap: 9px;
-  margin: 0;
-  padding-top: 12px;
-  border-top: 1px solid rgba(244, 240, 232, 0.16);
-  color: #f1eee5;
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-size: clamp(15px, 1.5vw, 19px);
-  font-weight: 560;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
+.contactBriefAccordionItem:last-child {
+  border-bottom: 0;
+}
+.contactBriefAccordionTrigger {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(8px, 0.9vw, 14px);
+  min-height: 44px;
+  padding: 14px 0;
+  /* Closed rows sit back so the open one owns the page; the reference draws
+     the difference as a large type-size change, and at this weight the colour
+     step is what carries it. Neither state is below 4.5:1 — `panel-ink-muted`
+     is the resting value, so the collapsed questions stay readable on their
+     own, which is the whole point of collapsing them.
+
+     26px rather than the 52px this shipped with. At 52px the questions were
+     the largest type anywhere in the contact section — nearly twice the
+     section's own display size — and the longest ones wrapped to two lines,
+     which broke the single-line rhythm the reference is built on. 26px still
+     reads as caps-with-intent next to the 15-18px body copy, while letting
+     every question sit on one line at desktop width. */
+  color: var(--panel-ink-muted);
+  font-family: var(--font-syne), var(--font-space-grotesk), sans-serif;
+  font-size: clamp(17px, 2vw, 26px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-align: left;
+  text-transform: uppercase;
   text-wrap: balance;
+  /* The primitive underlines on hover, which is a link cue on a button. */
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out);
 }
-.contactBriefFaqItem dd {
-  max-width: 60ch;
-  margin: 8px 0 0;
-  color: #b6b3a9;
-  font-size: 13.5px;
-  line-height: 1.6;
+.contactBriefAccordionTrigger:hover {
+  text-decoration: none;
+  color: var(--panel-ink);
+}
+.contactBriefAccordionTrigger[data-state='open'] {
+  color: var(--panel-ink);
+}
+.contactBriefAccordionTrigger:focus-visible {
+  outline: 2px solid var(--signal-orange);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+/* The row number, set as the deck sets its own readouts: small mono, muted,
+   and out of the way until the row is hovered or open. */
+.contactBriefAccordionIndex {
+  flex-shrink: 0;
+  color: var(--panel-ink-muted);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  /* Baseline alignment against the caps keeps the number sitting on the cap
+     line rather than floating at the optical centre of the block. */
+  transform: translateY(-0.35em);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.contactBriefAccordionQuestion {
+  flex: 1;
+}
+.contactBriefAccordionTrigger[data-state='open']
+  .contactBriefAccordionIndex {
+  color: var(--signal-orange);
+}
+.contactBriefAccordionContent {
+  max-width: 62ch;
+  /* The primitive's default `pb-4 pt-0` is too tight under a trigger that
+     already carries its own 14px block padding. */
+  padding: 4px 0 20px clamp(8px, 0.9vw, 14px);
+  color: var(--panel-ink-muted);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 14px;
+  line-height: 1.62;
+  text-wrap: pretty;
+}
+/* The reveal. The height animation already runs on the Radix outer element
+   (globals.css `accordion-down`), so the two never fight: this only fades and
+   lifts the copy inside it. Opacity and transform alone, so it does not
+   re-layout while the row above it is still changing height. */
+@keyframes brief-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.contactBriefAccordionItem[data-state='open'] .contactBriefAccordionContent {
+  animation: brief-reveal var(--dur-med) var(--ease-out) both;
+}
+/* The chevron is the section's only "there is more here" cue, so it inherits
+   the panel ink rather than the primitive's `text-muted-foreground`, which is
+   a Tailwind token this module never sets. */
+.contactBriefAccordionTrigger > svg {
+  flex-shrink: 0;
+  align-self: center;
+  color: var(--panel-ink-muted);
+  transition: transform var(--dur-med) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.contactBriefAccordionTrigger:hover > svg {
+  color: var(--signal-orange);
+}
+@media (prefers-reduced-motion: reduce) {
+  .contactBriefAccordionTrigger > svg {
+    transition: none;
+  }
+  /* The reveal is the only motion here that carries meaning, so it is the one
+     that has to go: the copy still appears, it just stops sliding up. */
+  .contactBriefAccordionItem[data-state='open'] .contactBriefAccordionContent {
+    animation: none;
+  }
 }
 @media (max-width: 768px) {
   .contactBrief {
     margin-top: 32px;
     padding: 0 20px;
   }
-  .contactBriefFaq {
-    gap: 18px;
-  }
-  .contactBriefFaqItem dt {
-    font-size: 15px;
+  .contactBriefAccordionContent {
+    padding-left: 0;
   }
 }
 

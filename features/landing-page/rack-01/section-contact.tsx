@@ -5,6 +5,12 @@ import { FOOTER_MOTTO, FOOTER_TANGLE_LINES, RESUME_URL } from './shared'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ScanLoader } from '../scan-loader'
 import { TangleFooter } from '@/components/ui/tangle-footer'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
 import styles from './rack-01.module.css'
 import { SectionHeading } from './section-heading'
@@ -80,22 +86,6 @@ const CONTACT_PADS = [
   { label: 'Hat', detail: 'Bright noise', note: 1200 },
   { label: 'Minor', detail: 'A minor', note: 220 },
   { label: 'Bell', detail: 'Metal tone', note: 1046.5 },
-  /*
-    X, appended rather than inserted.
-
-    The four link pads were Email, LinkedIn, GitHub and Résumé, which left X
-    with nowhere to live once the duplicate link list below the deck was removed.
-    Appending is the only safe way to add a pad: `triggerSound` special-cases
-    absolute indices (5, 13 for the noise buffers) and the sweep derives its
-    order from the array, so inserting at index 4 would re-map every note after
-    it. The grid is `repeat(4, ...)` so this lands on a new row on its own.
-  */
-  {
-    label: 'X',
-    detail: 'Short-form notes',
-    href: 'https://x.com/adityahimaone',
-    note: 1174.66,
-  },
 ] as const
 
 const CONTACT_PAD_COLORS = [
@@ -115,9 +105,6 @@ const CONTACT_PAD_COLORS = [
   '#cf62c3',
   '#746fe8',
   '#4bafd1',
-  // Pad 17 (X). The array indexes by pad number, so a new pad needs a colour
-  // at its own index or it renders with the previous pad's `--pad-color`.
-  '#8a9199',
 ] as const
 
 /**
@@ -521,9 +508,15 @@ export function Contact() {
         the same four things twice and made the pad grid look like an accident.
         One copy of a link is the point.
 
-        The FAQ is a single column now rather than a two-up with that list. It
-        has the deck to itself, so it can carry the contact section's whole
-        subject instead of sharing a row with a duplicate.
+        A Radix accordion rather than an open `<dl>`. Four always-open answers
+        is a wall of text that reads as a page of copy below the deck; four
+        collapsed ones read as a list of things this person has already
+        answered, which is what they are. It is also why the questions have to
+        be legible on their own — collapsed, they are all the reader sees. The
+        shadcn demo styles its trigger at `text-foreground/20`, which is the
+        near-invisible version of this component, so the ink comes from the
+        contact section's own `--room-ink` tokens instead and the demo's
+        ghosted `01`-style numbering is kept but given real contrast.
 
         Placement is deliberate: between `.contactDeck` and `<footer>`, because
         `use-rack-animations.ts:444-522` queries specific children of
@@ -536,14 +529,32 @@ export function Contact() {
       */}
       <div className={styles.contactBrief}>
         <SilkscreenLabel>BEFORE YOU WRITE</SilkscreenLabel>
-        <dl className={styles.contactBriefFaq}>
-          {CONTACT_QUESTIONS.map((entry) => (
-            <div key={entry.question} className={styles.contactBriefFaqItem}>
-              <dt>{entry.question}</dt>
-              <dd>{entry.answer}</dd>
-            </div>
+        <Accordion
+          type="single"
+          collapsible
+          defaultValue="0"
+          className={styles.contactBriefAccordion}
+        >
+          {CONTACT_QUESTIONS.map((entry, index) => (
+            <AccordionItem
+              key={entry.question}
+              value={String(index)}
+              className={styles.contactBriefAccordionItem}
+            >
+              <AccordionTrigger className={styles.contactBriefAccordionTrigger}>
+                <span className={styles.contactBriefAccordionIndex}>
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span className={styles.contactBriefAccordionQuestion}>
+                  {entry.question}
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className={styles.contactBriefAccordionContent}>
+                {entry.answer}
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </dl>
+        </Accordion>
       </div>
 
       <footer className={styles.footer}>

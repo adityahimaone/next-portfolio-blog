@@ -20,6 +20,10 @@ const ROUTE_HUES: Record<string, string> = {
   '/projects': '#ff5a1f',
   '/bookmarks': '#2dd4bf',
   '/blog': '#a78bfa',
+  // The guides are the blog's long-form sibling and wear the same reader, so
+  // they take the same wash. Without this they inherited the orange default,
+  // which read as a different room from the page furniture they share.
+  '/guides': '#a78bfa',
   '/mix': '#f472b6',
   '/music': '#38bdf8',
   '/contact': '#fbbf24',

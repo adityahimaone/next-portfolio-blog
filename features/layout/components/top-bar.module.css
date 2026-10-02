@@ -16,10 +16,12 @@
   --topbar-mark-glow: drop-shadow(0 0 8px rgba(255, 90, 31, 0.7));
   --topbar-toggle: rgba(244, 240, 232, 0.9);
   /* A normal-flow bar rather than a fixed overlay, and the first child of
-     .heroStage so it scrolls away with the hero. It shares the stage's gutter
-     rather than cancelling it: the horizontal padding is what aligns the chips
-     and the hairline to the hero panel's own box, and the vertical gutter is
-     the stage's to own. */
+     .heroStage so it scrolls away with the hero. It does not carry a
+     horizontal gutter on desktop: the inner row is already capped to the same
+     1500px box as the hairline and centred inside the bar, so a gutter here
+     would only push the chips in from the line's ends. The phone fork below
+     restores one, because there the inner row is not yet capped and the stage's
+     own 18px inset is the only thing tying the bar to the panel. */
   position: relative;
   z-index: 50;
   /* No negative margin. It used to pull the bar up by exactly the stage's top
@@ -32,10 +34,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  /* Top padding is the band's depth: the hairline is this box's top edge, so
-     everything below it — the chips included — sits inside the band, the same
-     relationship the hero panel's content has to its own border-top. */
-  padding: 18px clamp(20px, 4vw, 64px) 16px;
+  /* Top padding is the band's depth: the hairline is this box's bottom edge,
+     so everything above it — the chips included — sits inside the band, the
+     same relationship the hero panel's content has to its own border-top.
+     The horizontal padding is 0 on desktop because the inner row is already
+     capped to the same 1500px box as the hairline and centred inside it: a
+     gutter here would only pull the chips in from the line's two ends and
+     reintroduce the overhang the cap exists to remove. */
+  padding: 18px 0 16px;
 }
 
 /* The chips are capped to the same 1500px box as the hairline and the hero
@@ -50,7 +56,7 @@
    they were outside the line they are supposed to sit inside.
 
    An inner wrapper rather than a max-width on the bar: the bar has to keep
-   filling the stage, because the hairline is its top edge and is measured
+   filling the stage, because the hairline is its bottom edge and is measured
    against the bar's padding box. Capping the bar would have moved the line as
    well as the chips. */
 .topBarInner {
@@ -63,23 +69,7 @@
   margin-inline: auto;
 }
 
-/* At and past the cap the bar's box IS the 1500px content box, so the stage
-   gutter inside it is the one thing separating the chips from the line's ends —
-   the logo sat 64px in from the left end and the toggle 64px in from the right
-   at exactly 1628px, which is the same overhang the report named, just at its
-   smallest. Past that width the gutter is the leftover space outside the cap
-   and the bar needs no padding of its own: the inner row already fills the
-   bar, so the two boxes coincide and the chips land on the line's ends.
-
-   1628px is the exact crossover — stage gutter 64px on each side plus 1500px of
-   content — so this is a `min-width` on the cap, not an approximation. */
-@media (min-width: 1628px) {
-  .topBar {
-    padding-inline: 0;
-  }
-}
-
-/* The hairline is the band's top edge, so the chips sit below it, inside.
+/* The hairline is the band's bottom edge, so the chips sit above it, inside.
    It has to land on the same box as the hero panel's own border-top:
    `left: 0` / `right: 0` span the stage's content box (this bar has no border,
    so its padding box IS that box), and the cap plus auto margins reproduce
@@ -87,8 +77,8 @@
    growing at the same viewport. */
 .topBar::before {
   position: absolute;
-  top: 0;
   right: 0;
+  bottom: 0;
   left: 0;
   max-width: 1500px;
   height: 1px;

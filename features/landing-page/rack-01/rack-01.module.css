@@ -80,6 +80,7 @@
   --dev-edge-dim: #8f928e;
   --dev-edge-deep: #777c7b;
   --dev-screen: #101719;
+  --dev-screen-tint: rgba(16, 23, 25, 0.72);
   --dev-ink: rgba(38, 49, 58, 0.65);
   --dev-ink-strong: #1b242a;
   --dev-ink-dim: #8a8d87;
@@ -139,6 +140,7 @@
   --dev-edge-dim: #4a5056;
   --dev-edge-deep: #4a5056;
   --dev-screen: #0b0f11;
+  --dev-screen-tint: rgba(11, 15, 17, 0.72);
   --dev-ink: #8d8f8a;
   --dev-ink-strong: #d9d6cd;
   --dev-ink-dim: #4a4f55;
@@ -243,9 +245,13 @@
   backface-visibility: hidden;
   will-change: transform, opacity;
 } /* ponytail: keep chassis solid; add liquid-glass only to controls. */
+/* This matched `bg-[#101719]` and `bg-[#11191b]`, which the theme commit
+   replaced with `bg-[var(--dev-screen)]`. Both selectors stopped matching and
+   the screen and deck-display panels silently lost this whole glass pass while
+   the knob and jog rules kept it. `bg-[#152024]` survives — the cassette
+   window still uses that literal. */
 .heroDeviceWall [data-hero-device] [class*='rounded-full'],
-.heroDeviceWall [data-hero-device] [class*='bg-[#101719]'],
-.heroDeviceWall [data-hero-device] [class*='bg-[#11191b]'],
+.heroDeviceWall [data-hero-device] [class*='bg-[var(--dev-screen)]'],
 .heroDeviceWall [data-hero-device] [class*='bg-[#152024]'] {
   border-color: rgba(255, 255, 255, 0.42);
   background-image: radial-gradient(
@@ -265,10 +271,12 @@
   backdrop-filter: blur(8px) saturate(1.65);
   -webkit-backdrop-filter: blur(8px) saturate(1.65);
 }
-.heroDeviceWall [data-hero-device] [class*='bg-[#101719]'],
-.heroDeviceWall [data-hero-device] [class*='bg-[#11191b]'],
+.heroDeviceWall [data-hero-device] [class*='bg-[var(--dev-screen)]'],
 .heroDeviceWall [data-hero-device] [class*='bg-[#152024]'] {
-  background-color: rgba(16, 23, 25, 0.72);
+  /* Was `rgba(16, 23, 25, 0.72)` — the light-theme ink. It still reads as a
+     wash over the light `--dev-screen`, but it was doing nothing for the dark
+     theme's near-black screen. Token so each scheme tints its own. */
+  background-color: var(--dev-screen-tint);
 }
 .heroDeviceWall::after {
   position: absolute;
@@ -4333,9 +4341,12 @@
   text-underline-offset: 3px;
 }
 @media (prefers-reduced-transparency: reduce) {
+  /* The reduced-transparency escape hatch for the device wall. Kept in sync
+     with the glass rule at the top of this file: it carried the same dead
+     `bg-[#101719]` / `bg-[#11191b]` literals, so opting out of transparency
+     never reached the screens — they had already stopped being blurred. */
   .heroDeviceWall [data-hero-device] [class*='rounded-full'],
-  .heroDeviceWall [data-hero-device] [class*='bg-[#101719]'],
-  .heroDeviceWall [data-hero-device] [class*='bg-[#11191b]'],
+  .heroDeviceWall [data-hero-device] [class*='bg-[var(--dev-screen)]'],
   .heroDeviceWall [data-hero-device] [class*='bg-[#152024]'],
   .clip,
   .clipDetail,

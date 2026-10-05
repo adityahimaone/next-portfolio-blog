@@ -49,9 +49,13 @@ export function CassetteFace({ index }: { index: number }) {
           ))}
         </span>
       </div>
+      {/* Pin, head, pin. The assembly lays out with `space-around`, so the
+          trailing pin is load-bearing: without it the head block sits left of
+          centre with a bare gap down the right-hand side. */}
       <div className={styles.cassetteHeadAssembly} aria-hidden="true">
         <i />
         <b />
+        <i />
       </div>
       <span className={styles.cassetteFooter}>{item.period}</span>
     </>

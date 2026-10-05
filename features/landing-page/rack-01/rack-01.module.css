@@ -10002,7 +10002,50 @@
   transform: none;
 }
 
-/* Experience to projects: the deck's tape threads into the library. */
+/* The empty well the eject leaves behind.
+
+   A cassette bay with no tape in it is not flat black — it is a recess with a
+   front lip and a shadowed floor. Without this the tape appears to evaporate
+   off a painted panel; with it, the frame it leaves is visibly a hole, which
+   is what tells the reader the tape was *taken out* rather than cross-faded.
+
+   Driven by `data-ejected` on the carousel, written by the seam timeline the
+   same way the transform is, so it is scrubbed and reversible rather than a
+   one-shot class. */
+.tapeCarousel[data-ejected] {
+  background: radial-gradient(
+      ellipse 62% 46% at 50% 50%,
+      rgba(0, 0, 0, 0.92),
+      rgba(0, 0, 0, 0.55) 62%,
+      transparent 78%
+    ),
+    linear-gradient(
+      90deg,
+      transparent 49.7%,
+      rgba(255, 255, 255, 0.05) 50%,
+      transparent 50.3%
+    ),
+    #0c0e0c;
+  box-shadow:
+    inset 0 10px 26px rgba(0, 0, 0, 0.95),
+    inset 0 -4px 12px rgba(0, 0, 0, 0.7),
+    inset 0 1px rgba(255, 255, 255, 0.16);
+}
+
+/* The front lip of the well: a bright hairline along the top edge and a dark
+   one along the bottom, so the recess has a lip the tape passes behind. */
+.tapeCarousel[data-ejected]::before {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.8);
+  content: '';
+  pointer-events: none;
+}
+
 .ejectProxy {
   position: fixed;
   z-index: 100;

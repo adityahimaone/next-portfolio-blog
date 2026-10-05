@@ -7,7 +7,7 @@ import { SectionHeading } from './section-heading'
 import { Screw } from '@/components/ui/screw'
 import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
 
-/** Note frequency map for the 24 chromatic piano keys, C3 to B4. */
+/** Note frequency map for the 36 chromatic piano keys, C3 to B5. */
 const KEYBOARD_SHORTCUTS: Record<
   string,
   { type: 'pad' | 'key'; index: number }
@@ -18,25 +18,45 @@ const KEYBOARD_SHORTCUTS: Record<
   '4': { type: 'pad', index: 3 },
   '5': { type: 'pad', index: 4 },
   '6': { type: 'pad', index: 5 },
+  // White keys on the home row, C3 upward.
   a: { type: 'key', index: 0 },
-  w: { type: 'key', index: 14 },
   s: { type: 'key', index: 1 },
-  e: { type: 'key', index: 15 },
   d: { type: 'key', index: 2 },
   f: { type: 'key', index: 3 },
-  t: { type: 'key', index: 16 },
   g: { type: 'key', index: 4 },
-  y: { type: 'key', index: 17 },
   h: { type: 'key', index: 5 },
-  u: { type: 'key', index: 18 },
   j: { type: 'key', index: 6 },
   k: { type: 'key', index: 7 },
-  o: { type: 'key', index: 19 },
   l: { type: 'key', index: 8 },
+  ';': { type: 'key', index: 9 },
+  "'": { type: 'key', index: 10 },
+  // Black keys on the row above, in the gaps between them.
+  w: { type: 'key', index: 21 },
+  e: { type: 'key', index: 22 },
+  t: { type: 'key', index: 24 },
+  y: { type: 'key', index: 25 },
+  u: { type: 'key', index: 26 },
+  o: { type: 'key', index: 27 },
+  p: { type: 'key', index: 28 },
+  '[': { type: 'key', index: 30 },
+  ']': { type: 'key', index: 31 },
 }
 
 const SKILLS = MIXER_DATA.flatMap((group) => group.channels)
 
+/* Three octaves, C3 to B5.
+
+   This started at two octaves. Fourteen white keys across a 1169px keybed is
+   83px of width per key against 112px of length — nearly square, and a square
+   key is not a piano key. Keys are long and narrow in proportion (roughly 1:6
+   on a real full-size board), so widening the range is what lets each key stay
+   narrow enough to read as a key at this width. Adding an octave bought the
+   proportion; it was not for extra range on its own.
+
+   The count is used to position the black keys and to bound the keyboard
+   shortcuts, so it is stated once here rather than repeated as a literal 14 or
+   24 in three places — those are what silently drift apart when the range
+   changes. */
 const WHITE_KEY_NOTES = [
   { note: 'C3', freq: 130.81 },
   { note: 'D3', freq: 146.83 },
@@ -52,7 +72,17 @@ const WHITE_KEY_NOTES = [
   { note: 'G4', freq: 392.0 },
   { note: 'A4', freq: 440.0 },
   { note: 'B4', freq: 493.88 },
+  { note: 'C5', freq: 523.25 },
+  { note: 'D5', freq: 587.33 },
+  { note: 'E5', freq: 659.25 },
+  { note: 'F5', freq: 698.46 },
+  { note: 'G5', freq: 783.99 },
+  { note: 'A5', freq: 880.0 },
+  { note: 'B5', freq: 987.77 },
 ]
+
+/** How many white keys are drawn. Every layout figure keys off this. */
+const WHITE_KEY_COUNT = WHITE_KEY_NOTES.length
 
 const BLACK_KEY_NOTES = [
   { note: 'C#3', freq: 138.59, whiteIndex: 0 },
@@ -65,7 +95,24 @@ const BLACK_KEY_NOTES = [
   { note: 'F#4', freq: 369.99, whiteIndex: 10 },
   { note: 'G#4', freq: 415.3, whiteIndex: 11 },
   { note: 'A#4', freq: 466.16, whiteIndex: 12 },
+  { note: 'C#5', freq: 554.37, whiteIndex: 14 },
+  { note: 'D#5', freq: 622.25, whiteIndex: 15 },
+  { note: 'F#5', freq: 739.99, whiteIndex: 17 },
+  { note: 'G#5', freq: 830.61, whiteIndex: 18 },
+  { note: 'A#5', freq: 932.33, whiteIndex: 19 },
 ]
+
+/* Shortcut indices count through the CHROMATIC scale, which is every key in
+   playing order — whites and blacks interleaved, exactly as they sit on the
+   board. So a shortcut has to be an index into that, not into a white-key
+   list: index 21 is C#4, and mapping it against `WHITE_KEY_NOTES` would have
+   played C4-sharp a whole tone off.
+
+   Black keys are addressed by the chromatic index of the white key they sit
+   *after*, which is why the ranges below are 21..31 and not contiguous: a
+   black key occupies every index whose white key is not B or E, and E-F have
+   none. */
+const BLACK_KEY_CHROMATIC_OFFSET = WHITE_KEY_COUNT
 
 const PAD_SOUND_TYPES = [
   { type: 'kick', baseFreq: 160, dropFreq: 42, decay: 0.28 }, // HTML (808 Kick)
@@ -332,13 +379,19 @@ export function Skills() {
           const skill = MIXER_DATA[0].channels[mapping.index]
           if (skill) handlePadClick(skill, mapping.index)
         } else if (mapping.type === 'key') {
-          if (mapping.index < 14) {
-            const keyObj = WHITE_KEY_NOTES[mapping.index]
-            if (keyObj) handleKeyClick(keyObj.note, keyObj.freq, mapping.index)
-          } else {
-            const blackObj = BLACK_KEY_NOTES[mapping.index - 14]
-            if (blackObj)
-              handleKeyClick(blackObj.note, blackObj.freq, mapping.index)
+          /* One chromatic scale, resolved through a single lookup rather than
+             a white/black split at a hardcoded 14. The index below 14 is a
+             white key and above it a black one, so the previous
+             `index < 14 ? WHITE_KEY_NOTES[index] : BLACK_KEY_NOTES[index - 14]`
+             was only ever correct while the range was exactly two octaves —
+             and it would have silently read the wrong note the moment the
+             range changed, with no type to catch it. */
+          const note =
+            mapping.index < BLACK_KEY_CHROMATIC_OFFSET
+              ? WHITE_KEY_NOTES[mapping.index]
+              : BLACK_KEY_NOTES[mapping.index - BLACK_KEY_CHROMATIC_OFFSET - 1]
+          if (note) {
+            handleKeyClick(note.note, note.freq, mapping.index)
           }
         }
       }
@@ -789,7 +842,20 @@ export function Skills() {
               </div>
             </div>
 
-            <div className={styles.controllerKeys}>
+            <div
+              className={styles.controllerKeys}
+              /* The white-key count lives in the note table, but the grid
+                 columns and the black keys' width are CSS, and CSS cannot read
+                 a JS array's length. Stated here as the one place both read
+                 it, so the two can never disagree — a hardcoded `14` in either
+                 sheet silently produces a board whose black keys are out of
+                 position the moment the range changes. */
+              style={
+                {
+                  '--white-key-count': String(WHITE_KEY_COUNT),
+                } as React.CSSProperties
+              }
+            >
               <div className={styles.whiteKeys}>
                 {WHITE_KEY_NOTES.map((keyObj, index) => (
                   <button
@@ -807,22 +873,36 @@ export function Skills() {
                 className={styles.blackKeys}
                 aria-label="Sharp and flat keys"
               >
-                {BLACK_KEY_NOTES.map((blackObj, index) => (
-                  <button
-                    type="button"
-                    key={blackObj.note}
-                    aria-label={`Play ${blackObj.note} key`}
-                    aria-pressed={activeKey === index + 14}
-                    style={
-                      {
-                        '--key-position': `${((blackObj.whiteIndex + 1) / 14) * 100}%`,
-                      } as React.CSSProperties
-                    }
-                    onPointerDown={() =>
-                      handleKeyClick(blackObj.note, blackObj.freq, index + 14)
-                    }
-                  />
-                ))}
+                {BLACK_KEY_NOTES.map((blackObj, index) => {
+                  /* The chromatic index of this black key: one past the white
+                     key it follows, plus one for every black key already
+                     passed. Positioning and shortcut lookup both key off this
+                     same number, so the shortcut for C#4 lights the C#4 key
+                     rather than the nearest white one. */
+                  const chromatic = BLACK_KEY_CHROMATIC_OFFSET + index + 1
+                  /* Where it sits: on the boundary between two white keys, as
+                     a real black key does — not over the centre of the one it
+                     sharpens. Derived from the white-key count so the board
+                     cannot drift when the range changes. */
+                  const position =
+                    ((blackObj.whiteIndex + 1) / WHITE_KEY_COUNT) * 100
+                  return (
+                    <button
+                      type="button"
+                      key={blackObj.note}
+                      aria-label={`Play ${blackObj.note} key`}
+                      aria-pressed={activeKey === chromatic}
+                      style={
+                        {
+                          '--key-position': `${position}%`,
+                        } as React.CSSProperties
+                      }
+                      onPointerDown={() =>
+                        handleKeyClick(blackObj.note, blackObj.freq, chromatic)
+                      }
+                    />
+                  )
+                })}
               </div>
             </div>
           </div>

@@ -2905,9 +2905,17 @@
 .faderBank label span {
   overflow-wrap: anywhere;
 }
+/* One figure for the instrument's key length, read by the piano and by the
+   bed that contains it. See `.controllerKeys` for why the bed needs it: its
+   sidebar fills a row of exactly this height, and on an `auto` row the wells
+   and the row sized each other and settled 52px taller than the keys beside
+   them. */
 .keyboardBed {
+  --keybed-length: 10vw;
   display: grid;
   grid-template-columns: 116px 1fr;
+  grid-template-rows: minmax(0, auto);
+  align-items: stretch;
   gap: 16px;
   margin-top: 22px;
   padding: 14px 14px 18px;
@@ -2950,6 +2958,8 @@
 .wheelWell {
   position: relative;
   width: 38px;
+  /* Filled by `flex: 1` in the density pass; this is the pre-pass size. Kept
+     as a fallback for viewports that never reach that block. */
   height: 84px;
   border-radius: 4px;
   background: #090a09;
@@ -3042,7 +3052,30 @@
 }
 .controllerKeys {
   position: relative;
-  height: 112px;
+  /* Key length, as a fraction of the keybed's own width, so the piano keeps
+     one proportion at every viewport instead of the eight separate pixel
+     heights this file used to carry — four of which contradicted each other
+     and one of which silently won by being last.
+
+     Read from `--keybed-length` on the bed rather than restated here, because
+     the bed's sidebar has to fill a row of exactly this height and the two
+     cannot both be the source of it.
+
+     13vw gives ~2:1 keys: long enough to read as keys rather than as tabs,
+     short enough that the device still fits a 635px-tall viewport. It was
+     24vw, which at a 1169px keybed is 280px of key for 55px of width — past
+     a real board's ~1:6 and enough on its own to push the whole controller
+     below the fold.
+
+     Then cut a further 30% because the board still read as taller than it
+     needed to beside the three banks above it, and then put 10% of that back
+     once the gap proved to be the keys reading thin rather than the board
+     reading tall. Net 20% down from 13vw: keys are ~1.9:1, still well clear
+     of the square they were at two octaves, and the device keeps back 36px of
+     the 44 it had gained. */
+  height: var(--keybed-length, 10vw);
+  max-height: 114px;
+  min-height: 82px;
   overflow: hidden;
   margin-top: 0;
   border: 1px solid #676964;
@@ -3056,12 +3089,18 @@
   position: absolute;
   inset: 4px;
   display: grid;
-  grid-template-columns: repeat(14, 1fr);
+  grid-template-columns: repeat(var(--white-key-count), 1fr);
   gap: 1px;
 }
 .whiteKeys button {
   min-width: 0;
-  height: 103px;
+  /* The key's own height, taken from the bed rather than stated as a pixel
+     value. The bed is resized several times below — 112px at full height, 92px
+     in the density pass, 84px on a short viewport, 88px on mobile — and a fixed
+     103px key cannot follow it: on the short viewport it was being clipped
+     ~26px by the bed's `overflow: hidden`, so the keys were cut off at the
+     heel while the bed still reported its full height. */
+  height: 100%;
   border: 1px solid #a19f98;
   border-top-color: #d8d5cd;
   border-radius: 1px 1px 5px 5px;
@@ -3094,8 +3133,12 @@
   position: absolute;
   top: 0;
   left: var(--key-position);
-  width: clamp(14px, calc((100% / 14) * 0.62), 31px);
-  height: 66px;
+  width: clamp(12px, calc((100% / var(--white-key-count)) * 0.62), 26px);
+  /* 62% of the white key's length, which is what a real black key is. Stated
+     against the same axis as the white keys now carry, so the two always agree:
+     at 112px of bed a 66px black key over a 103px white one was already short,
+     and pinning it absolutely meant it never followed the bed at all. */
+  height: 62%;
   border: 1px solid #111310;
   border-radius: 1px 1px 4px 4px;
   background: linear-gradient(
@@ -7010,15 +7053,12 @@
     margin-top: 10px;
     padding: 8px 10px 12px;
   }
-  .controllerKeys {
-    height: 84px;
-  }
-  .whiteKeys button {
-    height: 76px;
-  }
-  .blackKeys button {
-    height: 48px;
-  }
+  /* No key-size floors here. They were minimums on the keybed and its keys
+     from when the board was two octaves at a fixed 112px, and a `min-height`
+     cannot be lowered by a shorter parent — at 84px they forced the white
+     keys to 76px inside a bed that is now 104px, and the black keys to 48px
+     regardless of the 62% ratio the rest of the board uses. Every key here is
+     a percentage of the bed, so the floors only ever fought it. */
   .wheelWell {
     height: 64px;
   }
@@ -11592,9 +11632,18 @@
   padding: 9px 10px;
 }
 
+/* PARAM BANK B was the loosest panel on the controller: four 62px encoders on
+   a 16px row gap and 12px of column gap, inside 13px of bank padding, left the
+   knobs floating in the middle of a box far taller than they needed. The rows
+   are packed and the padding dropped, and the height this gives back goes into
+   the piano below — which is the panel that was actually starved. */
 .encoderBank > div {
-  gap: 16px 9px;
-  padding: 4px 0;
+  gap: 6px 6px;
+  padding: 0;
+}
+
+.encoderBank .knobControl {
+  gap: 6px;
 }
 
 .faderBank > div {
@@ -11604,12 +11653,44 @@
 
 .keyboardBed {
   margin-top: 8px;
-  padding: 7px 7px 10px;
+  padding: 6px 7px 8px;
 }
 
-.controllerKeys {
-  height: 92px;
+/* The pitch and mod wells ride the keybed height rather than a fixed 84px.
+   They sit in a sidebar beside the keys and are read as part of the same
+   instrument, so when the keys grew these stayed at 84px and the bed's own
+   row grew past them — the wheels ended up floating in the top half of a box
+   with 30px of nothing beneath.
+
+   Tied to the row rather than to the content: the wells are grid items in an
+   auto row, so `100%` against an indefinite row resolves to the content box
+   and collapses them to their 3px label. `min-height: 0` plus an explicit
+   stretch is what actually makes them fill. */
+.pitchControls {
+  height: 100%;
 }
+
+.wheelGroup {
+  align-self: stretch;
+  justify-content: flex-end;
+}
+
+.wheelWell {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.wheelCylinder {
+  height: 72%;
+}
+
+/* No `.controllerKeys` override here, deliberately. The keybed's height is a
+   ratio of its own width (see the base rule), so it already tightens on a
+   short viewport by getting narrower — restating a pixel height in this block
+   is what kept producing keys wider than they were long, because this file
+   carried the height in eight places and only one of them was ever the one
+   that won. */
 
 .controllerBrand strong {
   font-size: 15px;
@@ -11640,7 +11721,7 @@
   }
 
   .encoderBank > div {
-    gap: 10px 7px;
+    gap: 6px 5px;
   }
 
   .faderBank > div {
@@ -11649,11 +11730,7 @@
 
   .keyboardBed {
     margin-top: 7px;
-    padding: 6px 8px 9px;
-  }
-
-  .controllerKeys {
-    height: 84px;
+    padding: 5px 7px 7px;
   }
 }
 
@@ -11708,10 +11785,6 @@
   .keyboardBed {
     margin-top: 8px;
     border-radius: 11px;
-  }
-
-  .controllerKeys {
-    height: 88px;
   }
 }
 

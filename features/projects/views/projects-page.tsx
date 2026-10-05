@@ -19,9 +19,11 @@ import {
   formatProjectTime,
   trackLabel,
 } from '@/data/projects'
-import type { FeaturedProject, GitHubRepo } from '../index'
+import type { ContributionDay, FeaturedProject, GitHubRepo } from '../index'
 import { Sleeve } from '../components/sleeve'
 import { LinerSheet } from '../components/liner-sheet'
+import ContributionSkyline from '@/components/ui/contribution-skyline'
+import { GITHUB_USER } from '../lib/github'
 import styles from '../crate.module.css'
 
 /** One "playback" track per release, so progress is real and per-project. */
@@ -30,10 +32,14 @@ const ELAPSED = new Map<number, number>()
 export function ProjectsPage({
   repos,
   featuredProjects,
+  contributions = [],
+  contributionsFailed = false,
   feedFailed = false,
 }: {
   repos: GitHubRepo[]
   featuredProjects: FeaturedProject[]
+  contributions?: ContributionDay[]
+  contributionsFailed?: boolean
   feedFailed?: boolean
 }) {
   const setHue = useRoomChannel()
@@ -301,6 +307,42 @@ export function ProjectsPage({
                 )
               })}
             </div>
+          </section>
+
+          <section>
+            <div className={styles.crateHead}>
+              <h2 className={styles.crateTitle}>
+                Contribution skyline
+                <span className={styles.crateCount}>live from GitHub</span>
+              </h2>
+              <a
+                href={`https://github.com/${GITHUB_USER}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.genre}
+                style={{ textDecoration: 'none' }}
+              >
+                <Github size={14} aria-hidden="true" />
+                github.com/{GITHUB_USER}
+              </a>
+            </div>
+
+            {/* Real counts when the fetch lands. With no data the component
+                draws its own seeded sample year, so a failed scrape degrades
+                to a labelled placeholder instead of an empty panel — hence the
+                caption swap rather than hiding the section. */}
+            <ContributionSkyline
+              data={contributions}
+              defaultView="3d"
+              palette="ember"
+              footer={
+                contributions.length
+                  ? 'Hover a day for its count · arrow keys to walk the year'
+                  : contributionsFailed
+                    ? 'Live counts unavailable — showing a generated sample year.'
+                    : 'Showing a generated sample year.'
+              }
+            />
           </section>
 
           <section>

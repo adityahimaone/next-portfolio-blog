@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getRepos } from '@/features/projects/lib/github'
+import { getContributions, getRepos } from '@/features/projects/lib/github'
 import { FEATURED_PROJECTS } from '@/features/projects/constants'
 import { ProjectsPage } from '@/features/projects'
 import { WORK_PROJECTS } from '@/data/projects'
@@ -32,7 +32,13 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-  const { repos, failed } = await getRepos()
+  // Both feeds are independent and each degrades on its own, so they are
+  // fetched together rather than in sequence — one GitHub round trip's latency
+  // instead of two.
+  const [
+    { repos, failed },
+    { days: contributions, failed: contributionsFailed },
+  ] = await Promise.all([getRepos(), getContributions()])
 
   const jsonLd = itemList({
     name: 'Shipped Work',
@@ -63,6 +69,8 @@ export default async function Page() {
       <ProjectsPage
         repos={repos}
         featuredProjects={FEATURED_PROJECTS}
+        contributions={contributions}
+        contributionsFailed={contributionsFailed}
         feedFailed={failed}
       />
     </>

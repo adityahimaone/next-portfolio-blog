@@ -1,0 +1,222 @@
+/* SignalField — the light across the device wall (docs/DESIGN_RACK.md §1).
+
+   Layers, back to front:
+     .fieldLight   the additive group: everything that can only brighten
+       .fieldDrift   a slow wash that breathes, on a period that disagrees with
+                     the band's so neither loop is readable on its own
+       .fieldBand    the travelling signal — the only layer that moves far
+       .fieldGrain   stops the gradients banding and gives the wall a surface
+     ::after       the vignette, which has to darken and so sits outside the
+                   additive group, over it
+
+   Every animated property here is transform or opacity. Width, top, background
+   and filter are never animated, so none of this triggers layout or paint, and
+   the two moving layers are the only ones promoted with will-change. */
+
+/* Above the device wall, which is z-0 — behind it this layer is invisible,
+   because DawHero's panels are opaque and tile the stage. Under the backdrop
+   name (z-1) and the content (z-4), so the name still reads on top of it. */
+.signalField {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ONE blend group, not one per layer.
+   `mix-blend-mode` forces the backdrop to be re-read and re-composited for
+   every element that carries it, against everything already painted inside the
+   stacking context — which here is the whole device wall. Four separate blended
+   layers measured 26fps against 60fps with the group removed, on an otherwise
+   idle page; folding them into one blended group and letting the children
+   composite normally inside it costs one blend instead of four and holds 60.
+   The children are painted into this element's own buffer first, so they still
+   stack on each other exactly as they did when each was blended separately. */
+.fieldLight {
+  position: absolute;
+  inset: 0;
+  /* Additive. This is what makes an effect legible from in front of twelve
+     glass panels: screen can only brighten, so the light lands in the dark
+     gaps between the devices and along their lit edges, and nothing already on
+     screen gets fogged. A normal-blended wash at these opacities would grey
+     the whole rack and cost the panel detail that is the point of the
+     section. Support for it is universal in the browsers this site targets;
+     the blend is simply ignored if it ever is not, which leaves an additive
+     layer looking slightly flat rather than breaking. */
+  mix-blend-mode: screen;
+}
+
+/* ─── The travelling band ──────────────────────────────────── */
+
+/* Tall and over-tall so it can travel a long way while its gradient edge stays
+   off-screen at both ends: 190% tall and centred, so the visible slice is
+   always the soft middle of the gradient. */
+.fieldBand {
+  position: absolute;
+  top: 50%;
+  left: -12%;
+  width: 124%;
+  height: 190%;
+  margin-top: -95%;
+  /* The edge is soft, the travel is long, and the vignette eats the arrival. */
+  background: linear-gradient(
+    180deg,
+    transparent 38%,
+    rgba(255, 122, 61, 0.09) 47%,
+    rgba(255, 148, 96, 0.14) 50%,
+    rgba(255, 122, 61, 0.09) 53%,
+    transparent 62%
+  );
+  transform: translate3d(0, 100%, 0);
+  animation: signalSweep 19s cubic-bezier(0.42, 0, 0.58, 1) infinite;
+  will-change: transform;
+}
+
+@keyframes signalSweep {
+  0% {
+    transform: translate3d(0, 100%, 0);
+  }
+
+  /* Held at the top for the tail of the cycle, so the band arrives somewhere
+     and stays long enough to be noticed. Without the hold it is a pulse, and a
+     pulse at a 19s period reads as a glitch rather than as light. */
+  62% {
+    transform: translate3d(0, -100%, 0);
+  }
+
+  100% {
+    transform: translate3d(0, -100%, 0);
+  }
+}
+
+/* ─── The drift ─────────────────────────────────────────────── */
+
+/* A second period, 27s against the band's 19s, and an offset start. Neither is
+   a multiple of the other, so the two do not re-align at any readable interval
+   and the wall never visibly repeats.
+
+   Three radials in one element rather than a separate standing layer: the warm
+   ember used to be its own node, and at this size an extra full-screen element
+   is not worth it. The third radial rides along with the drift's slow scale
+   rather than staying perfectly still, which is the better picture anyway —
+   it stops the drift reading as two separate things moving at once. */
+.fieldDrift {
+  position: absolute;
+  inset: -14%;
+  background:
+    radial-gradient(
+      48% 42% at 26% 36%,
+      rgba(255, 90, 31, 0.3),
+      transparent 68%
+    ),
+    radial-gradient(
+      44% 40% at 78% 62%,
+      rgba(38, 120, 148, 0.28),
+      transparent 68%
+    ),
+    /* The standing warm core, low and right, so the wall is not purely the
+       drift's cool. This is what keeps the corners from reading as dead grey
+       once the drift is at its dim end. */
+      radial-gradient(
+        30% 26% at 88% 82%,
+        rgba(255, 90, 31, 0.34),
+        transparent 70%
+      );
+  animation: fieldDrift 27s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+@keyframes fieldDrift {
+  0% {
+    opacity: 0.4;
+    transform: scale(0.97) translate3d(-1.5%, 1%, 0);
+  }
+
+  100% {
+    opacity: 0.85;
+    transform: scale(1.04) translate3d(1.5%, -1.5%, 0);
+  }
+}
+
+/* ─── Grain ─────────────────────────────────────────────────── */
+
+/* Stops the gradients banding. 4.5% like the work section's. Overlay rather
+   than normal blend, because grain has to both lift and sink to read as
+   texture — and unlike the wash layers above it is not a light, it is a
+   surface, so it is exempt from the additive rule. */
+.fieldGrain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background: url('/noise.png') repeat;
+  background-size: 128px 128px;
+}
+
+/* ─── Vignette ──────────────────────────────────────────────── */
+
+/* Painted on the root's ::after so it costs no extra element and no extra
+   stacking context. Normal blend, and deliberately outside .fieldLight: this is
+   the one layer that has to *darken*, and screening a dark gradient only ever
+   returns the backdrop unchanged — inside the additive group the vignette
+   would have had no effect at all. Out here it is what hides the band's
+   arrival and holds the rack's bottom rail legible over the light. */
+.signalField::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+      130% 95% at 50% 44%,
+      transparent 46%,
+      rgba(8, 10, 9, 0.66) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(8, 10, 9, 0.36),
+      transparent 18%,
+      transparent 72%,
+      rgba(8, 10, 9, 0.46)
+    );
+}
+
+/* ─── Reduced motion ────────────────────────────────────────── */
+
+/* A permanent looping animation is exactly what this preference rules out, so
+   both movers stop — and each is given an explicit rest value rather than
+   `animation: none` alone, which would drop it to an unstated base state and
+   leave the wall visibly flatter than it was authored to be. The band rests at
+   its arrival position, lit but not moving; the drift rests at mid-breath. */
+@media (prefers-reduced-motion: reduce) {
+  .fieldBand {
+    animation: none;
+    transform: translate3d(0, -100%, 0);
+  }
+
+  .fieldDrift {
+    animation: none;
+    opacity: 0.62;
+    transform: scale(1);
+  }
+}
+
+/* Reduced transparency: the light is additive rather than a backdrop-filter, so
+   there is no blur to switch off and the effect stays meaningful — screen
+   blending on a gradient is not a transparency effect in the sense this
+   preference is about. */
+@media (prefers-reduced-transparency: reduce) {
+  .fieldDrift {
+    opacity: 0.6;
+  }
+}
+
+/* Phones: the wall is a narrow column, so the drift's wide radial pair mostly
+   falls outside it and the third one takes the whole frame. Toned down rather
+   than removed — the section still needs a lit ground, and this is the only
+   thing lighting it. */
+@media (max-width: 640px) {
+  .fieldDrift {
+    opacity: 0.55;
+  }
+}

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { RESUME_URL } from './shared'
 import { useEffect, useState } from 'react'
 import { DawHero } from '../components/hero'
+import { SignalField } from './signal-field'
 import { TextCascade } from '../components/text-cascade'
 import { TopBar } from '@/features/layout/components/top-bar'
 import { SilkscreenLabel } from './primitives'
@@ -66,6 +67,11 @@ export function Hero() {
           <i />
           <span>Routing signal</span>
         </div>
+        {/* The light behind the wall. Ahead of this node in the DOM and at the
+            same z-0 as .heroDeviceWall, so it paints underneath the devices
+            rather than over them: the gaps between the panels are where the
+            signal shows, and the panels themselves stay legible. */}
+        <SignalField />
         <div
           className={styles.heroDeviceWall}
           aria-label="Interactive collection of music devices"

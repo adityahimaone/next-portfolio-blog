@@ -64,7 +64,7 @@ const ROOT = process.cwd()
  * Ceiling on the inline block.
  *
  * A guard against inlining the whole 500KB bundle, not a target to trim toward.
- * The landing route's rules that match the document come to roughly 190KB once
+ * The landing route's rules that match the document come to roughly 270KB once
  * the nested at-rules are filtered properly, so the budget sits just above that:
  * the trim should only ever fire when a future change pushes past it.
  *
@@ -78,12 +78,22 @@ const ROOT = process.cwd()
  * collapsed to 24px tall. A silently broken fold is far worse than 50KB, and a
  * budget that fires on every build is not a guard — it is a permanent trim.
  *
+ * The 260KB it then sat at was calibrated against a matched size that was
+ * itself wrong, and smaller for the worse reason: the splitter and the
+ * class extractor could not read escaped selectors, so every `sm:`
+ * variant and every arbitrary-value class was invisible to the match
+ * and absent from the block. Fixing both raised the true matched size
+ * to 270KB, which put the build back over budget and had the trim
+ * discarding first-paint styles — the top bar, the signal field, the
+ * device wall's own rules. The budget follows the corrected measurement
+ * rather than trimming rules the fold needs.
+ *
  * Uncompressed and inline means it cannot be cached separately from the
  * document, so the cost is real. It is still the right trade: it is smaller than
  * the ~500KB of linked CSS it covers, and it removes six serial round-trips from
  * the critical path.
  */
-const MAX_INLINE_KB = 260
+const MAX_INLINE_KB = 300
 
 const log = (msg) => console.log(`  [critical-css] ${msg}`)
 
@@ -121,9 +131,22 @@ function splitRules(css) {
   let quote = null
   for (let i = 0; i < css.length; i++) {
     const c = css[i]
+    /* A backslash escapes the next character wherever it appears,
+       not only inside a string. Selectors escape the characters
+       that cannot sit in a bare class name — `.\@container`,
+       `.bg-\[url\(\'/noise\.png\'\)\]` — and the escaped quote
+       there used to open a string state outside any string, which
+       then swallowed every brace until the next quote. The whole
+       utilities layer came back as one unterminated blob, so
+       every rule after it (all the `sm:` variants included) was
+       invisible to the filter and silently absent from the inline
+       block, where its surviving base utility then overrode them. */
+    if (c === '\\') {
+      i++
+      continue
+    }
     if (quote) {
-      if (c === '\\') i++
-      else if (c === quote) quote = null
+      if (c === quote) quote = null
       continue
     }
     if (c === '"' || c === "'") {
@@ -160,8 +183,33 @@ function selectorClasses(rule) {
   if (prelude.trim().startsWith('@')) return []
 
   const found = new Set()
-  for (const m of prelude.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) found.add(m[1])
+  /* A selector escapes the characters that cannot appear in a bare class
+     name: `.sm\:grid-cols-12`, `.grid-cols-\[auto_auto\]`, `.\@container`.
+     The escape ends a plain `[\w-]*` match, so this pattern used to read
+     `.sm\:grid-cols-12` as the class `sm` — a name no document ever
+     carries — and dropped every responsive variant from the inline block.
+     The base utilities survived, the variants did not, and because the
+     inline block loads after the linked sheets its surviving `.grid-cols-8`
+     then overrode the linked `.sm\:grid-cols-12`: the device wall painted
+     its 8-column mobile grid at every viewport width. Match the escape as
+     part of the name and unescape before comparing against the document's
+     class list. */
+  for (const m of prelude.matchAll(
+    /\.((?:\\[\s\S]|[_a-zA-Z-])(?:[\w-]|\\[\s\S])*)/g,
+  )) {
+    found.add(unescapeCss(m[1]))
+  }
   return [...found]
+}
+
+/** CSS escapes: `\:` is `:`, and `\31 ` is `1`. */
+function unescapeCss(raw) {
+  return raw
+    .replace(/\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?/g, (_, hex) => {
+      const cp = parseInt(hex, 16)
+      return cp > 0x10ffff ? '' : String.fromCodePoint(cp)
+    })
+    .replace(/\\(.)/g, '$1')
 }
 
 /** At-rules whose body is a list of nested rules we can filter individually. */

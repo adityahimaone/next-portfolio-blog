@@ -106,14 +106,20 @@
 } /* Left library · centre now-playing · right credits. */
 .columns {
   display: grid;
-  /* Both rails were taking a share sized for prose that neither of them holds:
-     the library is a list of short names and the credits are four rows. They
-     kept 0.9fr each while the centre — the only column with a square artwork
-     and a six-line lyric field in it — was squeezed into 2.2fr. Rebalancing
-     the same three columns toward the centre gives the art its width back
-     without touching either rail's own minimum, so neither can collapse into
-     its content at the narrow end of the desktop range. */
-  grid-template-columns: minmax(178px, 0.72fr) minmax(0, 2.6fr) minmax(
+  /* The centre was holding 2.6fr of the row — 835px at 1440 — for content that
+     cannot use it. The lyric field's widest line is ~776px and the rest of the
+     column is a square cover and three lines of copy, so the extra width was
+     not slack in the layout, it was slack inside it: `.centreTop` split the row
+     1fr / 1fr, which pinned the art to half the column while the art itself is
+     capped by the band's height. That left ~175px of empty shell around a
+     217px cover at every width.
+
+     2fr gives the lyric the room it actually reads at (775px fits inside 712px
+     of track plus the stage padding without wrapping) and takes the rest back
+     out of the column, rather than spending it on a gap. Verified at 1280 /
+     1440 / 1600 / 1920 / 2560: the cover column tracks the art exactly at
+     every one, and no lyric line wraps. */
+  grid-template-columns: minmax(178px, 0.72fr) minmax(0, 2fr) minmax(
       165px,
       0.72fr
     );
@@ -683,10 +689,16 @@
 .centreTop {
   display: grid;
   min-height: 0;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(14px, 1.6vw, 24px);
+  /* `auto`, not `1fr`. This was 1fr / 1fr, which gave the art half the row
+     whether it wanted it or not — and the art is a square capped by the band's
+     HEIGHT, so it can never fill a wide track. At 1440 that stranded ~175px of
+     bare panel down each side of a 217px cover. Sizing the art column to its
+     content lets the metadata take the width the art was never going to use,
+     and the description drops from three wrapped lines to one or two. */
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(12px, 1.2vw, 18px);
   align-items: center;
-  padding: clamp(12px, 1.4vh, 18px);
+  padding: clamp(10px, 1.2vh, 15px) clamp(12px, 1.2vw, 18px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 

@@ -1,5 +1,7 @@
 'use client'
 
+import { useRef } from 'react'
+
 import styles from './rack-01.module.css'
 
 /**
@@ -56,17 +58,49 @@ export function VenLogo() {
 }
 
 export function Knob({
-  color,
   label,
   value,
   onChange,
 }: {
-  color: string
   label: string
   value: number
   onChange: (value: number) => void
 }) {
   const rotation = -125 + value * 2.5
+  const draggingRef = useRef(false)
+  const draggedRef = useRef(false)
+  const dragStartY = useRef(0)
+  const dragStartValue = useRef(0)
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    draggingRef.current = true
+    draggedRef.current = false
+    dragStartY.current = e.clientY
+    dragStartValue.current = value
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!draggingRef.current) return
+    const delta = dragStartY.current - e.clientY
+    if (Math.abs(delta) > 4) draggedRef.current = true
+    const next = Math.max(
+      0,
+      Math.min(100, Math.round(dragStartValue.current + delta * 0.75)),
+    )
+    if (next !== value) onChange(next)
+  }
+
+  const endDrag = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (draggingRef.current) {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      } catch {
+        /* The capture is already gone on cancel. */
+      }
+    }
+    draggingRef.current = false
+  }
 
   return (
     <div className={styles.knobControl}>
@@ -75,9 +109,43 @@ export function Knob({
         type="button"
         data-skill-sequence="param"
         className={styles.knob}
-        style={{ '--knob-color': color } as React.CSSProperties}
-        aria-label={`${label}: ${value}. Press to increase`}
-        onClick={() => onChange(value >= 100 ? 0 : value + 10)}
+        role="slider"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={value}
+        aria-valuetext={`${value}%`}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClick={() => {
+          /* A drag always ends in a click. Only a press that never
+             travelled steps the value, so dragging to a position
+             never bumps it again afterwards. */
+          if (draggedRef.current) {
+            draggedRef.current = false
+            return
+          }
+          onChange(value >= 100 ? 0 : value + 10)
+        }}
+        onKeyDown={(e) => {
+          const step = (delta: number) =>
+            onChange(Math.max(0, Math.min(100, value + delta)))
+          if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+            e.preventDefault()
+            step(5)
+          } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+            e.preventDefault()
+            step(-5)
+          } else if (e.key === 'Home') {
+            e.preventDefault()
+            onChange(0)
+          } else if (e.key === 'End') {
+            e.preventDefault()
+            onChange(100)
+          }
+        }}
       >
         <span
           style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}

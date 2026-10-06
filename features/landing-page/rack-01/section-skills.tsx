@@ -153,8 +153,6 @@ export function Skills() {
   const sectionRef = useRef<HTMLElement | null>(null)
   const scrollRatioRef = useRef(0)
 
-  const colors = ['#2e3f5c', '#c9a574', '#8b8d8a', '#ff5a1f']
-
   const getAudioContext = () => {
     if (typeof window === 'undefined') return null
     if (!audioCtxRef.current) {
@@ -736,10 +734,9 @@ export function Skills() {
             <div className={`${styles.controlBank} ${styles.encoderBank}`}>
               <SilkscreenLabel>PARAM BANK B / APP + DATA</SilkscreenLabel>
               <div>
-                {MIXER_DATA[1].channels.map((skill, index) => (
+                {MIXER_DATA[1].channels.map((skill) => (
                   <Knob
                     key={skill.name}
-                    color={colors[index]}
                     label={skill.name}
                     value={Math.round(
                       levels[skill.name] *

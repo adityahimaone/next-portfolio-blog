@@ -2,4 +2,4 @@
 export const SEAM_SVH = 120
 
 /** The radio has to land on its back face to reveal the player window. */
-export const FLIP_DEGREES = 540
+export const FLIP_DEGREES = 180

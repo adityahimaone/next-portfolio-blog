@@ -10031,176 +10031,12 @@
     filter: none;
     transform: none;
   }
-} /* Experience to projects: the master cassette becomes the first release. */
+} /* Experience stage content, including the radio that flips into Work. */
 .experienceContent {
   position: relative;
   z-index: 1;
   width: 100%;
-  /* Nothing in the seam writes a transform to this box any more — it used to be
-     the deck's slide-up-and-blur. The frame growth that briefly lived here was
-     removed once measurement showed the deck and the work shell are 138px apart
-     and never overlap, so there is no shared box to grow between. Kept as
-     `opacity` only, which is what the band's cross-fade actually needs. */
   will-change: opacity;
-}
-
-.archiveEjectProxy {
-  position: fixed !important;
-  z-index: 100 !important;
-  margin: 0 !important;
-  pointer-events: none !important;
-  transform: none;
-  transform-origin: 50% 50%;
-  will-change: transform, opacity;
-}
-
-.archiveEjectProxy.cassetteActive,
-.archiveEjectProxy .cassetteActive {
-  transform: none;
-}
-
-/* The empty well the eject leaves behind.
-
-   A cassette bay with no tape in it is not flat black — it is a recess with a
-   front lip and a shadowed floor. Without this the tape appears to evaporate
-   off a painted panel; with it, the frame it leaves is visibly a hole, which
-   is what tells the reader the tape was *taken out* rather than cross-faded.
-
-   Driven by `data-ejected` on the carousel, written by the seam timeline the
-   same way the transform is, so it is scrubbed and reversible rather than a
-   one-shot class. */
-.tapeCarousel[data-ejected] {
-  background: radial-gradient(
-      ellipse 62% 46% at 50% 50%,
-      rgba(0, 0, 0, 0.92),
-      rgba(0, 0, 0, 0.55) 62%,
-      transparent 78%
-    ),
-    linear-gradient(
-      90deg,
-      transparent 49.7%,
-      rgba(255, 255, 255, 0.05) 50%,
-      transparent 50.3%
-    ),
-    #0c0e0c;
-  box-shadow:
-    inset 0 10px 26px rgba(0, 0, 0, 0.95),
-    inset 0 -4px 12px rgba(0, 0, 0, 0.7),
-    inset 0 1px rgba(255, 255, 255, 0.16);
-}
-
-/* The front lip of the well: a bright hairline along the top edge and a dark
-   one along the bottom, so the recess has a lip the tape passes behind. */
-.tapeCarousel[data-ejected]::before {
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 6px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.8);
-  content: '';
-  pointer-events: none;
-}
-
-.ejectProxy {
-  position: fixed;
-  z-index: 100;
-  top: 0;
-  left: 0;
-  /* Never let it paint before the seam timeline positions it. */
-  opacity: 0;
-  will-change: transform, opacity;
-  pointer-events: none;
-}
-
-/* The travelling cassette.
-
-   This is the deck's own `.cassette` class plus an override, NOT a second
-   drawing of a cassette. The shell keeps the deck's border radius, gradient,
-   padding and 100.4 / 63.8 proportion, and the interior is the same
-   `CassetteFace` the carousel renders — so the object that leaves the bay is
-   recognisably the object that was in it.
-
-   Only the placement changes. In the carousel `.cassette` is absolutely
-   positioned and centred by `translate(-50%, -50%)`; here it is driven entirely
-   by the seam timeline, which writes both the size and the transform.
-
-/* The deck's `.cassette` rule sets `max-height: calc(100% - 16px)` and
-   `max-width`, which resolve against the carousel bay. Those have to be undone
-   here or the shell collapses against this element's zero-sized parent.
-
-   Doubled class for specificity, not for style: `.cassette` is defined at the
-   top of a 12k-line file and this rule sits ~200KB later in the bundle, so at
-   equal specificity the deck's declarations won on source order and the flying
-   cassette rendered 2x2 — the `max-width: calc(100% - 84px)` resolved against
-   the portalled wrapper's zero width. Moving this rule would work today and
-   break again on the next reordering. */
-.ejectProxy .ejectCassette {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: auto;
-  bottom: auto;
-  /* Sized by the timeline, which writes `width` inline each frame. */
-  width: 240px;
-  max-width: none;
-  height: auto;
-  max-height: none;
-  aspect-ratio: 100.4 / 63.8;
-  /* The interior is drawn in `cqw`, so it needs a container to resolve
-     against — the same reason the deck's shell declares one. */
-  container-type: inline-size;
-  transform-origin: 50% 50%;
-  will-change: transform;
-  pointer-events: none;
-}
-
-.handoffTelemetry {
-  position: absolute;
-  z-index: 4;
-  right: clamp(20px, 5vw, 78px);
-  bottom: clamp(28px, 5vh, 56px);
-  left: clamp(20px, 5vw, 78px);
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  color: rgba(244, 240, 232, 0.58);
-  font: 700 clamp(7px, 0.58vw, 9px) var(--font-geist-mono);
-  letter-spacing: 0.12em;
-  opacity: 0;
-  will-change: transform, opacity;
-}
-
-.handoffTelemetry span:first-child {
-  color: var(--signal-orange);
-}
-
-.handoffTelemetry span:nth-child(2) {
-  color: rgba(244, 240, 232, 0.34);
-}
-
-/* The tape path the release travels along: the deck on the left, the library
-   on the right, with a dot that crosses as the cassette moves. */
-
-@media (max-width: 768px) {
-  .handoffTelemetry {
-    right: 20px;
-    bottom: 22px;
-    left: 20px;
-    flex-wrap: wrap;
-    font-size: 7px;
-  }
-}
-
-/* The proxy is a scroll-linked effect and there is nothing to show without it.
-   The old override forced its parts to opacity 1, which is correct for a
-   handoff inlined in the section but would pin a body-level portal on screen
-   forever. */
-@media (prefers-reduced-motion: reduce) {
-  .ejectProxy {
-    display: none !important;
-  }
 }
 
 /* The deck is a physical object, so it has to sit above the band it stands
@@ -12377,5 +12213,151 @@
      `.footerSignal` above. */
   .footerSignal {
     --footer-inset: 0px;
+  }
+}
+
+.deckFlip {
+  position: relative;
+  width: min(1050px, 100%);
+  margin: 0 auto;
+  perspective: 2200px;
+  perspective-origin: 50% 50%;
+}
+
+.deckFlipInner {
+  position: relative;
+  width: 100%;
+  transform-origin: 50% 50%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.deckFlip .cassetteDeck.deckFront {
+  width: 100%;
+  margin: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.deckBack {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  width: var(--back-w, 100%);
+  height: var(--back-h, 100%);
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: clamp(14px, 1.3vw, 20px);
+  background: linear-gradient(
+    150deg,
+    rgba(30, 32, 36, 0.96),
+    rgba(9, 10, 12, 0.98)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 30px 80px rgba(0, 0, 0, 0.55);
+  transform: translate(-50%, -50%) rotateY(180deg);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.deckBackChrome {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.deckBackDots,
+.deckBackTabs {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.deckBackTabs {
+  flex: 1;
+  gap: 8px;
+}
+
+.deckBackDots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.deckBackTabs i {
+  width: 54px;
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.deckBackSearch {
+  width: 18%;
+  height: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.deckBackColumns {
+  display: grid;
+  grid-template-columns: 22% minmax(0, 1fr) 24%;
+  gap: 10px;
+  min-height: 0;
+}
+
+.deckBackColumns span {
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.deckBackBar {
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.seamWash {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.seamWash::after {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 90% at 50% 50%,
+    transparent 55%,
+    rgba(0, 0, 0, 0.55)
+  );
+  content: '';
+}
+
+@media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
+  .experience {
+    height: calc(190svh + var(--seam-svh, 120) * 1svh);
+  }
+
+  .experienceStage {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+  .deckBack,
+  .seamWash {
+    display: none;
+  }
+
+  .deckFlip {
+    perspective: none;
   }
 }

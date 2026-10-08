@@ -19,6 +19,7 @@ import { PlayerBanner, PlayerChrome } from './player-chrome'
 import { useMediaQuery, useIsMobile, useRefraction } from '@/hooks/use-media'
 import type { ArchiveRepo } from '@/features/projects/lib/github'
 import { useWorkScroll } from './use-work-scroll'
+import { SEAM_SVH } from '@/features/landing-page/constants/seam'
 import styles from './work.module.css'
 
 const LinerNotes = dynamic(
@@ -136,7 +137,9 @@ export function Work({
         {
           '--work-accent': track.palette.accent,
           ...(scrollDriven
-            ? { height: `calc(100svh + ${COUNT * SCROLL_PER_TRACK}svh)` }
+            ? {
+                height: `calc(100svh + ${COUNT * SCROLL_PER_TRACK + SEAM_SVH}svh)`,
+              }
             : {}),
         } as React.CSSProperties
       }
@@ -146,15 +149,10 @@ export function Work({
     >
       <GlassFilters />
 
-      <div className={styles.stage}>
+      <div className={styles.stage} data-work-stage>
         <AmbientBackdrop palette={track.palette} />
 
-        {/* The entrance is scrubbed by the seam timeline in useRackAnimations,
-            which reaches this node through the data attribute — the class lives
-            in this module and is not visible from the rack's stylesheet. Motion
-            used to own the entrance, but it read raw window scroll while the
-            experience section above ran on Lenis-smoothed GSAP, so the two
-            sides of the handoff ran on different clocks. */}
+        {/* The seam timeline reveals this player shell after the radio turns. */}
         <div className={styles.shell} data-work-shell>
           <PlayerChrome query={query} onQueryChange={setQuery} />
 

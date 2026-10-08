@@ -8,6 +8,7 @@ import {
   type MotionValue,
 } from 'motion/react'
 import { scrollToY } from '@/features/landing-page/lib/smooth-scroll'
+import { SEAM_SVH } from '@/features/landing-page/constants/seam'
 import { resolveActiveIndex, resolveTrackProgress } from './track-math'
 
 export type WorkScroll = {
@@ -28,7 +29,7 @@ export function useWorkScroll(
 ): WorkScroll {
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ['start start', 'end end'],
+    offset: [`${SEAM_SVH}vh start`, 'end end'],
   })
   const [activeIndex, setActiveIndex] = useState(0)
 
@@ -47,11 +48,12 @@ export function useWorkScroll(
       if (!element) return
 
       const top = element.getBoundingClientRect().top + window.scrollY
-      const scrollable = element.offsetHeight - window.innerHeight
+      const lead = (SEAM_SVH / 100) * window.innerHeight
+      const scrollable = element.offsetHeight - window.innerHeight - lead
       if (scrollable <= 0) return
 
       // Land mid-track so the incoming record is already playing when it lands.
-      const target = top + ((index + 0.5) / count) * scrollable
+      const target = top + lead + ((index + 0.5) / count) * scrollable
       scrollToY(target)
     },
     [ref, count],

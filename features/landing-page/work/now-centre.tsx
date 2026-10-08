@@ -45,21 +45,6 @@ export function NowCentre({
             square. Both live in one grid cell and overlap only in the frames
             where neither is readable. */}
         <div className={styles.centreArtWrap}>
-          {/* The eject handoff's destination bay.
-
-              The player is the second deck, so before the tape arrives this
-              reads as an open, unlit well. The flying cassette is measured
-              against `[data-handoff-target]` — the artwork — so the bay is
-              what sits *behind* that measurement: the tape seats into the
-              recess and the artwork then cross-fades in over it on the label,
-              the way a sleeve covers a deck. */}
-          <div className={styles.centreBay} aria-hidden="true">
-            <span className={styles.centreBayDeck} />
-          </div>
-          {/* The eject handoff's destination. The seam timeline in
-              useRackAnimations measures this box every frame while the cassette
-              is in flight, and the class name is not reachable from the rack's
-              stylesheet, so it is addressed by attribute. */}
           <AnimatePresence initial={false}>
             <motion.div
               key={`out-${track.id}`}
@@ -75,7 +60,7 @@ export function NowCentre({
               <button
                 type="button"
                 className={styles.centreArt}
-                data-handoff-target=""
+                data-work-art
                 onClick={onOpenLiner}
                 aria-label={`Open liner notes for ${track.title}`}
               >

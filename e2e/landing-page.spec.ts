@@ -49,266 +49,83 @@ test('landing page has no duplicate React keys or console errors', async ({
   expect(real, 'console errors on home: ' + real.join(' | ')).toHaveLength(0)
 })
 
-/**
- * The eject handoff is portalled to the body and driven entirely by GSAP, so
- * nothing about it is visible in the section tree above — and every selector it
- * relies on is a string, which TypeScript cannot check. Renaming a class in
- * either stylesheet silently disables the whole effect.
- *
- * This guards the two contracts that silence would break: that the proxy is
- * portalled out of the sections and exists at all, and that it is fully hidden
- * once the seam has passed rather than left parked on screen.
- */
-test('eject proxy is portalled out and hidden outside the seam', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await page.waitForLoadState('networkidle').catch(() => {})
+const SEAM_SVH = 120
 
-  const insideSection = await page.evaluate(() => {
-    const proxy = document.querySelector('[class*="ejectProxy"]')
-    return proxy?.closest('section') != null
-  })
-  expect(
-    insideSection,
-    'proxy must live on the body, not inside an overflow-hidden section',
-  ).toBe(false)
+async function seamBounds(page: import('@playwright/test').Page) {
+  return page.evaluate((svh) => {
+    const work = document.querySelector('#work')!
+    const start = work.getBoundingClientRect().top + window.scrollY
+    return { start, end: start + (svh / 100) * window.innerHeight }
+  }, SEAM_SVH)
+}
 
-  const exists = await page.locator('[class*="ejectProxy"]').count()
-  expect(exists, 'proxy rendered').toBeGreaterThan(0)
-
-  // Park well past the seam: work is 6 tracks deep, so its midpoint is far
-  // beyond the handoff window.
-  await page.evaluate(() => {
-    const work = document.querySelector('#work')
-    if (work) {
-      window.scrollTo(
-        0,
-        work.getBoundingClientRect().top + window.scrollY + 600,
-      )
-    }
-  })
-  // The seam scrubs at 0.8, so it keeps easing toward the scroll position for a
-  // moment after the scroll stops. Poll until it settles rather than guessing.
-  await expect
-    .poll(
-      async () =>
-        page.evaluate(() => {
-          const proxy = document.querySelector<HTMLElement>(
-            '[class*="ejectProxy"]',
-          )
-          return proxy ? Number(getComputedStyle(proxy).opacity) : 1
-        }),
-      { timeout: 6000, intervals: [250, 250, 500, 500, 1000] },
-    )
-    .toBeLessThan(0.05)
-})
-
-test('the flying cassette paints and holds its real aspect ratio', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await page.waitForLoadState('networkidle').catch(() => {})
-
-  const seam = await page.evaluate(() => {
-    const work = document.querySelector('#work')
-    const top = work!.getBoundingClientRect().top + window.scrollY
-    return { start: top - window.innerHeight, end: top }
-  })
-
-  // A Type I shell is 100.4 x 63.8mm, and the deck's own cassette is drawn at
-  // that same ratio. This is most of what makes the object read as a tape.
-  const RATIO = 100.4 / 63.8
-
-  // Two points in the crossing, so a cassette that paints once and then stalls
-  // is caught as well as one that never paints at all.
-  const sampleAt = async (fraction: number) => {
-    await page.evaluate(
-      (y) => window.scrollTo(0, y),
-      seam.start + (seam.end - seam.start) * fraction,
-    )
-    await page.waitForTimeout(1800)
-
-    const box = await page.evaluate(() => {
-      const cass = document.querySelector<HTMLElement>(
-        '[class*="ejectCassette"]',
-      )
-      if (!cass) return null
-      const r = cass.getBoundingClientRect()
-      return {
-        width: r.width,
-        /* offsetWidth/Height are the UNTRANSFORMED box. getBoundingClientRect
-           returns the axis-aligned bounds of a rotated element, so the
-           in-flight tilt inflates it and the ratio reads low — the shell is
-           correct and the measurement was lying. */
-        ratio: cass.offsetHeight ? cass.offsetWidth / cass.offsetHeight : 0,
-      }
-    })
-
-    const withCassette = await page.screenshot({
-      clip: { x: 0, y: 0, width: 1440, height: 900 },
-    })
-    await page.evaluate(() => {
-      document.querySelector<HTMLElement>(
-        '[class*="ejectProxy"]',
-      )!.style.visibility = 'hidden'
-    })
-    await page.waitForTimeout(350)
-    const without = await page.screenshot({
-      clip: { x: 0, y: 0, width: 1440, height: 900 },
-    })
-    await page.evaluate(() => {
-      document.querySelector<HTMLElement>(
-        '[class*="ejectProxy"]',
-      )!.style.visibility = ''
-    })
-    await page.waitForTimeout(350)
-
-    const changed = await page.evaluate(
-      async ([a, b]) => {
-        const decode = async (bytes: number[]) => {
-          const blob = new Blob([new Uint8Array(bytes)], { type: 'image/png' })
-          const bitmap = await createImageBitmap(blob)
-          const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
-          const ctx = canvas.getContext('2d')!
-          ctx.drawImage(bitmap, 0, 0)
-          return ctx.getImageData(0, 0, bitmap.width, bitmap.height).data
-        }
-        const [withP, withoutP] = await Promise.all([decode(a), decode(b)])
-        let n = 0
-        for (let i = 0; i < withP.length; i += 4) {
-          const delta =
-            Math.abs(withP[i] - withoutP[i]) +
-            Math.abs(withP[i + 1] - withoutP[i + 1]) +
-            Math.abs(withP[i + 2] - withoutP[i + 2])
-          if (delta > 24) n++
-        }
-        return n
-      },
-      [Array.from(withCassette), Array.from(without)],
-    )
-
-    return { ...box!, changed }
-  }
-
-  const early = await sampleAt(0.2)
-  const late = await sampleAt(0.6)
-
-  // This regressed twice invisibly: once as an `opacity: 0` left over on the
-  // travelling box, and once as `var(--signal-orange)` resolving to nothing
-  // because the proxy is portalled outside the subtree declaring it. Geometry
-  // assertions reported a healthy box in both cases.
-  expect(
-    early.width,
-    'cassette is larger than the artwork early on',
-  ).toBeGreaterThan(150)
-  expect(early.changed, 'cassette paints while crossing').toBeGreaterThan(400)
-  expect(late.width, 'cassette shrinks toward the artwork').toBeLessThan(
-    early.width,
-  )
-
-  // The artwork is a 1:1 square, so driving width and height to meet it would
-  // squash the shell by a third and turn a tape into a card. The ratio has to
-  // hold at every frame, not just at rest.
-  expect(
-    Math.abs(early.ratio - RATIO),
-    'early aspect ratio is a real shell',
-  ).toBeLessThan(0.02)
-  expect(
-    Math.abs(late.ratio - RATIO),
-    'late aspect ratio is a real shell',
-  ).toBeLessThan(0.02)
-})
-
-test('the eject cassette is a clone of the deck cassette, not a copy', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await page.waitForLoadState('networkidle').catch(() => {})
-
-  const compare = await page.evaluate(() => {
-    const describe = (el: Element | null) => {
-      if (!el) return null
-      const g = getComputedStyle(el)
-      return {
-        classes: Array.from(el.classList).sort().join(' '),
-        borderRadius: g.borderRadius,
-        aspect: g.aspectRatio,
-        children: Array.from(el.children)
-          .map((c) => c.className.toString())
-          .sort()
-          .join(','),
-        label: el.querySelector('[class*="cassetteLabel"] strong')?.textContent,
-      }
-    }
+async function flipState(page: import('@playwright/test').Page) {
+  return page.evaluate(() => {
+    const inner = document.querySelector<HTMLElement>('[data-deck-flip-inner]')!
+    const matrix = new DOMMatrixReadOnly(getComputedStyle(inner).transform)
+    const section = inner.closest('section')!
+    const shell = document.querySelector<HTMLElement>('[data-work-shell]')!
+    const scale = Math.hypot(matrix.m11, matrix.m12, matrix.m13)
     return {
-      deck: describe(document.querySelector('[class*="cassetteActive"]')),
-      clone: describe(document.querySelector('[class*="ejectCassette"]')),
+      scale,
+      cosY: matrix.m11 / (scale || 1),
+      sectionOpacity: Number(getComputedStyle(section).opacity),
+      sectionVisibility: getComputedStyle(section).visibility,
+      shellOpacity: Number(getComputedStyle(shell).opacity),
     }
   })
+}
 
-  expect(compare.deck, 'deck cassette found').not.toBeNull()
-  expect(compare.clone, 'eject clone found').not.toBeNull()
-
-  // The shell must be the deck's own `.cassette` class, or the two are two
-  // drawings that will drift apart again — which is exactly what happened when
-  // the handoff had a hand-written stand-in with its own radius and label.
-  expect(compare.clone!.classes).toContain(compare.deck!.classes.split(' ')[0])
-  expect(compare.clone!.borderRadius).toBe(compare.deck!.borderRadius)
-  expect(compare.clone!.aspect).toBe(compare.deck!.aspect)
-  expect(compare.clone!.children).toBe(compare.deck!.children)
-
-  // It is the cassette the reader was on: the deck settles on the last entry
-  // before the seam opens, so the clone carries that one's identity.
-  expect(compare.clone!.label).toBe('Universities & Academies')
-})
-
-test('the cassette leaves the bay flat and only tilts once clear', async ({
+test('the eject proxy is removed and the radio has two faces', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.waitForLoadState('networkidle').catch(() => {})
 
-  const seam = await page.evaluate(() => {
-    const work = document.querySelector('#work')
-    const top = work!.getBoundingClientRect().top + window.scrollY
-    return { start: top - window.innerHeight, end: top }
-  })
+  await expect(page.locator('[class*="ejectProxy"]')).toHaveCount(0)
+  await expect(page.locator('[class*="ejectCassette"]')).toHaveCount(0)
+  await expect(page.locator('[data-deck-flip-inner]')).toHaveCount(1)
+  await expect(page.locator('[data-deck-back]')).toHaveCount(1)
+  await expect(page.locator('[data-seam-wash]')).toHaveCount(1)
+})
 
-  const rotationAt = async (fraction: number) => {
+test('the radio flips through the seam and hands over to the player', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.waitForLoadState('networkidle').catch(() => {})
+
+  const seam = await seamBounds(page)
+  const at = async (fraction: number) => {
     await page.evaluate(
       (y) => window.scrollTo(0, y),
       seam.start + (seam.end - seam.start) * fraction,
     )
-    await page.waitForTimeout(1600)
-    return page.evaluate(() => {
-      const c = document.querySelector<HTMLElement>('[class*="ejectCassette"]')
-      if (!c) return null
-      const m = new DOMMatrixReadOnly(getComputedStyle(c).transform)
-      return {
-        deg: (Math.atan2(m.b, m.a) * 180) / Math.PI,
-        opacity: Number(
-          getComputedStyle(document.querySelector('[class*="ejectProxy"]')!)
-            .opacity,
-        ),
-      }
-    })
+    await page.waitForTimeout(1200)
+    return flipState(page)
   }
 
-  const early = await rotationAt(0.12)
-  const mid = await rotationAt(0.42)
-  const late = await rotationAt(0.95)
+  const before = await at(-0.02)
+  expect(Math.abs(before.scale - 1), 'no growth before the seam').toBeLessThan(
+    0.01,
+  )
+  expect(before.cosY, 'front-facing before the seam').toBeGreaterThan(0.99)
+  expect(before.sectionOpacity).toBe(1)
 
-  // Flat while it still overlaps the bay it left, so the hand-off has no jump.
-  expect(early!.opacity, 'proxy is visible this early').toBeGreaterThan(0.3)
-  expect(Math.abs(early!.deg), 'leaves the bay at 0deg').toBeLessThan(0.5)
-  // Tilted through the crossing, and back to flat as it seats.
-  expect(Math.abs(mid!.deg), 'tilts mid-flight').toBeGreaterThan(1)
-  expect(Math.abs(late!.deg), 'seats flat').toBeLessThan(0.5)
+  const mid = await at(0.45)
+  expect(mid.scale, 'radio is growing').toBeGreaterThan(1.02)
+  expect(mid.cosY, 'radio is mid-turn').toBeLessThan(0.99)
+  expect(mid.sectionOpacity, 'experience still covers the player').toBe(1)
+
+  const after = await at(1.02)
+  expect(after.sectionVisibility).toBe('hidden')
+  expect(after.shellOpacity).toBe(1)
+
+  const back = await at(-0.02)
+  expect(Math.abs(back.scale - 1)).toBeLessThan(0.01)
+  expect(back.sectionOpacity).toBe(1)
 })
 
 test('every library row is drawn in the same visual language', async ({
@@ -319,10 +136,14 @@ test('every library row is drawn in the same visual language', async ({
   await page.waitForLoadState('networkidle').catch(() => {})
 
   // Land inside the section so the sidebar is rendered and measurable.
-  await page.evaluate(() => {
-    const work = document.querySelector('#work')
-    window.scrollTo(0, work!.getBoundingClientRect().top + window.scrollY + 600)
-  })
+  await page.evaluate(
+    (lead) => {
+      const work = document.querySelector('#work')!
+      const top = work.getBoundingClientRect().top + window.scrollY
+      window.scrollTo(0, top + lead + 600)
+    },
+    (SEAM_SVH / 100) * 900,
+  )
   await page.waitForTimeout(2000)
 
   const rows = await page.evaluate(() => {
@@ -380,11 +201,17 @@ test('every cover renders at the same size, generated or real', async ({
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.waitForLoadState('networkidle').catch(() => {})
 
-  const work = await page.evaluate(() => {
-    const el = document.querySelector<HTMLElement>('#work')!
-    const top = el.getBoundingClientRect().top + window.scrollY
-    return { top, scrollable: el.offsetHeight - window.innerHeight }
-  })
+  const work = await page.evaluate(
+    (lead) => {
+      const el = document.querySelector<HTMLElement>('#work')!
+      const top = el.getBoundingClientRect().top + window.scrollY
+      return {
+        top: top + lead,
+        scrollable: el.offsetHeight - window.innerHeight - lead,
+      }
+    },
+    (SEAM_SVH / 100) * 900,
+  )
 
   const sizes: Array<[string, number, number]> = []
   for (let i = 0; i < 6; i++) {
@@ -394,7 +221,7 @@ test('every cover renders at the same size, generated or real', async ({
     )
     await page.waitForTimeout(1600)
     const s = await page.evaluate(() => {
-      const art = document.querySelector('[data-handoff-target]')
+      const art = document.querySelector('[data-work-art]')
       const r = art?.getBoundingClientRect()
       return {
         title:
@@ -518,17 +345,31 @@ test('the first paint is already styled', async ({ page }) => {
   ).toBeGreaterThan(400)
 })
 
-test('eject proxy never renders for reduced motion', async ({ browser }) => {
+test('the radio flip is disabled for reduced motion', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'reduce' })
   const page = await context.newPage()
+  await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.waitForLoadState('networkidle').catch(() => {})
 
-  const display = await page.evaluate(() => {
-    const proxy = document.querySelector<HTMLElement>('[class*="ejectProxy"]')
-    return proxy ? getComputedStyle(proxy).display : 'none'
+  const state = await page.evaluate(() => {
+    const back = document.querySelector<HTMLElement>('[data-deck-back]')
+    const wash = document.querySelector<HTMLElement>('[data-seam-wash]')
+    const inner = document.querySelector<HTMLElement>('[data-deck-flip-inner]')!
+    const section = inner.closest('section')!
+    return {
+      back: back ? getComputedStyle(back).display : 'none',
+      wash: wash ? getComputedStyle(wash).display : 'none',
+      transform: getComputedStyle(inner).transform,
+      overlapped:
+        document.querySelector('#work')!.getBoundingClientRect().top <
+        section.getBoundingClientRect().bottom - 1,
+    }
   })
-  expect(display, 'proxy suppressed without scroll motion').toBe('none')
+  expect(state.back, 'back face hidden').toBe('none')
+  expect(state.wash, 'wash hidden').toBe('none')
+  expect(state.transform, 'radio never transformed').toBe('none')
+  expect(state.overlapped, 'sections do not overlap').toBe(false)
 
   await context.close()
 })

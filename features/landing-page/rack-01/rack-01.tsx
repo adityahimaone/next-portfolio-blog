@@ -7,12 +7,12 @@ import type { ArchiveRepo } from '@/features/projects/lib/github'
 import { About } from './section-about'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
-import { EjectProxy } from './eject-proxy'
 import { Experience } from './section-experience'
 import { Hero } from './section-hero'
 import { SignalDivider } from './section-signaldivider'
 import { Skills } from './section-skills'
 import styles from './rack-01.module.css'
+import { SEAM_SVH } from '../constants/seam'
 import { useRackAnimations } from './use-rack-animations'
 
 /**
@@ -53,7 +53,11 @@ export default function Rack01LandingPage({
        outside landmarks. It is also what the skip link below targets. The
        ref and className are unchanged, so neither the scroll-scrubbing nor the
        layout depends on the element name. */
-    <main ref={rootRef} className={styles.root}>
+    <main
+      ref={rootRef}
+      className={styles.root}
+      style={{ '--seam-svh': SEAM_SVH } as React.CSSProperties}
+    >
       <a className={styles.skipLink} href="#about">
         Skip to content
       </a>
@@ -68,9 +72,6 @@ export default function Rack01LandingPage({
       <CableDivider />
       <Experience selected={experienceIndex} setSelected={setExperienceIndex} />
       <Work archiveRepos={archiveRepos} />
-      {/* Portalled to the body: the handoff has to cross two `overflow: hidden`
-          sticky stages, so it cannot live inside either of them. */}
-      <EjectProxy />
       <Contact />
     </main>
   )

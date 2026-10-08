@@ -19,12 +19,14 @@ import {
 } from 'lucide-react'
 import { Screw } from '@/components/ui/screw'
 import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
+import { LIBRARY_TRACKS } from '../work/library-data'
 
 const STATIONS = [88.5, 94.2, 100.8, 106.5]
 
 const NEEDLE_POSITIONS = [8, 36, 64, 92]
 
 const KNOB_ROTATIONS = [0, 135, 270, 405]
+const SEAM_PALETTE = LIBRARY_TRACKS[0].palette
 
 export function Experience({
   selected,
@@ -70,143 +72,179 @@ export function Experience({
   return (
     <section id="experience" className={styles.experience} data-rack-section>
       <div className={styles.experienceStage}>
+        <div
+          className={styles.seamWash}
+          data-seam-wash
+          aria-hidden="true"
+          style={{
+            background: `radial-gradient(60% 55% at 28% 42%, ${SEAM_PALETTE.a}, transparent 70%), radial-gradient(50% 50% at 74% 58%, ${SEAM_PALETTE.b}, transparent 70%), var(--lcd-black, #0b0c0d)`,
+          }}
+        />
         <div className={styles.experienceContent}>
           <SectionHeading index="04" eyebrow="Experience + training">
             What shipped, and where.
           </SectionHeading>
-          <div className={styles.cassetteDeck}>
-            <Screw className={styles.screwTopLeft} />
-            <Screw className={styles.screwTopRight} />
-            <div className={styles.radioHandle} aria-hidden="true">
-              <span />
-            </div>
-            <div className={styles.cassetteHeader}>
-              <span>AH / FIELD RADIO</span>
-              <span className={styles.cassetteHeaderMeta}>
-                FM / AUX / TAPE ARCHIVE
-                <b className={styles.radioHeaderStatus}>ON AIR</b>
-              </span>
-            </div>
-            <div className={styles.radioFace}>
-              <div className={styles.radioSpeaker} aria-hidden="true">
-                <span className={styles.radioSpeakerBadge}>R-01</span>
-                <div className={styles.speakerGrille} />
-                <div className={styles.radioLevel}>
-                  {Array.from({ length: 8 }, (_, index) => (
-                    <i key={index} />
-                  ))}
+          <div className={styles.deckFlip} data-deck-flip>
+            <div className={styles.deckFlipInner} data-deck-flip-inner>
+              <div className={`${styles.cassetteDeck} ${styles.deckFront}`}>
+                <Screw className={styles.screwTopLeft} />
+                <Screw className={styles.screwTopRight} />
+                <div className={styles.radioHandle} aria-hidden="true">
+                  <span />
                 </div>
-              </div>
-              <div className={styles.radioCore}>
-                <div className={styles.radioTuner} aria-hidden="true">
-                  <div className={styles.frequencyDisplay}>
-                    <span>FM</span>
-                    <strong>{displayFreq}</strong>
-                    <small>MHz</small>
-                  </div>
-                  <div className={styles.frequencyScale}>
-                    {[88, 92, 96, 100, 104, 108].map((frequency) => (
-                      <span key={frequency}>{frequency}</span>
-                    ))}
-                    <i
-                      style={{
-                        left: `${targetNeedle}%`,
-                        transition: 'left 450ms cubic-bezier(0.22, 1, 0.36, 1)',
-                      }}
-                    />
-                  </div>
-                  <div className={styles.radioDials}>
-                    <span>
-                      <i />
-                      VOL
-                    </span>
-                    <span>
-                      <i
-                        style={{
-                          transform: `rotate(${targetKnob}deg)`,
-                          transition:
-                            'transform 450ms cubic-bezier(0.22, 1, 0.36, 1)',
-                        }}
-                      />
-                      TUNE
-                    </span>
-                  </div>
+                <div className={styles.cassetteHeader}>
+                  <span>AH / FIELD RADIO</span>
+                  <span className={styles.cassetteHeaderMeta}>
+                    FM / AUX / TAPE ARCHIVE
+                    <b className={styles.radioHeaderStatus}>ON AIR</b>
+                  </span>
                 </div>
-                <div
-                  className={styles.tapeCarousel}
-                  role="group"
-                  aria-label="Work experience cassette collection"
-                >
-                  {[-1, 0, 1].map((offset) => {
-                    const index =
-                      (selected + offset + EXPERIENCES.length) %
-                      EXPERIENCES.length
-                    const item = EXPERIENCES[index]
-                    return (
-                      <button
-                        type="button"
-                        key={item.id}
-                        onClick={() => setSelected(index)}
-                        aria-pressed={offset === 0}
-                        className={`${styles.cassette} ${offset === 0 ? styles.cassetteActive : offset < 0 ? styles.cassettePrevious : styles.cassetteNext}`}
-                        style={cassetteThemeVars(index)}
-                      >
-                        {/* The same face the eject handoff clones, so the
-                            cassette that leaves the bay is drawn by the same
-                            markup as the one sitting in it. */}
-                        <CassetteFace index={index} />
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-            <div className={styles.experienceBody}>
-              <div
-                className={styles.experienceSelector}
-                role="tablist"
-                aria-label="Experience recordings"
-              >
-                {EXPERIENCES.map((item, index) => {
-                  return (
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={selected === index}
-                      key={item.id}
-                      onClick={() => setSelected(index)}
-                      style={cassetteAccentVars(index)}
+                <div className={styles.radioFace}>
+                  <div className={styles.radioSpeaker} aria-hidden="true">
+                    <span className={styles.radioSpeakerBadge}>R-01</span>
+                    <div className={styles.speakerGrille} />
+                    <div className={styles.radioLevel}>
+                      {Array.from({ length: 8 }, (_, index) => (
+                        <i key={index} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className={styles.radioCore}>
+                    <div className={styles.radioTuner} aria-hidden="true">
+                      <div className={styles.frequencyDisplay}>
+                        <span>FM</span>
+                        <strong>{displayFreq}</strong>
+                        <small>MHz</small>
+                      </div>
+                      <div className={styles.frequencyScale}>
+                        {[88, 92, 96, 100, 104, 108].map((frequency) => (
+                          <span key={frequency}>{frequency}</span>
+                        ))}
+                        <i
+                          style={{
+                            left: `${targetNeedle}%`,
+                            transition:
+                              'left 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                          }}
+                        />
+                      </div>
+                      <div className={styles.radioDials}>
+                        <span>
+                          <i />
+                          VOL
+                        </span>
+                        <span>
+                          <i
+                            style={{
+                              transform: `rotate(${targetKnob}deg)`,
+                              transition:
+                                'transform 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+                            }}
+                          />
+                          TUNE
+                        </span>
+                      </div>
+                    </div>
+                    <div
+                      className={styles.tapeCarousel}
+                      role="group"
+                      aria-label="Work experience cassette collection"
                     >
-                      <span>{String(index + 1).padStart(2, '0')}</span>
-                      <strong>{item.company}</strong>
-                      <small>{item.period}</small>
-                    </button>
-                  )
-                })}
-              </div>
-              <div
-                className={styles.experienceNotes}
-                role="tabpanel"
-                /* The panel scrolls when a long note list overflows its 140px
+                      {[-1, 0, 1].map((offset) => {
+                        const index =
+                          (selected + offset + EXPERIENCES.length) %
+                          EXPERIENCES.length
+                        const item = EXPERIENCES[index]
+                        return (
+                          <button
+                            type="button"
+                            key={item.id}
+                            onClick={() => setSelected(index)}
+                            aria-pressed={offset === 0}
+                            className={`${styles.cassette} ${offset === 0 ? styles.cassetteActive : offset < 0 ? styles.cassettePrevious : styles.cassetteNext}`}
+                            style={cassetteThemeVars(index)}
+                          >
+                            <CassetteFace index={index} />
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.experienceBody}>
+                  <div
+                    className={styles.experienceSelector}
+                    role="tablist"
+                    aria-label="Experience recordings"
+                  >
+                    {EXPERIENCES.map((item, index) => {
+                      return (
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={selected === index}
+                          key={item.id}
+                          onClick={() => setSelected(index)}
+                          style={cassetteAccentVars(index)}
+                        >
+                          <span>{String(index + 1).padStart(2, '0')}</span>
+                          <strong>{item.company}</strong>
+                          <small>{item.period}</small>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div
+                    className={styles.experienceNotes}
+                    role="tabpanel"
+                    /* The panel scrolls when a long note list overflows its 140px
                    band, and it holds no focusable children — so a keyboard user
                    had no way to scroll it and could only reach what already fit.
                    `tabindex="0"` makes the scrollbar itself focusable, which is
                    what lets arrow keys move the content. `aria-label` names it
                    for the same reason: a tabpanel with no accessible name is
                    announced as an unlabelled group. */
-                tabIndex={0}
-                aria-label={`${experience.type} details`}
-              >
-                <div>
-                  <SilkscreenLabel>
-                    {experience.type} / {experience.location}
-                  </SilkscreenLabel>
+                    tabIndex={0}
+                    aria-label={`${experience.type} details`}
+                  >
+                    <div>
+                      <SilkscreenLabel>
+                        {experience.type} / {experience.location}
+                      </SilkscreenLabel>
+                    </div>
+                    <ul>
+                      {description.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-                <ul>
-                  {description.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+              </div>
+              <div
+                className={styles.deckBack}
+                data-deck-back
+                aria-hidden="true"
+              >
+                <div className={styles.deckBackChrome}>
+                  <span className={styles.deckBackDots}>
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span className={styles.deckBackTabs}>
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span className={styles.deckBackSearch} />
+                </div>
+                <div className={styles.deckBackColumns}>
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <div className={styles.deckBackBar} />
               </div>
             </div>
           </div>

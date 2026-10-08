@@ -10,6 +10,7 @@ import {
   unregisterSmoothScroll,
 } from '../lib/smooth-scroll'
 import { EXPERIENCES } from '../constants'
+import { FLIP_DEGREES, SEAM_SVH } from '../constants/seam'
 import styles from './rack-01.module.css'
 
 /**
@@ -593,7 +594,8 @@ export function useRackAnimations({
             scrollTrigger: {
               trigger: `.${styles.experience}`,
               start: 'top top',
-              end: 'bottom bottom',
+              end: () => `+=${Math.round(window.innerHeight * 0.9)}`,
+              invalidateOnRefresh: true,
               scrub: 0.4,
               onUpdate: (self) => {
                 const experienceProgress = Math.min(1, self.progress / 0.52)
@@ -608,594 +610,132 @@ export function useRackAnimations({
             },
           })
 
-          // ── Experience → Work: uncover, don't arrive ──
-          //
-          // The deck and the player are the same KIND of object at nearly the
-          // same width — 1296px and 1340px — and the same four-band structure.
-          // It is tempting to treat the seam as one growing into the other.
-          //
-          // Measured, they are 138px apart and never overlap: at the start of
-          // the window the deck's top is at 74px and the player's at 963px; at
-          // the end they are -826px and 63px. The gap is constant. They scroll
-          // in sequence, one leaving as the other appears, and there is no
-          // shared frame for a scale to bridge.
-          //
-          // So the seam does the only honest thing: the deck holds its opacity
-          // and simply scrolls off the top, and the player — already there,
-          // already unlit — brightens in place. The cassette flight is
-          // unchanged, and the tuning needle hands over to the playhead.
-          //
-          // Nothing in this window translates. That is the whole fix: the
-          // previous version had the deck sliding up and blurring out while the
-          // shell rose 18px into frame, and those two opposing moves are what
-          // made the boundary read as one section scrolling past another.
+          // ── Experience → Work: the radio flips into the player ──
           const experienceSection = rootRef.current?.querySelector<HTMLElement>(
             `.${styles.experience}`,
           )
-          const experienceContent = rootRef.current?.querySelector<HTMLElement>(
-            `.${styles.experienceContent}`,
+          const experienceStage = experienceSection?.querySelector<HTMLElement>(
+            `.${styles.experienceStage}`,
           )
-          const ejectProxy = document.querySelector<HTMLElement>(
-            `.${styles.ejectProxy}`,
+          const experienceHeading =
+            experienceSection?.querySelector<HTMLElement>(
+              `.${styles.sectionHeading}`,
+            )
+          const flipHost =
+            experienceSection?.querySelector<HTMLElement>('[data-deck-flip]')
+          const flipInner = experienceSection?.querySelector<HTMLElement>(
+            '[data-deck-flip-inner]',
           )
-          // Addressed by id, not by class: the rack's own `.work` rule only sets
-          // `color` on a descendant, and the section element itself carries the
-          // work module's class name, so a class lookup here finds nothing.
+          const seamWash =
+            experienceSection?.querySelector<HTMLElement>('[data-seam-wash]')
           const workSection =
             rootRef.current?.querySelector<HTMLElement>('#work')
-          // The player chrome lives in the work module, so its class names are
-          // not reachable from here. It marks the parts the seam drives instead.
+          const workStage =
+            workSection?.querySelector<HTMLElement>('[data-work-stage]')
           const workShell =
             workSection?.querySelector<HTMLElement>('[data-work-shell]')
 
-          /* The tuning needle. Its twin is the player's playhead: both are a
-             thin warm bar whose position along a horizontal track encodes where
-             you are, and the seam cross-fades one into the other at the same
-             fraction so it reads as one mark re-scaling.
-
-             This survives the uncover because it is not a "reveal" — it is a
-             handover between two instruments that are both present the whole
-             time, and it is the one piece of genuine continuity in the window. */
-          const deckNeedle =
-            experienceContent?.querySelector<HTMLElement>(
-              `.${styles.frequencyScale} i`,
-            ) ?? null
-          /* Its other half. In the work module, so addressed by attribute. */
-          const workPlayhead =
-            workSection?.querySelector<HTMLElement>('[data-playhead]')
-
-          /* The bay the tape leaves. Stable for the life of the page — nothing
-             remounts it — so unlike the artwork it is safe to hold, and it is
-             held here rather than re-queried on every frame. */
-          const bay = rootRef.current?.querySelector<HTMLElement>(
-            `.${styles.tapeCarousel}`,
-          )
-
-          const ejectCassette = ejectProxy?.querySelector<HTMLElement>(
-            `.${styles.ejectCassette}`,
-          )
-          /* The clone is drawn by the deck's own components, so its interior carries the
-               deck's class names — `cassetteLabel` and `cassetteMechanism`, not
-               an `eject`-prefixed pair. Reaching for the wrong prefix silently
-               found nothing and the whole seam stood still. */
-          const ejectLabel = ejectProxy?.querySelector<HTMLElement>(
-            `.${styles.cassetteLabel}`,
-          )
-          const ejectMechanism = ejectProxy?.querySelector<HTMLElement>(
-            `.${styles.cassetteMechanism}`,
-          )
-
           if (
             experienceSection &&
-            experienceContent &&
-            ejectProxy &&
-            ejectCassette &&
-            ejectLabel &&
-            ejectMechanism &&
+            experienceStage &&
+            experienceHeading &&
+            flipHost &&
+            flipInner &&
+            seamWash &&
             workSection &&
+            workStage &&
             workShell
           ) {
-            /* A Type I shell's proportion, in millimetres. The CSS states the same value
-               as `aspect-ratio`; this is only used to centre the box on the
-               point the flight computes, since height follows from width. */
-            const CASSETTE_RATIO = 100.4 / 63.8
+            const geometry = { scale: 1, dy: 0 }
+            const clamp01 = (n: number) => Math.min(1, Math.max(0, n))
+            const easeInOut = (t: number) =>
+              t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+            const smooth = (t: number) => t * t * (3 - 2 * t)
 
-            /* Where the proxy is picked up from.
+            const measure = () => {
+              const hostRect = flipHost.getBoundingClientRect()
+              const stageRect = experienceStage.getBoundingClientRect()
+              const shellRect = workShell.getBoundingClientRect()
+              const workStageRect = workStage.getBoundingClientRect()
+              const deckW = flipHost.offsetWidth
+              const shellW = workShell.offsetWidth
+              const shellH = workShell.offsetHeight
+              if (!deckW || !shellW) return
 
-               This was frozen once on entry, which is wrong: the deck's stage is
-               sticky but it is also scrolling up and out of view across exactly
-               this window, so a frozen source left the proxy parked down near the
-               fold after the real cassette had already left — the proxy was
-               briefly the only cassette on screen, sitting below the fold. So the
-               source is followed live for as long as the deck's own cassette is
-               substantially on screen, and frozen only after it goes. That also
-               makes the hand-off continuous rather than a jump on the first
-               frame. */
-            /* Where the tape actually starts.
+              const scale = shellW / deckW
+              const deckCenter =
+                hostRect.top - stageRect.top + flipHost.offsetHeight / 2
+              const shellCenter = shellRect.top - workStageRect.top + shellH / 2
 
-               Read live for as long as the deck's own cassette is
-               substantially on screen, then frozen — see `source`. But the
-               point it is frozen at is usually ABOVE the top of the viewport,
-               because the deck's stage is already scrolling out of frame when
-               the seam opens. So `source.y` cannot be used as the lift's
-               starting point directly: lifting "up" from a position already
-               off-screen just parks the tape further off-screen, which is what
-               left it invisible across the first half of the window on the way
-               down and the whole of the reverse. */
-            const source = { x: 0, y: 0, width: 0, frozen: false }
-
-            const readSource = (freeze: boolean) => {
-              if (source.frozen) return
-              const cassette = rootRef.current?.querySelector<HTMLElement>(
-                `.${styles.cassetteActive}`,
-              )
-              if (!cassette) return
-              const rect = cassette.getBoundingClientRect()
-              source.x = rect.left + rect.width / 2
-              source.y = rect.top + rect.height / 2
-              source.width = rect.width
-              if (freeze) source.frozen = true
+              geometry.scale = scale
+              geometry.dy = shellCenter - deckCenter
+              flipInner.style.setProperty('--back-w', `${deckW}px`)
+              flipInner.style.setProperty('--back-h', `${shellH / scale}px`)
             }
 
-            // Release the source again on the way back up, so reversing the seam
-            // re-attaches to the deck rather than replaying a stale origin.
-            const releaseSource = () => {
-              source.frozen = false
-            }
-
-            /* Put the deck back the way it was found.
-
-               The deck's tape and its bay are written from `placeCassette`,
-               which only runs while the seam's ScrollTrigger is between its
-               start and end. Scroll up past `start` and those writes stop — so
-               without this, a reader who crossed the seam and came back would
-               be looking at a deck with no tape in it and no trigger to put
-               it back. That is the whole of "the reverse is broken": the
-               forward direction is scrubbed and correct, but everything it
-               touched imperatively has to be undone explicitly.
-
-               Called on the way out in both directions, and on refresh, so a
-               reload mid-page cannot strand the deck blank either. */
-            const resetDeck = () => {
-              const cassette = rootRef.current?.querySelector<HTMLElement>(
-                `.${styles.cassetteActive}`,
-              )
-              cassette?.style.removeProperty('opacity')
-
-              bay?.removeAttribute('data-ejected')
-              bay?.style.removeProperty('--bay-empty')
-
-              /* The sleeve too, and this one matters more than it looks. Leaving
-                 the seam leaves the artwork at whatever opacity the last frame
-                 wrote — which is 0 when the reader exits upward early in the
-                 window. Clearing it here is what makes the cover visible again
-                 once the player is fully on screen. */
-              workSection
-                ?.querySelector<HTMLElement>('[data-handoff-target]')
-                ?.style.removeProperty('opacity')
-            }
-
-            /* The artwork is not static: the work stage travels a full viewport
-               height during this very window, so the destination moves every
-               frame and a frozen `fromTo` would miss it. The target rect is read
-               BEFORE the proxy's box is written — reading after would flush a
-               layout we just invalidated. */
-            /* ── The eject ──────────────────────────────────────────────
-
-               This used to be one straight line from the bay to the artwork,
-               and it read as two copies of the same tape sliding apart: the
-               flying clone left the deck's own "Universities & Academies"
-               behind, still painted, still scrolling up out of frame. So for
-               the whole crossing there were two tapes — the one that left and
-               the one that stayed — and no moment where the tape was simply
-               gone.
-
-               A real eject is three moves, not one, and the order is what sells
-               it. The tape has to LEAVE THE BAY before it can travel anywhere,
-               because a tape sliding sideways out of a slot is not a tape being
-               taken out of a machine — it is a sticker peeling off. So:
-
-                 0.00 → 0.24  lift: rise out of the well, bay emptying under it
-                 0.24 → 0.80  carry: the deck releases, the tape travels down
-                 0.80 → 1.00  seat: it settles into the player's bay
-
-               The lift is nearly vertical because that is what a deck does —
-               it lifts straight out of its slot before anything moves sideways.
-               Only then does it descend toward the player.
-
-               The lift is short. It only has to clear the bay's lip — the deck
-               is already scrolling out of frame underneath it, so a longer lift
-               spends the extra time as a plateau with the tape parked at the top
-               of the viewport, fully visible and completely motionless, which
-               reads as a stall rather than as a carry. */
-
-            const LIFT_END = 0.24
-            const TRAVEL_END = 0.8
-            /* How far clear of the bay the tape rises before it starts to move
-               toward the player, in units of its own height. Kept small: the
-               deck is scrolling up out of the frame across this whole window, so
-               a generous lift stacks on top of that scroll and puts the tape
-               above the top of the viewport — and there is then a stretch of the
-               crossing with no tape anywhere on screen, which reads as the
-               object being lost rather than carried. */
-            const LIFT_CLEARANCE = 0.42
-            /* How much of the bay's width the seated tape fills. The bay is a
-               square and the tape is 1.574:1, so a tape sized to the full square
-               is a wide sliver lying across it. Three quarters is what reads as
-               a tape lying *in* a well rather than covering one. */
-            const SEATED_FILL = 0.76
-            /* How far below the top of the viewport the tape is allowed to sit at
-               the top of its lift. It is lifted out of a deck that is itself
-               leaving the frame, so without a floor the tape follows it out and
-               spends the first half of the crossing invisible — see `apexY`. */
-            const VIEWPORT_MARGIN = 92
-
-            const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n)
-            const smoothstep = (n: number) => n * n * (3 - 2 * n)
-
-            const placeCassette = (progress: number) => {
-              const target = rootRef.current?.querySelector<HTMLElement>(
-                '[data-handoff-target]',
-              )
-              if (!target) return
-
-              /* Follow the deck's own cassette while it is still substantially
-                 on screen, then freeze. Measuring it is one layout read against
-                 the one already being done for the target below. */
-              const deckCassette = rootRef.current?.querySelector<HTMLElement>(
-                `.${styles.cassetteActive}`,
-              )
-              if (deckCassette && !source.frozen) {
-                const r = deckCassette.getBoundingClientRect()
-                const stillVisible = r.bottom > window.innerHeight * 0.45
-                if (!stillVisible) {
-                  readSource(true)
-                } else {
-                  source.x = r.left + r.width / 2
-                  source.y = r.top + r.height / 2
-                  source.width = r.width
-                }
-              }
-              if (source.width === 0) return
-
-              const rect = target.getBoundingClientRect()
-              // `content-visibility: auto` can leave a section holding its
-              // `contain-intrinsic-size` placeholder, so an unrendered target
-              // can still measure. Skip rather than fly to the wrong box.
-              if (rect.width === 0) return
-
-              const toX = rect.left + rect.width / 2
-              const toY = rect.top + rect.height / 2
-              const tapeH = source.width / CASSETTE_RATIO
-
-              /* Where the deck's cassette is right now, while it is still worth
-                 reading: the frozen `source` is the only stable measurement, but
-                 the live bay is the one the reader can see, so the flight starts
-                 from it for as long as it is on screen. */
-              const liveBay =
-                deckCassette && !source.frozen
-                  ? deckCassette.getBoundingClientRect()
-                  : null
-
-              /* One continuous path from the bay to the player's bay, with the
-                 three phases as WEIGHTS on it rather than as separate segments.
-
-                 They were separate segments, and that is what created the stall.
-                 The lift runs first and the carry second, so once the lift has
-                 finished there is a stretch of the window where neither phase
-                 has anything left to do: the tape is parked at the top of the
-                 viewport, fully visible, for roughly a fifth of the crossing —
-                 measurably motionless in both directions. Phase weights instead
-                 let the path keep moving while both phases are still active,
-                 and reach the bay exactly at the end.
-
-               Weights, not a timeline: the arc is a quadratic bezier whose
-               control point sits directly above the bay, which is what bends
-               the path into "up, then across, then down" — the shape of a tape
-               being lifted out of one machine and set into another. A lerp
-               between two points can only draw a straight line and could never
-               leave the bay before travelling. */
-              const bayY =
-                liveBay && liveBay.bottom > window.innerHeight * 0.45
-                  ? liveBay.top + liveBay.height / 2
-                  : source.y
-
-              const minVisibleY = VIEWPORT_MARGIN + tapeH / 2
-              /* The bay is above the top of the frame once the deck has left,
-                 so the flight is floored there: the tape is never asked to sit
-                 higher than it can be seen. Without it the whole arc goes
-                 off-screen for the first half of the window, in both
-                 directions, while the proxy is fully opaque. */
-              const fromY = Math.max(bayY, minVisibleY)
-              const fromX = source.x
-
-              /* How high above the flight line the tape arcs. A modest arc:
-                 enough that the tape is clearly rising out of the deck rather
-                 than sliding across it, and never so much that it climbs out
-                 of frame. */
-              const arc = Math.min(
-                tapeH * LIFT_CLEARANCE,
-                Math.max(0, fromY - minVisibleY),
+            const apply = (progress: number) => {
+              const swing = clamp01((progress - 0.06) / 0.78)
+              const turn = easeInOut(swing)
+              const grow = easeInOut(clamp01((progress - 0.02) / 0.84))
+              const arc = Math.sin(swing * Math.PI)
+              const settle = Math.sin(
+                clamp01((progress - 0.74) / 0.2) * Math.PI,
               )
 
-              /* Control point above the bay: entering and leaving the path are
-                 both vertical-ish, so the tape lifts before it travels. */
-              const ctrlX = fromX + (toX - fromX) * 0.16
-              const ctrlY = fromY - arc
-
-              const inv = 1 - progress
-              const b0 = inv * inv
-              const b1 = 2 * inv * progress
-              const b2 = progress * progress
-
-              const x = b0 * fromX + b1 * ctrlX + b2 * toX
-              const y = b0 * fromY + b1 * ctrlY + b2 * toY
-
-              /* The phases survive only as weights on the two things the rest
-                 of the page reads: how empty the deck's bay is, and how far
-                 the sleeve has come down. */
-              const lift = clamp01(progress / LIFT_END)
-              const carry = clamp01(
-                (progress - LIFT_END) / (TRAVEL_END - LIFT_END),
-              )
-              const seat = clamp01((progress - TRAVEL_END) / (1 - TRAVEL_END))
-              const liftEased = smoothstep(lift)
-              const carryEased = smoothstep(carry)
-
-              /* Sized along the way it travels, NOT to the destination's own
-                 dimensions. The destination is a 1:1 square and the cassette is
-                 100.4:63.8, so driving width and height independently to meet
-                 it would squash the shell by a third on the way in and turn a
-                 tape into a card. Instead the shell keeps its own ratio at every
-                 frame and simply gets smaller — which is also why the interior,
-                 drawn in `cqw`, stays in proportion the whole way down.
-
-                 It only starts shrinking once the travel begins. A tape that
-                 shrank while still lifting out would read as receding from the
-                 viewer rather than as being carried.
-
-                 It stops at the width the bay's slot can actually hold — the
-                 square's width scaled to `SEATED_FILL`, not the square's height,
-                 since the tape lies flat inside it. A tape that shrank all the
-                 way to nothing would read as dissolving into the artwork, which
-                 is the thing the eject exists to avoid. */
-              const seatedWidth = Math.min(
-                source.width,
-                rect.width * SEATED_FILL,
-              )
-              const shrink = carryEased * 0.82 + seat * 0.18
-              const width = source.width + (seatedWidth - source.width) * shrink
-
-              ejectCassette.style.width = `${width}px`
-
-              /* Zero for the first stretch, so the cassette leaves the bay at
-                 exactly the angle it was sitting at and the hand-off has no
-                 jump in it. The tilt only starts once it is clear of the deck,
-                 peaks mid-flight, and unwinds to flat as it seats — which is
-                 what reads as being inserted rather than dropped.
-
-                 `sin(flight * PI)` alone would be tilted from the first frame,
-                 because flight is already non-zero as soon as progress is. The
-                 dead zone is what holds it flat while it overlaps its own
-                 original position.
-
-                 Driven off the LINEAR carry, not the eased one. The eased value
-                 is barely moving in the first third of the travel, so easing it
-                 pushed the tilt so far back that the tape arrived at the bay
-                 already flat — and a tape that travels a long way with no tilt
-                 reads as a screenshot sliding, not as an object being carried. */
-              const TILT_START = 0.1
-              const tiltPhase = Math.max(
-                0,
-                (carry - TILT_START) / (1 - TILT_START),
-              )
-              const tilt = Math.sin(tiltPhase * Math.PI) * -5
-
-              gsap.set(ejectCassette, {
-                x: x - width / 2,
-                y: y - width / CASSETTE_RATIO / 2,
-                rotate: tilt,
+              gsap.set(flipInner, {
+                rotationY: FLIP_DEGREES * turn + settle * 5,
+                rotationX: -6 * arc,
+                rotationZ: 1.6 * arc,
+                z: 120 * arc,
+                scale: 1 + (geometry.scale - 1) * grow,
+                y: geometry.dy * grow,
               })
-
-              /* The bay empties as the tape clears it, and what is left is a slot sized to
-               what was in it. Written as an attribute rather than a class so it
-               is scrubbed and reversed with the rest of the timeline. The bay
-               element itself is stable — unlike the artwork, nothing remounts
-               it — so it is looked up once here rather than per frame. */
-              if (bay) {
-                bay.toggleAttribute('data-ejected', liftEased > 0.02)
-              }
-
-              /* The sleeve comes down over the seated tape.
-
-                 Without this the artwork is simply absent for the whole seam
-                 and appears fully opaque the instant the seam ends, so the bay
-                 that was built to receive the tape never reads as having
-                 received anything.
-
-                 Driven from here rather than as a tween on a captured node,
-                 because the artwork is REMOUNTED by the work player's
-                 `AnimatePresence` every time the track changes — and the track
-                 changes during this very window, since the section scrolls a
-                 viewport per seam. A tween holding the element it found at
-                 setup wrote its opacity to a detached node, leaving the live
-                 button at full opacity for the whole crossing: the cover stayed
-                 fully drawn underneath the tape and the bay behind it was never
-                 visible. Re-reading the node each frame keeps the sleeve tied
-                 to whatever is actually on screen, forwards and backwards. */
-              const liveArt = workSection?.querySelector<HTMLElement>(
-                '[data-handoff-target]',
+              experienceHeading.style.opacity = String(
+                1 - clamp01(progress / 0.28),
               )
-              if (liveArt) {
-                const coverUp = clamp01((progress - 0.68) / 0.26)
-                liveArt.style.opacity = coverUp.toFixed(3)
-              }
-
-              /* The deck's own tape stops being visible the moment the flying
-                 clone has lifted clear of it. Before this the deck held opacity
-                 and simply scrolled off with its tape still drawn, which is
-                 what put two copies of the same tape on screen for the whole
-                 crossing. It is hidden by opacity rather than unmounted so the
-                 carousel keeps its own transforms and the seam can measure it.
-
-                 Written on every frame, including the frames where it is above
-                 the threshold, so scrolling back up puts the tape back in its
-                 bay. A write that only fires on the way down leaves the deck
-                 permanently blank once the reader has crossed the seam. */
-              if (deckCassette) {
-                deckCassette.style.opacity = liftEased > 0.04 ? '0' : ''
-              }
+              seamWash.style.opacity = String(
+                smooth(clamp01((progress - 0.04) / 0.52)),
+              )
+              workShell.style.opacity = String(clamp01((progress - 0.6) / 0.22))
+              const cover = 1 - clamp01((progress - 0.86) / 0.12)
+              experienceSection.style.opacity = String(cover)
+              experienceSection.style.visibility =
+                cover <= 0.001 ? 'hidden' : ''
             }
 
-            const seam = gsap.timeline({
-              scrollTrigger: {
-                // The window work spends entering the viewport: it is exactly
-                // where experience's sticky stage releases and work's engages.
-                trigger: workSection,
-                start: 'top bottom',
-                end: 'top top',
-                scrub: 0.8,
-                invalidateOnRefresh: true,
-                onEnter: () => releaseSource(),
-                onEnterBack: () => releaseSource(),
-                /* Leaving in either direction means the seam is no longer the
-                   thing on screen, so everything it wrote imperatively has to be
-                   handed back — see `resetDeck`. Without these the reverse is
-                   broken in the specific way that the deck stays empty. */
-                onLeave: resetDeck,
-                onLeaveBack: resetDeck,
-                onRefresh: () => {
-                  resetDeck()
-                  releaseSource()
-                  readSource(false)
-                },
-                onUpdate: (self) => placeCassette(self.progress),
+            const seamLength = () => (SEAM_SVH / 100) * window.innerHeight
+            measure()
+            apply(0)
+            ScrollTrigger.create({
+              trigger: workSection,
+              start: 'top top',
+              end: () => `+=${seamLength()}`,
+              invalidateOnRefresh: true,
+              onEnter: (self) => {
+                measure()
+                apply(self.progress)
               },
-              defaults: { ease: 'none' },
+              onEnterBack: (self) => {
+                measure()
+                apply(self.progress)
+              },
+              onRefresh: (self) => {
+                measure()
+                apply(self.progress)
+              },
+              onUpdate: (self) => apply(self.progress),
+              onLeave: () => apply(1),
+              onLeaveBack: () => apply(0),
             })
 
-            /* ── Uncover, don't arrive ────────────────────────────────
-
-               The deck as a whole does not fade. It never fades. It holds
-               opacity 1 for the whole window and simply scrolls off the top of
-               the frame as the player scrolls up into place beneath it —
-               because that is what an object on a surface does when you scroll
-               past it, and anything else is performance.
-
-               The one thing that leaves the deck is its tape, and it leaves by
-               being lifted out of the bay, not by dissolving. That is the whole
-               difference between an eject and a cross-fade, and it is why the
-               clone and the bay are driven from `placeCassette` rather than from
-               the tweens below: the bay and the departing tape have to agree
-               frame by frame, and two separately-scrubbed tweens cannot.
-
-               The player is already there. It is dark and unlit from the
-               moment the window opens and brightens in place across it. So the
-               read is lifting one machine off another, not waiting for
-               something to arrive.
-
-               This is the correction to a wrong idea: the deck and the shell
-               are the same KIND of object at nearly the same width (1296 vs
-               1340) but they are 138px apart and never overlap at any point in
-               the window — measured, not assumed. There is no shared frame for
-               one to grow into, so the earlier "one frame grows into the other"
-               pass was animating a relationship that does not exist. */
-
-            seam.fromTo(
-              workShell,
-              { opacity: 0.25 },
-              /* Most of the brightening happens early and the rest arrives as
-                 the deck clears, so the player is already legible behind the
-                 deck before the deck is gone. Starting it at 0.25 rather than 0
-                 is what makes it read as uncovered rather than as about to
-                 appear — at 0 there is nothing to uncover. */
-              { opacity: 1, duration: 0.9, ease: 'none' },
-              0.05,
-            )
-
-            /* ── The needle becomes the playhead ─────────────────
-
-               The one element pair in either section that is genuinely the same
-               gesture: a thin warm bar whose position along a horizontal track
-               encodes where you are. A tuner needle finding a station and a
-               playhead finding a position in a record are the same instrument
-               reading a different scale, and the seam is the moment the scale
-               changes.
-
-               They overlap rather than cross-fade — the needle fades out over
-               0.2 while the playhead fades in across the same 0.2, so for that
-               window both are partly visible and the visitor sees one mark
-               re-scaling rather than one leaving and another arriving. A clean
-               hand-off would leave a moment with neither, which reads as the
-               mark vanishing.
-
-               The playhead's resting width is Motion's `trackProgress`, so its
-               opacity is animated on the wrapper and the width keeps being
-               driven normally underneath. */
-            if (deckNeedle && workPlayhead) {
-              seam
-                .to(
-                  [deckNeedle],
-                  { opacity: 0, duration: 0.2, ease: 'none' },
-                  0.5,
-                )
-                .fromTo(
-                  [workPlayhead],
-                  { opacity: 0 },
-                  { opacity: 1, duration: 0.2, ease: 'none' },
-                  0.5,
-                )
+            return () => {
+              experienceSection.style.opacity = ''
+              experienceSection.style.visibility = ''
+              experienceHeading.style.opacity = ''
+              seamWash.style.opacity = ''
+              workShell.style.opacity = ''
+              gsap.set(flipInner, { clearProps: 'all' })
             }
-
-            /* The cassette flight is untouched. It measures the deck's live
-               active cassette and the artwork every frame and writes the
-               transform directly, because both endpoints move across the window
-               and a frozen `fromTo` would miss both. */
-
-            seam.fromTo(
-              ejectProxy,
-              { opacity: 0 },
-              { opacity: 1, duration: 0.1 },
-              0.02,
-            )
-
-            /* The tape seats into the bay a moment before the seam ends, so its
-               printed detail has to be gone by then — otherwise the label and
-               reels are still on screen as the artwork cross-fades in over it
-               and the two overlap. Dropping it across the final stretch keeps
-               the tape a blank shell for the last frames, which is what a sleeve
-               covering a deck looks like from the outside. */
-            seam.to(
-              [ejectLabel, ejectMechanism],
-              { opacity: 0, duration: 0.18 },
-              0.7,
-            )
-
-            /* The tape has to clear well before the trigger ends. A fade that
-               starts at 0.92 only has the last 8% of the track to run in, so
-               the proxy was still ~0.8 opaque when the seam released it. */
-            seam.to(ejectProxy, { opacity: 0, duration: 0.14 }, 0.84)
-
-            /* The sleeve settling over the seated tape is driven from
-               `placeCassette`, not from here. It has to be: the artwork is
-               remounted by the player's `AnimatePresence` mid-window, so a
-               tween holding the node it found at setup would be animating a
-               detached element. See the note there. */
-
-            /* The masked-slot rise is gone.
-
-               Work is `data-no-heading-reveal`, so the seam had been giving
-               its heading the house reveal — a `yPercent: 105 → 0` slide out
-               of a clipped slot at 0.62 and 0.66. That is an arrival, and an
-               arrival is the one thing this seam is no longer doing: the player
-               is already there, dark, and simply gets brighter. Having its own
-               title then spring up out of a clip two thirds of the way through
-               the window contradicted that — it told the visitor something was
-               arriving at the same moment as the rest of the machine was
-               revealed to have been there all along.
-
-               The heading now brightens with everything else, which is what
-               `data-no-heading-reveal` means everywhere else on the page. */
           }
         })
 

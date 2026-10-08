@@ -11,7 +11,15 @@ import { cn } from '@/lib/utils'
 
 export interface BrokenLightTextProps extends UseFlickerOptions {
   text: string
-  as?: React.ElementType
+  /**
+   * The element to render.
+   *
+   * Narrowed from `React.ElementType`: under the installed @types/react the
+   * generic form resolves the tag's props to `children: never`, which fails
+   * `next build`'s type check. This component only ever forwards `className`,
+   * `aria-label` and children, so the tag is typed to exactly those.
+   */
+  as?: 'span' | 'p' | 'strong' | 'em' | 'h1' | 'h2' | 'h3' | 'div'
   glowColor?: string
   className?: string
 }

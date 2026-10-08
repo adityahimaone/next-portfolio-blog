@@ -11,7 +11,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
+import {
+  CONTACT_PAD_COLORS,
+  EMAIL,
+  EXPERIENCES,
+  MIXER_DATA,
+} from '../constants'
 import styles from './rack-01.module.css'
 import { SectionHeading } from './section-heading'
 import {
@@ -86,25 +91,6 @@ const CONTACT_PADS = [
   { label: 'Hat', detail: 'Bright noise', note: 1200 },
   { label: 'Minor', detail: 'A minor', note: 220 },
   { label: 'Bell', detail: 'Metal tone', note: 1046.5 },
-] as const
-
-const CONTACT_PAD_COLORS = [
-  '#35c78a',
-  '#4d8dff',
-  '#a778ff',
-  '#f2b84b',
-  '#ff5a3d',
-  '#ef4f91',
-  '#9b6cff',
-  '#3e9cff',
-  '#23c7b7',
-  '#85c94a',
-  '#e4ca3f',
-  '#f28b3d',
-  '#e05b52',
-  '#cf62c3',
-  '#746fe8',
-  '#4bafd1',
 ] as const
 
 /**

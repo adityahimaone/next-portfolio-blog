@@ -163,3 +163,29 @@ export const MIXER_DATA: readonly MixerGroup[] = [
   },
 ] as const
 
+/**
+ * The Contact controller's sixteen pad colours.
+ *
+ * Lifted out of `section-contact.tsx` when the hero's pad field started
+ * borrowing them: one palette, two instruments. Order is load-bearing — pad 01
+ * takes the first colour, and the hero's boot sweep and the deck's pad labels
+ * both index into it.
+ */
+export const CONTACT_PAD_COLORS = [
+  '#35c78a',
+  '#4d8dff',
+  '#a778ff',
+  '#f2b84b',
+  '#ff5a3d',
+  '#ef4f91',
+  '#9b6cff',
+  '#3e9cff',
+  '#23c7b7',
+  '#85c94a',
+  '#e4ca3f',
+  '#f28b3d',
+  '#e05b52',
+  '#cf62c3',
+  '#746fe8',
+  '#4bafd1',
+] as const

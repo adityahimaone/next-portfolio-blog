@@ -12361,3 +12361,293 @@
     perspective: none;
   }
 }
+
+/* ═══ Pad sea hero ═══════════════════════════════════════════════════════════
+
+   The device wall's twelve tiles became a field of pads. Everything in this
+   block is either the new surface, or a pointer-events fix the old wall never
+   needed — the tiles only covered part of the stage, the canvas covers all of
+   it, and two absolutely-positioned overlays were sitting on top of it.
+
+   The tuned hero timelines in use-rack-animations.ts are untouched: they still
+   address .heroDeviceWall (now an empty scrim node), .heroBackdropName,
+   .heroEditorialPanel, .heroBottomRail, .heroAtmosphere, .heroAboutHandoff and
+   .heroBootSequence. Only the internals of the editorial panel changed. */
+
+/* The canvas is the click surface for the pads. Both overlays below it in the
+   stack must stop swallowing pointer events, and both need to keep receiving
+   them where they are actually interactive. */
+.heroDeviceWall {
+  pointer-events: none;
+  background: transparent;
+}
+.heroImmersiveContent {
+  pointer-events: none;
+}
+.heroEditorialPanel {
+  pointer-events: auto;
+}
+
+/* ─── The name: a neon sign in Syne ─────────────────────────────────────────
+   Space Grotesk read as an editorial heading in front of hardware, Orbitron as
+   a frequency readout. Syne is the face the original device-wall hero set the
+   name in — wide, quirky geometric caps that read as a product wordmark — and
+   at 800 weight it looks like something that was milled, not typed.
+
+   The glow itself is not here. `BrokenLightText` writes a per-character
+   `text-shadow` inline as it powers each tube on, which overrides anything
+   this rule could set on the letters. */
+.heroBackdropName {
+  --hero-chroma: 0;
+  font-family: var(--font-syne), var(--font-space-grotesk),
+    'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  /* Measured, not estimated: Syne at 800 runs about 1.24em per cap, so
+     "HIMAWAN" at the 180px this started on measured 1562px inside a 1440px
+     viewport and clipped the A and the N. This clamp leaves ~90px a side. */
+  font-size: clamp(64px, 10.1vw, 150px);
+  font-weight: 800;
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+}
+/* Each line is transformed on its own by useHeroMotion, so it rides the swell
+   rather than moving as one plate.
+
+   The chromatic offset lives here as `drop-shadow` rather than on the
+   container as `text-shadow`, for two reasons: the flicker engine owns
+   `text-shadow` per character, and `filter` on this element composes with the
+   children instead of being overridden by them. Alpha is driven by the same
+   variable as the offset, so at rest both shadows are fully transparent — no
+   stray coloured copy sitting behind the letters. */
+.heroNameLine {
+  display: block;
+  filter: drop-shadow(0 3px 7px rgb(0 0 0 / 0.65))
+    drop-shadow(
+      calc(var(--hero-chroma) * 2.4px) 0 0
+        rgb(255 106 42 / calc(var(--hero-chroma) * 0.5))
+    )
+    drop-shadow(
+      calc(var(--hero-chroma) * -2px) 0 0
+        rgb(92 214 163 / calc(var(--hero-chroma) * 0.28))
+    );
+  will-change: transform, filter, opacity;
+}
+
+/* ─── The LCD tag ───────────────────────────────────────────────────────────
+   Same material as the rest of the rack's displays (`.lcd`): near-black glass,
+   inset shadow, green phosphor. The right-hand slot reports the pad you just
+   struck, so a click on the field has somewhere to land. */
+.heroEditorialPanel .heroKicker {
+  display: inline-flex;
+  width: fit-content;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 7px 12px;
+  border: 1px solid rgba(92, 214, 163, 0.18);
+  border-radius: 3px;
+  background: var(--lcd-black);
+  box-shadow:
+    inset 0 1px 3px #000,
+    0 1px 0 rgba(255, 255, 255, 0.05);
+  color: rgba(178, 226, 205, 0.78);
+  font: 650 8.5px var(--font-geist-mono);
+  letter-spacing: 0.14em;
+}
+.heroKickerReadout {
+  padding-left: 10px;
+  border-left: 1px solid rgba(92, 214, 163, 0.22);
+  color: var(--lcd-green);
+  font-style: normal;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 9px rgba(92, 214, 163, 0.4);
+}
+
+/* ─── The three lit link-pads ───────────────────────────────────────────────
+   Real anchors, styled as the Contact controller's pads: dark rubber, one LED
+   each, and a physical press. The LED is the single accent colour, so the
+   three carry the same signal. */
+.heroEditorialPanel .heroActions {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.heroLinkPad {
+  position: relative;
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 15px;
+  border: 1px solid rgba(244, 240, 232, 0.18);
+  border-radius: 4px;
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.07),
+      transparent 46%
+    ),
+    linear-gradient(180deg, #252a2d, #191d1f);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.5),
+    0 3px 9px rgba(0, 0, 0, 0.4);
+  color: rgba(244, 240, 232, 0.9);
+  font: 700 10px var(--font-geist-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    transform 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+.heroLinkPad > i {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--signal-orange);
+  box-shadow: 0 0 7px rgba(255, 90, 31, 0.65);
+}
+.heroLinkPad > svg {
+  transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .heroLinkPad:hover {
+    border-color: rgba(255, 90, 31, 0.5);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      inset 0 -2px 5px rgba(0, 0, 0, 0.5),
+      0 7px 15px rgba(0, 0, 0, 0.44);
+  }
+  .heroLinkPad:hover > i {
+    box-shadow: 0 0 11px rgba(255, 90, 31, 0.95);
+  }
+  .heroLinkPad:hover > svg {
+    transform: translate(1px, -1px);
+  }
+}
+.heroLinkPad:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.62);
+}
+
+/* ─── The LCD readouts ──────────────────────────────────────────────────── */
+.heroInlineProof {
+  gap: 6px 16px;
+  margin-top: 4px;
+  padding: 9px 13px;
+  border: 1px solid rgba(92, 214, 163, 0.16);
+  border-radius: 3px;
+  background: var(--lcd-black);
+  box-shadow:
+    inset 0 1px 3px #000,
+    0 1px 0 rgba(255, 255, 255, 0.045);
+  color: rgba(155, 214, 190, 0.6);
+  letter-spacing: 0.1em;
+}
+.heroInlineProof b {
+  color: var(--lcd-green);
+  font-size: 13px;
+  text-shadow: 0 0 9px rgba(92, 214, 163, 0.45);
+}
+
+/* Between the two hero layouts there is no room for three pads in the third
+   column; let the row use the full panel width instead of clipping. */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .heroEditorialPanel .heroActions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Syne is wide, and "HIMAWAN" carries the two widest caps in the alphabet.
+     At 13vw it measured 442px inside 390px and clipped both edges. */
+  .heroBackdropName {
+    font-size: clamp(30px, 9.8vw, 56px);
+    line-height: 0.88;
+    letter-spacing: -0.01em;
+  }
+  .heroEditorialPanel .heroKicker {
+    display: inline-flex;
+    width: auto;
+    max-width: 100%;
+    margin-bottom: 18px;
+    font-size: 8px;
+  }
+  .heroKickerReadout {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* One full-width primary and the other two paired: three stacked 48px rows
+     pushed the panel into the magnetic dock. */
+  .heroEditorialPanel .heroActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .heroEditorialPanel .heroLinkPad {
+    width: 100%;
+    min-height: 48px;
+    justify-content: space-between;
+    padding-inline: 13px;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+  .heroEditorialPanel .heroLinkPad:first-child {
+    grid-column: 1 / -1;
+  }
+  .heroInlineProof {
+    gap: 5px 12px;
+    font-size: 7.5px;
+  }
+  .heroInlineProof b {
+    font-size: 12px;
+  }
+  /* The magnetic dock is fixed over the bottom of the viewport and is ~80px
+     tall with its offset. The panel's last row is the LCD readout strip, and
+     at the old clearance the dock sat on top of it. */
+  .heroImmersiveContent {
+    padding-bottom: calc(116px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroBackdropName,
+  .heroBackdropName > span:last-child {
+    --hero-chroma: 0;
+  }
+  /* BrokenLightText renders plain text when motion is reduced, so the neon
+     glow it would have animated in is restated here as a static one. The sign
+     is still lit; it just never flickers. */
+  .heroBackdropName {
+    text-shadow:
+      0 0 16px rgb(255 242 226 / 0.4),
+      0 2px 0 rgb(6 8 7 / 0.72);
+  }
+  .heroBackdropName > span:last-child {
+    text-shadow:
+      0 0 18px rgb(255 90 31 / 0.5),
+      0 2px 0 rgb(6 8 7 / 0.72);
+  }
+  .heroLinkPad,
+  .heroLinkPad > svg {
+    transition: none;
+  }
+  /* The reduced-motion reset drops the hero to `height: auto` and unpins the
+     stage, which makes the immersive column's `height: calc(100% - 106px)`
+     stop resolving — the panel then floated up into the middle of the name.
+     Restate the column's height as a floor so the bottom alignment survives.
+     The extra 36px is the stage's own bottom padding, which the percentage
+     used to absorb: without it the panel sits low enough for the dock to clip
+     the readout strip. */
+  .heroImmersiveContent {
+    height: auto;
+    min-height: calc(100svh - 142px);
+  }
+}

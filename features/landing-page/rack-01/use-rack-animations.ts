@@ -112,13 +112,22 @@ export function useRackAnimations({
           // the direction the eye is already travelling. Passed as the target
           // rather than as a stagger option: the rack is a hand-authored
           // layout, so the DOM order is a zig-zag and needs re-sorting first.
-          const heroSweepOrder = heroSweepIndices(modules).map(
-            (index) => modules[index],
-          )
+          //
+          // The hero has no device tiles any more — the pad sea replaced the
+          // wall — so `modules` is legitimately empty here, and
+          // `heroSweepIndices` answers an empty list with its twelve-slot
+          // fallback. Mapping those onto nothing left twelve `undefined`
+          // targets and GSAP threw `Cannot read properties of undefined
+          // (reading '_gsap')` on every scroll frame. Filter them out instead
+          // of leaving phantom tiles in the DOM for the selectors to find.
+          const heroSweepOrder = heroSweepIndices(modules)
+            .map((index) => modules[index])
+            .filter(Boolean)
 
-          const name = hero.querySelector<HTMLElement>(
-            `.${styles.heroBackdropName}`,
-          )!
+          // `.heroBackdropName` is deliberately absent here. Its scroll story
+          // moved to useHeroMotion, which rides it on the same swell the pad
+          // field is drawing — two timelines writing the same transform fought
+          // each other, and only one of them can know the wave.
           const panel = hero.querySelector<HTMLElement>(
             `.${styles.heroEditorialPanel}`,
           )!
@@ -259,31 +268,10 @@ export function useRackAnimations({
               0.28,
             )
             .to(routes, { opacity: 1, y: 0, duration: 0.18 }, 0.32)
-            .to(
-              name,
-              {
-                scale: 1.34,
-                letterSpacing: '-0.055em',
-                filter: 'blur(0px)',
-                duration: 0.5,
-              },
-              0.14,
-            )
             .to(atmosphere, { opacity: 0.36, duration: 0.28 }, 0.3)
             .to(routes, { opacity: 0, y: -5, duration: 0.16 }, 0.66)
             .to(supportingModules, { opacity: 0.04, duration: 0.24 }, 0.7)
             .to(anchors, { opacity: 0.18, scale: 1.02, duration: 0.24 }, 0.7)
-            .to(
-              name,
-              {
-                yPercent: -10,
-                opacity: 0.32,
-                scale: 1.46,
-                filter: 'blur(3px)',
-                duration: 0.25,
-              },
-              0.72,
-            )
             .fromTo(
               handoff,
               { yPercent: 100, opacity: 0 },

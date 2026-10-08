@@ -76,3 +76,6 @@ next-env.d.ts
 
 # generated repo snapshots
 artifacts/
+
+# Screenshot scratch (pad sea verification captures)
+/.padsea-check/

@@ -1,0 +1,227 @@
+/* ── The radio swing: two layers, one scene ──────
+
+   The Experience deck (the previous deck component)
+   rides the front layer; the Work player waits on a
+   layer BEHIND it. The swing turns the radio a full
+   360° while it zooms to nearly the whole screen,
+   then dives behind the player, which brightens and
+   comes forward to take the stage.
+
+   The scene is CSS 3D, not WebGL, on purpose: the
+   player layer is the real player — buttons, lists,
+   a real search field, real ARIA roles — and CSS 3D
+   keeps all of that interactive instead of rendering
+   it into a texture. The radio layer hides its back
+   face, which is what makes a full turn read as a
+   spin (the deck goes edge-on and comes back around)
+   rather than a mirrored card. */
+
+.radioStage {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* The stage fills the work section's own sticky
+     box, which carries the padding and the minimum
+     height — `100%` (not `100svh`) so it sits
+     exactly inside that box's content area instead
+     of overflowing it by the padding and clipping
+     against the box's `overflow: hidden`. */
+  height: 100%;
+  overflow: visible;
+  padding: clamp(10px, 1.6vh, 22px) clamp(12px, 1.8vw, 28px);
+}
+
+/* The scene. `perspective` is the viewer; the
+   `translateZ(0)` is what makes `preserve-3d`
+   establish the 3D rendering context the two layers
+   depth-sort in — the radio passing behind the
+   player is a z-order event, not a paint-order
+   one, so it needs the shared context. */
+.flipScene {
+  --radio-w: min(1340px, 100%);
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 1800px;
+  perspective-origin: 50% 42%;
+  transform-style: preserve-3d;
+  transform: translateZ(0);
+}
+
+/* The player's layer. It waits behind the radio —
+   `overflow: hidden` flattens its contents into its
+   plane, which is exactly what a glass player shell
+   wants: an ordinary 2D stacking context sitting in
+   the scene's 3D space. The layer itself stays a
+   clean 3D participant, so the opacity fade lives on
+   the inner wrapper below, never on the layer. */
+.playerLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: clamp(14px, 1.3vw, 20px);
+  transform: translateZ(-320px);
+}
+
+/* The dim-to-bright wrapper. Written by the swing
+   timeline: the player is a dim presence behind the
+   radio from the first frame, and brightens as the
+   radio turns and dives behind it. */
+.playerFade {
+  position: relative;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  opacity: 0.2;
+}
+
+/* The radio's layer: the deck, the previous
+   ExperienceDeck component, at its natural size and
+   centred. `backface-visibility` (with the Safari
+   prefix) is what makes the deck disappear as it
+   turns edge-on and reappear as it comes back
+   around — a spin, not a mirror. */
+.radioLayer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transform: translateZ(140px);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* The ground shadow. A sibling of both layers so it
+   stays a flat ellipse on the player's floor rather
+   than rotating with the radio: the timeline writes
+   `scaleX` from the radio's angle — tightest and
+   faintest edge-on, widest and darkest face-on —
+   and dissolves it as the radio dives behind the
+   player. */
+.groundShadow {
+  position: absolute;
+  left: 4%;
+  top: calc(50% + min(40svh, 380px));
+  width: 92%;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(0 0 0 / 0.42),
+    transparent 68%
+  );
+  transform: translateZ(-310px);
+  pointer-events: none;
+}
+
+/* The specular sheen. `--angle` is the radio's
+   rotation in degrees, written by the timeline: the
+   highlight travels across the scene as the radio
+   turns, which is the cheap 80% of a real specular
+   pass. No blend mode on purpose — a blend inside a
+   preserve-3d context flattens it in some
+   browsers, and the sweep reads fine without one. */
+.radioGlassHighlight {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 32%,
+    rgb(255 255 255 / 0.13) 50%,
+    transparent 68%
+  );
+  background-size: 250% 100%;
+  background-position: calc(50% + var(--angle, 0) * 0.3%) 0;
+}
+
+/* The power-on sweep across the player's face. */
+.radioScanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 34%;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgb(197 240 217 / 0.14) 45%,
+    rgb(197 240 217 / 0.22) 55%,
+    transparent
+  );
+  opacity: 0;
+  will-change: transform;
+}
+
+/* The polite announcer for the layer change.
+   Visually hidden; screen readers get "Selected
+   work" / "Selected experience" exactly once per
+   crossing. */
+.radioStatus {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── No swing, no pin: phones and reduced motion ─
+
+   The swing timeline never runs for these visitors
+   (the orchestrator bails on reduced motion, and the
+   chapter is gated to the desktop media query), so
+   nothing here has to be undone by script. The two
+   layers stack as ordinary sections — the radio
+   above, the player below — and every control stays
+   reachable and every word stays on the page. The
+   swing is a desktop delight, not a content lock. */
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+  .radioStage {
+    position: static;
+    height: auto;
+    min-height: 0;
+    padding: 28px clamp(16px, 4vw, 40px);
+  }
+
+  .flipScene {
+    perspective: none;
+    transform: none;
+    height: auto;
+  }
+
+  .playerLayer,
+  .radioLayer {
+    position: static;
+    display: block;
+    transform: none;
+    -webkit-backface-visibility: visible;
+    backface-visibility: visible;
+    height: auto;
+    overflow: visible;
+    border-radius: 0;
+  }
+
+  .radioLayer {
+    margin-bottom: 36px;
+  }
+
+  .playerFade {
+    height: auto;
+    min-height: 480px;
+    opacity: 1;
+  }
+
+  .groundShadow,
+  .radioGlassHighlight,
+  .radioScanline {
+    display: none;
+  }
+}

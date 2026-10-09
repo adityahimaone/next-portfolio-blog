@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { ExternalLink } from 'lucide-react'
+import { ChevronDown, ExternalLink } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Cover } from '@/features/booth/cover'
 import {
@@ -40,6 +41,7 @@ export function LibrarySidebar({
           track.genre?.toLowerCase().includes(needle),
       )
     : tracks
+  const [archiveExpanded, setArchiveExpanded] = useState(false)
 
   return (
     <aside className={styles.sidebar} aria-label="Library">
@@ -90,14 +92,32 @@ export function LibrarySidebar({
           /projects, which lists the same repositories. */}
       {archiveTracks.length > 0 && (
         <div className={styles.archive}>
-          <div className={styles.archiveHead}>
+          <button
+            type="button"
+            className={styles.archiveHead}
+            aria-expanded={archiveExpanded}
+            aria-controls="github-archive-list"
+            onClick={() => setArchiveExpanded((expanded) => !expanded)}
+          >
             <span>More on GitHub</span>
+            <ChevronDown
+              size={12}
+              aria-hidden="true"
+              className={styles.archiveChevron}
+              data-expanded={archiveExpanded}
+            />
+          </button>
+          <div
+            id="github-archive-list"
+            className={styles.archiveContent}
+            hidden={!archiveExpanded}
+          >
+            <ul className={styles.archiveList}>
+              {archiveTracks.slice(0, ARCHIVE_LIMIT).map((item) => (
+                <ArchiveRow key={item.slug} item={item} />
+              ))}
+            </ul>
           </div>
-          <ul className={styles.archiveList}>
-            {archiveTracks.slice(0, ARCHIVE_LIMIT).map((item) => (
-              <ArchiveRow key={item.slug} item={item} />
-            ))}
-          </ul>
           {/* The full set stays reachable without widening the column. Internal
               rather than out to GitHub: this is a portfolio, and /projects is
               the page that actually shows the work. */}

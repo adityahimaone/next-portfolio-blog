@@ -128,6 +128,114 @@ test('the radio flips through the seam and hands over to the player', async ({
   expect(back.sectionOpacity).toBe(1)
 })
 
+test('the GitHub archive collapses while All projects stays visible', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.waitForLoadState('networkidle').catch(() => {})
+  await page.evaluate(
+    (lead) => {
+      const work = document.querySelector('#work')!
+      const top = work.getBoundingClientRect().top + window.scrollY
+      window.scrollTo(0, top + lead + 600)
+    },
+    (SEAM_SVH / 100) * 900,
+  )
+
+  const toggle = page.getByRole('button', { name: 'More on GitHub' })
+  const archive = page.locator('#github-archive-list')
+  const allProjects = page.getByRole('link', { name: 'All projects' })
+
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await expect(archive).toBeHidden()
+  await expect(archive.getByRole('link')).toHaveCount(0)
+  await expect(allProjects).toBeVisible()
+
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  await expect(archive).toBeVisible()
+  await expect(archive.getByRole('link')).toHaveCount(3)
+  await expect(allProjects).toBeVisible()
+
+  await toggle.scrollIntoViewIfNeeded()
+  await toggle.focus()
+  await expect(toggle).toBeFocused()
+  await toggle.press('Enter')
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await expect(archive).toBeHidden()
+  await expect(allProjects).toBeVisible()
+})
+
+test('the active library indicator stays centered on its project', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport)
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await page.waitForLoadState('networkidle').catch(() => {})
+    await page.evaluate(
+      (lead) => {
+        const work = document.querySelector('#work')!
+        const top = work.getBoundingClientRect().top + window.scrollY
+        window.scrollTo(0, top + lead + 600)
+      },
+      (SEAM_SVH / 100) * viewport.height,
+    )
+
+    const options = page.getByRole('option')
+    await expect(options).toHaveCount(6)
+    await options.nth(3).click()
+
+    const active = page.getByRole('option', { selected: true })
+    const indicator = active.locator('[class*="libraryIndicator"]')
+    await expect(indicator).toHaveCount(1)
+    await page.waitForFunction(() => {
+      const row = document.querySelector(
+        '[role="option"][aria-selected="true"]',
+      )
+      const rule = row?.querySelector('[class*="libraryIndicator"]')
+      if (!row || !rule) return false
+      const rowRect = row.getBoundingClientRect()
+      const ruleRect = rule.getBoundingClientRect()
+      return (
+        Math.abs(
+          ruleRect.top +
+            ruleRect.height / 2 -
+            (rowRect.top + rowRect.height / 2),
+        ) <= 1
+      )
+    })
+
+    const geometry = await page.evaluate(() => {
+      const row = document.querySelector(
+        '[role="option"][aria-selected="true"]',
+      )!
+      const rule = row.querySelector('[class*="libraryIndicator"]')!
+      const rowRect = row.getBoundingClientRect()
+      const ruleRect = rule.getBoundingClientRect()
+      return {
+        rowCenter: rowRect.top + rowRect.height / 2,
+        indicatorCenter: ruleRect.top + ruleRect.height / 2,
+        indicatorHeight: ruleRect.height,
+        rowHeight: rowRect.height,
+      }
+    })
+
+    expect(
+      Math.abs(geometry.indicatorCenter - geometry.rowCenter),
+      `${viewport.width}px: indicator center ${geometry.indicatorCenter} vs row center ${geometry.rowCenter}`,
+    ).toBeLessThanOrEqual(1)
+    expect(geometry.indicatorHeight).toBeGreaterThan(0)
+    expect(geometry.indicatorHeight).toBeLessThan(geometry.rowHeight)
+  }
+})
+
 test('every library row is drawn in the same visual language', async ({
   page,
 }) => {

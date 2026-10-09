@@ -180,11 +180,11 @@ describe('camera choreography', () => {
   it('rises through the swell, dives, then returns to plan view', () => {
     expect(cameraAt(0.4).amplitude).toBeGreaterThan(cameraAt(0).amplitude)
     // The dive puts the camera below the pad tops for the first time.
-    expect(cameraAt(0.62).position[1]).toBeLessThan(1)
+    expect(cameraAt(0.66).position[1]).toBeLessThan(1)
     // Calm is a top-down view again, well above the field, and the water is
     // already dead by the time the rig gets there.
-    expect(cameraAt(0.88).position[1]).toBeGreaterThan(10)
-    expect(cameraAt(0.8).amplitude).toBeLessThan(0.03)
+    expect(cameraAt(0.95).position[1]).toBeGreaterThan(10)
+    expect(cameraAt(0.88).amplitude).toBeLessThan(0.03)
     expect(cameraAt(1).amplitude).toBe(0)
   })
 
@@ -291,18 +291,12 @@ describe('boot, ripple and press', () => {
 
   it('boots the field in one colour, then releases the bank', () => {
     const rows = 18
-    const bootDone = (rows - 1) * BOOT.rowDelay + BOOT.rowDuration
-    // Still monochrome for the whole sweep and a moment after it.
+    // Palette reveal now starts at `hold` (0.1s) and finishes at `hold+duration` (0.9s),
+    // so colours fan out *during* the boot sweep, not after.
     expect(paletteReveal(rows, 0)).toBe(0)
-    expect(paletteReveal(rows, bootDone)).toBe(0)
-    expect(paletteReveal(rows, bootDone + PALETTE_REVEAL.hold)).toBe(0)
-    // Fully arrived by the end of the reveal window.
-    expect(
-      paletteReveal(
-        rows,
-        bootDone + PALETTE_REVEAL.hold + PALETTE_REVEAL.duration,
-      ),
-    ).toBe(1)
+    // At the middle of the reveal (0.5s), it's already halfway.
+    expect(paletteReveal(rows, 0.5)).toBeGreaterThanOrEqual(0.5)
+    expect(paletteReveal(rows, PALETTE_REVEAL.hold + PALETTE_REVEAL.duration)).toBe(1)
     // And it only ever moves one way.
     let previous = -1
     for (let t = 0; t < 8; t += 0.1) {

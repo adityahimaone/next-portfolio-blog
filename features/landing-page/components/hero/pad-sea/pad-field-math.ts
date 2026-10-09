@@ -273,7 +273,10 @@ export const CAMERA_KEYFRAMES: readonly CameraKeyframe[] = [
     amplitude: 0.62,
   },
   {
-    at: 0.4,
+    // The swell peaks here, and the title's `dive` window starts at 0.44 while
+    // the name's own exit uses the same edge. Keeping the two aligned by two
+    // frames is what makes the name leave with the field instead of ahead of it.
+    at: 0.44,
     position: [0, 2.6, 4.6],
     lookAt: [0, 0.1, -0.6],
     fov: 52,
@@ -284,38 +287,43 @@ export const CAMERA_KEYFRAMES: readonly CameraKeyframe[] = [
     // with them the top faces are seen at a grazing angle and 160 pads read as
     // 160 slats; a little height keeps the surface legible while still putting
     // the camera down inside the field.
-    at: 0.55,
+    //
+    // `at` is 0.66, not 0.55: the dive used to spend a fifth of the hero
+    // falling into the field, which read as a glimpse rather than as a move.
+    // Widening it gives the camera time to travel down there and for the pads
+    // to rush past on both sides.
+    at: 0.66,
     position: [0, 0.95, 1.9],
     lookAt: [0, 0.7, -3],
     fov: 62,
     amplitude: 0.56,
   },
   {
-    at: 0.65,
+    at: 0.76,
     position: [0, 0.6, 0.95],
     lookAt: [0, 0.78, -3.2],
     fov: 64,
     amplitude: 0.3,
   },
   {
-    // The climb back out is deliberately spread over four poses. Pulling from
-    // y=0.6 to plan view in one segment puts an 8-unit whip into 7% of the
-    // scroll, which reads as a teleport rather than as a crane shot.
-    at: 0.72,
+    // The climb back out is deliberately spread so no single segment whips.
+    // Pulling y=0.6 to plan view in one segment would put an 8-unit jump into
+    // 7% of the scroll, which reads as a teleport rather than a crane shot.
+    at: 0.8,
     position: [0, 2.6, 2.6],
     lookAt: [0, 0.2, -1.2],
     fov: 56,
     amplitude: 0.14,
   },
   {
-    at: 0.76,
+    at: 0.84,
     position: [0, 4.6, 2.2],
     lookAt: [0, 0.15, -0.8],
     fov: 52,
     amplitude: 0.08,
   },
   {
-    at: 0.8,
+    at: 0.88,
     position: [0, 7.2, 1.7],
     lookAt: [0, 0.05, -0.3],
     fov: 48,
@@ -323,25 +331,23 @@ export const CAMERA_KEYFRAMES: readonly CameraKeyframe[] = [
   },
   {
     // Water is dead and the rig is overhead before the lock-in starts, so the
-    // last quarter of the scroll has one thing happening rather than three
-    // overlapping ones: the step grid forming on a still surface. The crane is
-    // spread over six poses because compressing it into two put a 4.6-unit
-    // whip into 2% of the scroll.
-    at: 0.84,
+    // last quarter has one thing happening rather than three overlapping ones:
+    // the step grid forming on a still surface.
+    at: 0.92,
     position: [0, 9.8, 1.3],
     lookAt: [0, 0, 0],
     fov: 42,
     amplitude: 0,
   },
   {
-    at: 0.88,
+    at: 0.95,
     position: [0, 11.6, 0.9],
     lookAt: [0, 0, 0],
     fov: 38,
     amplitude: 0,
   },
   {
-    at: 0.92,
+    at: 0.97,
     position: [0, 12.3, 0.6],
     lookAt: [0, 0, 0],
     fov: 34,
@@ -361,6 +367,32 @@ export type CameraPose = {
   lookAt: [number, number, number]
   fov: number
   amplitude: number
+}
+
+/**
+ * Camera bank, in radians, while the rig falls into the field.
+ *
+ * Zero at the swell peak, at the bottom of the dive, and through the whole
+ * plan view — so the step grid is framed dead level. It ramps in over
+ * 0.44..0.55, holds while the camera is between the pads, and levels out by
+ * 0.78, which is where the climb back out starts.
+ *
+ * A roll the camera never returns from reads as a bug; one that leaves and
+ * comes back is a move.
+ */
+export const CAMERA_ROLL = {
+  peak: 0.075,
+  inStart: 0.44,
+  inEnd: 0.55,
+  outStart: 0.66,
+  outEnd: 0.78,
+} as const
+
+export function cameraRoll(progress: number): number {
+  const p = clamp01(progress)
+  const enter = smootherstep(CAMERA_ROLL.inStart, CAMERA_ROLL.inEnd, p)
+  const exit = smootherstep(CAMERA_ROLL.outStart, CAMERA_ROLL.outEnd, p)
+  return enter * (1 - exit) * CAMERA_ROLL.peak
 }
 
 /** Eased pose for a scroll progress. Values outside [0,1] clamp to the ends. */
@@ -474,8 +506,16 @@ export function lockInStepLit(col: number, row: number): boolean {
 
 export const BOOT = { rowDelay: 0.09, rowDuration: 0.5 } as const
 
-/** How long the field holds one colour after the sweep, then how fast the bank arrives. */
-export const PALETTE_REVEAL = { hold: 0.35, duration: 1.6 } as const
+/**
+ * How long the field holds one colour after the sweep, then how fast the bank arrives.
+ *
+ * `hold` is near-zero: the sweep completes in `BOOT` time (~1.91s on desktop),
+ * but the bank colours should fan out *during* the sweep, not after.
+ * `duration` controls how long that fan takes.
+ *
+ * Tweaked: hold=0.1s so colours appear with the first lit row, not after sweep.
+ */
+export const PALETTE_REVEAL = { hold: 0.1, duration: 0.8 } as const
 
 /** Row-by-row power-on, 0..1. `elapsed` is seconds since the field mounted. */
 export function bootGlow(row: number, elapsed: number): number {
@@ -486,12 +526,35 @@ export function bootGlow(row: number, elapsed: number): number {
 /**
  * 0 while the field is booting in one colour, 1 once the Contact bank has
  * arrived. A device powers on in a single colour; the sixteen-key bank is what
- * it becomes. Keyed off the row count because the sweep is row-by-row.
+ * it becomes. Keyed off elapsed time so colours arrive *during* the sweep.
  */
 export function paletteReveal(rows: number, elapsed: number): number {
-  const bootDone = Math.max(0, rows - 1) * BOOT.rowDelay + BOOT.rowDuration
-  const start = bootDone + PALETTE_REVEAL.hold
+  const start = PALETTE_REVEAL.hold
   return smoothstep(start, start + PALETTE_REVEAL.duration, elapsed)
+}
+
+/**
+ * The finale wave, 0..1, for the last stretch of the hero.
+ *
+ * The lock-in (0.76..0.92) snaps the middle 24 pads into the step grid and
+ * fades the rest. Without this, the last 28% of the scroll is a static grid
+ * on a dead surface — the most expensive part of the hero is the one that
+ * stops moving.
+ *
+ * Starts at 0.70 (before lock-in, so the water is already moving when the
+ * grid forms), peaks at 0.86, settles to 0 by 0.98 (grid still at handoff).
+ *
+ * Pure function of scroll progress — a scrub and a free scroll agree.
+ *
+ * Reaches 1.0 mid-finale; `pad-field.tsx` scales it into world units.
+ */
+export const FINALE_WAVE = { start: 0.7, peak: 0.86, end: 0.98 } as const
+
+export function finaleWave(progress: number): number {
+  const p = clamp01(progress)
+  const rise = smootherstep(FINALE_WAVE.start, FINALE_WAVE.peak, p)
+  const fall = smootherstep(FINALE_WAVE.peak, FINALE_WAVE.end, p)
+  return rise * (1 - fall)
 }
 
 /**

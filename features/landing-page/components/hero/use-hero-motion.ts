@@ -70,7 +70,14 @@ export function useHeroMotion({
         end: 'bottom bottom',
         invalidateOnRefresh: true,
         onUpdate: (self) => {
-          progress.current = self.progress
+          // Smooth the scroll input so the camera anticipates instead of
+          // tracking. Energy still reads raw velocity so choppiness stays
+          // honest.
+          const raw = self.progress
+          progress.current = Math.min(
+            progress.current + (raw - progress.current) * 0.09,
+            1,
+          )
           target = energyFromVelocity(self.getVelocity())
         },
         onLeave: () => {
@@ -107,9 +114,10 @@ export function useHeroMotion({
         // The same amplitude curve the pad field's camera uses, so the name
         // rides the swell the pads are drawing instead of an unrelated loop.
         const swell = cameraAt(p).amplitude
-        // `smootherstep` mirrors where the camera is: past 0.42 it is diving,
+        // `smootherstep` mirrors where the camera is: past 0.44 it is diving,
         // and the name leaves the way a key does, bottom line first.
-        const dive = smootherstep(0.42, 0.74, p)
+        // Ends at 0.82 — where the camera begins its climb back out.
+        const dive = smootherstep(0.44, 0.82, p)
         const drift = smootherstep(0.12, 0.5, p)
         const fade = smootherstep(0.6, 0.82, p)
 
@@ -120,7 +128,11 @@ export function useHeroMotion({
           const release = dive * (24 + index * 9)
           const y = bob - drift * 2 - release
           const scale = 1 - dive * 0.1
-          line.style.transform = `translate3d(0, ${y.toFixed(3)}vh, 0) rotate(${roll.toFixed(3)}deg) scale(${scale.toFixed(4)})`
+          // Perspective depth: title moves into 3D space during dive.
+          // Camera z goes from ~8.8 (top) to ~0.5 (bottom). We map this to
+          // a translateZ that makes the name feel like it's inside the field.
+          const depth = -60 * dive // 0 at top, -60px at full dive
+          line.style.transform = `perspective(800px) translate3d(0, ${y.toFixed(3)}vh, ${depth.toFixed(1)}px) rotate(${roll.toFixed(3)}deg) scale(${scale.toFixed(4)})`
           line.style.opacity = (1 - fade).toFixed(3)
         })
       }

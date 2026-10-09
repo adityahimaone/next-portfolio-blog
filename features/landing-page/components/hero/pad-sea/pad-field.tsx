@@ -21,12 +21,13 @@ import {
   buildPadLayout,
   calmFactor,
   cameraAt,
+  cameraRoll,
   clamp01,
+  finaleWave,
   lerp,
   lockInBlend,
   lockInStepLit,
   padTilt,
-  paletteReveal,
   planLockIn,
   pressAt,
   rippleAt,
@@ -84,7 +85,6 @@ const LED_DARK = new THREE.Color('#101315')
  * Contact bank is what it becomes once it is up.
  */
 const BOOT_COLOR = new THREE.Color('#ff6a2a')
-const BOOT_TINT = new THREE.Color('#2b2f31')
 /**
  * How much of the Contact colour survives into the pad body.
  *
@@ -321,7 +321,17 @@ export function PadField({
   const ripplesRef = useRef<Ripple[]>([])
   const hitsRef = useRef<Hit[]>([])
   const timeRef = useRef(0)
-  const cameraTarget = useRef(new THREE.Vector3())
+  const cameraTarget = useRef(new THREE.Vector3(...cameraAt(0).position))
+  /**
+   * The pose's look-at point and the point the camera is actually aiming at.
+   * Kept apart so the gaze can be damped at the same rate as the body; aiming
+   * straight at the keyframe made the dive snap its gaze at the boundary while
+   * the position eased.
+   *
+   * Seeded to the rest pose so the first frame doesn't aim from the origin.
+   */
+  const lookTarget = useRef(new THREE.Vector3(...cameraAt(0).lookAt))
+  const cameraLookAt = useRef(new THREE.Vector3(...cameraAt(0).lookAt))
 
   // Which pads become the 8x3 step grid, and which slot each one takes.
   useEffect(() => {
@@ -355,7 +365,7 @@ export function PadField({
       dummy.updateMatrix()
       for (const mesh of meshes) mesh!.setMatrixAt(pad.index, dummy.matrix)
       deckRef.current!.setColorAt(pad.index, new THREE.Color('#ffffff'))
-      padRef.current!.setColorAt(pad.index, BOOT_TINT)
+      padRef.current!.setColorAt(pad.index, BOOT_COLOR)
       lipRef.current!.setColorAt(pad.index, LED_DARK)
       glowRef.current!.setColorAt(pad.index, new THREE.Color(0, 0, 0))
       pipRef.current!.setColorAt(pad.index, LED_DARK)
@@ -439,7 +449,13 @@ export function PadField({
     )
     const follow = 1 - Math.exp(-delta * 9)
     camera.position.lerp(cameraTarget.current, follow)
-    camera.lookAt(pose.lookAt[0], pose.lookAt[1], pose.lookAt[2])
+    lookTarget.current.set(pose.lookAt[0], pose.lookAt[1], pose.lookAt[2])
+    cameraLookAt.current.lerp(lookTarget.current, follow)
+    camera.lookAt(cameraLookAt.current)
+    // The banking roll: only during the dive (true 3D, so lock-in is level).
+    // Seeded off `progress.current` (Authoritative truth), not time — so a
+    // scrub and a free scroll agree on which way is up.
+    camera.rotation.z = cameraRoll(p)
 
     const perspective = camera as THREE.PerspectiveCamera
     if (Math.abs(perspective.fov - fov) > 0.01) {
@@ -462,9 +478,8 @@ export function PadField({
 
     const { dummy, euler, offset, slotOf } = scratch
     const amplitude = pose.amplitude
-    // Boot in one colour, then release the Contact bank. `rows` is the grid's
-    // row count, because the boot sweep is row-by-row.
-    const reveal = paletteReveal(grid.rows, time)
+    // Palette reveal is now immediate (see pad-field-math.ts), so every pad
+    // carries its bank colour from the first lit frame — no monochrome hold.
 
     // Portrait sees further down the field, so its fog has to reach further too
     // or the far edge would appear inside the frame.
@@ -490,13 +505,24 @@ export function PadField({
         waveHeight(pad.x, pad.z, time, { amplitude, chop }) *
         lerp(CALM_ZONE.dip, 1, calm)
 
+      // Finale wave: a slow swell for 70..98% of the hero, so the last
+      // stretch isn't a static grid on dead water. 0.55 world units at peak —
+      // enough to feel alive and visible, not enough to drown the step grid.
+      // Scaled by (1 - lock) per-pad so the survivors settle flat as they
+      // snap into the grid.
+      const finale = finaleWave(p)
+      height += finale * 0.55 * Math.sin(time * 1.4 + (pad.x + pad.z) * 0.35)
+
       let ringBoost = 0
       for (const ripple of ripples) {
         const age = time - ripple.born
         const distance = Math.hypot(pad.x - ripple.x, pad.z - ripple.z)
         const ring = rippleAt(distance, age, { strength: ripple.strength })
         height += ring * (1 - lock)
-        ringBoost = Math.max(ringBoost, ring / ripple.strength)
+        ringBoost = Math.max(
+          ringBoost,
+          ring / ripple.strength + finale * 0.8 * (1 - lock),
+        )
       }
 
       /* --- struck pads, and the neighbours that dip with them ----------- */
@@ -572,8 +598,12 @@ export function PadField({
       // colour, so the handoff also shrinks the pad — fading alone left the
       // unlit rows reading as a second, dimmer copy of the step grid.
       const variance = 0.94 + ((index * 37) % 13) * 0.01
-      // One colour until the field is up, then the bank.
-      scratch.tint.copy(BOOT_TINT).lerp(tint, reveal)
+      // Colorful from the first frame. `tint` IS the bank colour, already
+      // mixed toward the deck base — there is no separate boot colour to fade
+      // *from*, so the row sweep alone reads the power-on. Previously the body
+      // multiplied by 0.3 and lerped toward the same colour, which held the
+      // whole field near-black until the reveal finished.
+      scratch.tint.copy(tint)
       scratch.color
         .copy(scratch.tint)
         .multiplyScalar(
@@ -613,9 +643,8 @@ export function PadField({
       dummy.updateMatrix()
       ledMesh.setMatrixAt(index, dummy.matrix)
 
-      // During the boot the lip is the single boot colour; the bank arrives
-      // with `reveal`. Off, it falls back to near-black.
-      scratch.tint.copy(BOOT_COLOR).lerp(full, reveal)
+      // Colorful from the first lit frame — the lip *is* the pad's bank colour.
+      scratch.tint.copy(full)
       scratch.color.copy(LED_DARK).lerp(scratch.tint, led)
       ledMesh.setColorAt(index, scratch.color)
 

@@ -93,8 +93,8 @@ export function useRackAnimations({
             `.${styles.hero}`,
           )
           // The legacy hero's boot + collapse timelines only run when the
-          // legacy hero markup is on the page. The DAP hero carries none of
-          // these classes and owns its motion (components/dap-hero), but the
+          // legacy hero markup is on the page. The RIDDIM hero carries none of
+          // these classes and owns its motion (components/riddim-hero), but the
           // timelines after this block — about, skills, the seam — must still
           // be built, so a missing hero skips the block instead of returning.
           if (hero) {

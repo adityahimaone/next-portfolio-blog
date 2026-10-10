@@ -1,0 +1,771 @@
+/* ==========================================================================
+   The RIDDIM hero — the machine is the page.
+
+   The section's height is the clone's height, so the page's scroll is the
+   machine's face. Nothing is pinned and nothing floats beside it: the headline
+   is printed on the fascia and the navigation is printed on the controls.
+
+   Everything animated here is driven by custom properties the scroll bridge
+   writes onto `.hero` (see use-riddim-hero.ts). The stylesheet owns the maths;
+   JS never touches an element's transform.
+
+     --r-power     0..1   the machine coming up to full power
+     --r-controls  0..1   knobs turn, fader slides
+     --r-meter     0..1   parameter LEDs step on down the pad field
+     --r-ink       0..1   the screen's glyph field lights, in sequence
+     --r-readout   0..1   the seven-segment counter runs
+     --r-play      0..1   gate for the pad ripple
+     --r-handoff   0..1   the bottom label row turns into the next chapter
+     --r-ptr-x/y   -1..1  pointer parallax for the panel's sheen
+
+   The defaults are the frame at scroll 0 — the machine's top edge, down to its
+   pilot light — so the server-rendered markup with no JS at all is the object.
+
+   Sizing: one clone unit is `--u`, and everything printed on the machine is
+   expressed in native units (`calc(374 * var(--u))`), so the clone scales as
+   one object. On narrower viewports the machine's own type scales below what
+   is readable, so the copy — and, on phones, the index — move to a normal
+   stack below the poster (`.stack`, gated in riddim-hero.tsx).
+   ========================================================================== */
+
+.hero {
+  --hero-top: 0px; /* the top bar is in flow above the machine */
+  --max-screens: 2.6;
+  --r-power: 0;
+  --r-controls: 0;
+  --r-meter: 0;
+  --r-ink: 0;
+  --r-readout: 0;
+  --r-play: 0;
+  --r-handoff: 0;
+  --r-ptr-x: 0;
+  --r-ptr-y: 0;
+
+  --orange: #f84a08;
+  --ink: #f1eee5;
+  --ink-muted: #a9a79d;
+  --mono: var(--font-geist-mono), ui-monospace, monospace;
+  --display: var(--font-space-grotesk), var(--font-inter), sans-serif;
+
+  position: relative;
+  padding-top: var(--hero-top);
+  background: #151716;
+  color: var(--ink);
+}
+
+.room {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background:
+    radial-gradient(90% 40% at 50% 12%, rgb(255 90 31 / 0.12), transparent 70%),
+    radial-gradient(70% 30% at 50% 100%, rgb(46 63 92 / 0.45), transparent 70%),
+    #151716;
+}
+
+/* ---- the machine --------------------------------------------------------- */
+
+.machine {
+  /* A clone unit. `cqw` resolves against this element's own inline size for
+     everything inside it, which is what lets one aspect-ratio'd box drive every
+     printed measurement; the vw line is the fallback. */
+  --u: calc(100vw / 952);
+  --u: calc(100cqw / 952);
+
+  container-type: inline-size;
+  position: relative;
+  z-index: 1;
+  width: min(100%, calc(var(--max-screens) * 100svh / 1.383403));
+  aspect-ratio: 952 / 1317;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: calc(30 * var(--u));
+  background: #d6cebd;
+  box-shadow:
+    0 calc(40 * var(--u)) calc(70 * var(--u)) calc(-30 * var(--u)) rgb(0 0 0 / 0.8),
+    0 0 0 1px rgb(0 0 0 / 0.4);
+  isolation: isolate;
+}
+
+.panel,
+.screenArt {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.panel {
+  position: absolute;
+  inset: 0;
+}
+
+/* A soft light that follows the pointer across the matte plastic. */
+.sheen {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: radial-gradient(
+    70% 45% at calc(50% + var(--r-ptr-x) * 34%)
+      calc(24% + var(--r-ptr-y) * 22%),
+    rgb(255 255 255 / 0.1),
+    transparent 70%
+  );
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+/* ---- the screen plane ---------------------------------------------------- */
+
+.screen {
+  position: absolute;
+  z-index: 2;
+  left: calc(15 * var(--u));
+  top: calc(324 * var(--u));
+  width: calc(922 * var(--u));
+  height: calc(268 * var(--u));
+  overflow: hidden;
+  border-radius: calc(6 * var(--u));
+}
+
+.screenArt {
+  position: absolute;
+  inset: 0;
+}
+
+.screenUi {
+  position: absolute;
+  inset: 0;
+  color: #f2fbf5;
+}
+
+.title {
+  position: absolute;
+  top: calc(var(--scr-title-top) * var(--u));
+  left: calc(var(--scr-pad) * var(--u));
+  margin: 0;
+  font-family: var(--display);
+  font-size: calc(var(--scr-title-size) * var(--u));
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.role {
+  position: absolute;
+  top: calc(var(--scr-role-top) * var(--u));
+  left: calc(var(--scr-pad) * var(--u));
+  margin: 0;
+  color: #0b3d2c;
+  font-family: var(--mono);
+  font-size: calc(var(--scr-role-size) * var(--u));
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.readout {
+  position: absolute;
+  top: calc(var(--scr-readout-top) * var(--u));
+  left: calc(var(--scr-pad) * var(--u));
+  display: flex;
+  max-width: calc(600 * var(--u));
+  align-items: baseline;
+  gap: calc(14 * var(--u));
+  margin: 0;
+  font-size: calc(var(--scr-readout-size) * var(--u));
+  line-height: 1;
+}
+
+.readout b {
+  color: #f84a08;
+  font-family: var(--display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.readout span {
+  overflow: hidden;
+  color: #0b3d2c;
+  font-family: var(--mono);
+  font-size: calc(var(--scr-readout-size) * 0.8 * var(--u));
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ---- the copy, printed on the blank half of the fascia ------------------- */
+
+.copy {
+  position: absolute;
+  z-index: 2;
+  left: calc(var(--copy-x) * var(--u));
+  top: calc(var(--copy-y) * var(--u));
+  width: calc(var(--copy-w) * var(--u));
+}
+
+.kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(4 * var(--u)) calc(10 * var(--u));
+  margin: 0 0 calc(8 * var(--u));
+  color: #1d1e1c;
+  font-family: var(--mono);
+  font-size: calc(var(--copy-kicker) * var(--u));
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.kicker i {
+  width: calc(8 * var(--u));
+  height: calc(8 * var(--u));
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 calc(10 * var(--u)) var(--orange);
+}
+
+.kicker span,
+.kicker em {
+  white-space: nowrap;
+}
+
+.kicker em {
+  color: #4a4a40;
+  font-style: normal;
+}
+
+.line {
+  display: block;
+  color: #16181a;
+  font-family: var(--display);
+  font-size: calc(var(--copy-headline) * var(--u));
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: calc(var(--copy-line) * var(--u));
+}
+
+.sub {
+  margin: calc(12 * var(--u)) 0 0;
+  color: #4a4a40;
+  font-family: var(--font-inter), sans-serif;
+  font-size: calc(var(--copy-sub) * var(--u));
+  line-height: 1.45;
+}
+
+.hint {
+  margin: calc(14 * var(--u)) 0 0;
+  color: #4a4a40;
+  font-family: var(--mono);
+  font-size: calc(var(--copy-hint) * var(--u));
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* ---- controls: the machine's controls ARE the navigation ----------------- */
+
+.control {
+  cursor: pointer;
+}
+
+.ring {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 3;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.machine [data-control]:focus {
+  outline: none;
+}
+
+.machine [data-control]:focus-visible .ring {
+  opacity: 1;
+}
+
+.cap,
+.pad {
+  transition: filter 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .machine [data-control]:hover {
+    filter: brightness(1.04) saturate(1.05);
+  }
+}
+
+.machine [data-armed='true'] {
+  filter: brightness(1.05) saturate(1.08);
+}
+
+/* ---- panel print --------------------------------------------------------- */
+
+.panel text {
+  font-family: var(--display);
+  text-transform: uppercase;
+}
+
+.wordmark {
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  fill: #01301f;
+  stroke: #01301f;
+  stroke-width: 3.4;
+  stroke-linejoin: round;
+}
+
+.model {
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  fill: #f84a08;
+}
+
+.tagline {
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: 0.035em;
+  fill: #1d1e1c;
+}
+
+.silk,
+.param,
+.swingText {
+  font-size: 16.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  fill: #4a4a40;
+}
+
+.gainText {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  fill: #f84a08;
+}
+
+.silkRule,
+.gainRule,
+.jackMark {
+  fill: none;
+  stroke: #4a4a40;
+  stroke-width: 1.4;
+}
+
+.gainRule {
+  stroke: #f84a08;
+}
+
+.jackMark {
+  stroke-width: 1.2;
+}
+
+.jackDot {
+  fill: #4a4a40;
+}
+
+.capBody {
+  fill: #2b2a24;
+}
+
+.capTop {
+  stroke: rgb(0 0 0 / 0.22);
+  stroke-width: 1;
+}
+
+.capText {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  fill: #0b3d2c;
+}
+
+.capSymbol {
+  font-size: 70px;
+  font-weight: 500;
+  fill: #0b3d2c;
+}
+
+.capOrange .capText,
+.capGreen .capText {
+  fill: #f6f2e8;
+}
+
+.knobSpin {
+  transform-box: view-box;
+  transform-origin: var(--cx) var(--cy);
+  transform: rotate(calc(var(--r-controls) * var(--sweep) * 1deg));
+}
+
+.faderCap {
+  transform-box: view-box;
+  transform: translateY(calc(var(--r-controls) * var(--travel) * 1px));
+}
+
+.padShadow {
+  fill: rgb(0 0 0 / 0.35);
+}
+
+.padBody {
+  fill: #2b2a24;
+}
+
+.padFace {
+  fill: url(#pad-face);
+}
+
+.padGlow {
+  opacity: var(--r-play);
+}
+
+.padPulse {
+  fill: var(--orange);
+  opacity: 0;
+  animation: padHit 2.4s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+  animation-delay: calc(var(--i) * -0.13s);
+}
+
+@keyframes padHit {
+  0% {
+    opacity: 0;
+  }
+  9% {
+    opacity: 0.42;
+  }
+  36% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.padDigit {
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  fill: #0b3d2c;
+  stroke: #0b3d2c;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+
+.padWord {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  fill: #f84a08;
+}
+
+.padOrange,
+.padGreen {
+  fill: #f84a08;
+}
+
+.padGreen {
+  fill: #0b3d2c;
+}
+
+/* Lamps idle at a fifth of their brightness, so the panel reads as powered at
+   rest, and step up one after another as the scroll runs. An armed control
+   takes its lamp to full. */
+.led {
+  --lit: clamp(0.2, calc(var(--r-meter) * 2.1 - var(--i) * 0.06), 1);
+}
+
+.ledOff {
+  fill: #464539;
+}
+
+.ledOn {
+  fill: var(--orange);
+  opacity: var(--lit);
+}
+
+.ledGlow {
+  fill: var(--orange);
+  opacity: calc(var(--lit) * 0.18);
+  filter: blur(5px);
+}
+
+.machine [data-armed='true'] .ledOn {
+  opacity: 1;
+}
+
+.machine [data-armed='true'] .ledGlow {
+  opacity: 0.5;
+}
+
+.powerLed {
+  fill: var(--orange);
+  opacity: calc(0.55 + var(--r-power) * 0.45);
+  filter: drop-shadow(0 0 6px rgb(248 74 8 / 0.9));
+}
+
+/* the console's bottom label row hands over to the next chapter */
+.paramHandoff {
+  opacity: var(--r-handoff);
+  fill: #4a4a40;
+}
+
+.paramHandoffKey {
+  fill: #b8400f;
+  font-weight: 700;
+}
+
+.paramOut {
+  opacity: calc(1 - var(--r-handoff));
+}
+
+/* ---- screen print -------------------------------------------------------- */
+
+.screenGreen {
+  fill: #21a273;
+}
+
+.screenSheen {
+  fill: url(#screen-sheen);
+}
+
+.screenEdge {
+  stroke: rgb(4 40 27 / 0.55);
+  stroke-width: 1;
+}
+
+.readoutWell {
+  fill: rgb(4 40 27 / 0.28);
+}
+
+.screenPlate {
+  fill: rgb(4 40 27 / 0.16);
+}
+
+.screenStatus {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  fill: #0b3d2c;
+}
+
+.seg rect {
+  fill: rgb(234 246 238 / 0.16);
+}
+
+/* Which bars are lit, per digit. Ten rules, one per value. */
+.seg[data-v='0'] .sega,
+.seg[data-v='0'] .segb,
+.seg[data-v='0'] .segc,
+.seg[data-v='0'] .segd,
+.seg[data-v='0'] .sege,
+.seg[data-v='0'] .segf {
+  fill: #eaf6ee;
+}
+.seg[data-v='1'] .segb,
+.seg[data-v='1'] .segc {
+  fill: #eaf6ee;
+}
+.seg[data-v='2'] .sega,
+.seg[data-v='2'] .segb,
+.seg[data-v='2'] .segg,
+.seg[data-v='2'] .sege,
+.seg[data-v='2'] .segd {
+  fill: #eaf6ee;
+}
+.seg[data-v='3'] .sega,
+.seg[data-v='3'] .segb,
+.seg[data-v='3'] .segg,
+.seg[data-v='3'] .segc,
+.seg[data-v='3'] .segd {
+  fill: #eaf6ee;
+}
+.seg[data-v='4'] .segf,
+.seg[data-v='4'] .segg,
+.seg[data-v='4'] .segb,
+.seg[data-v='4'] .segc {
+  fill: #eaf6ee;
+}
+.seg[data-v='5'] .sega,
+.seg[data-v='5'] .segf,
+.seg[data-v='5'] .segg,
+.seg[data-v='5'] .segc,
+.seg[data-v='5'] .segd {
+  fill: #eaf6ee;
+}
+.seg[data-v='6'] .sega,
+.seg[data-v='6'] .segf,
+.seg[data-v='6'] .segg,
+.seg[data-v='6'] .segc,
+.seg[data-v='6'] .segd,
+.seg[data-v='6'] .sege {
+  fill: #eaf6ee;
+}
+.seg[data-v='7'] .sega,
+.seg[data-v='7'] .segb,
+.seg[data-v='7'] .segc {
+  fill: #eaf6ee;
+}
+.seg[data-v='8'] .sega,
+.seg[data-v='8'] .segb,
+.seg[data-v='8'] .segc,
+.seg[data-v='8'] .segd,
+.seg[data-v='8'] .sege,
+.seg[data-v='8'] .segf,
+.seg[data-v='8'] .segg {
+  fill: #eaf6ee;
+}
+.seg[data-v='9'] .sega,
+.seg[data-v='9'] .segb,
+.seg[data-v='9'] .segc,
+.seg[data-v='9'] .segd,
+.seg[data-v='9'] .segf,
+.seg[data-v='9'] .segg {
+  fill: #eaf6ee;
+}
+
+.segDot {
+  fill: #eaf6ee;
+}
+
+/* The glyph field idles dim, like a screen between songs, and lights in
+   sequence as the scroll runs. */
+.glyph {
+  fill: currentColor;
+  opacity: calc(0.34 + var(--lit) * 0.52);
+  --lit: clamp(0, calc(var(--r-ink) * 2.4 - var(--i) * 0.009), 1);
+}
+
+.toneInk {
+  color: #07291d;
+}
+.toneWhite {
+  color: #eaf6ee;
+}
+.toneOrange {
+  color: #f84a08;
+}
+.toneLime {
+  color: #86d94a;
+}
+.toneBlue {
+  color: #2f7bd8;
+}
+
+.wordGlyph {
+  fill: currentColor;
+  color: #07291d;
+}
+
+.wordText {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  fill: #07291d;
+}
+
+/* ---- the stack: the copy, and on phones the index ------------------------ */
+
+.stack {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  max-width: 620px;
+  flex-direction: column;
+  gap: 28px;
+  margin: 40px auto 0;
+  padding: 0 clamp(20px, 5vw, 40px);
+}
+
+.stackCopy .kicker {
+  gap: 4px 8px;
+  margin-bottom: 14px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.stackCopy .line {
+  color: var(--ink);
+  font-size: clamp(26px, 6vw, 40px);
+  line-height: 1.06;
+}
+
+.stackCopy .sub {
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.index {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.indexLink {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgb(43 42 36 / 0.85);
+  border-radius: 7px;
+  background: linear-gradient(#fbf9f3, #e9e4d8);
+  box-shadow:
+    0 10px 18px -12px rgb(0 0 0 / 0.85),
+    inset 0 1px 0 #ffffff;
+  color: #0b3d2c;
+  font: 700 11px/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.indexLink b {
+  color: #b8400f;
+  font-weight: 700;
+}
+
+.indexLink:active {
+  transform: scale(0.97);
+}
+
+/* ---- fallbacks ----------------------------------------------------------- */
+
+/* Reduced motion, a failed import and phones all show the finished machine:
+   powered, lamps up, screen lit, counter run to the end. */
+@media (prefers-reduced-motion: reduce), (max-width: 768px) {
+  .hero {
+    --r-power: 1;
+    --r-controls: 0.62;
+    --r-meter: 1;
+    --r-ink: 1;
+    --r-readout: 1;
+    --r-play: 0;
+    --r-handoff: 0;
+  }
+}
+
+.hero[data-live='failed'] {
+  --r-power: 1;
+  --r-controls: 0.62;
+  --r-meter: 1;
+  --r-ink: 1;
+  --r-readout: 1;
+  --r-play: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .padPulse {
+    animation: none;
+  }
+}

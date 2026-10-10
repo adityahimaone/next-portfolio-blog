@@ -40,6 +40,18 @@
   --label-ink: #5e625c;
   --label-hair: rgba(29, 30, 28, 0.34);
 
+  /* The About band's opening frame.
+
+     The hero above it is the machine, and it ends exactly on its own bottom
+     edge, so this band's first pixels are the next thing the reader sees: the
+     top padding is deliberately smaller than the 170px the other bands use,
+     because this is the one band a reader scrolls INTO rather than to. */
+  --about-pad-top: clamp(48px, 5.5vw, 84px);
+  --about-pad-x: clamp(20px, 5vw, 78px);
+  --about-h2-size: clamp(36px, 5vw, 76px);
+  --about-h2-max: 860px;
+  --about-heading-gap: clamp(18px, 3vh, 38px);
+
   /* The ruled-grid overlay shared by the two tan bands. A single 1px line
      drawn at 30px pitch, sized with background-size so it never scales with
      the viewport — the same rule the about and contact panels use. */
@@ -4086,7 +4098,7 @@
 .about {
   position: relative;
   min-height: 0;
-  padding: clamp(90px, 11vw, 170px) clamp(20px, 5vw, 78px);
+  padding: var(--about-pad-top) var(--about-pad-x) clamp(90px, 11vw, 170px);
   background:
     linear-gradient(90deg, rgba(29, 30, 28, 0.035) 1px, transparent 1px) 0 0 /
       28px 28px,
@@ -4102,12 +4114,12 @@
 .aboutStage > .sectionHeading {
   width: 100%;
   max-width: 1480px;
-  margin: 0 auto clamp(18px, 3vh, 38px);
+  margin: 0 auto var(--about-heading-gap);
   overflow: visible;
 }
 .aboutStage > .sectionHeading h2 {
-  max-width: 860px;
-  font-size: clamp(36px, 5vw, 76px);
+  max-width: var(--about-h2-max);
+  font-size: var(--about-h2-size);
 }
 .aboutDeck {
   width: 100%;

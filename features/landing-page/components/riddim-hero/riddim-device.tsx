@@ -11,12 +11,12 @@ import {
   MACHINE_NAV,
   NAV_BY_ID,
   SCREEN_COPY,
+  STORY,
   type NavEntry,
 } from './riddim-content'
 import {
   CANVAS,
   CHASSIS,
-  COPY_BLOCK,
   capId,
   DIMPLES,
   FADER,
@@ -427,10 +427,17 @@ function Glyph({ id }: { id: string }) {
  * Seven-segment counter
  * ---------------------------------------------------------------------- */
 
-const SEG_T = 5
+/**
+ * The counter's two ratios, both measured off the photograph's own display:
+ * a digit is 0.54 as wide as it is tall, and a bar is 0.15 of that height
+ * thick. They are ratios rather than lengths so the display stays the same
+ * shape at every zoom the camera reaches.
+ */
+const SEG_W = 0.54
+const SEG_T = 0.12
 
 function segmentBars(w: number, h: number) {
-  const t = SEG_T
+  const t = h * SEG_T
   const mid = h / 2
   return {
     a: { x: t, y: 0, w: w - 2 * t, h: t },
@@ -457,7 +464,7 @@ function SevenSeg({
   size: number
   value: string
 }) {
-  const w = size * 0.62
+  const w = size * SEG_W
   const h = size
   const bars = segmentBars(w, h)
   return (
@@ -475,7 +482,7 @@ function SevenSeg({
           y={bar.y}
           width={bar.w}
           height={bar.h}
-          rx="2"
+          rx={round(h * SEG_T * 0.3)}
         />
       ))}
     </g>
@@ -586,7 +593,10 @@ function CapControl({
       className={`${styles.cap} ${TONE_CLASS[cap.tone]}`}
       ring={entry ? ring(cap.x, cap.y, cap.w, cap.h, 5) : null}
     >
-      <CapFace cap={cap} label={entry?.label ?? cap.label} />
+      {/* The cap prints what the photograph prints. The nav entry keeps the
+          destination for the screen's readout and the `aria-label`; it never
+          rewrites the hardware. */}
+      <CapFace cap={cap} label={cap.label} />
     </Control>
   )
 }
@@ -742,9 +752,6 @@ const longLabel = (text: string) =>
   text.length > 6
     ? { textLength: PAD.w - 30, lengthAdjust: 'spacingAndGlyphs' as const }
     : {}
-
-/** A plate behind the print, so the glyph texture never crowds the name. */
-const screenPlate = { x: 10, y: SCREEN_UI.status.y + 6, w: 636, h: 168 }
 
 function Panel({ api }: { api: MachineApi }) {
   return (
@@ -1100,7 +1107,6 @@ function Panel({ api }: { api: MachineApi }) {
         PAD_COLS.map((colX, colIndex) => {
           const i = rowIndex * PAD_COLS.length + colIndex
           const pad = PADS.find((p) => p.col === colIndex && p.row === rowIndex)
-          const entry = pad ? NAV_BY_ID.get(padId(pad)) : undefined
           const clone = row.labels[colIndex]
           const last = rowIndex === PARAM_ROWS.length - 1
           const armedPad = pad && api.active === padId(pad)
@@ -1110,16 +1116,16 @@ function Panel({ api }: { api: MachineApi }) {
               data-armed={armedPad ? 'true' : 'false'}
             >
               <Led cx={colX + 18} cy={row.y} i={i} />
-              {entry || clone ? (
+              {/* The silkscreen stays the photograph's: LEVEL, PITCH, TIME and
+                  the rest. The pad's destination is printed by the screen. */}
+              {clone ? (
                 <text
-                  className={`${styles.param} ${
-                    last && !entry ? styles.paramOut : ''
-                  }`}
+                  className={`${styles.param} ${last ? styles.paramOut : ''}`}
                   x={colX + 40}
                   y={row.y + 5}
-                  {...longLabel(entry?.label ?? clone)}
+                  {...longLabel(clone)}
                 >
-                  {entry?.label ?? clone}
+                  {clone}
                 </text>
               ) : null}
               {/* the machine hands over on its own bottom label row */}
@@ -1279,7 +1285,12 @@ const FIELD_TONES = [
   'ink',
 ] as const
 
-/** Five rows of eighteen, drawn from the glyph library: the reference's texture. */
+/**
+ * Four bands of eighteen, drawn from the glyph library: the photograph's
+ * texture, on the lattice `SCREEN_UI.field` measures. The last band is the one
+ * the words share, so `ScreenArt` prints only as much of it as runs up to
+ * SOUND.
+ */
 const FIELD_ROWS: readonly (readonly string[])[] = [
   [
     'fan',
@@ -1322,6 +1333,7 @@ const FIELD_ROWS: readonly (readonly string[])[] = [
     'bird',
   ],
   [
+    'grid',
     'star',
     'slash',
     'dots',
@@ -1339,9 +1351,9 @@ const FIELD_ROWS: readonly (readonly string[])[] = [
     'clock',
     'house',
     'foot',
-    'leaf',
   ],
   [
+    'leaf',
     'peace',
     'meter',
     'steps',
@@ -1359,43 +1371,29 @@ const FIELD_ROWS: readonly (readonly string[])[] = [
     'star',
     'slash',
     'dots',
-    'piano',
-  ],
-  [
-    'figure',
-    'notes',
-    'plane',
-    'brush',
-    'hand',
-    'sun',
-    'alarm',
-    'mic',
-    'toggle',
-    'undo',
-    'clock',
-    'house',
-    'foot',
-    'leaf',
-    'peace',
-    'meter',
-    'steps',
-    'lion',
   ],
 ]
 
 function ScreenArt() {
-  const { w, h, pad, counter, field, words, status } = SCREEN_UI
-  const cell = field.cell
-  const pitch = cell + field.gap
-  const gridW = field.cols * cell + (field.cols - 1) * field.gap
+  const { w, h, counter, field, words } = SCREEN_UI
+  const { cell } = field
+  const colPitch = cell + field.colGap
+  const rowPitch = cell + field.rowGap
+  const gridW = field.cols * cell + (field.cols - 1) * field.colGap
   const x0 = (w - gridW) / 2
-  const digitW = counter.digit * 0.62 + counter.gap
+  const digitW = counter.digit * SEG_W + counter.gap
   const start = counterDigits(0)
+  /* The last band is the one the words share: the photograph stops its
+     texture where SOUND begins, so the field prints only the icons that run
+     up to the first word and leaves the rest of the band to the type. */
+  const wordsStart = words.x[0] ?? 0
+  const leadCols = Math.floor((wordsStart - 12 - cell - x0) / colPitch)
 
   return (
     <svg
       className={styles.screenArt}
       viewBox={`0 0 ${w} ${h}`}
+      style={vars({ '--scr-word-size': words.size })}
       aria-hidden="true"
       focusable="false"
     >
@@ -1408,10 +1406,12 @@ function ScreenArt() {
       </defs>
       <rect width={w} height={h} className={styles.screenGreen} />
 
-      {/* the reference's glyph texture, under everything */}
+      {/* the photograph's glyph texture, under everything */}
       <g className={styles.field}>
         {FIELD_ROWS.map((row, rowIndex) =>
           row.map((glyph, colIndex) => {
+            const lastBand = rowIndex === field.rows - 1
+            if (lastBand && colIndex > leadCols) return null
             const i = rowIndex * field.cols + colIndex
             const tone =
               FIELD_TONES[(rowIndex + colIndex * 3) % FIELD_TONES.length]
@@ -1420,7 +1420,7 @@ function ScreenArt() {
                 key={`${rowIndex}-${colIndex}`}
                 className={`${styles.glyph} ${styles[`tone${tone[0].toUpperCase()}${tone.slice(1)}`]}`}
                 style={vars({ '--i': i })}
-                transform={`translate(${round(x0 + colIndex * pitch)} ${round(field.top + rowIndex * pitch)}) scale(${round(cell / 24)})`}
+                transform={`translate(${round(x0 + colIndex * colPitch)} ${round(field.top + rowIndex * rowPitch)}) scale(${round(cell / 24)})`}
               >
                 <Glyph id={glyph} />
               </g>
@@ -1429,20 +1429,11 @@ function ScreenArt() {
         )}
       </g>
 
-      <rect
-        x={screenPlate.x}
-        y={screenPlate.y}
-        width={screenPlate.w}
-        height={screenPlate.h}
-        rx="6"
-        className={styles.screenPlate}
-      />
-
-      {/* a well behind the counter, the way the reference backs its readout */}
+      {/* the panel the photograph backs the counter with */}
       <rect
         x={counter.x - 12}
         y={counter.y - 12}
-        width={4 * (counter.digit * 0.62 + counter.gap) + counter.dot + 24}
+        width={4 * digitW + counter.dot + 24}
         height={counter.digit + 24}
         rx="6"
         className={styles.readoutWell}
@@ -1471,10 +1462,12 @@ function ScreenArt() {
       {/* the six layer words, where the reference prints them */}
       <g className={styles.words}>
         {SCREEN_COPY.words.map((word, index) => {
-          const step = words.size * 0.62 * 6 + words.glyph + words.gap + 14
-          const x = words.x + index * step
+          const x = words.x[index] ?? wordsStart
+          /* The words continue the field's light-up sequence rather than
+             starting a second one, so the screen comes up as one sweep. */
+          const i = FIELD_ROWS.length * field.cols + index
           return (
-            <g key={word}>
+            <g key={word} style={vars({ '--i': i })}>
               <g
                 className={styles.wordGlyph}
                 transform={`translate(${round(x)} ${round(words.y - words.glyph * 0.78)}) scale(${round(words.glyph / 24)})`}
@@ -1494,17 +1487,6 @@ function ScreenArt() {
       </g>
 
       <rect width={w} height={h} className={styles.screenSheen} />
-      <text className={styles.screenStatus} x={pad} y={status.y}>
-        {SCREEN_COPY.status[0]}
-      </text>
-      <text
-        className={styles.screenStatus}
-        x={w - pad}
-        y={status.y}
-        textAnchor="end"
-      >
-        {SCREEN_COPY.status[1]}
-      </text>
       <rect
         x="0.5"
         y="0.5"
@@ -1524,12 +1506,9 @@ function ScreenArt() {
 
 export function RiddimMachine({
   interactive,
-  printCopy,
 }: {
   /** The machine's controls are the navigation (desktop widths). */
   interactive: boolean
-  /** The fascia's copy is large enough to read (wide desktops). */
-  printCopy: boolean
 }) {
   const [active, setActive] = useState<string | null>(null)
   const { setTheme } = useTheme()
@@ -1566,28 +1545,15 @@ export function RiddimMachine({
      geometry is a baseline, and a line box puts it 0.8em down. */
   const baseline = (y: number, size: number) => round(y - size * 0.8)
   const screenVars = vars({
-    '--scr-title-top': baseline(SCREEN_UI.title.y, SCREEN_UI.title.size),
-    '--scr-title-size': SCREEN_UI.title.size,
-    '--scr-role-top': baseline(SCREEN_UI.role.y, SCREEN_UI.role.size),
-    '--scr-role-size': SCREEN_UI.role.size,
     '--scr-readout-top': baseline(SCREEN_UI.readout.y, SCREEN_UI.readout.size),
     '--scr-readout-size': SCREEN_UI.readout.size,
     '--scr-pad': SCREEN_UI.pad,
-  })
-  const copyVars = vars({
-    '--copy-x': COPY_BLOCK.x,
-    '--copy-y': COPY_BLOCK.y,
-    '--copy-w': COPY_BLOCK.w,
-    '--copy-kicker': COPY_BLOCK.kicker,
-    '--copy-headline': COPY_BLOCK.headline,
-    '--copy-line': COPY_BLOCK.line,
-    '--copy-sub': COPY_BLOCK.sub,
-    '--copy-hint': COPY_BLOCK.hint,
   })
 
   return (
     <Shell
       className={styles.machine}
+      data-riddim-machine
       {...(interactive ? { 'aria-label': 'Primary' } : {})}
     >
       <Panel api={api} />
@@ -1595,28 +1561,24 @@ export function RiddimMachine({
 
       <div className={styles.screen}>
         <ScreenArt />
+        {/* The screen carries the photograph's own content plus one live line:
+            the control that is armed. The page's name is not printed on the
+            glass — it is the document's `h1`. */}
         <div className={styles.screenUi} style={screenVars}>
-          <h1 className={styles.title}>{SCREEN_COPY.title}</h1>
-          <p className={styles.role}>{SCREEN_COPY.role}</p>
           <p className={styles.readout} aria-hidden="true">
             <b>{armed?.label ?? SCREEN_COPY.idle.name}</b>
             <span>{armed?.note ?? SCREEN_COPY.idle.note}</span>
           </p>
         </div>
-      </div>
-
-      {printCopy ? (
-        <div className={styles.copy} style={copyVars}>
-          <p className={styles.kicker}>
-            <i aria-hidden="true" />
-            <span>{COPY.kicker}</span>
-            <em>{COPY.place}</em>
-          </p>
-          <strong className={styles.line}>{COPY.line}</strong>
-          <p className={styles.sub}>{COPY.sub}</p>
-          <p className={styles.hint}>{COPY.hint}</p>
+        {/* What the screen swaps to as the camera starts back in. It is a
+            second plane rather than a re-render, so the machine's own screen
+            never unmounts and the swap is a cross-fade the scroll can scrub in
+            both directions. */}
+        <div className={styles.screenSwap} aria-hidden="true">
+          <b>{STORY.screen2.kicker}</b>
+          <span>{STORY.screen2.title}</span>
         </div>
-      ) : null}
+      </div>
     </Shell>
   )
 }
@@ -1624,8 +1586,8 @@ export function RiddimMachine({
 /**
  * The phone's stack: the same copy and the same destinations, at sizes a phone
  * can read and tap. The machine above it stays the poster, and only one of the
- * two is ever a live navigation — `interactive` and `printCopy` are set from
- * the viewport in `riddim-hero.tsx`.
+ * two is ever a live navigation — `interactive` is set from the viewport in
+ * `riddim-hero.tsx`.
  */
 export function HeroIndex({ showIndex }: { showIndex: boolean }) {
   const { setTheme } = useTheme()

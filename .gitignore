@@ -79,3 +79,9 @@ artifacts/
 
 # Screenshot scratch (pad sea verification captures)
 /.padsea-check/
+
+# Screenshot scratch (RIDDIM hero verification captures)
+/.riddim-verify/
+
+# local agent tooling state
+/.workbuddy-ai/

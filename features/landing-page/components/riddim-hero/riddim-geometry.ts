@@ -17,9 +17,10 @@
  * framing, which is the only way every coordinate below stays a coordinate on
  * the photo.
  *
- * `SCREEN_UI` is the one region authored for us rather than copied: it holds
- * the title, the role line and the live readout, laid out inside the
- * reference's own 922 x 268 window.
+ * `SCREEN_UI` is the screen's interior: also measured off the photograph, down
+ * to the lattice the pictograms sit on. The only thing the screen adds is the
+ * live readout, which prints whichever control is armed — and it prints it in
+ * the one band the photograph leaves blank.
  */
 
 export const CANVAS = { w: 952, h: 1317 } as const
@@ -168,6 +169,18 @@ export const TOP_LED = { x: 864, w: 24, h: 20 } as const
 
 export const FRAME = { x: 0, y: 316, w: 952, h: 292, r: 6 } as const
 export const SCREEN = { x: 15, y: 324, w: 922, h: 268, r: 4 } as const
+
+/**
+ * The frame the story boots into: the top of the machine, down past the
+ * console's own label row and the knobs that stand under it.
+ *
+ * It is the half of the instrument that identifies it — the top strip, the
+ * RIDDIM header, the speaker, the lit screen, and VOLUME through METRONOME —
+ * so the first thing the page shows is a real object rather than a rectangle
+ * of screen. The story pulls back from here until the whole machine is in
+ * frame, and pushes back in at the other end.
+ */
+export const BOOT_WINDOW = { x: 0, y: 0, w: 952, h: 730 } as const
 
 /** Bezel screws: one on the screen's top edge, one on the frame's bottom. */
 export const SCREWS = [
@@ -474,27 +487,42 @@ export const SILK_RULES = [
 /**
  * The screen's layout, in native units of the reference's 922 x 268 window.
  *
- * The glyph field and the six layer words are the reference's. The title, the
- * role line and the live readout sit on top of that texture: at 952 units to
- * the viewport, a 74-unit title lands near 110px on a 1440 screen, so the
- * screen finally carries the name at headline size rather than as a detail.
+ * Like the rest of the clone, these are measurements off the photograph rather
+ * than a design: four bands of pictograms on a 50 x 42 lattice that runs the
+ * full width, the seven-segment counter backed by its own panel at 42% across,
+ * and the six layer words along the fourth band's right-hand two thirds.
+ *
+ * The photograph leaves one band blank — the strip under the words — and that
+ * is where the live readout prints, so the screen keeps its interaction without
+ * printing anything the hardware does not have. The page's own name is not here
+ * either: it is the document's `h1`, kept off the glass.
  */
 export const SCREEN_UI = {
   w: SCREEN.w,
   h: SCREEN.h,
+  /** Gutter for the live readout, in the band the photograph leaves empty. */
   pad: 26,
-  /** Tiny print, reference-authentic: legible only as texture. */
-  status: { y: 30, size: 16 },
-  /** The name, on its own full-width row: the hero's headline. */
-  title: { x: 26, y: 146, size: 86 },
-  /** Who and where, under it. */
-  role: { x: 26, y: 178, size: 21 },
-  /** Four digits and the dot, the machine's own readout. */
-  counter: { x: 700, y: 150, digit: 46, gap: 8, dot: 12 },
-  /** The armed control, printed by the screen while it is hovered or focused. */
-  readout: { x: 26, y: 216, size: 21 },
-  /** Glyph field: the reference's texture, behind everything else. */
-  field: { top: 8, cell: 26, gap: 10, cols: 25, rows: 7 },
-  /** The layer words, in the order the reference prints them. */
-  words: { x: 26, y: 252, size: 15, gap: 18, glyph: 20 },
+  /**
+   * Four digits and the dot, in the panel the photograph backs them with.
+   * `digit` is the seven-segment height — the bars are 0.54 of that wide — and
+   * the panel is the digit block plus a 12-unit rim on every side.
+   */
+  counter: { x: 347, y: 58, digit: 50, gap: 4, dot: 10 },
+  /** The armed control, printed while it is hovered or focused. */
+  readout: { x: 26, y: 250, size: 20 },
+  /**
+   * Glyph field: the photograph's texture, behind everything else. The last
+   * band carries only the icons that run up to the words — the photograph
+   * stops its texture where SOUND begins.
+   */
+  field: { top: 46, cols: 18, rows: 4, cell: 36, colGap: 14, rowGap: 6 },
+  /**
+   * The layer words, in the order the reference prints them, one glyph and one
+   * word per entry, on the baseline the fourth band sits on.
+   *
+   * `x` is one measured start per word rather than a step: the words differ in
+   * length by half again (`MAIN` against `SYSTEM`), so an even step either
+   * crowds the longest or runs the last one off the glass.
+   */
+  words: { y: 202, size: 20, glyph: 18, x: [296, 404, 495, 603, 705, 823] },
 } as const

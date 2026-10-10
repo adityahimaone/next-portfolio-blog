@@ -1,8 +1,10 @@
 import {
   RIDDIM_COUNTER,
   RIDDIM_PHASES,
+  RIDDIM_STORY,
   counterDigits,
   riddimFrame,
+  riddimStory,
 } from './riddim-choreography'
 import { MACHINE_NAV } from './riddim-content'
 import {
@@ -86,6 +88,94 @@ describe('riddimFrame', () => {
       expect(a).toBeGreaterThanOrEqual(0)
       expect(b).toBeLessThanOrEqual(1)
     }
+  })
+})
+
+describe('riddimStory', () => {
+  const DRIVEN = ['pull', 'push', 'sides', 'swap', 'about', 'flip'] as const
+
+  it('starts on the boot window, with the machine still out of frame', () => {
+    const s = riddimStory(0)
+    expect(s.pull).toBe(0)
+    expect(s.push).toBe(0)
+    expect(s.sides).toBe(0)
+    expect(s.beat).toBe('boot')
+  })
+
+  it('holds the whole machine at fit height through the overview', () => {
+    expect(riddimStory(0.5).pull).toBe(1)
+    expect(riddimStory(0.5).push).toBe(0)
+    expect(riddimStory(0.55).pull).toBe(1)
+    expect(riddimStory(0.55).push).toBe(0)
+    expect(riddimStory(0.55).beat).toBe('overview')
+  })
+
+  it('returns to the LCD and hands off to About at the end', () => {
+    expect(riddimStory(1).pull).toBe(1)
+    expect(riddimStory(1).push).toBe(1)
+    expect(riddimStory(1).flip).toBe(1)
+    expect(riddimStory(1).beat).toBe('about')
+  })
+
+  it('shows the flanking columns only around the overview beats', () => {
+    expect(riddimStory(0.2).sides).toBe(0)
+    expect(riddimStory(0.5).sides).toBe(1)
+    expect(riddimStory(0.9).sides).toBe(0)
+    // they annotate the machine, so they are up exactly when it is at fit
+    expect(riddimStory(0.5).pull).toBe(1)
+    expect(riddimStory(0.5).push).toBe(0)
+  })
+
+  it('finishes the screen swap before the camera pushes back in', () => {
+    expect(riddimStory(RIDDIM_STORY.push[0]).swap).toBe(1)
+    expect(riddimStory(0.5).swap).toBe(0)
+    expect(riddimStory(RIDDIM_STORY.push[0]).push).toBe(0)
+  })
+
+  it('is a pure function: the same progress always gives the same frame', () => {
+    const forward = samples.map((p) => riddimStory(p))
+    const backward = [...samples]
+      .reverse()
+      .map((p) => riddimStory(p))
+      .reverse()
+    expect(backward).toEqual(forward)
+  })
+
+  it('clamps progress outside 0..1', () => {
+    expect(riddimStory(-3)).toEqual(riddimStory(0))
+    expect(riddimStory(7)).toEqual(riddimStory(1))
+  })
+
+  it('keeps every driven value inside its range', () => {
+    for (const p of samples) {
+      const s = riddimStory(p)
+      for (const key of DRIVEN) {
+        expect(s[key]).toBeGreaterThanOrEqual(0)
+        expect(s[key]).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+
+  it('keeps its beats ordered, contiguous and inside the story', () => {
+    const keys = Object.keys(RIDDIM_STORY) as (keyof typeof RIDDIM_STORY)[]
+    let previous = -1
+    for (const key of keys) {
+      const [a, b] = RIDDIM_STORY[key]
+      expect(a).toBeLessThan(b)
+      expect(a).toBeGreaterThanOrEqual(previous)
+      expect(b).toBeLessThanOrEqual(1)
+      previous = a
+    }
+    expect(RIDDIM_STORY.boot[0]).toBe(0)
+    expect(RIDDIM_STORY.about[1]).toBe(1)
+  })
+
+  it('names the beat the progress is in', () => {
+    expect(riddimStory(0).beat).toBe('boot')
+    expect(riddimStory(0.2).beat).toBe('pull')
+    expect(riddimStory(0.5).beat).toBe('overview')
+    expect(riddimStory(0.7).beat).toBe('push')
+    expect(riddimStory(0.95).beat).toBe('about')
   })
 })
 

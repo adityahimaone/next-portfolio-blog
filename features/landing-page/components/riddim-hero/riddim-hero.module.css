@@ -1,13 +1,18 @@
 /* ==========================================================================
-   The RIDDIM hero — the machine is the page.
+   The RIDDIM hero — the machine, and a camera that walks it.
 
-   The section's height is the clone's height, so the page's scroll is the
-   machine's face. Nothing is pinned and nothing floats beside it: the headline
-   is printed on the fascia and the navigation is printed on the controls.
+   At the top the LCD is the whole viewport and the title card boots on it.
+   Scrolling closes a letterbox onto the LCD and pulls the camera back to the
+   whole machine; it holds there while the pads play, the PLAY key presses
+   itself and the screen swaps; then it pushes back in on the next chapter's
+   plane. The About band begins where the stage releases, and the LCD's
+   backlight has flipped to the band's cream by then, so the two meet with no
+   seam.
 
    Everything animated here is driven by custom properties the scroll bridge
    writes onto `.hero` (see use-riddim-hero.ts). The stylesheet owns the maths;
-   JS never touches an element's transform.
+   JS never touches an element's transform. The one measurement it takes — the
+   machine's height, which sets the camera's scale — arrives as two numbers.
 
      --r-power     0..1   the machine coming up to full power
      --r-controls  0..1   knobs turn, fader slides
@@ -17,6 +22,15 @@
      --r-play      0..1   gate for the pad ripple
      --r-handoff   0..1   the bottom label row turns into the next chapter
      --r-ptr-x/y   -1..1  pointer parallax for the panel's sheen
+
+     --r-pull      0..1   0 = the boot window, 1 = the whole machine
+     --r-push      0..1   0 = the whole machine, 1 = the LCD filling the frame
+     --r-sides     0..1   the printed columns either side of the machine
+     --r-swap      0..1   the machine's screen swapping to the next chapter
+     --r-about     0..1   the next chapter's plane, inside the LCD
+     --r-flip      0..1   the LCD backlight, green to cream
+     --cam-s       number the camera's scale (1 = the machine at fit height)
+     --cam-ty      length the camera's vertical offset, measured in JS
 
    The defaults are the frame at scroll 0 — the machine's top edge, down to its
    pilot light — so the server-rendered markup with no JS at all is the object.
@@ -31,6 +45,8 @@
 .hero {
   --hero-top: 0px; /* the top bar is in flow above the machine */
   --max-screens: 2.6;
+  --stage-h: auto;
+  --machine-h: 100svh;
   --r-power: 0;
   --r-controls: 0;
   --r-meter: 0;
@@ -40,12 +56,22 @@
   --r-handoff: 0;
   --r-ptr-x: 0;
   --r-ptr-y: 0;
+  --r-pull: 1;
+  --r-push: 0;
+  --r-sides: 0;
+  --r-swap: 0;
+  --r-about: 0;
+  --r-flip: 0;
+  --cam-s: 1;
+  --cam-ty: 0px;
 
   --orange: #f84a08;
   --ink: #f1eee5;
   --ink-muted: #a9a79d;
   --mono: var(--font-geist-mono), ui-monospace, monospace;
   --display: var(--font-space-grotesk), var(--font-inter), sans-serif;
+  --lcd-green: #21a273;
+  --about-cream: #f4f0e8;
 
   position: relative;
   padding-top: var(--hero-top);
@@ -53,14 +79,306 @@
   color: var(--ink);
 }
 
-.room {
+/* The page's heading. The machine prints the photograph's words rather than
+   the site's, so the name lives here: present for search engines and screen
+   readers, and off the glass. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  margin: -1px;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* The room is a sticky backdrop rather than an absolutely-positioned fill: the
+   stage is several viewports tall, and a gradient stretched over all of it
+   would leave the light far from the machine by the time the camera reaches
+   it. */
+.roomWrap {
   position: absolute;
   z-index: 0;
   inset: 0;
+}
+
+.room {
+  position: sticky;
+  top: 0;
+  height: 100svh;
   background:
     radial-gradient(90% 40% at 50% 12%, rgb(255 90 31 / 0.12), transparent 70%),
     radial-gradient(70% 30% at 50% 100%, rgb(46 63 92 / 0.45), transparent 70%),
     #151716;
+}
+
+/* ---- the stage: the pinned viewport the camera moves in ------------------ */
+
+.stage {
+  position: relative;
+  z-index: 1;
+  height: var(--stage-h);
+}
+
+.sticky {
+  position: relative;
+}
+
+.camera {
+  position: relative;
+}
+
+/* The letterbox and the columns only exist inside the story; without it the
+   machine is the whole hero and there is nothing to clip a plane to. */
+.letterbox,
+.sides {
+  display: none;
+}
+
+/* ---- the story, at the widths the machine leaves room either side of it ---
+
+   One camera on one axis. `--r-pull` and `--r-push` are the only numbers it
+   needs — pull runs from the boot window to the whole machine, push runs from
+   the whole machine into the LCD — and JS turns the pair into the scale and
+   offset below, because the middle framing depends on the window. Nothing else
+   is measured.
+
+   The letterbox is the one surface the stylesheet does own: a box in the LCD's
+   own rect, inside the camera, so the two move together and the plane inside
+   it is clipped to exactly the screen at every zoom. */
+@media (min-width: 1181px) and (prefers-reduced-motion: no-preference) {
+  .hero {
+    /* Fit height, and never wider than the window: at a tall, narrow desktop
+       the width is the binding constraint, so the height gives way. */
+    --machine-h: min(100svh, calc(100vw * 1317 / 952));
+    --u: calc(var(--machine-h) / 1317);
+    /* The frame at progress 0 — the top half of the machine fills the viewport,
+       the columns are away. Written here rather than by JS so the first paint
+       and the no-JS paint are the same frame the live story starts from. */
+    --r-pull: 0;
+    --r-push: 0;
+    --cam-s: min(calc(100vw / (952 * var(--u))), calc(100svh / (730 * var(--u))));
+    --cam-ty: calc(293.5 * var(--u) * var(--cam-s));
+  }
+
+  .hero[data-live='true'] {
+    --stage-h: 460svh;
+  }
+
+  .sticky {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: clip;
+  }
+
+  .camera {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    transform: translateY(var(--cam-ty)) scale(var(--cam-s));
+    transform-origin: 50% 50%;
+    /* The machine is only a navigation while the whole of it is in frame. */
+    pointer-events: none;
+  }
+
+  .hero[data-beat='overview'] .camera {
+    pointer-events: auto;
+  }
+
+  /* Scoped to the hero: the base `.machine` rule sits further down the file,
+     so a bare `.machine` here would lose the width back to the poster sizing. */
+  .hero .machine {
+    height: var(--machine-h);
+    width: calc(var(--machine-h) * 952 / 1317);
+    /* The clone's own rim was reading as an outline the photograph does not
+       have; the drop shadow alone seats it in the room. */
+    box-shadow: 0 calc(34 * var(--u)) calc(64 * var(--u)) calc(-28 * var(--u))
+      rgb(0 0 0 / 0.72);
+  }
+
+  .letterbox {
+    display: block;
+    position: absolute;
+    z-index: 3;
+    left: calc(50% - 461 * var(--u));
+    top: calc(50% - 334.5 * var(--u));
+    width: calc(922 * var(--u));
+    height: calc(268 * var(--u));
+    overflow: clip;
+    border-radius: calc(6 * var(--u));
+  }
+
+  /* A plane is a viewport laid inside the letterbox and counter-scaled by the
+     camera, so it is the size of the screen however far in the camera is.
+     `container-type: size` then lets everything inside it be written in
+     `cqw`/`cqh` and still land at viewport size. */
+  .plane {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(100vw / var(--cam-s));
+    height: calc(100svh / var(--cam-s));
+    transform: translate(-50%, -50%);
+    container-type: size;
+  }
+
+  .aboutPlane {
+    opacity: var(--r-about);
+    background: color-mix(
+      in oklab,
+      var(--lcd-green) calc((1 - var(--r-flip)) * 100%),
+      var(--about-cream)
+    );
+    color: color-mix(in oklab, #06291c calc((1 - var(--r-flip)) * 100%), #1d1e1c);
+  }
+
+  .sides {
+    display: flex;
+    position: absolute;
+    z-index: 4;
+    inset: 0;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 clamp(24px, 3.2vw, 64px);
+    opacity: var(--r-sides);
+    pointer-events: none;
+  }
+}
+
+/* Below roughly 4:3 the machine at fit height is too wide to leave a column
+   either side of it, so the annotations stand down rather than sit on it. */
+@media (max-aspect-ratio: 4 / 3) {
+  .sides {
+    display: none;
+  }
+}
+
+/* ---- the printed columns ------------------------------------------------ */
+
+.side {
+  display: flex;
+  width: min(280px, 18vw);
+  flex-direction: column;
+  gap: clamp(16px, 2.6vh, 32px);
+}
+
+.callout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(244 240 232 / 0.16);
+}
+
+.calloutIndex {
+  color: var(--orange);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.calloutBody {
+  min-width: 0;
+}
+
+.calloutLabel {
+  display: block;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.calloutNote {
+  margin: 6px 0 0;
+  color: var(--ink-muted);
+  font-family: var(--font-inter), sans-serif;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* ---- the next chapter's plane ------------------------------------------- */
+
+.aboutCard {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 2.2cqh;
+  padding: 0 7cqw;
+}
+
+.aboutKicker {
+  font-family: var(--mono);
+  font-size: min(1.1cqw, 2.4cqh);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.aboutTitle {
+  font-family: var(--display);
+  font-size: min(6.6cqw, 12cqh);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.aboutTracks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: min(1.6cqw, 2.6cqh);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aboutTracks li {
+  padding: min(0.9cqh, 0.8cqw) min(1.6cqw, 1.4cqh);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: min(1.05cqw, 2.2cqh);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.aboutNote {
+  font-family: var(--font-inter), sans-serif;
+  font-size: min(1.35cqw, 2.8cqh);
+  line-height: 1.5;
+  opacity: 0.82;
+}
+
+/* The PLAY key presses itself while the whole machine is in frame. A lamp
+   pulse rather than a translate: the caps are SVG, where a CSS transform
+   needs a transform-box the rest of the panel does not. */
+@keyframes playPress {
+  0%,
+  58%,
+  100% {
+    filter: brightness(1);
+  }
+  70% {
+    filter: brightness(1.38) saturate(1.15);
+  }
+  82% {
+    filter: brightness(1);
+  }
+}
+
+.hero[data-beat='overview'] .machine [data-control='right-play'] {
+  animation: playPress 2.2s cubic-bezier(0.3, 0.7, 0.3, 1) infinite;
 }
 
 /* ---- the machine --------------------------------------------------------- */
@@ -135,34 +453,10 @@
 .screenUi {
   position: absolute;
   inset: 0;
-  color: #f2fbf5;
-}
-
-.title {
-  position: absolute;
-  top: calc(var(--scr-title-top) * var(--u));
-  left: calc(var(--scr-pad) * var(--u));
-  margin: 0;
-  font-family: var(--display);
-  font-size: calc(var(--scr-title-size) * var(--u));
-  font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.role {
-  position: absolute;
-  top: calc(var(--scr-role-top) * var(--u));
-  left: calc(var(--scr-pad) * var(--u));
-  margin: 0;
-  color: #0b3d2c;
-  font-family: var(--mono);
-  font-size: calc(var(--scr-role-size) * var(--u));
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
+  /* Dark ink on lit green, the way the reference prints its pictograms; the
+     whole plane cross-fades out as the screen swaps to the next chapter. */
+  color: #06291c;
+  opacity: calc(1 - var(--r-swap));
 }
 
 .readout {
@@ -197,25 +491,49 @@
   white-space: nowrap;
 }
 
-/* ---- the copy, printed on the blank half of the fascia ------------------- */
-
-.copy {
+/* The screen's second state: the next chapter, printed where the name was.
+   A plane rather than a re-render, so the machine's `h1` never leaves the
+   page and the swap is a cross-fade the scroll can scrub either way. */
+.screenSwap {
   position: absolute;
-  z-index: 2;
-  left: calc(var(--copy-x) * var(--u));
-  top: calc(var(--copy-y) * var(--u));
-  width: calc(var(--copy-w) * var(--u));
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(8 * var(--u));
+  padding: 0 calc(26 * var(--u));
+  color: #06291c;
+  opacity: var(--r-swap);
 }
+
+.screenSwap b {
+  font-family: var(--mono);
+  font-size: calc(20 * var(--u));
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.screenSwap span {
+  font-family: var(--display);
+  font-size: calc(58 * var(--u));
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+/* ---- the stack's copy ---------------------------------------------------- */
 
 .kicker {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: calc(4 * var(--u)) calc(10 * var(--u));
-  margin: 0 0 calc(8 * var(--u));
-  color: #1d1e1c;
+  gap: 4px 8px;
+  margin: 0 0 14px;
+  color: var(--ink-muted);
   font-family: var(--mono);
-  font-size: calc(var(--copy-kicker) * var(--u));
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.14em;
   line-height: 1;
@@ -223,11 +541,11 @@
 }
 
 .kicker i {
-  width: calc(8 * var(--u));
-  height: calc(8 * var(--u));
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--orange);
-  box-shadow: 0 0 calc(10 * var(--u)) var(--orange);
+  box-shadow: 0 0 10px var(--orange);
 }
 
 .kicker span,
@@ -242,29 +560,20 @@
 
 .line {
   display: block;
-  color: #16181a;
+  color: var(--ink);
   font-family: var(--display);
-  font-size: calc(var(--copy-headline) * var(--u));
+  font-size: clamp(26px, 6vw, 40px);
   font-weight: 650;
   letter-spacing: -0.03em;
-  line-height: calc(var(--copy-line) * var(--u));
+  line-height: 1.06;
 }
 
 .sub {
-  margin: calc(12 * var(--u)) 0 0;
-  color: #4a4a40;
+  margin: 12px 0 0;
+  color: var(--ink-muted);
   font-family: var(--font-inter), sans-serif;
-  font-size: calc(var(--copy-sub) * var(--u));
-  line-height: 1.45;
-}
-
-.hint {
-  margin: calc(14 * var(--u)) 0 0;
-  color: #4a4a40;
-  font-family: var(--mono);
-  font-size: calc(var(--copy-hint) * var(--u));
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 /* ---- controls: the machine's controls ARE the navigation ----------------- */
@@ -539,24 +848,19 @@
   stroke-width: 1;
 }
 
+/* The panel the photograph backs the counter with: a lighter green than the
+   glass, with a dark rim, so the display reads as a module rather than as
+   type floating on the screen. */
 .readoutWell {
-  fill: rgb(4 40 27 / 0.28);
+  fill: #2cb083;
+  stroke: rgb(4 40 27 / 0.42);
+  stroke-width: 1;
 }
 
-.screenPlate {
-  fill: rgb(4 40 27 / 0.16);
-}
-
-.screenStatus {
-  font-family: var(--mono);
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  fill: #0b3d2c;
-}
-
+/* Every bar is drawn. The unlit ones are the dark ghosts the photograph
+   shows through its own display; the CSS lights the rest from `data-v`. */
 .seg rect {
-  fill: rgb(234 246 238 / 0.16);
+  fill: rgb(4 40 27 / 0.26);
 }
 
 /* Which bars are lit, per digit. Ten rules, one per value. */
@@ -634,12 +938,19 @@
   fill: #eaf6ee;
 }
 
-/* The glyph field idles dim, like a screen between songs, and lights in
-   sequence as the scroll runs. */
+/* The screen's printed texture boots dark and lights in sequence as the
+   machine comes up, so its first paint is an empty panel rather than a wall of
+   pictograms. `--i` is the element's place in that sequence, written by the
+   markup; the field and the six layer words share the same sweep. */
+.glyph,
+.wordGlyph,
+.wordText {
+  --lit: clamp(0, calc(var(--r-ink) * 2.4 - var(--i) * 0.009), 1);
+}
+
 .glyph {
   fill: currentColor;
-  opacity: calc(0.34 + var(--lit) * 0.52);
-  --lit: clamp(0, calc(var(--r-ink) * 2.4 - var(--i) * 0.009), 1);
+  opacity: calc(var(--lit) * 0.94);
 }
 
 .toneInk {
@@ -661,13 +972,19 @@
 .wordGlyph {
   fill: currentColor;
   color: #07291d;
+  opacity: var(--lit);
 }
 
+/* The six layer words: the display face, heavy and tight, the way the
+   photograph sets them. Their size comes from `SCREEN_UI.words`, so the type
+   and the glyph beside it cannot drift apart. */
 .wordText {
-  font-size: 15px;
+  font-family: var(--display);
+  font-size: calc(var(--scr-word-size, 20) * 1px);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.01em;
   fill: #07291d;
+  opacity: var(--lit);
 }
 
 /* ---- the stack: the copy, and on phones the index ------------------------ */
@@ -742,7 +1059,8 @@
 /* ---- fallbacks ----------------------------------------------------------- */
 
 /* Reduced motion, a failed import and phones all show the finished machine:
-   powered, lamps up, screen lit, counter run to the end. */
+   powered, lamps up, screen lit, counter run to the end, and the camera at
+   fit height with the columns out of the way. */
 @media (prefers-reduced-motion: reduce), (max-width: 768px) {
   .hero {
     --r-power: 1;
@@ -752,6 +1070,12 @@
     --r-readout: 1;
     --r-play: 0;
     --r-handoff: 0;
+    --r-zoom: 0;
+    --r-boot: 0;
+    --r-sides: 0;
+    --r-swap: 0;
+    --r-about: 0;
+    --r-flip: 0;
   }
 }
 
@@ -762,6 +1086,15 @@
   --r-ink: 1;
   --r-readout: 1;
   --r-play: 0;
+  --r-handoff: 0;
+  --r-pull: 1;
+  --r-push: 0;
+  --r-sides: 0;
+  --r-swap: 0;
+  --r-about: 0;
+  --r-flip: 0;
+  --cam-s: 1;
+  --cam-ty: 0px;
 }
 
 @media (prefers-reduced-motion: reduce) {

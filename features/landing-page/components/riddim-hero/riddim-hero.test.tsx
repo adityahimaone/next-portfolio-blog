@@ -37,7 +37,9 @@ describe('RiddimHero server render', () => {
     expect(html).toContain('class="machine"')
   })
 
-  it('prints the name on the machine, as the h1', () => {
+  it('carries the name as the document h1, off the machine', () => {
+    // The clone prints the photograph's words, so the name is the page's own
+    // heading rather than type on the glass.
     expect(html).toContain('<h1')
     expect(html).toContain(SCREEN_COPY.title)
     expect(html).toContain(SCREEN_COPY.role)
@@ -59,11 +61,22 @@ describe('RiddimHero server render', () => {
     expect(html.match(/data-seg=/g)).toHaveLength(4)
   })
 
-  it('prints the destinations on the controls that carry them', () => {
+  it('prints the photograph on the hardware, not the site', () => {
+    // The controls keep their own silkscreen: the clone is 1:1, so the nav
+    // words never overwrite what the machine says it is.
+    for (const word of ['SOUND', 'MAIN', 'TEMPO', 'LEVEL', 'PITCH', 'TIME']) {
+      expect(html).toContain(`>${word}<`)
+    }
+    for (const word of ['SAMPLE', 'CHOP', 'TIMING', 'CORRECT', 'RECORD']) {
+      expect(html).toContain(`>${word}<`)
+    }
+  })
+
+  it('still offers every destination, through the stack', () => {
     for (const entry of MACHINE_NAV) {
       expect(html).toContain(entry.label)
     }
-    // the nine index pads keep their numbers and gain their names
+    // the nine index pads keep their numbers
     for (const pad of PADS) {
       if (pad.glyph !== 'digit') continue
       expect(html).toContain(`>${pad.value}<`)

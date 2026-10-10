@@ -23,7 +23,6 @@ export const SCREEN_COPY = {
   brand: 'RIDDIM',
   model: 'SUPERTONE',
   tagline: 'Original layering machine',
-  status: ['RD-01', '4 LAYERS'],
   /** The hero's h1, printed by the machine rather than beside it. */
   title: 'ADITYA HIMAWAN',
   role: 'FRONTEND ENGINEER · JAKARTA, INDONESIA',
@@ -211,3 +210,66 @@ export const NAV_BY_ID = new Map(MACHINE_NAV.map((entry) => [entry.id, entry]))
 
 /** The primary three, in the order the LIVE row prints them. */
 export const PRIMARY_IDS = ['live-sound', 'live-main', 'live-tempo'] as const
+
+/* -------------------------------------------------------------------------
+ * The desktop story's copy
+ * ---------------------------------------------------------------------- */
+
+/**
+ * What the page says around the machine while the camera is at fit height.
+ *
+ * Two surfaces, in scroll order: the two printed columns that flank the
+ * machine while it is small enough to leave room either side of it, and the
+ * next chapter's plane that the LCD becomes.
+ *
+ * The columns are annotations, not navigation. The machine's own controls are
+ * the sitemap, and they are only clickable during the overview beat, so these
+ * are free to describe the object rather than repeat its destinations — which
+ * is what the reference manual pages beside a piece of hardware actually do.
+ */
+export const STORY = {
+  /** The machine at fit height, annotated from both sides. */
+  sides: {
+    left: [
+      {
+        index: '01',
+        label: 'DISPLAY',
+        note: 'The screen is the site. What it prints is where you are.',
+      },
+      {
+        index: '02',
+        label: 'CONSOLE',
+        note: 'Nine pads, nine destinations. The hardware is the sitemap.',
+      },
+      {
+        index: '03',
+        label: 'LAMPS',
+        note: 'Every lamp is a state: idle, armed, or playing itself.',
+      },
+    ],
+    right: [
+      {
+        index: '04',
+        label: 'CURRENT',
+        note: 'Scroll is the current. Nothing here moves without you.',
+      },
+      {
+        index: '05',
+        label: 'HANDOFF',
+        note: 'The machine releases into the page below, with no seam.',
+      },
+      {
+        index: '06',
+        label: 'SESSION',
+        note: 'Open to work. Résumé and contact are on the right-hand caps.',
+      },
+    ],
+  },
+  /** The screen the camera pushes back into, and the About band it becomes. */
+  screen2: {
+    kicker: '02 · PROFILE',
+    title: 'Start with the user.',
+    tracks: ['FOCUS', 'SYSTEMS', 'RANGE'],
+    note: 'Four years of production frontends, most of them React and Next.js.',
+  },
+} as const

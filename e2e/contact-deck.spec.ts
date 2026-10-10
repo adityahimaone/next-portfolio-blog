@@ -4,9 +4,9 @@ import { test, expect } from '@playwright/test'
  * Verifies the two contact-deck changes against a real browser.
  *
  * The padding assertion exists because the compiled CSS ships
- * `padding:14px0` with no space. CSS tokenisation separates a dimension from a
- * following digit, so this is valid and computes to 14px/0 — but "valid CSS"
- * is a claim about a spec, and only the engine settles it.
+ * `padding:18px26px` with no space. CSS tokenisation separates a dimension from
+ * a following digit, so this is valid and computes to 18px/26px — but "valid
+ * CSS" is a claim about a spec, and only the engine settles it.
  */
 test('the X pad is gone and sixteen pads fill four clean rows', async ({
   page,
@@ -30,7 +30,7 @@ test('the X pad is gone and sixteen pads fill four clean rows', async ({
   expect(grid).toBe(4)
 })
 
-test('accordion trigger computes real padding, not 14px0', async ({ page }) => {
+test('accordion trigger computes real padding, not 18px0', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' })
   const trigger = page
     .locator('button[class*="contactBriefAccordionTrigger"]')
@@ -43,36 +43,77 @@ test('accordion trigger computes real padding, not 14px0', async ({ page }) => {
     return { top: s.paddingTop, bottom: s.paddingBottom, left: s.paddingLeft }
   })
 
-  // Computed values, not the declared text: the minifier ships `14px0`, and
-  // whether that is 14px/0 or a parse error is exactly what this settles.
-  expect(padding.top).toBe('14px')
-  expect(padding.bottom).toBe('14px')
-  expect(padding.left).toBe('0px')
+  // Computed values, not the declared text: the minifier ships `18px0`, and
+  // whether that is 18px/0 or a parse error is exactly what this settles.
+  // 26px inline is the card's inset, and the one the corner screws clear.
+  expect(padding.top).toBe('18px')
+  expect(padding.bottom).toBe('18px')
+  expect(padding.left).toBe('26px')
 
-  // 28px of padding plus a single line of the question type.
-  const textHeight = await trigger
-    .locator('[class*="contactBriefAccordionQuestion"]')
+  // Two 18px paddings plus the number cell, which is taller than a line of the
+  // question type and is therefore what sets the row's height.
+  const cell = await trigger
+    .locator('[class*="contactBriefAccordionIndex"]')
     .first()
     .evaluate((el) => el.getBoundingClientRect().height)
-  expect(box!.height).toBeGreaterThan(28 + textHeight - 2)
+  expect(box!.height).toBeGreaterThan(36 + cell - 2)
 })
 
-test('accordion ink is dark on the cream band', async ({ page }) => {
+/**
+ * Contrast, not a colour sum. The collapsed question is deliberately the muted
+ * ink — it is the resting state, and it is the only thing the reader sees when
+ * every row is shut, so the assertion that matters is that it clears 4.5:1
+ * against the card it sits on. A sum-of-channels threshold passed the old
+ * near-black and would have passed a mid grey that failed this.
+ */
+test('collapsed question ink clears 4.5:1 on the card', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' })
   const trigger = page
     .locator('button[class*="contactBriefAccordionTrigger"]')
-    .first()
+    .nth(1)
   await trigger.scrollIntoViewIfNeeded()
 
-  const ink = await trigger.evaluate((el) => {
-    const s = getComputedStyle(el)
-    return { color: s.color, family: s.fontFamily }
+  const { ink, ground, family } = await trigger.evaluate((el) => {
+    const panel = el.closest('[class*="contactBriefPanel"]')!
+    return {
+      ink: getComputedStyle(el).color,
+      ground: getComputedStyle(panel).backgroundColor,
+      family: getComputedStyle(el).fontFamily,
+    }
   })
-  // --panel-ink is #101211, near-black. The old hardcoded #f1eee5 was light
-  // ink on a cream field, which is the whole reason this was invisible.
-  const [r, g, b] = ink.color.match(/\d+/g)!.map(Number)
-  expect(r + g + b).toBeLessThan(200)
-  expect(ink.family).toContain('Space Grotesk')
+
+  const channels = (value: string) => value.match(/[\d.]+/g)!.map(Number)
+  const luminance = (value: string) => {
+    const [r, g, b] = channels(value)
+      .slice(0, 3)
+      .map((channel) => {
+        const c = channel / 255
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+      })
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+  const [light, dark] = [luminance(ink), luminance(ground)].sort(
+    (a, b) => b - a,
+  )
+  expect((light + 0.05) / (dark + 0.05)).toBeGreaterThanOrEqual(4.5)
+  expect(family).toContain('Syne')
+})
+
+test('the head strip counts the questions it actually renders', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'networkidle' })
+  const count = page.locator('[class*="contactBriefCount"]')
+  await count.scrollIntoViewIfNeeded()
+
+  const rows = await page
+    .locator('button[class*="contactBriefAccordionTrigger"]')
+    .count()
+  // The label is silkscreen — machine-printed data — so it has to stay true to
+  // the list under it rather than be a decorative number.
+  expect((await count.textContent())!.trim()).toBe(
+    `${String(rows).padStart(2, '0')} entries`,
+  )
 })
 
 test('accordion opens and closes', async ({ page }) => {

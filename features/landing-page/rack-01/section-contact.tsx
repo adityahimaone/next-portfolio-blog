@@ -494,6 +494,13 @@ export function Contact() {
         the same four things twice and made the pad grid look like an accident.
         One copy of a link is the point.
 
+        Read as the deck's own documentation rather than as a page of copy: the
+        controller above is the hardware, this is the printed insert that ships
+        in the box with it. Hence the panel, the corner screws, and the head
+        strip — label on the left, entry count on the right, the same
+        left/right shape as the deck's own brand bar. It is a card, not a
+        second device: one border, one hairline between rows, no dials.
+
         A Radix accordion rather than an open `<dl>`. Four always-open answers
         is a wall of text that reads as a page of copy below the deck; four
         collapsed ones read as a list of things this person has already
@@ -501,8 +508,15 @@ export function Contact() {
         be legible on their own — collapsed, they are all the reader sees. The
         shadcn demo styles its trigger at `text-foreground/20`, which is the
         near-invisible version of this component, so the ink comes from the
-        contact section's own `--room-ink` tokens instead and the demo's
+        contact section's own `--panel-ink` tokens instead and the demo's
         ghosted `01`-style numbering is kept but given real contrast.
+
+        Each row is a channel strip: number cell, question, chevron cell. The
+        number is boxed rather than set free because the box is what makes it
+        read as a channel assignment instead of a list marker — the same reason
+        the deck's pads carry numbers. The open row lights its number and takes
+        the panel's own 4% fill, so the state is visible at a glance without
+        the row changing size.
 
         Placement is deliberate: between `.contactDeck` and `<footer>`, because
         `use-rack-animations.ts:444-522` queries specific children of
@@ -514,33 +528,46 @@ export function Contact() {
         padding the array would re-map the audio.
       */}
       <div className={styles.contactBrief}>
-        <SilkscreenLabel>BEFORE YOU WRITE</SilkscreenLabel>
-        <Accordion
-          type="single"
-          collapsible
-          defaultValue="0"
-          className={styles.contactBriefAccordion}
-        >
-          {CONTACT_QUESTIONS.map((entry, index) => (
-            <AccordionItem
-              key={entry.question}
-              value={String(index)}
-              className={styles.contactBriefAccordionItem}
-            >
-              <AccordionTrigger className={styles.contactBriefAccordionTrigger}>
-                <span className={styles.contactBriefAccordionIndex}>
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <span className={styles.contactBriefAccordionQuestion}>
-                  {entry.question}
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className={styles.contactBriefAccordionContent}>
-                {entry.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <div className={styles.contactBriefPanel}>
+          <Screw className={styles.screwTopLeft} />
+          <Screw className={styles.screwTopRight} />
+          <div className={styles.contactBriefHead}>
+            <SilkscreenLabel>Before you write</SilkscreenLabel>
+            <span className={styles.contactBriefCount}>
+              {String(CONTACT_QUESTIONS.length).padStart(2, '0')} entries
+            </span>
+          </div>
+          <Accordion
+            type="single"
+            collapsible
+            defaultValue="0"
+            className={styles.contactBriefAccordion}
+          >
+            {CONTACT_QUESTIONS.map((entry, index) => (
+              <AccordionItem
+                key={entry.question}
+                value={String(index)}
+                className={styles.contactBriefAccordionItem}
+              >
+                <AccordionTrigger
+                  className={styles.contactBriefAccordionTrigger}
+                >
+                  <span className={styles.contactBriefAccordionIndex}>
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <span className={styles.contactBriefAccordionQuestion}>
+                    {entry.question}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent
+                  className={styles.contactBriefAccordionContent}
+                >
+                  {entry.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       </div>
 
       <footer className={styles.footer}>

@@ -8536,64 +8536,98 @@
   margin: clamp(40px, 6vh, 76px) auto 0;
   padding: 0 clamp(20px, 4vw, 48px);
 }
-/* The silkscreen base rule ends in `color: #ffffff`, and the per-section
-   override only reaches `.sectionHeading > .silkscreen`. This label is a bare
-   child of `.contactBrief`, so it matched neither and rendered white-on-cream
-   in the light theme — which is why the heading read as missing. It takes the
-   same `--label-ink` the other section labels use, so it also carries the top
-   rule and the tracking those have. */
-.contactBrief > .silkscreen {
-  display: inline-flex;
-  width: fit-content;
-  padding-top: 6px;
-  border-top: 1.5px solid var(--label-hair);
-  color: var(--label-ink);
-  font: 750 10.5px var(--font-geist-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+/* The insert card. `--chassis-hi` is one step lighter than the band it sits
+   on in daylight and one step lighter than the graphite in the dark theme, so
+   a single declaration reads as a card in both: cream on cream, milled panel
+   on smoked panel. The shadow is the same trick — large and soft, so the card
+   lifts off the band without drawing an edge of its own. */
+.contactBriefPanel {
+  position: relative;
+  /* The deck's own width, so the two objects stack as one column: the device,
+     then the card that came in the box with it. A full-bleed band here would
+     have made the insert wider than the hardware it documents. */
+  max-width: 780px;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid var(--panel-hairline);
+  border-radius: 12px;
+  background: var(--chassis-hi);
+  box-shadow: 0 22px 40px -30px rgba(29, 30, 28, 0.55);
 }
-.contactBriefAccordion {
-  margin: clamp(18px, 2vw, 26px) 0 0;
-}
-/* Each row owns its own hairline, so the open panel does not push a rule down
-   with it. `border-b` from the shadcn primitive is kept on the last child and
-   overridden to transparent mid-list by the rule below. */
-.contactBriefAccordionItem {
+/* The deck's own brand bar, one size down: label left, machine count right,
+   hairline under both. The 26px inline inset is what clears the corner screws
+   at 10px. */
+.contactBriefHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 26px;
   border-bottom: 1px solid var(--panel-hairline);
 }
-.contactBriefAccordionItem:last-child {
+/* The silkscreen base rule ends in `color: #ffffff`, which was invisible on
+   this cream band, so the label takes the same `--label-ink` the other section
+   labels use. */
+.contactBriefHead > .silkscreen {
+  color: var(--label-ink);
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+.contactBriefCount {
+  color: var(--panel-ink-muted);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.contactBriefAccordion {
+  margin: 0;
+}
+/* Each row owns its own hairline, so the open panel does not push a rule down
+   with it. Drawn on the top edge rather than the bottom so the first row needs
+   no exception at the head strip's own border. `border-b` from the shadcn
+   primitive is switched off for the same reason. */
+.contactBriefAccordionItem {
   border-bottom: 0;
 }
+.contactBriefAccordionItem + .contactBriefAccordionItem {
+  border-top: 1px solid var(--panel-hairline);
+}
+/* The open row takes the panel's own 4% fill, so the active channel reads
+   without the row changing size. */
+.contactBriefAccordionItem[data-state='open'] {
+  background: var(--panel-fill);
+}
 .contactBriefAccordionTrigger {
-  display: flex;
-  align-items: baseline;
-  gap: clamp(8px, 0.9vw, 14px);
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: clamp(12px, 1.4vw, 20px);
   min-height: 44px;
-  padding: 14px 0;
-  /* Closed rows sit back so the open one owns the page; the reference draws
-     the difference as a large type-size change, and at this weight the colour
-     step is what carries it. Neither state is below 4.5:1 — `panel-ink-muted`
-     is the resting value, so the collapsed questions stay readable on their
-     own, which is the whole point of collapsing them.
+  padding: 18px 26px;
+  /* Closed rows sit back so the open one owns the page. Neither state is below
+     4.5:1 — `panel-ink-muted` is the resting value, so the collapsed questions
+     stay readable on their own, which is the whole point of collapsing them.
 
-     26px rather than the 52px this shipped with. At 52px the questions were
-     the largest type anywhere in the contact section — nearly twice the
-     section's own display size — and the longest ones wrapped to two lines,
-     which broke the single-line rhythm the reference is built on. 26px still
-     reads as caps-with-intent next to the 15-18px body copy, while letting
-     every question sit on one line at desktop width. */
+     Sentence case at 21px rather than the uppercase 26px this shipped with.
+     The rack sets its headings in sentence case and its titles in Syne
+     (`Start with the user.`), and the questions are written as sentences — so
+     caps were doing work the type already does, at the cost of a line each. */
   color: var(--panel-ink-muted);
   font-family: var(--font-syne), var(--font-space-grotesk), sans-serif;
-  font-size: clamp(17px, 2vw, 26px);
+  font-size: clamp(16px, 1.5vw, 21px);
   font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   text-align: left;
-  text-transform: uppercase;
-  text-wrap: balance;
+  text-wrap: pretty;
   /* The primitive underlines on hover, which is a link cue on a button. */
   text-decoration: none;
-  transition: color var(--dur-fast) var(--ease-out);
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
 }
 .contactBriefAccordionTrigger:hover {
   text-decoration: none;
@@ -8602,39 +8636,59 @@
 .contactBriefAccordionTrigger[data-state='open'] {
   color: var(--panel-ink);
 }
-.contactBriefAccordionTrigger:focus-visible {
-  outline: 2px solid var(--signal-orange);
-  outline-offset: 3px;
-  border-radius: 2px;
+/* The rack's own ring — `.root button:focus-visible`, 3px of signal orange at
+   a 4px offset — is the right ring and the wrong offset here. These rows are
+   full-bleed inside a card with `overflow: hidden`, so an offset ring is
+   sliced off at both ends and lands as a pair of rules across the card rather
+   than as a ring around a row. Same colour, same weight, pulled 3px inside
+   instead, which is the whole difference. The selector carries `.root` because
+   that is the specificity the rack's own rule carries. */
+.root .contactBriefAccordionTrigger:focus-visible {
+  outline: 3px solid var(--signal-orange);
+  outline-offset: -3px;
+  border-radius: 6px;
 }
-/* The row number, set as the deck sets its own readouts: small mono, muted,
-   and out of the way until the row is hovered or open. */
+/* The channel number, boxed: the box is what makes it read as an assignment
+   rather than a list marker, which is why it is a cell and not a bare digit.
+   The open row lights it, the same way the deck lights the pad it triggered. */
 .contactBriefAccordionIndex {
-  flex-shrink: 0;
+  display: flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--panel-hairline);
+  border-radius: 7px;
+  background: var(--panel-fill);
   color: var(--panel-ink-muted);
   font-family: var(--font-geist-mono), monospace;
   font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  /* Baseline alignment against the caps keeps the number sitting on the cap
-     line rather than floating at the optical centre of the block. */
-  transform: translateY(-0.35em);
-  transition: color var(--dur-fast) var(--ease-out);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
 }
 .contactBriefAccordionQuestion {
-  flex: 1;
+  min-width: 0;
 }
 .contactBriefAccordionTrigger[data-state='open'] .contactBriefAccordionIndex {
+  border-color: color-mix(in srgb, var(--signal-orange) 46%, transparent);
+  background: color-mix(in srgb, var(--signal-orange) 14%, transparent);
   color: var(--signal-orange);
 }
 .contactBriefAccordionContent {
   max-width: 62ch;
   /* The primitive's default `pb-4 pt-0` is too tight under a trigger that
-     already carries its own 14px block padding. */
-  padding: 4px 0 20px clamp(8px, 0.9vw, 14px);
+     already carries its own 18px block padding. The inline start lines the
+     answer up under the question, past the number cell and its gap. */
+  padding: 0 26px 20px
+    calc(26px + 30px + clamp(12px, 1.4vw, 20px));
   color: var(--panel-ink-muted);
   font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 14px;
+  font-size: 14.5px;
   line-height: 1.62;
   text-wrap: pretty;
 }
@@ -8657,16 +8711,28 @@
 }
 /* The chevron is the section's only "there is more here" cue, so it inherits
    the panel ink rather than the primitive's `text-muted-foreground`, which is
-   a Tailwind token this module never sets. */
+   a Tailwind token this module never sets. Boxed to match the number cell at
+   the other end of the row: padding on the svg itself is enough, because the
+   element is replaced and honours a box. */
 .contactBriefAccordionTrigger > svg {
   flex-shrink: 0;
   align-self: center;
+  width: 28px;
+  height: 28px;
+  padding: 7px;
+  border: 1px solid var(--panel-hairline);
+  border-radius: 7px;
   color: var(--panel-ink-muted);
   transition:
     transform var(--dur-med) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 .contactBriefAccordionTrigger:hover > svg {
+  color: var(--signal-orange);
+}
+.contactBriefAccordionTrigger[data-state='open'] > svg {
+  border-color: color-mix(in srgb, var(--signal-orange) 46%, transparent);
   color: var(--signal-orange);
 }
 @media (prefers-reduced-motion: reduce) {
@@ -8684,8 +8750,34 @@
     margin-top: 32px;
     padding: 0 20px;
   }
+  /* The corner screws are the one detail that costs more than it returns at
+     phone width: they are 10px of chrome holding a 20px inset open, and the
+     card already reads as a card. */
+  .contactBriefPanel > .screwTopLeft,
+  .contactBriefPanel > .screwTopRight {
+    display: none;
+  }
+  .contactBriefHead {
+    padding: 14px 18px;
+  }
+  .contactBriefAccordionTrigger {
+    grid-template-columns: 26px minmax(0, 1fr) 26px;
+    gap: 12px;
+    padding: 16px 18px;
+  }
+  .contactBriefAccordionIndex {
+    width: 26px;
+    height: 26px;
+  }
+  .contactBriefAccordionTrigger > svg {
+    width: 26px;
+    height: 26px;
+    padding: 6px;
+  }
+  /* The indent that lines the answer up under the question costs more width
+     than it buys on a phone, so the copy takes the row's own inset instead. */
   .contactBriefAccordionContent {
-    padding-left: 0;
+    padding: 0 18px 18px;
   }
 }
 

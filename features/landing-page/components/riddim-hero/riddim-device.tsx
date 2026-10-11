@@ -5,18 +5,17 @@ import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
 import { useCallback, useState } from 'react'
 import { useTheme } from 'next-themes'
 
-import { counterDigits } from './riddim-choreography'
 import {
   COPY,
   MACHINE_NAV,
   NAV_BY_ID,
   SCREEN_COPY,
+  SCREEN_NAV,
   type NavEntry,
 } from './riddim-content'
 import {
   CANVAS,
   CHASSIS,
-  COPY_BLOCK,
   capId,
   DIMPLES,
   FADER,
@@ -33,8 +32,6 @@ import {
   PALETTE,
   PARAM_ROWS,
   RIGHT_CAPS,
-  SCREEN,
-  SCREEN_UI,
   SCREWS,
   SILK_LABELS,
   SILK_RULES,
@@ -46,6 +43,7 @@ import {
   padId,
   type Cap,
 } from './riddim-geometry'
+import { LcdFace } from './riddim-screen'
 import styles from './riddim-hero.module.css'
 
 /**
@@ -71,8 +69,6 @@ import styles from './riddim-hero.module.css'
 
 type Vars = Record<`--${string}`, string | number>
 const vars = (v: Vars) => v as CSSProperties
-const round = (n: number) => Math.round(n * 100) / 100
-
 type MachineApi = {
   /** False on narrow viewports, where the stack below carries the links. */
   enabled: boolean
@@ -174,313 +170,6 @@ const ring = (x: number, y: number, w: number, h: number, r: number) => (
     rx={r + 4}
   />
 )
-
-/* -------------------------------------------------------------------------
- * Glyphs — the reference's icon language, in a 24 x 24 box
- * ---------------------------------------------------------------------- */
-
-const GLYPHS: Record<string, ReactNode> = {
-  fan: (
-    <>
-      <path d="M3 21 12 21 12 12Z" />
-      <path d="M3 21 11 11 3 8Z" />
-      <path d="M3 21 8 5 2 3Z" />
-    </>
-  ),
-  square: (
-    <rect
-      x="3"
-      y="4"
-      width="18"
-      height="16"
-      rx="4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-    />
-  ),
-  cup: (
-    <>
-      <path d="M6 4h12l-2 8H8Z" />
-      <path d="M7 15h10l-1 5H8Z" opacity=".75" />
-    </>
-  ),
-  bars: (
-    <>
-      <rect x="3" y="4" width="18" height="4" rx="2" />
-      <rect x="3" y="10" width="18" height="4" rx="2" />
-      <rect x="3" y="16" width="18" height="4" rx="2" />
-    </>
-  ),
-  lines: (
-    <>
-      <rect x="3" y="5" width="18" height="2" rx="1" />
-      <rect x="3" y="11" width="18" height="2" rx="1" />
-      <rect x="3" y="17" width="18" height="2" rx="1" />
-    </>
-  ),
-  disc: (
-    <>
-      <circle
-        cx="12"
-        cy="12"
-        r="9"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-      />
-      <circle cx="9" cy="12" r="2.4" />
-    </>
-  ),
-  capsule: <rect x="2" y="8" width="20" height="8" rx="4" />,
-  grid: (
-    <>
-      <rect x="3" y="3" width="8" height="8" rx="2" />
-      <rect x="13" y="3" width="8" height="8" rx="2" />
-      <rect x="3" y="13" width="8" height="8" rx="2" />
-      <rect x="13" y="13" width="8" height="8" rx="2" />
-    </>
-  ),
-  bird: (
-    <>
-      <path d="M4 18c6 0 12-3 13-9 1 3 2 4 4 4-2 5-8 8-14 8Z" />
-      <path d="M8 10c3 0 5 2 5 5H8Z" opacity=".7" />
-    </>
-  ),
-  leaf: (
-    <>
-      <path d="M12 3c5 4 8 7 8 11a8 8 0 0 1-16 0c0-4 3-7 8-11Z" />
-      <path d="M12 8v11" stroke="#00000055" strokeWidth="1.6" />
-    </>
-  ),
-  hand: (
-    <>
-      <rect x="7" y="9" width="10" height="12" rx="3" />
-      <rect x="5" y="3" width="3" height="9" rx="1.5" />
-      <rect x="10" y="2" width="3" height="9" rx="1.5" />
-      <rect x="15" y="3" width="3" height="9" rx="1.5" />
-    </>
-  ),
-  peace: (
-    <>
-      <rect x="6" y="10" width="12" height="11" rx="3" />
-      <rect x="8" y="3" width="3" height="9" rx="1.5" />
-      <rect x="13" y="3" width="3" height="9" rx="1.5" />
-    </>
-  ),
-  foot: (
-    <>
-      <ellipse cx="12" cy="15" rx="5" ry="6" />
-      <circle cx="9" cy="6" r="2" />
-      <circle cx="15" cy="6" r="2" />
-    </>
-  ),
-  house: (
-    <>
-      <path d="M12 3 22 12h-3v9H5v-9H2Z" />
-      <rect x="10" y="14" width="4" height="7" fill="#00000055" />
-    </>
-  ),
-  figure: (
-    <>
-      <circle cx="14" cy="4" r="2.6" />
-      <path d="M13 7 8 12l4 3-2 6h3l2-6 3 4v6h3v-7l-4-5 3-4Z" />
-    </>
-  ),
-  piano: (
-    <>
-      <rect x="2" y="6" width="20" height="12" rx="2.5" />
-      <path d="M7 6v12M12 6v12M17 6v12" stroke="#00000066" strokeWidth="1.6" />
-    </>
-  ),
-  notes: (
-    <>
-      <circle cx="7" cy="17" r="3.4" />
-      <circle cx="17" cy="15" r="3.4" />
-      <path
-        d="M10 17V5l10-2v12"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        fill="none"
-      />
-    </>
-  ),
-  plane: <path d="M2 11 22 3l-7 18-3-7Z" />,
-  brush: (
-    <>
-      <path d="M4 20c0-4 2-6 5-6l4 4c-1 3-3 4-6 4Z" />
-      <path d="M11 13 20 4l2 2-9 9Z" opacity=".75" />
-    </>
-  ),
-  sun: (
-    <>
-      <circle cx="12" cy="12" r="5" />
-      <path
-        d="M12 1v4M12 19v4M1 12h4M19 12h4M4 4l3 3M17 17l3 3M20 4l-3 3M7 17l-3 3"
-        stroke="currentColor"
-        strokeWidth="2.2"
-      />
-    </>
-  ),
-  alarm: (
-    <>
-      <path d="M12 5a6 6 0 0 1 6 6v5H6v-5a6 6 0 0 1 6-6Z" />
-      <rect x="4" y="17" width="16" height="3" rx="1.5" />
-      <path
-        d="M12 1v2M4 3l2 2M20 3l-2 2"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-    </>
-  ),
-  mic: (
-    <>
-      <rect x="9" y="2" width="6" height="12" rx="3" />
-      <path
-        d="M6 12a6 6 0 0 0 12 0"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        fill="none"
-      />
-      <rect x="11" y="18" width="2" height="4" rx="1" />
-    </>
-  ),
-  toggle: (
-    <>
-      <rect x="2" y="7" width="20" height="10" rx="5" />
-      <circle cx="17" cy="12" r="3.2" fill="#00000055" />
-    </>
-  ),
-  undo: (
-    <>
-      <path
-        d="M12 5a8 8 0 1 1-7.4 5"
-        stroke="currentColor"
-        strokeWidth="2.6"
-        fill="none"
-      />
-      <path d="M3 3v6h6Z" />
-    </>
-  ),
-  star: <path d="M12 1 14 9l8 3-8 3-2 8-2-8-8-3 8-3Z" />,
-  slash: (
-    <rect
-      x="4"
-      y="10"
-      width="16"
-      height="4"
-      rx="2"
-      transform="rotate(-42 12 12)"
-    />
-  ),
-  dots: (
-    <>
-      <circle cx="8" cy="12" r="5" />
-      <circle cx="17" cy="12" r="5" />
-    </>
-  ),
-  clock: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 6v7l5 3" stroke="#00000066" strokeWidth="2" fill="none" />
-    </>
-  ),
-  meter: (
-    <>
-      <rect x="3" y="14" width="4" height="7" rx="1.5" />
-      <rect x="10" y="9" width="4" height="12" rx="1.5" />
-      <rect x="17" y="4" width="4" height="17" rx="1.5" />
-    </>
-  ),
-  steps: (
-    <>
-      <rect x="2" y="16" width="6" height="6" rx="1.5" />
-      <rect x="9" y="11" width="6" height="11" rx="1.5" />
-      <rect x="16" y="5" width="6" height="17" rx="1.5" />
-    </>
-  ),
-  lion: (
-    <>
-      <circle cx="12" cy="12" r="7" />
-      <path
-        d="M12 1v3M12 20v3M1 12h3M20 12h3M4 4l2 2M18 18l2 2M20 4l-2 2M6 18l-2 2"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-      <circle cx="9.5" cy="11" r="1.3" fill="#00000066" />
-      <circle cx="14.5" cy="11" r="1.3" fill="#00000066" />
-    </>
-  ),
-  man: (
-    <>
-      <circle cx="12" cy="5" r="3" />
-      <path d="M9 9h6l2 6h-3v7h-4v-7H7Z" />
-    </>
-  ),
-}
-
-function Glyph({ id }: { id: string }) {
-  return GLYPHS[id] ?? GLYPHS.grid
-}
-
-/* -------------------------------------------------------------------------
- * Seven-segment counter
- * ---------------------------------------------------------------------- */
-
-const SEG_T = 5
-
-function segmentBars(w: number, h: number) {
-  const t = SEG_T
-  const mid = h / 2
-  return {
-    a: { x: t, y: 0, w: w - 2 * t, h: t },
-    g: { x: t, y: mid - t / 2, w: w - 2 * t, h: t },
-    d: { x: t, y: h - t, w: w - 2 * t, h: t },
-    f: { x: 0, y: t, w: t, h: mid - t * 1.5 },
-    b: { x: w - t, y: t, w: t, h: mid - t * 1.5 },
-    e: { x: 0, y: mid + t / 2, w: t, h: mid - t * 1.5 },
-    c: { x: w - t, y: mid + t / 2, w: t, h: mid - t * 1.5 },
-  }
-}
-
-/** All seven bars are always drawn; the CSS lights them from `data-v`. */
-function SevenSeg({
-  index,
-  x,
-  y,
-  size,
-  value,
-}: {
-  index: number
-  x: number
-  y: number
-  size: number
-  value: string
-}) {
-  const w = size * 0.62
-  const h = size
-  const bars = segmentBars(w, h)
-  return (
-    <g
-      className={styles.seg}
-      data-seg={index}
-      data-v={value}
-      transform={`translate(${round(x)} ${round(y)})`}
-    >
-      {Object.entries(bars).map(([key, bar]) => (
-        <rect
-          key={key}
-          className={styles[`seg${key}`]}
-          x={bar.x}
-          y={bar.y}
-          width={bar.w}
-          height={bar.h}
-          rx="2"
-        />
-      ))}
-    </g>
-  )
-}
 
 /* -------------------------------------------------------------------------
  * Panel pieces
@@ -744,7 +433,6 @@ const longLabel = (text: string) =>
     : {}
 
 /** A plate behind the print, so the glyph texture never crowds the name. */
-const screenPlate = { x: 10, y: SCREEN_UI.status.y + 6, w: 636, h: 168 }
 
 function Panel({ api }: { api: MachineApi }) {
   return (
@@ -792,16 +480,23 @@ function Panel({ api }: { api: MachineApi }) {
           <rect y="0" width="6" height="4" fill="#ffffff" opacity="0.5" />
           <rect y="4" width="6" height="5" fill="#000000" opacity="0.07" />
         </pattern>
+        {/* The reference's grille is a handful of bold black slats on the
+            cream plate, with the cone showing dark at the middle. */}
         <pattern
           id="grille"
-          width="10"
-          height="10"
+          width="25"
+          height="25"
           patternUnits="userSpaceOnUse"
         >
-          <rect width="10" height="10" fill={PALETTE.grille} />
-          <rect y="6" width="10" height="4" fill="#000000" />
-          <rect y="0" width="10" height="1.4" fill="#6b6f60" opacity="0.5" />
+          <rect width="25" height="25" fill="#e6dccb" />
+          <rect y="10.5" width="25" height="14.5" fill="#06140e" />
+          <rect y="10.5" width="25" height="1.6" fill="#2c3a31" opacity="0.8" />
         </pattern>
+        <radialGradient id="grilleCone" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#050c08" stopOpacity="0.96" />
+          <stop offset="0.74" stopColor="#050c08" stopOpacity="0.9" />
+          <stop offset="1" stopColor="#050c08" stopOpacity="0" />
+        </radialGradient>
         <radialGradient id="grilleShade" cx="0.5" cy="0.32" r="0.75">
           <stop offset="0" stopColor="#ffffff" stopOpacity="0.22" />
           <stop offset="0.55" stopColor="#ffffff" stopOpacity="0" />
@@ -821,6 +516,12 @@ function Panel({ api }: { api: MachineApi }) {
           <stop offset="0" stopColor="#1a6b4c" />
           <stop offset="0.62" stopColor={PALETTE.green} />
           <stop offset="1" stopColor={PALETTE.greenLo} />
+        </radialGradient>
+        {/* The lamp's halo, as a gradient instead of a blur filter. */}
+        <radialGradient id="led-glow" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor={PALETTE.orange} stopOpacity="0.6" />
+          <stop offset="0.42" stopColor={PALETTE.orange} stopOpacity="0.22" />
+          <stop offset="1" stopColor={PALETTE.orange} stopOpacity="0" />
         </radialGradient>
       </defs>
 
@@ -878,6 +579,12 @@ function Panel({ api }: { api: MachineApi }) {
         cy={SPEAKER.grille.cy}
         r={SPEAKER.grille.r}
         fill="url(#grille)"
+      />
+      <circle
+        cx={SPEAKER.grille.cx}
+        cy={SPEAKER.grille.cy}
+        r={SPEAKER.grille.r * 0.46}
+        fill="url(#grilleCone)"
       />
       <circle
         cx={SPEAKER.grille.cx}
@@ -1263,273 +970,14 @@ function Panel({ api }: { api: MachineApi }) {
 }
 
 /* -------------------------------------------------------------------------
- * The screen
- * ---------------------------------------------------------------------- */
-
-const FIELD_TONES = [
-  'ink',
-  'ink',
-  'orange',
-  'ink',
-  'lime',
-  'ink',
-  'ink',
-  'blue',
-  'ink',
-  'ink',
-] as const
-
-/** Five rows of eighteen, drawn from the glyph library: the reference's texture. */
-const FIELD_ROWS: readonly (readonly string[])[] = [
-  [
-    'fan',
-    'square',
-    'cup',
-    'bars',
-    'disc',
-    'capsule',
-    'lines',
-    'bird',
-    'grid',
-    'star',
-    'slash',
-    'dots',
-    'piano',
-    'figure',
-    'notes',
-    'plane',
-    'brush',
-    'hand',
-  ],
-  [
-    'sun',
-    'alarm',
-    'mic',
-    'toggle',
-    'undo',
-    'clock',
-    'house',
-    'foot',
-    'leaf',
-    'peace',
-    'meter',
-    'steps',
-    'lion',
-    'man',
-    'disc',
-    'capsule',
-    'lines',
-    'bird',
-  ],
-  [
-    'star',
-    'slash',
-    'dots',
-    'piano',
-    'figure',
-    'notes',
-    'plane',
-    'brush',
-    'hand',
-    'sun',
-    'alarm',
-    'mic',
-    'toggle',
-    'undo',
-    'clock',
-    'house',
-    'foot',
-    'leaf',
-  ],
-  [
-    'peace',
-    'meter',
-    'steps',
-    'lion',
-    'man',
-    'fan',
-    'square',
-    'cup',
-    'bars',
-    'disc',
-    'capsule',
-    'lines',
-    'bird',
-    'grid',
-    'star',
-    'slash',
-    'dots',
-    'piano',
-  ],
-  [
-    'figure',
-    'notes',
-    'plane',
-    'brush',
-    'hand',
-    'sun',
-    'alarm',
-    'mic',
-    'toggle',
-    'undo',
-    'clock',
-    'house',
-    'foot',
-    'leaf',
-    'peace',
-    'meter',
-    'steps',
-    'lion',
-  ],
-]
-
-function ScreenArt() {
-  const { w, h, pad, counter, field, words, status } = SCREEN_UI
-  const cell = field.cell
-  const pitch = cell + field.gap
-  const gridW = field.cols * cell + (field.cols - 1) * field.gap
-  const x0 = (w - gridW) / 2
-  const digitW = counter.digit * 0.62 + counter.gap
-  const start = counterDigits(0)
-
-  return (
-    <svg
-      className={styles.screenArt}
-      viewBox={`0 0 ${w} ${h}`}
-      aria-hidden="true"
-      focusable="false"
-    >
-      <defs>
-        <linearGradient id="screen-sheen" x1="0" y1="0" x2="0.7" y2="1">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.22" />
-          <stop offset="0.32" stopColor="#ffffff" stopOpacity="0.05" />
-          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <rect width={w} height={h} className={styles.screenGreen} />
-
-      {/* the reference's glyph texture, under everything */}
-      <g className={styles.field}>
-        {FIELD_ROWS.map((row, rowIndex) =>
-          row.map((glyph, colIndex) => {
-            const i = rowIndex * field.cols + colIndex
-            const tone =
-              FIELD_TONES[(rowIndex + colIndex * 3) % FIELD_TONES.length]
-            return (
-              <g
-                key={`${rowIndex}-${colIndex}`}
-                className={`${styles.glyph} ${styles[`tone${tone[0].toUpperCase()}${tone.slice(1)}`]}`}
-                style={vars({ '--i': i })}
-                transform={`translate(${round(x0 + colIndex * pitch)} ${round(field.top + rowIndex * pitch)}) scale(${round(cell / 24)})`}
-              >
-                <Glyph id={glyph} />
-              </g>
-            )
-          }),
-        )}
-      </g>
-
-      <rect
-        x={screenPlate.x}
-        y={screenPlate.y}
-        width={screenPlate.w}
-        height={screenPlate.h}
-        rx="6"
-        className={styles.screenPlate}
-      />
-
-      {/* a well behind the counter, the way the reference backs its readout */}
-      <rect
-        x={counter.x - 12}
-        y={counter.y - 12}
-        width={4 * (counter.digit * 0.62 + counter.gap) + counter.dot + 24}
-        height={counter.digit + 24}
-        rx="6"
-        className={styles.readoutWell}
-      />
-
-      {/* the machine's own counter */}
-      <g className={styles.counter}>
-        {[0, 1, 2, 3].map((index) => (
-          <SevenSeg
-            key={index}
-            index={index}
-            x={counter.x + index * digitW + (index > 1 ? counter.dot : 0)}
-            y={counter.y}
-            size={counter.digit}
-            value={start[index]}
-          />
-        ))}
-        <circle
-          cx={counter.x + 2 * digitW + counter.dot / 2 - 6}
-          cy={counter.y + counter.digit - 4}
-          r={counter.dot / 2}
-          className={styles.segDot}
-        />
-      </g>
-
-      {/* the six layer words, where the reference prints them */}
-      <g className={styles.words}>
-        {SCREEN_COPY.words.map((word, index) => {
-          const step = words.size * 0.62 * 6 + words.glyph + words.gap + 14
-          const x = words.x + index * step
-          return (
-            <g key={word}>
-              <g
-                className={styles.wordGlyph}
-                transform={`translate(${round(x)} ${round(words.y - words.glyph * 0.78)}) scale(${round(words.glyph / 24)})`}
-              >
-                <Glyph id={FIELD_ROWS[0][index]} />
-              </g>
-              <text
-                className={styles.wordText}
-                x={round(x + words.glyph + 8)}
-                y={words.y}
-              >
-                {word}
-              </text>
-            </g>
-          )
-        })}
-      </g>
-
-      <rect width={w} height={h} className={styles.screenSheen} />
-      <text className={styles.screenStatus} x={pad} y={status.y}>
-        {SCREEN_COPY.status[0]}
-      </text>
-      <text
-        className={styles.screenStatus}
-        x={w - pad}
-        y={status.y}
-        textAnchor="end"
-      >
-        {SCREEN_COPY.status[1]}
-      </text>
-      <rect
-        x="0.5"
-        y="0.5"
-        width={w - 1}
-        height={h - 1}
-        rx={SCREEN.r}
-        fill="none"
-        className={styles.screenEdge}
-      />
-    </svg>
-  )
-}
-
-/* -------------------------------------------------------------------------
  * Assembly
  * ---------------------------------------------------------------------- */
 
 export function RiddimMachine({
   interactive,
-  printCopy,
 }: {
   /** The machine's controls are the navigation (desktop widths). */
   interactive: boolean
-  /** The fascia's copy is large enough to read (wide desktops). */
-  printCopy: boolean
 }) {
   const [active, setActive] = useState<string | null>(null)
   const { setTheme } = useTheme()
@@ -1561,62 +1009,22 @@ export function RiddimMachine({
   const armed = active ? NAV_BY_ID.get(active) : undefined
   const Shell = interactive ? 'nav' : 'div'
 
-  /* The clone table owns these numbers; HTML type reads them through the same
-     `--u` the SVG uses, so print and markup cannot drift apart. `y` in the
-     geometry is a baseline, and a line box puts it 0.8em down. */
-  const baseline = (y: number, size: number) => round(y - size * 0.8)
-  const screenVars = vars({
-    '--scr-title-top': baseline(SCREEN_UI.title.y, SCREEN_UI.title.size),
-    '--scr-title-size': SCREEN_UI.title.size,
-    '--scr-role-top': baseline(SCREEN_UI.role.y, SCREEN_UI.role.size),
-    '--scr-role-size': SCREEN_UI.role.size,
-    '--scr-readout-top': baseline(SCREEN_UI.readout.y, SCREEN_UI.readout.size),
-    '--scr-readout-size': SCREEN_UI.readout.size,
-    '--scr-pad': SCREEN_UI.pad,
-  })
-  const copyVars = vars({
-    '--copy-x': COPY_BLOCK.x,
-    '--copy-y': COPY_BLOCK.y,
-    '--copy-w': COPY_BLOCK.w,
-    '--copy-kicker': COPY_BLOCK.kicker,
-    '--copy-headline': COPY_BLOCK.headline,
-    '--copy-line': COPY_BLOCK.line,
-    '--copy-sub': COPY_BLOCK.sub,
-    '--copy-hint': COPY_BLOCK.hint,
-  })
-
   return (
     <Shell
       className={styles.machine}
+      data-riddim-machine
       {...(interactive ? { 'aria-label': 'Primary' } : {})}
     >
       <Panel api={api} />
       <span className={styles.sheen} aria-hidden="true" />
 
       <div className={styles.screen}>
-        <ScreenArt />
-        <div className={styles.screenUi} style={screenVars}>
-          <h1 className={styles.title}>{SCREEN_COPY.title}</h1>
-          <p className={styles.role}>{SCREEN_COPY.role}</p>
-          <p className={styles.readout} aria-hidden="true">
-            <b>{armed?.label ?? SCREEN_COPY.idle.name}</b>
-            <span>{armed?.note ?? SCREEN_COPY.idle.note}</span>
-          </p>
-        </div>
+        <LcdFace
+          heading
+          readout={armed ? { name: armed.label, note: armed.note } : undefined}
+          nav={{ entries: SCREEN_NAV, interactive, active, describe }}
+        />
       </div>
-
-      {printCopy ? (
-        <div className={styles.copy} style={copyVars}>
-          <p className={styles.kicker}>
-            <i aria-hidden="true" />
-            <span>{COPY.kicker}</span>
-            <em>{COPY.place}</em>
-          </p>
-          <strong className={styles.line}>{COPY.line}</strong>
-          <p className={styles.sub}>{COPY.sub}</p>
-          <p className={styles.hint}>{COPY.hint}</p>
-        </div>
-      ) : null}
     </Shell>
   )
 }

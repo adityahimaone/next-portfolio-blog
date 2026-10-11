@@ -172,16 +172,33 @@ export const SCREEN = { x: 15, y: 324, w: 922, h: 268, r: 4 } as const
 /** Bezel screws: one on the screen's top edge, one on the frame's bottom. */
 export const SCREWS = [
   { cx: 476, cy: 337 },
-  { cx: 476, cy: 594 },
+  // Centred in the frame's bottom lip (the lit screen ends at 592, the bezel
+  // at 608): any higher and the screen plane cuts the screw in half.
+  { cx: 476, cy: 600 },
 ] as const
 
 /* -------------------------------------------------------------------------
  * Console: the measured lattice
  * ---------------------------------------------------------------------- */
 
+/**
+ * Everything from the console's label row down is the photograph's lattice
+ * translated `CONSOLE_DROP` units down the case.
+ *
+ * On the photo the silkscreen words crowd the screen module: their cap height
+ * starts at y 598 and the module's dark lip runs to y 608, so the row is drawn
+ * half over the bezel and half under the lit screen. A photograph can get away
+ * with that; a drawing cannot, because the lit screen is a separate plane with
+ * `overflow: hidden` and simply cuts the words in half. The drop is uniform, so
+ * every gap *inside* the console is still the measured one — only its distance
+ * from the screen module changed, and the case has the room (the last pad row
+ * ends at 1242 of 1317).
+ */
+export const CONSOLE_DROP = 16
+
 /** Four pad columns, four pad rows. Pitch is a hair over 129 either way. */
 export const PAD_COLS = [174, 304, 435, 564] as const
-export const PAD_ROWS = [757, 887, 1016, 1146] as const
+export const PAD_ROWS = [773, 903, 1032, 1162] as const
 export const PAD = { w: 84, h: 80, r: 9 } as const
 
 /** Two control columns to the right of the pads. */
@@ -192,42 +209,42 @@ export const RIGHT_W = 86
 export const LEFT_BUTTONS = { x: 44, w: 122, h: 62, r: 6 } as const
 
 /** Silkscreen section labels above the console, and their bracket rules. */
-export const CONSOLE_LABELS = { y: 610, rule: 606 } as const
+export const CONSOLE_LABELS = { y: 626, rule: 622 } as const
 
 /** The two rows of live caps above pad row 1. */
-export const LIVE_ROWS = [620, 666] as const
+export const LIVE_ROWS = [636, 682] as const
 export const LIVE_H = 43
 
 /** Where each parameter label row sits, and what it prints. */
 export const PARAM_ROWS = [
-  { y: 728, labels: ['', 'LEVEL', 'PITCH', 'TIME'] },
-  { y: 858, labels: ['', 'LPF', 'HPF', '\u2192FX'] },
-  { y: 988, labels: ['', 'ATK', 'REL', 'PAN'] },
-  { y: 1118, labels: ['', 'TUNE', 'VEL', 'MOD'] },
+  { y: 744, labels: ['', 'LEVEL', 'PITCH', 'TIME'] },
+  { y: 874, labels: ['', 'LPF', 'HPF', '\u2192FX'] },
+  { y: 1004, labels: ['', 'ATK', 'REL', 'PAN'] },
+  { y: 1134, labels: ['', 'TUNE', 'VEL', 'MOD'] },
 ] as const
 
 /** Knobs: the white volume, the orange BPM, the green metronome. */
 export const KNOBS = {
-  volume: { cx: 105, cy: 650, r: 46, cap: 27, sweep: 140, tone: 'white' },
-  bpm: { cx: 737, cy: 670, r: 52, cap: 26, sweep: 150, tone: 'orange' },
-  swing: { cx: 868, cy: 670, r: 46, cap: 23, sweep: 70, tone: 'green' },
+  volume: { cx: 105, cy: 666, r: 46, cap: 27, sweep: 140, tone: 'white' },
+  bpm: { cx: 737, cy: 686, r: 52, cap: 26, sweep: 150, tone: 'orange' },
+  swing: { cx: 868, cy: 686, r: 46, cap: 23, sweep: 70, tone: 'green' },
 } as const
 
 /** Fader: the slot the cap rides in, and the cap's travel. */
 export const FADER = {
   cx: 87,
-  slotY: 968,
+  slotY: 984,
   slotH: 280,
   capW: 40,
   capH: 44,
-  capY: 1012,
+  capY: 1028,
   travel: 118,
 } as const
 
 /** Two loose LEDs under the right-hand columns, where the reference has them. */
 export const LOOSE_LEDS = [
-  { cx: 722, cy: 1136 },
-  { cx: 752, cy: 1136 },
+  { cx: 722, cy: 1152 },
+  { cx: 752, cy: 1152 },
 ] as const
 
 /* -------------------------------------------------------------------------
@@ -333,7 +350,7 @@ export const LIVE_CAPS: readonly Cap[] = [
 export const RIGHT_CAPS: readonly Cap[] = [
   {
     x: RIGHT_COLS[0],
-    y: 754,
+    y: 770,
     w: RIGHT_W,
     h: 44,
     label: 'SAMPLE',
@@ -341,7 +358,7 @@ export const RIGHT_CAPS: readonly Cap[] = [
   },
   {
     x: RIGHT_COLS[0],
-    y: 800,
+    y: 816,
     w: RIGHT_W,
     h: 44,
     label: 'CHOP',
@@ -349,7 +366,7 @@ export const RIGHT_CAPS: readonly Cap[] = [
   },
   {
     x: RIGHT_COLS[1],
-    y: 754,
+    y: 770,
     w: RIGHT_W,
     h: 44,
     label: 'TIMING',
@@ -357,16 +374,16 @@ export const RIGHT_CAPS: readonly Cap[] = [
   },
   {
     x: RIGHT_COLS[1],
-    y: 800,
+    y: 816,
     w: RIGHT_W,
     h: 44,
     label: 'CORRECT',
     tone: 'green',
   },
-  { x: RIGHT_COLS[0], y: 884, w: RIGHT_W, h: 44, label: 'FX', tone: 'cream' },
+  { x: RIGHT_COLS[0], y: 900, w: RIGHT_W, h: 44, label: 'FX', tone: 'cream' },
   {
     x: RIGHT_COLS[0],
-    y: 930,
+    y: 946,
     w: RIGHT_W,
     h: 44,
     label: 'OUTPUT',
@@ -374,7 +391,7 @@ export const RIGHT_CAPS: readonly Cap[] = [
   },
   {
     x: RIGHT_COLS[1],
-    y: 884,
+    y: 900,
     w: RIGHT_W,
     h: 44,
     label: 'ERASE',
@@ -382,7 +399,7 @@ export const RIGHT_CAPS: readonly Cap[] = [
   },
   {
     x: RIGHT_COLS[1],
-    y: 930,
+    y: 946,
     w: RIGHT_W,
     h: 44,
     label: 'SYSTEM',
@@ -426,7 +443,7 @@ export const RIGHT_CAPS: readonly Cap[] = [
 export const LEFT_CAPS: readonly Cap[] = [
   {
     x: LEFT_BUTTONS.x,
-    y: 804,
+    y: 820,
     w: LEFT_BUTTONS.w,
     h: LEFT_BUTTONS.h,
     label: 'KEYS',
@@ -434,7 +451,7 @@ export const LEFT_CAPS: readonly Cap[] = [
   },
   {
     x: LEFT_BUTTONS.x,
-    y: 898,
+    y: 914,
     w: LEFT_BUTTONS.w,
     h: LEFT_BUTTONS.h,
     label: 'FADER',
@@ -442,7 +459,7 @@ export const LEFT_CAPS: readonly Cap[] = [
   },
   {
     x: LEFT_BUTTONS.x,
-    y: 1186,
+    y: 1202,
     w: LEFT_BUTTONS.w,
     h: LEFT_BUTTONS.h,
     label: 'SHIFT',
@@ -476,8 +493,16 @@ export const SILK_RULES = [
  *
  * The glyph field and the six layer words are the reference's. The title, the
  * role line and the live readout sit on top of that texture: at 952 units to
- * the viewport, a 74-unit title lands near 110px on a 1440 screen, so the
+ * the viewport, an 84-unit title lands near 125px on a 1440 screen, so the
  * screen finally carries the name at headline size rather than as a detail.
+ *
+ * The title and the counter share one row, so their widths are coupled. At 86
+ * units the name measures 661.4 wide from x 26 — its right edge lands at
+ * 687.4, and the counter's well begins at `counter.x - 12`, which was 688. A
+ * one-unit gap is not a gap: the two read as one collided block. The name is
+ * 84 (646.1 wide, ending at 672.1) and the counter has moved to x 720, so its
+ * well runs 708 to 890 — a clear 35 units of air, and its right edge sits on
+ * the screen's own 26-unit pad instead of 52.
  */
 export const SCREEN_UI = {
   w: SCREEN.w,
@@ -485,12 +510,18 @@ export const SCREEN_UI = {
   pad: 26,
   /** Tiny print, reference-authentic: legible only as texture. */
   status: { y: 30, size: 16 },
+  /**
+   * The screen's own top row is also the way out of it: three destinations
+   * printed between the machine's `RD-01` and `4 LAYERS`, on the status line's
+   * baseline so the row reads as one strip of print.
+   */
+  nav: { y: 30, size: 16, gap: 38 },
   /** The name, on its own full-width row: the hero's headline. */
-  title: { x: 26, y: 146, size: 86 },
+  title: { x: 26, y: 146, size: 84 },
   /** Who and where, under it. */
   role: { x: 26, y: 178, size: 21 },
   /** Four digits and the dot, the machine's own readout. */
-  counter: { x: 700, y: 150, digit: 46, gap: 8, dot: 12 },
+  counter: { x: 720, y: 150, digit: 46, gap: 8, dot: 12 },
   /** The armed control, printed by the screen while it is hovered or focused. */
   readout: { x: 26, y: 216, size: 21 },
   /** Glyph field: the reference's texture, behind everything else. */

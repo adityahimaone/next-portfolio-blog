@@ -6,7 +6,6 @@ import { useEffect } from 'react'
 import { RADIO_FLIP_ENABLED } from '../lib/flags'
 import type { ChapterContext, ChapterCleanup } from './shared/engine'
 import { setupScrollEngine } from './shared/scroll-engine'
-import { heroChapter } from './hero/hero-chapter'
 import { aboutChapter } from './about/about-chapter'
 import { skillsChapter } from './skills/skills-chapter'
 import { contactChapter } from './contact/contact-chapter'
@@ -95,7 +94,6 @@ export function useLandingChapters({
 
         media.add('(min-width: 769px)', () => {
           const chapterCleanups: ChapterCleanup[] = [
-            heroChapter(ctx),
             aboutChapter(ctx),
             skillsChapter(ctx),
             contactChapter(ctx),

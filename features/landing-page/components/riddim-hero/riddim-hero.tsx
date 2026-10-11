@@ -1,64 +1,62 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import { useEffect, useRef, useState } from 'react'
 
-import { TopBar } from '@/features/layout/components/top-bar'
+import { RIDDIM_SCROLL_SVH } from './riddim-choreography'
+import { SCREEN_COPY } from './riddim-content'
 import { HeroIndex, RiddimMachine } from './riddim-device'
+import { PlaneScreen } from './riddim-screen'
+import { RiddimSide } from './riddim-side'
 import { useRiddimHero } from './use-riddim-hero'
 import styles from './riddim-hero.module.css'
 
 /**
- * The hero: the machine, full bleed, and nothing else.
+ * The hero: the machine at its own screen, then out and back in.
  *
- * The section's height IS the clone's height, so the page's scroll is the
- * machine's face: you start at the port strip and the RIDDIM wordmark, the
- * screen prints ADITYA HIMAWAN at headline size, and scrolling walks you down
- * the console, where the nine numbered pads and the right-hand caps are the
- * site's navigation. The About band begins at the machine's bottom edge, so
- * there is no dead scroll between the two.
+ * A pinned stage (`RIDDIM_SCROLL_SVH` tall, `.stage` sticky inside it). You
+ * arrive on the frame the machine was photographed in — its screen filling the
+ * width, the fascia above it, the console and its metronome below — and the
+ * story runs from there: the camera pulls back until the whole machine is in
+ * frame with the page's copy and track list either side, the machine presses
+ * its own PLAY key and its screen wipes to the profile card, and the camera
+ * falls back in and lets the letterbox open until the profile screen — the
+ * About section's own line — is the viewport, then gives way to the page.
  *
- * The machine carries its own copy and its own links (`riddim-content.ts`),
- * which is why there is no floating headline beside it and no separate key
- * list. Two viewport facts decide who owns them:
+ * The scroll story lives in `riddim-choreography.ts` (what happens when) and
+ * `riddim-camera.ts` (where the camera is); `use-riddim-hero.ts` writes them
+ * into custom properties and `riddim-hero.module.css` turns those into
+ * pixels. There is no top bar: the machine is the navigation (its controls,
+ * `MACHINE_NAV`, plus the three destinations on the screen's own top row), and
+ * the side panels repeat the two things most people want.
  *
- *   - below 769px a 84-unit pad is 34px, too small to be the navigation, so
- *     the links move to the stack under the poster and the machine's controls
- *     go back to being drawings;
- *   - below 1181px the machine's own headline scales under ~34px, so the copy
- *     moves to the stack as well.
- *
- * Both are read after mount rather than during render, so the server output —
- * the stack, which is the layout that works everywhere — is also what a client
- * without JS keeps.
+ * Layout is chosen by media query alone, so first paint is right with no JS:
+ * LIVE is the pinned stage; phones and reduced motion get the finished machine
+ * in the flow of the page, with the copy and (on phones) the index under it in
+ * `.stack`. The machine's controls become links only where it is the
+ * navigation — `interactive` is read after mount, so the server output, which
+ * has the stack's index, is also what a client without JS keeps.
  */
 
-const WIDE_QUERY = '(min-width: 1181px)'
 const LIVE_QUERY = '(min-width: 769px)'
 
-function useMachineLayout() {
-  const [layout, setLayout] = useState({ interactive: false, onMachine: false })
+function useInteractive() {
+  const [interactive, setInteractive] = useState(false)
 
   useEffect(() => {
-    const wide = window.matchMedia(WIDE_QUERY)
     const live = window.matchMedia(LIVE_QUERY)
-    const sync = () =>
-      setLayout({ interactive: live.matches, onMachine: wide.matches })
-
+    const sync = () => setInteractive(live.matches)
     sync()
-    wide.addEventListener('change', sync)
     live.addEventListener('change', sync)
-    return () => {
-      wide.removeEventListener('change', sync)
-      live.removeEventListener('change', sync)
-    }
+    return () => live.removeEventListener('change', sync)
   }, [])
 
-  return layout
+  return interactive
 }
 
 export function RiddimHero() {
   const heroRef = useRef<HTMLElement>(null)
-  const { interactive, onMachine } = useMachineLayout()
+  const interactive = useInteractive()
 
   useRiddimHero({ heroRef })
 
@@ -69,11 +67,22 @@ export function RiddimHero() {
       className={styles.hero}
       data-rack-section
       data-riddim-hero
+      data-plane="off"
+      data-side="off"
+      style={{ '--hero-scroll': RIDDIM_SCROLL_SVH } as CSSProperties}
     >
-      <TopBar />
-      <div className={styles.room} aria-hidden="true" />
-      <RiddimMachine interactive={interactive} printCopy={onMachine} />
-      {onMachine ? null : <HeroIndex showIndex={!interactive} />}
+      <div className={styles.stage} data-riddim-stage>
+        <div className={styles.room} aria-hidden="true" />
+        <div className={styles.rig}>
+          <RiddimMachine interactive={interactive} />
+        </div>
+        <RiddimSide />
+        <p className={styles.boot}>{SCREEN_COPY.hint[0]}</p>
+        <div className={styles.plane}>
+          <PlaneScreen />
+        </div>
+      </div>
+      <HeroIndex showIndex={!interactive} />
     </section>
   )
 }

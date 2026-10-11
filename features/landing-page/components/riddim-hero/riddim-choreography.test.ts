@@ -1,43 +1,62 @@
 import {
+  bandInset,
+  cameraAt,
+  fillScale,
+  LCD_CENTRE,
+  DRIFT,
+} from './riddim-camera'
+import {
   RIDDIM_COUNTER,
   RIDDIM_PHASES,
   counterDigits,
   riddimFrame,
 } from './riddim-choreography'
-import { MACHINE_NAV } from './riddim-content'
-import {
-  LEFT_CAPS,
-  LIVE_CAPS,
-  PADS,
-  RIGHT_CAPS,
-  TOP_CAPS,
-  capId,
-  padId,
-} from './riddim-geometry'
 
-const samples = Array.from({ length: 201 }, (_, i) => i / 200)
-
-const DRIVEN = [
-  'power',
-  'controls',
-  'meter',
-  'ink',
-  'readout',
-  'play',
-  'handoff',
-] as const
+const samples = Array.from({ length: 401 }, (_, i) => i / 400)
 
 describe('riddimFrame', () => {
-  it('starts at the machine top edge, down to its pilot light', () => {
+  it('starts on the machine at its screen, not blown up fullscreen', () => {
+    // Scroll 0 is the frame the machine was photographed in: the camera is
+    // already on the LCD, and the letterbox is shut, so the console and its
+    // metronome are visible below the screen rather than covered by the plane.
     const f = riddimFrame(0)
-    for (const key of DRIVEN) expect(f[key]).toBe(0)
-    expect(f.digits.join('')).toBe('0112')
+    expect(f.lens).toBe(1)
+    expect(f.open).toBe(0)
+    expect(f.plane).toBe(false)
+    expect(f.swap).toBe(0)
+    expect(f.side).toBe(0)
+    expect(f.flip).toBe(0)
+    expect(f.digits).toEqual(counterDigits(0))
   })
 
-  it('ends fully powered, with the next chapter printed', () => {
+  it('is the whole machine, playing, with the panels out, in the overview', () => {
+    const [a, b] = RIDDIM_PHASES.drift
+    const f = riddimFrame((a + b) / 2)
+    expect(f.lens).toBe(0)
+    expect(f.open).toBe(0)
+    expect(f.plane).toBe(false)
+    expect(f.side).toBe(1)
+    expect(f.play).toBe(1)
+    expect(f.power).toBe(1)
+  })
+
+  it('presses the key and swaps the screen inside the overview', () => {
+    const peak = riddimFrame(0.5)
+    expect(peak.press).toBe(1)
+    expect(riddimFrame(0.45).press).toBe(0)
+    expect(riddimFrame(0.56).press).toBe(0)
+    expect(riddimFrame(0.45).swap).toBe(0)
+    expect(riddimFrame(0.56).swap).toBe(1)
+  })
+
+  it('ends on the profile screen, flipped to the page surface', () => {
     const f = riddimFrame(1)
-    for (const key of DRIVEN) expect(f[key]).toBe(1)
-    expect(f.digits.join('')).toBe('0416')
+    expect(f.open).toBe(1)
+    expect(f.lens).toBe(1)
+    expect(f.swap).toBe(1)
+    expect(f.flip).toBe(1)
+    expect(f.side).toBe(0)
+    expect(f.digits).toEqual(counterDigits(1))
   })
 
   it('is a pure function: the same progress always gives the same frame', () => {
@@ -50,134 +69,181 @@ describe('riddimFrame', () => {
   })
 
   it('clamps progress outside 0..1', () => {
-    expect(riddimFrame(-3)).toEqual(riddimFrame(0))
-    expect(riddimFrame(7)).toEqual(riddimFrame(1))
+    expect(riddimFrame(-2)).toEqual(riddimFrame(0))
+    expect(riddimFrame(9)).toEqual(riddimFrame(1))
   })
 
   it('keeps every driven value inside its range', () => {
     for (const p of samples) {
       const f = riddimFrame(p)
-      for (const key of DRIVEN) {
+      for (const key of [
+        'power',
+        'controls',
+        'meter',
+        'ink',
+        'inkTwo',
+        'readout',
+        'play',
+        'handoff',
+        'open',
+        'lens',
+        'drift',
+        'press',
+        'swap',
+        'side',
+        'flip',
+      ] as const) {
         expect(f[key]).toBeGreaterThanOrEqual(0)
         expect(f[key]).toBeLessThanOrEqual(1)
+        expect(Object.is(f[key], -0)).toBe(false)
       }
     }
   })
 
-  it('finishes the story exactly at the last frame of the hero', () => {
-    // The About band arrives in the frame the machine's bottom edge does, so
-    // anything still animating at progress 1 is a frame nobody sees.
-    expect(RIDDIM_PHASES.handoff[1]).toBe(1)
-    expect(riddimFrame(1).handoff).toBe(1)
-    expect(riddimFrame(0.999).handoff).toBeGreaterThan(0.99)
-  })
-
-  it('keeps the handoff off the console until the reader is near its foot', () => {
+  it('never puts the plane over the console', () => {
+    // The plane covers the whole stage. If it were on while the letterbox was
+    // shut, the opening frame — the screen with the console and its metronome
+    // around it — would be a fullscreen screen instead.
     for (const p of samples) {
-      if (p < 0.7) expect(riddimFrame(p).handoff).toBe(0)
+      if (riddimFrame(p).plane) expect(riddimFrame(p).open).toBeGreaterThan(0)
+    }
+    expect(riddimFrame(0).plane).toBe(false)
+    // and it is on at the end, where the profile screen is the viewport
+    expect(riddimFrame(1).plane).toBe(true)
+    expect(riddimFrame(1).open).toBe(1)
+  })
+
+  it('never has the letterbox open while the camera is away from the screen', () => {
+    // The plane hides when the camera leaves the LCD; an open letterbox at that
+    // moment would be a fullscreen screen that suddenly is not there.
+    for (const p of samples) {
+      const f = riddimFrame(p)
+      if (f.lens < 0.9999) expect(f.open).toBe(0)
     }
   })
 
-  it('keeps its phase windows ordered and inside the story', () => {
-    const keys = Object.keys(RIDDIM_PHASES) as (keyof typeof RIDDIM_PHASES)[]
-    for (const key of keys) {
-      const [a, b] = RIDDIM_PHASES[key]
-      expect(a).toBeLessThan(b)
-      expect(a).toBeGreaterThanOrEqual(0)
-      expect(b).toBeLessThanOrEqual(1)
+  it('hands over at the LCD: the plane is exactly a closed band there', () => {
+    // The plane turns on the instant the letterbox starts to open, and at that
+    // moment its window is still the LCD band, so the two surfaces show the
+    // same picture and the hand-over cannot be seen.
+    const [openStart, openEnd] = RIDDIM_PHASES.open
+    expect(riddimFrame(openStart).open).toBe(0)
+    expect(riddimFrame(openStart).lens).toBe(1)
+    expect(riddimFrame(openStart).plane).toBe(false)
+    expect(riddimFrame(openStart + 0.01).plane).toBe(true)
+    expect(riddimFrame(openStart + 0.01).open).toBeLessThan(0.03)
+    // and on the way in, the letterbox is shut for the whole push
+    expect(riddimFrame(RIDDIM_PHASES.pushIn[0]).lens).toBe(0)
+    expect(riddimFrame(RIDDIM_PHASES.pushIn[1]).open).toBe(0)
+    expect(riddimFrame(RIDDIM_PHASES.pushIn[1]).lens).toBe(1)
+    expect(riddimFrame(RIDDIM_PHASES.pushIn[1]).plane).toBe(false)
+    // the plane is the only surface at the end of the open
+    expect(riddimFrame(openEnd).plane).toBe(true)
+  })
+
+  it('swaps the screen only while the camera is back', () => {
+    for (const p of samples) {
+      const f = riddimFrame(p)
+      if (f.swap > 0 && f.swap < 1) expect(f.lens).toBe(0)
+      if (f.press > 0) expect(f.lens).toBe(0)
     }
+  })
+
+  it('brings the side panels in only once the camera is nearly back', () => {
+    for (const p of samples) {
+      const f = riddimFrame(p)
+      if (f.side > 0) expect(f.lens).toBeLessThan(0.6)
+    }
+  })
+
+  it('keeps its phase windows ordered', () => {
+    const p = RIDDIM_PHASES
+    // the opening frame holds the screen for a moment before the camera moves
+    expect(p.pullBack[0]).toBeGreaterThan(0)
+    expect(p.pullBack[1]).toBeLessThanOrEqual(p.drift[0])
+    expect(p.drift[1]).toBeLessThanOrEqual(p.pushIn[0])
+    expect(p.pushIn[1]).toBeLessThanOrEqual(p.open[0])
+    expect(p.open[1]).toBeLessThanOrEqual(p.flip[1])
+    // press and swap live inside the overview
+    expect(p.press[0]).toBeGreaterThanOrEqual(p.drift[0])
+    expect(p.pressOut[1]).toBeLessThanOrEqual(p.drift[1])
+    expect(p.swap[0]).toBeGreaterThanOrEqual(p.drift[0])
+    expect(p.swap[1]).toBeLessThanOrEqual(p.drift[1])
+    expect(p.flip[1]).toBeLessThanOrEqual(1)
   })
 })
 
 describe('counterDigits', () => {
-  it('prints bar.beat from the reference, four bars of sixteen', () => {
-    expect(counterDigits(0).join('')).toBe('0112')
-    expect(counterDigits(1).join('')).toBe('0416')
+  it('prints bar.beat, first to last', () => {
+    expect(counterDigits(0)).toEqual(['0', '1', '1', '2'])
+    expect(counterDigits(1)).toEqual(['0', '4', '1', '6'])
+    expect(RIDDIM_COUNTER.last).toBeGreaterThan(RIDDIM_COUNTER.first)
   })
 
-  it('stays a four-digit readout across the whole run', () => {
-    for (let i = 0; i <= 100; i++) {
-      const digits = counterDigits(i / 100)
-      expect(digits).toHaveLength(4)
-      expect(digits.join('')).toMatch(/^0[1-4][0-2][0-9]$/)
+  it('never goes backwards', () => {
+    let previous = 0
+    for (const p of samples) {
+      const d = counterDigits(p)
+      const n = Number(d.join(''))
+      expect(n).toBeGreaterThanOrEqual(previous)
+      previous = n
     }
-  })
-
-  it('only ever moves forward, from the first step to the last', () => {
-    const step = (p: number) => {
-      const [a, b, c, d] = counterDigits(p)
-      return (Number(`${a}${b}`) - 1) * 16 + Number(`${c}${d}`)
-    }
-    let previous = -1
-    for (let i = 0; i <= 100; i++) {
-      const value = step(i / 100)
-      expect(value).toBeGreaterThanOrEqual(previous)
-      previous = value
-    }
-    expect(step(0)).toBe(RIDDIM_COUNTER.first)
-    expect(step(1)).toBe(RIDDIM_COUNTER.last)
-  })
-
-  it('clamps outside 0..1', () => {
-    expect(counterDigits(-4)).toEqual(counterDigits(0))
-    expect(counterDigits(9)).toEqual(counterDigits(1))
   })
 })
 
-describe('the machine as navigation', () => {
-  /** Every control the geometry draws, addressed the way the markup is. */
-  const controls = new Set<string>([
-    ...TOP_CAPS.map((cap) => capId('strip', cap)),
-    ...LEFT_CAPS.map((cap) => capId('left', cap)),
-    ...LIVE_CAPS.map((cap) => capId('live', cap)),
-    ...RIGHT_CAPS.map((cap) => capId('right', cap)),
-    ...PADS.map((pad) => padId(pad)),
-  ])
+describe('camera', () => {
+  const fill = 2.6
 
-  it('points every destination at a control that exists', () => {
-    for (const entry of MACHINE_NAV) {
-      expect(controls.has(entry.id)).toBe(true)
+  it('rests on the machine in the overview', () => {
+    const c = cameraAt({ lens: 0, drift: 0 }, fill)
+    expect(c.scale).toBe(1)
+    expect(c.dx).toBe(0)
+    expect(c.dy).toBe(0)
+  })
+
+  it('fills the stage with the LCD, centred, at lens 1', () => {
+    const c = cameraAt({ lens: 1, drift: 0 }, fill)
+    expect(c.scale).toBeCloseTo(fill)
+    expect(c.dx).toBeCloseTo(0)
+    // the LCD sits above the machine's centre, so the machine moves down
+    expect(c.dy).toBeGreaterThan(0)
+  })
+
+  it('zooms in log space: halfway is the geometric mean', () => {
+    const c = cameraAt({ lens: 0.5, drift: 0 }, fill)
+    expect(c.scale).toBeCloseTo(Math.sqrt(fill))
+  })
+
+  it('only ever grows from overview to screen', () => {
+    let previous = 0
+    for (let i = 0; i <= 20; i++) {
+      const c = cameraAt({ lens: i / 20, drift: 0 }, fill)
+      expect(c.scale).toBeGreaterThanOrEqual(previous)
+      previous = c.scale
     }
   })
 
-  it('addresses every control at most once', () => {
-    const ids = MACHINE_NAV.map((entry) => entry.id)
-    expect(new Set(ids).size).toBe(ids.length)
+  it('dollies a little during the overview, and no further than DRIFT', () => {
+    const c = cameraAt({ lens: 0, drift: 1 }, fill)
+    expect(c.scale).toBeCloseTo(1 + DRIFT)
   })
 
-  it('is the nine pads plus the caps, not a second sitemap', () => {
-    const pads = MACHINE_NAV.filter((entry) => entry.id.startsWith('pad-'))
-    expect(pads).toHaveLength(9)
-    expect(
-      MACHINE_NAV.filter((entry) => entry.kind === 'link').length,
-    ).toBeGreaterThanOrEqual(12)
+  it('puts the LCD at the stage centre whatever the scale', () => {
+    // A point at the focus must land on the stage centre: its offset from the
+    // machine centre, scaled, plus the pan, is zero.
+    const lens = 1
+    const c = cameraAt({ lens, drift: 0 }, fill)
+    const offsetY = LCD_CENTRE.y - 1317 / 2
+    expect(c.scale * offsetY + c.dy).toBeCloseTo(0)
   })
 
-  it('sends every link somewhere that exists', () => {
-    const allowed = [
-      '#work',
-      '#about',
-      '#contact',
-      '/projects',
-      '/blog',
-      '/bookmarks',
-      '/music',
-      '/rss.xml',
-      '/resume.pdf',
-    ]
-    for (const entry of MACHINE_NAV) {
-      if (entry.kind !== 'link') continue
-      const ok =
-        allowed.includes(entry.href) || entry.href.startsWith('mailto:')
-      expect(ok).toBe(true)
-    }
+  it('measures the scale at which the LCD spans the stage', () => {
+    expect(fillScale(1440, 0.6)).toBeCloseTo(1440 / (922 * 0.6))
   })
 
-  it('keeps every destination labelled and described', () => {
-    for (const entry of MACHINE_NAV) {
-      expect(entry.label.length).toBeGreaterThan(0)
-      expect(entry.note.length).toBeGreaterThan(0)
-      expect(entry.label).toBe(entry.label.toUpperCase())
-    }
+  it('sizes the letterbox from the LCD aspect', () => {
+    expect(bandInset(1440, 900)).toBeCloseTo((900 - (1440 * 268) / 922) / 2)
+    // a stage no taller than the band has no bars to close onto
+    expect(bandInset(2600, 700)).toBe(0)
   })
 })

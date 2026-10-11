@@ -12,10 +12,8 @@ import { RiddimHero } from '../components/riddim-hero'
  *
  * The component lives in `components/riddim-hero` with its own stylesheet, hook,
  * measured clone geometry and pure choreography, and this file is only the seam
- * `rack-01.tsx` imports. It deliberately carries none of the old hero's
- * `data-anim` hooks or `rack-01.module.css` classes, so the chapter engine's
- * hero timelines find nothing to drive and stand down (see
- * `use-rack-animations.ts` and `chapters/hero/hero-chapter.ts`).
+ * `rack-01.tsx` imports. The hero owns its motion; the page engines
+ * (`use-rack-animations.ts`, `chapters/`) have no hero timelines at all.
  */
 export function Hero() {
   return <RiddimHero />

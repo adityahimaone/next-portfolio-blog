@@ -2,7 +2,13 @@
 import { createElement } from 'react'
 import { renderToString } from 'react-dom/server'
 
-import { COPY, MACHINE_NAV, SCREEN_COPY } from './riddim-content'
+import {
+  COPY,
+  MACHINE_NAV,
+  SCREEN_COPY,
+  SCREEN_NAV,
+  SIDE_COPY,
+} from './riddim-content'
 import { PADS, SCREEN, TOP_CAPS } from './riddim-geometry'
 
 // CSS modules are not transformed under ts-jest: answer every class with its
@@ -10,9 +16,6 @@ import { PADS, SCREEN, TOP_CAPS } from './riddim-geometry'
 jest.mock('./riddim-hero.module.css', () => ({
   __esModule: true,
   default: new Proxy({}, { get: (_target, key) => String(key) }),
-}))
-jest.mock('@/features/layout/components/top-bar', () => ({
-  TopBar: () => null,
 }))
 jest.mock('next-themes', () => ({
   useTheme: () => ({ resolvedTheme: 'light', setTheme: () => {} }),
@@ -56,7 +59,8 @@ describe('RiddimHero server render', () => {
       expect(html).toContain(word)
     }
     expect(html.match(/data-cap|class="cap/g)?.length).toBeGreaterThan(4)
-    expect(html.match(/data-seg=/g)).toHaveLength(4)
+    // four digits, on each of two screens, on the machine and on the plane
+    expect(html.match(/data-seg=/g)).toHaveLength(16)
   })
 
   it('prints the destinations on the controls that carry them', () => {
@@ -92,6 +96,54 @@ describe('RiddimHero server render', () => {
     expect(html).toContain('href="/rss.xml"')
     expect(html).toContain('mailto:')
     expect(html.match(/aria-label="Primary"/g)).toHaveLength(1)
+  })
+
+  it('has both screens, on the machine and on the fullscreen plane', () => {
+    expect(html).toContain('lcdOne')
+    expect(html).toContain('lcdTwo')
+    expect(html).toContain('planeScreen')
+    expect(html).toContain(SCREEN_COPY.second.title)
+    expect(html).toContain(SCREEN_COPY.second.role)
+    // the plane is a picture of the machine's screen, not a second headline
+    expect(html.match(/<h1/g)).toHaveLength(1)
+    expect(html).toMatch(/class="plane"/)
+  })
+
+  it('starts on the machine at its screen: plane off, side panels off, pinned', () => {
+    // Scroll 0 is the frame at the LCD — the plane is not standing in for it,
+    // so the console and its metronome are visible below the screen.
+    expect(html).toContain('data-plane="off"')
+    expect(html).toContain('data-side="off"')
+    expect(html).toContain('data-riddim-stage')
+    expect(html).toContain('data-riddim-machine')
+    expect(html).toContain('--hero-scroll:480')
+  })
+
+  it("puts the screen's own top row to work as navigation", () => {
+    // Three destinations printed between the machine's RD-01 and 4 LAYERS. On
+    // the server the machine is a drawing, so they are print; on a desktop
+    // they become links.
+    for (const entry of SCREEN_NAV) {
+      expect(html).toContain(entry.label)
+    }
+    expect(html.match(/data-screen-nav=/g)).toHaveLength(SCREEN_NAV.length)
+    expect(html).toContain(SCREEN_COPY.hint[0])
+  })
+
+  it('stands the page copy and the track list either side of the machine', () => {
+    expect(html).toContain('sideLeft')
+    expect(html).toContain('sideRight')
+    for (const track of SIDE_COPY.tracks) {
+      expect(html).toContain(track.title)
+    }
+    for (const row of SIDE_COPY.chain) {
+      expect(html).toContain(row.title)
+    }
+    expect(html).toContain('data-side-link')
+  })
+
+  it('has no top bar', () => {
+    expect(html).not.toContain('topBar')
   })
 
   it('lays the screen out on the reference window', () => {

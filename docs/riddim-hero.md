@@ -1,159 +1,91 @@
-# RIDDIM hero — "The machine is the page"
+# RIDDIM hero — zoom out, swap, zoom in
 
-The landing hero is the RIDDIM SUPERTONE from the two reference photographs,
-cloned at the coordinates measured off the front view, upright and full bleed.
-The section's height **is** the clone's height: scrolling is walking down the
-machine's face, from the port strip and the wordmark, past the screen that
-prints `ADITYA HIMAWAN`, and down the console — where the nine numbered pads
-and the right-hand caps **are** the site's navigation. The About band begins at
-the machine's bottom edge, so there is no dead scroll between the two.
+The landing hero is a clone of the RIDDIM reference machine, and the scroll is a
+camera move around it. You arrive inside the machine's screen, pull back to see
+the whole machine, watch it press its own key and change screen, then fall back
+into the new screen, which is the About section.
 
-No canvas, no WebGL, no pinning: one SVG for the panel, one HTML block for the
-screen's type, and a scroll bridge that writes numbers.
+The machine is flat vector art (an SVG panel plus HTML type), so the camera is a
+translate and a scale on it. No WebGL, no 3D.
 
-## Files
+## The story
 
-All the hero's code is in `features/landing-page/components/riddim-hero/`.
+The hero is a pinned stage: a section `RIDDIM_SCROLL_SVH` (480) tall holding a
+sticky, viewport-sized `.stage`.
 
-| File                     | What it is                                                                                                        |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `riddim-geometry.ts`     | The clone, transcribed: every cap, pad, knob, label and colour in reference pixels, plus the control-id helpers.   |
-| `riddim-content.ts`      | The software: the copy, the screen's wording, and `MACHINE_NAV` — the table that joins a control to a destination.  |
-| `riddim-choreography.ts` | The whole scroll story as one pure function, `riddimFrame(progress)`, plus the counter.                            |
-| `riddim-device.tsx`      | The machine: the panel SVG, the screen, the glyph library, the controls as links and buttons.                      |
-| `riddim-hero.tsx`        | The section, and the two viewport facts that decide who owns the copy and the links.                               |
-| `use-riddim-hero.ts`     | Scroll bridge: one ScrollTrigger → CSS custom properties on the hero. Pointer parallax for the sheen.              |
-| `riddim-hero.module.css` | All visual maths (`rotate(calc(var(--r-controls) * var(--sweep) * 1deg))` etc.).                                   |
-| `*.test.ts(x)`           | Choreography invariants, the nav/geometry join, counter digits, server render.                                    |
+| Progress  | What happens                                                                                                      |
+| --------- | ----------------------------------------------------------------------------------------------------------------- |
+| 0.00–0.08 | Fullscreen title card, ADITYA HIMAWAN, glyph field booting                                                        |
+| 0.08–0.20 | The letterbox closes onto the LCD band; fascia above and console below appear                                     |
+| 0.20–0.42 | The camera pulls back to the whole machine                                                                        |
+| 0.34–0.44 | Side panels come in: pitch and actions on the left, track list and signal chain on the right                      |
+| 0.42–0.58 | Overview: pads ripple, the camera drifts in 6%                                                                    |
+| 0.47–0.53 | PLAY goes down and comes back up                                                                                  |
+| 0.50–0.56 | The LCD wipes from the title card to the profile card; the side panels follow (now playing, track marker 01 → 02) |
+| 0.60–0.70 | Side panels leave                                                                                                 |
+| 0.58–0.80 | The camera falls back into the screen                                                                             |
+| 0.80–0.92 | The letterbox opens: the profile screen is the viewport                                                           |
+| 0.90–0.98 | The backlight gives way to the page surface (`--chassis-hi` and the About grid)                                   |
 
-The About band keeps its opening frame tight via `--about-pad-top` and friends on
-`.root` in `rack-01/rack-01.module.css`; the hero no longer reads those tokens,
-but it does end exactly where they begin, so they stay tuned together.
+## Files (`features/landing-page/components/riddim-hero/`)
 
-## How the clone is built
-
-- **One coordinate space.** Everything on the panel is drawn in
-  `viewBox="0 0 952 1317"` — the device's bounding box in the reference front
-  view — so a number in `riddim-geometry.ts` is a number on the photograph.
-- **One scale.** `.machine` is an inline-size container with `aspect-ratio:
-  952 / 1317`, and `--u: calc(100cqw / 952)` is one clone unit. Everything
-  printed on the machine, including the HTML type on the fascia and the screen,
-  is `calc(<native units> * var(--u))`, so the whole object scales as one thing.
-  Its width is `min(100%, 2.6 screens of height)`, so it is full bleed on
-  ordinary screens and stops growing on ultrawide ones.
-- **Colours are sampled, not mixed.** `PALETTE` holds the values pulled out of
-  the reference crops: cream that is never white, green that is nearly black,
-  and one orange used only on the controls that do something.
-- **No rotation.** The clone is upright, which is what keeps every measured
-  coordinate a coordinate. The composition problem a portrait machine poses in
-  a landscape viewport is solved by scale and scroll, not by turning the object.
-
-## The machine as navigation
-
-`MACHINE_NAV` is the single place the site and the hardware meet. Each entry
-names a control id (`live-sound`, `pad-7`, `right-record`), the word printed on
-it, and the line the screen prints while it is armed. The ids are derived from
-the clone table (`capId(zone, cap)`, `padId(pad)`), and a test asserts that
-every entry resolves to a control the geometry actually draws.
-
-Three tiers, because that is how the hardware is laid out:
-
-| Tier | Controls | Destinations |
-| --- | --- | --- |
-| Primary | the LIVE row's top line | Work, Profile, Résumé |
-| Index | the nine numbered pads, with their names in the reference's own label rows | Work, Projects, Notes, Mixtape, Bookmarks, Profile, Contact, Résumé, Email |
-| Utilities | the right-hand cap column | Résumé (RECORD), Email (SAMPLE), copy link (SHOP → SHARE), light/dark (TIMING/CORRECT), RSS (FX), back to top (ERASE) |
-
-Hovering or focusing any of them arms it: its lamp goes to full and the screen
-prints its name and note. That is the only React state on the machine, and it is
-off the scroll path.
-
-Controls that are not destinations stay drawings — the rest of the panel, the
-knobs, the fader, the instrument bank, `EDIT`/`COMMIT`/`LOOP`, `PLAY`, and the
-port strip.
-
-## Choreography
-
-The hero is as tall as the machine, so progress 0 is the machine's top edge at
-the top of the viewport and progress 1 is its bottom edge at the bottom — the
-frame the About band arrives in.
-
-| Progress   | Phase                                                                                     |
-| ---------- | ----------------------------------------------------------------------------------------- |
-| 0.00–0.16  | Power: the power LED and the panel come up to full                                         |
-| 0.05–0.80  | Controls: both knobs turn and the fader slides with the scroll                             |
-| 0.12–0.58  | Meter: the parameter LEDs step on, one after another, down the pad field                   |
-| 0.20–0.68  | Ink: the screen's glyph field lights, in sequence                                          |
-| 0.20–0.66  | Readout: the seven-segment counter runs 01.12 → 04.16                                      |
-| 0.34–0.90  | Play: the pads ripple, each on its own beat                                                |
-| 0.84–1.00  | Handoff: the console's bottom label row turns into `NEXT / 02 / PROFILE`                    |
-
-Everything is a pure function of progress: scrolling back renders the identical
-frame at the identical position.
+| File                                                                                | What it is                                                                                                                                         |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `riddim-choreography.ts`                                                            | `riddimFrame(progress)`: every number the scene needs, as one pure function. Retime here (`RIDDIM_PHASES`, `RIDDIM_SCROLL_SVH`).                   |
+| `riddim-camera.ts`                                                                  | `cameraAt`, `fillScale`, `bandInset`: the camera poses and the letterbox. Pure.                                                                    |
+| `use-riddim-hero.ts`                                                                | One ScrollTrigger → CSS custom properties on `.hero`. Measures one number (the fill scale), writes the counter digits and three flags.             |
+| `riddim-hero.tsx`                                                                   | Stage, rig, side panels, plane, and the phone stack.                                                                                               |
+| `riddim-screen.tsx`                                                                 | The LCD as one component used twice: on the machine (`LcdFace`) and across the viewport (`PlaneScreen`). Two screens stacked, wiped by `--r-swap`. |
+| `riddim-side.tsx`                                                                   | The side panels.                                                                                                                                   |
+| `riddim-device.tsx`, `riddim-glyphs.tsx`, `riddim-geometry.ts`, `riddim-content.ts` | The clone, its glyph library, its measured coordinates, and its copy.                                                                              |
+| `riddim-hero.module.css`                                                            | All visual maths.                                                                                                                                  |
 
 ## Contracts worth knowing
 
-- **The hero's height is the machine's height.** There is nothing to pin and
-  nothing to measure, `end: 'bottom bottom'` is the whole geometry, and the
-  handoff finishes exactly at progress 1 — anything still animating there is a
-  frame nobody sees. The top bar sits in flow above the machine, which is the
-  only thing between the page's top and the clone's top edge.
-- **The clone table owns the HTML's numbers.** The fascia copy and the screen's
-  `h1`/role/readout are positioned from `COPY_BLOCK` and `SCREEN_UI`, passed
-  into CSS as `--copy-*` and `--scr-*`. The geometry's `y` values are SVG
-  baselines; the component converts them to line-box tops once.
-- **Controls are SVG.** Links are `<a>` (via `next/link` for routes, which does
-  work inside SVG and keeps navigation client-side); the four actions are
-  `<g role="button" tabindex="0">` with Enter/Space handlers, because a
-  `<button>` cannot live in the SVG namespace. Focus is drawn by a `.ring` in
-  each control's own shape, and every control carries an `aria-label` of
-  `"<destination> — <note>"`.
-- **Only one navigation is ever live.** The machine's controls are the nav from
-  769px up; below that a 84-unit pad is 34px, so the links move to `.stack`
-  under the poster and the machine goes back to being a drawing. Below 1181px
-  the copy moves there too, because the machine's own headline scales under
-  ~34px. Both facts are read after mount, so the server output — the stack,
-  which works everywhere — is also what a client without JS keeps. `HeroIndex`
-  renders the index only when the machine is not interactive, so there is never
-  a duplicate navigation in the accessibility tree.
-- **Live vs static.** The motion runs only at `min-width: 769px` with
-  `prefers-reduced-motion: no-preference`; otherwise `.hero` takes the finished
-  values (powered, lamps up, screen lit, counter run to the end) and the hook
-  downloads nothing. If the GSAP import fails the hook sets
-  `data-live="failed"`, which does the same.
+- **Two surfaces, one picture.** The plane lays the LCD, at its own 922:268
+  proportions, across the full stage width. At `lens = 1` the camera has made the
+  machine's LCD exactly that wide, so the plane's middle band and the LCD are the
+  same picture and the hand-over cannot be seen. That is why `plane` is on
+  exactly when `lens` is 1, and why the letterbox (`open`) is always closed when
+  the camera is away. Both are pinned by tests.
+- **`--u` must not be built from `cqw` in the pinned layout.** The machine is
+  itself a query container, so the same token would mean something else inside it.
+  `--mw` (machine width) is `vw`/`svh` based.
+- **Camera in clone units.** `--cam-dx/dy` are in native units; the stylesheet
+  multiplies by `--u`. Scale is interpolated in log space.
+- **Seam into About.** After the flip the plane is `--chassis-hi` with the same
+  28px grid as `.about`. If About's background changes, change `.plane` too.
+- **Layout by media query alone.** LIVE is `min-width: 769px` with motion allowed;
+  everything else (phones, reduced motion, a failed GSAP import) gets the finished
+  machine in the flow of the page, with the copy and, on phones, the index in
+  `.stack`. The side panels are hidden below 1181px.
+- **Keyboard.** A control or side link that takes focus while the camera is on the
+  screen sends the scroll to the middle of the overview. Off-screen side panels
+  are `visibility: hidden`, so they are out of the tab order.
+- **One `h1`.** The machine's own LCD carries it; the plane is `aria-hidden`.
+- **No top bar.** The machine is the navigation (`MACHINE_NAV`); the site's dock
+  stays.
 
 ## Tuning
 
-- Timing: `RIDDIM_PHASES` in `riddim-choreography.ts`.
-- Counter range: `RIDDIM_COUNTER`. Readout format: `counterDigits`.
-- Machine scale: `--max-screens` on `.hero` (`2.6` = the tallest the machine may
-  stand in viewport heights).
-- A destination: one entry in `MACHINE_NAV`. Its printed word changes with it,
-  and if the id is wrong the nav test fails.
-- Machine geometry or colour: `riddim-geometry.ts` only.
+- Timing: `RIDDIM_PHASES`. Length: `RIDDIM_SCROLL_SVH`.
+- Overview size: `--mw` on `.stage` (0.88 of the viewport height).
+- Dolly: `DRIFT` in `riddim-camera.ts`.
+- Screen 2 copy: `SCREEN_COPY.second`. Side copy: `SIDE_COPY`.
 
 ## QA checklist (not run in CI)
 
-- [ ] Desktop 1440×900: power → controls → meter → ink → readout → handoff, smooth both directions.
-- [ ] Scroll to the bottom: the machine's label row reads `NEXT 02 PROFILE` and About arrives in the next frame, with no gap.
-- [ ] Hover and tab through every armed control: the screen prints its name, its lamp goes to full, the focus ring is visible on the control's own shape.
-- [ ] A route pad (`/projects`, `/blog`, `/music`, `/bookmarks`) navigates without a full page load.
-- [ ] LIGHT / DARK caps switch the theme; SHARE copies the URL; TOP returns to the top.
-- [ ] 769–1180px: the copy moves to the stack, the machine keeps its links, nothing collides.
-- [ ] ≤768px and `prefers-reduced-motion`: the whole machine fits one screen, the stack carries the copy and the index, no duplicate nav.
-- [ ] Safari and Firefox: `cqw` sizing, `aspect-ratio`, SVG `<a>` focus rings, `color-mix`.
-- [ ] Lighthouse: LCP is the server-rendered machine; no layout shift when the layout flags settle.
+- [ ] 1440×900: title card, letterbox, pull back, overview, press/swap, push in, open, flip, About. Smooth both ways.
+- [ ] The hand-over at 0.20 and 0.80 shows no pop in the LCD.
+- [ ] Resize mid-scroll: the fill scale re-measures.
+- [ ] 1181–1280 wide: side panels fit; 769–1180: panels hidden, story still reads.
+- [ ] Phone and reduced motion: static machine, stack, working links.
+- [ ] Tab through the page: no focus lands on something off screen without the scroll following.
+- [ ] Safari and Firefox: `color-mix`, `clip-path: inset()`, `cqw`.
+- [ ] Zoom sharpness at 2.6× on a mid-range phone-class GPU; if soft, cross-dissolve to the plane earlier.
 
-## Not done / optional follow-ups
+## Not done
 
-- The clone is a clone of a *design*, not a photograph: the wordmark and the pad
-  numerals are the site's display face with a stroke for weight, not traced.
-- The screen's glyph field is the reference's shapes and palette, re-laid; it is
-  texture, not a one-to-one transcription of the icons.
-- The primary three repeat inside the index on purpose (quick caps plus the
-  numbered map). If the tab order ever feels long, drop the duplicates from the
-  index rather than from the caps.
-- No sound. A tick per pad hit would suit the machine.
-- The old Pad Sea hero (`components/hero/pad-sea`, `use-hero-motion.ts`, the
-  `hero*` classes in `rack-01.module.css`, `chapters/hero`, `lib/hero-sweep-order.ts`)
-  remains unused; delete in a separate commit.
+- `three` and `@react-three/fiber` are still in `package.json`; nothing here imports them. Remove with the lockfiles in a separate commit.
+- The reference's top-strip tabs are flat; the clone's are still outlined pills.
+- Keycaps are close but not 1:1 (the reference's are flatter, with chunkier numerals).

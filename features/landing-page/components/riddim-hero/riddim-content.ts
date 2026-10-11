@@ -33,6 +33,62 @@ export const SCREEN_COPY = {
   words: ['SOUND', 'MAIN', 'TEMPO', 'ERASE', 'SYSTEM', 'SWING'],
   /** Printed by the console's bottom label row as the machine hands over. */
   handoff: ['NEXT', '02', 'PROFILE'],
+  /** What the fullscreen plane prints under the screen, per screen. */
+  hint: ['SCROLL TO POWER UP ↓', 'KEEP SCROLLING ↓'],
+  /**
+   * The second screen: what the key press swaps in. It is the About section's
+   * own line, so the page you scroll into is the screen you were just looking
+   * at.
+   */
+  second: {
+    status: ['RD-01', 'LAYER 02'],
+    title: 'PROFILE',
+    role: 'MAKE THE COMPLICATED PART FEEL OBVIOUS.',
+    idle: { name: 'NEXT', note: 'Keep scrolling.' },
+    words: ['FOCUS', 'SYSTEMS', 'RANGE', 'SSR', 'VPS', 'SHIP'],
+  },
+} as const
+
+/**
+ * What stands either side of the machine while the camera is pulled back and
+ * the key is pressed. Left: the pitch and the two things to do. Right: the
+ * track list, which is the page's own sections, and the signal chain, which is
+ * About's three tracks in one line each (kept in step by hand with
+ * `ABOUT_TRACKS` in `section-about.tsx`).
+ */
+export const SIDE_COPY = {
+  now: ['NOW PLAYING', 'NOW PLAYING'],
+  playing: ['ADITYA HIMAWAN', 'PROFILE'],
+  actions: [
+    { label: 'See the work', href: '#work', external: false },
+    { label: 'Résumé', href: RESUME_URL, external: true },
+  ],
+  tracks: [
+    { n: '01', title: 'Aditya Himawan', note: 'Frontend engineer', href: null },
+    { n: '02', title: 'Profile', note: 'How I work', href: '#about' },
+    { n: '03', title: 'Work', note: 'Selected systems', href: '#work' },
+    { n: '04', title: 'Contact', note: 'Say hello', href: '#contact' },
+  ],
+  chain: [
+    {
+      title: 'FOCUS',
+      note: 'REACT / NEXT.JS / TYPESCRIPT',
+      metric: '04+',
+      label: 'YEARS IN FRONTEND',
+    },
+    {
+      title: 'SYSTEMS',
+      note: 'FEATURES / DATA / DELIVERY',
+      metric: 'SSR',
+      label: 'RENDERING',
+    },
+    {
+      title: 'RANGE',
+      note: 'BACKEND / AUTOMATION / INFRA',
+      metric: 'VPS',
+      label: 'SELF-HOSTED',
+    },
+  ],
 } as const
 
 export type NavEntry = {
@@ -211,3 +267,40 @@ export const NAV_BY_ID = new Map(MACHINE_NAV.map((entry) => [entry.id, entry]))
 
 /** The primary three, in the order the LIVE row prints them. */
 export const PRIMARY_IDS = ['live-sound', 'live-main', 'live-tempo'] as const
+
+/**
+ * The screen's top row, as navigation.
+ *
+ * The machine's own print — `RD-01` on the left, `4 LAYERS` on the right —
+ * keeps the corners; these three sit between them. They are the destinations
+ * the console does not reach without a scroll and a look: the pads carry them
+ * too, but the pads are the numbered index and read as a keyboard, whereas
+ * this is the one row of the screen that is always facing you. Which is the
+ * point: the screen you are looking at is also the way out of it.
+ *
+ * Deliberately not part of `MACHINE_NAV`: that list is what the controls and
+ * the phone's stack are built from, and these three already appear there.
+ */
+export const SCREEN_NAV: readonly NavEntry[] = [
+  {
+    kind: 'link',
+    id: 'screen-projects',
+    label: 'PROJECTS',
+    href: '/projects',
+    note: 'Repositories and releases',
+  },
+  {
+    kind: 'link',
+    id: 'screen-bookmarks',
+    label: 'BOOKMARKS',
+    href: '/bookmarks',
+    note: 'Links worth keeping',
+  },
+  {
+    kind: 'link',
+    id: 'screen-blog',
+    label: 'BLOG',
+    href: '/blog',
+    note: 'Writing about what broke',
+  },
+]

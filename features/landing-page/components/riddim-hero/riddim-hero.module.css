@@ -1,9 +1,16 @@
 /* ==========================================================================
-   The RIDDIM hero — the machine is the page.
+   The RIDDIM hero — zoom out, swap, zoom in.
 
-   The section's height is the clone's height, so the page's scroll is the
-   machine's face. Nothing is pinned and nothing floats beside it: the headline
-   is printed on the fascia and the navigation is printed on the controls.
+   You arrive inside the machine's screen. Scrolling pulls the camera back
+   until the whole machine is in frame (with the page's copy standing either
+   side of it), the machine presses its own PLAY key and its screen changes,
+   and the camera falls back into the new screen, which is the About section.
+
+   The hero is a pinned stage: a tall section holding a sticky, viewport-sized
+   `.stage`. The machine is flat vector art, so the camera is a translate and a
+   scale on it (`--cam-*`). The screen has two homes — the machine's own LCD,
+   and `.plane`, the same screen laid across the whole viewport — and they hand
+   over only while the camera is exactly on the LCD (`data-plane`).
 
    Everything animated here is driven by custom properties the scroll bridge
    writes onto `.hero` (see use-riddim-hero.ts). The stylesheet owns the maths;
@@ -12,32 +19,57 @@
      --r-power     0..1   the machine coming up to full power
      --r-controls  0..1   knobs turn, fader slides
      --r-meter     0..1   parameter LEDs step on down the pad field
-     --r-ink       0..1   the screen's glyph field lights, in sequence
+     --r-ink       0..1   the first screen's glyph field lights
+     --r-ink2      0..1   the second screen's glyph field lights
      --r-readout   0..1   the seven-segment counter runs
      --r-play      0..1   gate for the pad ripple
      --r-handoff   0..1   the bottom label row turns into the next chapter
+     --r-open      0..1   the letterbox: 1 is the screen filling the viewport
+     --r-press     0..1   how far down the PLAY key is
+     --r-swap      0..1   the second screen wiping over the first
+     --r-side      0..1   the side panels
+     --r-flip      0..1   the screen's backlight giving way to the page surface
+     --cam-s        ×     camera scale
+     --cam-dx/dy   units  camera pan, in clone units (× `--u` for pixels)
      --r-ptr-x/y   -1..1  pointer parallax for the panel's sheen
 
-   The defaults are the frame at scroll 0 — the machine's top edge, down to its
-   pilot light — so the server-rendered markup with no JS at all is the object.
+   The defaults are the frame at scroll 0 — the camera already on the LCD, the
+   letterbox shut, so the screen, the fascia above it and the console below it
+   are all in frame — which means the server-rendered markup with no JS at all
+   is a real hero, and the scroll bridge's first frame is the same picture the
+   first paint already drew.
 
-   Sizing: one clone unit is `--u`, and everything printed on the machine is
-   expressed in native units (`calc(374 * var(--u))`), so the clone scales as
-   one object. On narrower viewports the machine's own type scales below what
-   is readable, so the copy — and, on phones, the index — move to a normal
-   stack below the poster (`.stack`, gated in riddim-hero.tsx).
+   Two layouts, chosen by media query alone so the first paint is right:
+
+     LIVE    min-width 769px and motion allowed: the pinned stage above.
+     STATIC  phones, and reduced motion: the finished machine in the flow of
+             the page, its copy and (on phones) its index in `.stack` below.
+
+   One clone unit is `--u`, and everything printed on the machine is expressed
+   in native units (`calc(374 * var(--u))`), so the clone scales as one object.
+   `--u` must NOT be built from `cqw` in LIVE: the machine is itself a query
+   container, so the same token would mean something else inside it.
    ========================================================================== */
 
 .hero {
-  --hero-top: 0px; /* the top bar is in flow above the machine */
+  --hero-scroll: 480;
   --max-screens: 2.6;
   --r-power: 0;
   --r-controls: 0;
   --r-meter: 0;
   --r-ink: 0;
+  --r-ink2: 0;
   --r-readout: 0;
   --r-play: 0;
   --r-handoff: 0;
+  --r-open: 0;
+  --r-press: 0;
+  --r-swap: 0;
+  --r-side: 0;
+  --r-flip: 0;
+  --cam-s: 1;
+  --cam-dx: 0;
+  --cam-dy: 0;
   --r-ptr-x: 0;
   --r-ptr-y: 0;
 
@@ -48,19 +80,32 @@
   --display: var(--font-space-grotesk), var(--font-inter), sans-serif;
 
   position: relative;
-  padding-top: var(--hero-top);
   background: #151716;
   color: var(--ink);
+}
+
+.stage {
+  position: relative;
+  overflow: hidden;
 }
 
 .room {
   position: absolute;
   z-index: 0;
   inset: 0;
-  background:
-    radial-gradient(90% 40% at 50% 12%, rgb(255 90 31 / 0.12), transparent 70%),
-    radial-gradient(70% 30% at 50% 100%, rgb(46 63 92 / 0.45), transparent 70%),
+  background: radial-gradient(
+      52% 48% at 50% 46%,
+      rgb(255 90 31 / 0.16),
+      rgb(255 90 31 / 0.04) 55%,
+      transparent 74%
+    ),
+    radial-gradient(90% 40% at 50% 100%, rgb(46 63 92 / 0.45), transparent 70%),
     #151716;
+}
+
+.rig {
+  position: relative;
+  z-index: 1;
 }
 
 /* ---- the machine --------------------------------------------------------- */
@@ -81,10 +126,17 @@
   overflow: hidden;
   border-radius: calc(30 * var(--u));
   background: #d6cebd;
-  box-shadow:
-    0 calc(40 * var(--u)) calc(70 * var(--u)) calc(-30 * var(--u)) rgb(0 0 0 / 0.8),
-    0 0 0 1px rgb(0 0 0 / 0.4);
+  box-shadow: 0 calc(40 * var(--u)) calc(70 * var(--u)) calc(-30 * var(--u))
+    rgb(0 0 0 / 0.8);
   isolation: isolate;
+}
+
+/* The plane and the side panels exist only in LIVE. */
+.plane,
+.side,
+.lead,
+.boot {
+  display: none;
 }
 
 .panel,
@@ -105,8 +157,7 @@
   z-index: 1;
   inset: 0;
   background: radial-gradient(
-    70% 45% at calc(50% + var(--r-ptr-x) * 34%)
-      calc(24% + var(--r-ptr-y) * 22%),
+    70% 45% at calc(50% + var(--r-ptr-x) * 34%) calc(24% + var(--r-ptr-y) * 22%),
     rgb(255 255 255 / 0.1),
     transparent 70%
   );
@@ -127,6 +178,48 @@
   border-radius: calc(6 * var(--u));
 }
 
+/* ---- the LCD: two screens, one over the other ---------------------------- */
+
+.lcd,
+.lcdOne,
+.lcdTwo {
+  position: absolute;
+  inset: 0;
+}
+
+/* The profile card wipes in from the top: the key press changing the screen. */
+.lcdTwo {
+  clip-path: inset(0 0 calc((1 - var(--r-swap)) * 100%) 0);
+}
+
+.lcdTwo .glyph {
+  --lit: clamp(0, calc(var(--r-ink2) * 2.4 - var(--i) * 0.009), 1);
+}
+
+/* The bright line the wipe travels on. */
+.scan {
+  position: absolute;
+  top: calc(var(--r-swap) * 100%);
+  right: 0;
+  left: 0;
+  height: calc(5 * var(--u));
+  background: linear-gradient(
+    transparent,
+    rgb(234 246 238 / 0.85),
+    transparent
+  );
+  opacity: calc(min(var(--r-swap), 1 - var(--r-swap)) * 5);
+  pointer-events: none;
+}
+
+.screenRim {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(4 40 27 / 0.55);
+  pointer-events: none;
+}
+
 .screenArt {
   position: absolute;
   inset: 0;
@@ -138,6 +231,11 @@
   color: #f2fbf5;
 }
 
+/* The screen's own type is printed ON the glyph field, the way the reference
+   prints it: the texture reads through the letters rather than stopping at
+   them. Neither line is fully opaque, and both are only ever inside the LCD —
+   the page's copy elsewhere is untouched. The title stays the brighter of the
+   two because it is the h1. */
 .title {
   position: absolute;
   top: calc(var(--scr-title-top) * var(--u));
@@ -148,6 +246,7 @@
   font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1;
+  opacity: 0.84;
   text-transform: uppercase;
 }
 
@@ -162,7 +261,79 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   line-height: 1;
+  opacity: 0.62;
   text-transform: uppercase;
+}
+
+/* ---- the screen's top row, as navigation --------------------------------- */
+
+/* One row of print between the machine's own `RD-01` and `4 LAYERS`, on the
+   status line's baseline. It lives on `.lcd` rather than inside either card:
+   the row is the screen's chrome, so it stays put while the cards wipe under
+   it. */
+.screenNav {
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--scr-nav-top) * var(--u));
+  right: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  gap: calc(var(--scr-nav-gap) * var(--u));
+  font-family: var(--mono);
+  font-size: calc(var(--scr-nav-size) * var(--u));
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.screenNavLink,
+.screenNavPrint {
+  position: relative;
+  color: #0b3d2c;
+  white-space: nowrap;
+}
+
+.screenNavLink {
+  text-decoration: none;
+  transition: color 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* The rule under the word is the underline the machine would have printed. */
+.screenNavLink::after {
+  position: absolute;
+  right: 0;
+  bottom: calc(-7 * var(--u));
+  left: 0;
+  height: max(1px, calc(var(--u) * 1.4));
+  background: currentColor;
+  content: '';
+  opacity: 0;
+  transition: opacity 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.screenNavLink:focus-visible {
+  outline: max(1px, calc(2 * var(--u))) solid var(--orange);
+  outline-offset: calc(5 * var(--u));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .screenNavLink:hover {
+    color: #01301f;
+  }
+
+  .screenNavLink:hover::after {
+    opacity: 1;
+  }
+}
+
+.screenNavArmed {
+  color: #01301f;
+}
+
+.screenNavArmed::after {
+  opacity: 1;
 }
 
 .readout {
@@ -195,16 +366,6 @@
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
-}
-
-/* ---- the copy, printed on the blank half of the fascia ------------------- */
-
-.copy {
-  position: absolute;
-  z-index: 2;
-  left: calc(var(--copy-x) * var(--u));
-  top: calc(var(--copy-y) * var(--u));
-  width: calc(var(--copy-w) * var(--u));
 }
 
 .kicker {
@@ -258,15 +419,6 @@
   line-height: 1.45;
 }
 
-.hint {
-  margin: calc(14 * var(--u)) 0 0;
-  color: #4a4a40;
-  font-family: var(--mono);
-  font-size: calc(var(--copy-hint) * var(--u));
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
 /* ---- controls: the machine's controls ARE the navigation ----------------- */
 
 .control {
@@ -298,6 +450,12 @@
   .machine [data-control]:hover {
     filter: brightness(1.04) saturate(1.05);
   }
+}
+
+/* The key the scroll presses for you. */
+.machine [data-control='right-play'] {
+  transform: translateY(calc(var(--r-press) * 5px));
+  filter: brightness(calc(1 + var(--r-press) * 0.28));
 }
 
 .machine [data-armed='true'] {
@@ -372,7 +530,7 @@
 }
 
 .capBody {
-  fill: #2b2a24;
+  fill: #55503f;
 }
 
 .capTop {
@@ -414,7 +572,7 @@
 }
 
 .padBody {
-  fill: #2b2a24;
+  fill: #4a463b;
 }
 
 .padFace {
@@ -489,10 +647,12 @@
   opacity: var(--lit);
 }
 
+/* The glow is a radial gradient rather than a `blur()` filter: eighteen
+   filtered circles had to be re-filtered every time their opacity stepped,
+   which is most of the story, and a gradient costs a fill. */
 .ledGlow {
-  fill: var(--orange);
-  opacity: calc(var(--lit) * 0.18);
-  filter: blur(5px);
+  fill: url(#led-glow);
+  opacity: calc(var(--lit) * 0.9);
 }
 
 .machine [data-armed='true'] .ledOn {
@@ -739,6 +899,527 @@
   transform: scale(0.97);
 }
 
+/* ---- the fullscreen plane ------------------------------------------------ */
+
+/* Positions and sizes below are in the stage's own width (`cqw`): the plane
+   lays the LCD, at its own 922:268 proportions, across the whole stage, so it
+   is the same picture as the machine's LCD at the moment the camera fills the
+   screen's width. */
+.planeScreen,
+.planeBand {
+  position: absolute;
+  inset: 0;
+}
+
+.planeBand {
+  --u: calc(100cqw / 922);
+
+  top: 50%;
+  bottom: auto;
+  height: calc(100cqw * 268 / 922);
+  translate: 0 -50%;
+}
+
+.planeEdge {
+  position: absolute;
+  right: 0;
+  left: 0;
+}
+
+.planeEdge[data-edge='top'] {
+  bottom: calc(50% + 100cqw * 268 / 922 / 2);
+}
+
+.planeEdge[data-edge='bottom'] {
+  top: calc(50% + 100cqw * 268 / 922 / 2);
+}
+
+.planeField {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0.7;
+}
+
+.planeFieldTop {
+  mask-image: linear-gradient(to top, #000, rgb(0 0 0 / 0.1));
+}
+
+.planeFieldBottom {
+  mask-image: linear-gradient(to bottom, #000, rgb(0 0 0 / 0.1));
+}
+
+.planeHint {
+  position: absolute;
+  top: calc(var(--band-inset) - 52px);
+  right: 0;
+  left: 0;
+  display: grid;
+  margin: 0;
+  color: #0b3d2c;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  place-items: center;
+}
+
+.hintOne,
+.hintTwo {
+  grid-area: 1 / 1;
+}
+
+.hintOne {
+  opacity: calc(1 - var(--r-swap));
+}
+
+.hintTwo {
+  opacity: var(--r-swap);
+}
+
+/* ---- the side panels ----------------------------------------------------- */
+
+.side {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  flex-direction: column;
+  gap: 26px;
+  width: min(340px, calc((100cqw - var(--mw)) / 2 - 72px));
+  opacity: var(--r-side);
+}
+
+.hero:not([data-side='on']) .side {
+  visibility: hidden;
+}
+
+.sideLeft {
+  right: calc(50% + var(--mw) / 2 + 48px);
+  transform: translate(calc((1 - var(--r-side)) * -32px), -50%);
+}
+
+.sideRight {
+  left: calc(50% + var(--mw) / 2 + 48px);
+  transform: translate(calc((1 - var(--r-side)) * 32px), -50%);
+}
+
+.sideKicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+  color: var(--ink);
+  font: 600 11px/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sideKicker i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 12px var(--orange);
+}
+
+.sideKicker em {
+  color: var(--ink-muted);
+  font-style: normal;
+}
+
+.sideLine {
+  display: block;
+  margin: 0;
+  color: var(--ink);
+  font: 650 clamp(30px, 2.7vw, 44px) / 1.04 var(--display);
+  letter-spacing: -0.035em;
+}
+
+.sideSub {
+  margin: 0;
+  color: var(--ink-muted);
+  font:
+    400 15px/1.5 var(--font-inter),
+    sans-serif;
+}
+
+.sideNow {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid rgb(241 238 229 / 0.16);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.03);
+}
+
+.sideNow small {
+  color: var(--orange);
+  font: 600 10px/1 var(--mono);
+  letter-spacing: 0.2em;
+}
+
+.nowName {
+  display: grid;
+  color: var(--ink);
+  font: 650 17px/1.1 var(--display);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.nowName span {
+  grid-area: 1 / 1;
+}
+
+.nowName span:first-child {
+  opacity: calc(1 - var(--r-swap));
+}
+
+.nowName span:last-child {
+  opacity: var(--r-swap);
+}
+
+.sideActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sideAction {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 18px;
+  border: 1px solid rgb(0 0 0 / 0.45);
+  border-radius: 7px;
+  background: linear-gradient(#fbf9f3, #e1dccf);
+  box-shadow:
+    0 10px 18px -12px rgb(0 0 0 / 0.9),
+    inset 0 1px 0 #ffffff;
+  color: #0b3d2c;
+  font: 700 11px/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.sideAction:first-child {
+  background: linear-gradient(#ff6a2c, var(--orange));
+  color: #fff6ec;
+}
+
+.sideAction:active {
+  transform: scale(0.97);
+}
+
+.sideAction:focus-visible,
+.trackLink:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 3px;
+}
+
+.sideHead {
+  margin: 0 0 10px;
+  color: var(--ink-muted);
+  font: 600 10px/1 var(--mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.tracks {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The marker rides from track 01 to track 02 as the screen changes. */
+.trackNow {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 54px;
+  border-left: 2px solid var(--orange);
+  background: linear-gradient(90deg, rgb(248 74 8 / 0.14), transparent);
+  transform: translateY(calc(var(--r-swap) * 54px));
+  pointer-events: none;
+}
+
+.track {
+  display: block;
+}
+
+.trackLink,
+.trackStatic {
+  display: grid;
+  height: 54px;
+  grid-template-columns: 34px 1fr;
+  align-content: center;
+  align-items: center;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.trackN {
+  padding-left: 12px;
+  color: var(--ink-muted);
+  font: 600 11px/1 var(--mono);
+  letter-spacing: 0.1em;
+}
+
+.trackTitle {
+  display: grid;
+  gap: 4px;
+}
+
+.trackTitle b {
+  font: 650 15px/1 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.trackTitle span {
+  color: var(--ink-muted);
+  font: 500 10px/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.trackLink:hover .trackTitle b {
+  color: var(--orange);
+}
+
+.chain {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chainRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 14px;
+  padding: 12px 0;
+  border-top: 1px solid rgb(241 238 229 / 0.14);
+}
+
+.chainRow b {
+  color: var(--ink);
+  font: 700 12px/1 var(--mono);
+  letter-spacing: 0.16em;
+}
+
+.chainRow span {
+  grid-column: 1;
+  color: var(--ink-muted);
+  font: 500 10px/1.3 var(--mono);
+  letter-spacing: 0.1em;
+}
+
+.chainRow em {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: #5fd9a6;
+  font: 700 22px/1 var(--display);
+  font-style: normal;
+  letter-spacing: -0.02em;
+}
+
+/* Silkscreen-style leaders from the panels to what they are about. */
+.lead {
+  position: absolute;
+  z-index: 3;
+  width: 56px;
+  height: 1px;
+  background: linear-gradient(90deg, rgb(248 74 8 / 0), var(--orange));
+  opacity: var(--r-side);
+}
+
+.lead::after {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--orange);
+  content: '';
+}
+
+.leadLeft {
+  top: calc(50% - var(--mw) * 200.5 / 952);
+  right: calc(50% + var(--mw) / 2 - 8px);
+  transform: rotate(180deg);
+}
+
+.leadRight {
+  top: calc(50% + var(--mw) * 291.5 / 952);
+  left: calc(50% + var(--mw) / 2 - 8px);
+}
+
+/* ---- LIVE: the pinned stage ----------------------------------------------- */
+
+@media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
+  .hero {
+    height: calc(var(--hero-scroll) * 1svh);
+  }
+
+  .stage {
+    --mw: min(calc(100svh * 0.88 * 952 / 1317), 90vw);
+
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    container-type: inline-size;
+  }
+
+  .rig {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  .machine {
+    --u: calc(var(--mw) / 952);
+
+    width: var(--mw);
+    margin: 0;
+    transform: translate(
+        calc(var(--cam-dx) * var(--u)),
+        calc(var(--cam-dy) * var(--u))
+      )
+      scale(var(--cam-s));
+    transform-origin: 50% 50%;
+  }
+
+  /* Scroll 0 IS the frame at the LCD, so the camera is already there on the
+     very first paint — otherwise the machine would jump from the overview to
+     the screen the moment the scroll bridge started. This is
+     `cameraAt({ lens: 1, drift: 0 }, fill)` written out in CSS: `fill` is the
+     stage width over the LCD's, and the LCD sits 200.5 units above the
+     machine's centre, so the machine pans down by `scale * 200.5`. It is
+     scoped to the hero before the bridge reports in, so the bridge's own
+     writes always win.
+
+     `100cqw` here resolves against `.stage` (the machine is itself a query
+     container, so it is the *ancestor* container that counts for its own
+     declarations — the same reason `--u` above is not built from `cqw`). */
+  .hero:not([data-live='true']) .machine {
+    --cam-s: calc(100cqw / (922 * var(--mw) / 952));
+    --cam-dy: calc(var(--cam-s) * 200.5);
+  }
+
+  /* The scroll cue. At scroll 0 the machine fills the viewport edge to edge,
+     so the cue rides the one strip of bare case there is — the cream between
+     the screen module's bottom lip and the console's silkscreen — and fades as
+     the machine comes up to power. It is centred on the stage, which at that
+     moment is the centre of the screen module. */
+  .boot {
+    position: absolute;
+    z-index: 3;
+    top: calc(50% + 100cqw * 134 / 922 + 3px);
+    left: 50%;
+    display: block;
+    margin: 0;
+    padding: 6px 13px;
+    border: 1px solid rgb(74 74 64 / 0.28);
+    border-radius: 999px;
+    background: rgb(246 243 235 / 0.84);
+    color: #3a3a32;
+    font: 600 10px/1 var(--mono);
+    letter-spacing: 0.2em;
+    opacity: clamp(0, calc(1 - var(--r-power) * 1.7), 1);
+    pointer-events: none;
+    text-transform: uppercase;
+    translate: -50% 0;
+    white-space: nowrap;
+  }
+
+  .stack {
+    display: none;
+  }
+
+  .plane {
+    --band-inset: max(0px, calc((100svh - 100cqw * 268 / 922) / 2));
+
+    position: absolute;
+    z-index: 4;
+    inset: 0;
+    display: block;
+    background: color-mix(
+      in srgb,
+      #21a273 calc((1 - var(--r-flip)) * 100%),
+      var(--chassis-hi, #f4f0e8) calc(var(--r-flip) * 100%)
+    );
+    clip-path: inset(calc(var(--band-inset) * (1 - var(--r-open))) 0);
+    pointer-events: none;
+  }
+
+  /* After the flip the plane is the About section's own surface. */
+  .plane::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        rgb(29 30 28 / 0.035) 1px,
+        transparent 1px
+      )
+      0 0 / 28px 28px;
+    content: '';
+    opacity: var(--r-flip);
+  }
+
+  .planeScreen {
+    opacity: clamp(0, calc(1 - var(--r-flip) * 1.25), 1);
+  }
+
+  /* The plane is only ever a stand-in, and it is the heaviest thing in the
+     hero: a second LCD plus eighteen rows of glyph texture, all of it reading
+     the same scroll properties the machine does.
+
+     Custom properties are inherited, so writing one on `.hero` invalidates its
+     entire subtree — the cost of a scroll tick is the size of the tree, not the
+     number of things that read the value. (`display: none` does not help: a
+     hidden subtree is still styled. `content-visibility: hidden` does, because
+     skipped content is not styled at all — measured at a tenth of the cost.)
+
+     So both subtrees are skipped while they are standing behind something: the
+     plane until it is standing in for the screen, and the machine's own LCD
+     once the plane has taken over. The hand-overs are the only recalcs they
+     cost, and both land on frames that are already doing a full repaint. */
+  .hero:not([data-plane='on']) .plane {
+    visibility: hidden;
+    content-visibility: hidden;
+  }
+
+  .hero[data-plane='on'] .screen {
+    content-visibility: hidden;
+  }
+
+  .side {
+    display: flex;
+  }
+
+  .lead {
+    display: block;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1180px) {
+  .side,
+  .lead {
+    display: none;
+  }
+}
+
 /* ---- fallbacks ----------------------------------------------------------- */
 
 /* Reduced motion, a failed import and phones all show the finished machine:
@@ -749,19 +1430,59 @@
     --r-controls: 0.62;
     --r-meter: 1;
     --r-ink: 1;
+    --r-ink2: 1;
     --r-readout: 1;
     --r-play: 0;
     --r-handoff: 0;
+    --r-open: 0;
+    --r-swap: 0;
   }
 }
 
+/* A failed import on a desktop falls back to the finished machine in flow. */
 .hero[data-live='failed'] {
   --r-power: 1;
   --r-controls: 0.62;
   --r-meter: 1;
   --r-ink: 1;
+  --r-ink2: 1;
   --r-readout: 1;
   --r-play: 0;
+  --r-open: 0;
+  --r-swap: 0;
+  --cam-s: 1;
+  --cam-dx: 0;
+  --cam-dy: 0;
+
+  height: auto;
+}
+
+.hero[data-live='failed'] .stage {
+  position: relative;
+  height: auto;
+}
+
+.hero[data-live='failed'] .rig {
+  position: relative;
+  display: block;
+}
+
+.hero[data-live='failed'] .machine {
+  --u: calc(100cqw / 952);
+
+  width: min(100%, calc(var(--max-screens) * 100svh / 1.383403));
+  margin-inline: auto;
+  transform: none;
+}
+
+.hero[data-live='failed'] .plane,
+.hero[data-live='failed'] .side,
+.hero[data-live='failed'] .lead {
+  display: none;
+}
+
+.hero[data-live='failed'] .stack {
+  display: flex;
 }
 
 @media (prefers-reduced-motion: reduce) {

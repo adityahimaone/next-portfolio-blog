@@ -4,17 +4,12 @@ import { useEffect, useState } from 'react'
 import { SilkscreenLabel, VenLogo } from './primitives'
 import styles from './rack-01.module.css'
 import { SectionHeading } from './section-heading'
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Mail,
-  Pause,
-  Play,
-  Square,
-} from 'lucide-react'
+import { Pause, Play, Square } from 'lucide-react'
 import { RESUME_URL } from './shared'
 import { Screw } from '@/components/ui/screw'
-import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
+/** Where the playhead parks when the transport is stopped. */
+const PARKED_PLAYHEAD = 0.62
+
 const ABOUT_TRACKS = [
   {
     title: 'FOCUS',
@@ -59,8 +54,8 @@ const ABOUT_TRACKS = [
   {
     title: 'RANGE',
     note: 'BACKEND / AUTOMATION / INFRA',
-    metric: 'VPS',
-    metricLabel: 'SELF-HOSTED',
+    metric: 'EDGE',
+    metricLabel: 'DEPLOY TARGET',
     heading: 'Stay close to production.',
     signal: 'ADDITIONAL EXPERIENCE',
     surface: '#b68ba5',
@@ -71,8 +66,16 @@ const ABOUT_TRACKS = [
     // of text against an 83px row, so the last line was being cut off behind the
     // foot's internal scroll. Four characters shorter per line is the whole
     // difference; the meaning is unchanged.
+    //
+    // The sentence about the VPS behind Nginx went stale: `.github/workflows/
+    // deploy.yml` now builds with `opennextjs-cloudflare` and deploys through
+    // `cloudflare/wrangler-action`, and its own comment says the SSH-to-PM2 path
+    // "no longer exists". `ecosystem.config.js` is checked in as
+    // `.vps-retired`. A card whose whole argument is "I stay close to
+    // production" cannot be the one place the stack is out of date, so this
+    // states the deployment that is actually running.
     story:
-      'I work across application data, deployment and monitoring when the frontend needs more than a polished screen. This site runs on a VPS behind Nginx, watched by Prometheus and Grafana, which is why the writing here is about what broke.',
+      'I work across application data, deployment and monitoring when the frontend needs more than a polished screen. This site runs on Cloudflare Workers via OpenNext with an R2 cache, which is why the writing here is about what broke.',
     // No credits row on this card, and that is deliberate.
     //
     // It carries the availability line and the résumé as well, which makes its
@@ -106,21 +109,18 @@ const ABOUT_TRACKS = [
 export function About({
   selected,
   setSelected,
-  scrollProgress,
 }: {
   selected: number
   setSelected: React.Dispatch<React.SetStateAction<number>>
-  scrollProgress: number
 }) {
   const [isPlaying, setIsPlaying] = useState(false)
-  const [playhead, setPlayhead] = useState(0.08)
+  // Parked on the PROFILE clip's centre, which is the year the hero's own
+  // playhead arrives at. The panel is the clip's interior, so the two agree on
+  // where the playhead stands — one timeline, two zoom levels.
+  const [playhead, setPlayhead] = useState(PARKED_PLAYHEAD)
 
   const [mutedTracks, setMutedTracks] = useState<Set<number>>(new Set())
   const [soloedTrack, setSoloedTrack] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (!isPlaying) setPlayhead(0.05 + scrollProgress * 0.9)
-  }, [isPlaying, scrollProgress])
 
   useEffect(() => {
     if (!isPlaying) return
@@ -146,18 +146,28 @@ export function About({
   }
 
   return (
-    <section
-      id="about"
-      className={`${styles.section} ${styles.about}`}
-      data-rack-section
+    <div
+      className={`${styles.about} ${styles.aboutSeam}`}
+      data-no-heading-reveal
     >
       <div className={styles.aboutStage}>
         <SectionHeading index="02" eyebrow="Profile">
           Make the complicated part feel obvious.
         </SectionHeading>
-        <div className={styles.aboutDeck}>
+        {/* `data-about-read` marks the window the read travels inside. The hook
+            measures the rail against it to work out how far the column has to
+            move, so this element — not the panel — is what "fits" has to mean. */}
+        <div className={styles.aboutDeck} data-about-read>
           <div className={styles.aboutCardStack}>
-            <div className={styles.aboutCardRail} aria-live="polite">
+            {/* `data-about-rail` is the content that moves during the read. The
+                timeline panel beside it is deliberately NOT part of this: it
+                holds still, the way it did when this was a page section with a
+                sticky panel and a scrolling column of cards. */}
+            <div
+              className={styles.aboutCardRail}
+              data-about-rail
+              aria-live="polite"
+            >
               {ABOUT_TRACKS.map((track, index) => (
                 /* The card is a button with the résumé link as its only real
                    action, so the link used to be rendered INSIDE it. A focusable
@@ -379,6 +389,6 @@ export function About({
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }

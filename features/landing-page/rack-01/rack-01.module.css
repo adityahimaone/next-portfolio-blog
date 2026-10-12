@@ -12743,3 +12743,113 @@
     min-height: calc(100svh - 142px);
   }
 }
+
+/* ─── About, as the PROFILE clip's interior ────────────────────────────────
+   The panel is no longer a section in the page flow. It is revealed inside the
+   arrangement's sticky stage by the camera's dive, so it has to do two things
+   the section never had to: fit the frame it is revealed in, and stay out of
+   the layout of everything else. Hence absolute positioning, a much tighter
+   rhythm than the section's `clamp(90px, 11vw, 170px)`, and the resets below.
+
+   `content-visibility: auto` in particular has to go. On a section it is a
+   cheap win; on a clipped, pinned panel it applies size containment to the very
+   element the seam is measuring, and the panel collapses to its intrinsic size
+   the moment the clip-path opens. */
+.aboutSeam {
+  position: absolute;
+  inset: 0;
+  /* `visible`, not `hidden`. The content column is taller than the window it is
+     revealed in — by 0px at 1728×1117 and by 103px at 1440×900 — and the read
+     translates it up by exactly that overflow. Clipping here would hide the very
+     content the read exists to uncover; the parent `.seam`'s clip-path is what
+     bounds the window. */
+  overflow: visible;
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+  padding: clamp(12px, 2.2vh, 28px) clamp(16px, 2.4vw, 40px);
+}
+.aboutSeam .aboutStage {
+  height: 100%;
+  /* Top-aligned, so the overflow falls off the bottom where the read can pull it
+     in. Centred, it would split — cutting the heading at the top, which no
+     amount of scrolling past the end can recover. */
+  justify-content: flex-start;
+  gap: clamp(8px, 1.4vh, 18px);
+}
+/* ─── The read: the column travels, the panel does not ────────────────────
+   This is the page section's own animation, transplanted. As a section it read
+   as a sticky timeline beside a scrolling column of cards — the heading and the
+   rail moved up the page, `.timelinePanel` held its place. There is no scroll
+   container inside the seam for `position: sticky` to stick against, so the
+   travel is this translate instead, driven by the hook on `--arr-read-travel`.
+
+   The two travelling elements are the heading and the card stack, and they are
+   transformed individually because nothing wraps exactly those two: the deck
+   between them also holds the timeline, which must not move. Transforms do not
+   affect layout, so moving them separately is the same as moving a wrapper —
+   and it leaves the deck's grid row, which is what the travel is measured
+   against, completely undisturbed.
+
+   The timeline is excluded by omission, and pinned by the rule below so it is
+   excluded on purpose rather than by luck. */
+.aboutSeam .sectionHeading,
+.aboutSeam .aboutCardStack {
+  transform: translateY(var(--arr-read-travel, 0px));
+  will-change: transform;
+}
+.aboutSeam .sectionHeading {
+  margin-bottom: 0;
+}
+.aboutSeam .sectionHeading h2 {
+  font-size: clamp(24px, 3vw, 46px);
+}
+.aboutSeam .aboutDeck {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+  gap: clamp(16px, 2vw, 40px);
+}
+.aboutSeam .aboutCardRail {
+  align-content: start;
+}
+/* `relative`, not `sticky`. Sticky resolves against the nearest scrollport,
+   which inside a pinned stage is the page itself — it would be inert during the
+   read and unpredictable after it. The panel does not travel; this says so. */
+.aboutSeam .timelinePanel {
+  position: relative;
+  min-height: 0;
+}
+
+/* The panel is a pinned interior only while the camera is driving it. Three
+   situations put it back in the flow — a phone, reduced motion, and scripting
+   off — and they are exactly the three that un-pin the stage in
+   `arrangement.module.css`. Comma-separated media queries are OR'd, so this is
+   one rule rather than three; a browser that does not know `scripting` simply
+   fails that one query and still matches the others.
+
+   The alternative — flipping it from an attribute the hook sets — would make the
+   server render one layout and the client another, which is a visible jump on
+   every load for everyone in the common case.
+
+   This is not cosmetic. With `position: absolute` and no positioned ancestor
+   sized to hold it, the panel contributes no height: measured, the hero
+   collapsed to 108px and the panel to 40px under reduced motion and with JS off,
+   because the seam around it is `position: relative` in those states. */
+@media (max-width: 768px), (prefers-reduced-motion: reduce), (scripting: none) {
+  .aboutSeam {
+    position: relative;
+    inset: auto;
+    padding: clamp(28px, 7vw, 52px) clamp(14px, 4vw, 24px);
+  }
+  .aboutSeam .aboutStage {
+    height: auto;
+  }
+  /* `--arr-read-travel` is never written without the hook, so this is already
+     an identity translate — but `will-change` is not. Left on, it promotes two
+     full-width layers on a phone for an animation that does not exist. */
+  .aboutSeam .sectionHeading,
+  .aboutSeam .aboutCardStack {
+    transform: none;
+    will-change: auto;
+  }
+}

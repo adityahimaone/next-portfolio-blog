@@ -4,11 +4,10 @@ import { useRef, useState } from 'react'
 
 import { Work } from '../work/work'
 import type { ArchiveRepo } from '@/features/projects/lib/github'
-import { About } from './section-about'
+import { ArrangementHero } from '../components/arrangement/arrangement-hero'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
 import { Experience } from './section-experience'
-import { Hero } from './section-hero'
 import { SignalDivider } from './section-signaldivider'
 import { Skills } from './section-skills'
 import styles from './rack-01.module.css'
@@ -36,15 +35,9 @@ export default function Rack01LandingPage({
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [aboutIndex, setAboutIndex] = useState(0)
-  const [aboutProgress, setAboutProgress] = useState(0)
   const [experienceIndex, setExperienceIndex] = useState(0)
 
-  useRackAnimations({
-    rootRef,
-    setAboutIndex,
-    setAboutProgress,
-    setExperienceIndex,
-  })
+  useRackAnimations({ rootRef, setExperienceIndex })
 
   return (
     /* `<main>` rather than a plain div: this wrapper holds every section of the
@@ -61,12 +54,7 @@ export default function Rack01LandingPage({
       <a className={styles.skipLink} href="#about">
         Skip to content
       </a>
-      <Hero />
-      <About
-        selected={aboutIndex}
-        setSelected={setAboutIndex}
-        scrollProgress={aboutProgress}
-      />
+      <ArrangementHero selected={aboutIndex} setSelected={setAboutIndex} />
       <SignalDivider />
       <Skills />
       <CableDivider />

@@ -2,9 +2,6 @@
 
 import type { RefObject } from 'react'
 import { useEffect } from 'react'
-import Lenis from 'lenis'
-
-import { heroSweepIndices } from '../lib/hero-sweep-order'
 import {
   registerSmoothScroll,
   unregisterSmoothScroll,
@@ -14,9 +11,8 @@ import { FLIP_DEGREES, SEAM_SVH } from '../constants/seam'
 import styles from './rack-01.module.css'
 
 /**
- * Drives every scroll-linked animation on the landing page: the hero boot
- * sequence and collapse, the about and experience scrubbers, and the section
- * reveals.
+ * Drives the landing page's section reveals, Skills and Experience animations,
+ * and Experience-to-Work seam.
  *
  * Kept out of the component so the timelines can be read on their own. Note
  * that it selects elements by CSS-module class name rather than by ref, so
@@ -25,19 +21,15 @@ import styles from './rack-01.module.css'
  * without a type error.
  *
  * GSAP and Lenis are imported dynamically: together they are a meaningful
- * part of first load and nothing moves without a scroll or a boot. Under
+ * part of first load. Under
  * `prefers-reduced-motion` none of this runs, so those visitors never pay
  * for the download at all.
  */
 export function useRackAnimations({
   rootRef,
-  setAboutIndex,
-  setAboutProgress,
   setExperienceIndex,
 }: {
   rootRef: RefObject<HTMLDivElement | null>
-  setAboutIndex: React.Dispatch<React.SetStateAction<number>>
-  setAboutProgress: React.Dispatch<React.SetStateAction<number>>
   setExperienceIndex: React.Dispatch<React.SetStateAction<number>>
 }) {
   useEffect(() => {
@@ -52,10 +44,12 @@ export function useRackAnimations({
         window.matchMedia('(prefers-reduced-motion: reduce)').matches
       )
         return
-      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
-        import('gsap'),
-        import('gsap/ScrollTrigger'),
-      ])
+      const [{ gsap }, { ScrollTrigger }, { default: Lenis }] =
+        await Promise.all([
+          import('gsap'),
+          import('gsap/ScrollTrigger'),
+          import('lenis'),
+        ])
       if (cancelled || !rootRef.current) return
       gsap.registerPlugin(ScrollTrigger)
 
@@ -89,217 +83,6 @@ export function useRackAnimations({
       context = gsap.context(() => {
         const media = gsap.matchMedia()
         media.add('(min-width: 769px)', () => {
-          const hero = rootRef.current?.querySelector<HTMLElement>(
-            `.${styles.hero}`,
-          )
-          if (!hero) return
-          const wall = hero.querySelector<HTMLElement>(
-            `.${styles.heroDeviceWall}`,
-          )!
-          const modules = gsap.utils.toArray<HTMLElement>(
-            hero?.querySelectorAll<HTMLElement>('[data-hero-device]') ?? [],
-          )
-          const routes = gsap.utils.toArray<HTMLElement>(
-            hero?.querySelectorAll<HTMLElement>('[data-hero-route]') ?? [],
-          )
-          const anchors = modules.filter(
-            (module) => module.dataset.rackAnchor === 'true',
-          )
-          const supportingModules = modules.filter(
-            (module) => module.dataset.rackAnchor !== 'true',
-          )
-          // Same visual order the wall powers on in, so the tiles settle in
-          // the direction the eye is already travelling. Passed as the target
-          // rather than as a stagger option: the rack is a hand-authored
-          // layout, so the DOM order is a zig-zag and needs re-sorting first.
-          //
-          // The hero has no device tiles any more — the pad sea replaced the
-          // wall — so `modules` is legitimately empty here, and
-          // `heroSweepIndices` answers an empty list with its twelve-slot
-          // fallback. Mapping those onto nothing left twelve `undefined`
-          // targets and GSAP threw `Cannot read properties of undefined
-          // (reading '_gsap')` on every scroll frame. Filter them out instead
-          // of leaving phantom tiles in the DOM for the selectors to find.
-          const heroSweepOrder = heroSweepIndices(modules)
-            .map((index) => modules[index])
-            .filter(Boolean)
-
-          // `.heroBackdropName` is deliberately absent here. Its scroll story
-          // moved to useHeroMotion, which rides it on the same swell the pad
-          // field is drawing — two timelines writing the same transform fought
-          // each other, and only one of them can know the wave.
-          const panel = hero.querySelector<HTMLElement>(
-            `.${styles.heroEditorialPanel}`,
-          )!
-          const heroRail = hero.querySelector<HTMLElement>(
-            `.${styles.heroBottomRail}`,
-          )!
-          const heroRailLink = heroRail.querySelector<HTMLElement>('a')!
-          const atmosphere = hero.querySelector<HTMLElement>(
-            `.${styles.heroAtmosphere}`,
-          )!
-          const handoff = hero.querySelector<HTMLElement>(
-            `.${styles.heroAboutHandoff}`,
-          )!
-          const boot = hero.querySelector<HTMLElement>(
-            `.${styles.heroBootSequence}`,
-          )!
-
-          const intro = gsap.timeline({ defaults: { overwrite: 'auto' } })
-          intro
-            .fromTo(
-              wall,
-              {
-                scale: 1.11,
-                filter: 'saturate(0.45) contrast(1.15) brightness(0.42)',
-              },
-              {
-                scale: 1.015,
-                filter: 'saturate(0.8) contrast(1.08) brightness(0.78)',
-                duration: 1.45,
-                ease: 'expo.out',
-              },
-            )
-            .fromTo(
-              heroSweepOrder,
-              {
-                xPercent: (_, element) =>
-                  Number((element as HTMLElement).dataset.collapseX ?? 0) *
-                  0.72,
-                yPercent: (_, element) =>
-                  Number((element as HTMLElement).dataset.collapseY ?? 0) *
-                  0.72,
-                rotation: (_, element) =>
-                  Number(
-                    (element as HTMLElement).dataset.collapseRotation ?? 0,
-                  ) * 0.7,
-                scale: 0.88,
-                opacity: 0,
-              },
-              {
-                xPercent: 0,
-                yPercent: 0,
-                rotation: 0,
-                scale: 1,
-                opacity: 1,
-                duration: 1.25,
-                stagger: { each: 0.045, from: 'start' },
-                ease: 'expo.out',
-              },
-              0.06,
-            )
-
-            .fromTo(
-              [heroRail],
-              { opacity: 0 },
-              { opacity: 1, duration: 0.55, ease: 'power2.out' },
-              0.94,
-            )
-            .to(boot, { opacity: 0, duration: 0.35, ease: 'power2.out' }, 0.38)
-
-          const collapse = gsap.timeline({
-            scrollTrigger: {
-              trigger: hero,
-              start: 'top top',
-              end: 'bottom bottom',
-              scrub: 0.85,
-              invalidateOnRefresh: true,
-            },
-            defaults: { ease: 'none', overwrite: 'auto' },
-          })
-
-          collapse
-            .to(
-              panel,
-              {
-                xPercent: -18,
-                opacity: 0,
-                filter: 'blur(5px)',
-                duration: 0.18,
-              },
-              0.04,
-            )
-            .to(
-              heroRail,
-              {
-                y: () => -Math.min(176, window.innerHeight * 0.2),
-                color: 'rgba(16, 18, 17, 0.68)',
-                opacity: 1,
-                duration: 0.36,
-              },
-              0.7,
-            )
-            .to(
-              heroRailLink,
-              {
-                color: 'rgba(16, 18, 17, 0.9)',
-                duration: 0.36,
-              },
-              0.7,
-            )
-            .to(
-              modules,
-              {
-                xPercent: (_, element) =>
-                  Number((element as HTMLElement).dataset.collapseX ?? 0),
-                yPercent: (_, element) =>
-                  Number((element as HTMLElement).dataset.collapseY ?? 0),
-                rotation: (_, element) =>
-                  Number(
-                    (element as HTMLElement).dataset.collapseRotation ?? 0,
-                  ),
-                scale: (_, element) =>
-                  (element as HTMLElement).dataset.rackAnchor === 'true'
-                    ? 0.96
-                    : 0.88,
-                duration: 0.52,
-                stagger: 0.008,
-              },
-              0.1,
-            )
-            .to(supportingModules, { opacity: 0.16, duration: 0.28 }, 0.24)
-            .to(
-              anchors,
-              {
-                opacity: 1,
-                filter: 'brightness(1.08) saturate(1)',
-                duration: 0.22,
-              },
-              0.28,
-            )
-            .to(routes, { opacity: 1, y: 0, duration: 0.18 }, 0.32)
-            .to(atmosphere, { opacity: 0.36, duration: 0.28 }, 0.3)
-            .to(routes, { opacity: 0, y: -5, duration: 0.16 }, 0.66)
-            .to(supportingModules, { opacity: 0.04, duration: 0.24 }, 0.7)
-            .to(anchors, { opacity: 0.18, scale: 1.02, duration: 0.24 }, 0.7)
-            .fromTo(
-              handoff,
-              { yPercent: 100, opacity: 0 },
-              { yPercent: 0, opacity: 1, duration: 0.26 },
-              0.72,
-            )
-            .to(atmosphere, { opacity: 0.1, duration: 0.2 }, 0.78)
-
-          ScrollTrigger.create({
-            trigger: `.${styles.about}`,
-            start: 'top bottom',
-            end: 'bottom top',
-            onUpdate: (self) => setAboutProgress(self.progress),
-          })
-
-          const aboutCards = gsap.utils.toArray<HTMLElement>(
-            `.${styles.aboutCard}`,
-          )
-          aboutCards.forEach((card, index) => {
-            ScrollTrigger.create({
-              trigger: card,
-              start: 'top 58%',
-              end: 'bottom 42%',
-              onEnter: () => setAboutIndex(index),
-              onEnterBack: () => setAboutIndex(index),
-            })
-          })
-
           const storyHeadings = gsap.utils
             .toArray<HTMLElement>(`.${styles.sectionHeading}`)
             .filter((heading) => !heading.closest('[data-no-heading-reveal]'))

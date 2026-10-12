@@ -12869,3 +12869,32 @@
     will-change: auto;
   }
 }
+
+/* ─── The flow fallbacks that keep motion off owe the panel its place ─────
+   The dive and the read are the seam's two reasons to exist, and neither of
+   them runs in these two states: the hook returns before the trigger under
+   reduced motion, and it never runs at all without scripting. What is left
+   is the About section in the flow — and a `relative` panel there is not
+   "held still", it simply scrolls away with the card column beside it.
+   Measured under `prefers-reduced-motion` at 1440x900: panel and rail move
+   1:1 with the page, so the timeline leaves the window at the same moment
+   the first card does. That is the one thing this section never did — as a
+   page section it was a sticky panel beside a scrolling column of cards,
+   which is exactly the behaviour the seam's read reproduces when motion is
+   on. So the panel gets its `sticky` back here, against the page scrollport
+   the flow layout finally gives it.
+
+   `sticky` is safe for the screws: it is a positioned value, so they still
+   resolve against the panel rather than an ancestor. `top` is the base
+   rule's threshold, which is what it always was for this box.
+
+   Phone is deliberately absent. The panel is `display: none` there — an
+   eight-lane arrangement in a 360px column is 540px of scroll to show
+   something nobody can read — so there is nothing to stick, and restoring
+   `sticky` would only re-assert a `top` on a hidden box. */
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .aboutSeam .timelinePanel {
+    position: sticky;
+    top: clamp(24px, 7vh, 72px);
+  }
+}

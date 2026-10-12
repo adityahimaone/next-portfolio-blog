@@ -149,6 +149,35 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
+      <head>
+        {/* Retire the dock before the landing page hydrates.
+
+            The hero retires the dock until About owns the frame, but it does
+            that from an effect — and an effect runs after the first paint. By
+            then the dock has already begun its 450ms rise, so the visitor
+            watches it arrive and immediately leave. Measured: it reached 89%
+            opacity at 862ms, then unmounted.
+
+            Writing the flag here, before React renders anything, makes the
+            retired state the dock's *first* state instead of its second, so
+            there is no arrival to watch.
+
+            Deliberately narrow. It is the landing route, at the top of it, and
+            not when the URL already points at About — and a body that throws
+            leaves the flag alone rather than guessing. It does not run with
+            scripting disabled at all, which is the point: a no-JS visitor
+            keeps the dock they have today, exactly as the `scripting: none`
+            rules elsewhere in this app already promise.
+
+            The hero's hook still owns the flag from here on and restores it on
+            the way out, so navigating away from the landing page brings the
+            dock back. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(location.pathname!=='/'||location.hash==='#about')return;document.documentElement.dataset.interface='hidden'}catch(e){}`,
+          }}
+        />
+      </head>
       <body
         className={`${geist.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${syne.variable} ${orbitron.variable} ${inter.variable} bg-background text-foreground tracking-tight antialiased`}
       >

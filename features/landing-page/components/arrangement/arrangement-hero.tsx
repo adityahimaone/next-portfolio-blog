@@ -18,6 +18,7 @@ import { ArrangementPlayhead } from './arrangement-playhead'
 import { ArrangementRail } from './arrangement-rail'
 import { ArrangementRuler } from './arrangement-ruler'
 import { useArrangementHero } from './use-arrangement-hero'
+import { useHeroDockVisibility } from './use-hero-dock-visibility'
 import styles from './arrangement.module.css'
 
 /**
@@ -54,6 +55,7 @@ export function ArrangementHero({
   const [clock, setClock] = useState('')
 
   useArrangementHero({ sectionRef, trackRef, cameraRef, seamRef })
+  useHeroDockVisibility({ sectionRef, seamRef })
 
   // The clock is the one readout on this instrument that is true without being
   // invented. Seeded empty and filled in an effect, so the server and the client

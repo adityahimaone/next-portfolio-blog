@@ -49,6 +49,7 @@ export function useArrangementHero({
 
     let cancelled = false
     let cleanup: (() => void) | undefined
+    let correctedAboutAnchor = false
 
     const setup = async () => {
       const [{ gsap }, { ScrollTrigger }] = await Promise.all([
@@ -220,6 +221,36 @@ export function useArrangementHero({
       }
 
       measure()
+
+      // Put a `#about` visitor where the fragment asked them to be.
+      //
+      // The browser resolves the fragment while the document is still parsing,
+      // which is before anything has measured. `.aboutAnchor`'s fallback of
+      // `100svh` is therefore where it lands — and then `measure()` moves the
+      // anchor to its real offset of `ARRANGEMENT_SEAM_OPEN × 360svh` (295.2svh
+      // at 1440×900), which the browser does not follow. Measured: the reader is
+      // left at 900 of 3240, progress 0.28, with the window still closed and
+      // the timeline dive not yet begun — the one place the skip link and the
+      // shared URL disagree.
+      //
+      // One shot, and only while they are still where the fallback put them. By
+      // the time this runs nobody has scrolled, so the guard is belt and
+      // braces; it exists because `measure()` also runs on every refresh and
+      // this block must not.
+      if (location.hash === '#about' && !correctedAboutAnchor) {
+        const anchor = document.getElementById('about')
+        if (anchor) {
+          correctedAboutAnchor = true
+          const target = anchor.getBoundingClientRect().top + window.scrollY
+          // `instant`: the root sets `scroll-behavior: smooth` for route
+          // changes, and animating a correction to the page's own load position
+          // reads as the scroll having gone somewhere else first.
+          if (Math.abs(window.scrollY - target) > 4) {
+            window.scrollTo({ top: target, behavior: 'instant' })
+          }
+        }
+      }
+
       render(0)
 
       const trigger = ScrollTrigger.create({

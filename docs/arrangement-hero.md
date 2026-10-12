@@ -1214,3 +1214,88 @@ reduced size it had while the panel was learning to fit the seam.
   three cards visible, `transform: none`, the timeline `display: none` on a
   phone as it always was.
 
+
+### 13.9 The dock retires for the hero and rises back for About
+
+Requested: hide the navbar / quick navigation in the hero, and show it again
+with a fade-up from the bottom once About is on screen.
+
+- **The dock is the one piece of chrome this tree cannot reach with CSS.** It is
+  rendered by the root layout — a different React tree, on the far side of the
+  `AudioProvider` — so a rule scoped to `.hero` can never scope it. It goes out
+  through the same document-level channel the mixtape's stealth mode already
+  uses (`setInterfaceVisibility`), which the dock already subscribes to and
+  already handles by unmounting.
+- **The reveal is free, because the dock already had one.** Unmounting is the
+  mechanism, and `dock-rise` runs on *every* mount — `opacity 0 → 1` over
+  `translateY(14px) → 0`, 450ms. Nothing new was written for this. Measured
+  frame by frame: it mounts at `opacity 0` and `translateY(14px)` and eases to
+  full opacity and 0px, the box itself rising 13px.
+- **Two ways "About owns the frame", and they are not interchangeable.** See
+  `use-hero-dock-visibility.ts` for the full argument; the short form is that
+  the desktop dive pins the stage so nothing geometric moves — the seam's own
+  `data-seam` is the only signal — while the flow layouts un-pin the stage and
+  stack About beneath it, so nothing writes `data-seam` and the scroll position
+  has to answer. Reading a rect where the dataset would do returns "always
+  visible" (the seam is an absolute overlay filling the stage); reading the
+  dataset where a rect would do returns "never visible".
+- **An effect runs too late to retire it.** The first implementation published
+  from the hook's own effect, which is after the first paint — measured, the
+  dock reached **89% opacity at 862ms and then unmounted**: an arrival plus a
+  departure, every load. It is now retired by a blocking inline script in the
+  root layout's `<head>`, before React renders anything, so the retired state
+  is the dock's *first* state rather than its second. The hero's hook owns the
+  flag from there and restores it on cleanup, so navigating away brings the
+  dock back.
+- **The inline script is narrow on purpose**: the landing route, at the top of
+  it, not when the URL already points at About, and a throwing body leaves the
+  flag alone. It does not run with scripting disabled — which is what keeps a
+  no-JS visitor the dock they have today, the same promise the `scripting: none`
+  rules elsewhere already make.
+- **Verified across the page, 1440×900**: hidden at the top of the hero and
+  through the whole dive; visible from seam-open to the bottom of the page;
+  hidden again on the way back to the top; visible again at About. On a phone
+  (390×844) it hides at `scrollY 0` and rises once About's top reaches the
+  dock's own 76px clearance — the moment it would otherwise land on top of the
+  content the hero was hiding it from.
+
+
+### 13.10 The flow fallbacks owe the panel its place
+
+Requested: "fix issue on about section that must stay is timeline not rail — you
+can see in prev or old component/commit for about section animation scroll
+behavior."
+
+- **The pinned read was already right, and this is measured, not assumed.** At
+  1440×900, 1512×982, 1280×800, 1024×768 and 834×1112, at every progress point
+  from 0 to 1: `.timelinePanel`'s rect never changes (1440×900: `170 → 722.5` at
+  every point) while the heading and the rail travel together, and the rail
+  lands flush with the deck's bottom — travel `-194px` at 1440×900, `-217` at
+  1280×800, `-198` at 1024×768, `-82` at 1512×982, `0` at 834×1117-wide portrait
+  where the column already fits. The desktop seam is the page section's
+  sticky-panel-beside-scrolling-column, transplanted.
+- **The defect was in the fallbacks, and only there.** Under
+  `prefers-reduced-motion: reduce` — and identically with `scripting: none` —
+  the hook never runs, the seam un-pins, and About sits in the flow, where
+  `.aboutSeam .timelinePanel`'s `position: relative` let the panel scroll away
+  1:1 with the card column. Measured under reduced motion at 1440×900:
+  scrollY 360 → 510 moves the rail 150px and the panel 150px; the timeline left
+  the window at the same moment as the first card. The old page section was
+  sticky in that state, and nothing in the reduced-motion rules had ever
+  unstuck it — the relative declaration came from §13.7, which only ever needed
+  it inside the pinned seam.
+- **Fixed by giving the panel its `sticky` back, but only where the dive cannot
+  run**: `@media (prefers-reduced-motion: reduce), (scripting: none)`. The phone
+  block is deliberately left alone — the panel is `display: none` there (540px
+  of unreadable arrangement in a 360px column), so there is nothing to stick,
+  and re-asserting `top` on a hidden box is noise. Verified after the change:
+  the phone panel is still `display: none`.
+- **Measured after the fix** (reduced motion, 1440×900): the panel parks at
+  `63 → 616` — exactly the base rule's `7vh` threshold — and holds while the
+  rail scrolls past it (scrollY 360 → 510: panel unmoved, rail `-50 → -200`),
+  then releases with the section when the deck's bottom arrives, which is the
+  sticky containing block doing its job. The desktop pinned read is
+  byte-identical to before: same probe, same numbers at every point.
+- **`sticky` is safe for the screws** — it is a positioned value, so they still
+  resolve against the panel. The §13.7 trap stands: this box must never be
+  `static`.

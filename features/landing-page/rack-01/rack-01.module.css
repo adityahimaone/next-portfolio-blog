@@ -12800,8 +12800,17 @@
 .aboutSeam .sectionHeading {
   margin-bottom: 0;
 }
+/* The heading keeps the size the section always had. It was shrunk to
+   `clamp(24px, 3vw, 46px)` while the panel was learning to fit the window, but
+   the read does not need it: the deck is the `flex: 1` sibling, so a taller
+   heading only shortens the deck, and the travel is measured from the deck's
+   height every refresh — it grows by exactly what the heading gained. The
+   heading itself is clipped by the seam's `clip-path`, so it still leaves
+   cleanly. What it cannot survive shrinking is the page's scale: 24px against a
+   76px-era section heading reads as a different section. */
 .aboutSeam .sectionHeading h2 {
-  font-size: clamp(24px, 3vw, 46px);
+  max-width: 860px;
+  font-size: clamp(36px, 5vw, 76px);
 }
 .aboutSeam .aboutDeck {
   flex: 1;
@@ -12814,9 +12823,16 @@
 }
 /* `relative`, not `sticky`. Sticky resolves against the nearest scrollport,
    which inside a pinned stage is the page itself — it would be inert during the
-   read and unpredictable after it. The panel does not travel; this says so. */
+   read and unpredictable after it. The panel does not travel; this says so.
+
+   `top: auto` is the load-bearing part. The base `.timelinePanel` rule sets
+   `top: clamp(24px, 7vh, 72px)`, which for a sticky box is a *threshold* — it
+   only bites once the box would scroll past it. For a `relative` box the same
+   declaration is a literal offset, so without this the panel is shoved 63px
+   down the deck at 900px tall, out of step with the card column beside it. */
 .aboutSeam .timelinePanel {
   position: relative;
+  top: auto;
   min-height: 0;
 }
 

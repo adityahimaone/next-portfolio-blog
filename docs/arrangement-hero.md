@@ -438,7 +438,7 @@ like the *interior* of the clip rather than the next section:
 The hold is split in two rather than spent in one, because **About's card column  
 does not fit the window it is revealed in.** Measured across six viewports, the  
 rail's overflow against the deck runs from **0px (1728×1117 and 1512×982) to  
-211px (1280×720)** — it is a function of the viewport, not a constant. So the  
+296px (1440×792)** — it is a function of the viewport, not a constant. So the  
 last stretch is *the read*: the heading and the card rail translate up by exactly  
 the measured overflow, ending flush with the bottom of the deck, while the  
 timeline panel beside them holds still. That is the page section's own animation  
@@ -746,12 +746,14 @@ are not imported by anything here — see §11.
 - [ ] 769–1180: the rail collapses; the camera still reads.
 - [ ] **The read reaches the last About card at every viewport.** The travel is the  
   rail's overflow against the deck: 0px at 1728×1117 and 1512×982 (nothing should  
-  translate), 103px at 1440×900, 136px at 1280×800, 205px at 1440×792, 211px at  
+  translate), 194px at 1440×900, 296px at 1440×792, 217px at 1280×800, 292px at  
   1280×720. The last card's bottom should land flush with the deck's.
 - [ ] **The timeline panel does not move during the read.** Its bounding rect  
-  should be identical at `seam-open` and at the end — measured 142.3 → 694.8 at  
+  should be identical at `seam-open` and at the end — measured 170 → 722.5 at  
   1440×900, unchanged at every progress point. Only the heading and the cards  
-  travel.
+  travel. Its top should also match the card column's top: both start at the same  
+  y. A gap between them means `.timelinePanel`'s `top` has been re-applied as a  
+  literal offset (§13.8).
 - [ ] **The chrome and the proof disappear once About owns the frame.** Untouched
   through the dive, gone by the time the window is fully open — painted over by
   the seam, and out of the tab order.
@@ -1033,12 +1035,12 @@ a timeline **zoom-in** rather than a scroll to a section below.
 
   | viewport  | rail  | deck  | `readOverflow` |
   | --------- | ----- | ----- | -------------- |
-  | 1728×1117 | 1003  | 1003  | **0**          |
+  | 1728×1117 | 907   | 907   | **0**          |
   | 1512×982  | 876   | 876   | **0**          |
-  | 1440×900  | 904   | 801   | **103**        |
-  | 1440×792  | 904   | 699   | **205**        |
-  | 1280×800  | 847   | 711   | **136**        |
-  | 1280×720  | 847   | 636   | **211**        |
+  | 1440×900  | 904   | 710   | **194**        |
+  | 1440×792  | 904   | 608   | **296**        |
+  | 1280×800  | 847   | 630   | **217**        |
+  | 1280×720  | 847   | 555   | **292**        |
 
   A constant cannot cover that range, so `readOverflow` is measured in
   `measure()` and the frame returns `readTravel = readT × readOverflow`. Verified
@@ -1161,8 +1163,54 @@ the timeline along with everything else.
   rect is `top: 142.3, bottom: 694.8` **at every progress point from 0 to 1** —
   it does not move a pixel. The heading goes 19.8 → -83.2 and the rail 79.3 →
   -23.7.
+- **Verified at 1440×900, p=1:** `--arr-read-travel` is exactly `-194px`, the
+  rail's bottom lands at 879.5 against the deck's 880.2, and `.timelinePanel`'s
+  rect is `top: 170, bottom: 722.5` **at every progress point from 0 to 1** — it
+  does not move a pixel, and it starts at the same y as the card column. The
+  heading goes 19.8 → -36.6 (fully clear of the window) and the rail 170 → -24.
+  (Those were 103px / 142.3 → 694.8 / 79.3 → -83.2 before §13.8 restored the
+  heading's size; the taller heading shortens the deck, and the measured travel
+  grew by exactly what the heading gained.)
 - **`#about` still lands on a fully open window**: progress 0.82, `data-seam`
   `open`, all four insets `0`, `readTravel ≈ 0` (the read starts there), panel not
   `inert`. Phone, reduced motion and scripting-off all keep the panel in flow with
-  `transform: none` and all three cards visible; the phone hero is 1874px, the
-  other two 1153px.
+  `transform: none` and all three cards visible.
+
+### 13.8 The heading gets its size back, and `top: auto`
+
+Requested: the About title should be the size it was as a section, not the
+reduced size it had while the panel was learning to fit the seam.
+
+- **`.aboutSeam .sectionHeading h2` is back to `clamp(36px, 5vw, 76px)`** with
+  `max-width: 860px`, the values `.aboutStage > .sectionHeading h2` always had.
+  It had been cut to `clamp(24px, 3vw, 46px)`. Measured after the restore: 72px
+  at 1440 and 1280, 76px at 1728 — the clamp's own maximum — over two lines.
+- **The read absorbs it for free.** The deck is the `flex: 1` sibling, so a
+  taller heading only shortens the deck, and the travel is measured from the
+  deck's height every refresh. At 1440×900 the heading grew 83px → 138px, so
+  the deck fell 801 → 710 and the travel rose 103px → 194px: exactly the 91px
+  the heading gained, no more. There is nothing to re-time.
+- **The heading still leaves cleanly.** It exits when `travel ≥ headingTop +
+  headingHeight`; at 1440×900 that is 194 ≥ 157.8, and at every viewport
+  measured the margin is wide enough, because the rail is tall enough to fund
+  the travel the heading costs. It is clipped by the seam's `clip-path`, so it
+  does not bleed over the arrangement.
+- **Changing `position: sticky` to `relative` silently applies `top`.** This is
+  the trap. The base `.timelinePanel` rule carries `top: clamp(24px, 7vh, 72px)`,
+  which for a sticky box is a *threshold* — it bites only once the box would
+  scroll past it, and inside the seam there is no scrollport to bite against, so
+  it never did. For a `relative` box the same declaration is a literal offset:
+  measured, the panel sat **63px below** the card column at 900px tall (7vh),
+  out of step with the cards beside it. It looks like a layout bug in the grid,
+  not like a positioning declaration, which is what makes it worth writing
+  down. `.aboutSeam .timelinePanel` now sets `top: auto` alongside
+  `position: relative`. **When you change a box's `position`, audit the
+  directional properties it inherited.**
+- **Measured travel after the restore**, six viewports (§13.5): 0 at 1728×1117
+  and 1512×982, 194 at 1440×900, 296 at 1440×792, 217 at 1280×800, 292 at
+  1280×720. The 1512×982 column is the one to watch: it is 0 before and after,
+  because the rail and the deck are the same height there.
+- Fallbacks unchanged: phone hero 1896px, reduced-motion and no-JS 1244px, all
+  three cards visible, `transform: none`, the timeline `display: none` on a
+  phone as it always was.
+

@@ -201,6 +201,25 @@ export function useArrangementHero({
           '--arr-clip-interior',
           String(frame.clipInterior),
         )
+        // The depth layer. Both are read by the lanes and by nothing else, so
+        // they go on the same host the camera's own numbers do — the smallest
+        // node that reads them. `--arr-depth` is a px translateZ, and
+        // `--arr-profile-focus` is unitless because the stylesheet uses it as a
+        // multiplier on a brightness lift rather than as a length.
+        host.style.setProperty('--arr-depth', `${frame.depth}px`)
+        host.style.setProperty(
+          '--arr-profile-focus',
+          frame.profileFocus.toFixed(3),
+        )
+        // The supporting lanes' contrast. Per tick, not per phase: this is the
+        // signal that carries the eye off the supporting tracks, so it has to
+        // follow the scroll rather than a boundary. The stylesheet gives it a
+        // 120ms linear transition, which is short enough to track a scrub and
+        // long enough to hide a dropped frame.
+        host.style.setProperty(
+          '--arr-lane-opacity',
+          frame.laneOpacity.toFixed(3),
+        )
 
         // The seam's own properties go on the **seam**, not on `.trackArea`.
         // The seam is a sibling of the track area — it has to be, or it could
@@ -373,6 +392,9 @@ export function useArrangementHero({
           '--arr-playhead',
           '--arr-rail',
           '--arr-clip-interior',
+          '--arr-depth',
+          '--arr-profile-focus',
+          '--arr-lane-opacity',
           '--arr-rail-w',
           '--arr-profile-centre',
         ].forEach((property) => host.style.removeProperty(property))
@@ -386,5 +408,18 @@ export function useArrangementHero({
       cancelled = true
       cleanup?.()
     }
-  }, [sectionRef, trackRef, cameraRef, seamRef])
+    // The two setters are declared rather than omitted. They are `useState`
+    // dispatchers from `rack-01.tsx`, passed down unwrapped, so React holds
+    // their identity for the life of the component and listing them cannot
+    // re-run this effect — which is the point: the alternative is an
+    // `exhaustive-deps` suppression that hides a genuinely missing dependency
+    // the day someone passes a callback instead.
+  }, [
+    sectionRef,
+    trackRef,
+    cameraRef,
+    seamRef,
+    setAboutProgress,
+    setAboutIndex,
+  ])
 }

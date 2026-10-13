@@ -4,6 +4,15 @@ import {
   ARRANGEMENT_SEAM_OPEN,
   arrangementFrame,
   arrangementPhase,
+  cameraScale,
+  IMMERSIVE_DEPTH_DIVE,
+  IMMERSIVE_DEPTH_LOCK,
+  IMMERSIVE_LANE_DIVE_OPACITY,
+  IMMERSIVE_LANE_SCAN_OPACITY,
+  IMMERSIVE_OVERSHOOT,
+  IMMERSIVE_OVERSHOOT_FROM,
+  IMMERSIVE_OVERSHOOT_TO,
+  IMMERSIVE_PHASES,
   OPEN_OVERSHOOT,
   OPEN_SCALE,
   type ArrangementGeometry,
@@ -277,6 +286,166 @@ describe('arrangementFrame', () => {
   it('clamps out-of-range progress instead of extrapolating', () => {
     expect(arrangementFrame(-1, GEO)).toEqual(arrangementFrame(0, GEO))
     expect(arrangementFrame(2, GEO)).toEqual(arrangementFrame(1, GEO))
+  })
+})
+
+/**
+ * The immersive layer: the overshoot the camera is allowed and the two depth
+ * signals the stylesheet reads.
+ *
+ * The point of these is the *bound*, not the curve. A camera that overshoots is
+ * a camera that can end up parked somewhere other than the measured fit, and
+ * the fit is the one number the whole seam is built on — the profile clip's
+ * edges land on the frame's edges at exactly `worldWidth / profileWidth`. So
+ * the assertions that matter are that the overshoot is bounded at 2.5%, that it
+ * is spent after the seam has opened, and that it returns to the fit rather
+ * than to fit-minus-something.
+ */
+describe('cameraScale', () => {
+  const FIT = GEO.worldWidth / (GEO.profileEnd - GEO.profileStart)
+
+  it('is the overview, the fit, and nothing else at either end', () => {
+    expect(cameraScale(0, FIT)).toBeCloseTo(1, 9)
+    expect(cameraScale(0.5, FIT)).toBe(1)
+    expect(cameraScale(ARRANGEMENT_PHASES.rail, FIT)).toBeCloseTo(FIT, 9)
+    expect(cameraScale(1, FIT)).toBeCloseTo(FIT, 9)
+  })
+
+  it('never exceeds the fit by more than the declared 2.5%', () => {
+    let peak = 0
+    for (let p = 0; p <= 1.0001; p += 0.002) {
+      const scale = cameraScale(p, FIT)
+      expect(scale).toBeLessThanOrEqual(FIT * (1 + IMMERSIVE_OVERSHOOT) + 1e-9)
+      expect(scale).toBeGreaterThanOrEqual(1)
+      peak = Math.max(peak, scale)
+    }
+    // It has to actually be seen, or the bump is a rounding error rather than
+    // the camera weight the direction asks for.
+    expect(peak).toBeGreaterThan(FIT * 1.02)
+  })
+
+  it('spends the overshoot after the seam has opened, and settles back onto the fit', () => {
+    expect(IMMERSIVE_OVERSHOOT_FROM).toBeGreaterThanOrEqual(
+      ARRANGEMENT_SEAM_OPEN,
+    )
+    expect(IMMERSIVE_OVERSHOOT_TO).toBeLessThan(1)
+    // Zero at both ends of the bump, so there is no residual offset to inherit.
+    expect(cameraScale(IMMERSIVE_OVERSHOOT_FROM, FIT)).toBeCloseTo(FIT, 9)
+    expect(cameraScale(IMMERSIVE_OVERSHOOT_TO, FIT)).toBeCloseTo(FIT, 9)
+  })
+
+  it('leaves the frame untouched while the camera is still travelling', () => {
+    for (let p = 0; p < ARRANGEMENT_PHASES.zoom; p += 0.01) {
+      expect(cameraScale(p, FIT)).toBe(1)
+    }
+  })
+
+  it('is a pure function of progress', () => {
+    expect(cameraScale(0.87, FIT)).toBe(cameraScale(0.87, FIT))
+    expect(cameraScale(-1, FIT)).toBe(cameraScale(0, FIT))
+    expect(cameraScale(2, FIT)).toBe(cameraScale(1, FIT))
+  })
+})
+
+describe('the depth layer', () => {
+  it('starts flat, so the CSS fallbacks are the settled overview', () => {
+    const frame = arrangementFrame(0, GEO)
+    expect(frame.depth).toBe(0)
+    expect(frame.profileFocus).toBe(0)
+  })
+
+  it('locks the profile clip in at the lock phase and keeps it there', () => {
+    const locked = arrangementFrame(IMMERSIVE_PHASES.lock, GEO)
+    expect(locked.depth).toBeCloseTo(IMMERSIVE_DEPTH_LOCK, 6)
+    expect(locked.profileFocus).toBe(1)
+    expect(arrangementFrame(IMMERSIVE_PHASES.dive, GEO).depth).toBeCloseTo(
+      IMMERSIVE_DEPTH_LOCK + IMMERSIVE_DEPTH_DIVE,
+      6,
+    )
+    expect(arrangementFrame(1, GEO).depth).toBeCloseTo(
+      IMMERSIVE_DEPTH_LOCK + IMMERSIVE_DEPTH_DIVE,
+      6,
+    )
+  })
+
+  it('only ever pushes back or holds, never pulls the frame apart', () => {
+    let previousDepth = -1
+    let previousFocus = -1
+    for (let p = 0; p <= 1.0001; p += 0.01) {
+      const { depth, profileFocus } = arrangementFrame(p, GEO)
+      expect(depth).toBeGreaterThanOrEqual(previousDepth)
+      expect(profileFocus).toBeGreaterThanOrEqual(previousFocus)
+      // A 0 → 1 signal. Anything past 1 would make the stylesheet's brightness
+      // lift unbounded, which is how a lane ends up blowing out to white.
+      expect(profileFocus).toBeGreaterThanOrEqual(0)
+      expect(profileFocus).toBeLessThanOrEqual(1)
+      previousDepth = depth
+      previousFocus = profileFocus
+    }
+    expect(previousDepth).toBe(IMMERSIVE_DEPTH_LOCK + IMMERSIVE_DEPTH_DIVE)
+    expect(previousFocus).toBe(1)
+  })
+
+  it('leaves the camera itself alone: depth is a different axis from zoom', () => {
+    const frame = arrangementFrame(1, GEO)
+    // The fit, unchanged by the depth layer having pushed the lanes apart.
+    expect(frame.scale).toBeCloseTo(
+      GEO.worldWidth / (GEO.profileEnd - GEO.profileStart),
+      6,
+    )
+    expect(frame.depth).toBeGreaterThan(0)
+  })
+})
+
+/**
+ * The supporting lanes' contrast.
+ *
+ * This is the one depth signal that is continuous rather than stepped, and the
+ * reason it exists at all is that the reader's attention has to be carried off
+ * the supporting tracks rather than switched off them. The failure mode a
+ * boundary produces is specific and visible: every lane holds at full strength
+ * for a third of the window and then snaps to a tenth, which reads as a glitch
+ * rather than as a camera move.
+ */
+describe('the supporting lanes', () => {
+  it('start at full contrast, because the overview shows the whole session', () => {
+    expect(arrangementFrame(0, GEO).laneOpacity).toBe(1)
+    expect(arrangementFrame(IMMERSIVE_PHASES.scan, GEO).laneOpacity).toBe(1)
+  })
+
+  it('land on the contract’s two stops: .72 at the lock, .16 at the dive', () => {
+    expect(
+      arrangementFrame(IMMERSIVE_PHASES.lock, GEO).laneOpacity,
+    ).toBeCloseTo(IMMERSIVE_LANE_SCAN_OPACITY, 6)
+    expect(
+      arrangementFrame(IMMERSIVE_PHASES.dive, GEO).laneOpacity,
+    ).toBeCloseTo(IMMERSIVE_LANE_DIVE_OPACITY, 6)
+    expect(arrangementFrame(1, GEO).laneOpacity).toBeCloseTo(
+      IMMERSIVE_LANE_DIVE_OPACITY,
+      6,
+    )
+  })
+
+  it('only ever recedes, and never past the floor or above the ceiling', () => {
+    let previous = 2
+    for (let p = 0; p <= 1.0001; p += 0.01) {
+      const { laneOpacity } = arrangementFrame(p, GEO)
+      expect(laneOpacity).toBeLessThanOrEqual(previous + 1e-9)
+      expect(laneOpacity).toBeGreaterThanOrEqual(
+        IMMERSIVE_LANE_DIVE_OPACITY - 1e-9,
+      )
+      expect(laneOpacity).toBeLessThanOrEqual(1)
+      previous = laneOpacity
+    }
+  })
+
+  it('is still legible at the floor, because the lanes are the instrument', () => {
+    // A floor of zero would leave an empty grid behind the panel during the
+    // read. `.16` is a recession, not a removal.
+    expect(IMMERSIVE_LANE_DIVE_OPACITY).toBeGreaterThan(0)
+    expect(IMMERSIVE_LANE_DIVE_OPACITY).toBeLessThan(
+      IMMERSIVE_LANE_SCAN_OPACITY,
+    )
   })
 })
 

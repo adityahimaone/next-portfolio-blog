@@ -12797,7 +12797,7 @@
    The timeline is excluded by omission, and pinned by the rule below so it is
    excluded on purpose rather than by luck. */
 .aboutSeam .sectionHeading,
-.aboutSeam .aboutCardStack {
+.aboutSeam .aboutRail {
   transform: translateY(var(--arr-read-travel, 0px));
   will-change: transform;
 }
@@ -12837,7 +12837,12 @@
 .aboutSeam .aboutDeck {
   flex: 1;
   min-height: 0;
-  align-items: stretch;
+  /* `start`, not `stretch`. The read is measured as the rail's height minus the
+     deck's, so the rail has to be free to be *taller* than the window it is
+     revealed in — that difference is the whole travel. Stretched, the two are
+     the same box by definition and the read would measure zero at every
+     viewport, including the ones where the last channel is clipped. */
+  align-items: start;
   gap: clamp(16px, 2vw, 40px);
   padding-bottom: calc(var(--arr-dock-band) + max(0px, 620px - 100svh));
 }
@@ -12959,7 +12964,7 @@
      an identity translate — but `will-change` is not. Left on, it promotes two
      full-width layers on a phone for an animation that does not exist. */
   .aboutSeam .sectionHeading,
-  .aboutSeam .aboutCardStack {
+  .aboutSeam .aboutRail {
     transform: none;
     will-change: auto;
   }
@@ -13037,5 +13042,291 @@
   .aboutSeam .timelinePanel .clipDetail {
     min-height: 0;
     padding-block: 8px;
+  }
+}
+
+/* ─── About: the channel rail ─────────────────────────────────────────────
+   The About panel is one flat timeline rail: three channel headers on a single
+   column, one of them open. It replaced a deck of three equal cards beside a
+   timeline instrument, and the reason is the page's own language — a rail with
+   one open channel is what the arrangement above has been saying all along,
+   and three cards side by side said the opposite.
+
+   It merges into the rack tokens rather than starting a palette of its own. The
+   ground is `--chassis-hi` (the seam's own surface, cream by day and graphite
+   at night), the ink is `--panel-ink*` so it flips with it, the hairlines are
+   `--panel-hairline`, and the only accent is the signal orange. Two tones of
+   it, because the raw orange clears 3:1 against graphite and does not clear it
+   against cream — `--about-accent-ink` is the pair that does, and it is the
+   same pair the section heading's syscode already uses. */
+
+.aboutDeck {
+  /* One rail and the signal column beside it. The old two-column split —
+     cards against the timeline instrument — is gone with the instrument, and
+     the rail is deliberately given the whole width: a rail that only spans
+     two-thirds of the page reads as a card again. Declared after the older
+     `.aboutDeck` rules above, which is what retires them without deleting
+     them; the seam block's own overrides are unaffected because they set
+     different properties. */
+  grid-template-columns: minmax(0, 1fr) 56px;
+}
+
+.aboutRail {
+  /* Signal orange, tuned per theme so every use of it here clears AA as text
+     and 3:1 as a focus indicator. */
+  --about-accent-ink: #b8400f;
+
+  display: grid;
+  align-content: start;
+  border-top: 1px solid var(--panel-hairline);
+}
+:global(.dark) .aboutRail {
+  --about-accent-ink: #ff7a45;
+}
+
+.aboutTrack {
+  border-bottom: 1px solid var(--panel-hairline);
+}
+
+/* The channel header. A grid rather than a flex row so the index, the title and
+   the note line up down the whole rail no matter how long any one of them is —
+   that alignment is what makes three separate rows read as one timeline. */
+.aboutTrackButton {
+  display: grid;
+  grid-template-columns: 42px minmax(140px, 0.5fr) minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  gap: 16px;
+  padding: 12px 0;
+  border: 0;
+  background: transparent;
+  color: var(--panel-ink-muted);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.aboutTrackButton:hover,
+.aboutTrackActive .aboutTrackButton {
+  color: var(--panel-ink);
+}
+.aboutTrackButton:focus-visible {
+  outline: 3px solid var(--about-accent-ink);
+  outline-offset: 3px;
+}
+.aboutTrackIndex {
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.aboutTrackActive .aboutTrackIndex,
+.aboutTrackButton:hover .aboutTrackIndex {
+  color: var(--about-accent-ink);
+}
+.aboutTrackTitle {
+  min-width: 0;
+  overflow: hidden;
+  font: inherit;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aboutTrackNote {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--panel-ink-muted);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── The open channel ────────────────────────────────────────────────────
+   Only the active body is drawn, and only where something is driving the
+   selection. See the media query at the foot of this block: with reduced motion
+   or with scripting off, every channel stays open and the rail is simply a
+   list. Nothing required is behind a control, and nothing is behind a script. */
+
+.aboutTrackBody {
+  max-width: 720px;
+  padding: 4px 0 34px 58px;
+}
+.aboutTrackBody h3 {
+  margin: 0 0 14px;
+  color: var(--panel-ink);
+  font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+  font-size: clamp(1.8rem, 4vw, 3.6rem);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+.aboutTrackBody p {
+  max-width: 60ch;
+  margin: 0 0 16px;
+  color: var(--panel-ink-muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.aboutTrackCredits {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+.aboutTrackCredits li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+}
+.aboutTrackCredits b {
+  color: var(--panel-ink);
+  font: 700 11px var(--font-geist-mono), monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.aboutTrackCredits span {
+  color: var(--panel-ink-muted);
+  font-size: 12px;
+}
+
+/* The availability line. It sits on the last channel, because that is where a
+   reader has finished reading and is deciding what to do next, and it is
+   marked with the accent rather than repeated on all three. */
+.aboutTrackAside {
+  max-width: 52ch;
+  margin: 0 0 14px;
+  padding-left: 14px;
+  border-left: 2px solid var(--about-accent-ink);
+  color: var(--panel-ink);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* The résumé is a sibling of the channel button, never a child of it. A
+   focusable descendant of a button is announced as part of the button and is
+   not reachable by keyboard, which is how this link was unusable before. */
+.aboutTrackResume {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0 2px;
+  border-bottom: 1px solid currentColor;
+  color: var(--about-accent-ink);
+  font: 700 10px var(--font-geist-mono), monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.aboutTrackResume:hover {
+  color: var(--panel-ink);
+}
+.aboutTrackResume:focus-visible {
+  outline: 3px solid var(--about-accent-ink);
+  outline-offset: 3px;
+}
+
+/* ─── The signal column ───────────────────────────────────────────────────
+   The rail's playhead, as a hairline with a head on it. It reports the read
+   rather than responding to it: `--about-progress` is the reader's position
+   through the channels, written by the arrangement hook, and the head travels
+   20px across it. It is `aria-hidden` because the same position is already
+   conveyed by which channel is open — a second announcement of it would be
+   noise. */
+
+.aboutSignal {
+  position: relative;
+  display: flex;
+  /* Stretched, so the line spans the rail beside it rather than the 18px of the
+     head that is its only content. The deck's own `align-items: start` is what
+     keeps the rail content-height; this is the one item that overrides it. */
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+}
+.aboutSignalLine {
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 1px;
+  background: var(--panel-hairline);
+}
+.aboutSignalHead {
+  position: sticky;
+  top: 50%;
+  display: block;
+  width: 18px;
+  height: 18px;
+  /* The 3px chassis ring is what separates the head from the line it sits on,
+     so it has to be the seam's own surface and not a fixed colour. */
+  border: 3px solid var(--chassis-hi);
+  border-radius: 50%;
+  background: var(--signal-orange);
+  box-shadow: 0 0 0 1px var(--signal-orange);
+  transform: translateY(calc(var(--about-progress, 0) * 20px));
+}
+
+/* ─── One channel at a time ───────────────────────────────────────────────
+   The collapse is a CSS decision, not a React one, and it is gated on exactly
+   the conditions that make the About an instrument rather than a list: the
+   reader has not asked for reduced motion, scripting is on, and there is a
+   camera to drive the rail in the first place.
+
+   The third condition is the breakpoint, and it is not decoration. Below 769px
+   `arrangement.module.css` drops `.stage` to `position: static` and takes the
+   camera away, so nothing scrolls the selection: the rail would sit on channel
+   01 with the other two behind a tap and no affordance saying so. The gate has
+   to name the same edge the pinning does, or "collapses precisely when
+   something is driving it" stops being true. Measured: at 390px and 768px the
+   stage is `static`, `perspective: none`, and the hero is one screen tall; at
+   1280px it is `sticky` with a 3680px dive.
+
+   Everywhere else — reduced motion, scripting off, any browser that does not
+   understand `scripting`, and every viewport at or below 768px — the query
+   fails and all three channels stay open. That is the frame the contract asks
+   for: About content in normal flow, no hidden required content, functional
+   navigation.
+
+   Gating on CSS rather than on a state flag is also what keeps the server and
+   the client rendering the same rail. The open channel is in the markup; the
+   collapse is a stylesheet rule, so there is no first frame in which all three
+   are open and then snap shut. */
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) and (min-width: 769px) {
+  .aboutTrack:not(.aboutTrackActive) .aboutTrackBody {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* The signal column is gone, so the grid that held it goes too. Left on, it
+     would reserve 56px plus the gap for a column that renders nothing. */
+  .aboutDeck {
+    display: block;
+  }
+  /* The rail stacks: the index and the title on one line, the note on the next,
+     because three columns at 390px would leave the note about forty pixels. */
+  .aboutTrackButton {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 6px 12px;
+    min-height: 52px;
+    font-size: 10px;
+  }
+  .aboutTrackNote {
+    grid-column: 2;
+    font-size: 9px;
+  }
+  .aboutTrackBody {
+    padding: 4px 0 28px 44px;
+  }
+  .aboutTrackBody h3 {
+    font-size: clamp(1.6rem, 7vw, 2.2rem);
+  }
+  .aboutSignal {
+    display: none;
   }
 }

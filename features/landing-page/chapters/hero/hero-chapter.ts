@@ -37,7 +37,9 @@ export function heroChapter(ctx: ChapterContext): void {
   // the direction the eye is already travelling. Passed as the target
   // rather than as a stagger option: the rack is a hand-authored
   // layout, so the DOM order is a zig-zag and needs re-sorting first.
-  const heroSweepOrder = heroSweepIndices(modules).map((index) => modules[index])
+  const heroSweepOrder = heroSweepIndices(modules).map(
+    (index) => modules[index],
+  )
 
   const name = hero.querySelector<HTMLElement>('[data-anim="hero-name"]')!
   const panel = hero.querySelector<HTMLElement>('[data-anim="hero-panel"]')!
@@ -108,94 +110,112 @@ export function heroChapter(ctx: ChapterContext): void {
     defaults: { ease: 'none', overwrite: 'auto' },
   })
 
+  /**
+   * The walk-out collapse, retimed to the immersive phase table.
+   *
+   * The positions below are the ones the Hero → About contract names, and they
+   * are deliberately the same dials `IMMERSIVE_PHASES` in `arrangement-camera.ts`
+   * reads: `scan` is where the supporting lanes start to recede, `lock` is where
+   * the profile clip becomes the focal point, `dive` is where the clip opens,
+   * `reveal` is where About is whole.
+   *
+   * What this chapter is NOT is a second camera. The arrangement hero has its
+   * own single ScrollTrigger in `use-arrangement-hero.ts`, and that hook is the
+   * only thing that writes the zoom, the camera offset and the seam. This
+   * timeline moves the legacy hero's own furniture — the wall, the name, the
+   * panel, the rail, the handoff — and nothing that the camera owns. Adding a
+   * second trigger to the same element is exactly what the contract forbids.
+   *
+   * Note the shape of the second half: the supporting modules fade to `.16`
+   * and stay there, the anchors lift by 8% brightness, and the rail and the
+   * handoff come up. There is no zoom-out and no pull-back anywhere in it,
+   * because a zoom-out here would break the spatial continuity the dive spent
+   * the first half of the window establishing.
+   */
   collapse
+    .to(
+      supportingModules,
+      {
+        opacity: 0.16,
+        scale: 0.98,
+        duration: 0.22,
+        stagger: 0.01,
+      },
+      0.24,
+    )
+    .to(
+      anchors,
+      {
+        opacity: 1,
+        filter: 'brightness(1.08) saturate(1)',
+        duration: 0.2,
+      },
+      0.34,
+    )
     .to(
       panel,
       {
-        xPercent: -18,
+        xPercent: -12,
         opacity: 0,
-        filter: 'blur(5px)',
+        filter: 'blur(4px)',
         duration: 0.18,
       },
-      0.04,
+      0.42,
+    )
+    .to(
+      name,
+      {
+        scale: 1.26,
+        letterSpacing: '-0.05em',
+        duration: 0.42,
+      },
+      0.42,
     )
     .to(
       heroRail,
       {
         y: () => -Math.min(176, window.innerHeight * 0.2),
-        color: 'rgba(16, 18, 17, 0.68)',
-        opacity: 1,
-        duration: 0.36,
+        opacity: 0.42,
+        duration: 0.28,
       },
-      0.7,
+      0.66,
     )
+    // `fromTo`, not `to`. The contract writes this step as a `.to()` onto
+    // `{ yPercent: 0, opacity: 1 }`, which is the state the handoff is already
+    // in — the step would have compiled, run, and moved nothing. The starting
+    // frame is what carries the meaning: the handoff is parked below the fold
+    // and rises into place as the profile clip opens.
+    .fromTo(
+      handoff,
+      { yPercent: 100, opacity: 0 },
+      {
+        yPercent: 0,
+        opacity: 1,
+        duration: 0.24,
+      },
+      0.72,
+    )
+    .to(
+      atmosphere,
+      {
+        opacity: 0.1,
+        duration: 0.2,
+      },
+      0.8,
+    )
+    // The chapter's own two remaining steps. They belong to elements the
+    // contract does not name — the rail's link and the transport routes — and
+    // they are kept rather than dropped, because a route that has been faded
+    // out has to come back in and a link sitting on a rail that just moved has
+    // to keep its own contrast. Both sit inside the same phase window.
+    .to(routes, { opacity: 1, y: 0, duration: 0.18 }, 0.34)
+    .to(routes, { opacity: 0, y: -5, duration: 0.16 }, 0.66)
     .to(
       heroRailLink,
       {
         color: 'rgba(16, 18, 17, 0.9)',
         duration: 0.36,
       },
-      0.7,
+      0.66,
     )
-    .to(
-      modules,
-      {
-        xPercent: (_, element) =>
-          Number((element as HTMLElement).dataset.collapseX ?? 0),
-        yPercent: (_, element) =>
-          Number((element as HTMLElement).dataset.collapseY ?? 0),
-        rotation: (_, element) =>
-          Number((element as HTMLElement).dataset.collapseRotation ?? 0),
-        scale: (_, element) =>
-          (element as HTMLElement).dataset.rackAnchor === 'true'
-            ? 0.96
-            : 0.88,
-        duration: 0.52,
-        stagger: 0.008,
-      },
-      0.1,
-    )
-    .to(supportingModules, { opacity: 0.16, duration: 0.28 }, 0.24)
-    .to(
-      anchors,
-      {
-        opacity: 1,
-        filter: 'brightness(1.08) saturate(1)',
-        duration: 0.22,
-      },
-      0.28,
-    )
-    .to(routes, { opacity: 1, y: 0, duration: 0.18 }, 0.32)
-    .to(
-      name,
-      {
-        scale: 1.34,
-        letterSpacing: '-0.055em',
-        filter: 'blur(0px)',
-        duration: 0.5,
-      },
-      0.14,
-    )
-    .to(atmosphere, { opacity: 0.36, duration: 0.28 }, 0.3)
-    .to(routes, { opacity: 0, y: -5, duration: 0.16 }, 0.66)
-    .to(supportingModules, { opacity: 0.04, duration: 0.24 }, 0.7)
-    .to(anchors, { opacity: 0.18, scale: 1.02, duration: 0.24 }, 0.7)
-    .to(
-      name,
-      {
-        yPercent: -10,
-        opacity: 0.32,
-        scale: 1.46,
-        filter: 'blur(3px)',
-        duration: 0.25,
-      },
-      0.72,
-    )
-    .fromTo(
-      handoff,
-      { yPercent: 100, opacity: 0 },
-      { yPercent: 0, opacity: 1, duration: 0.26 },
-      0.72,
-    )
-    .to(atmosphere, { opacity: 0.1, duration: 0.2 }, 0.78)
 }

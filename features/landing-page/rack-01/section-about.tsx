@@ -1,29 +1,63 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { SilkscreenLabel, VenLogo } from './primitives'
+import type { CSSProperties } from 'react'
+
 import styles from './rack-01.module.css'
 import { SectionHeading } from './section-heading'
-import { Pause, Play, Square } from 'lucide-react'
 import { RESUME_URL } from './shared'
-import { Screw } from '@/components/ui/screw'
 
-const ABOUT_TRACKS = [
+/**
+ * About, as the PROFILE clip's interior.
+ *
+ * The three channels are the three things this practice is actually made of,
+ * and they are laid out as one timeline rail rather than as three equal cards.
+ * That is the whole redesign: three cards side by side are a brochure, and a
+ * rail with one open channel is the instrument the rest of the page has been
+ * pretending to be. The reader scans the arrangement, locks onto a channel, and
+ * reads it — the same move the camera makes one level up.
+ *
+ * Three rules the markup below is holding to:
+ *
+ * 1. **The text is real and it is in the DOM.** Every channel's heading, story
+ *    and credits are rendered on the server, always. Collapsing the inactive
+ *    ones is a CSS decision gated on the same conditions that pin the seam, so
+ *    a phone, a reduced-motion visitor and a reader with scripting off all get
+ *    the full rail with every channel open — nothing required is behind an
+ *    animation, and nothing is behind a script.
+ * 2. **The buttons are the keyboard path.** Each channel header is a real
+ *    `<button>` with `aria-pressed`, so the rail is operable without a pointer
+ *    and without hovering anything. The résumé link is outside the button,
+ *    because a focusable descendant of a button is not reachable.
+ * 3. **Scroll and click write the same state.** `selected` is what the rail
+ *    reads and what a click writes; the arrangement hook writes it from the
+ *    read's own progress. One value, two authors, no third copy.
+ *
+ * Every fact here was already on the page. The titles are the channels the work
+ * actually runs in, and the stories, credits and the availability line are the
+ * ones the About section carried before — this is a rewrite of the shape, not
+ * of the record.
+ */
+
+export type AboutCredit = {
+  name: string
+  note: string
+}
+
+export type AboutTrack = {
+  title: string
+  heading: string
+  note: string
+  story: string
+  credits?: readonly AboutCredit[]
+  aside?: string
+  resumeLink?: string
+}
+
+export const ABOUT_TRACKS: readonly AboutTrack[] = [
   {
-    title: 'FOCUS',
-    note: 'REACT / NEXT.JS / TYPESCRIPT',
-    metric: '04+',
-    metricLabel: 'YEARS IN FRONTEND',
+    title: 'INTERACTION',
     heading: 'Start with the user.',
-    signal: 'PRIMARY PRACTICE',
-    surface: '#d7b36f',
-    ink: '#2c251b',
-    accent: '#8a432d',
-    detail: 'Understand the interaction before shaping the interface.',
-    // The card's whole prose, one block. It used to be two: a `body` sentence
-    // and a `story` paragraph that opened by restating it. RANGE was the worst
-    // case — the body appeared word for word at the start of the story. The body
-    // is gone and its one good sentence now opens the story instead.
+    note: 'REACT / NEXT.JS / TYPESCRIPT',
     story:
       'I begin with the interaction, not the component, because the component is the cheap part to get right. Four years of production frontends, most of them React and Next.js on systems where the interface is load-bearing rather than decorative.',
     credits: [
@@ -33,73 +67,23 @@ const ABOUT_TRACKS = [
   },
   {
     title: 'SYSTEMS',
-    note: 'FEATURES / DATA / DELIVERY',
-    metric: 'SSR',
-    metricLabel: 'RENDERING',
     heading: 'Build the system.',
-    signal: 'FRONTEND ARCHITECTURE',
-    surface: '#8199ad',
-    ink: '#17252d',
-    accent: '#315d72',
-    detail: 'Create a frontend system that can carry the next feature.',
+    note: 'FEATURES / DATA / DELIVERY',
     story:
-      'I use React, Next.js, and TypeScript to create reusable structures that keep new features consistent. The structure underneath the first screen decides whether the next six months are cheap or expensive: typed data at the boundary, rendering chosen per route rather than by default.',
+      'I use React, Next.js, and TypeScript to create reusable structures that keep new features consistent. Typed data at the boundary and rendering chosen per route make the next six months cheaper to change.',
     credits: [
       { name: 'Primarindo Asia', note: 'Manufacturing · Jakarta' },
       { name: 'Niqcode', note: 'Product studio · Partner' },
     ],
   },
   {
-    title: 'RANGE',
-    note: 'BACKEND / AUTOMATION / INFRA',
-    metric: 'EDGE',
-    metricLabel: 'DEPLOY TARGET',
+    title: 'PRODUCTION',
     heading: 'Stay close to production.',
-    signal: 'ADDITIONAL EXPERIENCE',
-    surface: '#b68ba5',
-    ink: '#30212a',
-    accent: '#70415d',
-    detail: 'Keep the product visible and dependable after it ships.',
-    // Trimmed to fit the card. At the previous wording this story measured 87px
-    // of text against an 83px row, so the last line was being cut off behind the
-    // foot's internal scroll. Four characters shorter per line is the whole
-    // difference; the meaning is unchanged.
-    //
-    // The sentence about the VPS behind Nginx went stale: `.github/workflows/
-    // deploy.yml` now builds with `opennextjs-cloudflare` and deploys through
-    // `cloudflare/wrangler-action`, and its own comment says the SSH-to-PM2 path
-    // "no longer exists". `ecosystem.config.js` is checked in as
-    // `.vps-retired`. A card whose whole argument is "I stay close to
-    // production" cannot be the one place the stack is out of date, so this
-    // states the deployment that is actually running.
+    note: 'BACKEND / AUTOMATION / INFRA',
     story:
       'I work across application data, deployment and monitoring when the frontend needs more than a polished screen. This site runs on Cloudflare Workers via OpenNext with an R2 cache, which is why the writing here is about what broke.',
-    // No credits row on this card, and that is deliberate.
-    //
-    // It carries the availability line and the résumé as well, which makes its
-    // foot 89px against 46px on the other two. Because the rail is uniform and
-    // the story row is `1fr`, that extra 43px came straight out of the story:
-    // RANGE got a 29px slot for 87px of copy and the last two lines printed
-    // through the credits. Measured, not eyeballed.
-    //
-    // Unzyp Solusi and Campus Connect are not lost — they appear in the
-    // experience cassettes above and in the Work section's credits, which is
-    // where a reader looks for an employer rather than a track label.
-    //
-    // The availability line: on exactly one card. Repeating it on all three is
-    // the redundancy this move was meant to remove, and it sits on the last
-    // track because that is where a reader has finished reading and is deciding
-    // what to do next.
-    //
-    // The résumé is separate from the prose because it is a link, and a link
-    // cannot live inside the card's button — that made it unreachable by
-    // keyboard and screen reader. It renders beside the card instead.
-    aside: (
-      <>
-        Based in Jakarta. Available for frontend, design engineering and hard
-        interface work.
-      </>
-    ),
+    aside:
+      'Based in Jakarta. Available for frontend, design engineering and hard interface work.',
     resumeLink: RESUME_URL,
   },
 ]
@@ -115,159 +99,81 @@ export function About({
    * 0 → 1 across the read. On `main` this was the About *section's* own scroll
    * progress, from a ScrollTrigger spanning `top bottom` → `bottom top`; here the
    * same range is the seam's window, which is the only scroll this section gets.
-   * Either way it is the reader's position through the three cards, and the
-   * playhead is what reports it.
+   * Either way it is the reader's position through the three channels, and the
+   * signal head is what reports it.
    */
   scrollProgress: number
 }) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  // Where the transport stands, and it is state only while it runs.
-  //
-  // On `main` this was one value written from an effect: while the transport was
-  // stopped, the effect copied `0.05 + scrollProgress × 0.9` into it on every
-  // scroll. That is right and it is also a cascading render per scroll tick, so
-  // the two halves are split here — while the transport is stopped the playhead
-  // is *derived during render*, because it is a pure function of the scroll and
-  // React can simply compute it; while it runs, it is the rAF loop's and nothing
-  // else's, and `null` is how that is said.
-  const [playedHead, setPlayedHead] = useState<number | null>(null)
-  const playhead = playedHead ?? 0.05 + scrollProgress * 0.9
-
-  const [mutedTracks, setMutedTracks] = useState<Set<number>>(new Set())
-  const [soloedTrack, setSoloedTrack] = useState<number | null>(null)
-
-  // Event handlers, not effects: the transport is a thing a reader does, so both
-  // transitions start there. Playing takes over from wherever the scroll left
-  // the playhead; stopping hands it straight back to the scroll.
-  const startPlayback = () => {
-    setPlayedHead(playhead)
-    setIsPlaying(true)
-  }
-  const stopPlayback = () => {
-    setIsPlaying(false)
-    setPlayedHead(null)
-  }
-
-  useEffect(() => {
-    if (!isPlaying) return
-    let frame = 0
-    let previous = performance.now()
-    const advance = (now: number) => {
-      const delta = now - previous
-      previous = now
-      setPlayedHead((position) => ((position ?? 0) + delta / 16000) % 1)
-      frame = requestAnimationFrame(advance)
-    }
-    frame = requestAnimationFrame(advance)
-    return () => cancelAnimationFrame(frame)
-  }, [isPlaying])
-
-  const toggleMuted = (index: number) => {
-    setMutedTracks((current) => {
-      const next = new Set(current)
-      if (next.has(index)) next.delete(index)
-      else next.add(index)
-      return next
-    })
-  }
+  // Clamped rather than trusted: the hook derives this from the read's own
+  // progress and a retime could momentarily hand over an out-of-range index.
+  // An unclamped one would leave every channel inactive for a frame, which
+  // reads as the rail losing its selection.
+  const active = Math.min(Math.max(0, selected), ABOUT_TRACKS.length - 1)
 
   return (
     <div
       className={`${styles.about} ${styles.aboutSeam}`}
+      data-anim="about-section"
       data-no-heading-reveal
     >
       <div className={styles.aboutStage}>
         <SectionHeading index="02" eyebrow="Profile">
           Make the complicated part feel obvious.
         </SectionHeading>
-        {/* `data-about-read` marks the window the read travels inside. The hook
-            measures the rail against it to work out how far the column has to
-            move, so this element — not the panel — is what "fits" has to mean. */}
+
+        {/* `data-about-read` marks the window the read travels inside, and
+            `data-about-rail` the content that moves. The hook measures the rail
+            against the deck to work out how far the column has to move and
+            counts the rail's children to know how many channels the read has to
+            walk through — so the rail must keep exactly one element per
+            channel, and neither attribute is decorative. */}
         <div className={styles.aboutDeck} data-about-read>
-          <div className={styles.aboutCardStack}>
-            {/* `data-about-rail` is the content that moves during the read. The
-                timeline panel beside it is deliberately NOT part of this: it
-                holds still, the way it did when this was a page section with a
-                sticky panel and a scrolling column of cards. */}
-            <div
-              className={styles.aboutCardRail}
-              data-about-rail
-              aria-live="polite"
-            >
-              {ABOUT_TRACKS.map((track, index) => (
-                /* The card is a button with the résumé link as its only real
-                   action, so the link used to be rendered INSIDE it. A focusable
-                   descendant of a button is not reachable — screen readers
-                   announce the button as one control and the link is skipped
-                   entirely, and axe flags it as nested-interactive. So the link
-                   is lifted out here, beside the card rather than inside it.
+          <div className={styles.aboutRail} data-about-rail>
+            {ABOUT_TRACKS.map((track, index) => (
+              <article
+                key={track.title}
+                className={`${styles.aboutTrack} ${
+                  active === index ? styles.aboutTrackActive : ''
+                }`}
+                data-anim="about-card"
+              >
+                <button
+                  type="button"
+                  className={styles.aboutTrackButton}
+                  aria-pressed={active === index}
+                  onClick={() => setSelected(index)}
+                >
+                  <span className={styles.aboutTrackIndex}>
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <strong className={styles.aboutTrackTitle}>
+                    {track.title}
+                  </strong>
+                  <span className={styles.aboutTrackNote}>{track.note}</span>
+                </button>
 
-                   `aside` is split into the prose (which stays in the button, so
-                   selecting the card still reads as selecting the whole track)
-                   and `resumeLink`, which renders as its own control. */
-                <div className={styles.aboutCardSlot} key={track.title}>
-                  <button
-                    type="button"
-                    className={`${styles.aboutCard} ${
-                      selected === index ? styles.aboutCardActive : ''
-                    }`}
-                    style={
-                      {
-                        '--about-card': track.surface,
-                        '--about-ink': track.ink,
-                        '--about-accent': track.accent,
-                      } as React.CSSProperties
-                    }
-                    aria-label={`${track.title}. Select this phase`}
-                    aria-pressed={selected === index}
-                    onClick={() => setSelected(index)}
-                  >
-                    <SilkscreenLabel>
-                      ARRANGEMENT / {String(index + 1).padStart(2, '0')} /{' '}
-                      {track.signal}
-                    </SilkscreenLabel>
-                    <span className={styles.aboutMetric}>
-                      <b>{track.metric}</b>
-                      <small>{track.metricLabel}</small>
-                    </span>
-                    <strong>{track.heading}</strong>
-                    {/*
-                      The card's prose, credits and availability line.
-
-                      These used to be split three ways: a `body` sentence here, the
-                      longer story in the shared clip panel, and the résumé line
-                      beside it. A reader saw the same idea in the card and then
-                      again in the panel below, and the body sentence was restated
-                      at the top of the story. Now there is one block per card and
-                      the panel is back to being the clip readout it was built as.
-
-                      Order inside the card: story, then the foot on the bottom
-                      edge. The foot is whatever that track has — two credits on
-                      FOCUS and SYSTEMS, the availability line on RANGE, and never
-                      both, because a taller foot on one card squeezes the shared
-                      `1fr` story row on that card alone.
-                    */}
-                    <p className={styles.aboutCardStory}>{track.story}</p>
-                    <div className={styles.aboutCardFoot}>
-                      {track.credits ? (
-                        <ul className={styles.aboutCardCredits}>
-                          {track.credits.map((credit) => (
-                            <li key={credit.name}>
-                              <b>{credit.name}</b>
-                              <span>{credit.note}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
-                      {track.aside ? (
-                        <p className={styles.aboutCardAside}>{track.aside}</p>
-                      ) : null}
-                    </div>
-                    <span className={styles.aboutCardLabel}>{track.title}</span>
-                  </button>
+                <div className={styles.aboutTrackBody} aria-live="polite">
+                  <h3>{track.heading}</h3>
+                  <p>{track.story}</p>
+                  {track.credits ? (
+                    <ul className={styles.aboutTrackCredits}>
+                      {track.credits.map((credit) => (
+                        <li key={credit.name}>
+                          <b>{credit.name}</b>
+                          <span>{credit.note}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {track.aside ? (
+                    <p className={styles.aboutTrackAside}>{track.aside}</p>
+                  ) : null}
+                  {/* The résumé is a sibling of the button, not a child of it.
+                      A link inside a button is announced as part of the button
+                      and is unreachable by keyboard. */}
                   {track.resumeLink ? (
                     <a
-                      className={styles.aboutCardResume}
+                      className={styles.aboutTrackResume}
                       href={track.resumeLink}
                       target="_blank"
                       rel="noreferrer"
@@ -276,139 +182,20 @@ export function About({
                     </a>
                   ) : null}
                 </div>
-              ))}
-            </div>
+              </article>
+            ))}
           </div>
-          <div className={styles.timelinePanel}>
-            <Screw className={styles.screwTopLeft} />
-            <Screw className={styles.screwTopRight} />
-            <div className={styles.timelineWorkspace}>
-              <div className={styles.timelineDeviceBrand}>
-                <div className={styles.timelineBrandMark}>
-                  <VenLogo />
-                  <SilkscreenLabel>ARRANGEMENT WORKSTATION</SilkscreenLabel>
-                </div>
-                <div className={styles.timelineMeters} aria-hidden="true">
-                  {Array.from({ length: 12 }, (_, index) => (
-                    <i key={index} />
-                  ))}
-                </div>
-              </div>
-              <div className={styles.panelHeader}>
-                <SilkscreenLabel>ARRANGEMENT / IDENTITY.AIF</SilkscreenLabel>
-                <div className={styles.timelineTransport}>
-                  <button
-                    type="button"
-                    onClick={isPlaying ? stopPlayback : startPlayback}
-                    aria-label={isPlaying ? 'Pause timeline' : 'Play timeline'}
-                  >
-                    {isPlaying ? <Pause size={13} /> : <Play size={13} />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={stopPlayback}
-                    aria-label="Stop and rewind timeline"
-                  >
-                    <Square size={12} />
-                  </button>
-                  <span>120 BPM / 4-4</span>
-                </div>
-              </div>
-              <div className={styles.timelineArrangement}>
-                <div className={styles.timelineRuler}>
-                  <div className={styles.timelineRulerHeader}>
-                    <span>TRK</span>
-                  </div>
-                  <div className={styles.timelineRulerLanes}>
-                    {Array.from({ length: 8 }, (_, i) => (
-                      <span key={i}>{i + 1}</span>
-                    ))}
-                  </div>
-                </div>
-                <div
-                  className={styles.playhead}
-                  style={{ '--playhead': `${playhead}` } as React.CSSProperties}
-                  aria-hidden="true"
-                />
-                {ABOUT_TRACKS.map((item, index) => (
-                  <div
-                    className={`${styles.track} ${
-                      index === ABOUT_TRACKS.length - 1 ? styles.trackLast : ''
-                    } ${
-                      mutedTracks.has(index) ||
-                      (soloedTrack !== null && soloedTrack !== index)
-                        ? styles.trackMuted
-                        : ''
-                    }`}
-                    key={item.title}
-                    style={
-                      {
-                        '--track-color': item.surface,
-                        '--track-ink': item.ink,
-                        '--track-accent': item.accent,
-                      } as React.CSSProperties
-                    }
-                  >
-                    <div className={styles.trackHeader}>
-                      <span>{String(index + 1).padStart(2, '0')}</span>
-                      <strong>{item.title}</strong>
-                      <span className={styles.trackActions}>
-                        <button
-                          type="button"
-                          aria-label={`${mutedTracks.has(index) ? 'Unmute' : 'Mute'} ${item.title}`}
-                          aria-pressed={mutedTracks.has(index)}
-                          onClick={() => toggleMuted(index)}
-                        >
-                          M
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={`${soloedTrack === index ? 'Unsolo' : 'Solo'} ${item.title}`}
-                          aria-pressed={soloedTrack === index}
-                          onClick={() =>
-                            setSoloedTrack((current) =>
-                              current === index ? null : index,
-                            )
-                          }
-                        >
-                          S
-                        </button>
-                      </span>
-                    </div>
-                    <div className={styles.trackLane}>
-                      <button
-                        type="button"
-                        className={`${styles.clip} ${
-                          selected === index ? styles.clipActive : ''
-                        }`}
-                        style={
-                          {
-                            '--clip-offset': `${index * 12.5}%`,
-                          } as React.CSSProperties
-                        }
-                        onClick={() => setSelected(index)}
-                        aria-pressed={selected === index}
-                      >
-                        <span>{item.note}</span>
-                        <i />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className={styles.clipDetail} aria-live="polite">
-                <SilkscreenLabel>
-                  CLIP {String(selected + 1).padStart(2, '0')} / SELECTED
-                </SilkscreenLabel>
-                <p>{ABOUT_TRACKS[selected].detail}</p>
-                {/*
-                  The story, credits and résumé line used to sit here as well,
-                  which meant every card said one thing and this panel said it
-                  again. They now live on the card that owns them; the panel is
-                  back to being the clip readout it was designed as.
-                */}
-              </div>
-            </div>
+
+          {/* The playhead, as a column. It is the one part of the rail that
+              reports the read rather than responding to it, which is why it is
+              driven by `--about-progress` and hidden from assistive tech: the
+              same position is already conveyed by which channel is open. */}
+          <div className={styles.aboutSignal} aria-hidden="true">
+            <span className={styles.aboutSignalLine} />
+            <span
+              className={styles.aboutSignalHead}
+              style={{ '--about-progress': scrollProgress } as CSSProperties}
+            />
           </div>
         </div>
       </div>

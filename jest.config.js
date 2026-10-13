@@ -4,6 +4,9 @@ module.exports = {
   testEnvironment: 'jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    // ts-jest only transforms .ts/.tsx, so a component importing a CSS module
+    // cannot be loaded in a jsdom suite without this. See tests/style-mock.js.
+    '\\.css$': '<rootDir>/tests/style-mock.js',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testMatch: [

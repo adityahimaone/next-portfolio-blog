@@ -1,0 +1,302 @@
+/* The slat count preloader.
+
+   Every class is `.scp-` prefixed and scoped to this module, so the component
+   can be dropped anywhere without colliding with the rack's own names. The
+   only values it takes from outside are the three palette colours, handed in
+   as custom properties on `.scp`, so the console language is the caller's and
+   the geometry is this file's.
+
+   The blinds are the overlay's actual ground, not a decoration painted on top
+   of it. Fourteen opaque strips tile the viewport, and the exit collapses them
+   one after another from alternating origins, which is what lets the page
+   underneath appear in bands instead of through a fade. `.scp-veil` sits
+   behind them for the one moment it is needed: while the strips are still
+   closed, so nothing of the page shows through the hairline seams. */
+
+.scp {
+  --scp-bg: #14171a;
+  --scp-ink: #eee9df;
+  --scp-accent: #ff5a1f;
+  --scp-exit: 640ms;
+  --scp-strip-ink: color-mix(in srgb, var(--scp-ink) 9%, transparent);
+
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  background: transparent;
+  color: var(--scp-ink);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  isolation: isolate;
+}
+.scp:focus {
+  outline: none;
+}
+
+/* ── Blinds ─────────────────────────────────────────────── */
+
+.scp-veil {
+  position: absolute;
+  inset: 0;
+  background: var(--scp-bg);
+  opacity: 1;
+  transition: opacity 1ms linear;
+}
+.scp[data-exit='true'] .scp-veil {
+  opacity: 0;
+}
+
+.scp-blinds {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+.scp-blind {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+  background: var(--scp-bg);
+  border-right: 1px solid var(--scp-strip-ink);
+  transform: scaleY(1);
+  transition: transform var(--scp-exit) cubic-bezier(0.65, 0, 0.35, 1);
+}
+.scp-blind:last-child {
+  border-right: 0;
+}
+/* Alternating origins are the whole trick: odd strips fold up, even strips
+   fold down, so the reveal is a blind and not a curtain. */
+.scp-blind:nth-child(odd) {
+  transform-origin: top center;
+}
+.scp-blind:nth-child(even) {
+  transform-origin: bottom center;
+}
+.scp[data-exit='true'] .scp-blind {
+  transform: scaleY(0);
+}
+
+/* The seam lines light up in order while the rack boots. Text-free, so it is
+   hidden from assistive tech along with the rest of the HUD. */
+.scp-blind::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--scp-accent) 22%, transparent),
+    transparent 34%
+  );
+  opacity: 0;
+  animation: scp-seam 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: var(--scp-seam-delay, 0ms);
+}
+@keyframes scp-seam {
+  0%,
+  72%,
+  100% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.5;
+  }
+}
+
+/* ── HUD ────────────────────────────────────────────────── */
+
+.scp-hud {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(14px, 2.4vw, 26px);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.scp-hud-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.scp-hud-row:last-child {
+  justify-content: space-between;
+}
+.scp-hud-mark {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: conic-gradient(
+    from 90deg,
+    var(--scp-accent) 0 25%,
+    color-mix(in srgb, var(--scp-accent) 45%, var(--scp-ink)) 0 50%,
+    color-mix(in srgb, var(--scp-ink) 40%, var(--scp-bg)) 0 75%,
+    color-mix(in srgb, var(--scp-ink) 22%, var(--scp-bg)) 0
+  );
+}
+.scp-hud-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scp-hud-step {
+  margin-left: auto;
+  color: var(--scp-accent);
+  font-variant-numeric: tabular-nums;
+}
+.scp-hud-note {
+  color: color-mix(in srgb, var(--scp-ink) 62%, var(--scp-bg));
+}
+
+/* ── Core ───────────────────────────────────────────────── */
+
+.scp-core {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vh, 22px);
+  padding: clamp(56px, 12vw, 120px) clamp(18px, 5vw, 48px);
+  text-align: center;
+  transition: opacity 180ms linear;
+}
+.scp[data-exit='true'] .scp-core {
+  opacity: 0;
+}
+
+.scp-eyebrow {
+  margin: 0;
+  color: color-mix(in srgb, var(--scp-ink) 58%, var(--scp-bg));
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.scp-count {
+  margin: 0;
+  color: var(--scp-ink);
+  font-family: var(--font-orbitron), var(--font-geist-mono), monospace;
+  font-size: clamp(56px, 15vw, 176px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  line-height: 0.9;
+  animation: scp-count-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+/* A word is wider than three digits at the same size, so the final frame gets
+   its own scale rather than being the one frame that overflows. */
+.scp-count[data-long='true'] {
+  font-size: clamp(38px, 9.5vw, 108px);
+  letter-spacing: 0.06em;
+}
+@keyframes scp-count-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.scp-caption {
+  max-width: 44ch;
+  margin: 0;
+  color: color-mix(in srgb, var(--scp-ink) 72%, var(--scp-bg));
+  font-size: clamp(11px, 1.4vw, 13px);
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+}
+
+.scp-meter {
+  position: relative;
+  width: min(280px, 62vw);
+  height: 3px;
+  margin-top: clamp(6px, 1.6vh, 16px);
+  background: color-mix(in srgb, var(--scp-ink) 16%, transparent);
+}
+.scp-meter i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--scp-progress, 0) * 100%);
+  background: var(--scp-accent);
+  transition: width 120ms linear;
+}
+
+/* ── Skip ───────────────────────────────────────────────── */
+
+.scp-skip {
+  position: absolute;
+  right: clamp(14px, 2.4vw, 26px);
+  bottom: clamp(14px, 2.4vw, 26px);
+  z-index: 2;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid color-mix(in srgb, var(--scp-ink) 30%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--scp-bg) 72%, transparent);
+  color: var(--scp-ink);
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.scp-skip:hover {
+  border-color: color-mix(in srgb, var(--scp-accent) 72%, transparent);
+  color: var(--scp-accent);
+}
+.scp-skip:focus-visible {
+  outline: 3px solid var(--scp-accent);
+  outline-offset: 3px;
+}
+/* With the HUD on, the skip control shares the bottom band with the caption,
+   so the core keeps clear of both. */
+.scp[data-hud='true'] .scp-core {
+  padding-bottom: clamp(74px, 14vh, 118px);
+}
+
+.scp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── Reduced motion ─────────────────────────────────────────
+   The slats stay put and the exit becomes a short fade, so nothing travels
+   across the viewport. The count is still stepped through in JS, at a shorter
+   beat, and the final frame stays on screen long enough to be read. */
+
+@media (prefers-reduced-motion: reduce) {
+  .scp-blind {
+    transform: none;
+    transition: opacity 200ms linear;
+  }
+  .scp[data-exit='true'] .scp-blind {
+    transform: none;
+    opacity: 0;
+  }
+  .scp-blind::after,
+  .scp-count {
+    animation: none;
+  }
+  .scp-core {
+    transition: none;
+  }
+  .scp-meter i {
+    transition: none;
+  }
+}

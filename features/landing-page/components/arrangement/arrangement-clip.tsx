@@ -32,10 +32,13 @@ const WAVE_PATH = (() => {
  */
 export function ArrangementClip({
   clip,
+  index = 0,
   onSelect,
   selected,
 }: {
   clip: ClipData
+  /** The clip's position in the arrangement, for the one-time record-in. */
+  index?: number
   onSelect?: () => void
   selected?: boolean
 }) {
@@ -55,6 +58,7 @@ export function ArrangementClip({
     // Overlapping clips share a lane in rows rather than on top of each other.
     '--clip-top': clip.top ?? 0,
     '--clip-height': clip.height ?? 1,
+    '--i': index,
   } as CSSProperties
 
   const count = clip.notes?.length ?? 0
@@ -102,6 +106,13 @@ export function ArrangementClip({
                     '--note': note,
                     '--row': index,
                     '--rows': count,
+                    // Where in the world this note sits. The notes spread across
+                    // the first 36% of their clip's span, which is how a pattern
+                    // sits inside a region in a DAW, and the playhead lights each
+                    // one as it arrives.
+                    '--at':
+                      clip.start +
+                      (clip.end - clip.start) * ((index / count) * 0.36),
                   } as CSSProperties
                 }
               />

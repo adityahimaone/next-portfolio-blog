@@ -3,12 +3,13 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { About } from '../../rack-01/section-about'
+import { PatchPanel } from '../patch/patch-panel'
 import {
   ARRANGEMENT_CLIPS,
   ARRANGEMENT_LANES,
   ARRANGEMENT_MODE,
   RULER_AXIS_LABEL,
+  RULER_LABELS,
   YEAR_MAX,
   YEAR_MIN,
 } from './arrangement-data'
@@ -40,17 +41,18 @@ import styles from './arrangement.module.css'
  * mixed toward the hero's own ground, so the eye has exactly one thing to land
  * on. It is also the one documented exception to "a clip's width is a duration":
  * the name is not a stage, so it spans the record.
+ *
+ * What is inside the PROFILE clip is not a section of this page. It is the
+ * Patch: the clip opened, drawn with the same kit as the mixer below, on a cream
+ * faceplate rather than this dark ground. Same machine, different window — see
+ * `components/patch/`.
  */
 export function ArrangementHero({
   selected,
   setSelected,
-  aboutProgress,
-  setAboutProgress,
 }: {
   selected: number
   setSelected: React.Dispatch<React.SetStateAction<number>>
-  aboutProgress: number
-  setAboutProgress: React.Dispatch<React.SetStateAction<number>>
 }) {
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -63,9 +65,8 @@ export function ArrangementHero({
     trackRef,
     cameraRef,
     seamRef,
-    setAboutProgress,
-    // The hook owns which card the read has reached; `selected` is the same
-    // state the cards and the panel's clips read, and the one a click writes.
+    // The hook owns which module the read has reached; `selected` is the same
+    // state the module buttons read and the one a click writes.
     setAboutIndex: setSelected,
   })
   useHeroDockVisibility({ sectionRef, seamRef })
@@ -73,9 +74,7 @@ export function ArrangementHero({
   // The clock is the one readout on this instrument that is true without being
   // invented. Seeded empty and filled in an effect, so the server and the client
   // agree on the first render. There is no BPM readout: nothing here keeps a
-  // tempo. The hero's own playhead parks on the PROFILE clip for the whole dive
-  // and About's travels only as far as the read takes it, so a number for that
-  // motion would be invented — which is the decoration §0.0 forbids.
+  // tempo.
   useEffect(() => {
     const tick = () =>
       setClock(
@@ -87,6 +86,25 @@ export function ArrangementHero({
     tick()
     const timer = window.setInterval(tick, 30000)
     return () => window.clearInterval(timer)
+  }, [])
+
+  // The clips record themselves in, once. `data-boot` is what makes that true
+  // rather than "on every re-render": it is set for 1.2s and then removed, and
+  // the animation is gated on it. A state flag rather than a CSS animation on
+  // load, because a CSS-only version would replay on every remount and would
+  // have no way to be retired for reduced motion beyond the media query.
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+    section.dataset.boot = ''
+    const timer = window.setTimeout(
+      () => section.removeAttribute('data-boot'),
+      1200,
+    )
+    return () => {
+      window.clearTimeout(timer)
+      section.removeAttribute('data-boot')
+    }
   }, [])
 
   const profile = ARRANGEMENT_CLIPS.find((clip) => clip.kind === 'profile')
@@ -123,6 +141,23 @@ export function ArrangementHero({
             <Link href="/bookmarks">Bookmarks</Link>
             <a href="#about">About</a>
           </nav>
+          {/* The story line. It names the stage the playhead is in, so the
+              ruler's ticks are read rather than decoded. Both writes are on
+              change only — three across the whole scroll.
+
+              `data-arr-stage-label`, not `data-arr-stage`: the latter is the
+              stage *wrapper* below (the hook measures its height, and
+              `about-chapter.ts` uses it as the "am I inside the arrangement"
+              marker). Reusing it here would make `querySelector` find the
+              wrapper — an ancestor wins document order — and the stage write
+              would replace the whole hero with one word. */}
+          <span
+            className={`${styles.lcd} ${styles.lcdStage}`}
+            aria-hidden="true"
+          >
+            <small data-arr-stage-label>{RULER_LABELS[0]}</small>
+            <b data-arr-caption />
+          </span>
           <div className={styles.transport}>
             <button
               type="button"
@@ -153,9 +188,21 @@ export function ArrangementHero({
           </div>
         </header>
 
-        <div ref={trackRef} className={styles.trackArea}>
-          <ArrangementRuler />
+        {/* The ruler is a child of the stage, not of the track area, and that is
+            the whole of "the seam is structural". It is the one piece of the
+            instrument's furniture that does not belong to the world being
+            zoomed: it measures the arrangement from outside it, so it must not
+            be clipped by the window the camera dives through, and it must not be
+            painted over by the panel the dive reveals. A DAW has one ruler and
+            it is always at the top; this is the same rule.
 
+            It reads the camera's own properties (`--arr-zoom`, `--arr-camera-x`)
+            so its ticks track the clips under it. The hook writes those on the
+            track area *and* on this element — the two smallest nodes that read
+            them — which is why it carries `data-arr-ruler`. */}
+        <ArrangementRuler />
+
+        <div ref={trackRef} className={styles.trackArea}>
           <div ref={cameraRef} className={styles.camera}>
             <div className={styles.lanes}>
               {ARRANGEMENT_LANES.map((lane) => (
@@ -174,7 +221,11 @@ export function ArrangementHero({
                   {ARRANGEMENT_CLIPS.filter(
                     (clip) => clip.laneId === lane.id,
                   ).map((clip) => (
-                    <ArrangementClip key={clip.id} clip={clip} />
+                    <ArrangementClip
+                      key={clip.id}
+                      clip={clip}
+                      index={ARRANGEMENT_CLIPS.indexOf(clip)}
+                    />
                   ))}
                 </div>
               ))}
@@ -206,19 +257,17 @@ export function ArrangementHero({
             lets it cover the chrome and the proof once the window is fully open.
             `.trackArea` is `overflow: hidden` (the camera's transformed lanes
             have to be clipped to it), so a seam inside it could never paint over
-            the furniture above and below. Its clip-path insets are therefore
-            measured from the stage's edges — see `chromeHeight` / `proofHeight`
-            in `ArrangementGeometry`.
+            the furniture above and below. Its top edge is the ruler's bottom
+            edge, so the ruler stays visible through the dive and the panel opens
+            beneath it rather than under it. Its clip-path insets are therefore
+            measured from its own edges — see `chromeHeight` / `rulerHeight` in
+            `ArrangementGeometry`.
 
             `inert` is not set here. The hook sets it on the first frame, and the
             hook never runs on phones or under reduced motion — where the media
             queries put this back in the flow and it must stay reachable. */}
         <div ref={seamRef} className={styles.seam}>
-          <About
-            selected={selected}
-            setSelected={setSelected}
-            scrollProgress={aboutProgress}
-          />
+          <PatchPanel active={selected} onSelect={setSelected} />
         </div>
       </div>
 

@@ -2,37 +2,65 @@
 
 import { useEffect, type RefObject } from 'react'
 import {
-  ARRANGEMENT_SEAM_OPEN,
   arrangementFrame,
   type ArrangementGeometry,
 } from './arrangement-camera'
-import { ARRANGEMENT_BARS, ARRANGEMENT_CLIPS } from './arrangement-data'
+import {
+  ARRANGEMENT_BARS,
+  ARRANGEMENT_CLIPS,
+  RULER_LABELS,
+} from './arrangement-data'
+import { STAGE_CAPTIONS, stageAt } from '../patch/hero-story'
+import {
+  patchFrame,
+  scrollBudget,
+  splitProgress,
+} from '../patch/patch-timeline'
 
 /**
- * One ScrollTrigger, writing CSS custom properties and two datasets.
+ * One ScrollTrigger, writing CSS custom properties and a handful of datasets.
  *
  * Three rules this encodes, all of them measured on the RIDDIM hero first:
  *
- * 1. **Write to the smallest node that reads the value.** The properties go on
- *    `.trackArea`, not on the section: writing a custom property invalidates the
- *    whole subtree and the cost scales with its size (1613 ms against 166 ms),
- *    and the section also holds the chrome and the proof strips, which read
- *    none of them.
+ * 1. **Write to the smallest node that reads the value.** The camera's
+ *    properties go on `.trackArea`, not on the section: writing a custom
+ *    property invalidates the whole subtree and the cost scales with its size
+ *    (1613 ms against 166 ms), and the section also holds the chrome and the
+ *    proof strips, which read none of them. The ruler is the one exception, and
+ *    it is an exception with a reason: it is a sibling of the track area now, so
+ *    it has to be written to directly — but it reads exactly two of the camera's
+ *    numbers and it is a 44px node, which is as small as a node that reads them
+ *    can be.
  * 2. **Datasets are written on change, never per frame.** `data-phase` and
  *    `data-detail` switch CSS transitions; recomputing them every tick would
- *    re-render nothing and cost everything.
+ *    re-render nothing and cost everything. The same rule governs the caption,
+ *    the transport readout and which Patch module is live.
  * 3. **Never trigger on the sticky stage.** A sticky element's bounding rect is
  *    a function of scroll position, so `top top` and `bottom bottom` both
  *    resolve to the same offset and leave a zero-length range. The trigger is
  *    the tall section that *contains* the stage.
  *
- * It also publishes the About section's two pieces of state. On `main` those
- * came from `useRackAnimations`, where a ScrollTrigger spanning the section
- * drove the playhead and one ScrollTrigger per card drove the selection. Inside
- * the seam there is no section to span — the About is a pinned interior and its
- * layout rects never change — so both are derived from this hook's own progress
- * instead, which is the same quantity for a different reason: the read is the
- * only scroll the seam's About gets.
+ * ## One scroll, two clocks
+ *
+ * The section's scroll is now two instruments in series. The first 295.2svh is
+ * the camera's, and it ends where the window is fully open; the next 300svh is
+ * the Patch's own read. `splitProgress` is what cuts them apart, and it hands
+ * the camera progress **in the camera's own domain** — so `arrangement-camera.ts`
+ * and its tests are untouched, and the camera never learns the read exists. The
+ * one thing the split does add to the camera's clock is the overshoot: the
+ * camera's own `IMMERSIVE_OVERSHOOT_FROM`/`_TO` sit past the seam-open mark, so
+ * a camera clock that stopped at 0.82 would never play them. The split runs the
+ * camera clock on to 0.91 across the panel's power-on act, which is where the
+ * bump lands on a frame that is already whole.
+ *
+ * ## What the read writes
+ *
+ * Eight numbers on the seam, and that is the whole of the Patch's scroll
+ * state — three act values and one sweep per module. Everything else on the
+ * panel is derived from them in CSS, including each control's staggered sweep,
+ * so the cost does not grow with the number of controls. They are skipped when
+ * unchanged, and the only React state the read touches is which module is lit,
+ * on change.
  *
  * GSAP and ScrollTrigger are imported dynamically and only after the runtime
  * check, so phones and reduced-motion visitors never pay for the download.
@@ -42,14 +70,12 @@ export function useArrangementHero({
   trackRef,
   cameraRef,
   seamRef,
-  setAboutProgress,
   setAboutIndex,
 }: {
   sectionRef: RefObject<HTMLElement | null>
   trackRef: RefObject<HTMLDivElement | null>
   cameraRef: RefObject<HTMLDivElement | null>
   seamRef: RefObject<HTMLDivElement | null>
-  setAboutProgress: React.Dispatch<React.SetStateAction<number>>
   setAboutIndex: React.Dispatch<React.SetStateAction<number>>
 }) {
   useEffect(() => {
@@ -82,29 +108,60 @@ export function useArrangementHero({
       const profileCentre = profile ? (profile.start + profile.end) / 2 : 0.625
 
       let geo: ArrangementGeometry | null = null
+      /** The two pixel budgets for the current viewport, from the two svh constants. */
+      let budget = scrollBudget(window.innerHeight)
 
       /**
        * The last phase this hook *applied*, not the one in the DOM.
        *
        * The section ships with `data-phase="open"` already on it, so comparing
        * against the attribute would make the very first `render(0)` a no-op and
-       * `inert` would never be set — leaving the whole clipped About panel in
-       * the tab order behind the arrangement. Starting from `null` guarantees
-       * the first frame applies.
+       * `inert` would never be set — leaving the whole clipped Patch in the tab
+       * order behind the arrangement. Starting from `null` guarantees the first
+       * frame applies.
        */
       let appliedPhase: string | null = null
       /** Whether the seam is currently reachable — see the write in `render`. */
       let seamReachable: boolean | null = null
-      /** How many cards the read has to walk through. Measured, never assumed. */
-      let cardCount = 0
-      /** The About interior's two states, as this hook last published them. */
-      let aboutProgress = -1
+      /** The Patch module the read last published, and the one it has applied. */
       let aboutIndex = -1
-      /** The toolbar's position readout, written on change only. */
+      /** The toolbar's position readout, and the story line's stage. */
       const positionEl = section.querySelector<HTMLElement>(
         '[data-arr-position]',
       )
+      /**
+       * The caption's stage label — **not** `[data-arr-stage]`.
+       *
+       * `data-arr-stage` marks the stage *wrapper*: `measure()` reads its
+       * height and `about-chapter.ts` uses it as the "am I inside the
+       * arrangement" marker. A second element carrying the same attribute
+       * would be shadowed by the wrapper — an ancestor wins document order in
+       * `querySelector` — and the write in `render` would then replace the
+       * entire hero with the name of one stage.
+       */
+      const stageEl = section.querySelector<HTMLElement>(
+        '[data-arr-stage-label]',
+      )
+      const captionEl = section.querySelector<HTMLElement>('[data-arr-caption]')
+      const rulerEl = section.querySelector<HTMLElement>('[data-arr-ruler]')
+      const proofEl = section.querySelector<HTMLElement>('[data-arr-proof]')
       let appliedPosition = ''
+      let appliedStage = -1
+      /** The playhead's world position, as last written to the two nodes that read it. */
+      let appliedPlay = ''
+
+      /**
+       * Last string written to each Patch property, so an unchanged frame writes
+       * nothing. All of these go to the seam, which is the smallest node that
+       * reads them.
+       */
+      const written = new Map<string, string>()
+      const put = (name: string, value: number) => {
+        const text = value.toFixed(4)
+        if (written.get(name) === text) return
+        written.set(name, text)
+        seam.style.setProperty(name, text)
+      }
 
       /**
        * Measured once per refresh, never per frame. Every anchor the frame needs
@@ -112,63 +169,40 @@ export function useArrangementHero({
        * tested against a written-out fixture with no browser.
        */
       const measure = () => {
+        budget = scrollBudget(window.innerHeight)
+
         const gutter = camera.offsetLeft
-        const ruler = host.querySelector<HTMLElement>('[data-arr-ruler]')
-        const rulerHeight = ruler?.offsetHeight ?? 38
         const laneEl = host.querySelector<HTMLElement>('[data-lane="profile"]')
         const profileLaneTop = laneEl?.offsetTop ?? 0
         const laneHeight = laneEl?.offsetHeight ?? 58
 
-        // The seam overlays the whole stage, so its window is measured from the
-        // stage's edges. The stage is the track area's offsetParent (it is
-        // `position: sticky`), which makes both offsets readable without a
-        // second ref.
+        // The stage is the track area's offsetParent (it is `position: sticky`),
+        // which makes both offsets readable without a second ref.
         const stage = section.querySelector<HTMLElement>('[data-arr-stage]')
-        const chromeHeight = host.offsetTop
+        // The track area's top edge is the chrome *and* the ruler: the ruler is
+        // a child of the stage now, above the track area and above the seam. So
+        // this is the seam's own top edge as well, and it is why `chromeHeight`
+        // and `rulerHeight` are both passed to the frame as zero — the camera's
+        // window and the seam's window start at the same line, and the frame's
+        // two corrections have nothing left to correct.
+        const stageTop = host.offsetTop
         const proofHeight = stage
-          ? stage.clientHeight - chromeHeight - host.offsetHeight
+          ? stage.clientHeight - stageTop - host.offsetHeight
           : 0
 
-        // How much taller the card rail is than the window it is revealed in.
-        // Measured, not derived: it is a function of the viewport — 0px at
-        // 1728×1117, 103px at 1440×900 — and the read has to cover exactly this
-        // or the last card stays clipped.
-        //
-        // Rail against deck, rather than rail against panel. The read moves the
-        // heading and the rail and leaves the timeline alone, so what has to fit
-        // is the column inside the deck — and the deck is the element whose
-        // height the read is closing the gap to. Both are layout boxes: the
-        // rail's top sits flush with the deck's top (the stack is the deck's
-        // first grid item, the rail the stack's only child), and the deck's
-        // bottom is the stage's content bottom, because the deck is the `flex: 1`
-        // child of a `height: 100%` stage.
-        //
-        // `offsetHeight`, not a bounding rect. The stack carries the read's own
-        // translate, and a rect would measure the moved element — the travel
-        // would shrink by its own displacement every time this re-ran. Layout
-        // heights are what the travel has to close, and transforms do not touch
-        // them.
-        const rail = seam.querySelector<HTMLElement>('[data-about-rail]')
-        const deck = seam.querySelector<HTMLElement>('[data-about-read]')
-        const readOverflow =
-          rail && deck ? Math.max(0, rail.offsetHeight - deck.offsetHeight) : 0
-        cardCount = rail ? rail.children.length : 0
-
         // The measured gutter is written back so the ruler's live rule and the
-        // frame's maths cannot disagree about where the world starts.
+        // frame's maths cannot disagree about where the world starts. The ruler
+        // reads it too, and it is outside the track area.
         host.style.setProperty('--arr-rail-w', `${gutter}px`)
         host.style.setProperty('--arr-profile-centre', String(profileCentre))
+        rulerEl?.style.setProperty('--arr-rail-w', `${gutter}px`)
 
         // Where `#about` resolves to: the scroll offset at which the window is
-        // fully open and the read begins. Not `rail` — that is where the window
-        // *starts* opening, so an anchor there lands on a closed strip. Derived
-        // from the trigger's own range rather than written into the stylesheet,
-        // so it cannot drift when the phases are retimed.
-        const travel = section.offsetHeight - window.innerHeight
-        section.style.setProperty(
-          '--arr-about-at',
-          `${ARRANGEMENT_SEAM_OPEN * Math.max(0, travel)}px`,
-        )
+        // fully open and the read begins. Not the end of the camera's range —
+        // that is where the window *finishes* opening, so an anchor there lands
+        // with the panel still a clipped strip. Derived from the same two
+        // constants the frame is, so it cannot drift when they are retimed.
+        section.style.setProperty('--arr-about-at', `${budget.heroPx}px`)
 
         geo = {
           worldWidth: camera.offsetWidth,
@@ -178,15 +212,22 @@ export function useArrangementHero({
           profileEnd: (profile?.end ?? 0.75) * camera.offsetWidth,
           profileLaneTop,
           laneHeight,
-          rulerHeight,
+          // Zero, not measured. The camera's band *is* the track area now that
+          // the ruler is not in it, and its window starts at the track area's
+          // top edge — which is also the seam's top edge.
+          rulerHeight: 0,
           viewportWidth: host.clientWidth,
           viewportHeight: host.clientHeight,
-          chromeHeight,
+          chromeHeight: 0,
           proofHeight,
-          readOverflow,
+          // The read no longer travels a column: the Patch's modules are all in
+          // the panel at once and the read sweeps them rather than scrolling
+          // them. So there is nothing to measure and nothing to close.
+          readOverflow: 0,
         }
       }
 
+      /** The camera's half of the scroll. Unchanged from before the Patch. */
       const render = (progress: number) => {
         if (!geo) return
         const frame = arrangementFrame(progress, geo)
@@ -201,6 +242,12 @@ export function useArrangementHero({
           '--arr-clip-interior',
           String(frame.clipInterior),
         )
+        // The ruler is the second node that reads the camera, and it reads only
+        // these two: its ticks are positioned from the zoom and the camera's own
+        // translate, so it cannot drift from the clips beneath it while the dive
+        // is running. Everything else it needs is inherited or static.
+        rulerEl?.style.setProperty('--arr-zoom', String(frame.scale))
+        rulerEl?.style.setProperty('--arr-camera-x', `${frame.cameraX}px`)
         // The depth layer. Both are read by the lanes and by nothing else, so
         // they go on the same host the camera's own numbers do — the smallest
         // node that reads them. `--arr-depth` is a px translateZ, and
@@ -229,7 +276,6 @@ export function useArrangementHero({
         // fully open and completely invisible. The seam is also the smallest
         // node that reads any of them.
         seam.style.setProperty('--arr-seam-opacity', String(frame.seamOpacity))
-        seam.style.setProperty('--arr-read-travel', `${-frame.readTravel}px`)
         seam.style.setProperty('--arr-seam-top', `${frame.seamInset.top}px`)
         seam.style.setProperty('--arr-seam-right', `${frame.seamInset.right}px`)
         seam.style.setProperty(
@@ -238,12 +284,37 @@ export function useArrangementHero({
         )
         seam.style.setProperty('--arr-seam-left', `${frame.seamInset.left}px`)
 
+        // ── The story line, the transport and the strip meters ──
+        //
+        // All three read the same quantity: where the playhead is in the world.
+        // `world` is the playhead's fraction of the profile centre, which is
+        // where the camera parks it, so it runs 0 → 0.67 across the walk and
+        // then holds. It is written on both nodes that read it — the track area
+        // for the notes, the proof strip for the mixer — because they are
+        // siblings and neither can inherit from the other.
+        const world = frame.playheadFraction * profileCentre
+        const play = world.toFixed(4)
+        if (play !== appliedPlay) {
+          appliedPlay = play
+          host.style.setProperty('--arr-play', play)
+          proofEl?.style.setProperty('--arr-play', play)
+        }
+
+        // On change only. Two text writes three times across the whole scroll.
+        const stage = stageAt(world)
+        if (stage !== appliedStage) {
+          appliedStage = stage
+          if (stageEl) stageEl.textContent = RULER_LABELS[stage]
+          if (captionEl) {
+            captionEl.textContent = STAGE_CAPTIONS[RULER_LABELS[stage]] ?? ''
+          }
+        }
+
         // The transport's position, in bars:beats along the world the playhead
         // is walking. On change only; a text write per frame would cost more
         // than the number is worth.
         if (positionEl) {
-          const along = frame.playheadFraction * profileCentre
-          const bars = along * ARRANGEMENT_BARS
+          const bars = world * ARRANGEMENT_BARS
           const bar = Math.floor(bars) + 1
           const beat = Math.floor((bars % 1) * 4) + 1
           const text = `${String(bar).padStart(3, '0')}:${String(beat).padStart(2, '0')}`
@@ -275,42 +346,32 @@ export function useArrangementHero({
 
         const detail = frame.scale > 1.4 ? 'true' : 'false'
         if (section.dataset.detail !== detail) section.dataset.detail = detail
+      }
 
-        // ── The About interior's own two states ──
-        //
-        // On `main` both came from ScrollTriggers that spanned the section: one
-        // over `top bottom` → `bottom top` for the playhead, one per card with
-        // `top 58%` → `bottom 42%` for the selection. Neither can work here. The
-        // interior is pinned, so its rects are constant and every card would be
-        // "in range" at the same instant — a trigger measures layout, and the
-        // read moves cards with a transform it cannot see.
-        //
-        // What replaces them is this hook's own progress, cut to the read: the
-        // window is the section's scroll range now, so the read is the About's
-        // progress. The playhead reports it, and the selection follows it in
-        // thirds — the read walks the column past the window, and the card the
-        // reader has reached is `floor(read × count)`, clamped so the last card
-        // holds once the travel is spent.
-        //
-        // Clicking a card still wins: `setAboutIndex` writes through to the same
-        // state, and this only overwrites it when the read's own answer moves.
-        const readT = Math.max(
-          0,
-          Math.min(
-            1,
-            (progress - ARRANGEMENT_SEAM_OPEN) / (1 - ARRANGEMENT_SEAM_OPEN),
-          ),
-        )
-        if (readT !== aboutProgress) {
-          aboutProgress = readT
-          setAboutProgress(readT)
-        }
-        const nextIndex = cardCount
-          ? Math.min(cardCount - 1, Math.floor(readT * cardCount))
-          : 0
-        if (nextIndex !== aboutIndex) {
-          aboutIndex = nextIndex
-          setAboutIndex(nextIndex)
+      /**
+       * The Patch's half. Eight numbers, and one piece of React state that moves
+       * on change only.
+       *
+       * There is no equivalent of the old `setAboutProgress` here, and that is
+       * the point: the rail needed its scroll progress in React because it
+       * translated a column, and the Patch's whole motion is derived from these
+       * custom properties in CSS. The only thing React has to know is which
+       * module is lit, because that is an accessibility state — `aria-pressed`,
+       * `inert` — and not a position.
+       */
+      const renderPatch = (read: number) => {
+        const f = patchFrame(read)
+        put('--patch-power', f.power)
+        put('--patch-bounce', f.bounce)
+        put('--patch-cursor', f.cursor)
+        f.sweep.forEach((s, i) => put(`--patch-sweep-${i}`, s))
+
+        // A click on a module writes through to the same state and wins until
+        // the reader scrolls on to the next module, at which point the read's
+        // own answer changes and takes over again.
+        if (f.active !== aboutIndex) {
+          aboutIndex = f.active
+          setAboutIndex(f.active)
         }
       }
 
@@ -319,18 +380,12 @@ export function useArrangementHero({
       // Put a `#about` visitor where the fragment asked them to be.
       //
       // The browser resolves the fragment while the document is still parsing,
-      // which is before anything has measured. `.aboutAnchor`'s fallback of
-      // `100svh` is therefore where it lands — and then `measure()` moves the
-      // anchor to its real offset of `ARRANGEMENT_SEAM_OPEN × 360svh` (295.2svh
-      // at 1440×900), which the browser does not follow. Measured: the reader is
-      // left at 900 of 3240, progress 0.28, with the window still closed and
-      // the timeline dive not yet begun — the one place the skip link and the
-      // shared URL disagree.
-      //
-      // One shot, and only while they are still where the fallback put them. By
-      // the time this runs nobody has scrolled, so the guard is belt and
-      // braces; it exists because `measure()` also runs on every refresh and
-      // this block must not.
+      // which is before anything has measured. `.aboutAnchor`'s fallback is
+      // therefore where it lands — and then `measure()` moves the anchor to its
+      // real offset, which the browser does not follow. One shot, and only while
+      // they are still where the fallback put them. By the time this runs nobody
+      // has scrolled, so the guard is belt and braces; it exists because
+      // `measure()` also runs on every refresh and this block must not.
       if (location.hash === '#about' && !correctedAboutAnchor) {
         const anchor = document.getElementById('about')
         if (anchor) {
@@ -345,7 +400,11 @@ export function useArrangementHero({
         }
       }
 
+      const at = (self: { progress: number }) =>
+        self.progress * Math.max(0, section.offsetHeight - window.innerHeight)
+
       render(0)
+      renderPatch(0)
 
       const trigger = ScrollTrigger.create({
         trigger: section,
@@ -354,9 +413,23 @@ export function useArrangementHero({
         invalidateOnRefresh: true,
         onRefresh: (self) => {
           measure()
-          render(self.progress)
+          const { camera: cameraP, read } = splitProgress(
+            at(self),
+            budget.heroPx,
+            budget.readPx,
+          )
+          render(cameraP)
+          renderPatch(read)
         },
-        onUpdate: (self) => render(self.progress),
+        onUpdate: (self) => {
+          const { camera: cameraP, read } = splitProgress(
+            at(self),
+            budget.heroPx,
+            budget.readPx,
+          )
+          render(cameraP)
+          renderPatch(read)
+        },
         // A window that opens at scroll 0 is already active on load, so
         // `onEnter` never fires and anything it sets is never applied for the
         // whole first pass. `onToggle` reports state after a refresh too.
@@ -374,17 +447,24 @@ export function useArrangementHero({
         // Undo what this hook did to the seam. Without this a resize across the
         // 768px breakpoint tears the trigger down and leaves the panel `inert`
         // with nothing left running to clear it — reachable by scroll, unusable
-        // by keyboard.
+        // by keyboard. A panel left at `--patch-sweep-1: 0.3` would mount
+        // half-built for the same reason.
         seam.inert = false
         seam.removeAttribute('aria-hidden')
         ;[
           '--arr-seam-opacity',
-          '--arr-read-travel',
           '--arr-seam-top',
           '--arr-seam-right',
           '--arr-seam-bottom',
           '--arr-seam-left',
+          '--patch-power',
+          '--patch-bounce',
+          '--patch-cursor',
+          '--patch-sweep-0',
+          '--patch-sweep-1',
+          '--patch-sweep-2',
         ].forEach((property) => seam.style.removeProperty(property))
+        written.clear()
         ;[
           '--arr-zoom',
           '--arr-camera-x',
@@ -397,7 +477,12 @@ export function useArrangementHero({
           '--arr-lane-opacity',
           '--arr-rail-w',
           '--arr-profile-centre',
+          '--arr-play',
         ].forEach((property) => host.style.removeProperty(property))
+        ;['--arr-zoom', '--arr-camera-x', '--arr-rail-w'].forEach((property) =>
+          rulerEl?.style.removeProperty(property),
+        )
+        proofEl?.style.removeProperty('--arr-play')
         section.style.removeProperty('--arr-about-at')
       }
     }
@@ -408,18 +493,11 @@ export function useArrangementHero({
       cancelled = true
       cleanup?.()
     }
-    // The two setters are declared rather than omitted. They are `useState`
-    // dispatchers from `rack-01.tsx`, passed down unwrapped, so React holds
-    // their identity for the life of the component and listing them cannot
-    // re-run this effect — which is the point: the alternative is an
-    // `exhaustive-deps` suppression that hides a genuinely missing dependency
-    // the day someone passes a callback instead.
-  }, [
-    sectionRef,
-    trackRef,
-    cameraRef,
-    seamRef,
-    setAboutProgress,
-    setAboutIndex,
-  ])
+    // The setter is declared rather than omitted. It is a `useState` dispatcher
+    // from `rack-01.tsx`, passed down unwrapped, so React holds its identity for
+    // the life of the component and listing it cannot re-run this effect — which
+    // is the point: the alternative is an `exhaustive-deps` suppression that
+    // hides a genuinely missing dependency the day someone passes a callback
+    // instead.
+  }, [sectionRef, trackRef, cameraRef, seamRef, setAboutIndex])
 }

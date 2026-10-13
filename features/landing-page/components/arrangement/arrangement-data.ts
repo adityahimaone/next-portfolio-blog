@@ -39,6 +39,13 @@ export type ArrangementClip = {
   start: number
   end: number
   color: string
+  /**
+   * The `MIXER_DATA` group whose technologies this clip is drawn from. Present
+   * on the three practice clips and absent on everything else, because only
+   * those three have a mixer group behind them. The mixer reads it to know
+   * which span of the arrangement a strip's channel is live in.
+   */
+  group?: string
   /** Normalised bar heights. The bar **count** is the data; see below. */
   notes?: readonly number[]
   detail?: string
@@ -180,6 +187,7 @@ const MAKING_CLIPS_RAW: readonly ArrangementClip[] = [
     start: 0.05,
     end: 0.34,
     color: '#c07352',
+    group: 'frontend',
     notes: levels('frontend'),
     detail: 'Understand the interaction, then build the pieces it needs.',
   },
@@ -191,6 +199,7 @@ const MAKING_CLIPS_RAW: readonly ArrangementClip[] = [
     start: 0.3,
     end: 0.66,
     color: '#7d97ab',
+    group: 'app-data',
     notes: levels('app-data'),
     detail: 'Typed data at the boundary, rendering chosen per route.',
   },
@@ -202,6 +211,7 @@ const MAKING_CLIPS_RAW: readonly ArrangementClip[] = [
     start: 0.62,
     end: 0.97,
     color: '#4e91a8',
+    group: 'delivery-infra',
     notes: levels('delivery-infra'),
     detail: 'Deploy, watch it, and fix what the meters show.',
   },
@@ -478,7 +488,12 @@ export type MixerStrip = {
   color: string
 }
 
-const GROUP_COLORS: Record<string, string> = {
+/**
+ * The three groups' colours, exported because they are the one palette the
+ * whole page agrees on: a lane header, the clip above it, the mixer strip below
+ * it and the Patch's module all take their hue from here. Typed in once.
+ */
+export const GROUP_COLORS: Record<string, string> = {
   frontend: '#c07352',
   'app-data': '#7d97ab',
   'delivery-infra': '#4e91a8',

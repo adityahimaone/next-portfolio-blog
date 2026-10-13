@@ -34,12 +34,12 @@ export default function Rack01LandingPage({
   archiveRepos: readonly ArchiveRepo[]
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
+  // Which Patch module is live. It is the one piece of About state the
+  // arrangement hook still owns: the read moves it on change only, and a click
+  // on a module writes the same value. The old scroll *progress* is gone with
+  // the rail — the Patch reads its own scroll through CSS custom properties, so
+  // there is no React state written per frame any more. See §7 of the plan.
   const [aboutIndex, setAboutIndex] = useState(0)
-  // The About section's scroll progress, and its selected card. Both are the
-  // same two pieces of state the page section had — the arrangement hook
-  // publishes them from the dive's own progress, because the About is the seam's
-  // interior and the read is the only scroll it gets. See §13.11.
-  const [aboutProgress, setAboutProgress] = useState(0)
   const [experienceIndex, setExperienceIndex] = useState(0)
 
   useRackAnimations({ rootRef, setExperienceIndex })
@@ -59,12 +59,7 @@ export default function Rack01LandingPage({
       <a className={styles.skipLink} href="#about">
         Skip to content
       </a>
-      <ArrangementHero
-        selected={aboutIndex}
-        setSelected={setAboutIndex}
-        aboutProgress={aboutProgress}
-        setAboutProgress={setAboutProgress}
-      />
+      <ArrangementHero selected={aboutIndex} setSelected={setAboutIndex} />
       <SignalDivider />
       <Skills />
       <CableDivider />

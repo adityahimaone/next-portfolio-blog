@@ -18,6 +18,7 @@
 
 .hero {
   --arr-rail-w: max(72px, 9vw);
+  --arr-chrome-h: 46px;
   --arr-ruler-h: 44px;
   --arr-lane-h: clamp(46px, 6.6svh, 60px);
   --arr-lane-tall: clamp(150px, 22svh, 204px);
@@ -34,7 +35,14 @@
   --arr-hair: rgb(238 233 223 / 0.13);
   --arr-ink: #eee9df;
   --arr-muted: #8e928e;
-  --arr-scroll: 460svh;
+  /* The section's height, and it is three things added up: one viewport for the
+     sticky stage, the camera's own distance (`ARRANGEMENT_SCROLL_SVH` less that
+     viewport, times `ARRANGEMENT_SEAM_OPEN`), and the read's own length
+     (`PATCH_READ_SVH`). The read used to borrow the last 18% of the camera's
+     range, which is why the audit found it had nothing to do; it has its own
+     300svh now. A test reads this line and compares it to `PATCH_SECTION_SVH`,
+     so the two cannot drift. */
+  --arr-scroll: 695.2svh;
 
   position: relative;
   height: var(--arr-scroll);
@@ -52,6 +60,14 @@
   overflow: hidden;
   background: var(--arr-ground);
   isolation: isolate;
+  /* Declared here as well as on the track area because the ruler is a child of
+     the stage now, and the ruler's grid and ticks are positioned from the world
+     width. `100%` resolves against whichever element uses it, and the stage, the
+     ruler and the track area are all the same width, so the two declarations
+     cannot disagree. */
+  --arr-world-w: calc(100% - var(--arr-rail-w));
+  --arr-zoom: 1;
+  --arr-camera-x: 0px;
 }
 
 /* ── Toolbar ────────────────────────────────────────────── */
@@ -61,7 +77,7 @@
   flex: 0 0 auto;
   align-items: center;
   gap: clamp(12px, 2vw, 28px);
-  height: 46px;
+  height: var(--arr-chrome-h);
   padding: 0 clamp(12px, 2vw, 24px);
   border-bottom: 1px solid var(--arr-hair);
   background: linear-gradient(#272c31, #1d2125);
@@ -73,9 +89,11 @@
   white-space: nowrap;
   transition: opacity 400ms cubic-bezier(0.25, 1, 0.5, 1);
 }
-.hero[data-phase='rail'] .chrome {
-  opacity: 0.4;
-}
+/* The toolbar used to dim as the camera dove, because the panel took the whole
+   frame and the chrome was furniture it replaced. It is not furniture any more:
+   it and the ruler are the instrument's header, and the panel opens beneath
+   them, so the chrome holds its contrast for the whole window. The story line
+   in it is the one thing on this page that says which stage the reader is in. */
 .brand {
   display: flex;
   flex: 0 1 auto;
@@ -193,6 +211,31 @@
 .lcd time {
   color: var(--arr-ink);
 }
+/* The story line. One caption per ruler stage, shown while the playhead is
+   inside it — so the ruler's ticks are named as the reader reaches them rather
+   than being a legend to decode. It takes the toolbar's free space between the
+   menu and the transport, where there was already a gap and nothing can
+   collide with a clip. */
+.lcdStage {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0 clamp(8px, 2vw, 28px);
+}
+.lcdStage small {
+  flex: 0 0 auto;
+}
+.lcdStage b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Dropped before the toolbar runs out of room for the transport. A caption that
+   pushed the clock off the end would be a worse trade than no caption. */
+@media (max-width: 1180px) {
+  .lcdStage {
+    display: none;
+  }
+}
 
 /* ── Track area: the property host ──────────────────────── */
 
@@ -204,9 +247,10 @@
   /* The depth layer's frame. `perspective` here and not on `.camera` because
      the lanes are the things with a Z, and the eye that gives them one belongs
      to the window they are seen through. It also makes `.trackArea` a stacking
-     context, which is what keeps `.ruler` (z-index 3) and `.pinned` (z-index 4)
-     in front of a lane that has come forward — they are the instrument's own
-     furniture and must never be occluded by the thing they are measuring. */
+     context, which is what keeps `.pinned` (z-index 4) in front of a lane that
+     has come forward — it is the instrument's own furniture and must never be
+     occluded by the thing it is measuring. The ruler used to live in here too;
+     it is a child of the stage now, above the seam. */
   perspective: 1200px;
   --arr-zoom: 1;
   --arr-camera-x: 0px;
@@ -229,23 +273,29 @@
    Outside the camera on purpose: it must not scale. Its labels are positioned
    from the camera's own transform, so the type is always drawn at real size and
    the ruler cannot drift from the clips beneath it. Top row: stage markers.
-   Bottom row: bar numbers. */
+   Bottom row: bar numbers.
+
+   It is a child of the **stage**, between the chrome and the track area, and
+   that is a structural move rather than a tidy-up. While it lived inside the
+   track area the seam painted straight over it: the track area is
+   `overflow: hidden` (the camera's transformed lanes have to be clipped to it)
+   and the seam is its sibling at a higher z-index, so nothing inside could ever
+   come out in front. As a stage child it is outside the thing being covered —
+   and the seam's own top edge is this element's bottom edge, so the panel opens
+   *beneath* the ruler instead of under it. A DAW has one ruler and it is always
+   at the top; this is the same rule, and it is what carries the reader across
+   the seam. */
 
 .ruler {
-  position: absolute;
-  z-index: 3;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
+  z-index: 6;
+  flex: 0 0 auto;
   height: var(--arr-ruler-h);
   overflow: hidden;
   border-bottom: 1px solid var(--arr-hair);
   background: var(--arr-panel);
   font-family: var(--font-geist-mono), monospace;
   pointer-events: none;
-  /* Gives way as the revealed panel takes the frame — otherwise two rulers
-     print on top of each other for the length of the reveal. */
-  opacity: calc(1 - var(--arr-clip-interior));
 }
 .rulerGrid {
   position: absolute;
@@ -335,7 +385,7 @@
 
 .camera {
   position: absolute;
-  top: var(--arr-ruler-h);
+  top: 0;
   left: var(--arr-rail-w);
   width: var(--arr-world-w);
   transform-origin: 0 0;
@@ -447,6 +497,26 @@
 button.clip {
   cursor: pointer;
 }
+
+/* The clips record themselves in, once, on load. A DAW draws a clip as it
+   records it: the region grows from its left edge. This is the only entrance
+   animation on the page and it is not a loop — `data-boot` is set on the
+   section for 1.2s and then removed, which is what makes "once" true rather
+   than "every time the section re-renders". `--i` is the clip's own index, so
+   they land in sequence; `clip-path` rather than a width change, because
+   nothing here may animate layout. */
+@keyframes clip-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.hero[data-boot] .clip {
+  animation: clip-in 520ms cubic-bezier(0.25, 1, 0.5, 1) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
 .clipHead {
   position: relative;
   z-index: 1;
@@ -497,7 +567,15 @@ button.clip {
   min-height: 2px;
   border-radius: 1px;
   background: color-mix(in srgb, var(--clip-color) 45%, #fff);
-  opacity: 0.88;
+  /* A note is a technology, and `--at` is where in the world it sits. It is dim
+     before the playhead reaches it and lit once it has passed, so the clip is a
+     record of the playhead rather than a picture of one. `--arr-play` has a
+     fallback of 0, so the no-script frame shows every note dim; the
+     reduced-motion and scripting-off blocks raise that fallback to 1 so
+     everything is lit, which is the honest reading of a page that is not
+     scrubbing. */
+  --lit: clamp(0, calc((var(--arr-play, 0) - var(--at, 0)) * 60), 1);
+  opacity: calc(0.38 + 0.62 * var(--lit));
 }
 
 .clipDetail {
@@ -623,7 +701,7 @@ button.clip {
 .pinned {
   position: absolute;
   z-index: 4;
-  top: var(--arr-ruler-h);
+  top: 0;
   right: 0;
   bottom: 0;
   left: 0;
@@ -639,12 +717,12 @@ button.clip {
   box-shadow: 0 0 8px color-mix(in srgb, var(--signal-orange) 55%, transparent);
   transform: translateX(-0.5px);
 }
-/* The head is a downward triangle seated in the bottom of the ruler, under the
-   bar numbers, so it never prints across them. */
+/* The head is a downward triangle seated at the top of the track area, directly
+   under the ruler, so it never prints across the bar numbers above it. */
 .playhead::before {
   content: '';
   position: absolute;
-  top: -9px;
+  top: 0;
   left: -5px;
   border-top: 9px solid var(--signal-orange);
   border-right: 5.5px solid transparent;
@@ -767,6 +845,10 @@ button.clip {
   gap: clamp(12px, 1.8vw, 26px);
   padding: 0 clamp(12px, 1.6vw, 22px);
   border-right: 1px solid var(--arr-hair);
+  /* The kit's `Meter` is shared with the Patch's bridge, which sits on cream.
+     Its groove is the one thing a section may say about it, and this one is on
+     the dark ground: a light hairline rather than a dark one. */
+  --meter-track: rgb(238 233 223 / 0.12);
 }
 .proofReadouts div {
   display: flex;
@@ -785,18 +867,6 @@ button.clip {
   color: var(--arr-muted);
   font-size: 8px;
 }
-.meter {
-  position: relative;
-  height: 3px;
-  background: rgb(238 233 223 / 0.12);
-}
-.meter i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: calc(var(--ratio) * 100%);
-  background: var(--signal-orange);
-  opacity: 0.7;
-}
 .strips {
   display: flex;
   flex: 1 1 0;
@@ -806,6 +876,19 @@ button.clip {
   overflow: hidden;
 }
 .strip {
+  /* `--on` is 1 while the playhead is inside this group's clip and 0 outside
+     it, with a short ramp at each edge. It is the strip's one reading, and both
+     the lamp and the meter are drawn from it: the lamp is the kit's `Led`, which
+     lights on `--on`, and the meter rests at 55% of its level and peaks to the
+     level while the playhead is over the clip. The old `meter-bounce` loop is
+     gone — a meter that breathes while nothing is playing is the perpetual
+     animation the design rules out, and the playhead is a real thing to follow
+     instead. `--from` / `--to` are the clip's own start and end, written inline.
+     `--arr-play` is the playhead's position in the world, from the hook. */
+  --on: calc(
+    clamp(0, (var(--arr-play, 0) - var(--from, 0)) * 40, 1) *
+      clamp(0, (var(--to, 1) - var(--arr-play, 0)) * 40, 1)
+  );
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
@@ -872,7 +955,17 @@ button.clip {
   border-radius: 1px;
   background: #0f1214;
 }
-/* The meter peaks at the technology's listed level and never above it. */
+/* The lamp's seat. It centres the kit's `Led` on the strip body's cross axis,
+   which the kit cannot know about — the part decides what a lamp is, the
+   section decides where it sits. */
+.stripLed {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+/* The meter peaks at the technology's listed level and never above it. At rest
+   it is 55% of that level; the playhead's own `--on` lifts it the rest of the
+   way, so the stack reads as a live instrument rather than a printed chart. */
 .stripMeter i {
   position: absolute;
   right: 0;
@@ -895,22 +988,7 @@ button.clip {
     transparent 3px 4px
   );
   transform-origin: bottom;
-  animation: meter-bounce 1.7s ease-in-out infinite alternate var(--phase, 0ms);
-}
-.hero:not([data-phase='open']):not([data-phase='settle']):not(
-    [data-phase='travel']
-  )
-  .stripMeter
-  i {
-  animation-play-state: paused;
-}
-@keyframes meter-bounce {
-  from {
-    transform: scaleY(0.68);
-  }
-  to {
-    transform: scaleY(1);
-  }
+  transform: scaleY(calc(0.55 + 0.45 * var(--on, 0)));
 }
 .stripFader {
   position: relative;
@@ -992,23 +1070,26 @@ button.clip {
    It is a child of the **stage**, not of `.trackArea`. `.trackArea` is
    `overflow: hidden` — the camera's transformed lanes have to be clipped to it —
    so a seam inside it could never paint over the chrome above or the proof
-   below. As a stage overlay it covers both once the window is fully open, which
-   is the point: the panel is what you came for, and the instrument's own
-   furniture should get out of its way. Its insets are measured from the stage's
-   edges to match, via `chromeHeight` / `proofHeight` in the geometry.
+   below. As a stage overlay it covers the proof once the window is fully open.
+   Its top edge is the ruler's bottom edge, so the ruler and the chrome stay
+   visible for the whole window and the panel opens beneath them: they are the
+   instrument's header, and the header of a DAW does not scroll away. Its insets
+   are measured from its own top edge to match, which is why the hook hands the
+   frame a `chromeHeight` and a `rulerHeight` of zero.
 
-   The panel is the previous About — cards, transport, timeline — with its own
-   stylesheet in `rack-01.module.css`. `.aboutSeam` there is what turns a
-   section into a pinned interior. */
+   The panel is the Patch — a cream faceplate built from the same kit as the
+   mixer — with its own stylesheet in `components/patch/patch.module.css`. */
 
 .seam {
   position: absolute;
   z-index: 5;
-  inset: 0;
-  /* The panel's own ground, on the window rather than on the panel. The read
-     translates the panel up by its overflow, so a ground that travelled with it
-     would leave a strip of the dark arrangement showing along the bottom edge —
-     exactly the seam the reveal is supposed to close. */
+  /* Below the chrome *and* the ruler. Both are the instrument's header and both
+     stay, so the window starts where they end rather than at the stage's top. */
+  top: calc(var(--arr-chrome-h) + var(--arr-ruler-h));
+  right: 0;
+  bottom: 0;
+  left: 0;
+  /* The panel's own ground, on the window rather than on the panel. */
   background: var(--chassis-hi);
   clip-path: inset(
     var(--arr-seam-top, 0) var(--arr-seam-right, 0) var(--arr-seam-bottom, 0)
@@ -1019,22 +1100,26 @@ button.clip {
 }
 /* Gated on `data-seam`, not on `data-phase`. The window starts opening at
    `rail` and finishes at `seamOpen`, so a phase gate would make a half-closed
-   strip clickable — and would put its cards in the tab order while the panel is
-   still clipped. The hook writes this on the same condition that clears `inert`,
-   so pointer and keyboard reachability cannot disagree. */
+   strip clickable — and would put its module buttons in the tab order while the
+   panel is still clipped. The hook writes this on the same condition that clears
+   `inert`, so pointer and keyboard reachability cannot disagree. */
 .hero[data-seam='open'] .seam {
   pointer-events: auto;
 }
 
-/* The chrome and the proof step aside once the panel owns the frame. They are
-   already *painted* over by the seam at that point — the window's insets are all
-   zero — so this is not a visual change, it is what takes the nav and the
-   "Open profile" link out of the tab order. Leaving them focusable behind an
-   opaque panel is the classic way a keyboard user tabs into nothing.
+/* The proof strip steps aside once the panel owns the frame. It is already
+   *painted* over by the seam at that point — the window reaches the stage's
+   bottom — so this is not a visual change, it is what takes the "Open profile"
+   link and the footer nav out of the tab order. Leaving them focusable behind
+   an opaque panel is the classic way a keyboard user tabs into nothing.
    `visibility` rather than `display` so the stage's flex column keeps its
    geometry: the camera's measurements are taken once per refresh, and collapsing
-   the chrome would move every lane out from under a frozen camera. */
-.hero[data-seam='open'] .chrome,
+   the proof would move every lane out from under a frozen camera.
+
+   The chrome is deliberately **not** in this list. The seam starts below it, so
+   it is not painted over, and the toolbar's nav is the navigation a reader has
+   while the panel is open — hiding it would leave a blank band where the page's
+   own menu used to be. */
 .hero[data-seam='open'] .proof {
   visibility: hidden;
 }
@@ -1275,7 +1360,9 @@ button.clip {
     position: relative;
     top: auto;
     left: var(--arr-rail-w);
-    margin-top: var(--arr-ruler-h);
+    /* No margin: the ruler is a sibling of the track area in these layouts too,
+       so the camera starts at the track area's own top edge. */
+    margin-top: 0;
     transform: none;
   }
   /* The depth layer is motion, so it is off. `.laneProfile`'s brightness would
@@ -1314,14 +1401,21 @@ button.clip {
   .aboutAnchor {
     display: none;
   }
+  /* Nothing is scrubbing, so no note is "not yet reached": every one is lit.
+     The fallback in the rule above is 0 because the default is a page that is
+     about to be scrubbed; this is the one state where that is not true. */
+  .hero {
+    --arr-play: 1;
+  }
+  /* The entrance is a scroll-adjacent flourish, so it goes with the scroll. */
+  .hero[data-boot] .clip {
+    animation: none;
+  }
   .chrome,
   .proof,
   .lane,
   .rail {
     transition: none;
-  }
-  .stripMeter i {
-    animation: none;
   }
 }
 
@@ -1363,7 +1457,9 @@ button.clip {
     position: relative;
     top: auto;
     left: var(--arr-rail-w);
-    margin-top: var(--arr-ruler-h);
+    /* No margin: the ruler is a sibling of the track area in these layouts too,
+       so the camera starts at the track area's own top edge. */
+    margin-top: 0;
     transform: none;
   }
   .lane,
@@ -1380,9 +1476,6 @@ button.clip {
   .rail {
     transform: none;
   }
-  .ruler {
-    opacity: 1;
-  }
   .seam {
     /* `relative`, not `static`. `.aboutSeam` is absolutely positioned inside
        this, so it needs a containing block the size of the seam; `static` lets
@@ -1395,6 +1488,12 @@ button.clip {
   }
   .aboutAnchor {
     display: none;
+  }
+  /* No hook, so `--arr-play` is never written and the notes would sit dim
+     forever. Every note is lit instead: without a playhead there is nothing
+     that has not been reached. */
+  .hero {
+    --arr-play: 1;
   }
 }
 

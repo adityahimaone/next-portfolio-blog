@@ -44,9 +44,13 @@ import styles from './arrangement.module.css'
 export function ArrangementHero({
   selected,
   setSelected,
+  aboutProgress,
+  setAboutProgress,
 }: {
   selected: number
   setSelected: React.Dispatch<React.SetStateAction<number>>
+  aboutProgress: number
+  setAboutProgress: React.Dispatch<React.SetStateAction<number>>
 }) {
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -54,14 +58,24 @@ export function ArrangementHero({
   const seamRef = useRef<HTMLDivElement>(null)
   const [clock, setClock] = useState('')
 
-  useArrangementHero({ sectionRef, trackRef, cameraRef, seamRef })
+  useArrangementHero({
+    sectionRef,
+    trackRef,
+    cameraRef,
+    seamRef,
+    setAboutProgress,
+    // The hook owns which card the read has reached; `selected` is the same
+    // state the cards and the panel's clips read, and the one a click writes.
+    setAboutIndex: setSelected,
+  })
   useHeroDockVisibility({ sectionRef, seamRef })
 
   // The clock is the one readout on this instrument that is true without being
   // invented. Seeded empty and filled in an effect, so the server and the client
-  // agree on the first render. There is no BPM readout: About's playhead is
-  // parked, so there is no tempo to report, and a readout for motion that does
-  // not happen is exactly the decoration §0.0 forbids.
+  // agree on the first render. There is no BPM readout: nothing here keeps a
+  // tempo. The hero's own playhead parks on the PROFILE clip for the whole dive
+  // and About's travels only as far as the read takes it, so a number for that
+  // motion would be invented — which is the decoration §0.0 forbids.
   useEffect(() => {
     const tick = () =>
       setClock(
@@ -189,7 +203,11 @@ export function ArrangementHero({
             hook never runs on phones or under reduced motion — where the media
             queries put this back in the flow and it must stay reachable. */}
         <div ref={seamRef} className={styles.seam}>
-          <About selected={selected} setSelected={setSelected} />
+          <About
+            selected={selected}
+            setSelected={setSelected}
+            scrollProgress={aboutProgress}
+          />
         </div>
       </div>
 

@@ -26,6 +26,14 @@ import { ARRANGEMENT_CLIPS } from './arrangement-data'
  *    resolve to the same offset and leave a zero-length range. The trigger is
  *    the tall section that *contains* the stage.
  *
+ * It also publishes the About section's two pieces of state. On `main` those
+ * came from `useRackAnimations`, where a ScrollTrigger spanning the section
+ * drove the playhead and one ScrollTrigger per card drove the selection. Inside
+ * the seam there is no section to span — the About is a pinned interior and its
+ * layout rects never change — so both are derived from this hook's own progress
+ * instead, which is the same quantity for a different reason: the read is the
+ * only scroll the seam's About gets.
+ *
  * GSAP and ScrollTrigger are imported dynamically and only after the runtime
  * check, so phones and reduced-motion visitors never pay for the download.
  */
@@ -34,11 +42,15 @@ export function useArrangementHero({
   trackRef,
   cameraRef,
   seamRef,
+  setAboutProgress,
+  setAboutIndex,
 }: {
   sectionRef: RefObject<HTMLElement | null>
   trackRef: RefObject<HTMLDivElement | null>
   cameraRef: RefObject<HTMLDivElement | null>
   seamRef: RefObject<HTMLDivElement | null>
+  setAboutProgress: React.Dispatch<React.SetStateAction<number>>
+  setAboutIndex: React.Dispatch<React.SetStateAction<number>>
 }) {
   useEffect(() => {
     if (
@@ -83,6 +95,11 @@ export function useArrangementHero({
       let appliedPhase: string | null = null
       /** Whether the seam is currently reachable — see the write in `render`. */
       let seamReachable: boolean | null = null
+      /** How many cards the read has to walk through. Measured, never assumed. */
+      let cardCount = 0
+      /** The About interior's two states, as this hook last published them. */
+      let aboutProgress = -1
+      let aboutIndex = -1
 
       /**
        * Measured once per refresh, never per frame. Every anchor the frame needs
@@ -130,6 +147,7 @@ export function useArrangementHero({
         const deck = seam.querySelector<HTMLElement>('[data-about-read]')
         const readOverflow =
           rail && deck ? Math.max(0, rail.offsetHeight - deck.offsetHeight) : 0
+        cardCount = rail ? rail.children.length : 0
 
         // The measured gutter is written back so the ruler's live rule and the
         // frame's maths cannot disagree about where the world starts.
@@ -218,6 +236,43 @@ export function useArrangementHero({
 
         const detail = frame.scale > 1.4 ? 'true' : 'false'
         if (section.dataset.detail !== detail) section.dataset.detail = detail
+
+        // ── The About interior's own two states ──
+        //
+        // On `main` both came from ScrollTriggers that spanned the section: one
+        // over `top bottom` → `bottom top` for the playhead, one per card with
+        // `top 58%` → `bottom 42%` for the selection. Neither can work here. The
+        // interior is pinned, so its rects are constant and every card would be
+        // "in range" at the same instant — a trigger measures layout, and the
+        // read moves cards with a transform it cannot see.
+        //
+        // What replaces them is this hook's own progress, cut to the read: the
+        // window is the section's scroll range now, so the read is the About's
+        // progress. The playhead reports it, and the selection follows it in
+        // thirds — the read walks the column past the window, and the card the
+        // reader has reached is `floor(read × count)`, clamped so the last card
+        // holds once the travel is spent.
+        //
+        // Clicking a card still wins: `setAboutIndex` writes through to the same
+        // state, and this only overwrites it when the read's own answer moves.
+        const readT = Math.max(
+          0,
+          Math.min(
+            1,
+            (progress - ARRANGEMENT_SEAM_OPEN) / (1 - ARRANGEMENT_SEAM_OPEN),
+          ),
+        )
+        if (readT !== aboutProgress) {
+          aboutProgress = readT
+          setAboutProgress(readT)
+        }
+        const nextIndex = cardCount
+          ? Math.min(cardCount - 1, Math.floor(readT * cardCount))
+          : 0
+        if (nextIndex !== aboutIndex) {
+          aboutIndex = nextIndex
+          setAboutIndex(nextIndex)
+        }
       }
 
       measure()

@@ -1299,3 +1299,165 @@ behavior."
 - **`sticky` is safe for the screws** — it is a positioned value, so they still
   resolve against the panel. The §13.7 trap stands: this box must never be
   `static`.
+
+
+### 13.11 The About interior becomes the page section's own
+
+Requested: "atau untuk yang about section kamu ambil dari main section terus put
+in branch docs/arrangment-" — take the About section from `main` and put it in
+this branch, with the seam left standing.
+
+Two readings were possible and they differ by the whole seam, so it was asked
+rather than guessed: pull About out of the seam as its own page section, or keep
+the dive and make the seam's interior be `main`'s About. The answer was the
+second, and the seam's whole premise survives — the clip's own rail reveals, and
+what it reveals is the About the site already ships.
+
+Three things the seam's About had drifted away from `main`, all of them from
+§13.5 and §13.7, and none of them visible until they were measured side by side:
+
+1. **`.timelinePanel` was `relative`.** §13.7 needed that inside the pinned seam
+   and set it globally, which is what forced §13.10's media query to put `sticky`
+   back in the two flow states. `main` is sticky, so sticky is the base rule now
+   — `position: sticky; top: clamp(24px, 7vh, 72px)` — and the §13.10 patch is
+   gone, because the reason it existed is gone.
+2. **The playhead was parked.** It sat at `PARKED_PLAYHEAD = 0.62`, chosen to
+   agree with the hero's own playhead on the PROFILE clip's centre. `main`
+   reports the scroll: `0.05 + progress × 0.9`.
+3. **Nothing drove the selection.** `selected` only ever changed on a click. On
+   `main` one ScrollTrigger per card walked it forward, with `top 58%` →
+   `bottom 42%`.
+
+**The panel's geometry changes with `sticky`, and it is worth knowing why.** A
+positioned grid item does not stretch: with `align-items: stretch` on the deck,
+`relative` let the panel fill the window (710px at 1440×900) while `sticky` gives
+it its own content height — **553px**, exactly the base rule's `min-height: 540px`
+plus padding, and exactly the height it has on `main`. The 157px of empty seam
+below it is the same gap the page section has below its panel. This was a choice,
+not a regression: the number is the site's existing one.
+
+**ScrollTriggers cannot drive the interior, and the reason is structural.** They
+measure layout rects, and the interior is pinned — its rects are constant, so
+every card would be "in range" on the same instant and never again. The read
+moves cards with a transform a trigger cannot see. What replaces them is the
+dive's own progress cut to the read (`ARRANGEMENT_SEAM_OPEN → 1`), because the
+read is the only scroll this About gets: the playhead reports it, and the
+selection follows it in thirds — `floor(readT × count)`, clamped, so the last
+card holds once the travel is spent. Clicking a card still wins; the read only
+overwrites when its own answer moves.
+
+Measured after, 1440×900, `node_modules`-hosted probe:
+
+| progress    | rail         | panel       | playhead | selected |
+| ----------- | ------------ | ----------- | -------- | -------- |
+| 0.60 (zoom) | `170 → 1073` | `170 → 722` | `0.05`   | FOCUS    |
+| 0.78 (rail) | `170 → 1073` | `170 → 722` | `0.05`   | FOCUS    |
+| 0.90 (read) | `89 → 993`   | `170 → 722` | `0.45`   | SYSTEMS  |
+| 1.00 (end)  | `-24 → 879`  | `170 → 722` | `0.95`   | RANGE    |
+
+The panel's rect is the same four times. The rail travels `-194px` and lands
+flush with the deck's bottom. Panel `position` computes to `sticky` with
+`top: 63px` (`7vh`), and its height is `553`.
+
+The other states: **reduced motion** at 1440×900 — scrollY 0 both at rest,
+scrollY 400 panel parks at `63 → 616` and holds while the rail runs
+`310 → -90`, scrollY 900 releases with the section. That is `main`'s behaviour
+from the base rule, with no media query involved. **Phone** — the panel is still
+`display: none`, `0 × 0`, and the rail flows. **Tablet** 834×1112 — the column
+already fits the window (overflow 0), so the read has nothing to travel and the
+About is simply visible, as it was.
+
+`scrollProgress` is back as a prop on `About`, published by
+`useArrangementHero` alongside `setAboutIndex`. The composition in
+`rack-01.tsx` now holds `aboutProgress` next to `aboutIndex`, which is the same
+pair `main` holds for the same reason.
+
+### 13.12 The dock's band is reserved, and the panel gives up the difference
+
+Reported: "can you fix on timeline it collison with navbar bottom maybe on
+container section about width its like in experience section" — with a
+screenshot of the workstation's footer sitting under the quick navigation.
+
+**The width reading was a dead end, and it is worth saying why.** The collision
+is vertical. The dock is `fixed`, 20px off the bottom and 56px tall, so it owns
+the bottom 76px of the viewport, and it is centred — 256px of a 1512px window.
+The panel is top-aligned in the deck with a content height, so its bottom edge is
+`deckTop + 552.5` at every viewport and does not care how much room is left below
+it. Narrowing the About container to the experience section's
+`min(1050px, 100%)` — the reading the report suggested — moves the panel's left
+edge from 644 to 679 against a dock spanning 627…885: still 206px of horizontal
+overlap, and the panel only gets *taller*, because its readout sentence wraps.
+Measured, not argued.
+
+**What was actually wrong.** Nothing in About knew the dock existed. Measured
+before the fix at 1512×784 — the reporter's own window, read off the screenshot's
+1.93 aspect — the panel ran `172.3 → 724.8` against a dock at `708.6 → 764.6`:
+**16px of overlap across 241px of the dock's width**, straight across the
+"CLIP nn / SELECTED" readout. At 1280×720 it was **58px**. Nothing above about
+800px tall collided at all, which is why this survived the earlier passes: they
+were measured at 900 and 982.
+
+**The fix, in two halves.**
+
+1. *Reserve the band.* `padding-bottom: calc(76px + max(0px, 620px - 100svh))`
+   on `.aboutSeam .aboutDeck`. Padding, not a shorter seam, because the deck is
+   `flex: 1`: its border box is whatever the stage has left over either way, so
+   `offsetHeight` does not move — and `offsetHeight` is what the read measures
+   its travel from (`rail.offsetHeight - deck.offsetHeight`). Taking the band out
+   of the deck's *content* box leaves the travel at exactly −194px at 1440×900
+   and takes the room out of the panel alone. The `max(0px, 620px - 100svh)` term
+   is `.stage`'s own `min-height`: below 620px the stage is taller than the
+   window and the dock has moved down with it.
+2. *Let the panel collect it.* `max-height: 100%` resolves against the grid area,
+   which is now the space above the dock. On a block that would simply clip — the
+   panel is `overflow: hidden` and the first thing off the bottom is the readout
+   this exists to protect — so the panel is a flex column and the difference is
+   distributed instead.
+
+**Where the difference comes out is the lanes, and that took a correction.** The
+instrument has three parts that must not change size (brand strip, transport
+header, clip readout) and one that is meant to. So the workspace is a column,
+everything but the arrangement is `flex: none`, and the arrangement is the
+flexible child: a grid whose rows are `minmax(min-content, 1fr)`.
+
+The first pass used `flex: auto` and the panel silently lost 42px *at every
+viewport*, including 1728×1117 where nothing was colliding. An auto-height grid
+resolves `1fr` rows to max-content, and a lane's max-content is its content
+(89px), not the 104px it is drawn at. The basis has to be written out —
+`flex: 1 1 calc(34px + 3 * 104px)`, the ruler plus three lanes — with
+`min-height: 0` so the flex algorithm can take it away again.
+
+**And a short window sheds the chrome rather than cropping the arrangement.** The
+lane floor is 89px (a track header: three 12px labels and a 28px button row
+around 25px of padding) and the chrome above it is 208px, so below about 780px
+tall the two stop fitting and the third lane crops mid-clip.
+`@media (min-width: 769px) and (max-height: 780px)` brings the brand strip's
+`min-height` to 44px, the header's padding to 5px, the track header's to 9px and
+the readout's to 8px — 49px back, with nothing dropped and nothing hidden.
+
+Measured after, five progress points per viewport, panel against dock:
+
+| viewport  | panel           | lane  | arrangement overflow | overlap |
+| --------- | --------------- | ----- | -------------------- | ------- |
+| 1728×1117 | `185 → 737.5`   | 104   | 0                    | 0       |
+| 1512×982  | `179.4 → 731.9` | 104   | 0                    | 0       |
+| 1440×900  | `170 → 722.5`   | 104   | 0                    | 0       |
+| 1512×784  | `172.3 → 690.8` | 92.7  | 0                    | 0       |
+| 1280×720  | `149.1 → 628.2` | 88.2  | 0                    | 0       |
+| 1440×700  | `162.8 → 608.6` | 83    | 17                   | 0       |
+
+The panel keeps its full 552.5px and its 104px lanes at 1440×900 and above —
+`main`'s height, unchanged — and shrinks smoothly into the room above the dock
+below that. 1440×700 is the first size where the lanes reach their floor and the
+third crops 17px; that is the end of the curve, not a cliff.
+
+**Two things that had to be protected while doing this.** The phone still hides
+the panel — its rule is `.timelinePanel` on its own, one class lighter than the
+`display: flex` this section now adds to the same box, so the seam would have won
+and the panel would have come back on the one viewport it is never drawn on;
+verified `display: none`, height 0. And the flow fallbacks undo all of it: in the
+flow there is no deck content box to cap against, the reserved band would be 76px
+of dead space under the last card, and the flex chain has no definite height
+above it to resolve against. Verified under reduced motion at 1440×900 — the
+panel is `display: block`, `position: sticky`, parks at `63 → 615.5` and holds
+while the rail runs to −89.8.

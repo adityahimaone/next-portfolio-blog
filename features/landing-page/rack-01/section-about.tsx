@@ -7,8 +7,6 @@ import { SectionHeading } from './section-heading'
 import { Pause, Play, Square } from 'lucide-react'
 import { RESUME_URL } from './shared'
 import { Screw } from '@/components/ui/screw'
-/** Where the playhead parks when the transport is stopped. */
-const PARKED_PLAYHEAD = 0.62
 
 const ABOUT_TRACKS = [
   {
@@ -109,18 +107,46 @@ const ABOUT_TRACKS = [
 export function About({
   selected,
   setSelected,
+  scrollProgress,
 }: {
   selected: number
   setSelected: React.Dispatch<React.SetStateAction<number>>
+  /**
+   * 0 → 1 across the read. On `main` this was the About *section's* own scroll
+   * progress, from a ScrollTrigger spanning `top bottom` → `bottom top`; here the
+   * same range is the seam's window, which is the only scroll this section gets.
+   * Either way it is the reader's position through the three cards, and the
+   * playhead is what reports it.
+   */
+  scrollProgress: number
 }) {
   const [isPlaying, setIsPlaying] = useState(false)
-  // Parked on the PROFILE clip's centre, which is the year the hero's own
-  // playhead arrives at. The panel is the clip's interior, so the two agree on
-  // where the playhead stands — one timeline, two zoom levels.
-  const [playhead, setPlayhead] = useState(PARKED_PLAYHEAD)
+  // Where the transport stands, and it is state only while it runs.
+  //
+  // On `main` this was one value written from an effect: while the transport was
+  // stopped, the effect copied `0.05 + scrollProgress × 0.9` into it on every
+  // scroll. That is right and it is also a cascading render per scroll tick, so
+  // the two halves are split here — while the transport is stopped the playhead
+  // is *derived during render*, because it is a pure function of the scroll and
+  // React can simply compute it; while it runs, it is the rAF loop's and nothing
+  // else's, and `null` is how that is said.
+  const [playedHead, setPlayedHead] = useState<number | null>(null)
+  const playhead = playedHead ?? 0.05 + scrollProgress * 0.9
 
   const [mutedTracks, setMutedTracks] = useState<Set<number>>(new Set())
   const [soloedTrack, setSoloedTrack] = useState<number | null>(null)
+
+  // Event handlers, not effects: the transport is a thing a reader does, so both
+  // transitions start there. Playing takes over from wherever the scroll left
+  // the playhead; stopping hands it straight back to the scroll.
+  const startPlayback = () => {
+    setPlayedHead(playhead)
+    setIsPlaying(true)
+  }
+  const stopPlayback = () => {
+    setIsPlaying(false)
+    setPlayedHead(null)
+  }
 
   useEffect(() => {
     if (!isPlaying) return
@@ -129,7 +155,7 @@ export function About({
     const advance = (now: number) => {
       const delta = now - previous
       previous = now
-      setPlayhead((position) => (position + delta / 16000) % 1)
+      setPlayedHead((position) => ((position ?? 0) + delta / 16000) % 1)
       frame = requestAnimationFrame(advance)
     }
     frame = requestAnimationFrame(advance)
@@ -273,17 +299,14 @@ export function About({
                 <div className={styles.timelineTransport}>
                   <button
                     type="button"
-                    onClick={() => setIsPlaying((current) => !current)}
+                    onClick={isPlaying ? stopPlayback : startPlayback}
                     aria-label={isPlaying ? 'Pause timeline' : 'Play timeline'}
                   >
                     {isPlaying ? <Pause size={13} /> : <Play size={13} />}
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsPlaying(false)
-                      setPlayhead(0.05)
-                    }}
+                    onClick={stopPlayback}
                     aria-label="Stop and rewind timeline"
                   >
                     <Square size={12} />

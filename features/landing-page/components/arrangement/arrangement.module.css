@@ -1,0 +1,1358 @@
+/* The arrangement.
+
+   Everything here is either the session's ground or a number the scroll writes.
+   The properties the hook animates live on `.trackArea` — the smallest node
+   that reads all of them — and never on the section, because writing a custom
+   property invalidates the whole subtree and that cost scales with its size.
+
+   Every animated property has a fallback, and the fallbacks together *are* the
+   settled overview: no translate, scale 1, the world's top-left at the gutter,
+   the playhead on the profile centre. That falls out of the camera being a
+   translate in world coordinates, so the no-JavaScript frame and the
+   reduced-motion frame need no second ruleset.
+
+   The look is a DAW's playlist: toolbar with transport on top, a two-row ruler
+   (stage markers over bar numbers), coloured track headers on the left, clips
+   with a header strip and a preview of their contents, empty tracks below the
+   real ones, and a mixer along the bottom. */
+
+.hero {
+  --arr-rail-w: max(72px, 9vw);
+  --arr-ruler-h: 44px;
+  --arr-lane-h: clamp(46px, 6.6svh, 60px);
+  --arr-lane-tall: clamp(150px, 22svh, 204px);
+  --arr-mixer-h: clamp(116px, 16svh, 152px);
+  --arr-profile-centre: 0.625;
+}
+
+.hero {
+  --arr-ground: #14171a;
+  --arr-panel: #1b1f23;
+  --arr-panel-hi: #252a2f;
+  --arr-grid: rgb(238 233 223 / 0.05);
+  --arr-grid-bar: rgb(238 233 223 / 0.11);
+  --arr-hair: rgb(238 233 223 / 0.13);
+  --arr-ink: #eee9df;
+  --arr-muted: #8e928e;
+  --arr-scroll: 460svh;
+
+  position: relative;
+  height: var(--arr-scroll);
+  background: var(--arr-ground);
+  color: var(--arr-ink);
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  min-height: 620px;
+  overflow: hidden;
+  background: var(--arr-ground);
+  isolation: isolate;
+}
+
+/* ── Toolbar ────────────────────────────────────────────── */
+
+.chrome {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: clamp(12px, 2vw, 28px);
+  height: 46px;
+  padding: 0 clamp(12px, 2vw, 24px);
+  border-bottom: 1px solid var(--arr-hair);
+  background: linear-gradient(#272c31, #1d2125);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: opacity 400ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.hero[data-phase='rail'] .chrome {
+  opacity: 0.4;
+}
+.brand {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+.brand span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brand small {
+  color: var(--arr-muted);
+  font-size: 9px;
+  font-weight: 500;
+}
+.brandMark {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: conic-gradient(
+    from 90deg,
+    var(--signal-orange) 0 25%,
+    #d7b36f 0 50%,
+    #7d97ab 0 75%,
+    #6f8a6d 0
+  );
+}
+.menu {
+  display: flex;
+  flex: 0 1 auto;
+  gap: clamp(10px, 1.4vw, 20px);
+  padding-left: clamp(10px, 1.6vw, 22px);
+  border-left: 1px solid var(--arr-hair);
+}
+.menu a {
+  color: var(--arr-muted);
+}
+.menu a:hover,
+.menu a:focus-visible {
+  color: var(--arr-ink);
+}
+.transport {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.tBtn {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--arr-hair);
+  border-radius: 3px;
+  background: linear-gradient(#32383e, #262b30);
+  color: var(--arr-ink);
+  cursor: pointer;
+}
+.tBtn:hover,
+.tBtn:focus-visible {
+  border-color: rgb(238 233 223 / 0.35);
+}
+.tPlay {
+  background: linear-gradient(
+    color-mix(in srgb, var(--signal-orange) 90%, #fff),
+    var(--signal-orange)
+  );
+  border-color: color-mix(in srgb, var(--signal-orange) 70%, #000);
+  color: #1a120c;
+}
+.iconPlay {
+  width: 0;
+  height: 0;
+  margin-left: 2px;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid currentColor;
+}
+.iconStop {
+  width: 9px;
+  height: 9px;
+  background: currentColor;
+}
+/* The LCD: a recessed readout, the one place the toolbar uses a display face. */
+.lcd {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid #0c0e10;
+  border-radius: 3px;
+  background: #0f1214;
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.6);
+  line-height: 26px;
+}
+.lcd small {
+  color: var(--arr-muted);
+  font-size: 8px;
+  font-weight: 500;
+}
+.lcd b,
+.lcd time {
+  color: var(--signal-orange);
+  font-family: var(--font-orbitron), var(--font-geist-mono), monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+.lcd time {
+  color: var(--arr-ink);
+}
+
+/* ── Track area: the property host ──────────────────────── */
+
+.trackArea {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  --arr-zoom: 1;
+  --arr-camera-x: 0px;
+  --arr-camera-y: 0px;
+  --arr-world-w: calc(100% - var(--arr-rail-w));
+  --arr-rail: 0;
+  --arr-clip-interior: 0;
+  --arr-playhead: calc(
+    (1 - var(--arr-profile-centre)) * var(--arr-rail-w) +
+      var(--arr-profile-centre) * 100%
+  );
+}
+
+/* ── Ruler ──────────────────────────────────────────────────
+   Outside the camera on purpose: it must not scale. Its labels are positioned
+   from the camera's own transform, so the type is always drawn at real size and
+   the ruler cannot drift from the clips beneath it. Top row: stage markers.
+   Bottom row: bar numbers. */
+
+.ruler {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--arr-ruler-h);
+  overflow: hidden;
+  border-bottom: 1px solid var(--arr-hair);
+  background: var(--arr-panel);
+  font-family: var(--font-geist-mono), monospace;
+  pointer-events: none;
+  /* Gives way as the revealed panel takes the frame — otherwise two rulers
+     print on top of each other for the length of the reveal. */
+  opacity: calc(1 - var(--arr-clip-interior));
+}
+.rulerGrid {
+  position: absolute;
+  inset: 22px 0 0;
+  background-image: linear-gradient(
+      90deg,
+      var(--arr-grid-bar) 0 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, var(--arr-hair) 0 1px, transparent 1px);
+  background-repeat: repeat-x;
+  background-size:
+    calc(var(--arr-world-w) * var(--arr-zoom) / 8) 100%,
+    calc(var(--arr-world-w) * var(--arr-zoom) / 32) 40%;
+  background-position:
+    calc(var(--arr-rail-w) + var(--arr-camera-x)) 0,
+    calc(var(--arr-rail-w) + var(--arr-camera-x)) 100%;
+}
+.tick {
+  position: absolute;
+  top: 0;
+  height: 22px;
+  border-left: 1px solid
+    color-mix(in srgb, var(--signal-orange) 55%, transparent);
+  padding: 6px 0 0 6px;
+  color: color-mix(in srgb, var(--signal-orange) 65%, var(--arr-muted));
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  white-space: nowrap;
+  left: calc(
+    var(--arr-rail-w) + var(--tick) * var(--arr-world-w) * var(--arr-zoom) +
+      var(--arr-camera-x)
+  );
+}
+/* The last marker is right-aligned onto its tick. Left-aligned it hangs off the
+   frame, and the final stage is the one a reader is most likely to look for. */
+.tickLast {
+  padding: 6px 6px 0 0;
+  border-left: 0;
+  border-right: 1px solid
+    color-mix(in srgb, var(--signal-orange) 55%, transparent);
+  transform: translateX(-100%);
+}
+.barNum {
+  position: absolute;
+  top: 24px;
+  padding-left: 4px;
+  color: var(--arr-muted);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  left: calc(
+    var(--arr-rail-w) + var(--tick) * var(--arr-world-w) * var(--arr-zoom) +
+      var(--arr-camera-x)
+  );
+}
+/* The corner sits over the rail's column, so markers and numbers slide under it
+   instead of printing across the track headers. */
+.rulerCorner {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  width: var(--arr-rail-w);
+  padding-left: 10px;
+  overflow: hidden;
+  border-right: 1px solid var(--arr-hair);
+  background: var(--arr-panel-hi);
+  color: var(--arr-muted);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+/* ── Camera: the only scaled node ───────────────────────── */
+
+.camera {
+  position: absolute;
+  top: var(--arr-ruler-h);
+  left: var(--arr-rail-w);
+  width: var(--arr-world-w);
+  transform-origin: 0 0;
+  transform: translate3d(var(--arr-camera-x), var(--arr-camera-y), 0)
+    scale(var(--arr-zoom));
+}
+.lanes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lane {
+  position: relative;
+  height: var(--arr-lane-h);
+  border-bottom: 1px solid var(--arr-hair);
+  background-color: #171a1e;
+  /* The grid is drawn on bars, not on a fixed pixel step: a line every bar, a
+     stronger one every four, and every other four-bar block a shade lighter —
+     the same count the ruler prints. */
+  background-image: repeating-linear-gradient(
+      90deg,
+      var(--arr-grid-bar) 0 1px,
+      transparent 1px calc(100% / 8)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--arr-grid) 0 1px,
+      transparent 1px calc(100% / 32)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgb(238 233 223 / 0.022) 0 calc(100% / 8),
+      transparent calc(100% / 8) calc(100% / 4)
+    );
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--arr-lane-h);
+  transition: opacity 320ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.laneTall {
+  height: var(--arr-lane-tall);
+  contain-intrinsic-size: auto var(--arr-lane-tall);
+}
+.laneGhost {
+  background-color: #15181b;
+}
+
+/* Non-target lanes fall away during the dive. Driven by the phase attribute,
+   not by the frame — it changes once, so a transition is cheaper and smoother
+   than a per-tick recompute. */
+.hero[data-phase='zoom'] .lane:not(.laneProfile),
+.hero[data-phase='rail'] .lane:not(.laneProfile) {
+  opacity: 0.12;
+}
+.hero[data-phase='zoom'] .laneName,
+.hero[data-phase='rail'] .laneName {
+  opacity: 0.16;
+}
+
+/* ── Clips ──────────────────────────────────────────────────
+   A header strip in the clip's colour carrying its name, over a darker body
+   carrying a preview of what is inside. */
+
+.clip {
+  position: absolute;
+  top: calc(var(--clip-top, 0) * 100% + 4px);
+  height: calc(var(--clip-height, 1) * 100% - 8px);
+  left: calc(var(--clip-start) * 100%);
+  width: calc((var(--clip-end) - var(--clip-start)) * 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--clip-color) 75%, #000);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--clip-color) 24%, var(--arr-ground));
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.35);
+  color: var(--arr-ink);
+  font-family: var(--font-geist-mono), monospace;
+  text-align: left;
+}
+button.clip {
+  cursor: pointer;
+}
+.clipHead {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  height: 16px;
+  padding: 0 7px;
+  overflow: hidden;
+  background: var(--clip-color);
+  color: #141210;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.clipHead strong {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font: inherit;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+.clipBody {
+  position: relative;
+  z-index: 1;
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Pattern preview: one note per technology, as long as its level. */
+.notes {
+  position: absolute;
+  inset: 4px 8px;
+  display: block;
+}
+.notes i {
+  position: absolute;
+  top: calc(var(--row) / var(--rows) * 100%);
+  left: calc(var(--row) / var(--rows) * 36%);
+  width: calc(var(--note) * 60%);
+  height: calc(100% / var(--rows) - 1px);
+  min-height: 2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--clip-color) 45%, #fff);
+  opacity: 0.88;
+}
+
+.clipDetail {
+  position: absolute;
+  inset: 6px 8px;
+  overflow: hidden;
+  color: rgb(238 233 223 / 0.66);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+/* The name clip is the one full-saturation element in the hero, and the one
+   documented exception to "a clip's width is a duration". Its body is the name
+   drawn as a waveform with the name set over it. */
+.clipName {
+  border-color: color-mix(in srgb, var(--signal-orange) 70%, #000);
+  background: var(--signal-orange);
+  color: #1a120c;
+}
+.clipName .clipHead {
+  background: color-mix(in srgb, var(--signal-orange) 72%, #000);
+  padding-left: clamp(14px, 2vw, 28px);
+  color: #1a120c;
+}
+.clipName .clipBody {
+  display: flex;
+  align-items: center;
+}
+.clipWave {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.clipWave path {
+  fill: rgb(26 18 12 / 0.2);
+}
+.clipNameTitle {
+  position: relative;
+  margin: 0;
+  padding-left: clamp(14px, 2vw, 28px);
+  font-family: var(--font-syne), sans-serif;
+  /* The ceiling is the smaller of the width's and the lane's: two lines at
+     0.92 line-height, inside a lane that is `--arr-lane-tall` tall less the
+     clip's margin, its header and a little air. Width alone overflowed the
+     lane at short viewports. */
+  font-size: clamp(
+    34px,
+    min(6.5vw, calc((var(--arr-lane-tall) - 44px) / 1.86)),
+    96px
+  );
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+.clipNameTitle span {
+  display: block;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The clip becomes the page: the wash crossfades to the chassis colour and the
+   header and detail ink flip with it. The wash is a direct child of the clip so
+   it reaches all four edges, header included. */
+.clipProfile {
+  background: color-mix(in srgb, var(--clip-color) 24%, var(--arr-ground));
+}
+.clipWash {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--chassis-hi, #f4f0e8);
+  opacity: var(--arr-clip-interior);
+}
+.clipProfile .clipHead {
+  background: color-mix(
+    in srgb,
+    var(--clip-color) calc((1 - var(--arr-clip-interior)) * 100%),
+    transparent
+  );
+  color: color-mix(
+    in srgb,
+    #141210 calc((1 - var(--arr-clip-interior)) * 100%),
+    var(--panel-ink, #101211)
+  );
+}
+.clipProfile .clipDetail {
+  color: color-mix(
+    in srgb,
+    rgb(238 233 223 / 0.66) calc((1 - var(--arr-clip-interior)) * 100%),
+    var(--panel-ink, #101211)
+  );
+}
+
+/* While the dive opens the clip into the panel, the panel fades in over it. The
+   clip's own label and detail would print on top of the panel's heading for that
+   stretch, so they step out as soon as the dive starts. */
+.clipProfile .clipHead strong,
+.clipDetail {
+  transition: opacity 200ms linear;
+}
+.hero[data-phase='zoom'] .clipProfile .clipHead strong,
+.hero[data-phase='zoom'] .clipProfile .clipDetail,
+.hero[data-phase='rail'] .clipProfile .clipHead strong,
+.hero[data-phase='rail'] .clipProfile .clipDetail {
+  opacity: 0;
+}
+
+/* ── Pinned: playhead and track headers ─────────────────── */
+
+.pinned {
+  position: absolute;
+  z-index: 4;
+  top: var(--arr-ruler-h);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+}
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--arr-playhead);
+  width: 1px;
+  background: var(--signal-orange);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--signal-orange) 55%, transparent);
+  transform: translateX(-0.5px);
+}
+/* The head is a downward triangle seated in the bottom of the ruler, under the
+   bar numbers, so it never prints across them. */
+.playhead::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: -5px;
+  border-top: 9px solid var(--signal-orange);
+  border-right: 5.5px solid transparent;
+  border-left: 5.5px solid transparent;
+}
+.rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: var(--arr-rail-w);
+  overflow: hidden;
+  border-right: 1px solid var(--arr-hair);
+  background: var(--arr-panel);
+  transition: opacity 260ms linear;
+}
+/* The headers are there from the first frame, as in a DAW. They step out of the
+   way while the camera dives — the lanes are scaled by then and the rows would
+   no longer line up — and slide back in at the rail phase. */
+.hero[data-phase='zoom'] .rail {
+  opacity: 0;
+  transform: translate3d(-100%, 0, 0);
+}
+.hero[data-phase='rail'] .rail {
+  transform: translate3d(calc((1 - var(--arr-rail)) * -100%), 0, 0);
+}
+.rail span {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  height: var(--arr-lane-h);
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid var(--arr-hair);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--lane-color) 30%, var(--arr-panel)),
+    var(--arr-panel) 85%
+  );
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+.rail span::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--lane-color);
+}
+.rail span b {
+  flex: 0 0 auto;
+  color: var(--arr-muted);
+  font-weight: 500;
+}
+.rail span em {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--arr-ink);
+  font-style: normal;
+  text-overflow: ellipsis;
+}
+.railLed {
+  order: 3;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--lane-color);
+  box-shadow: 0 0 5px var(--lane-color);
+}
+.rail .railTall {
+  height: var(--arr-lane-tall);
+}
+.rail .railTall em {
+  color: var(--signal-orange);
+}
+.rail .railGhost {
+  background: #15181b;
+}
+.rail .railGhost::before {
+  background: rgb(238 233 223 / 0.08);
+}
+.rail .railGhost em {
+  color: rgb(238 233 223 / 0.28);
+}
+
+/* ── Mixer ──────────────────────────────────────────────────
+   One insert per technology, coloured by its stage, fader set to its listed
+   level. The proof numbers are the info display at the left, the master at the
+   right carries the way into About. */
+
+.proof {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  height: var(--arr-mixer-h);
+  border-top: 1px solid var(--arr-hair);
+  background: var(--arr-panel);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: opacity 400ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.hero[data-phase='zoom'] .proof,
+.hero[data-phase='rail'] .proof {
+  opacity: 0.25;
+}
+.proofReadouts {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: clamp(12px, 1.8vw, 26px);
+  padding: 0 clamp(12px, 1.6vw, 22px);
+  border-right: 1px solid var(--arr-hair);
+}
+.proofReadouts div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 68px;
+}
+.proofReadouts b {
+  color: var(--arr-ink);
+  font-family: var(--font-orbitron), var(--font-geist-mono), monospace;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.proofReadouts small {
+  color: var(--arr-muted);
+  font-size: 8px;
+}
+.meter {
+  position: relative;
+  height: 3px;
+  background: rgb(238 233 223 / 0.12);
+}
+.meter i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--ratio) * 100%);
+  background: var(--signal-orange);
+  opacity: 0.7;
+}
+.strips {
+  display: flex;
+  flex: 1 1 0;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 8px;
+  overflow: hidden;
+}
+.strip {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100px;
+  overflow: hidden;
+  border: 1px solid var(--arr-hair);
+  border-radius: 2px;
+  background: var(--arr-panel-hi);
+}
+.stripHead {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 5px;
+  background: var(--strip-color);
+  color: #141210;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.stripHead b {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+/* The name is set vertically in the body, like the reference's mixer. The
+   horizontal copy stays for assistive tech and for phones. */
+.stripHead em {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  font-style: normal;
+  white-space: nowrap;
+}
+.stripName {
+  flex: 0 0 auto;
+  overflow: hidden;
+  color: rgb(238 233 223 / 0.72);
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+  line-height: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.stripBody {
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: 5px;
+  min-height: 0;
+  padding: 6px 4px;
+}
+.stripMeter {
+  position: relative;
+  flex: 0 0 auto;
+  width: 6px;
+  overflow: hidden;
+  border-radius: 1px;
+  background: #0f1214;
+}
+/* The meter peaks at the technology's listed level and never above it. */
+.stripMeter i {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: calc(var(--level) * 100%);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--strip-color) 75%, #fff),
+    var(--signal-orange)
+  );
+  -webkit-mask-image: repeating-linear-gradient(
+    to top,
+    #000 0 3px,
+    transparent 3px 4px
+  );
+  mask-image: repeating-linear-gradient(
+    to top,
+    #000 0 3px,
+    transparent 3px 4px
+  );
+  transform-origin: bottom;
+  animation: meter-bounce 1.7s ease-in-out infinite alternate var(--phase, 0ms);
+}
+.hero:not([data-phase='open']):not([data-phase='settle']):not(
+    [data-phase='travel']
+  )
+  .stripMeter
+  i {
+  animation-play-state: paused;
+}
+@keyframes meter-bounce {
+  from {
+    transform: scaleY(0.68);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.stripFader {
+  position: relative;
+  flex: 0 0 auto;
+  width: 12px;
+}
+.stripFader::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 3px;
+  border-radius: 1px;
+  background: #0f1214;
+  transform: translateX(-50%);
+}
+.stripFader i {
+  position: absolute;
+  bottom: calc(var(--level) * 100% - 3px);
+  left: 0;
+  width: 12px;
+  height: 6px;
+  border-radius: 1px;
+  background: #d8d3c8;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
+}
+.master {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  /* Anchored to the bottom, so the stack stays under 96px tall. The site's
+     floating player is fixed 96px above the viewport's bottom edge on the right,
+     and anything higher in this column would sit under it. */
+  justify-content: flex-end;
+  gap: 8px;
+  width: clamp(120px, 12vw, 176px);
+  padding: 12px clamp(12px, 1.6vw, 22px);
+  border-left: 1px solid var(--arr-hair);
+}
+.axis {
+  color: var(--arr-muted);
+  font-size: 8px;
+  line-height: 1.5;
+  text-align: right;
+}
+.proofJump {
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--signal-orange) 70%, transparent);
+  border-radius: 3px;
+  color: var(--signal-orange);
+  white-space: nowrap;
+}
+.proofJump:hover,
+.proofJump:focus-visible {
+  background: var(--signal-orange);
+  color: #1a120c;
+}
+/* Shown only on phones, where the toolbar's menu has no room. */
+.proofNav {
+  display: none;
+  gap: 16px;
+}
+.proofNav a {
+  color: var(--arr-muted);
+}
+.proofNav a:hover,
+.proofNav a:focus-visible {
+  color: var(--arr-ink);
+}
+
+/* ── The seam: the clip's interior ──────────────────────────
+   Laid out at its real size for the whole window and uncovered by a clip-path
+   that starts as the PROFILE clip's own rectangle. A `clip-path` reveal rather
+   than a `transform: scale()` one on purpose: the clip is 58px tall when the
+   dive starts, and anything that scaled the panel to fit that box would render
+   About's heading at a fraction of its size. Revealing keeps the type at real
+   size and grows the window around it, which is also what the doc describes.
+
+   It is a child of the **stage**, not of `.trackArea`. `.trackArea` is
+   `overflow: hidden` — the camera's transformed lanes have to be clipped to it —
+   so a seam inside it could never paint over the chrome above or the proof
+   below. As a stage overlay it covers both once the window is fully open, which
+   is the point: the panel is what you came for, and the instrument's own
+   furniture should get out of its way. Its insets are measured from the stage's
+   edges to match, via `chromeHeight` / `proofHeight` in the geometry.
+
+   The panel is the previous About — cards, transport, timeline — with its own
+   stylesheet in `rack-01.module.css`. `.aboutSeam` there is what turns a
+   section into a pinned interior. */
+
+.seam {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  /* The panel's own ground, on the window rather than on the panel. The read
+     translates the panel up by its overflow, so a ground that travelled with it
+     would leave a strip of the dark arrangement showing along the bottom edge —
+     exactly the seam the reveal is supposed to close. */
+  background: var(--chassis-hi);
+  clip-path: inset(
+    var(--arr-seam-top, 0) var(--arr-seam-right, 0) var(--arr-seam-bottom, 0)
+      var(--arr-seam-left, 0)
+  );
+  opacity: var(--arr-seam-opacity, 0);
+  pointer-events: none;
+}
+/* Gated on `data-seam`, not on `data-phase`. The window starts opening at
+   `rail` and finishes at `seamOpen`, so a phase gate would make a half-closed
+   strip clickable — and would put its cards in the tab order while the panel is
+   still clipped. The hook writes this on the same condition that clears `inert`,
+   so pointer and keyboard reachability cannot disagree. */
+.hero[data-seam='open'] .seam {
+  pointer-events: auto;
+}
+
+/* The chrome and the proof step aside once the panel owns the frame. They are
+   already *painted* over by the seam at that point — the window's insets are all
+   zero — so this is not a visual change, it is what takes the nav and the
+   "Open profile" link out of the tab order. Leaving them focusable behind an
+   opaque panel is the classic way a keyboard user tabs into nothing.
+   `visibility` rather than `display` so the stage's flex column keeps its
+   geometry: the camera's measurements are taken once per refresh, and collapsing
+   the chrome would move every lane out from under a frozen camera. */
+.hero[data-seam='open'] .chrome,
+.hero[data-seam='open'] .proof {
+  visibility: hidden;
+}
+
+/* Where `#about` resolves to. Not on the seam itself: a sticky element's rect is
+   a function of scroll position, so an `#about` inside the stage resolves to the
+   hero's scroll origin and the skip link would jump to the top of the hero.
+
+   It lands on `ARRANGEMENT_PHASES.rail` — the offset at which the window is open
+   and the read begins — not on the end of the hero. Landing on the end would put
+   the reader at the bottom of the panel having never seen its heading. The hook
+   writes the offset in px, derived from the trigger's own range, so this cannot
+   drift when the phases are retimed. */
+.aboutAnchor {
+  position: absolute;
+  top: var(--arr-about-at, 100svh);
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+/* ── Phones: a session view, no camera ──────────────────── */
+
+@media (max-width: 768px) {
+  .hero {
+    height: auto;
+  }
+  .stage {
+    position: static;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+  .trackArea {
+    overflow: visible;
+    padding-bottom: 24px;
+  }
+  /* The toolbar keeps one line: the brand and the clock. The menu moves to the
+     footer, where the readouts already are, rather than being dropped. */
+  .chrome {
+    overflow: hidden;
+  }
+  .menu,
+  .tBtn,
+  .lcdPos,
+  .brand small {
+    display: none;
+  }
+  .ruler {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 12px 6px;
+    overflow: visible;
+    background: none;
+  }
+  .rulerGrid,
+  .barNum,
+  .rulerCorner {
+    display: none;
+  }
+  .tick {
+    position: static;
+    height: auto;
+    border-left: 0;
+    padding: 0 12px 0 0;
+  }
+  .tickLast {
+    padding-right: 0;
+    border-right: 0;
+    transform: none;
+  }
+  .camera {
+    position: static;
+    width: auto;
+    transform: none;
+  }
+  .lanes {
+    gap: 6px;
+    padding: 0 12px;
+  }
+  .lane {
+    height: auto;
+    min-height: 84px;
+    content-visibility: visible;
+  }
+  .laneGhost {
+    display: none;
+  }
+  .laneTall {
+    height: auto;
+  }
+  .clip {
+    position: static;
+    width: auto;
+    height: auto;
+    min-height: 76px;
+    margin: 4px 0;
+  }
+  .clipBody {
+    min-height: 44px;
+  }
+  .clipNameTitle {
+    font-size: clamp(30px, 9vw, 52px);
+  }
+  .pinned {
+    position: static;
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 0 12px;
+  }
+  .playhead {
+    display: none;
+  }
+  .rail {
+    position: static;
+    flex-flow: row wrap;
+    width: auto;
+    overflow: visible;
+    border: 0;
+    background: none;
+    gap: 8px;
+  }
+  .rail span,
+  .rail .railTall {
+    height: auto;
+    padding: 5px 10px 5px 14px;
+    border: 1px solid var(--arr-hair);
+  }
+  .rail .railGhost {
+    display: none;
+  }
+  .proof {
+    flex-direction: column;
+    height: auto;
+    gap: 14px;
+    align-items: stretch;
+    padding: 16px 12px;
+  }
+  .proofReadouts {
+    padding: 0 0 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--arr-hair);
+  }
+  .strips {
+    flex-wrap: wrap;
+    padding: 0;
+    overflow: visible;
+  }
+  .strip {
+    flex: 0 0 calc(33.333% - 2px);
+    max-width: none;
+    height: 76px;
+  }
+  .stripHead em {
+    position: static;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    overflow: hidden;
+    clip-path: none;
+    text-overflow: ellipsis;
+  }
+  .stripName {
+    display: none;
+  }
+  .master {
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    padding: 0;
+    border-left: 0;
+  }
+  .proofNav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  /* The stage is not pinned here, so the seam is just the next block in the
+     flow — which is the session view the doc asks for. */
+  .seam {
+    /* `relative`, not `static`. `.aboutSeam` is absolutely positioned inside
+       this, so it needs a containing block the size of the seam; `static` lets
+       it resolve against `.hero` and cover the whole section instead. */
+    position: relative;
+    inset: auto;
+    clip-path: none;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .aboutAnchor {
+    display: none;
+  }
+}
+
+/* ── Reduced motion: the arrangement at overview zoom ───── */
+
+@media (prefers-reduced-motion: reduce) {
+  .hero {
+    height: auto;
+  }
+  .stage {
+    position: static;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+  .trackArea {
+    overflow: visible;
+  }
+  /* The camera is absolutely positioned in the pinned layout, so with nothing
+     in the flow the track area would be 0px tall and the lanes would paint
+     over the mixer. Here it is a block in the flow, offset by the ruler and the
+     header column, and the filler tracks go: there is no frame to fill. */
+  .camera {
+    position: relative;
+    top: auto;
+    left: var(--arr-rail-w);
+    margin-top: var(--arr-ruler-h);
+    transform: none;
+  }
+  .laneGhost {
+    display: none;
+  }
+  .rail {
+    transform: none;
+  }
+  .ruler {
+    opacity: 1;
+  }
+  /* Nothing is revealed by scroll here, so the interior is simply the block
+     below the arrangement. It has to be reachable: `inert` is set by the hook,
+     and the hook never runs under reduced motion. */
+  .seam {
+    /* `relative`, not `static`. `.aboutSeam` is absolutely positioned inside
+       this, so it needs a containing block the size of the seam; `static` lets
+       it resolve against `.hero` and cover the whole section instead. */
+    position: relative;
+    inset: auto;
+    clip-path: none;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .aboutAnchor {
+    display: none;
+  }
+  .chrome,
+  .proof,
+  .lane,
+  .rail {
+    transition: none;
+  }
+  .stripMeter i {
+    animation: none;
+  }
+}
+
+/* ── No JavaScript ────────────────────────────────────────
+   The pin is CSS-only (`position: sticky` inside a 460svh section), so with
+   scripting off the desktop page would otherwise be 460svh of arrangement with
+   About sitting at `opacity: 0` behind it — content reachable only by a scroll
+   that does nothing. Nothing may be hidden behind a script: the seam goes back
+   into the flow and becomes the block below the arrangement, which is exactly
+   what a reduced-motion visitor gets.
+
+   `scripting: none` is evaluated only when scripting is genuinely disabled, so
+   this can never fight the hook, and it needs no `data-live` flip that would
+   make the server render one layout and the client another. Browsers too old to
+   know the feature drop the block and keep the animated default — no worse than
+   today. */
+@media (scripting: none) {
+  .hero {
+    height: auto;
+  }
+  .stage {
+    position: static;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+  .trackArea {
+    overflow: visible;
+  }
+  /* The camera is absolutely positioned in the pinned layout, so with nothing
+     in the flow the track area would be 0px tall and the lanes would paint
+     over the mixer. Here it is a block in the flow, offset by the ruler and the
+     header column, and the filler tracks go: there is no frame to fill. */
+  .camera {
+    position: relative;
+    top: auto;
+    left: var(--arr-rail-w);
+    margin-top: var(--arr-ruler-h);
+    transform: none;
+  }
+  .laneGhost {
+    display: none;
+  }
+  .rail {
+    transform: none;
+  }
+  .ruler {
+    opacity: 1;
+  }
+  .seam {
+    /* `relative`, not `static`. `.aboutSeam` is absolutely positioned inside
+       this, so it needs a containing block the size of the seam; `static` lets
+       it resolve against `.hero` and cover the whole section instead. */
+    position: relative;
+    inset: auto;
+    clip-path: none;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .aboutAnchor {
+    display: none;
+  }
+}
+
+/* Tablets: the track headers collapse to number and LED, the camera still runs. */
+@media (min-width: 769px) and (max-width: 1180px) {
+  .hero {
+    --arr-rail-w: 46px;
+  }
+  .rail span {
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+  }
+  .rail span em,
+  .rail .railLed {
+    display: none;
+  }
+  .rulerCorner {
+    font-size: 0;
+  }
+  .brand small {
+    display: none;
+  }
+  .stripFader {
+    display: none;
+  }
+  .master {
+    width: 148px;
+  }
+  .axis {
+    display: none;
+  }
+  .proofReadouts {
+    gap: 10px;
+    padding: 0 12px;
+  }
+  .proofReadouts div {
+    min-width: 52px;
+  }
+  .stripBody {
+    gap: 4px;
+    padding: 6px 3px;
+  }
+}
+@media (min-width: 769px) and (max-width: 940px) {
+  .lcdPos {
+    display: none;
+  }
+}

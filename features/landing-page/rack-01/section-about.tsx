@@ -4,17 +4,10 @@ import { useEffect, useState } from 'react'
 import { SilkscreenLabel, VenLogo } from './primitives'
 import styles from './rack-01.module.css'
 import { SectionHeading } from './section-heading'
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Mail,
-  Pause,
-  Play,
-  Square,
-} from 'lucide-react'
+import { Pause, Play, Square } from 'lucide-react'
 import { RESUME_URL } from './shared'
 import { Screw } from '@/components/ui/screw'
-import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
+
 const ABOUT_TRACKS = [
   {
     title: 'FOCUS',
@@ -59,8 +52,8 @@ const ABOUT_TRACKS = [
   {
     title: 'RANGE',
     note: 'BACKEND / AUTOMATION / INFRA',
-    metric: 'VPS',
-    metricLabel: 'SELF-HOSTED',
+    metric: 'EDGE',
+    metricLabel: 'DEPLOY TARGET',
     heading: 'Stay close to production.',
     signal: 'ADDITIONAL EXPERIENCE',
     surface: '#b68ba5',
@@ -71,8 +64,16 @@ const ABOUT_TRACKS = [
     // of text against an 83px row, so the last line was being cut off behind the
     // foot's internal scroll. Four characters shorter per line is the whole
     // difference; the meaning is unchanged.
+    //
+    // The sentence about the VPS behind Nginx went stale: `.github/workflows/
+    // deploy.yml` now builds with `opennextjs-cloudflare` and deploys through
+    // `cloudflare/wrangler-action`, and its own comment says the SSH-to-PM2 path
+    // "no longer exists". `ecosystem.config.js` is checked in as
+    // `.vps-retired`. A card whose whole argument is "I stay close to
+    // production" cannot be the one place the stack is out of date, so this
+    // states the deployment that is actually running.
     story:
-      'I work across application data, deployment and monitoring when the frontend needs more than a polished screen. This site runs on a VPS behind Nginx, watched by Prometheus and Grafana, which is why the writing here is about what broke.',
+      'I work across application data, deployment and monitoring when the frontend needs more than a polished screen. This site runs on Cloudflare Workers via OpenNext with an R2 cache, which is why the writing here is about what broke.',
     // No credits row on this card, and that is deliberate.
     //
     // It carries the availability line and the résumé as well, which makes its
@@ -110,17 +111,42 @@ export function About({
 }: {
   selected: number
   setSelected: React.Dispatch<React.SetStateAction<number>>
+  /**
+   * 0 → 1 across the read. On `main` this was the About *section's* own scroll
+   * progress, from a ScrollTrigger spanning `top bottom` → `bottom top`; here the
+   * same range is the seam's window, which is the only scroll this section gets.
+   * Either way it is the reader's position through the three cards, and the
+   * playhead is what reports it.
+   */
   scrollProgress: number
 }) {
   const [isPlaying, setIsPlaying] = useState(false)
-  const [playhead, setPlayhead] = useState(0.08)
+  // Where the transport stands, and it is state only while it runs.
+  //
+  // On `main` this was one value written from an effect: while the transport was
+  // stopped, the effect copied `0.05 + scrollProgress × 0.9` into it on every
+  // scroll. That is right and it is also a cascading render per scroll tick, so
+  // the two halves are split here — while the transport is stopped the playhead
+  // is *derived during render*, because it is a pure function of the scroll and
+  // React can simply compute it; while it runs, it is the rAF loop's and nothing
+  // else's, and `null` is how that is said.
+  const [playedHead, setPlayedHead] = useState<number | null>(null)
+  const playhead = playedHead ?? 0.05 + scrollProgress * 0.9
 
   const [mutedTracks, setMutedTracks] = useState<Set<number>>(new Set())
   const [soloedTrack, setSoloedTrack] = useState<number | null>(null)
 
-  useEffect(() => {
-    if (!isPlaying) setPlayhead(0.05 + scrollProgress * 0.9)
-  }, [isPlaying, scrollProgress])
+  // Event handlers, not effects: the transport is a thing a reader does, so both
+  // transitions start there. Playing takes over from wherever the scroll left
+  // the playhead; stopping hands it straight back to the scroll.
+  const startPlayback = () => {
+    setPlayedHead(playhead)
+    setIsPlaying(true)
+  }
+  const stopPlayback = () => {
+    setIsPlaying(false)
+    setPlayedHead(null)
+  }
 
   useEffect(() => {
     if (!isPlaying) return
@@ -129,7 +155,7 @@ export function About({
     const advance = (now: number) => {
       const delta = now - previous
       previous = now
-      setPlayhead((position) => (position + delta / 16000) % 1)
+      setPlayedHead((position) => ((position ?? 0) + delta / 16000) % 1)
       frame = requestAnimationFrame(advance)
     }
     frame = requestAnimationFrame(advance)
@@ -146,18 +172,28 @@ export function About({
   }
 
   return (
-    <section
-      id="about"
-      className={`${styles.section} ${styles.about}`}
-      data-rack-section
+    <div
+      className={`${styles.about} ${styles.aboutSeam}`}
+      data-no-heading-reveal
     >
       <div className={styles.aboutStage}>
         <SectionHeading index="02" eyebrow="Profile">
           Make the complicated part feel obvious.
         </SectionHeading>
-        <div className={styles.aboutDeck}>
+        {/* `data-about-read` marks the window the read travels inside. The hook
+            measures the rail against it to work out how far the column has to
+            move, so this element — not the panel — is what "fits" has to mean. */}
+        <div className={styles.aboutDeck} data-about-read>
           <div className={styles.aboutCardStack}>
-            <div className={styles.aboutCardRail} aria-live="polite">
+            {/* `data-about-rail` is the content that moves during the read. The
+                timeline panel beside it is deliberately NOT part of this: it
+                holds still, the way it did when this was a page section with a
+                sticky panel and a scrolling column of cards. */}
+            <div
+              className={styles.aboutCardRail}
+              data-about-rail
+              aria-live="polite"
+            >
               {ABOUT_TRACKS.map((track, index) => (
                 /* The card is a button with the résumé link as its only real
                    action, so the link used to be rendered INSIDE it. A focusable
@@ -263,17 +299,14 @@ export function About({
                 <div className={styles.timelineTransport}>
                   <button
                     type="button"
-                    onClick={() => setIsPlaying((current) => !current)}
+                    onClick={isPlaying ? stopPlayback : startPlayback}
                     aria-label={isPlaying ? 'Pause timeline' : 'Play timeline'}
                   >
                     {isPlaying ? <Pause size={13} /> : <Play size={13} />}
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsPlaying(false)
-                      setPlayhead(0.05)
-                    }}
+                    onClick={stopPlayback}
                     aria-label="Stop and rewind timeline"
                   >
                     <Square size={12} />
@@ -379,6 +412,6 @@ export function About({
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }

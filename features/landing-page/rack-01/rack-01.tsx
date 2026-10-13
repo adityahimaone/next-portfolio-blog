@@ -4,11 +4,10 @@ import { useRef, useState } from 'react'
 
 import { Work } from '../work/work'
 import type { ArchiveRepo } from '@/features/projects/lib/github'
-import { About } from './section-about'
+import { ArrangementHero } from '../components/arrangement/arrangement-hero'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
 import { Experience } from './section-experience'
-import { Hero } from './section-hero'
 import { SignalDivider } from './section-signaldivider'
 import { Skills } from './section-skills'
 import styles from './rack-01.module.css'
@@ -19,10 +18,10 @@ import { useRackAnimations } from './use-rack-animations'
  * The landing page: seven sections stacked in reading order, one scroll
  * container, and the two pieces of state the animations write back into.
  *
- * All scroll-linked motion lives in useRackAnimations rather than here, so
- * this file is only the composition. The section order matters — the about
- * and experience strips scrub off the same scroll position the hero hands off
- * from — so reordering the JSX changes the page, not just the markup.
+ * All scroll-linked motion lives in the two hooks rather than here, so this
+ * file is only the composition. The section order matters — the experience
+ * strip scrubs off the same scroll position the hero hands off from — so
+ * reordering the JSX changes the page, not just the markup.
  *
  * `archiveRepos` arrives from the page, the only server boundary above this
  * client tree. It is passed down rather than fetched here because this
@@ -36,15 +35,14 @@ export default function Rack01LandingPage({
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [aboutIndex, setAboutIndex] = useState(0)
+  // The About section's scroll progress, and its selected card. Both are the
+  // same two pieces of state the page section had — the arrangement hook
+  // publishes them from the dive's own progress, because the About is the seam's
+  // interior and the read is the only scroll it gets. See §13.11.
   const [aboutProgress, setAboutProgress] = useState(0)
   const [experienceIndex, setExperienceIndex] = useState(0)
 
-  useRackAnimations({
-    rootRef,
-    setAboutIndex,
-    setAboutProgress,
-    setExperienceIndex,
-  })
+  useRackAnimations({ rootRef, setExperienceIndex })
 
   return (
     /* `<main>` rather than a plain div: this wrapper holds every section of the
@@ -61,11 +59,11 @@ export default function Rack01LandingPage({
       <a className={styles.skipLink} href="#about">
         Skip to content
       </a>
-      <Hero />
-      <About
+      <ArrangementHero
         selected={aboutIndex}
         setSelected={setAboutIndex}
-        scrollProgress={aboutProgress}
+        aboutProgress={aboutProgress}
+        setAboutProgress={setAboutProgress}
       />
       <SignalDivider />
       <Skills />

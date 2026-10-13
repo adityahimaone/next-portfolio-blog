@@ -12743,3 +12743,299 @@
     min-height: calc(100svh - 142px);
   }
 }
+
+/* ─── About, as the PROFILE clip's interior ────────────────────────────────
+   The panel is no longer a section in the page flow. It is revealed inside the
+   arrangement's sticky stage by the camera's dive, so it has to do two things
+   the section never had to: fit the frame it is revealed in, and stay out of
+   the layout of everything else. Hence absolute positioning, a much tighter
+   rhythm than the section's `clamp(90px, 11vw, 170px)`, and the resets below.
+
+   `content-visibility: auto` in particular has to go. On a section it is a
+   cheap win; on a clipped, pinned panel it applies size containment to the very
+   element the seam is measuring, and the panel collapses to its intrinsic size
+   the moment the clip-path opens. */
+.aboutSeam {
+  /* The quick navigation's claim on the bottom of the viewport. See
+     `.aboutSeam .aboutDeck` for what it is for and why it is spent here. */
+  --arr-dock-band: 76px;
+
+  position: absolute;
+  inset: 0;
+  /* `visible`, not `hidden`. The content column is taller than the window it is
+     revealed in — by 0px at 1728×1117 and by 103px at 1440×900 — and the read
+     translates it up by exactly that overflow. Clipping here would hide the very
+     content the read exists to uncover; the parent `.seam`'s clip-path is what
+     bounds the window. */
+  overflow: visible;
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+  padding: clamp(12px, 2.2vh, 28px) clamp(16px, 2.4vw, 40px);
+}
+.aboutSeam .aboutStage {
+  height: 100%;
+  /* Top-aligned, so the overflow falls off the bottom where the read can pull it
+     in. Centred, it would split — cutting the heading at the top, which no
+     amount of scrolling past the end can recover. */
+  justify-content: flex-start;
+  gap: clamp(8px, 1.4vh, 18px);
+}
+/* ─── The read: the column travels, the panel does not ────────────────────
+   This is the page section's own animation, transplanted. As a section it read
+   as a sticky timeline beside a scrolling column of cards — the heading and the
+   rail moved up the page, `.timelinePanel` held its place. There is no scroll
+   container inside the seam for `position: sticky` to stick against, so the
+   travel is this translate instead, driven by the hook on `--arr-read-travel`.
+
+   The two travelling elements are the heading and the card stack, and they are
+   transformed individually because nothing wraps exactly those two: the deck
+   between them also holds the timeline, which must not move. Transforms do not
+   affect layout, so moving them separately is the same as moving a wrapper —
+   and it leaves the deck's grid row, which is what the travel is measured
+   against, completely undisturbed.
+
+   The timeline is excluded by omission, and pinned by the rule below so it is
+   excluded on purpose rather than by luck. */
+.aboutSeam .sectionHeading,
+.aboutSeam .aboutCardStack {
+  transform: translateY(var(--arr-read-travel, 0px));
+  will-change: transform;
+}
+.aboutSeam .sectionHeading {
+  margin-bottom: 0;
+}
+/* The heading keeps the size the section always had. It was shrunk to
+   `clamp(24px, 3vw, 46px)` while the panel was learning to fit the window, but
+   the read does not need it: the deck is the `flex: 1` sibling, so a taller
+   heading only shortens the deck, and the travel is measured from the deck's
+   height every refresh — it grows by exactly what the heading gained. The
+   heading itself is clipped by the seam's `clip-path`, so it still leaves
+   cleanly. What it cannot survive shrinking is the page's scale: 24px against a
+   76px-era section heading reads as a different section. */
+.aboutSeam .sectionHeading h2 {
+  max-width: 860px;
+  font-size: clamp(36px, 5vw, 76px);
+}
+/* ─── The dock's band, spent as padding on the deck ───────────────────────
+   The quick navigation is `fixed` — 20px off the bottom, 56px tall — so it owns
+   the bottom 76px of the viewport, and the root layout renders it from outside
+   this tree. Nothing in About knows it is there, and the workstation is the one
+   thing in the section tall enough to reach it: on a 1512×784 window the panel's
+   bottom edge landed 16px inside the dock, so the dock's glass sat across the
+   "CLIP nn / SELECTED" readout. On a 1280×720 window it was 58px.
+
+   Padding on the deck, not a shorter seam. The deck is `flex: 1`, so its border
+   box is whatever height the stage has left over either way and `offsetHeight`
+   does not move — which is exactly what the read measures its travel from
+   (`rail.offsetHeight - deck.offsetHeight`). Taking the band out of the deck's
+   content box instead leaves the travel untouched and takes the room out of the
+   panel alone, which is where the collision is.
+
+   `max(0px, 620px - 100svh)` is `.stage`'s own `min-height`, in
+   `arrangement.module.css`. Under 620px tall the stage is taller than the window
+   and the dock has moved down with it, so a flat 76px would not be enough. */
+.aboutSeam .aboutDeck {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+  gap: clamp(16px, 2vw, 40px);
+  padding-bottom: calc(var(--arr-dock-band) + max(0px, 620px - 100svh));
+}
+.aboutSeam .aboutCardRail {
+  align-content: start;
+}
+/* `sticky`, the page section's own declaration — reinstated rather than
+   reinvented. On `main` this is what held the workstation still beside the
+   scrolling column of cards, and it is the whole of the requested behaviour.
+
+   Inside the pinned dive it is inert, and inert is exactly right: the stage is
+   fixed in the viewport for the whole window, so the panel's nearest scrollport
+   never moves under it and there is nothing to stick against — it simply holds
+   while the column travels past. Where it earns its keep is in the flow states
+   (a phone, reduced motion, scripting off): those un-pin the stage, the page
+   becomes the scrollport, and the panel parks at `7vh` and stays. That is the
+   one rule `relative` could not give, and the reason §13.10 had to patch it in a
+   media query — the patch is gone because the base rule is now correct.
+
+   `min-height: 0` because the base rule's `540px` is a floor for a section that
+   owns its height; the seam's window is shorter than that and the panel is
+   stretched to the column beside it.
+
+   `max-height: 100%` is the dock's band, collected. The panel's height is its
+   content — 552.5px, `min-height: 540px` plus its padding on `main` — and it is
+   top-aligned in the deck, so its bottom edge is `deckTop + 552.5` at every
+   viewport and does not care how much room is left below it. The deck's content
+   box now ends above the dock, and `100%` of a grid area resolves against
+   exactly that, so this is the one line that says "and no further than the room
+   I have". It bites only when it has to: at 1440×900 the deck still has 634px
+   and the panel keeps its full 552.5.
+
+   `display: flex` is what lets it collect. A `max-height` on a block would
+   simply clip — the panel is `overflow: hidden`, and the first thing off the
+   bottom is the readout this whole rule exists to protect. As a column, the
+   difference is distributed to the children instead, and `.timelineWorkspace`
+   below is the one that takes it. */
+.aboutSeam .timelinePanel {
+  position: sticky;
+  top: clamp(24px, 7vh, 72px);
+  display: flex;
+  max-height: 100%;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ─── Where the difference comes out: the lanes ───────────────────────────
+   The instrument has three parts that must not change size — the brand strip,
+   the transport header, and the clip readout — and one that is meant to: the
+   three lanes, which are what a shorter window should take room from. So the
+   workspace is a column, everything but the arrangement is `flex: none`, and the
+   arrangement is the flexible child.
+
+   `flex: auto` rather than `flex: 1`, and that matters. `flex: 1` is
+   `1 1 0%`, which is only safe inside a box whose height is already definite:
+   in an auto-height parent a zero basis makes the item's hypothetical size zero
+   and it collapses to nothing. `auto` keeps the content as the base size, so
+   the panel still measures its natural 552.5 when there is room, and shrinks
+   only when the cap above takes that room away.
+
+   The rows are `minmax(min-content, 1fr)`: free to share the space, never free
+   to go under the height the lane actually needs. The floor is the track header
+   — 89px, three 12px labels and a 28px button row around 25px of padding — and
+   a window short enough to want less than that gets a clipped third lane rather
+   than buttons printed through the border of the one below.
+
+   The basis is the height the instrument is drawn at — `34px` of ruler plus
+   three `104px` lanes, which is where `main`'s 553px panel comes from — and it
+   has to be written out rather than left to the grid. An auto-height grid
+   resolves `1fr` rows to max-content, and a lane's max-content is its *content*
+   (89px), not the 104 it is drawn at; with the basis left auto the panel quietly
+   loses 42px at every viewport, including the ones that were never colliding.
+   With it set, the rows share the box and land back on 104. `min-height: 0` is
+   what lets the flex algorithm take that basis away again. */
+.aboutSeam .timelineWorkspace {
+  display: flex;
+  min-height: 0;
+  flex: auto;
+  flex-direction: column;
+}
+.aboutSeam .timelineWorkspace > * {
+  flex: none;
+}
+.aboutSeam .timelinePanel .timelineArrangement {
+  display: grid;
+  flex: 1 1 calc(34px + 3 * 104px);
+  min-height: 0;
+  grid-template-rows: auto repeat(3, minmax(min-content, 1fr));
+}
+.aboutSeam .timelinePanel .track {
+  min-height: 0;
+}
+
+/* The panel is a pinned interior only while the camera is driving it. Three
+   situations put it back in the flow — a phone, reduced motion, and scripting
+   off — and they are exactly the three that un-pin the stage in
+   `arrangement.module.css`. Comma-separated media queries are OR'd, so this is
+   one rule rather than three; a browser that does not know `scripting` simply
+   fails that one query and still matches the others.
+
+   The alternative — flipping it from an attribute the hook sets — would make the
+   server render one layout and the client another, which is a visible jump on
+   every load for everyone in the common case.
+
+   This is not cosmetic. With `position: absolute` and no positioned ancestor
+   sized to hold it, the panel contributes no height: measured, the hero
+   collapsed to 108px and the panel to 40px under reduced motion and with JS off,
+   because the seam around it is `position: relative` in those states. */
+@media (max-width: 768px), (prefers-reduced-motion: reduce), (scripting: none) {
+  .aboutSeam {
+    position: relative;
+    inset: auto;
+    padding: clamp(28px, 7vw, 52px) clamp(14px, 4vw, 24px);
+  }
+  .aboutSeam .aboutStage {
+    height: auto;
+  }
+  /* `--arr-read-travel` is never written without the hook, so this is already
+     an identity translate — but `will-change` is not. Left on, it promotes two
+     full-width layers on a phone for an animation that does not exist. */
+  .aboutSeam .sectionHeading,
+  .aboutSeam .aboutCardStack {
+    transform: none;
+    will-change: auto;
+  }
+  /* None of the dock-band work belongs in these three states. The seam is in the
+     flow and the stage is not pinned, so there is no deck content box to cap the
+     panel against — and a reserved band here is not protection, it is 76px of
+     dead space under the last card. The flex chain is worse than useless without
+     a definite height above it: the arrangement's basis would be resolved
+     against a workspace that is sizing to its own content, and the panel's
+     `max-height` is `none`, so the lanes are back to their own height. The dock
+     still floats over the bottom of this section, as it floats over every other
+     one; that is the flow layout's normal and it is what the page section always
+     looked like. */
+  .aboutSeam .aboutDeck {
+    padding-bottom: 0;
+  }
+  .aboutSeam .timelinePanel,
+  .aboutSeam .timelineWorkspace,
+  .aboutSeam .timelinePanel .timelineArrangement {
+    display: block;
+    max-height: none;
+  }
+  .aboutSeam .timelinePanel .track {
+    min-height: 104px;
+  }
+}
+
+/* The flow fallbacks that keep motion off used to need a rule of their own here
+   (§13.10) because the panel was `relative` and scrolled away with the column.
+   Sticky is the base rule now, so there is nothing left to patch: under reduced
+   motion and without scripting the stage un-pins, the page is the scrollport,
+   and the panel parks and holds by itself. */
+
+/* The phone hides the panel outright — "540px of 360px-wide arrangement", as the
+   `max-width: 768px` block above puts it — and that rule is `.timelinePanel` on
+   its own, one class lighter than the `display: flex` this section adds to the
+   same box. Left alone the seam wins and the panel comes back on the one viewport
+   it is deliberately never drawn on. This is only the specificity, not a second
+   decision: the phone still hides it. */
+@media (max-width: 768px) {
+  .aboutSeam .timelinePanel {
+    display: none;
+  }
+}
+
+/* ─── A short window sheds the instrument's own furniture ─────────────────
+   The lanes have a floor — the height of a track header — and the panel's chrome
+   sits above it: a brand strip, a transport header, and the clip readout. Below
+   about 780px tall those two stop fitting together, and because the lanes are
+   the only child that is allowed to shrink, the difference comes out of the
+   third one: it crops mid-clip, with the panel's bottom edge cutting straight
+   across it. Measured before this block, at 1280×720: the arrangement wanted
+   301px and had 273, so the RANGE lane lost its bottom 28px.
+
+   So on a short window the chrome comes down to its content instead. Nothing is
+   dropped and nothing is hidden — the brand strip's 58px is a generous surround
+   for a 28px mark, the header's padding is twice what a 32px transport needs,
+   and the readout's is the same 12px the panel itself uses. Together they buy
+   back 49px, which is what a short window should cost: the instrument drawn
+   tighter, not the arrangement cropped.
+
+   Guarded on width as well as height so it cannot reach the phone, where the
+   panel is `display: none` and none of this exists. */
+@media (min-width: 769px) and (max-height: 780px) {
+  .aboutSeam .timelinePanel .timelineDeviceBrand {
+    min-height: 44px;
+  }
+  .aboutSeam .timelinePanel .panelHeader {
+    min-height: 42px;
+    padding-block: 5px;
+  }
+  .aboutSeam .timelinePanel .trackHeader {
+    padding: 9px 10px 9px 12px;
+  }
+  .aboutSeam .timelinePanel .clipDetail {
+    min-height: 0;
+    padding-block: 8px;
+  }
+}

@@ -1,0 +1,136 @@
+import type { CSSProperties } from 'react'
+import { nameWave, type ArrangementClip as ClipData } from './arrangement-data'
+import styles from './arrangement.module.css'
+
+const NAME_WAVE = nameWave('ADITYA HIMAWAN')
+
+/** The name's samples as a mirrored waveform path in a 0..100 x 0..100 box. */
+const WAVE_PATH = (() => {
+  const step = 100 / (NAME_WAVE.length - 1)
+  const top = NAME_WAVE.map(
+    (v, i) =>
+      `${i === 0 ? 'M' : 'L'}${(i * step).toFixed(2)} ${(50 - v * 48).toFixed(2)}`,
+  )
+  const bottom = NAME_WAVE.map(
+    (v, i) =>
+      `L${(100 - i * step).toFixed(2)} ${(50 + NAME_WAVE[NAME_WAVE.length - 1 - i] * 48).toFixed(2)}`,
+  )
+  return `${top.join(' ')} ${bottom.join(' ')} Z`
+})()
+
+/**
+ * One clip, the way a DAW playlist draws it: a coloured header strip carrying
+ * the name, and a darker body carrying a preview of what is inside.
+ *
+ * - a pattern clip's body is a piano-roll preview — one note per listed
+ *   technology, as long as that technology's level;
+ * - the name clip's body is the name as a waveform;
+ * - the profile clip's body is its one line of detail, and it is the clip the
+ *   dive opens into, so its fill is a wash that the page colour replaces.
+ *
+ * A clip is a `<div>` unless it is selectable, in which case it is a `<button>`.
+ */
+export function ArrangementClip({
+  clip,
+  onSelect,
+  selected,
+}: {
+  clip: ClipData
+  onSelect?: () => void
+  selected?: boolean
+}) {
+  const className = [
+    styles.clip,
+    clip.kind === 'name' ? styles.clipName : '',
+    clip.kind === 'profile' ? styles.clipProfile : '',
+    selected ? styles.clipSelected : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  const style = {
+    '--clip-start': clip.start,
+    '--clip-end': clip.end,
+    '--clip-color': clip.color,
+    // Overlapping clips share a lane in rows rather than on top of each other.
+    '--clip-top': clip.top ?? 0,
+    '--clip-height': clip.height ?? 1,
+  } as CSSProperties
+
+  const count = clip.notes?.length ?? 0
+
+  const body = (
+    <>
+      {clip.kind === 'profile' ? (
+        <span className={styles.clipWash} aria-hidden="true" />
+      ) : null}
+      <span className={styles.clipHead}>
+        {clip.kind === 'name' ? (
+          <>
+            <span aria-hidden="true">AUDIO</span>
+            <span aria-hidden="true">FRONTEND ENGINEER · JAKARTA</span>
+          </>
+        ) : (
+          <strong>{clip.label}</strong>
+        )}
+      </span>
+      <span className={styles.clipBody}>
+        {clip.kind === 'name' ? (
+          <>
+            <svg
+              className={styles.clipWave}
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <path d={WAVE_PATH} />
+            </svg>
+            <h1 className={styles.clipNameTitle}>
+              {clip.label.split(' ').map((word) => (
+                <span key={word}>{word}</span>
+              ))}
+            </h1>
+            <span className={styles.srOnly}> — Frontend Engineer, Jakarta</span>
+          </>
+        ) : clip.notes ? (
+          <span className={styles.notes} aria-hidden="true">
+            {clip.notes.map((note, index) => (
+              <i
+                key={index}
+                style={
+                  {
+                    '--note': note,
+                    '--row': index,
+                    '--rows': count,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </span>
+        ) : clip.detail ? (
+          <span className={styles.clipDetail}>{clip.detail}</span>
+        ) : null}
+      </span>
+    </>
+  )
+
+  if (!onSelect) {
+    return (
+      <div className={className} style={style}>
+        {body}
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      className={className}
+      style={style}
+      aria-pressed={selected}
+      onClick={onSelect}
+    >
+      {body}
+    </button>
+  )
+}

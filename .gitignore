@@ -79,3 +79,6 @@ artifacts/
 
 # Screenshot scratch (pad sea verification captures)
 /.padsea-check/
+
+# Screenshot scratch (arrangement hero verification captures)
+/.riddim-verify/

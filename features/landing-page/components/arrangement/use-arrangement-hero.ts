@@ -6,7 +6,7 @@ import {
   arrangementFrame,
   type ArrangementGeometry,
 } from './arrangement-camera'
-import { ARRANGEMENT_CLIPS } from './arrangement-data'
+import { ARRANGEMENT_BARS, ARRANGEMENT_CLIPS } from './arrangement-data'
 
 /**
  * One ScrollTrigger, writing CSS custom properties and two datasets.
@@ -100,6 +100,11 @@ export function useArrangementHero({
       /** The About interior's two states, as this hook last published them. */
       let aboutProgress = -1
       let aboutIndex = -1
+      /** The toolbar's position readout, written on change only. */
+      const positionEl = section.querySelector<HTMLElement>(
+        '[data-arr-position]',
+      )
+      let appliedPosition = ''
 
       /**
        * Measured once per refresh, never per frame. Every anchor the frame needs
@@ -213,6 +218,21 @@ export function useArrangementHero({
           `${frame.seamInset.bottom}px`,
         )
         seam.style.setProperty('--arr-seam-left', `${frame.seamInset.left}px`)
+
+        // The transport's position, in bars:beats along the world the playhead
+        // is walking. On change only; a text write per frame would cost more
+        // than the number is worth.
+        if (positionEl) {
+          const along = frame.playheadFraction * profileCentre
+          const bars = along * ARRANGEMENT_BARS
+          const bar = Math.floor(bars) + 1
+          const beat = Math.floor((bars % 1) * 4) + 1
+          const text = `${String(bar).padStart(3, '0')}:${String(beat).padStart(2, '0')}`
+          if (text !== appliedPosition) {
+            appliedPosition = text
+            positionEl.textContent = text
+          }
+        }
 
         // On change only — these switch transitions and, for the seam, whether
         // its controls are reachable at all.

@@ -8,14 +8,14 @@ import {
   ARRANGEMENT_CLIPS,
   ARRANGEMENT_LANES,
   ARRANGEMENT_MODE,
-  PROOF_READOUTS,
   RULER_AXIS_LABEL,
   YEAR_MAX,
   YEAR_MIN,
 } from './arrangement-data'
 import { ArrangementClip } from './arrangement-clip'
 import { ArrangementPlayhead } from './arrangement-playhead'
-import { ArrangementRail } from './arrangement-rail'
+import { ArrangementRail, GHOST_TRACKS } from './arrangement-rail'
+import { ArrangementMixer } from './arrangement-mixer'
 import { ArrangementRuler } from './arrangement-ruler'
 import { useArrangementHero } from './use-arrangement-hero'
 import { useHeroDockVisibility } from './use-hero-dock-visibility'
@@ -112,18 +112,49 @@ export function ArrangementHero({
     >
       <div className={styles.stage} data-arr-stage>
         <header className={styles.chrome}>
-          <span>ADITYA HIMAWAN / FRONTEND SESSION</span>
-          <time aria-label="Your local time">{clock}</time>
-          <nav aria-label="Portfolio">
+          <div className={styles.brand}>
+            <i className={styles.brandMark} aria-hidden="true" />
+            <span>ADITYA HIMAWAN</span>
+            <small>FRONTEND SESSION</small>
+          </div>
+          <nav className={styles.menu} aria-label="Portfolio">
             <a href="#work">Projects</a>
             <Link href="/blog">Notes</Link>
             <Link href="/bookmarks">Bookmarks</Link>
             <a href="#about">About</a>
           </nav>
+          <div className={styles.transport}>
+            <button
+              type="button"
+              className={styles.tBtn}
+              aria-label="Stop — back to the start"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+              <i className={styles.iconStop} />
+            </button>
+            <a
+              className={`${styles.tBtn} ${styles.tPlay}`}
+              href="#about"
+              aria-label="Play — open the profile"
+            >
+              <i className={styles.iconPlay} />
+            </a>
+            <span
+              className={`${styles.lcd} ${styles.lcdPos}`}
+              aria-hidden="true"
+            >
+              <small>BAR</small>
+              <b data-arr-position>001:01</b>
+            </span>
+            <span className={styles.lcd}>
+              <small>LOCAL</small>
+              <time aria-label="Your local time">{clock || '--:--'}</time>
+            </span>
+          </div>
         </header>
 
         <div ref={trackRef} className={styles.trackArea}>
-          <ArrangementRuler live detail />
+          <ArrangementRuler />
 
           <div ref={cameraRef} className={styles.camera}>
             <div className={styles.lanes}>
@@ -140,13 +171,19 @@ export function ArrangementHero({
                     .filter(Boolean)
                     .join(' ')}
                 >
-                  <span className={styles.laneLabel}>{lane.label}</span>
                   {ARRANGEMENT_CLIPS.filter(
                     (clip) => clip.laneId === lane.id,
                   ).map((clip) => (
                     <ArrangementClip key={clip.id} clip={clip} />
                   ))}
                 </div>
+              ))}
+              {Array.from({ length: GHOST_TRACKS }, (_, index) => (
+                <div
+                  key={`ghost-${index}`}
+                  className={`${styles.lane} ${styles.laneGhost}`}
+                  aria-hidden="true"
+                />
               ))}
             </div>
           </div>
@@ -157,33 +194,7 @@ export function ArrangementHero({
           </div>
         </div>
 
-        <footer className={styles.proof}>
-          <div className={styles.proofReadouts}>
-            {PROOF_READOUTS.map((readout) => (
-              <div key={readout.unit}>
-                <b>{readout.value}</b>
-                <small>{readout.unit}</small>
-                <span className={styles.meter} aria-hidden="true">
-                  <i style={{ '--ratio': readout.ratio } as CSSProperties} />
-                </span>
-                <small>{readout.meter}</small>
-              </div>
-            ))}
-          </div>
-          <span className={styles.axis}>{axis}</span>
-          <a className={styles.proofJump} href="#about">
-            Open profile →
-          </a>
-          {/* The nav is hidden in the chrome on phones, where the header has one
-              line and no room for four links. It reappears here, in the flow,
-              rather than being dropped. */}
-          <nav className={styles.proofNav} aria-label="Portfolio">
-            <a href="#work">Projects</a>
-            <Link href="/blog">Notes</Link>
-            <Link href="/bookmarks">Bookmarks</Link>
-            <a href="#about">About</a>
-          </nav>
-        </footer>
+        <ArrangementMixer axis={axis} />
 
         {/* The seam: the clip's interior, revealed by the dive rather than
             reached by scrolling. It is laid out at its real size the whole time

@@ -68,6 +68,19 @@ const channels = (id: string) =>
   MIXER_DATA.find((group) => group.id === id)?.channels.length ?? 0
 
 /**
+ * A pattern clip's notes, one per technology, each as long as that technology's
+ * listed level. A DAW draws a pattern as note blocks, so this is the honest
+ * version of the thumbnail: the same numbers the mixer strips below are set to.
+ */
+const levels = (id: string): readonly number[] =>
+  (MIXER_DATA.find((group) => group.id === id)?.channels ?? []).map(
+    (channel) => channel.level / 100,
+  )
+
+/** Bars across the world. The ruler counts them and the lane grid is drawn on them. */
+export const ARRANGEMENT_BARS = 32
+
+/**
  * Stacks overlapping clips inside a lane.
  *
  * A DAW never paints two clips on top of each other: overlapping ones share the
@@ -167,7 +180,7 @@ const MAKING_CLIPS_RAW: readonly ArrangementClip[] = [
     start: 0.05,
     end: 0.34,
     color: '#c07352',
-    notes: envelope(channels('frontend')),
+    notes: levels('frontend'),
     detail: 'Understand the interaction, then build the pieces it needs.',
   },
   {
@@ -178,7 +191,7 @@ const MAKING_CLIPS_RAW: readonly ArrangementClip[] = [
     start: 0.3,
     end: 0.66,
     color: '#7d97ab',
-    notes: envelope(channels('app-data')),
+    notes: levels('app-data'),
     detail: 'Typed data at the boundary, rendering chosen per route.',
   },
   {
@@ -189,7 +202,7 @@ const MAKING_CLIPS_RAW: readonly ArrangementClip[] = [
     start: 0.62,
     end: 0.97,
     color: '#4e91a8',
-    notes: envelope(channels('delivery-infra')),
+    notes: levels('delivery-infra'),
     detail: 'Deploy, watch it, and fix what the meters show.',
   },
   {
@@ -452,3 +465,50 @@ export const PROOF_READOUTS = [
   { value: '3', unit: 'PRODUCT TEAMS', meter: '0–5', ratio: 3 / 5 },
   { value: '15K+', unit: 'USERS', meter: '0–20K', ratio: 15 / 20 },
 ] as const
+
+// ─── Mixer ───────────────────────────────────────────────
+
+export type MixerStrip = {
+  id: string
+  index: number
+  name: string
+  /** 0..1 — the technology's listed level; the fader and the meter ceiling. */
+  level: number
+  group: string
+  color: string
+}
+
+const GROUP_COLORS: Record<string, string> = {
+  frontend: '#c07352',
+  'app-data': '#7d97ab',
+  'delivery-infra': '#4e91a8',
+}
+
+/**
+ * One insert per listed technology, coloured by the stage that uses it, so the
+ * strip under a clip is the same colour as the clip above it.
+ */
+export const MIXER_STRIPS: readonly MixerStrip[] = MIXER_DATA.flatMap((group) =>
+  group.channels.map((channel) => ({
+    id: `${group.id}-${channel.name}`,
+    name: channel.name,
+    level: channel.level / 100,
+    group: group.id,
+    color: GROUP_COLORS[group.id] ?? '#8e928e',
+  })),
+).map((strip, index) => ({ ...strip, index: index + 1 }))
+
+/**
+ * The name clip's waveform: one sample per character of the name, so the shape
+ * is the name rendered as audio rather than a random pattern. Deterministic, so
+ * the server and the client draw the same path.
+ */
+export function nameWave(text: string, points = 96): readonly number[] {
+  const codes = Array.from(text).map((char) => char.charCodeAt(0))
+  return Array.from({ length: points }, (_, i) => {
+    const code = codes[i % codes.length]
+    const wobble = Math.sin(i * 0.9 + code) * 0.5 + 0.5
+    const swell = 0.35 + 0.65 * Math.abs(Math.sin((i / points) * Math.PI * 3))
+    return Math.round((0.15 + 0.85 * wobble * swell) * 100) / 100
+  })
+}

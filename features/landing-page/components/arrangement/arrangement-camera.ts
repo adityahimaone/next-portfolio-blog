@@ -136,9 +136,13 @@ export type ArrangementFrame = {
   phase: ArrangementPhase
 }
 
-export const OPEN_SCALE = 1.28
-/** 4% of headroom so the window has somewhere to travel from — see doc §6.1. */
-export const OPEN_OVERSHOOT = 1.04
+/**
+ * The first frame is the whole arrangement, the way a DAW opens a project:
+ * every lane and every bar visible, nothing cropped. The earlier 1.28x
+ * over-zoom cut the right edge of the name and the last stage off the frame.
+ */
+export const OPEN_SCALE = 1
+export const OPEN_OVERSHOOT = 1
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
 const mix = (from: number, to: number, t: number) => from + (to - from) * t

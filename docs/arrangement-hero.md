@@ -1461,3 +1461,121 @@ of dead space under the last card, and the flex chain has no definite height
 above it to resolve against. Verified under reduced motion at 1440×900 — the
 panel is `display: block`, `position: sticky`, parks at `63 → 615.5` and holds
 while the rail runs to −89.8.
+
+## Redesign: the playlist, drawn like one
+
+The first build had the right data and the wrong look: flat coloured boxes on a
+grid. This pass keeps the camera, the seam and the scroll contract exactly as
+they were and redraws everything the camera moves, against a DAW playlist.
+
+- **Toolbar.** Brand, the menu (the site nav, in a DAW's menu position), and a
+  transport: stop returns to the start, play opens the profile. Two LCDs — the
+  playhead's position in `bar:beat`, written by the hook on change only, and the
+  local clock.
+- **Ruler.** Two rows. Stage markers on top (the five `RULER_LABELS`, unchanged),
+  bar numbers below. The bar grid is one gradient sized from the camera's zoom,
+  so it cannot drift from the lane grid, which is drawn on the same
+  `ARRANGEMENT_BARS` (32).
+- **Track headers.** Present from the first frame, coloured by their lane's clip.
+  They step out during the dive — the lanes are scaled by then and the rows would
+  not line up — and slide back at the `rail` phase.
+- **Clips.** A header strip carrying the name over a darker body carrying a
+  preview. A pattern clip's preview is a piano roll with one note per listed
+  technology, each as long as that technology's level in `MIXER_DATA`. The name
+  clip's preview is the name as a waveform (`nameWave`, one sample per character).
+- **Empty tracks** under the real ones, so the frame is full the way a project is.
+- **Mixer** replaces the proof strip: one insert per technology, coloured by its
+  stage, fader at its listed level, meter peaking at that level and never above
+  it. The proof numbers are the info display; the master carries the way into
+  About.
+- **The open frame is the whole arrangement.** `OPEN_SCALE` is 1: the earlier
+  1.28x over-zoom cropped the right edge of the name and the last stage.
+
+Checked at 769, 820, 1024, 1280x720, 1366, 1440, 1728 and 1920 wide, at four
+scroll depths each, plus 390 and reduced motion: no two labelled parts overlap,
+nothing is truncated, the name fits its clip, and the page never scrolls
+sideways. The site's floating player is `fixed` 96px above the bottom edge on the
+right, so the mixer's master column is anchored to the bottom and stays below it.
+
+### Applying it, and the one thing it broke
+
+The patch was cut against the §13.7-era tree, so `git apply` refused it —
+`docs/arrangement-hero.md` and `use-arrangement-hero.ts` both came back "patch
+does not apply". `git apply --3way` took it: every base blob it names was still
+in the object store, and eleven of its thirteen files merged clean. The two
+conflicts were both this branch having grown material the patch had never seen,
+and in both cases the two sides were additions, so both were kept:
+
+- **`use-arrangement-hero.ts`.** The patch declares the toolbar's position
+  readout here (`positionEl`, `appliedPosition`); §13.11 had already declared the
+  About read's three locals in the same spot (`cardCount`, `aboutProgress`,
+  `aboutIndex`). The two features share only the frame, so they compose — both
+  blocks stay, and both are still referenced by their own hunk.
+- **`docs/arrangement-hero.md`.** The patch appends `## Redesign` where its own
+  base ended, which is now the middle of §13.11. §13.11 and §13.12 were kept and
+  `## Redesign` closes the section, which is where a new top-level heading goes.
+
+**The regression it carried.** `ArrangementRuler`'s `live` prop selected
+`.rulerLive`, and the patch deleted that rule — every `.tick` now reads the
+camera's transform directly, so the static overview rule it used to switch away
+from no longer exists. The prop outlived the class it named: `styles.rulerLive`
+resolved to `undefined` and the element shipped `class="ruler undefined"`.
+Found by diffing the served HTML against the source, not by reading either — at
+HEAD the rule was there, so this was a deletion, not a name that never existed.
+The prop and its call site are gone; `ArrangementRuler` takes no props now.
+
+A sweep for the same mistake across the whole feature — every `styles.X`
+reference checked against the class names the CSS module actually defines —
+leaves one other dangling name, `clipSelected`, which predates this pass and is
+inert (it sits behind `.filter(Boolean)`, so it never reaches the DOM).
+
+### Measured
+
+Geometry at the open, one row per viewport, read from the live page:
+
+| Viewport  | H-overflow | Header self-collision | Name fits its clip | Bars | Strips |
+| --------- | ---------- | --------------------- | ------------------ | ---- | ------ |
+| 769×900   | 0          | no                    | yes                | 32   | 85     |
+| 820×900   | 0          | no                    | yes                | 32   | 85     |
+| 1024×800  | 0          | no                    | yes                | 32   | 85     |
+| 1280×720  | 0          | no                    | yes                | 32   | 85     |
+| 1366×768  | 0          | no                    | yes                | 32   | 85     |
+| 1440×900  | 0          | no                    | yes                | 32   | 85     |
+| 1728×1117 | 0          | no                    | yes                | 32   | 85     |
+| 1920×1080 | 0          | no                    | yes                | 32   | 85     |
+
+The walk, taken **inside the hero's own range** — 4140px section against 900px of
+viewport is 3240px of travel, while the whole page is 11772px. Scrolling by page
+fraction overshoots the hero by the first quarter and reads a finished
+arrangement for the rest, which is how a first pass "found" the walk stalling:
+
+| progress | LCD    | phase  | detail | seam   | playhead x | seam opacity |
+| -------- | ------ | ------ | ------ | ------ | ---------- | ------------ |
+| 0.0      | 001:01 | open   | false  | closed | 129.5      | 0            |
+| 0.3      | 001:01 | travel | false  | closed | 129.5      | 0            |
+| 0.4      | 010:02 | travel | false  | closed | 508.7      | 0            |
+| 0.5      | 021:04 | travel | false  | closed | 986.8      | 0            |
+| 0.6      | 022:02 | zoom   | false  | closed | 928.8      | 0.352        |
+| 0.7      | 022:02 | zoom   | true   | closed | 790.7      | 0.972        |
+| 0.8      | 022:02 | rail   | true   | closed | 784.5      | 1            |
+| 1.0      | 022:02 | rail   | true   | open   | 784.5      | 1            |
+
+The LCD stops at `022:02` and that is correct, not a truncated count. The
+playhead walks `mix(0, profileCentre, f)` — it parks on the profile clip's
+centre, `(0.42 + 0.92) / 2 = 0.67`, and never reaches the world's end. `0.67 ×
+32 bars = 21.44` is bar 22 beat 2. The ruler counts 32 bars because the
+arrangement is 32 bars; the playhead stops where the dive happens. The two agree,
+and the `profileCentre` the hook reads is the same `0.67` the hero writes to the
+section.
+
+Fallbacks, re-measured on the new chrome:
+
+- **390×844.** In the flow, no horizontal overflow; the name clip runs `12 → 378`
+  with its head label inside it. The toolbar drops its menu and its transport and
+  keeps only the local clock — the mixer's nav carries the links back in the
+  flow, which is the same trade §13.9 made for the old proof strip.
+- **Reduced motion, 1440×900.** No horizontal overflow. The playhead has no
+  transform to read, so it sits at the stylesheet's own default,
+  `(1 − 0.67) × 130px + 0.67 × 100% = 1007.7px` — the profile centre, which is
+  the same place the dive leaves it. Measured 1007.1.
+

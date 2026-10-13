@@ -80,7 +80,7 @@ describe('arrangementPhase', () => {
 })
 
 describe('arrangementFrame', () => {
-  it('overshoots the open by 4% so the camera has somewhere to travel from', () => {
+  it('opens on the whole arrangement, at the scale the constants say', () => {
     expect(arrangementFrame(0, GEO).scale).toBeCloseTo(
       OPEN_SCALE * OPEN_OVERSHOOT,
       6,

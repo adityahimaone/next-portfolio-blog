@@ -7,23 +7,30 @@
 
    Every animated property has a fallback, and the fallbacks together *are* the
    settled overview: no translate, scale 1, the world's top-left at the gutter,
-   the playhead on the profile centre. That is not a coincidence to maintain by
-   hand — it falls out of the camera being a translate in world coordinates, so
-   the no-JavaScript frame and the reduced-motion frame need no second ruleset. */
+   the playhead on the profile centre. That falls out of the camera being a
+   translate in world coordinates, so the no-JavaScript frame and the
+   reduced-motion frame need no second ruleset.
 
-/* The geometry tokens. Written once, here, because the ruler, the rail and the
-   lane grid all derive from them and any second copy drifts. */
+   The look is a DAW's playlist: toolbar with transport on top, a two-row ruler
+   (stage markers over bar numbers), coloured track headers on the left, clips
+   with a header strip and a preview of their contents, empty tracks below the
+   real ones, and a mixer along the bottom. */
+
 .hero {
-  --arr-rail-w: max(64px, 9vw);
-  --arr-ruler-h: 38px;
-  --arr-lane-h: 58px;
-  --arr-lane-tall: 204px;
+  --arr-rail-w: max(72px, 9vw);
+  --arr-ruler-h: 44px;
+  --arr-lane-h: clamp(46px, 6.6svh, 60px);
+  --arr-lane-tall: clamp(150px, 22svh, 204px);
+  --arr-mixer-h: clamp(116px, 16svh, 152px);
   --arr-profile-centre: 0.625;
 }
 
 .hero {
   --arr-ground: #14171a;
-  --arr-grid: rgb(238 233 223 / 0.055);
+  --arr-panel: #1b1f23;
+  --arr-panel-hi: #252a2f;
+  --arr-grid: rgb(238 233 223 / 0.05);
+  --arr-grid-bar: rgb(238 233 223 / 0.11);
   --arr-hair: rgb(238 233 223 / 0.13);
   --arr-ink: #eee9df;
   --arr-muted: #8e928e;
@@ -47,50 +54,152 @@
   isolation: isolate;
 }
 
-/* ── Chrome ─────────────────────────────────────────────── */
+/* ── Toolbar ────────────────────────────────────────────── */
 
 .chrome {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 16px;
-  padding: 0 clamp(16px, 3vw, 40px);
-  height: 42px;
+  gap: clamp(12px, 2vw, 28px);
+  height: 46px;
+  padding: 0 clamp(12px, 2vw, 24px);
   border-bottom: 1px solid var(--arr-hair);
+  background: linear-gradient(#272c31, #1d2125);
   font-family: var(--font-geist-mono), monospace;
   font-size: 10px;
   font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  white-space: nowrap;
   transition: opacity 400ms cubic-bezier(0.25, 1, 0.5, 1);
-}
-.chrome time {
-  font-variant-numeric: tabular-nums;
-  color: var(--arr-muted);
-}
-.chrome nav {
-  display: flex;
-  gap: 18px;
-  justify-content: flex-end;
-}
-.chrome nav a {
-  color: var(--arr-muted);
-}
-.chrome nav a:hover,
-.chrome nav a:focus-visible {
-  color: var(--arr-ink);
 }
 .hero[data-phase='rail'] .chrome {
   opacity: 0.4;
 }
+.brand {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+.brand span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brand small {
+  color: var(--arr-muted);
+  font-size: 9px;
+  font-weight: 500;
+}
+.brandMark {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: conic-gradient(
+    from 90deg,
+    var(--signal-orange) 0 25%,
+    #d7b36f 0 50%,
+    #7d97ab 0 75%,
+    #6f8a6d 0
+  );
+}
+.menu {
+  display: flex;
+  flex: 0 1 auto;
+  gap: clamp(10px, 1.4vw, 20px);
+  padding-left: clamp(10px, 1.6vw, 22px);
+  border-left: 1px solid var(--arr-hair);
+}
+.menu a {
+  color: var(--arr-muted);
+}
+.menu a:hover,
+.menu a:focus-visible {
+  color: var(--arr-ink);
+}
+.transport {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.tBtn {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--arr-hair);
+  border-radius: 3px;
+  background: linear-gradient(#32383e, #262b30);
+  color: var(--arr-ink);
+  cursor: pointer;
+}
+.tBtn:hover,
+.tBtn:focus-visible {
+  border-color: rgb(238 233 223 / 0.35);
+}
+.tPlay {
+  background: linear-gradient(
+    color-mix(in srgb, var(--signal-orange) 90%, #fff),
+    var(--signal-orange)
+  );
+  border-color: color-mix(in srgb, var(--signal-orange) 70%, #000);
+  color: #1a120c;
+}
+.iconPlay {
+  width: 0;
+  height: 0;
+  margin-left: 2px;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid currentColor;
+}
+.iconStop {
+  width: 9px;
+  height: 9px;
+  background: currentColor;
+}
+/* The LCD: a recessed readout, the one place the toolbar uses a display face. */
+.lcd {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid #0c0e10;
+  border-radius: 3px;
+  background: #0f1214;
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.6);
+  line-height: 26px;
+}
+.lcd small {
+  color: var(--arr-muted);
+  font-size: 8px;
+  font-weight: 500;
+}
+.lcd b,
+.lcd time {
+  color: var(--signal-orange);
+  font-family: var(--font-orbitron), var(--font-geist-mono), monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+.lcd time {
+  color: var(--arr-ink);
+}
 
 /* ── Track area: the property host ──────────────────────── */
 
-/* The property defaults, and — under reduced motion or no JavaScript — the
-   settled frame itself. See §9 of the doc. */
 .trackArea {
   position: relative;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   --arr-zoom: 1;
   --arr-camera-x: 0px;
@@ -105,9 +214,10 @@
 }
 
 /* ── Ruler ──────────────────────────────────────────────────
-   Outside the camera on purpose: it must not scale. Its ticks are positioned
+   Outside the camera on purpose: it must not scale. Its labels are positioned
    from the camera's own transform, so the type is always drawn at real size and
-   the ruler cannot drift from the clips beneath it. */
+   the ruler cannot drift from the clips beneath it. Top row: stage markers.
+   Bottom row: bar numbers. */
 
 .ruler {
   position: absolute;
@@ -116,62 +226,90 @@
   left: 0;
   right: 0;
   height: var(--arr-ruler-h);
+  overflow: hidden;
   border-bottom: 1px solid var(--arr-hair);
+  background: var(--arr-panel);
+  font-family: var(--font-geist-mono), monospace;
   pointer-events: none;
   /* Gives way as the revealed panel takes the frame — otherwise two rulers
      print on top of each other for the length of the reveal. */
   opacity: calc(1 - var(--arr-clip-interior));
 }
+.rulerGrid {
+  position: absolute;
+  inset: 22px 0 0;
+  background-image: linear-gradient(
+      90deg,
+      var(--arr-grid-bar) 0 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, var(--arr-hair) 0 1px, transparent 1px);
+  background-repeat: repeat-x;
+  background-size:
+    calc(var(--arr-world-w) * var(--arr-zoom) / 8) 100%,
+    calc(var(--arr-world-w) * var(--arr-zoom) / 32) 40%;
+  background-position:
+    calc(var(--arr-rail-w) + var(--arr-camera-x)) 0,
+    calc(var(--arr-rail-w) + var(--arr-camera-x)) 100%;
+}
 .tick {
   position: absolute;
   top: 0;
-  bottom: 0;
-  border-left: 1px solid var(--arr-hair);
-  padding: 8px 0 0 6px;
-  color: var(--arr-muted);
-  font-family: var(--font-geist-mono), monospace;
+  height: 22px;
+  border-left: 1px solid
+    color-mix(in srgb, var(--signal-orange) 55%, transparent);
+  padding: 6px 0 0 6px;
+  color: color-mix(in srgb, var(--signal-orange) 65%, var(--arr-muted));
   font-size: 9px;
   letter-spacing: 0.1em;
+  line-height: 1;
   white-space: nowrap;
-  left: calc(var(--arr-rail-w) + var(--tick) * (100% - var(--arr-rail-w)));
-}
-/* The last label is right-aligned onto its tick. Left-aligned it hangs off the
-   frame, and the final stage is the one a reader is most likely to look for. */
-.tickLast {
-  padding: 8px 6px 0 0;
-  transform: translateX(-100%);
-}
-/* Live rule: the same transform the clips ride, applied to position only. */
-.rulerLive .tick {
   left: calc(
     var(--arr-rail-w) + var(--tick) * var(--arr-world-w) * var(--arr-zoom) +
       var(--arr-camera-x)
   );
 }
-/* Past scale 1.4 the ruler shows *more* of its scale, which is what a DAW does
-   when you zoom in. Always in the DOM; switched by the phase attribute, so the
-   reveal costs no render. */
-.rulerDetail {
+/* The last marker is right-aligned onto its tick. Left-aligned it hangs off the
+   frame, and the final stage is the one a reader is most likely to look for. */
+.tickLast {
+  padding: 6px 6px 0 0;
+  border-left: 0;
+  border-right: 1px solid
+    color-mix(in srgb, var(--signal-orange) 55%, transparent);
+  transform: translateX(-100%);
+}
+.barNum {
   position: absolute;
+  top: 24px;
+  padding-left: 4px;
+  color: var(--arr-muted);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  left: calc(
+    var(--arr-rail-w) + var(--tick) * var(--arr-world-w) * var(--arr-zoom) +
+      var(--arr-camera-x)
+  );
+}
+/* The corner sits over the rail's column, so markers and numbers slide under it
+   instead of printing across the track headers. */
+.rulerCorner {
+  position: absolute;
+  z-index: 2;
   top: 0;
   bottom: 0;
   left: 0;
-  width: 100%;
-  opacity: 0;
-  transition: opacity 240ms linear;
-}
-.hero[data-detail='true'] .rulerDetail {
-  opacity: 1;
-}
-.rulerDetail i {
-  position: absolute;
-  bottom: 0;
-  height: 7px;
-  border-left: 1px solid var(--arr-hair);
-  left: calc(
-    var(--arr-rail-w) + var(--tick) * var(--arr-world-w) * var(--arr-zoom) +
-      var(--arr-camera-x)
-  );
+  display: flex;
+  align-items: center;
+  width: var(--arr-rail-w);
+  padding-left: 10px;
+  overflow: hidden;
+  border-right: 1px solid var(--arr-hair);
+  background: var(--arr-panel-hi);
+  color: var(--arr-muted);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
 }
 
 /* ── Camera: the only scaled node ───────────────────────── */
@@ -193,28 +331,36 @@
 .lane {
   position: relative;
   height: var(--arr-lane-h);
-  border-bottom: 1px solid var(--arr-grid);
+  border-bottom: 1px solid var(--arr-hair);
+  background-color: #171a1e;
+  /* The grid is drawn on bars, not on a fixed pixel step: a line every bar, a
+     stronger one every four, and every other four-bar block a shade lighter —
+     the same count the ruler prints. */
   background-image: repeating-linear-gradient(
-    90deg,
-    var(--arr-grid) 0 1px,
-    transparent 1px 64px
-  );
+      90deg,
+      var(--arr-grid-bar) 0 1px,
+      transparent 1px calc(100% / 8)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--arr-grid) 0 1px,
+      transparent 1px calc(100% / 32)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgb(238 233 223 / 0.022) 0 calc(100% / 8),
+      transparent calc(100% / 8) calc(100% / 4)
+    );
   content-visibility: auto;
+  contain-intrinsic-size: auto var(--arr-lane-h);
   transition: opacity 320ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 .laneTall {
   height: var(--arr-lane-tall);
+  contain-intrinsic-size: auto var(--arr-lane-tall);
 }
-.laneLabel {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  padding-left: 4px;
-  transform: translateY(-50%);
-  color: rgb(238 233 223 / 0.16);
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
-  letter-spacing: 0.16em;
+.laneGhost {
+  background-color: #15181b;
 }
 
 /* Non-target lanes fall away during the dive. Driven by the phase attribute,
@@ -229,117 +375,139 @@
   opacity: 0.16;
 }
 
-/* ── Clips ──────────────────────────────────────────────── */
+/* ── Clips ──────────────────────────────────────────────────
+   A header strip in the clip's colour carrying its name, over a darker body
+   carrying a preview of what is inside. */
 
 .clip {
   position: absolute;
-  top: calc(var(--clip-top, 0) * 100% + 6px);
-  height: calc(var(--clip-height, 1) * 100% - 12px);
+  top: calc(var(--clip-top, 0) * 100% + 4px);
+  height: calc(var(--clip-height, 1) * 100% - 8px);
   left: calc(var(--clip-start) * 100%);
   width: calc((var(--clip-end) - var(--clip-start)) * 100%);
-  /* Padding scales with the clip on both axes: a seven-month course against an
-     eight-year axis is a narrow box, and a fixed 12px of gutter each side would
-     leave no room for its own name. A stacked row is 23px tall. */
-  padding: max(3px, calc(var(--clip-height, 1) * 8px)) clamp(3px, 6%, 12px);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--clip-color) 70%, var(--arr-ground));
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--clip-color) 62%, var(--arr-ground));
+  border: 1px solid color-mix(in srgb, var(--clip-color) 75%, #000);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--clip-color) 24%, var(--arr-ground));
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.35);
   color: var(--arr-ink);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
   text-align: left;
 }
 button.clip {
   cursor: pointer;
 }
-/* The label, the bars and the wash. The wash is absolutely positioned inside
-   this, not inside the clip — as a direct child of the clip it would be caught
-   by the ink rule below and forced back into the flow, where its background
-   would paint over nothing. Measured, not theorised: that is exactly what the
-   first build did, and the profile clip stayed gold while its ink went dark. */
-.clipBody {
+.clipHead {
   position: relative;
+  z-index: 1;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  height: 100%;
-}
-/* The label never shrinks; the bars and the detail line are what give way when
-   a lane is split into rows. Without this the label is squeezed to nothing and
-   a stacked clip renders as a blank rectangle. */
-.clipBody > strong,
-.clipBody > h1 {
   flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   min-width: 0;
-}
-.clip strong,
-.clip h1 {
-  margin: 0;
+  height: 16px;
+  padding: 0 7px;
   overflow: hidden;
-  font-family: var(--font-syne), sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  line-height: 1.15;
-  text-overflow: ellipsis;
+  background: var(--clip-color);
+  color: #141210;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  line-height: 16px;
   white-space: nowrap;
 }
-.clipDetail {
-  flex: 0 1 auto;
-  min-height: 0;
-  margin-top: auto;
-  max-height: calc(var(--clip-height, 1) * 22px);
+.clipHead strong {
+  min-width: 0;
+  margin: 0;
   overflow: hidden;
-  color: rgb(238 233 223 / 0.62);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font: inherit;
+  font-weight: 700;
+  text-overflow: ellipsis;
 }
-.notes {
-  display: flex;
-  flex: 0 1 auto;
-  gap: 2px;
-  align-items: flex-end;
-  height: 22px;
-  max-height: calc(var(--clip-height, 1) * 26px);
+.clipBody {
+  position: relative;
+  z-index: 1;
+  display: block;
+  flex: 1 1 auto;
   min-height: 0;
-  margin-top: auto;
-  overflow: hidden;
+}
+
+/* Pattern preview: one note per technology, as long as its level. */
+.notes {
+  position: absolute;
+  inset: 4px 8px;
+  display: block;
 }
 .notes i {
-  width: 2px;
-  height: calc(4px + var(--note) * 18px);
-  background: currentColor;
-  opacity: 0.5;
+  position: absolute;
+  top: calc(var(--row) / var(--rows) * 100%);
+  left: calc(var(--row) / var(--rows) * 36%);
+  width: calc(var(--note) * 60%);
+  height: calc(100% / var(--rows) - 1px);
+  min-height: 2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--clip-color) 45%, #fff);
+  opacity: 0.88;
+}
+
+.clipDetail {
+  position: absolute;
+  inset: 6px 8px;
+  overflow: hidden;
+  color: rgb(238 233 223 / 0.66);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-transform: uppercase;
 }
 
 /* The name clip is the one full-saturation element in the hero, and the one
-   documented exception to "a clip's width is a duration". */
+   documented exception to "a clip's width is a duration". Its body is the name
+   drawn as a waveform with the name set over it. */
 .clipName {
-  border-color: color-mix(in srgb, var(--signal-orange) 70%, var(--arr-ground));
+  border-color: color-mix(in srgb, var(--signal-orange) 70%, #000);
   background: var(--signal-orange);
   color: #1a120c;
+}
+.clipName .clipHead {
+  background: color-mix(in srgb, var(--signal-orange) 72%, #000);
   padding-left: clamp(14px, 2vw, 28px);
+  color: #1a120c;
 }
 .clipName .clipBody {
-  justify-content: center;
+  display: flex;
+  align-items: center;
 }
-.clipName strong,
-.clipName h1,
+.clipWave {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.clipWave path {
+  fill: rgb(26 18 12 / 0.2);
+}
 .clipNameTitle {
-  font-size: clamp(40px, 6.5vw, 96px);
+  position: relative;
+  margin: 0;
+  padding-left: clamp(14px, 2vw, 28px);
+  font-family: var(--font-syne), sans-serif;
+  /* The ceiling is the smaller of the width's and the lane's: two lines at
+     0.92 line-height, inside a lane that is `--arr-lane-tall` tall less the
+     clip's margin, its header and a little air. Width alone overflowed the
+     lane at short viewports. */
+  font-size: clamp(
+    34px,
+    min(6.5vw, calc((var(--arr-lane-tall) - 44px) / 1.86)),
+    96px
+  );
+  font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 0.92;
   text-transform: uppercase;
-}
-/* One word per line. `HIMAWAN` is the widest word and therefore the ceiling —
-   see §2 of the doc, which measures the ceiling off it. */
-.clipNameTitle {
-  margin: 0;
-  font-family: var(--font-syne), sans-serif;
-  font-weight: 700;
 }
 .clipNameTitle span {
   display: block;
@@ -356,31 +524,54 @@ button.clip {
   white-space: nowrap;
 }
 
-/* The clip becomes the page: its fill crossfades to the chassis colour and its
-   ink flips with it. */
+/* The clip becomes the page: the wash crossfades to the chassis colour and the
+   header and detail ink flip with it. The wash is a direct child of the clip so
+   it reaches all four edges, header included. */
 .clipProfile {
-  background: color-mix(in srgb, var(--clip-color) 62%, var(--arr-ground));
+  background: color-mix(in srgb, var(--clip-color) 24%, var(--arr-ground));
 }
 .clipWash {
   position: absolute;
-  inset: -8px -12px;
+  inset: 0;
   z-index: 0;
   background: var(--chassis-hi, #f4f0e8);
   opacity: var(--arr-clip-interior);
 }
-/* The wash is the last child, so without an explicit order it paints over the
-   label it is meant to sit behind. */
-.clipProfile .clipBody > *:not(.clipWash) {
-  position: relative;
-  z-index: 1;
+.clipProfile .clipHead {
+  background: color-mix(
+    in srgb,
+    var(--clip-color) calc((1 - var(--arr-clip-interior)) * 100%),
+    transparent
+  );
   color: color-mix(
     in srgb,
-    var(--arr-ink) calc((1 - var(--arr-clip-interior)) * 100%),
+    #141210 calc((1 - var(--arr-clip-interior)) * 100%),
+    var(--panel-ink, #101211)
+  );
+}
+.clipProfile .clipDetail {
+  color: color-mix(
+    in srgb,
+    rgb(238 233 223 / 0.66) calc((1 - var(--arr-clip-interior)) * 100%),
     var(--panel-ink, #101211)
   );
 }
 
-/* ── Pinned: playhead and rail ──────────────────────────── */
+/* While the dive opens the clip into the panel, the panel fades in over it. The
+   clip's own label and detail would print on top of the panel's heading for that
+   stretch, so they step out as soon as the dive starts. */
+.clipProfile .clipHead strong,
+.clipDetail {
+  transition: opacity 200ms linear;
+}
+.hero[data-phase='zoom'] .clipProfile .clipHead strong,
+.hero[data-phase='zoom'] .clipProfile .clipDetail,
+.hero[data-phase='rail'] .clipProfile .clipHead strong,
+.hero[data-phase='rail'] .clipProfile .clipDetail {
+  opacity: 0;
+}
+
+/* ── Pinned: playhead and track headers ─────────────────── */
 
 .pinned {
   position: absolute;
@@ -393,21 +584,24 @@ button.clip {
 }
 .playhead {
   position: absolute;
-  top: calc(-1 * var(--arr-ruler-h));
+  top: 0;
   bottom: 0;
   left: var(--arr-playhead);
   width: 1px;
   background: var(--signal-orange);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--signal-orange) 55%, transparent);
   transform: translateX(-0.5px);
 }
+/* The head is a downward triangle seated in the bottom of the ruler, under the
+   bar numbers, so it never prints across them. */
 .playhead::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: -3px;
-  width: 7px;
-  height: 7px;
-  background: var(--signal-orange);
+  top: -9px;
+  left: -5px;
+  border-top: 9px solid var(--signal-orange);
+  border-right: 5.5px solid transparent;
+  border-left: 5.5px solid transparent;
 }
 .rail {
   position: absolute;
@@ -418,38 +612,97 @@ button.clip {
   flex-direction: column;
   gap: 2px;
   width: var(--arr-rail-w);
+  overflow: hidden;
   border-right: 1px solid var(--arr-hair);
-  background: var(--arr-ground);
+  background: var(--arr-panel);
+  transition: opacity 260ms linear;
+}
+/* The headers are there from the first frame, as in a DAW. They step out of the
+   way while the camera dives — the lanes are scaled by then and the rows would
+   no longer line up — and slide back in at the rail phase. */
+.hero[data-phase='zoom'] .rail {
+  opacity: 0;
+  transform: translate3d(-100%, 0, 0);
+}
+.hero[data-phase='rail'] .rail {
   transform: translate3d(calc((1 - var(--arr-rail)) * -100%), 0, 0);
 }
 .rail span {
+  position: relative;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
+  gap: 6px;
   height: var(--arr-lane-h);
-  padding: 0 8px;
-  border-bottom: 1px solid var(--arr-grid);
-  color: var(--arr-muted);
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid var(--arr-hair);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--lane-color) 30%, var(--arr-panel)),
+    var(--arr-panel) 85%
+  );
   font-family: var(--font-geist-mono), monospace;
   font-size: 9px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
 }
-.rail span:first-child {
+.rail span::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--lane-color);
+}
+.rail span b {
+  flex: 0 0 auto;
+  color: var(--arr-muted);
+  font-weight: 500;
+}
+.rail span em {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--arr-ink);
+  font-style: normal;
+  text-overflow: ellipsis;
+}
+.railLed {
+  order: 3;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--lane-color);
+  box-shadow: 0 0 5px var(--lane-color);
+}
+.rail .railTall {
   height: var(--arr-lane-tall);
-  align-items: flex-end;
-  padding-bottom: 10px;
+}
+.rail .railTall em {
   color: var(--signal-orange);
 }
+.rail .railGhost {
+  background: #15181b;
+}
+.rail .railGhost::before {
+  background: rgb(238 233 223 / 0.08);
+}
+.rail .railGhost em {
+  color: rgb(238 233 223 / 0.28);
+}
 
-/* ── Proof readouts ─────────────────────────────────────── */
+/* ── Mixer ──────────────────────────────────────────────────
+   One insert per technology, coloured by its stage, fader set to its listed
+   level. The proof numbers are the info display at the left, the master at the
+   right carries the way into About. */
 
 .proof {
   display: flex;
-  gap: clamp(16px, 4vw, 56px);
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 clamp(16px, 3vw, 40px);
-  height: 66px;
+  flex: 0 0 auto;
+  align-items: stretch;
+  height: var(--arr-mixer-h);
   border-top: 1px solid var(--arr-hair);
+  background: var(--arr-panel);
   font-family: var(--font-geist-mono), monospace;
   font-size: 9px;
   letter-spacing: 0.12em;
@@ -462,13 +715,17 @@ button.clip {
 }
 .proofReadouts {
   display: flex;
-  gap: clamp(14px, 3vw, 40px);
+  flex: 0 0 auto;
+  align-items: center;
+  gap: clamp(12px, 1.8vw, 26px);
+  padding: 0 clamp(12px, 1.6vw, 22px);
+  border-right: 1px solid var(--arr-hair);
 }
 .proofReadouts div {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  min-width: 74px;
+  min-width: 68px;
 }
 .proofReadouts b {
   color: var(--arr-ink);
@@ -493,18 +750,178 @@ button.clip {
   background: var(--signal-orange);
   opacity: 0.7;
 }
-.proofJump {
-  color: var(--arr-muted);
+.strips {
+  display: flex;
+  flex: 1 1 0;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 8px;
+  overflow: hidden;
 }
-.proofJump:hover,
-.proofJump:focus-visible {
-  color: var(--arr-ink);
+.strip {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100px;
+  overflow: hidden;
+  border: 1px solid var(--arr-hair);
+  border-radius: 2px;
+  background: var(--arr-panel-hi);
+}
+.stripHead {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 5px;
+  background: var(--strip-color);
+  color: #141210;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.stripHead b {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+/* The name is set vertically in the body, like the reference's mixer. The
+   horizontal copy stays for assistive tech and for phones. */
+.stripHead em {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  font-style: normal;
+  white-space: nowrap;
+}
+.stripName {
+  flex: 0 0 auto;
+  overflow: hidden;
+  color: rgb(238 233 223 / 0.72);
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+  line-height: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.stripBody {
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: 5px;
+  min-height: 0;
+  padding: 6px 4px;
+}
+.stripMeter {
+  position: relative;
+  flex: 0 0 auto;
+  width: 6px;
+  overflow: hidden;
+  border-radius: 1px;
+  background: #0f1214;
+}
+/* The meter peaks at the technology's listed level and never above it. */
+.stripMeter i {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: calc(var(--level) * 100%);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--strip-color) 75%, #fff),
+    var(--signal-orange)
+  );
+  -webkit-mask-image: repeating-linear-gradient(
+    to top,
+    #000 0 3px,
+    transparent 3px 4px
+  );
+  mask-image: repeating-linear-gradient(
+    to top,
+    #000 0 3px,
+    transparent 3px 4px
+  );
+  transform-origin: bottom;
+  animation: meter-bounce 1.7s ease-in-out infinite alternate var(--phase, 0ms);
+}
+.hero:not([data-phase='open']):not([data-phase='settle']):not(
+    [data-phase='travel']
+  )
+  .stripMeter
+  i {
+  animation-play-state: paused;
+}
+@keyframes meter-bounce {
+  from {
+    transform: scaleY(0.68);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.stripFader {
+  position: relative;
+  flex: 0 0 auto;
+  width: 12px;
+}
+.stripFader::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 3px;
+  border-radius: 1px;
+  background: #0f1214;
+  transform: translateX(-50%);
+}
+.stripFader i {
+  position: absolute;
+  bottom: calc(var(--level) * 100% - 3px);
+  left: 0;
+  width: 12px;
+  height: 6px;
+  border-radius: 1px;
+  background: #d8d3c8;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
+}
+.master {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  /* Anchored to the bottom, so the stack stays under 96px tall. The site's
+     floating player is fixed 96px above the viewport's bottom edge on the right,
+     and anything higher in this column would sit under it. */
+  justify-content: flex-end;
+  gap: 8px;
+  width: clamp(120px, 12vw, 176px);
+  padding: 12px clamp(12px, 1.6vw, 22px);
+  border-left: 1px solid var(--arr-hair);
 }
 .axis {
   color: var(--arr-muted);
+  font-size: 8px;
+  line-height: 1.5;
+  text-align: right;
+}
+.proofJump {
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--signal-orange) 70%, transparent);
+  border-radius: 3px;
+  color: var(--signal-orange);
   white-space: nowrap;
 }
-/* Shown only on phones, where the chrome's nav has no room. */
+.proofJump:hover,
+.proofJump:focus-visible {
+  background: var(--signal-orange);
+  color: #1a120c;
+}
+/* Shown only on phones, where the toolbar's menu has no room. */
 .proofNav {
   display: none;
   gap: 16px;
@@ -610,42 +1027,41 @@ button.clip {
     overflow: visible;
     padding-bottom: 24px;
   }
-  /* The chrome keeps one line: a wrapped project name pushed the ruler out of
-     the header and printed it over the first clip. The nav moves to the footer,
-     where the proof readouts already are, rather than being dropped. */
+  /* The toolbar keeps one line: the brand and the clock. The menu moves to the
+     footer, where the readouts already are, rather than being dropped. */
   .chrome {
-    grid-template-columns: 1fr auto;
-    white-space: nowrap;
     overflow: hidden;
   }
-  .chrome nav {
+  .menu,
+  .tBtn,
+  .lcdPos,
+  .brand small {
     display: none;
-  }
-  .proof {
-    white-space: normal;
-  }
-  .proofNav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
   }
   .ruler {
     position: static;
+    display: flex;
+    flex-wrap: wrap;
     height: auto;
-    padding: 10px 0 6px;
+    padding: 10px 12px 6px;
+    overflow: visible;
+    background: none;
+  }
+  .rulerGrid,
+  .barNum,
+  .rulerCorner {
+    display: none;
   }
   .tick {
     position: static;
-    display: inline-block;
+    height: auto;
     border-left: 0;
     padding: 0 12px 0 0;
   }
   .tickLast {
     padding-right: 0;
+    border-right: 0;
     transform: none;
-  }
-  .rulerDetail {
-    display: none;
   }
   .camera {
     position: static;
@@ -654,14 +1070,14 @@ button.clip {
   }
   .lanes {
     gap: 6px;
+    padding: 0 12px;
   }
   .lane {
     height: auto;
     min-height: 84px;
+    content-visibility: visible;
   }
-  /* The rail is a row of chips here, so the faint in-lane labels are the same
-     word twice. */
-  .laneLabel {
+  .laneGhost {
     display: none;
   }
   .laneTall {
@@ -672,9 +1088,11 @@ button.clip {
     width: auto;
     height: auto;
     min-height: 76px;
+    margin: 4px 0;
   }
-  .clipName strong,
-  .clipName h1,
+  .clipBody {
+    min-height: 44px;
+  }
   .clipNameTitle {
     font-size: clamp(30px, 9vw, 52px);
   }
@@ -683,34 +1101,77 @@ button.clip {
     display: flex;
     gap: 8px;
     margin-top: 12px;
+    padding: 0 12px;
   }
   .playhead {
     display: none;
   }
   .rail {
     position: static;
-    flex-direction: row;
+    flex-flow: row wrap;
     width: auto;
-    transform: none;
+    overflow: visible;
     border: 0;
+    background: none;
     gap: 8px;
   }
   .rail span,
-  .rail span:first-child {
+  .rail .railTall {
     height: auto;
-    align-items: center;
-    padding: 4px 8px;
+    padding: 5px 10px 5px 14px;
     border: 1px solid var(--arr-hair);
+  }
+  .rail .railGhost {
+    display: none;
   }
   .proof {
     flex-direction: column;
     height: auto;
     gap: 14px;
-    align-items: flex-start;
-    padding: 16px;
+    align-items: stretch;
+    padding: 16px 12px;
+  }
+  .proofReadouts {
+    padding: 0 0 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--arr-hair);
+  }
+  .strips {
+    flex-wrap: wrap;
+    padding: 0;
+    overflow: visible;
+  }
+  .strip {
+    flex: 0 0 calc(33.333% - 2px);
+    max-width: none;
+    height: 76px;
+  }
+  .stripHead em {
+    position: static;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    overflow: hidden;
+    clip-path: none;
+    text-overflow: ellipsis;
+  }
+  .stripName {
+    display: none;
+  }
+  .master {
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    padding: 0;
+    border-left: 0;
+  }
+  .proofNav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
   }
   /* The stage is not pinned here, so the seam is just the next block in the
-     flow — which is the session view §9 asks for. */
+     flow — which is the session view the doc asks for. */
   .seam {
     /* `relative`, not `static`. `.aboutSeam` is absolutely positioned inside
        this, so it needs a containing block the size of the seam; `static` lets
@@ -741,8 +1202,19 @@ button.clip {
   .trackArea {
     overflow: visible;
   }
+  /* The camera is absolutely positioned in the pinned layout, so with nothing
+     in the flow the track area would be 0px tall and the lanes would paint
+     over the mixer. Here it is a block in the flow, offset by the ruler and the
+     header column, and the filler tracks go: there is no frame to fill. */
   .camera {
+    position: relative;
+    top: auto;
+    left: var(--arr-rail-w);
+    margin-top: var(--arr-ruler-h);
     transform: none;
+  }
+  .laneGhost {
+    display: none;
   }
   .rail {
     transform: none;
@@ -768,8 +1240,12 @@ button.clip {
   }
   .chrome,
   .proof,
-  .lane {
+  .lane,
+  .rail {
     transition: none;
+  }
+  .stripMeter i {
+    animation: none;
   }
 }
 
@@ -799,8 +1275,19 @@ button.clip {
   .trackArea {
     overflow: visible;
   }
+  /* The camera is absolutely positioned in the pinned layout, so with nothing
+     in the flow the track area would be 0px tall and the lanes would paint
+     over the mixer. Here it is a block in the flow, offset by the ruler and the
+     header column, and the filler tracks go: there is no frame to fill. */
   .camera {
+    position: relative;
+    top: auto;
+    left: var(--arr-rail-w);
+    margin-top: var(--arr-ruler-h);
     transform: none;
+  }
+  .laneGhost {
+    display: none;
   }
   .rail {
     transform: none;
@@ -823,15 +1310,49 @@ button.clip {
   }
 }
 
-/* Tablets: the rail collapses to lane icons, the camera still runs. */
+/* Tablets: the track headers collapse to number and LED, the camera still runs. */
 @media (min-width: 769px) and (max-width: 1180px) {
   .hero {
     --arr-rail-w: 46px;
   }
   .rail span {
     justify-content: center;
+    gap: 0;
     padding: 0;
-    font-size: 8px;
-    letter-spacing: 0.04em;
+  }
+  .rail span em,
+  .rail .railLed {
+    display: none;
+  }
+  .rulerCorner {
+    font-size: 0;
+  }
+  .brand small {
+    display: none;
+  }
+  .stripFader {
+    display: none;
+  }
+  .master {
+    width: 148px;
+  }
+  .axis {
+    display: none;
+  }
+  .proofReadouts {
+    gap: 10px;
+    padding: 0 12px;
+  }
+  .proofReadouts div {
+    min-width: 52px;
+  }
+  .stripBody {
+    gap: 4px;
+    padding: 6px 3px;
+  }
+}
+@media (min-width: 769px) and (max-width: 940px) {
+  .lcdPos {
+    display: none;
   }
 }

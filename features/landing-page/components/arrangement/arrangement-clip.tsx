@@ -1,13 +1,34 @@
 import type { CSSProperties } from 'react'
-import type { ArrangementClip as ClipData } from './arrangement-data'
+import { nameWave, type ArrangementClip as ClipData } from './arrangement-data'
 import styles from './arrangement.module.css'
 
+const NAME_WAVE = nameWave('ADITYA HIMAWAN')
+
+/** The name's samples as a mirrored waveform path in a 0..100 x 0..100 box. */
+const WAVE_PATH = (() => {
+  const step = 100 / (NAME_WAVE.length - 1)
+  const top = NAME_WAVE.map(
+    (v, i) =>
+      `${i === 0 ? 'M' : 'L'}${(i * step).toFixed(2)} ${(50 - v * 48).toFixed(2)}`,
+  )
+  const bottom = NAME_WAVE.map(
+    (v, i) =>
+      `L${(100 - i * step).toFixed(2)} ${(50 + NAME_WAVE[NAME_WAVE.length - 1 - i] * 48).toFixed(2)}`,
+  )
+  return `${top.join(' ')} ${bottom.join(' ')} Z`
+})()
+
 /**
- * The one clip component, used by the hero arrangement and by About.
+ * One clip, the way a DAW playlist draws it: a coloured header strip carrying
+ * the name, and a darker body carrying a preview of what is inside.
  *
- * A clip is a `<div>` unless it is selectable, in which case it is a `<button>`
- * — the About tracks are the only selectable ones, and a `<div>` with a click
- * handler is not reachable by keyboard.
+ * - a pattern clip's body is a piano-roll preview — one note per listed
+ *   technology, as long as that technology's level;
+ * - the name clip's body is the name as a waveform;
+ * - the profile clip's body is its one line of detail, and it is the clip the
+ *   dive opens into, so its fill is a wash that the page colour replaces.
+ *
+ * A clip is a `<div>` unless it is selectable, in which case it is a `<button>`.
  */
 export function ArrangementClip({
   clip,
@@ -36,42 +57,61 @@ export function ArrangementClip({
     '--clip-height': clip.height ?? 1,
   } as CSSProperties
 
-  // The name clip's label is the document's single `h1`. It is a heading that
-  // happens to be a clip label, rather than a heading placed over the scene —
-  // which is the difference between the name being part of the arrangement and
-  // the name being a plate on top of it.
-  //
-  // The two words are set on two lines, and that is arithmetic rather than
-  // taste: §2 derives the ceiling from the widest word, `HIMAWAN`, because
-  // `ADITYA HIMAWAN` on one line is wider than any frame this hero supports.
-  // One word per line is what makes that derivation true.
+  const count = clip.notes?.length ?? 0
+
   const body = (
-    <span className={styles.clipBody}>
-      {clip.kind === 'name' ? (
-        <>
-          <h1 className={styles.clipNameTitle}>
-            {clip.label.split(' ').map((word) => (
-              <span key={word}>{word}</span>
-            ))}
-          </h1>
-          <span className={styles.srOnly}> — Frontend Engineer, Jakarta</span>
-        </>
-      ) : (
-        <strong>{clip.label}</strong>
-      )}
-      {clip.notes ? (
-        <span className={styles.notes} aria-hidden="true">
-          {clip.notes.map((note, index) => (
-            <i key={index} style={{ '--note': note } as CSSProperties} />
-          ))}
-        </span>
-      ) : clip.detail ? (
-        <span className={styles.clipDetail}>{clip.detail}</span>
-      ) : null}
+    <>
       {clip.kind === 'profile' ? (
         <span className={styles.clipWash} aria-hidden="true" />
       ) : null}
-    </span>
+      <span className={styles.clipHead}>
+        {clip.kind === 'name' ? (
+          <>
+            <span aria-hidden="true">AUDIO</span>
+            <span aria-hidden="true">FRONTEND ENGINEER · JAKARTA</span>
+          </>
+        ) : (
+          <strong>{clip.label}</strong>
+        )}
+      </span>
+      <span className={styles.clipBody}>
+        {clip.kind === 'name' ? (
+          <>
+            <svg
+              className={styles.clipWave}
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <path d={WAVE_PATH} />
+            </svg>
+            <h1 className={styles.clipNameTitle}>
+              {clip.label.split(' ').map((word) => (
+                <span key={word}>{word}</span>
+              ))}
+            </h1>
+            <span className={styles.srOnly}> — Frontend Engineer, Jakarta</span>
+          </>
+        ) : clip.notes ? (
+          <span className={styles.notes} aria-hidden="true">
+            {clip.notes.map((note, index) => (
+              <i
+                key={index}
+                style={
+                  {
+                    '--note': note,
+                    '--row': index,
+                    '--rows': count,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </span>
+        ) : clip.detail ? (
+          <span className={styles.clipDetail}>{clip.detail}</span>
+        ) : null}
+      </span>
+    </>
   )
 
   if (!onSelect) {

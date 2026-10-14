@@ -138,8 +138,7 @@ export function ExperienceDeck({
           >
             {[-1, 0, 1].map((offset) => {
               const index =
-                (selected + offset + EXPERIENCES.length) %
-                EXPERIENCES.length
+                (selected + offset + EXPERIENCES.length) % EXPERIENCES.length
               const item = EXPERIENCES[index]
               return (
                 <button

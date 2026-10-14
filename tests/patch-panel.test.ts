@@ -111,12 +111,16 @@ describe('the Patch is a readout, not an input surface', () => {
     }
   })
 
-  it('prints the hero proof strip unchanged', () => {
+  it('does not reprint the hero proof strip', () => {
     const { container } = renderPanel(0)
+    // The hero prints these three. About used to print them too, which made
+    // the panel an echo of the section above it. The footer is decoration
+    // now: it is hidden from assistive tech and says nothing at all.
     for (const readout of PROOF_READOUTS) {
-      expect(container.textContent).toContain(readout.value)
-      expect(container.textContent).toContain(readout.unit)
-      expect(container.textContent).toContain(readout.meter)
+      expect(container.textContent).not.toContain(readout.unit)
     }
+    const footer = container.querySelector('footer')!
+    expect(footer).toHaveAttribute('aria-hidden', 'true')
+    expect(footer.textContent?.trim()).toBe('')
   })
 })

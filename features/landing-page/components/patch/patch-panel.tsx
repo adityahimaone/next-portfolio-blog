@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react'
-import { PROOF_READOUTS } from '../arrangement/arrangement-data'
-import { Fader, Knob, Led, Meter, Silk } from './patch-kit'
+import { Fader, Knob, Led, Silk } from './patch-kit'
 import { PATCH_LOOP, PATCH_MODULE_LIST } from './patch-data'
 import styles from './patch.module.css'
 
@@ -134,22 +133,20 @@ export function PatchPanel({
         ))}
       </div>
 
-      {/* D — the meter bridge. `ratio` is the field the hero's proof strip uses. */}
-      <footer className={styles.bridge}>
-        {PROOF_READOUTS.map((readout) => (
-          <div key={readout.unit}>
-            <b>{readout.value}</b>
-            <Silk>{readout.unit}</Silk>
-            <Meter ratio={readout.ratio} />
-            <small>{readout.meter}</small>
-          </div>
-        ))}
-        <div className={styles.bounce}>
-          <Silk>BOUNCE</Silk>
-          <span aria-hidden="true">
-            <i />
-          </span>
-        </div>
+      {/* D — the output stage. Decoration, and deliberately not a readout.
+          This footer used to print the same three numbers the hero's proof
+          strip prints, which made the panel an echo of the section above it.
+          The numbers live in one place on the page, and it is not here.
+
+          What is left is the hardware an amp ends in — a finned heatsink, a
+          speaker grille and a power lamp. `--settle` is the panel's own
+          power-on act and `--p` its power state, so the lamp and the fins
+          report something true rather than blinking for effect. It is
+          `aria-hidden`: there is nothing here to read. */}
+      <footer className={styles.outStage} aria-hidden="true">
+        <span className={styles.outFins} />
+        <span className={styles.outGrille} />
+        <span className={styles.outLamp} />
       </footer>
     </section>
   )

@@ -864,27 +864,26 @@
   place-items: center;
   gap: 7px;
 }
+/* The rotary, drawn to match the Patch's knob. Both faces on this page are
+   cream faceplates, so both knobs are the same knob: a dark milled cap with
+   one coloured index line. The dotted scale ring is gone with it — the
+   Patch's knob has none, and two knobs that disagree about whether knobs
+   have rings is the kind of drift that reads as a mistake.
+
+   It is still a real input (drag, arrow keys, Home/End, `role="slider"`).
+   The Patch's knobs are readouts. Same part, same look, different job. */
 .knob {
   position: relative;
   width: 52px;
   height: 52px;
   border: 0;
   border-radius: 50%;
-  /* A milled disc: the face is flat silver with a
-     whisper of light across it — no dome, no window
-     specular. Its thickness is a 2px edge ring,
-     the way a turned disc has a side wall. */
-  background: radial-gradient(
-    circle at 50% 38%,
-    #faf9f7 0%,
-    #e9e7e3 55%,
-    #d8d6d1 100%
-  );
+  background: radial-gradient(circle at 35% 30%, #4a4f55, #1d2125 70%);
   box-shadow:
-    0 0 0 2px #c5c3be,
-    0 2px 4px rgba(0, 0, 0, 0.3),
-    inset 0 1px 1px rgba(255, 255, 255, 0.8),
-    inset 0 -1px 2px rgba(0, 0, 0, 0.12);
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 2px 5px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4);
   cursor: pointer;
   touch-action: none;
   transition:
@@ -894,28 +893,19 @@
 .knob:active {
   transform: scale(0.96);
 }
-/* The index notch — one machined line, the only
-   mark on the face. It pivots around the disc's
-   centre the way a real knob's indicator does. */
+/* The index line — the only mark on the face, in the page's signal colour.
+   It pivots about the cap's centre the way a real knob's indicator does. */
 .knob span {
   position: absolute;
   bottom: 50%;
   left: 50%;
   width: 2px;
-  height: 32%;
+  height: 34%;
   margin-left: -1px;
   border-radius: 1px;
-  background: rgba(60, 58, 54, 0.55);
+  background: var(--signal-orange);
   transform-origin: 50% 100%;
   transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.knobScale {
-  position: absolute;
-  top: -5px;
-  width: 66px;
-  height: 66px;
-  border: 1px dotted #97958e;
-  border-radius: 50%;
 }
 .padGrid {
   grid-column: 1 / -1;
@@ -2462,10 +2452,6 @@
 .encoderBank .knob {
   width: 52px;
   height: 52px;
-}
-.encoderBank .knobScale {
-  width: 62px;
-  height: 62px;
 }
 .faderBank > div {
   display: grid;
@@ -5948,10 +5934,6 @@
     width: 42px;
     height: 42px;
   }
-  .encoderBank .knobScale {
-    width: 50px;
-    height: 50px;
-  }
   .faderBank > div {
     min-height: 125px;
   }
@@ -6175,10 +6157,6 @@
   .knob {
     width: 42px;
     height: 42px;
-  }
-  .knobScale {
-    width: 52px;
-    height: 52px;
   }
   .padGrid {
     grid-template-columns: repeat(4, 1fr);
@@ -7347,7 +7325,11 @@
 .contactBrief {
   width: 100%;
   max-width: 1180px;
-  margin: clamp(40px, 6vh, 76px) auto 0;
+  /* The gap between the deck (the hardware) and this card (the insert that
+     shipped with it). It was clamp(40px, 6vh, 76px) — about 54px at a 900px
+     window — which read as the card crowding the deck's own bottom edge. The
+     two are separate objects and the space should say so. */
+  margin: clamp(64px, 9vh, 112px) auto 0;
   padding: 0 clamp(20px, 4vw, 48px);
 }
 /* The insert card. `--chassis-hi` is one step lighter than the band it sits
@@ -7561,7 +7543,9 @@
 }
 @media (max-width: 768px) {
   .contactBrief {
-    margin-top: 32px;
+    /* 32px was the phone value; it read as the card touching the deck. Same
+       reason as the desktop value above, one step smaller. */
+    margin-top: 48px;
     padding: 0 20px;
   }
   /* The corner screws are the one detail that costs more than it returns at
@@ -10444,7 +10428,26 @@
 }
 
 /* The contact deck and the editorial panel copy both print dark rgba over a
-   surface that follows --chassis, so they follow the panel ink. */
+   surface that follows --chassis, so they follow the panel ink.
+
+   The heading and its eyebrow are the two that did not, and they are why this
+   rule is here. Neither set a colour of its own, so both inherited ink meant
+   for somewhere else: the h2 took --room-ink (the floor's ink, deliberately
+   the same cream in both themes because the device wall does not daylight) and
+   the eyebrow took the `#ffffff` that `.sectionHeading > .silkscreen` gives
+   every section on the dark floor. On this section's cream chassis that was
+   cream on cream and white on cream — "Bring me the difficult part." and
+   "Open channel", the largest type and its label, both invisible in the
+   default light theme.
+
+   They take the panel ink now, which is near-black on the cream and cream on
+   the graphite. The `06` stays orange: `.sectionIndex` colours itself, so
+   only the words follow. The eyebrow's hairline is `currentColor`, so it
+   darkens with the text rather than staying a white rule on a cream band. */
+.contactFreshHeader .sectionHeading h2,
+.contactFreshHeader .sectionHeading > .silkscreen {
+  color: var(--panel-ink);
+}
 .contactFreshHeader > p {
   color: var(--panel-ink-muted);
 }
@@ -10570,7 +10573,7 @@
   }
 
   /* Encoders are already two-up; only the 23px row gap needs to come down so
-     the two 42px knobs and their scales have room to breathe. */
+     the two 42px knobs have room to breathe. */
   .encoderBank > div {
     gap: 16px 8px;
   }
@@ -10578,11 +10581,6 @@
   .encoderBank .knob {
     width: 52px;
     height: 52px;
-  }
-
-  .encoderBank .knobScale {
-    width: 60px;
-    height: 60px;
   }
 
   /* Fourteen keys, 23px apiece, with the pitch controls already hidden by the

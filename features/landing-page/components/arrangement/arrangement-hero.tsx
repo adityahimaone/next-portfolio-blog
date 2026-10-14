@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { PatchPanel } from '../patch/patch-panel'
 import {
   ARRANGEMENT_CLIPS,
   ARRANGEMENT_LANES,
@@ -42,34 +41,30 @@ import styles from './arrangement.module.css'
  * on. It is also the one documented exception to "a clip's width is a duration":
  * the name is not a stage, so it spans the record.
  *
- * What is inside the PROFILE clip is not a section of this page. It is the
- * Patch: the clip opened, drawn with the same kit as the mixer below, on a cream
- * faceplate rather than this dark ground. Same machine, different window — see
- * `components/patch/`.
+ * ## Where the session ends
+ *
+ * The camera dives once into the PROFILE clip, and the machine is left there.
+ * What used to open out of that dive was the Patch — a synth faceplate built
+ * from the same kit as the mixer, sitting in the clip's interior. It is gone.
+ * The handoff now belongs to `components/matter/`, which carries the reader out
+ * of the device entirely and into an editorial About; this component's only
+ * part in it is to mark the two things the handoff needs to read: the outgoing
+ * device (`.trackArea`) and the source region (the PROFILE clip).
+ *
+ * That is why there is no `#about` in this file. The clip's interior is not a
+ * section any more, and an anchor that resolves to the top of a long pinned
+ * runway lands a reader at the start of an animation instead of at the thing
+ * they asked for. There is exactly one `#about` on the page, and it is the
+ * heading of the biography.
  */
-export function ArrangementHero({
-  selected,
-  setSelected,
-}: {
-  selected: number
-  setSelected: React.Dispatch<React.SetStateAction<number>>
-}) {
+export function ArrangementHero() {
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const cameraRef = useRef<HTMLDivElement>(null)
-  const seamRef = useRef<HTMLDivElement>(null)
   const [clock, setClock] = useState('')
 
-  useArrangementHero({
-    sectionRef,
-    trackRef,
-    cameraRef,
-    seamRef,
-    // The hook owns which module the read has reached; `selected` is the same
-    // state the module buttons read and the one a click writes.
-    setAboutIndex: setSelected,
-  })
-  useHeroDockVisibility({ sectionRef, seamRef })
+  useArrangementHero({ sectionRef, trackRef, cameraRef })
+  useHeroDockVisibility({ sectionRef })
 
   // The clock is the one readout on this instrument that is true without being
   // invented. Seeded empty and filled in an effect, so the server and the client
@@ -189,11 +184,11 @@ export function ArrangementHero({
         </header>
 
         {/* The ruler is a child of the stage, not of the track area, and that is
-            the whole of "the seam is structural". It is the one piece of the
+            the whole of "the ruler is structural". It is the one piece of the
             instrument's furniture that does not belong to the world being
             zoomed: it measures the arrangement from outside it, so it must not
             be clipped by the window the camera dives through, and it must not be
-            painted over by the panel the dive reveals. A DAW has one ruler and
+            painted over by whatever the dive reveals. A DAW has one ruler and
             it is always at the top; this is the same rule.
 
             It reads the camera's own properties (`--arr-zoom`, `--arr-camera-x`)
@@ -202,7 +197,12 @@ export function ArrangementHero({
             them — which is why it carries `data-arr-ruler`. */}
         <ArrangementRuler />
 
-        <div ref={trackRef} className={styles.trackArea}>
+        {/* `data-matter-device` is the handoff's own marker: this is the
+            outgoing device, and the only thing the bridge does to it is fade
+            it. It is on the track area rather than on the stage because the
+            stage holds the navigation and the transport, and nothing focusable
+            may sit inside an element that gets faded to nothing. */}
+        <div ref={trackRef} className={styles.trackArea} data-matter-device>
           <div ref={cameraRef} className={styles.camera}>
             <div className={styles.lanes}>
               {ARRANGEMENT_LANES.map((lane) => (
@@ -225,6 +225,7 @@ export function ArrangementHero({
                       key={clip.id}
                       clip={clip}
                       index={ARRANGEMENT_CLIPS.indexOf(clip)}
+                      source={clip.kind === 'profile'}
                     />
                   ))}
                 </div>
@@ -246,38 +247,7 @@ export function ArrangementHero({
         </div>
 
         <ArrangementMixer axis={axis} />
-
-        {/* The seam: the clip's interior, revealed by the dive rather than
-            reached by scrolling. It is laid out at its real size the whole time
-            and uncovered by a clip-path that starts as the PROFILE clip's own
-            rectangle — so this is a zoom, not a fade, and there is no second
-            copy of About anywhere on the page.
-
-            It is a child of the **stage**, not of `.trackArea`, and that is what
-            lets it cover the chrome and the proof once the window is fully open.
-            `.trackArea` is `overflow: hidden` (the camera's transformed lanes
-            have to be clipped to it), so a seam inside it could never paint over
-            the furniture above and below. Its top edge is the ruler's bottom
-            edge, so the ruler stays visible through the dive and the panel opens
-            beneath it rather than under it. Its clip-path insets are therefore
-            measured from its own edges — see `chromeHeight` / `rulerHeight` in
-            `ArrangementGeometry`.
-
-            `inert` is not set here. The hook sets it on the first frame, and the
-            hook never runs on phones or under reduced motion — where the media
-            queries put this back in the flow and it must stay reachable. */}
-        <div ref={seamRef} className={styles.seam}>
-          <PatchPanel active={selected} onSelect={setSelected} />
-        </div>
       </div>
-
-      {/* The skip link and every `#about` link land here. Not on the seam
-          itself: a sticky element's rect is a function of scroll position, so
-          an `#about` inside the stage resolves to the hero's scroll origin and
-          the link would jump to the top of the hero instead of to the panel.
-          This anchor sits exactly where the pinned window ends, which is the
-          scroll offset at which the seam is fully open. */}
-      <div id="about" className={styles.aboutAnchor} aria-hidden="true" />
     </section>
   )
 }

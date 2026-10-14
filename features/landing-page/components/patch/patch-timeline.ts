@@ -6,7 +6,6 @@
 import {
   ARRANGEMENT_SCROLL_SVH,
   ARRANGEMENT_SEAM_OPEN,
-  IMMERSIVE_OVERSHOOT_TO,
 } from '../arrangement/arrangement-camera'
 
 export const PATCH_MODULES = 3
@@ -92,12 +91,15 @@ export const knobAngle = (level: number) =>
 export type SplitProgress = {
   /**
    * The camera's progress, **in the camera's own domain**. It runs 0 →
-   * `ARRANGEMENT_SEAM_OPEN` while the window opens, then on to
-   * `IMMERSIVE_OVERSHOOT_TO` during the panel's power-on act, which is where the
-   * camera's one overshoot is spent (`IMMERSIVE_OVERSHOOT_FROM` is already past
-   * the seam-open mark by design). Feeding the camera this, unscaled, leaves
+   * `ARRANGEMENT_SEAM_OPEN` while the window opens, and stops there.
+   *
+   * It used to carry on to `IMMERSIVE_OVERSHOOT_TO` so the camera's overshoot
+   * could be spent during the panel's power-on act. The camera has no overshoot
+   * any more — the reader read the in-out-in as a mistake — so there is nothing
+   * left for the extra scroll to buy, and the camera's domain is exactly the
+   * window it opens. Feeding the camera this, unscaled, leaves
    * `arrangement-camera.ts` and its tests untouched: the camera never learns the
-   * read exists, it just sees a slightly longer scroll that ends at 0.91.
+   * read exists.
    */
   camera: number
   /** 0..1 across the read, 0 until the window is open. */
@@ -117,13 +119,9 @@ export function splitProgress(
   heroPx: number,
   readPx: number,
 ): SplitProgress {
-  const read = span(scrolled, heroPx, heroPx + readPx)
-  const settle = span(read, 0, PATCH_ACTS.powerOn[1])
   return {
-    camera:
-      span(scrolled, 0, heroPx) * ARRANGEMENT_SEAM_OPEN +
-      settle * (IMMERSIVE_OVERSHOOT_TO - ARRANGEMENT_SEAM_OPEN),
-    read,
+    camera: span(scrolled, 0, heroPx) * ARRANGEMENT_SEAM_OPEN,
+    read: span(scrolled, heroPx, heroPx + readPx),
   }
 }
 

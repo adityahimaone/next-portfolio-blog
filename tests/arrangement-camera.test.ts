@@ -9,9 +9,6 @@ import {
   IMMERSIVE_DEPTH_LOCK,
   IMMERSIVE_LANE_DIVE_OPACITY,
   IMMERSIVE_LANE_SCAN_OPACITY,
-  IMMERSIVE_OVERSHOOT,
-  IMMERSIVE_OVERSHOOT_FROM,
-  IMMERSIVE_OVERSHOOT_TO,
   IMMERSIVE_PHASES,
   OPEN_OVERSHOOT,
   OPEN_SCALE,
@@ -290,16 +287,14 @@ describe('arrangementFrame', () => {
 })
 
 /**
- * The immersive layer: the overshoot the camera is allowed and the two depth
- * signals the stylesheet reads.
+ * The camera's scale, and the two depth signals the stylesheet reads.
  *
- * The point of these is the *bound*, not the curve. A camera that overshoots is
- * a camera that can end up parked somewhere other than the measured fit, and
- * the fit is the one number the whole seam is built on — the profile clip's
- * edges land on the frame's edges at exactly `worldWidth / profileWidth`. So
- * the assertions that matter are that the overshoot is bounded at 2.5%, that it
- * is spent after the seam has opened, and that it returns to the fit rather
- * than to fit-minus-something.
+ * The point of these is the *bound*, and now the *direction*. The fit is the
+ * one number the whole seam is built on — the profile clip's edges land on the
+ * frame's edges at exactly `worldWidth / profileWidth` — so nothing downstream
+ * of the rail may move the scale. And the curve has to be monotonic: the reader
+ * asked for one uninterrupted zoom, because a camera that goes in, back out and
+ * in again reads as a mistake rather than as weight.
  */
 describe('cameraScale', () => {
   const FIT = GEO.worldWidth / (GEO.profileEnd - GEO.profileStart)
@@ -311,27 +306,27 @@ describe('cameraScale', () => {
     expect(cameraScale(1, FIT)).toBeCloseTo(FIT, 9)
   })
 
-  it('never exceeds the fit by more than the declared 2.5%', () => {
-    let peak = 0
+  it('rises to the fit and never past it, so the zoom runs one way only', () => {
+    // There used to be a 2.5% overshoot here: in, back out, then the handoff
+    // zooming in again. That is the exact shape the reader reported as wrong.
+    // The bound is now the fit itself and the curve may never fall, which is
+    // the whole contract — a camera that cannot go backwards cannot wobble.
+    let previous = -1
     for (let p = 0; p <= 1.0001; p += 0.002) {
       const scale = cameraScale(p, FIT)
-      expect(scale).toBeLessThanOrEqual(FIT * (1 + IMMERSIVE_OVERSHOOT) + 1e-9)
+      expect(scale).toBeLessThanOrEqual(FIT + 1e-9)
       expect(scale).toBeGreaterThanOrEqual(1)
-      peak = Math.max(peak, scale)
+      expect(scale).toBeGreaterThanOrEqual(previous - 1e-9)
+      previous = scale
     }
-    // It has to actually be seen, or the bump is a rounding error rather than
-    // the camera weight the direction asks for.
-    expect(peak).toBeGreaterThan(FIT * 1.02)
+    expect(previous).toBeCloseTo(FIT, 9)
   })
 
-  it('spends the overshoot after the seam has opened, and settles back onto the fit', () => {
-    expect(IMMERSIVE_OVERSHOOT_FROM).toBeGreaterThanOrEqual(
-      ARRANGEMENT_SEAM_OPEN,
-    )
-    expect(IMMERSIVE_OVERSHOOT_TO).toBeLessThan(1)
-    // Zero at both ends of the bump, so there is no residual offset to inherit.
-    expect(cameraScale(IMMERSIVE_OVERSHOOT_FROM, FIT)).toBeCloseTo(FIT, 9)
-    expect(cameraScale(IMMERSIVE_OVERSHOOT_TO, FIT)).toBeCloseTo(FIT, 9)
+  it('reaches the fit on the rail and holds it to the last frame', () => {
+    expect(cameraScale(ARRANGEMENT_PHASES.rail, FIT)).toBeCloseTo(FIT, 9)
+    expect(cameraScale(0.9, FIT)).toBeCloseTo(FIT, 9)
+    expect(cameraScale(ARRANGEMENT_SEAM_OPEN, FIT)).toBeCloseTo(FIT, 9)
+    expect(cameraScale(1, FIT)).toBeCloseTo(FIT, 9)
   })
 
   it('leaves the frame untouched while the camera is still travelling', () => {

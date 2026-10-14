@@ -35,8 +35,28 @@
  * Measured at five viewports, the overflow runs from 0px (1728×1117) to 304px
  * (1280×720) — it is a function of the viewport, not a constant, which is why
  * the read is driven by a measured number rather than a tuned one.
+ *
+ * ## Why 400 and not 460
+ *
+ * 460 was the window this was drawn against; it was never measured against the
+ * page. Measuring it did two things. The camera's own travel is this number
+ * less the viewport the stage is pinned for — 3240px at 1440×900 — and the
+ * hero's whole run is therefore the largest single cost between the top of the
+ * page and the SIGNAL word the handoff is built around.
+ *
+ * The bridge, meanwhile, has to be *longer* than it was: its runway now holds
+ * the reading panel clear of the decorative word band for the whole time SIGNAL
+ * is legible (see `matterRunway`), which is what makes that beat watchable at
+ * all, and it costs about 400px of scroll. Paying for it here is what keeps the
+ * total from growing: at 400 the hero gives back 540px, so the page is shorter
+ * than it was *and* the words get their window.
+ *
+ * 400 is also the floor both tests declare, so this is the shortest the hero is
+ * allowed to be without retiming the five phases themselves. The design doc
+ * anticipates the choice: "Final total hero length must be chosen after
+ * measuring current behavior."
  */
-export const ARRANGEMENT_SCROLL_SVH = 460
+export const ARRANGEMENT_SCROLL_SVH = 400
 
 export const ARRANGEMENT_PHASES = {
   open: 0,
@@ -61,12 +81,12 @@ export const ARRANGEMENT_SEAM_OPEN = 0.82
  *
  * `ARRANGEMENT_PHASES` above times the camera. These time the *reader*: scan the
  * session, lock onto PROFILE, dive into the clip, and read. They are the dials
- * the depth layer and the overshoot are hung from, and they are deliberately a
- * separate table — retiming the camera must not silently move the moment the
- * profile clip becomes the focal point.
+ * the depth layer is hung from, and they are deliberately a separate table —
+ * retiming the camera must not silently move the moment the profile clip
+ * becomes the focal point.
  *
- * `dive` sits after the camera's own `zoom` and `reveal` after the seam has
- * opened, so the overshoot below lands on a frame that is already whole.
+ * `dive` sits after the camera's own `zoom`, so the depth is spent on a clip the
+ * camera has already framed.
  */
 export const IMMERSIVE_PHASES = {
   overview: 0,
@@ -76,26 +96,6 @@ export const IMMERSIVE_PHASES = {
   reveal: 0.84,
   read: 1,
 } as const
-
-/**
- * The one camera overshoot, and its ceiling.
- *
- * `0.025` is 2.5% of whatever the fitted scale happens to be, which is the
- * whole point of expressing it as a fraction rather than in pixels: at 1440×900
- * the measured fit is about 2.0, so the camera reaches 2.05 and comes back. It
- * is enough to imply weight on a 2× frame and small enough that the viewport
- * does not wobble.
- *
- * It starts after `ARRANGEMENT_SEAM_OPEN` and returns to zero before the read
- * begins, so the scale the reader settles on is the measured fit exactly —
- * `arrangementFrame(1, geo).scale === geo.worldWidth / profileWidth`. A bump
- * that never came back down would leave the panel permanently over-zoomed by
- * 2.5%, which is the "wobble" this exists to avoid.
- */
-export const IMMERSIVE_OVERSHOOT = 0.025
-/** Where the bump is spent. Ends before `read` so the last frame is the fit. */
-export const IMMERSIVE_OVERSHOOT_FROM = 0.84
-export const IMMERSIVE_OVERSHOOT_TO = 0.91
 
 /** px of depth at full lock, and the extra earned by the dive. */
 export const IMMERSIVE_DEPTH_LOCK = 18
@@ -258,33 +258,42 @@ export function arrangementPhase(progress: number): ArrangementPhase {
 }
 
 /**
- * The camera's scale, as the measured fit plus one restrained overshoot.
+ * The camera's scale: the measured fit, reached on the rail and held there.
  *
- * The dive itself is `ARRANGEMENT_PHASES.zoom → rail`, exactly as it was: the
- * fit is derived from the profile clip's width against the world, so this
- * function only ever moves between `1` and `zoomScale`, and it reaches
- * `zoomScale` on the rail and stays there.
+ * The dive is `ARRANGEMENT_PHASES.zoom → rail`, exactly as it was: the fit is
+ * derived from the profile clip's width against the world, so this function
+ * only ever moves between `1` and `zoomScale`, and it reaches `zoomScale` on the
+ * rail and stays there.
  *
- * What it adds is the weight. A camera that arrives at its mark and stops dead
- * reads as a cross-fade; a camera that overshoots by 2.5% and settles reads as
- * something with mass. The bump is a half sine — zero at both ends, peak in the
- * middle — so it cannot leave a residual offset: at
- * `IMMERSIVE_OVERSHOOT_TO` and beyond, `cameraScale` is the measured fit to the
- * last decimal. That is what the acceptance criterion "zoom ends at the
- * measured clip fit" means, and it is why the overshoot is spent *after* the
- * seam has opened rather than on the way in.
+ * ## There is deliberately no overshoot
+ *
+ * There used to be one: a 2.5% half-sine bump at `[0.84, 0.91]`, on the
+ * argument that a camera arriving at its mark and stopping dead reads as a
+ * cross-fade while one that overshoots reads as something with mass. It was
+ * removed because the reader sees it as exactly what it is. The dive goes in,
+ * the bump takes it back out, and the handoff then zooms in again — three
+ * changes of direction where the story only has one, which reads as a mistake
+ * rather than as weight. The sound-becomes-matter design rules the effect out
+ * by name: "no spring bounce, camera overshoot, blur pulses, velocity skew, or
+ * opacity flicker".
+ *
+ * The bump was never really a camera idea anyway. It existed so that the Patch
+ * panel's power-on act had something to spend it on — `patch-timeline.ts` drove
+ * the camera from `ARRANGEMENT_SEAM_OPEN` to `IMMERSIVE_OVERSHOOT_TO` for
+ * precisely that reason — and that clock left with the seam. A viewpoint that
+ * does not move should arrive at its mark and hold.
+ *
+ * Monotonicity is the property worth keeping, and a test asserts it: nothing
+ * downstream of the rail may move the scale, so the clip's edges land on the
+ * frame's edges at exactly `worldWidth / profileWidth` and stay there.
  */
 export function cameraScale(progress: number, zoomScale: number): number {
   const p = clamp01(progress)
-  const fitted = mix(
+  return mix(
     1,
     zoomScale,
     span(p, ARRANGEMENT_PHASES.zoom, ARRANGEMENT_PHASES.rail),
   )
-  const weight = Math.sin(
-    span(p, IMMERSIVE_OVERSHOOT_FROM, IMMERSIVE_OVERSHOOT_TO) * Math.PI,
-  )
-  return fitted + weight * IMMERSIVE_OVERSHOOT * zoomScale
 }
 
 export function arrangementFrame(

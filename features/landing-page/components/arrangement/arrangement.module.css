@@ -35,17 +35,34 @@
   --arr-hair: rgb(238 233 223 / 0.13);
   --arr-ink: #eee9df;
   --arr-muted: #8e928e;
-  /* The section's height, and it is three things added up: one viewport for the
-     sticky stage, the camera's own distance (`ARRANGEMENT_SCROLL_SVH` less that
-     viewport, times `ARRANGEMENT_SEAM_OPEN`), and the read's own length
-     (`PATCH_READ_SVH`). The read used to borrow the last 18% of the camera's
-     range, which is why the audit found it had nothing to do; it has its own
-     300svh now. A test reads this line and compares it to `PATCH_SECTION_SVH`,
-     so the two cannot drift. */
-  --arr-scroll: 695.2svh;
+  /* The section's height, and it is one thing now: the camera's own distance,
+     `ARRANGEMENT_SCROLL_SVH`. One viewport of it is the sticky stage and the
+     rest is travel, so the trigger's progress *is* the camera's progress — the
+     translation layer that used to sit between them is gone.
+
+     There used to be a second instrument after the dive: the Patch's read,
+     which owned another 300svh and was fed from the same scroll position by
+     `splitProgress`. It left with the seam. A test reads this line and compares
+     it to `ARRANGEMENT_SCROLL_SVH`, so the two cannot drift.
+
+     400 rather than the 460 this was drawn against: the bridge's runway now
+     holds the reading panel clear of the decorative word band, which costs
+     scroll, and the hero giving back 540px here is what pays for it. See
+     `ARRANGEMENT_SCROLL_SVH` for the measurement. */
+  --arr-scroll: 400svh;
 
   position: relative;
-  height: var(--arr-scroll);
+  /* `--arr-hold` is the handoff's, and it defaults to nothing.
+   *
+   * The camera finishes on the exact scroll the sticky stage unsticks on, so
+   * without a hold the machine starts sliding away on the same frame the
+   * bridge's clock starts — and a bridge whose first frame arrives over an
+   * empty page can only ever be a cut. The bridge's hook publishes how much
+   * scroll it needs the stage to stay pinned for, and the section grows by it;
+   * the camera's own trigger is told its distance separately, so the dive is
+   * not retimed by this. Unset — every phone, every reduced-motion visitor, and
+   * every route with no bridge — the declaration is the plain `--arr-scroll`. */
+  height: calc(var(--arr-scroll) + var(--arr-hold, 0px));
   background: var(--arr-ground);
   color: var(--arr-ink);
 }
@@ -1059,88 +1076,18 @@ button.clip {
   color: var(--arr-ink);
 }
 
-/* ── The seam: the clip's interior ──────────────────────────
-   Laid out at its real size for the whole window and uncovered by a clip-path
-   that starts as the PROFILE clip's own rectangle. A `clip-path` reveal rather
-   than a `transform: scale()` one on purpose: the clip is 58px tall when the
-   dive starts, and anything that scaled the panel to fit that box would render
-   About's heading at a fraction of its size. Revealing keeps the type at real
-   size and grows the window around it, which is also what the doc describes.
+/* ── Where the seam used to be ─────────────────────────────
+   This is where the seam lived: an absolutely-positioned overlay on the whole
+   stage, clipped to the PROFILE clip's own rectangle and opened by a `clip-path`
+   until it covered the chrome and the proof, with the Patch — a cream synth
+   faceplate — laid out inside it at its real size.
 
-   It is a child of the **stage**, not of `.trackArea`. `.trackArea` is
-   `overflow: hidden` — the camera's transformed lanes have to be clipped to it —
-   so a seam inside it could never paint over the chrome above or the proof
-   below. As a stage overlay it covers the proof once the window is fully open.
-   Its top edge is the ruler's bottom edge, so the ruler and the chrome stay
-   visible for the whole window and the panel opens beneath them: they are the
-   instrument's header, and the header of a DAW does not scroll away. Its insets
-   are measured from its own top edge to match, which is why the hook hands the
-   frame a `chromeHeight` and a `rulerHeight` of zero.
-
-   The panel is the Patch — a cream faceplate built from the same kit as the
-   mixer — with its own stylesheet in `components/patch/patch.module.css`. */
-
-.seam {
-  position: absolute;
-  z-index: 5;
-  /* Below the chrome *and* the ruler. Both are the instrument's header and both
-     stay, so the window starts where they end rather than at the stage's top. */
-  top: calc(var(--arr-chrome-h) + var(--arr-ruler-h));
-  right: 0;
-  bottom: 0;
-  left: 0;
-  /* The panel's own ground, on the window rather than on the panel. */
-  background: var(--chassis-hi);
-  clip-path: inset(
-    var(--arr-seam-top, 0) var(--arr-seam-right, 0) var(--arr-seam-bottom, 0)
-      var(--arr-seam-left, 0)
-  );
-  opacity: var(--arr-seam-opacity, 0);
-  pointer-events: none;
-}
-/* Gated on `data-seam`, not on `data-phase`. The window starts opening at
-   `rail` and finishes at `seamOpen`, so a phase gate would make a half-closed
-   strip clickable — and would put its module buttons in the tab order while the
-   panel is still clipped. The hook writes this on the same condition that clears
-   `inert`, so pointer and keyboard reachability cannot disagree. */
-.hero[data-seam='open'] .seam {
-  pointer-events: auto;
-}
-
-/* The proof strip steps aside once the panel owns the frame. It is already
-   *painted* over by the seam at that point — the window reaches the stage's
-   bottom — so this is not a visual change, it is what takes the "Open profile"
-   link and the footer nav out of the tab order. Leaving them focusable behind
-   an opaque panel is the classic way a keyboard user tabs into nothing.
-   `visibility` rather than `display` so the stage's flex column keeps its
-   geometry: the camera's measurements are taken once per refresh, and collapsing
-   the proof would move every lane out from under a frozen camera.
-
-   The chrome is deliberately **not** in this list. The seam starts below it, so
-   it is not painted over, and the toolbar's nav is the navigation a reader has
-   while the panel is open — hiding it would leave a blank band where the page's
-   own menu used to be. */
-.hero[data-seam='open'] .proof {
-  visibility: hidden;
-}
-
-/* Where `#about` resolves to. Not on the seam itself: a sticky element's rect is
-   a function of scroll position, so an `#about` inside the stage resolves to the
-   hero's scroll origin and the skip link would jump to the top of the hero.
-
-   It lands on `ARRANGEMENT_PHASES.rail` — the offset at which the window is open
-   and the read begins — not on the end of the hero. Landing on the end would put
-   the reader at the bottom of the panel having never seen its heading. The hook
-   writes the offset in px, derived from the trigger's own range, so this cannot
-   drift when the phases are retimed. */
-.aboutAnchor {
-  position: absolute;
-  top: var(--arr-about-at, 100svh);
-  left: 0;
-  width: 1px;
-  height: 1px;
-  pointer-events: none;
-}
+   All of it is gone, and the `#about` anchor that sat at the bottom of this
+   file with it. The clip's interior is no longer a section: the dive ends with
+   the source region grown to fill the frame, and the reader is carried out of
+   the device by `components/matter/`, which owns its own stage, its own
+   trigger and its own About landmark. Nothing in this file reads
+   `--arr-seam-*` any more, and nothing writes it. */
 
 /* ── Phones: a session view, no camera ──────────────────── */
 
@@ -1318,21 +1265,8 @@ button.clip {
     flex-wrap: wrap;
     gap: 14px;
   }
-  /* The stage is not pinned here, so the seam is just the next block in the
-     flow — which is the session view the doc asks for. */
-  .seam {
-    /* `relative`, not `static`. `.aboutSeam` is absolutely positioned inside
-       this, so it needs a containing block the size of the seam; `static` lets
-       it resolve against `.hero` and cover the whole section instead. */
-    position: relative;
-    inset: auto;
-    clip-path: none;
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .aboutAnchor {
-    display: none;
-  }
+  /* The stage is not pinned here, so the arrangement is simply the session
+     view the doc asks for. */
 }
 
 /* ── Reduced motion: the arrangement at overview zoom ───── */
@@ -1385,22 +1319,8 @@ button.clip {
   .ruler {
     opacity: 1;
   }
-  /* Nothing is revealed by scroll here, so the interior is simply the block
-     below the arrangement. It has to be reachable: `inert` is set by the hook,
-     and the hook never runs under reduced motion. */
-  .seam {
-    /* `relative`, not `static`. `.aboutSeam` is absolutely positioned inside
-       this, so it needs a containing block the size of the seam; `static` lets
-       it resolve against `.hero` and cover the whole section instead. */
-    position: relative;
-    inset: auto;
-    clip-path: none;
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .aboutAnchor {
-    display: none;
-  }
+  /* Nothing is revealed by scroll here, so the arrangement is simply the block
+     above the biography. */
   /* Nothing is scrubbing, so no note is "not yet reached": every one is lit.
      The fallback in the rule above is 0 because the default is a page that is
      about to be scrubbed; this is the one state where that is not true. */
@@ -1419,9 +1339,35 @@ button.clip {
   }
 }
 
+/* ── Short viewports: the third half of the same condition ──
+   The hook gates on three things at once — wide enough, tall enough, motion
+   allowed — and the two blocks above cover the second and third. This is the
+   first, and it was missing.
+
+   Without it a 1440×640 window got the pin with none of the motion: the hook
+   declined to activate because `min-height: 700px` failed, but nothing told the
+   stylesheet, so `position: sticky` stayed on and the arrangement sat frozen at
+   the top of a 400svh section. Measured, the reader scrolled ~1920px past a
+   picture that never changed — the "blank runway" the design rules out by name:
+   "At <=768px, reduced motion, or insufficient height (<700px initial target),
+   use normal stacked layout; no pinning, zoom, parallax, hidden text or blank
+   runway."
+
+   `max-height: 699px` is the exact complement of the hook's `min-height: 700px`,
+   so the CSS and the JS now agree about which viewports get the motion. */
+@media (max-height: 699px) {
+  .hero {
+    height: auto;
+  }
+  .stage {
+    position: static;
+    height: auto;
+  }
+}
+
 /* ── No JavaScript ────────────────────────────────────────
-   The pin is CSS-only (`position: sticky` inside a 460svh section), so with
-   scripting off the desktop page would otherwise be 460svh of arrangement with
+   The pin is CSS-only (`position: sticky` inside a 400svh section), so with
+   scripting off the desktop page would otherwise be 400svh of arrangement with
    About sitting at `opacity: 0` behind it — content reachable only by a scroll
    that does nothing. Nothing may be hidden behind a script: the seam goes back
    into the flow and becomes the block below the arrangement, which is exactly
@@ -1475,19 +1421,6 @@ button.clip {
   }
   .rail {
     transform: none;
-  }
-  .seam {
-    /* `relative`, not `static`. `.aboutSeam` is absolutely positioned inside
-       this, so it needs a containing block the size of the seam; `static` lets
-       it resolve against `.hero` and cover the whole section instead. */
-    position: relative;
-    inset: auto;
-    clip-path: none;
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .aboutAnchor {
-    display: none;
   }
   /* No hook, so `--arr-play` is never written and the notes would sit dim
      forever. Every note is lit instead: without a playhead there is nothing

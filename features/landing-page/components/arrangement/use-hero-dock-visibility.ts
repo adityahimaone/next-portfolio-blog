@@ -17,12 +17,12 @@ import {
  */
 const DOCK_CLEARANCE = 76
 
-/** The layouts that un-pin the stage and stack About beneath it. */
+/** The layouts that un-pin the hero and stack the page beneath it. */
 const FLOW_LAYOUT = '(max-width: 768px), (prefers-reduced-motion: reduce)'
 
 /**
  * Retires the dock while the arrangement owns the frame, and brings it back
- * once About does.
+ * once the biography does.
  *
  * The dock is the one piece of chrome this tree cannot reach with CSS. It is
  * rendered by the root layout — a different React tree, on the far side of the
@@ -35,46 +35,45 @@ const FLOW_LAYOUT = '(max-width: 768px), (prefers-reduced-motion: reduce)'
  * so coming back is the fade-up-from-the-bottom the design asks for. There is
  * no new animation here to write, and none to keep in sync.
  *
- * The rule is one sentence: **hidden while the arrangement owns the frame,
- * shown once About does.** Two ways that can be true, and they are not
- * interchangeable:
+ * ## The rule
  *
- * - **The dive** pins the stage for the whole window, so nothing about the
- *   geometry ever moves — the seam's own state is the only thing that does.
- *   This branch reads a dataset and no rect. Reading a rect here returns
- *   "always visible": the seam is an absolute overlay filling the stage, so its
- *   box is the stage's whether or not the window has opened.
- * - **The flow layouts** un-pin the stage and stack About underneath it, and
- *   nothing writes `data-seam` without the dive, so the scroll position has to
- *   answer instead. The seam is `position: relative` there and its box *is*
- *   About's, which is why measuring the seam is measuring the thing that
- *   arrived rather than the thing it arrived in.
+ * **Hidden while the arrangement owns the frame, shown once About does.** It
+ * used to be two branches, because the About panel was a clipped interior
+ * pinned inside the hero and nothing but the dive could say whether it had
+ * arrived. That is no longer true: the biography is a real section in ordinary
+ * document flow with one `#about` on it, so one geometric answer covers every
+ * layout the page has.
  *
- * Both branches are re-evaluated on scroll and on resize, and on a
- * `prefers-reduced-motion` flip, so a visitor who changes the setting mid-page
- * gets the branch their layout actually uses rather than whichever one ran
- * first.
+ * The reading panel's own top edge is the boundary. Below the clearance line it
+ * is still arriving and the dock stays out; at or above it, the reader has the
+ * biography and the dock can come back without covering the first sentence.
+ *
+ * The element is looked up rather than passed in because the two live in
+ * different components — the hero owns the dock, the bridge owns the panel —
+ * and a ref threaded between them would be a coupling with no other purpose.
+ * The lookup is memoised and re-tried, so a route that renders no About falls
+ * back to the hero's own bottom edge instead of leaving the dock hidden.
  */
 export function useHeroDockVisibility({
   sectionRef,
-  seamRef,
 }: {
   sectionRef: RefObject<HTMLElement | null>
-  seamRef: RefObject<HTMLDivElement | null>
 }) {
   useEffect(() => {
     const section = sectionRef.current
-    const seam = seamRef.current
-    if (!section || !seam) return
+    if (!section) return
 
     const flowLayout = window.matchMedia(FLOW_LAYOUT)
     let frame = 0
     let applied: InterfaceVisibility | null = null
+    let about: HTMLElement | null = null
 
     const aboutOwnsTheFrame = () => {
-      if (!flowLayout.matches) return section.dataset.seam === 'open'
+      if (!about) about = document.getElementById('about')
+      const boundary = about ?? section
       return (
-        seam.getBoundingClientRect().top <= window.innerHeight - DOCK_CLEARANCE
+        boundary.getBoundingClientRect().top <=
+        window.innerHeight - DOCK_CLEARANCE
       )
     }
 
@@ -99,6 +98,7 @@ export function useHeroDockVisibility({
     evaluate()
     window.addEventListener('scroll', schedule, { passive: true })
     window.addEventListener('resize', schedule)
+    // A preference flip re-lays the whole page out without firing a resize.
     flowLayout.addEventListener('change', schedule)
 
     return () => {
@@ -112,5 +112,5 @@ export function useHeroDockVisibility({
       // why it is restored here rather than left to the dock to notice.
       setInterfaceVisibility('visible')
     }
-  }, [sectionRef, seamRef])
+  }, [sectionRef])
 }

@@ -42,8 +42,7 @@ beforeEach(() => {
   })) as unknown as typeof window.matchMedia
 })
 
-const renderHero = () =>
-  render(createElement(ArrangementHero, { selected: 0, setSelected: () => {} }))
+const renderHero = () => render(createElement(ArrangementHero))
 
 describe('the hero stage marker and the caption label are different elements', () => {
   it('puts the stage marker on the wrapper and the label on the caption', () => {

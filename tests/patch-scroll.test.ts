@@ -1,13 +1,10 @@
 import { readFileSync } from 'node:fs'
 import {
+  ARRANGEMENT_SCROLL_SVH,
   ARRANGEMENT_SEAM_OPEN,
-  IMMERSIVE_OVERSHOOT_FROM,
-  IMMERSIVE_OVERSHOOT_TO,
 } from '@/features/landing-page/components/arrangement/arrangement-camera'
 import {
-  PATCH_ACTS,
   PATCH_READ_SVH,
-  PATCH_SECTION_SVH,
   scrollBudget,
   splitProgress,
 } from '@/features/landing-page/components/patch/patch-timeline'
@@ -30,21 +27,17 @@ describe('splitProgress', () => {
     expect(open.read).toBe(0)
     expect(splitProgress(heroPx + readPx, heroPx, readPx).read).toBe(1)
   })
-  it('spends the camera overshoot during power-on and then holds the camera', () => {
-    const powerOnEnd = heroPx + readPx * PATCH_ACTS.powerOn[1]
-    expect(splitProgress(powerOnEnd, heroPx, readPx).camera).toBeCloseTo(
-      IMMERSIVE_OVERSHOOT_TO,
-      10,
-    )
-    expect(splitProgress(1e9, heroPx, readPx).camera).toBeCloseTo(
-      IMMERSIVE_OVERSHOOT_TO,
-      10,
-    )
-  })
-  it('passes through the whole overshoot span, so the bump actually plays', () => {
-    const mid = splitProgress(heroPx + readPx * 0.06, heroPx, readPx).camera
-    expect(mid).toBeGreaterThan(IMMERSIVE_OVERSHOOT_FROM)
-    expect(mid).toBeLessThan(IMMERSIVE_OVERSHOOT_TO)
+  it('stops the camera on the seam-open mark and holds it there', () => {
+    // The camera's domain is the window it opens, and nothing more. It used to
+    // run on to `IMMERSIVE_OVERSHOOT_TO` so the panel's power-on act had the
+    // camera's overshoot to spend; the overshoot is gone, so the extra scroll
+    // bought nothing and went with it.
+    for (const at of [heroPx, heroPx + readPx * 0.06, heroPx + readPx, 1e9]) {
+      expect(splitProgress(at, heroPx, readPx).camera).toBeCloseTo(
+        ARRANGEMENT_SEAM_OPEN,
+        10,
+      )
+    }
   })
   it('never moves the camera backwards', () => {
     let prev = -1
@@ -60,24 +53,42 @@ describe('splitProgress', () => {
 })
 
 describe('section height', () => {
-  it('is the stage, the camera distance and the read, in svh', () => {
-    expect(PATCH_SECTION_SVH).toBeCloseTo(
-      100 + 360 * ARRANGEMENT_SEAM_OPEN + 300,
-      9,
-    )
-    const { heroPx, readPx } = scrollBudget(900)
-    expect((PATCH_SECTION_SVH * 900) / 100).toBeCloseTo(
-      900 + heroPx + readPx,
-      6,
-    )
-  })
-  it('keeps the stylesheet in step with the section height', () => {
+  it('keeps the stylesheet in step with the camera distance', () => {
+    // The hero is one instrument now: one viewport of sticky stage plus
+    // `ARRANGEMENT_SCROLL_SVH`'s travel, with the trigger's own progress *being*
+    // the camera's progress. The read that used to add `PATCH_READ_SVH` of its
+    // own went with the seam, so `PATCH_SECTION_SVH` no longer describes any
+    // section on the page — the guard is against the camera constant instead.
     const css = readFileSync(
       'features/landing-page/components/arrangement/arrangement.module.css',
       'utf8',
     )
     const match = css.match(/--arr-scroll:\s*([\d.]+)svh/)
-    expect(Number(match?.[1])).toBeCloseTo(PATCH_SECTION_SVH, 6)
+    expect(Number(match?.[1])).toBeCloseTo(ARRANGEMENT_SCROLL_SVH, 6)
+    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(400)
+  })
+
+  it('un-pins the hero on short viewports, where the hook declines to run', () => {
+    // The hook gates on three conditions at once — `min-width: 769px`,
+    // `min-height: 700px`, motion allowed — and the stylesheet has to un-pin
+    // the stage for each of the three ways one can fail. It had a block for
+    // narrow and a block for reduced motion, but none for short.
+    //
+    // The cost of the missing third was measured at 1440×640: the hook declined
+    // to activate, nothing told the stylesheet, and `position: sticky` stayed on
+    // — so the arrangement sat frozen at the top of a 400svh section and the
+    // reader scrolled ~1920px past a picture that never changed. The design
+    // rules that out by name: "insufficient height (<700px initial target), use
+    // normal stacked layout; no pinning, zoom, parallax, hidden text or blank
+    // runway."
+    const css = readFileSync(
+      'features/landing-page/components/arrangement/arrangement.module.css',
+      'utf8',
+    )
+    const block = css.match(/@media \(max-height: 699px\) \{([\s\S]*?)\n\}/)
+    expect(block).not.toBeNull()
+    expect(block?.[1]).toMatch(/\.hero\s*\{[^}]*height:\s*auto/)
+    expect(block?.[1]).toMatch(/\.stage\s*\{[^}]*position:\s*static/)
   })
 })
 

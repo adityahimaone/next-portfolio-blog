@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { Work } from '../work/work'
 import type { ArchiveRepo } from '@/features/projects/lib/github'
 import { ArrangementHero } from '../components/arrangement/arrangement-hero'
+import { MatterBridge } from '../components/matter/matter-bridge'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
 import { Experience } from './section-experience'
@@ -34,12 +35,11 @@ export default function Rack01LandingPage({
   archiveRepos: readonly ArchiveRepo[]
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
-  // Which Patch module is live. It is the one piece of About state the
-  // arrangement hook still owns: the read moves it on change only, and a click
-  // on a module writes the same value. The old scroll *progress* is gone with
-  // the rail — the Patch reads its own scroll through CSS custom properties, so
-  // there is no React state written per frame any more. See §7 of the plan.
-  const [aboutIndex, setAboutIndex] = useState(0)
+  // The arrangement's `aboutIndex` is gone with the Patch: the hero no longer
+  // owns a read that moves a module on, and the biography is its own section
+  // rather than a panel inside the dive. The experience strip's index is the
+  // one piece of scroll-written React state left on this page, and it moves on
+  // change only.
   const [experienceIndex, setExperienceIndex] = useState(0)
 
   useRackAnimations({ rootRef, setExperienceIndex })
@@ -59,7 +59,12 @@ export default function Rack01LandingPage({
       <a className={styles.skipLink} href="#about">
         Skip to content
       </a>
-      <ArrangementHero selected={aboutIndex} setSelected={setAboutIndex} />
+      <ArrangementHero />
+      {/* The handoff, and the About it hands off to. It sits immediately after
+          the hero because that is what it is: the hero's last frame is the
+          source region grown to fill the frame, and this section's first frame
+          is that signal leaving the device behind. */}
+      <MatterBridge />
       <SignalDivider />
       <Skills />
       <CableDivider />

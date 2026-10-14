@@ -4,6 +4,9 @@ module.exports = {
   testEnvironment: 'jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    // CSS modules: a component under test imports one, and jest has no pipeline
+    // for it. Resolves every class name to itself so a render assertion works.
+    '\\.(css)$': '<rootDir>/tests/style-mock.js',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testMatch: [

@@ -66,6 +66,9 @@ jest.mock('motion/react', () => ({
   }),
   useTransform: () => 0,
   AnimatePresence: ({ children }) => children,
+  // `motion.create(Component)` wraps a component; several booth components use
+  // it at module scope, so it has to exist for anything importing them.
+  create: (Component) => Component,
 }))
 
 // Clear mocks between tests

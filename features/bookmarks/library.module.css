@@ -61,6 +61,70 @@
   }
 }
 
+/* ─── Skills entry point ─────────────────────────────────────── */
+
+/*
+  /skills has no dock entry on purpose — the dock holds the five destinations
+  that are their own place, and this one is a footnote to the library. It is
+  therefore linked from here or not at all, so the card sits above the grid
+  rather than inside the sidebar where it would read as a channel.
+
+  Low intensity: a hairline and a faint tint, no plate, no glow.
+*/
+.skillsCta {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 16px;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 2rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--hairline));
+  border-radius: var(--booth-r-panel);
+  background: color-mix(in srgb, var(--primary) 4%, transparent);
+  color: var(--booth-ink);
+  text-decoration: none;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.skillsCta:hover {
+  border-color: color-mix(in srgb, var(--primary) 32%, var(--hairline));
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+}
+
+.skillsCta:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.skillsCtaIcon {
+  color: var(--primary);
+}
+
+.skillsCtaTitle {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.skillsCtaText {
+  display: block;
+  margin-top: 0.1rem;
+  color: var(--booth-ink-muted);
+  font-size: 0.8125rem;
+}
+
+.skillsCtaArrow {
+  color: var(--booth-ink-dim);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.skillsCta:hover .skillsCtaArrow {
+  color: var(--primary);
+}
+
 /* ─── Playlist sidebar (control layer) ───────────────────────── */
 
 .sidebar {

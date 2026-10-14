@@ -9,6 +9,7 @@ import {
   type MatterFrame,
   type MatterGeometry,
 } from './matter-frame'
+import { createMatterExtras } from './matter-extras'
 
 /**
  * The one media query the bridge gates on, written out here and in
@@ -30,8 +31,6 @@ type MatterWriterKey =
   | 'middleY'
   | 'nearY'
   | 'signalY'
-  | 'signalOpacity'
-  | 'humanOpacity'
   | 'titleY'
 
 type Gsap = (typeof import('gsap'))['gsap']
@@ -202,6 +201,8 @@ function startMatterMotion({
     return () => {}
   }
 
+  const extras = createMatterExtras(stage, gsap)
+
   /**
    * The outgoing hero content, faded across the departure. It is the hero's
    * track area rather than its stage: the stage holds the navigation and the
@@ -254,8 +255,6 @@ function startMatterMotion({
     middleY: setter(middle, 'y', 'px'),
     nearY: setter(near, 'y', 'px'),
     signalY: setter(signalWord, 'y', 'px'),
-    signalOpacity: setter(signalWord, 'opacity'),
-    humanOpacity: setter(humanWord, 'opacity'),
     titleY: setter(title, 'y', 'px'),
   }
 
@@ -481,6 +480,7 @@ function startMatterMotion({
     // so removing the inline value is the restoration — and with `data-motion`
     // gone the stage is `display: none` regardless.
     stage.style.removeProperty('opacity')
+    extras.restore()
     element.style.removeProperty('--matter-runway')
     // The hero is not this hook's to keep. Leaving the hold behind would leave
     // a section below it with a stretch of scroll nothing animates in, which is
@@ -491,6 +491,7 @@ function startMatterMotion({
 
   try {
     measure()
+    extras.measure()
 
     trigger = ScrollTrigger.create({
       trigger: element,
@@ -499,12 +500,23 @@ function startMatterMotion({
       invalidateOnRefresh: true,
       // Layout belongs in `onRefreshInit` — ScrollTrigger recalculates the
       // trigger's range after it — and rendering belongs in `onRefresh`.
-      onRefreshInit: () => measure(),
-      onRefresh: (self) => renderFrame(matterFrame(self.progress, geometry)),
-      onUpdate: (self) => renderFrame(matterFrame(self.progress, geometry)),
+      onRefreshInit: () => {
+        extras.reset()
+        measure()
+      },
+      onRefresh: (self) => {
+        extras.measure()
+        renderFrame(matterFrame(self.progress, geometry))
+        extras.render(self.progress)
+      },
+      onUpdate: (self) => {
+        renderFrame(matterFrame(self.progress, geometry))
+        extras.render(self.progress)
+      },
     })
 
     renderFrame(matterFrame(trigger.progress, geometry))
+    extras.render(trigger.progress)
 
     // Text measured before the display face has loaded is the wrong height, and
     // the wrong height is a runway that puts the title in the wrong place. One

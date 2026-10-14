@@ -79,7 +79,11 @@ export function ArrangementMixer({ axis }: { axis: string }) {
                   <i />
                 </span>
                 <span className={styles.stripFader}>
-                  <i />
+                  <i
+                    data-flight-source={
+                      strip.id === 'frontend-REACT' ? 'fader' : undefined
+                    }
+                  />
                 </span>
               </span>
             </div>

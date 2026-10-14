@@ -7,5 +7,11 @@ import styles from './arrangement.module.css'
  * cannot drift from the ruler or the clips. Nothing resets or re-mounts it.
  */
 export function ArrangementPlayhead() {
-  return <div className={styles.playhead} aria-hidden="true" />
+  return (
+    <div
+      className={styles.playhead}
+      data-flight-source="playhead"
+      aria-hidden="true"
+    />
+  )
 }

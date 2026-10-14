@@ -364,9 +364,9 @@ describe('matterFrame — the reverse pass reproduces the forward pass', () => {
  * The panel is opaque and above the stage, so as soon as its top edge climbs
  * into the band the decorative words live in, it starts eating them. Measured
  * at 1440×900 before this function existed, the runway was `999` and the panel
- * crossed the SIGNAL band at p≈.33 — so SIGNAL, which the design has fully
- * legible from `.35` to `.48`, was covered for the whole of its own beat. The
- * readable window was 80px.
+ * crossed the SIGNAL band at p≈.33. The runway now keeps the band clear through
+ * HUMAN's hold as well as SIGNAL's entrance, so the exit beat cannot be covered
+ * by the opaque panel.
  */
 describe('matterRunway — the panel waits for the words', () => {
   /** A written-out 1440×900 bridge: a 999px reading panel inside a 1272px one. */
@@ -390,9 +390,9 @@ describe('matterRunway — the panel waits for the words', () => {
     input: MatterRunwayInput = INPUT,
   ) => runway - p * (runway + input.aboutHeight - input.viewportHeight)
 
-  it('keeps the panel out of the word band for the whole time SIGNAL is legible', () => {
+  it('keeps the panel out of the word band through HUMAN’s exit start', () => {
     const runway = matterRunway(INPUT)
-    for (let p = 0; p <= MATTER_PHASES.swap[0] + 1e-9; p += 0.01) {
+    for (let p = 0; p <= MATTER_PHASES.arrive[0] + 1e-9; p += 0.01) {
       expect(panelTop(runway, p)).toBeGreaterThanOrEqual(
         INPUT.typeBandBottom - 1e-9,
       )
@@ -401,8 +401,7 @@ describe('matterRunway — the panel waits for the words', () => {
 
   it('is the shortest runway that does, so no scroll is spent on slack', () => {
     const runway = matterRunway(INPUT)
-    // Two pixels less and the panel crosses the band on SIGNAL's last frame.
-    expect(panelTop(runway - 2, MATTER_PHASES.swap[0])).toBeLessThan(
+    expect(panelTop(runway - 2, MATTER_PHASES.arrive[0])).toBeLessThan(
       INPUT.typeBandBottom,
     )
   })

@@ -273,9 +273,8 @@ export type MatterRunwayInput = {
  * It used to be `max(readingHeight, viewportHeight)`, which only guaranteed
  * that the panel was off screen on the first frame. Measured at 1440×900 that
  * came to 999px against a 1272px panel, and the panel crossed the SIGNAL band
- * at p≈.33. SIGNAL, which the design has fully legible from `.35` to `.48`, was
- * therefore covered for the whole of its own beat: the readable window was 80px
- * and the reader saw the word for about a fifth of a screen.
+ * at p≈.33. The band must stay clear through HUMAN's hold as well as SIGNAL's
+ * entrance; otherwise the opaque panel covers the word before its exit beat.
  *
  * ## The rule
  *
@@ -285,10 +284,9 @@ export type MatterRunwayInput = {
  *
  *     runway - p * (runway + aboutHeight - viewportHeight)
  *
- * and the runway that puts its first frame in the band exactly on SIGNAL's last
+ * and the runway that puts its first frame in the band exactly on HUMAN's last
  * legible one is the solution of that expression equalling `typeBandBottom` at
- * `p = MATTER_PHASES.swap[0]` — the moment SIGNAL starts leaving, so being
- * covered from then on costs nothing.
+ * `p = MATTER_PHASES.arrive[0]` — the moment HUMAN starts leaving.
  *
  * Deriving it rather than tuning it is the point: the word band moves with the
  * type scale, the panel moves with the biography, and both move with the
@@ -305,13 +303,11 @@ export function matterRunway(input: MatterRunwayInput): number {
   const aboutHeight = Math.max(0, finite(input.aboutHeight, 0))
   const typeBandBottom = Math.max(0, finite(input.typeBandBottom, 0))
 
-  const swapFrom = MATTER_PHASES.swap[0]
-  // `swap` is a constant pair with a non-zero span, so this can only ever be
-  // 0.42 — but the guard keeps the division honest if the table is retimed to a
-  // swap that starts at 1.
-  const climb = Math.max(0.05, 1 - swapFrom)
+  const clearanceProgress = MATTER_PHASES.arrive[0]
+  const climb = Math.max(0.05, 1 - clearanceProgress)
   const clearance =
-    (typeBandBottom + swapFrom * (aboutHeight - viewportHeight)) / climb
+    (typeBandBottom + clearanceProgress * (aboutHeight - viewportHeight)) /
+    climb
 
   return Math.max(readingHeight, viewportHeight, Math.ceil(clearance))
 }

@@ -37,6 +37,14 @@ New files are clean. Every lint error is pre-existing in untouched files.
 
 ### Camera: overshoot and depth
 
+> **Historical — the overshoot described here has since been removed.** This
+> audit records commit `02a237d` and is accurate *for that commit*. `IMMERSIVE_OVERSHOOT`,
+> `IMMERSIVE_OVERSHOOT_FROM` and `IMMERSIVE_OVERSHOOT_TO` no longer exist;
+> `cameraScale` is now monotonic and `tests/arrangement-camera.test.ts` asserts it.
+> See `docs/HERO_ABOUT_IMMERSIVE_SCROLL.md` §Status for why. Everything else in
+> this section — the depth layer, `laneOpacity`'s nested `mix()`, `profileFocus`'s
+> `max()` — is unchanged and still accurate.
+
 `arrangement-camera.ts` is well built.
 
 - `cameraScale()` returns the measured fit plus a half-sine bump, and the bump is provably zero at both ends. The test asserts `cameraScale(IMMERSIVE_OVERSHOOT_TO, FIT) === FIT`, which is the exact property the contract asked for.
@@ -47,7 +55,7 @@ New files are clean. Every lint error is pre-existing in untouched files.
 
 New constants are exported and tested:
 
-- `IMMERSIVE_PHASES`, `IMMERSIVE_OVERSHOOT`, `IMMERSIVE_OVERSHOOT_FROM`, `IMMERSIVE_OVERSHOOT_TO`
+- `IMMERSIVE_PHASES` — ~~`IMMERSIVE_OVERSHOOT`, `IMMERSIVE_OVERSHOOT_FROM`, `IMMERSIVE_OVERSHOOT_TO`~~ (removed)
 - `IMMERSIVE_DEPTH_LOCK`, `IMMERSIVE_DEPTH_DIVE`
 - `IMMERSIVE_LANE_SCAN_OPACITY`, `IMMERSIVE_LANE_DIVE_OPACITY`
 
@@ -301,7 +309,7 @@ Not introduced by this commit, but it makes `npm run build` unreliable in the ex
 | --- | --- |
 | Preloader with rack palette and blind exit | Done, and better than specified |
 | One-run session gate | Done, and better than specified |
-| Camera scale with restrained overshoot | Done |
+| Camera scale with restrained overshoot | Done at `02a237d`; **overshoot since removed** — scale is now monotonic |
 | Depth and profile focus | Done |
 | Hero chapter retimed to the immersive phases | **Not applied, file unreachable** |
 | About as a timeline rail, not three cards | Done |

@@ -4,6 +4,23 @@
 
 Approved concept. This document is the implementation contract. Source code remains unchanged until this contract is accepted.
 
+> **Superseded in part — the camera overshoot is gone.** This document asks for a
+> 2.5% half-sine overshoot on `cameraScale` after the seam opens (see §*Refine
+> `arrangement-camera.ts`*, and the `2.5% overshoot settles cleanly` line in the
+> verification list). That was built, then removed. `docs/sound-becomes-matter-design.md`
+> — the newer, authoritative contract for this handoff — rules the effect out by
+> name: *"No spring bounce, camera overshoot, blur pulses, velocity skew, or
+> opacity flicker."* Read on the scroll it produced **in → out → in**: the dive
+> arrived at the fit, the bump pulled it back out, and the bridge proxy then
+> zoomed in again. Three changes of direction where the story has one, which
+> reads as a mistake rather than as camera weight.
+>
+> `cameraScale` is now monotonic — `mix(1, zoomScale, span(p, zoom, rail))` — and
+> a test asserts that nothing past the rail may move the scale. **Do not
+> re-introduce the overshoot from the code sample below.** The "Do not zoom out
+> during Hero → About" rule on the next line still stands and is now what the
+> code actually does.
+
 ## Design Read
 
 Reading this as: a creative engineer portfolio for design-conscious technical clients, using a dark DAW console language and cinematic scroll choreography.
@@ -212,6 +229,12 @@ export const IMMERSIVE_PHASES = {
 ### Refine `arrangement-camera.ts`
 
 Keep the existing measured `zoomScale`. Add a restrained overshoot after the seam opens:
+
+> **Do not build this.** The sample below is the removed design — see the
+> superseded note at the top. The shipped `cameraScale` is
+> `mix(1, zoomScale, span(p, ARRANGEMENT_PHASES.zoom, ARRANGEMENT_PHASES.rail))`
+> with no overshoot term, timed off the camera's own `ARRANGEMENT_PHASES` table
+> rather than off `IMMERSIVE_PHASES`, and it is monotonic by test.
 
 ```ts
 const IMMERSIVE_PHASES = {
@@ -736,7 +759,7 @@ Verify at `390px`, `768px`, `1280px`, and `1600px`:
 - Hero camera starts at scroll `0`
 - profile clip remains the focal point
 - zoom ends at the measured clip fit
-- 2.5% overshoot settles cleanly
+- zoom ends at the measured clip fit and holds it — one continuous zoom in, no overshoot
 - About appears through the clip, not as a disconnected fade
 - About content remains readable after the transition
 - no horizontal overflow

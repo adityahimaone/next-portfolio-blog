@@ -325,6 +325,10 @@ Steps 1–3 are the ones that change the architecture. Steps 4–6 are additive.
   first probe, not for this document.
 - **The narration copy** is provisional and should be rewritten against the  
   finished structure.
-- **`ARRANGEMENT_SCROLL_SVH = 460`** is carried over unchanged. Four levels  
-  instead of five may want a different total; that is a retime, and the probe  
-  should decide it.
+- **`ARRANGEMENT_SCROLL_SVH`** was carried over unchanged at `460`, and has since
+  been **measured down to `400`**. The bridge's runway now holds the reading panel
+  clear of the decorative word band for the whole of SIGNAL's beat, which costs
+  the bridge about 400px of scroll; the hero giving back 540px is what pays for
+  it, so the page is shorter than it was *and* the words get their window. The
+  probe decided it, as this list asked. Four levels instead of five may still
+  want a different total.

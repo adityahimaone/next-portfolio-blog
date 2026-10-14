@@ -46,10 +46,18 @@ import styles from './arrangement.module.css'
  * The camera dives once into the PROFILE clip, and the machine is left there.
  * What used to open out of that dive was the Patch — a synth faceplate built
  * from the same kit as the mixer, sitting in the clip's interior. It is gone.
- * The handoff now belongs to `components/matter/`, which carries the reader out
+ * The handoff now belongs to `components/bench/`, which carries the reader out
  * of the device entirely and into an editorial About; this component's only
- * part in it is to mark the two things the handoff needs to read: the outgoing
- * device (`.trackArea`) and the source region (the PROFILE clip).
+ * part in it is to keep the stage pinned for `--arr-hold`, the length of the
+ * bench's own takeover, so the machine is still still while it is covered.
+ *
+ * Two older handoff contracts are still published and currently unread: the
+ * outgoing device's `data-matter-device` and the source region's
+ * `data-matter-source`, both of which the retired `components/matter/` bridge
+ * consumed. The bench deliberately arrives as a fresh sheet rather than
+ * continuing the signal, so it reads neither. They are kept because the
+ * publishing side is this component's own measurement and removing it would
+ * change nothing a reader can see.
  *
  * That is why there is no `#about` in this file. The clip's interior is not a
  * section any more, and an anchor that resolves to the top of a long pinned

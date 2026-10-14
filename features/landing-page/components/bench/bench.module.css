@@ -1,0 +1,634 @@
+/* Rules becoming play.
+
+   A ring of real constraints — the technologies and the credits the biography
+   already names — is strewn across a sheet of graph paper. As the reader
+   scrolls, the ring contracts and every chip lands on the slot it was always
+   going to land on; the thing they assemble around draws itself; and then the
+   experiment steps aside for the one line of prose it was a demonstration of.
+   The biography is what the section is *for*, and the artwork is the argument
+   that arrives before it.
+
+   Three rules the whole file obeys, and all three are about not hiding content
+   behind a script:
+
+   1. **The decoration is opt-in.** `.stage` is `display: none` until the hook
+      sets `data-motion="ready"`, which it only does on a wide, tall viewport
+      with motion allowed. Phones, reduced motion and no-JavaScript therefore
+      get the editorial About on its own, in normal flow, with nothing to
+      scroll through and nothing to wait for. The media query below is the
+      *same* one the hook gates on — it is written out twice on purpose, so a
+      viewport that activates the motion also lays it out, and a viewport that
+      does not is never left with a sticky stage and no artwork.
+   2. **No decorative line ever crosses body text.** The reading panel is an
+      opaque surface at a higher z-index than the artwork, and the principle,
+      the artifact and the ring are all authored in the band above it. The
+      artwork is never a backdrop for a sentence.
+   3. **Depth is a set of authored decisions, not one effect.** A chip's depth
+      decides its size, its weight, its paint order and how far it scatters —
+      see `bench-copy.ts`. This file reads those numbers; it does not invent
+      them, and it animates nothing on its own. The ScrollTrigger is the only
+      clock.
+
+   Everything the scroll writes is a transform or an opacity, and every one of
+   them is bounded by `bench-frame.ts`. */
+
+.bench {
+  position: relative;
+  isolation: isolate;
+  color: var(--foreground);
+  /* Shared by the section grid and every track's inner grid, so the two cannot
+     disagree about the gutter. */
+  --bench-gap: clamp(1rem, 2.2vw, 2.5rem);
+  --bench-pad: clamp(1.25rem, 5vw, 4.5rem);
+  /* The sheet: one minor rule every cell, one major rule every four. Both are
+     mixes of the ink rather than fixed greys, so the paper inverts with the
+     theme instead of turning into a different material.
+
+     The two intensities were raised after looking at the rendered page: at 7%
+     and 13% the sheet read as a very slightly dirty background rather than as
+     graph paper, because the vignette below takes another large bite out of
+     both. These are the values at which the minor rules survive the vignette at
+     the frame's edges. */
+  --bench-cell: clamp(32px, 3.4vw, 52px);
+  --bench-rule: color-mix(in srgb, var(--foreground) 11%, transparent);
+  --bench-rule-strong: color-mix(in srgb, var(--foreground) 19%, transparent);
+  /* The chip's own materials. The edge is heavier than the paper's rules
+     because a label is a different kind of mark from a grid line. */
+  --bench-edge: color-mix(in srgb, var(--foreground) 26%, transparent);
+  --bench-wash: color-mix(in srgb, var(--background) 86%, transparent);
+}
+
+/* Deliberately no `background` here. Under the motion query below this section
+   is pulled up over the hero's last viewport, and a background on the wrapper
+   would paint the page colour across the machine while it was still on screen.
+   The two surfaces that need to be opaque — the stage and the reading panel —
+   each carry their own. */
+
+/* ── The decorative stage ────────────────────────────────
+   Sticky, one viewport tall, and out of the flow entirely once it is sticky —
+   `margin-bottom: -100svh` pulls the reading panel up to start where the stage
+   starts, so the panel scrolls *over* the artwork rather than after it.
+
+   `overflow: clip` is load-bearing rather than tidiness. The chips scatter
+   radially, so the outermost ones start near the sheet's edge; without the clip
+   they would paint over the hero above and the panel below on their way in. */
+
+.stage {
+  display: none;
+  position: relative;
+  overflow: clip;
+  color: var(--foreground);
+  pointer-events: none;
+}
+
+/* ── The far stratum: the sheet ──────────────────────────
+   Graph paper, drawn with two gradients rather than an SVG pattern: it has to
+   tile at any size, it never needs to be measured, and `background-position`
+   centres the grid on the stage so the major and minor rules cannot drift
+   apart.
+
+   It is inset by more than it ever moves. The hook writes a whole-arc drift of
+   at most 14px, and a sheet whose edge could come into the frame would read as
+   a rectangle lying on the page rather than as the page itself. */
+
+.paper {
+  position: absolute;
+  inset: -8% -6%;
+  background-image:
+    linear-gradient(to right, var(--bench-rule) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--bench-rule) 1px, transparent 1px);
+  background-size: var(--bench-cell) var(--bench-cell);
+  background-position: 50% 50%;
+  will-change: transform;
+}
+
+.paper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--bench-rule-strong) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--bench-rule-strong) 1px, transparent 1px);
+  background-size: calc(var(--bench-cell) * 4) calc(var(--bench-cell) * 4);
+  background-position: 50% 50%;
+}
+
+/* The vignette. It is what stops the grid reading as a repeating texture: the
+   paper dissolves into the page colour at the edges, so the drawing looks like
+   it is happening in the middle of a much larger sheet rather than on a swatch
+   of it. A radial gradient over the top rather than a `mask-image`, because a
+   mask on a full-viewport layer is a compositing cost this does not need.
+
+   The transparent stop is generous — 38% of the ellipse — because the vignette
+   is competing with the grid for contrast. An earlier 24% left the rules
+   invisible across most of the frame, which is the opposite of what a sheet of
+   graph paper is for. */
+.paper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 72% at 50% 48%,
+    transparent 38%,
+    var(--background) 100%
+  );
+}
+
+/* ── The far stratum: the principle ──────────────────────
+   The line the whole drawing is an argument for — the opening sentence of
+   `INTERACTION`'s own story, quoted rather than paraphrased.
+
+   It is pinned to the top of the stage and allowed to run the full width. That
+   is a collision decision rather than a compositional one: the ring's topmost
+   landed chip sits at 18% of the stage, so a line that occupies the first ~13%
+   can never be crossed by a label at any window size the motion is active on.
+   It is also why it is small relative to the artifact — it has to fit in a
+   band, not dominate one. */
+
+.principle {
+  position: absolute;
+  left: var(--bench-pad);
+  right: var(--bench-pad);
+  top: 4.5%;
+  max-width: 68ch;
+  margin: 0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: clamp(1.15rem, 2.1vw, 2.1rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  color: var(--foreground);
+  will-change: transform, opacity;
+}
+
+/* ── The middle stratum: the artifact ────────────────────
+   The thing the constraints assemble around, drawn once as one SVG.
+
+   It is positioned at the stage's centre with `left`/`top` only; the centring
+   half of the transform is written by the hook as the first function of the
+   transform it owns. It cannot be declared here as the standalone `translate`
+   property, because GSAP folds the individual transform properties into its own
+   model the first time it touches a node — and after that a declaration it did
+   not write stops reaching paint. That failure is silent and looks exactly like
+   a layout bug: the drawing simply sits a half-width to the right of where it
+   was authored. */
+
+.artifact {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  width: min(30rem, 36vw);
+  color: var(--foreground);
+  will-change: transform, opacity;
+}
+
+/* The construction marks, laid exactly over the drawing.
+ *
+ * `aspect-ratio` rather than a height, and the same 340:260 box the drawing
+ * uses, so the two SVGs resolve their viewBoxes to identical rectangles at every
+ * window size — a scaffold that drifted from the thing it is the scaffold *for*
+ * would be worse than no scaffold at all. It is out of the flex flow, because
+ * the column's two real children are the drawing and its caption. */
+.scaffold {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  aspect-ratio: 340 / 260;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* One material for the whole scaffold: a dashed rule in the paper's own ink.
+ * Dashed on purpose — a solid rectangle would read as a second drawing, and the
+ * point of these marks is that they are not the drawing. */
+.scaffoldRule {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 5 7;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.42;
+}
+
+.artifactFrame {
+  width: 100%;
+  height: auto;
+  /* The registration brackets sit outside the drawing's frame, so the SVG has
+     to be allowed to paint past its own box or they are clipped away. */
+  overflow: visible;
+}
+
+/* One stroke language for the whole drawing. Every element carrying this class
+   also carries `pathLength="1"`, which is what makes a single normalised
+   `stroke-dashoffset` draw the frame, the dividers, the plot and the brackets
+   at the same rate — without it a long path would lag a short one badly enough
+   that the plot would still be blank when the brackets had finished. */
+.artifactStroke {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: calc(1 - var(--bench-draw, 1));
+  opacity: 0.7;
+}
+
+/* The one accent, spent three times: the selected rail row, the segmented
+   control's knob, and the marked point on the plot. Filled marks cannot be
+   drawn on with a dash, so they fade in on the same clock instead. */
+.artifactFill {
+  fill: var(--primary);
+  stroke: none;
+  opacity: calc(var(--bench-draw, 1) * 0.9);
+}
+
+/* The artifact's own silkscreen line — a track's note, verbatim. It fades more
+   slowly than the drawing it labels, so the last thing the reader can read on
+   the sheet is what the thing was made of. */
+.caption {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(0.62rem, 0.78vw, 0.72rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  opacity: 0;
+  will-change: opacity;
+}
+
+/* ── The near stratum: the ring ──────────────────────────
+   The constraints. The ring itself takes one shared transform — a uniform
+   contraction about the stage's own centre, which is the only transform the
+   ring can take after it has landed without any chip leaving its slot relative
+   to its neighbours. */
+
+.ring {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+/* A chip is two elements, and each one is doing a job the other cannot.
+
+   The outer span is the **anchor**: zero-size, sitting on the chip's authored
+   slot, and the node the binder writes its transform to. Zero size is what
+   makes `transform-origin: 50% 50%` the slot itself, so a chip's rotation and
+   scale happen about the point it is travelling to rather than about the middle
+   of its own label.
+
+   The inner span is the **label**, and it centres itself on the anchor with its
+   own static `transform: translate(-50%, -50%)`. That has to be a separate
+   element: the binder overwrites the anchor's `transform` every frame, so a
+   centring transform declared on the same node would survive exactly one
+   frame. */
+
+.chip {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+
+.chipLabel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.34em 0.6em;
+  border: 1px solid var(--bench-edge);
+  border-radius: 3px;
+  background: var(--bench-wash);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(0.72rem, 0.98vw, 0.9rem);
+  line-height: 1;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  color: var(--foreground);
+  /* The one transition in the file, and it is a state change rather than a
+     scroll-linked value: once the ring has settled the boxes drop away and the
+     constraints read as bare annotations on the sheet. Seven hundred
+     milliseconds is long enough that the change reads as the drawing relaxing
+     and short enough that it is over before the artifact has finished
+     receding. */
+  transition:
+    border-color 700ms ease,
+    background-color 700ms ease;
+}
+
+/* The accent tick. It is the smallest mark in the section and the only one on
+   every chip — which is what makes the ring read as one set of things rather
+   than as ten labels that happen to be near each other. */
+.chipTick {
+  width: 0.4em;
+  height: 0.4em;
+  flex: none;
+  background: var(--primary);
+}
+
+/* Once the constraints have been spent, they stop being boxes. The ring stays —
+   the constraints are what the artifact is made of, so dropping them to nothing
+   would say the argument was thrown away rather than concluded — but it stops
+   competing with the thing it built. */
+.bench[data-bench-state='settle'] .chipLabel {
+  border-color: color-mix(in srgb, var(--foreground) 11%, transparent);
+  background: transparent;
+}
+
+/* The runway is the measured gap between the stage's first frame and the
+   reading panel's first line. The hook writes `--bench-runway` in px from
+   `benchRunway()`: the largest of the panel's own height, one viewport, and the
+   scroll needed to keep the panel's top edge out of the artwork's bands until
+   each has finished its own beat. That last term is what makes the last beat
+   watchable — without it the panel climbs over the drawing while it is still
+   being assembled. It is zero — and therefore invisible — whenever the motion
+   is off.
+
+   Measured at 1440×900, the binding band is the **artifact**, not the principle
+   it was originally solved for: the artifact is centred on the stage and is the
+   lowest thing that has to survive whole, so its bottom edge (≈650px down a
+   900px stage) is what the panel's leading edge must not reach early. The
+   principle sits high enough that clearing the artifact clears it too. The
+   numbers are not written here because they are not constants — they move with
+   the type scale, the artwork and the viewport — but the *ordering* is, and it
+   is the reason `benchRunway` takes a list of bands and returns the largest
+   solution rather than a single derived value. */
+.runway {
+  height: 0;
+}
+
+/* ── The reading panel ───────────────────────────────────
+   Ordinary document flow, opaque, and above the artwork. It is the only
+   container of the biography, which is what makes the page readable with the
+   script absent, failed or disabled. */
+
+.about {
+  position: relative;
+  z-index: 1;
+  background: var(--background);
+  padding: clamp(3.5rem, 9vw, 9rem) var(--bench-pad) clamp(4rem, 10vw, 10rem);
+  /* The skip link and every `#about` link land on the panel's first line, not
+     at the top of a long animation runway. The clearance is the height of the
+     fixed chrome a reader arrives under. */
+  scroll-margin-top: clamp(3.5rem, 8vh, 6rem);
+}
+
+.reading {
+  max-width: 78rem;
+  margin: 0 auto;
+}
+
+/* ── Typography ──────────────────────────────────────────
+   The section's whole argument is a change of register, so the type does the
+   work: one monumental display line, three large practice statements, and body
+   copy that is quiet, narrow and completely still. Nothing here is
+   scroll-scrubbed and nothing here is written per frame. */
+
+.title {
+  max-width: 14ch;
+  margin: 0 0 clamp(2rem, 5vw, 4.5rem);
+  font-family: var(--font-syne), sans-serif;
+  font-size: clamp(2.5rem, 6.5vw, 6.5rem);
+  font-weight: 750;
+  line-height: 0.94;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.tracks {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--bench-gap);
+  row-gap: clamp(2.5rem, 5vw, 5rem);
+}
+
+/* Each track is its own twelve-column band. The body sits in columns 2–6 and
+   the practice statement in 8–12, which is the editorial spread the design asks
+   for — two vertical bands, never overlapping boxes. The DOM order stays
+   statement-then-body, so the visual rearrangement costs assistive tech
+   nothing. */
+.track {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--bench-gap);
+  row-gap: clamp(0.6rem, 1.4vw, 1rem);
+  align-items: start;
+}
+
+.practice {
+  grid-column: 8 / 13;
+  grid-row: 1;
+  margin: 0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: clamp(1.75rem, 3.4vw, 3.25rem);
+  font-weight: 650;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.body {
+  grid-column: 2 / 7;
+  grid-row: 1;
+  display: grid;
+  gap: clamp(0.75rem, 1.6vw, 1.25rem);
+  align-content: start;
+}
+
+/* 46–60ch, always full contrast, never scrubbed. */
+.story {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-geist), sans-serif;
+  font-size: clamp(1rem, 1.15vw, 1.125rem);
+  line-height: 1.65;
+}
+
+.credits {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+.credits li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.credits b {
+  font-weight: 650;
+  color: var(--foreground);
+}
+
+.credits span {
+  color: var(--muted-foreground);
+}
+
+.aside {
+  max-width: 60ch;
+  margin: 0;
+  font-family: var(--font-geist), sans-serif;
+  font-size: clamp(1rem, 1.15vw, 1.125rem);
+  line-height: 1.65;
+  color: var(--foreground);
+}
+
+.resume {
+  justify-self: start;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.resume:hover,
+.resume:focus-visible {
+  color: var(--foreground);
+}
+
+/* ── The panel's own entrance ────────────────────────────
+   A view timeline rather than an observer: the panel is ordinary flow, so
+   `view()` is exactly the right clock for it, and this way the biography's
+   reveal costs no JavaScript, no attribute plumbing and no second
+   IntersectionObserver.
+
+   It is behind `@supports` and inside the motion query, so a browser without
+   scroll-driven animations, a phone, and a reduced-motion visitor all get the
+   same thing: the biography, static and fully visible. That is the correct
+   fallback and it is also the reason the reveal is allowed to be decorative —
+   nothing here is the only way to read the section. */
+
+@supports (animation-timeline: view()) {
+  @media (min-width: 769px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+    .bench [data-reveal] {
+      animation: bench-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 6% entry 44%;
+    }
+    @keyframes bench-rise {
+      from {
+        opacity: 0;
+        translate: 0 24px;
+      }
+      to {
+        opacity: 1;
+        translate: 0 0;
+      }
+    }
+  }
+}
+
+/* ── The motion layout ───────────────────────────────────
+   The same query the hook gates on. Only when both agree does the stage become
+   a sticky layer, the runway take its measured height, and the section get
+   pulled up over the hero. */
+
+@media (min-width: 769px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+  /* The handoff's clock starts where the camera's ends.
+   *
+   * The hero's pinned stage unsticks at the exact scroll its dive finishes —
+   * that is what its own measured camera travel resolves to — and then spends
+   * one viewport sliding away with nothing animating in it. Two things stop the
+   * reader falling through that dead frame, and they are not interchangeable.
+   * Pulling this section up makes the two clocks *meet*, so there is no dead
+   * scroll left to fall through. And the hero's own hook grows its section by
+   * `--arr-hold` — the length of this stage's takeover — so the machine is
+   * still pinned, and therefore still still, while the takeover runs.
+   *
+   * **The pull-up has to absorb the hold as well as the stage.** This section's
+   * own top edge is what its clock starts on, and that edge is derived from the
+   * hero's height — so pulling up by exactly one viewport would make p=0 track
+   * the hero's un-pin no matter how much the hero grew, and the hold would be
+   * spent as dead scroll *before* this section rather than as its first beat.
+   * Pulling up by the stage *and* the hold is what puts p=0 one hold earlier
+   * than the un-pin, which is the only arrangement in which the takeover
+   * happens over a machine that is standing still. */
+  .bench[data-motion='ready'] {
+    margin-top: calc(-100svh - var(--arr-hold, 0px));
+  }
+
+  .bench[data-motion='ready'] .stage {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    height: 100svh;
+    margin-bottom: -100svh;
+    background: var(--background);
+    /* The two properties the hook animates, promoted once here rather than per
+       frame. The stage is a full-viewport layer carrying a grid, ten labels and
+       an SVG, so both the opacity ramp and the arrival translate are worth a
+       compositor layer — and `transform` in particular is what keeps the sheet's
+       settle off the main thread. */
+    will-change: transform, opacity;
+    /* Nothing here hides the stage at rest. The hook writes its opacity from
+       `stageOpacity`, which is zero on the first frame and whole before
+       `BENCH_HOLD` — so the pulled-up stage cannot climb over the hero during
+       the dive, and the machine is not covered until the reader has stopped
+       looking at it. There is deliberately no `visibility` fallback: an
+       `opacity: 0` stage that the hook never reaches is still invisible, which
+       is the same resting state by a different route.
+
+       The arrival offset is the hook's too, and for the same reason: it is the
+       seam's own number and it belongs with the rest of the frame maths rather
+       than split between two files. It is written as the first function of the
+       transform the hook owns, never as a standalone `translate` declaration —
+       see `.artifact` for what GSAP does to a property it did not write. */
+  }
+
+  .bench[data-motion='ready'] .runway {
+    height: var(--bench-runway, 0px);
+  }
+}
+
+/* ── Below the breakpoint: one column, natural reading order ── */
+
+@media (max-width: 768px) {
+  .title {
+    max-width: none;
+  }
+  .track {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .practice,
+  .body {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .practice {
+    margin-bottom: 0.35rem;
+  }
+}
+
+/* Narrow desktops: the two bands stack rather than being squeezed. */
+@media (min-width: 769px) and (max-width: 1080px) {
+  .practice {
+    grid-column: 7 / 13;
+  }
+  .body {
+    grid-column: 1 / 6;
+  }
+}

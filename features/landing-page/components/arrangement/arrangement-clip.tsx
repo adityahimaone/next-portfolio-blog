@@ -32,7 +32,11 @@ const WAVE_PATH = (() => {
  *
  * `source` marks the one clip the handoff reads its opening geometry from. It
  * is an attribute rather than a class because the reader of it is a different
- * component entirely — see `components/matter/use-matter-motion.ts`.
+ * component entirely — see `components/matter/use-matter-motion.ts`. That
+ * bridge is retired: the live About is `components/bench/`, which deliberately
+ * arrives as a fresh sheet rather than growing out of the signal, so nothing on
+ * the page reads this attribute today. It is kept for the same reason the hero
+ * keeps publishing it — see the note in `arrangement-hero.tsx`.
  */
 export function ArrangementClip({
   clip,

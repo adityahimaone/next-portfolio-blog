@@ -5,7 +5,7 @@ import { useRef, useState } from 'react'
 import { Work } from '../work/work'
 import type { ArchiveRepo } from '@/features/projects/lib/github'
 import { ArrangementHero } from '../components/arrangement/arrangement-hero'
-import { MatterBridge } from '../components/matter/matter-bridge'
+import { BenchAbout } from '../components/bench/bench-about'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
 import { Experience } from './section-experience'
@@ -63,8 +63,9 @@ export default function Rack01LandingPage({
       {/* The handoff, and the About it hands off to. It sits immediately after
           the hero because that is what it is: the hero's last frame is the
           source region grown to fill the frame, and this section's first frame
-          is that signal leaving the device behind. */}
-      <MatterBridge />
+          is that signal leaving the device behind — a sheet of graph paper
+          arriving over the machine with the constraints already on it. */}
+      <BenchAbout />
       <SignalDivider />
       <Skills />
       <CableDivider />

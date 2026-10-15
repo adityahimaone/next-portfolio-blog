@@ -1,0 +1,374 @@
+/* The bridge from About to Skills.
+
+   Two layouts share one DOM, selected by the same media query the hook gates
+   on (`use-skills-bridge.ts`):
+
+   - The BASE rules are the static composition, and they are a finished page:
+     the sentence, three devices, three labelled slots, a caption. It is what a
+     phone, a reduced-motion visitor and a page with no script get.
+   - The `@media (motion)` block at the bottom turns it into the pinned scene:
+     the stage sticks, the sheet and the room overlap, the room is masked by an
+     iris, and the devices fly.
+
+   The script writes only custom properties and transforms on small nodes.
+   Every default below is the *resting* value, so with the script absent the
+   scene is at its end, not its start. */
+
+.bridge {
+  --dev-body: #e7e2d8;
+  --dev-body-deep: #cfc9bc;
+  --dev-edge: rgb(20 20 20 / 0.34);
+  --dev-lcd: color-mix(in srgb, var(--signal-orange, #ff5a1f) 32%, #e7e2d8);
+  position: relative;
+  color: var(--room-ink, #f1eee5);
+  background: var(--room-base, #14161a);
+  padding: clamp(4rem, 9vw, 8rem) clamp(1.25rem, 5vw, 5rem);
+}
+
+.stage {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+/* ── The sheet and its sentence ──────────────────────────── */
+
+.sheet {
+  order: 1;
+}
+
+.statement {
+  --s: 1;
+  max-width: 13ch;
+  margin: 0;
+  font-family: var(--font-syne), sans-serif;
+  font-size: clamp(2.6rem, 8vw, 7.2rem);
+  font-weight: 750;
+  line-height: 0.96;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.sw {
+  display: inline-block;
+  overflow: clip;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+  vertical-align: top;
+}
+
+.swIn {
+  display: inline-block;
+  --k: clamp(0, (var(--s) * (var(--n) + 2) - var(--i)) / 2, 1);
+  translate: 0 calc((1 - var(--k)) * 112%);
+  rotate: calc((1 - var(--k)) * 5deg);
+  transform-origin: 0 100%;
+}
+
+/* ── The devices ─────────────────────────────────────────── */
+
+.devices {
+  order: 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  perspective: 1100px;
+  pointer-events: none;
+  /* Device parts read `--foreground` / `--background` / `--primary`; pinned
+     here so the hardware is the same cream chassis in either theme. */
+  --foreground: #1d1e1c;
+  --background: #e7e2d8;
+  --primary: var(--signal-orange, #ff5a1f);
+}
+
+.anchor {
+  --o: 1;
+  position: relative;
+  height: 9.5rem;
+  transform-style: preserve-3d;
+}
+
+.bob,
+.rot,
+.fit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+.rot {
+  transform: rotateX(-14deg) rotateY(20deg);
+}
+
+.fit {
+  left: 0;
+  top: 0;
+  transform: scale(1.2);
+}
+
+/* ── The room: caption, slots and cables ─────────────────── */
+
+.room {
+  order: 3;
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+}
+
+.rack {
+  --rack: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.slot {
+  --lit: 1;
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  padding: clamp(0.9rem, 1.6vw, 1.4rem);
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.05), transparent 40%),
+    rgb(255 255 255 / 0.025);
+}
+
+.slotHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.slotLabel {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(0.66rem, 0.85vw, 0.78rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--room-ink, #f1eee5);
+}
+
+.led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: color-mix(
+    in srgb,
+    var(--signal-orange, #ff5a1f) calc(var(--lit, 1) * 100%),
+    #3a3d3a
+  );
+}
+
+.slotChannels {
+  margin: 0;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(0.64rem, 0.8vw, 0.74rem);
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  color: var(--room-ink-muted, #b6b3a9);
+}
+
+.cables {
+  display: none;
+}
+
+.caption {
+  margin: 0;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--room-ink-muted, #b6b3a9);
+}
+
+.caption b {
+  margin-left: 0.8em;
+  font-weight: 500;
+  color: var(--signal-orange, #ff5a1f);
+}
+
+@media (max-width: 768px) {
+  .rack {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .anchor {
+    height: 6.5rem;
+  }
+  .fit {
+    transform: scale(0.8);
+  }
+}
+
+/* ── The pinned scene ────────────────────────────────────── */
+
+@media (min-width: 769px) and (min-height: 600px) and (prefers-reduced-motion: no-preference) {
+  /* Just over two viewports: one is the stage, the rest is the scene's travel.
+     It is the cost of the transition, so it is kept as short as the choreography
+     allows. */
+  .bridge {
+    height: 230svh;
+    padding: 0;
+    background: var(--background);
+  }
+
+  .stage {
+    position: sticky;
+    top: 0;
+    display: block;
+    height: 100svh;
+    max-width: none;
+    overflow: clip;
+  }
+
+  .sheet {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--foreground);
+    background:
+      linear-gradient(
+          color-mix(in srgb, var(--foreground) 6%, transparent) 1px,
+          transparent 1px
+        )
+        0 0 / 48px 48px,
+      linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--foreground) 6%, transparent) 1px,
+          transparent 1px
+        )
+        0 0 / 48px 48px,
+      var(--background);
+  }
+
+  .statement {
+    --s: 0;
+    text-align: center;
+    margin-top: -6svh;
+  }
+
+  /* The room is the Skills' own ground, and it is revealed by an iris from the
+     middle of the sheet. The radius is a number written per frame; the mask is
+     the only thing that repaints. */
+  .room {
+    --r: 0;
+    position: absolute;
+    inset: 0;
+    display: block;
+    background:
+      radial-gradient(
+        circle at 10% 15%,
+        rgba(46, 63, 92, 0.34),
+        transparent 28%
+      ),
+      linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px) 0
+        0 / 32px 32px,
+      var(--room-base, #14161a);
+    -webkit-mask-image: radial-gradient(
+      circle at 50% 44%,
+      #000 calc(var(--r, 0) * 1%),
+      transparent calc(var(--r, 0) * 1% + 0.6%)
+    );
+    mask-image: radial-gradient(
+      circle at 50% 44%,
+      #000 calc(var(--r, 0) * 1%),
+      transparent calc(var(--r, 0) * 1% + 0.6%)
+    );
+  }
+
+  .rack {
+    --rack: 0;
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  .slot {
+    --lit: 0;
+    position: absolute;
+    left: var(--sx);
+    top: var(--sy);
+    width: min(27vw, 22.5rem);
+    height: min(46svh, 21rem);
+    grid-template-rows: auto 1fr auto;
+    opacity: var(--rack, 0);
+    transform: translate(-50%, -50%) scale(calc(0.94 + 0.06 * var(--rack, 0)));
+  }
+
+  .slotChannels {
+    align-self: end;
+  }
+
+  .cables {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .cable,
+  .cableGlow {
+    fill: none;
+    stroke-dasharray: 1;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+  }
+
+  .cable {
+    stroke: var(--signal-orange, #ff5a1f);
+    stroke-width: 2px;
+  }
+
+  .cableGlow {
+    stroke: var(--signal-orange, #ff5a1f);
+    stroke-width: 8px;
+    opacity: 0.16;
+  }
+
+  .caption {
+    --k: 0;
+    position: absolute;
+    left: 50%;
+    top: clamp(4.5rem, 11svh, 7rem);
+    white-space: nowrap;
+    opacity: var(--k, 0);
+    translate: -50% calc((1 - var(--k, 0)) * 10px);
+  }
+
+  .devices {
+    position: absolute;
+    inset: 0;
+    display: block;
+    perspective-origin: 50% 46%;
+  }
+
+  .anchor {
+    --o: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    will-change: transform;
+  }
+
+  .bob {
+    left: 0;
+    top: 0;
+  }
+
+  .rot {
+    left: 0;
+    top: 0;
+    transform: none;
+  }
+
+  .fit {
+    transform: none;
+  }
+}

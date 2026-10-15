@@ -671,22 +671,67 @@ button.clip {
   margin: 0;
   padding-left: clamp(14px, 2vw, 28px);
   font-family: var(--font-syne), sans-serif;
-  /* The ceiling is the smaller of the width's and the lane's: two lines at
-     0.92 line-height, inside a lane that is `--arr-lane-tall` tall less the
-     clip's margin, its header and a little air. Width alone overflowed the
-     lane at short viewports. */
-  font-size: clamp(
-    34px,
-    min(6.5vw, calc((var(--arr-lane-tall) - 44px) / 1.86)),
-    96px
-  );
-  font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 0.92;
+  /* One line, not two. The name used to stack so it could fit the lane's
+     height, which capped it at ~96px; on one line the ceiling is the width
+     (fourteen letters across the viewport) or the lane's height, whichever is
+     smaller, and the name is half as large again. The name is the brand, so
+     it is the biggest thing on the page. */
+  font-size: clamp(40px, min(8.7vw, calc(var(--arr-lane-tall) - 40px)), 176px);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.96;
   text-transform: uppercase;
+  white-space: nowrap;
 }
-.clipNameTitle span {
-  display: block;
+.nameWord {
+  display: inline-block;
+  /* A mask per word: the letters rise out of it. The padding and the matching
+     negative margin keep the swell and the descenders inside the clip without
+     changing the line's box. */
+  overflow: clip;
+  padding: 0.06em 0.03em 0.1em;
+  margin: -0.06em -0.03em -0.1em;
+  vertical-align: top;
+}
+.nameWord + .nameWord {
+  margin-left: 0.2em;
+}
+/* Entrance, then a swell. `translate`/`rotate` are the entrance and the
+   `transform` is the swell, so the two compose rather than fight. Both are
+   compositor-only. Each letter's phase is its index, so the swell travels
+   along the name like a wave travelling along the waveform behind it. */
+.nameChar {
+  display: inline-block;
+  transform-origin: 0 100%;
+  animation:
+    name-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) both,
+    name-swell 5200ms ease-in-out infinite;
+  animation-delay: calc(450ms + var(--c) * 45ms),
+    calc(1700ms + var(--c) * -230ms);
+}
+@keyframes name-rise {
+  from {
+    translate: 0 115%;
+    rotate: 7deg;
+  }
+  to {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+}
+@keyframes name-swell {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-3.5%) scaleY(1.025);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nameChar {
+    animation: none;
+  }
 }
 .srOnly {
   position: absolute;
@@ -1224,6 +1269,13 @@ button.clip {
   }
   .clipNameTitle {
     font-size: clamp(30px, 9vw, 52px);
+    white-space: normal;
+  }
+  .nameWord {
+    display: block;
+  }
+  .nameWord + .nameWord {
+    margin-left: -0.03em;
   }
   .pinned {
     position: static;

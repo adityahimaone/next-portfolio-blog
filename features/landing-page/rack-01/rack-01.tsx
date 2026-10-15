@@ -6,10 +6,10 @@ import { Work } from '../work/work'
 import type { ArchiveRepo } from '@/features/projects/lib/github'
 import { ArrangementHero } from '../components/arrangement/arrangement-hero'
 import { BenchAbout } from '../components/bench/bench-about'
+import { SkillsBridge } from '../components/bridge/skills-bridge'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
 import { Experience } from './section-experience'
-import { SignalDivider } from './section-signaldivider'
 import { Skills } from './section-skills'
 import styles from './rack-01.module.css'
 import { SEAM_SVH } from '../constants/seam'
@@ -66,7 +66,8 @@ export default function Rack01LandingPage({
           is that signal leaving the device behind — a sheet of graph paper
           arriving over the machine with the constraints already on it. */}
       <BenchAbout />
-      <SignalDivider />
+      {/* The About's three devices dock into the Skills' three groups. */}
+      <SkillsBridge />
       <Skills />
       <CableDivider />
       <Experience selected={experienceIndex} setSelected={setExperienceIndex} />

@@ -510,53 +510,6 @@ export function useRackAnimations({
           }
         })
 
-        const dividerDockRule = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.signalDockRule}`,
-        )
-        const dividerTopRail = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.signalDividerTopRail}`,
-        )
-        const dividerBottomRail = rootRef.current?.querySelector<HTMLElement>(
-          `.${styles.signalDividerBottomRail}`,
-        )
-
-        if (dividerTopRail && dividerBottomRail && dividerDockRule) {
-          const horizontalTravel = () =>
-            window.innerWidth < 769
-              ? Math.min(22, window.innerWidth * 0.055)
-              : Math.min(48, window.innerWidth * 0.035)
-
-          gsap
-            .timeline({
-              scrollTrigger: {
-                trigger: `.${styles.signalDivider}`,
-                start: 'top 85%',
-                end: 'bottom 15%',
-                scrub: 0.8,
-                invalidateOnRefresh: true,
-              },
-              defaults: { ease: 'none' },
-            })
-            .fromTo(
-              dividerTopRail,
-              { x: () => -horizontalTravel() },
-              { x: 0, duration: 0.7, force3D: true },
-              0,
-            )
-            .fromTo(
-              dividerBottomRail,
-              { x: () => horizontalTravel() },
-              { x: 0, duration: 0.7, force3D: true },
-              0,
-            )
-            .fromTo(
-              dividerDockRule,
-              { scaleX: 0.18, opacity: 0.5 },
-              { scaleX: 1, opacity: 0.82, duration: 0.52 },
-              0.22,
-            )
-        }
-
         const cableMaleHalf = rootRef.current?.querySelector<HTMLElement>(
           `.${styles.cableMaleHalf}`,
         )

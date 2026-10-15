@@ -159,7 +159,29 @@
   letter-spacing: -0.03em;
   text-wrap: balance;
   color: var(--foreground);
-  will-change: transform, opacity;
+  will-change: transform;
+  /* The arrival is the words', not the box's: `--e` is written by the hook. */
+  --e: 0;
+}
+
+/* One word, one mask. The word rises out of its own line. The padding and the
+   matching negative margin keep descenders inside the clip without changing
+   the line's height. */
+.pw {
+  display: inline-block;
+  overflow: clip;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+  vertical-align: top;
+}
+
+.pwIn {
+  display: inline-block;
+  --k: clamp(0, (var(--e) * (var(--n) + 3) - var(--i)) / 3, 1);
+  translate: 0 calc((1 - var(--k)) * 112%);
+  rotate: calc((1 - var(--k)) * 5deg);
+  transform-origin: 0 100%;
+  will-change: translate, rotate;
 }
 
 /* ── The middle stratum: the artifact ────────────────────
@@ -238,6 +260,15 @@
   stroke-dasharray: 1;
   stroke-dashoffset: calc(1 - var(--bench-draw, 1));
   opacity: 0.7;
+}
+
+/* The groove sheen turns with the scroll: `--bench-spin` is degrees, written by
+   the hook onto the artifact. The origin is the platter's centre in the
+   drawing's own user units, which is what an SVG element's transform-origin
+   resolves against. */
+.vinylSpin {
+  transform-origin: 120px 130px;
+  transform: rotate(calc(var(--bench-spin, 0) * 1deg));
 }
 
 /* The one accent, spent three times: the selected rail row, the segmented
@@ -386,6 +417,40 @@
 .reading {
   max-width: 78rem;
   margin: 0 auto;
+}
+
+/* ── The title's letter reveal ───────────────────────────
+   Armed by `useBenchTitleReveal` and only then: with the script absent, failed
+   or reduced-motion, none of these rules match and the heading is just text.
+   Each letter is clipped by its word and rises on a wave: `--c` is its index
+   along the line. `translate`/`rotate` are the individual properties, so the
+   whole thing is compositor work and never touches layout. */
+
+.tw {
+  display: inline-block;
+  overflow: clip;
+  white-space: nowrap;
+  padding: 0.04em 0.02em 0.16em;
+  margin: -0.04em -0.02em -0.16em;
+  vertical-align: top;
+}
+
+.tc {
+  display: inline-block;
+  transform-origin: 0 100%;
+}
+
+.title[data-armed='true'] .tc {
+  translate: 0 115%;
+  rotate: 8deg;
+}
+
+.title[data-armed='true'][data-in='true'] .tc {
+  translate: 0 0;
+  rotate: 0deg;
+  transition:
+    translate 900ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--c) * 34ms),
+    rotate 900ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--c) * 34ms);
 }
 
 /* ── Typography ──────────────────────────────────────────

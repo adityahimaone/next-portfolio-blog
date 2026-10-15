@@ -1,11 +1,13 @@
 'use client'
 
-import { useRef } from 'react'
+import { Fragment, useRef, type CSSProperties } from 'react'
 
 import { ABOUT_TRACKS } from '../../rack-01/about-copy'
 import { BENCH_CAPTION, BENCH_CHIPS, BENCH_PRINCIPLE } from './bench-copy'
+import { BenchDevices } from './bench-device-layer'
 import styles from './bench.module.css'
 import { useBenchMotion } from './use-bench-motion'
+import { useBenchTitleReveal } from './use-bench-title-reveal'
 
 /**
  * The artifact, drawn once.
@@ -73,6 +75,20 @@ const SCAFFOLD = (
 
 const STROKE = { className: styles.artifactStroke, pathLength: 1 } as const
 
+/**
+ * The artifact: a record player, drawn once.
+ *
+ * It replaces the interface wireframe the section used to assemble around, and
+ * it keeps every property that drawing had: one `<svg>` on a fixed viewBox,
+ * `pathLength={1}` on every stroke so one dash offset draws the whole thing,
+ * and a single accent spent in a few places. The record and the tonearm are
+ * the two parts that move: the groove sheen turns with `--bench-spin`, which
+ * the hook writes from the scroll, so the record plays as the page does.
+ *
+ * Like the wireframe, it carries no label and no number. Every mark is
+ * abstract; a decorative mark that read like a specification would be a claim
+ * the page cannot support.
+ */
 const ARTIFACT = (
   <svg
     className={styles.artifactFrame}
@@ -81,63 +97,71 @@ const ARTIFACT = (
     preserveAspectRatio="xMidYMid meet"
     aria-hidden="true"
   >
-    {/* Registration brackets, outside the frame. */}
+    <defs>
+      <radialGradient id="bench-glow" cx="35%" cy="50%" r="60%">
+        <stop offset="0" stopColor="var(--primary)" stopOpacity="0.2" />
+        <stop offset="1" stopColor="var(--primary)" stopOpacity="0" />
+      </radialGradient>
+    </defs>
+
+    {/* The light the record gives off. Fades with the drawing, never alone. */}
+    <circle cx="120" cy="130" r="150" fill="url(#bench-glow)" />
+
+    {/* Registration brackets, outside the plinth. */}
     <polyline {...STROKE} points="8,38 8,8 38,8" />
     <polyline {...STROKE} points="302,8 332,8 332,38" />
     <polyline {...STROKE} points="8,222 8,252 38,252" />
     <polyline {...STROKE} points="302,252 332,252 332,222" />
 
-    {/* The panel. */}
+    {/* The plinth and its feet. */}
     <rect {...STROKE} x="22" y="22" width="296" height="216" rx="14" />
-    <line {...STROKE} x1="22" y1="64" x2="318" y2="64" />
+    <line {...STROKE} x1="40" y1="238" x2="40" y2="246" />
+    <line {...STROKE} x1="300" y1="238" x2="300" y2="246" />
 
-    {/* The header: a title pill, a segmented control, two window dots. */}
-    <rect {...STROKE} x="38" y="34" width="68" height="12" rx="6" />
-    <rect {...STROKE} x="128" y="32" width="104" height="16" rx="8" />
-    <rect
-      className={styles.artifactFill}
-      x="132"
-      y="36"
-      width="48"
-      height="8"
-      rx="4"
-    />
-    <circle {...STROKE} cx="282" cy="40" r="4.5" />
-    <circle {...STROKE} cx="298" cy="40" r="4.5" />
+    {/* The platter and the record. */}
+    <circle {...STROKE} cx="120" cy="130" r="88" />
+    <circle {...STROKE} cx="120" cy="130" r="80" />
+    <circle {...STROKE} cx="120" cy="130" r="68" />
+    <circle {...STROKE} cx="120" cy="130" r="58" />
+    <circle {...STROKE} cx="120" cy="130" r="48" />
+    <circle {...STROKE} cx="120" cy="130" r="27" />
+    <circle className={styles.artifactFill} cx="120" cy="130" r="21" />
+    <circle {...STROKE} cx="120" cy="130" r="3" />
 
-    {/* The rail. */}
-    <line {...STROKE} x1="110" y1="64" x2="110" y2="238" />
-    <rect {...STROKE} x="38" y="86" width="54" height="9" rx="4.5" />
-    <rect {...STROKE} x="38" y="110" width="40" height="9" rx="4.5" />
-    <rect {...STROKE} x="38" y="134" width="48" height="9" rx="4.5" />
-    <rect {...STROKE} x="38" y="158" width="34" height="9" rx="4.5" />
-    {/* The one accent in the rail: the row that is selected. */}
-    <rect
-      className={styles.artifactFill}
-      x="31"
-      y="82"
-      width="3"
-      height="17"
-      rx="1.5"
-    />
+    {/* The sheen: the one part of the record that turns. */}
+    <g className={styles.vinylSpin}>
+      <line {...STROKE} x1="120" y1="58" x2="120" y2="82" />
+      <line {...STROKE} x1="120" y1="178" x2="120" y2="200" />
+    </g>
 
-    {/* The content: a card and a primary action. */}
-    <rect {...STROKE} x="128" y="78" width="84" height="52" rx="10" />
-    <line {...STROKE} x1="142" y1="98" x2="200" y2="98" />
-    <line {...STROKE} x1="142" y1="114" x2="182" y2="114" />
-    <rect {...STROKE} x="228" y="78" width="78" height="26" rx="9" />
-    <line {...STROKE} x1="244" y1="91" x2="292" y2="91" />
+    {/* The tonearm: pivot, counterweight, arm, headshell. */}
+    <circle {...STROKE} cx="286" cy="62" r="10" />
+    <circle {...STROKE} cx="286" cy="62" r="3" />
+    <rect {...STROKE} x="280" y="36" width="12" height="14" rx="3" />
+    <polyline {...STROKE} points="286,72 286,130 214,168" />
+    <polyline {...STROKE} points="214,168 202,176 196,170" />
+    <circle className={styles.artifactFill} cx="199" cy="173" r="3.4" />
 
-    {/* The plot. */}
-    <line {...STROKE} x1="128" y1="216" x2="306" y2="216" />
-    <line {...STROKE} x1="128" y1="216" x2="128" y2="142" />
-    <polyline
-      {...STROKE}
-      points="132,204 156,182 180,194 204,158 228,174 252,144 276,162 302,138"
-    />
-    <circle className={styles.artifactFill} cx="252" cy="144" r="5" />
+    {/* The controls: start, pitch, and the one lit indicator. */}
+    <rect {...STROKE} x="232" y="204" width="38" height="14" rx="7" />
+    <line {...STROKE} x1="306" y1="150" x2="306" y2="218" />
+    <rect {...STROKE} x="299" y="176" width="14" height="9" rx="2" />
+    <circle className={styles.artifactFill} cx="246" cy="211" r="3" />
   </svg>
 )
+
+/**
+ * The principle, one word per mask.
+ *
+ * Each word is an inline box that clips its own overflow with the word itself
+ * inside it, so a word rises *out of* a line rather than fading in on it. The
+ * stagger is arithmetic in the stylesheet, not a timeline: the hook writes one
+ * number (`--e`, the emerge progress) and every word derives its own offset
+ * from its index `--i` and the count `--n`.
+ */
+const PRINCIPLE_WORDS = BENCH_PRINCIPLE.split(' ')
+
+const TITLE = 'The rules become the work.'
 
 /**
  * Rules becoming play: the constraints, the thing they become, and the
@@ -167,7 +191,9 @@ const ARTIFACT = (
  */
 export function BenchAbout() {
   const root = useRef<HTMLElement>(null)
+  const title = useRef<HTMLHeadingElement>(null)
   useBenchMotion(root)
+  useBenchTitleReveal(title)
 
   return (
     <section ref={root} className={styles.bench} data-bench>
@@ -176,10 +202,29 @@ export function BenchAbout() {
             read as the page's own surface rather than as a layer on it. */}
         <div className={styles.paper} data-bench-paper />
 
+        {/* The flying devices: behind the artifact and the ring, in the
+            gutters, dissolving before they reach the principle's band. */}
+        <BenchDevices />
+
         {/* The line the drawing is an argument for. It is in the far stratum
             too: it was behind the experiment the whole time. */}
-        <p className={styles.principle} data-bench-principle>
-          {BENCH_PRINCIPLE}
+        <p
+          className={styles.principle}
+          data-bench-principle
+          style={{ '--n': PRINCIPLE_WORDS.length } as CSSProperties}
+        >
+          {PRINCIPLE_WORDS.map((word, index) => (
+            <Fragment key={`${word}-${index}`}>
+              <span className={styles.pw}>
+                <span
+                  className={styles.pwIn}
+                  style={{ '--i': index } as CSSProperties}
+                >
+                  {word}
+                </span>
+              </span>{' '}
+            </Fragment>
+          ))}
         </p>
 
         {/* The middle stratum: the thing the constraints become. */}
@@ -237,8 +282,35 @@ export function BenchAbout() {
         aria-labelledby="about-title"
       >
         <div className={styles.reading}>
-          <h2 id="about-title" className={styles.title}>
-            The rules become the work.
+          <h2
+            ref={title}
+            id="about-title"
+            className={styles.title}
+            aria-label={TITLE}
+          >
+            {TITLE.split(' ').map((word, wordIndex, words) => {
+              // A running character index across the whole line, so the
+              // stagger is one wave rather than a restart at every word.
+              const before = words
+                .slice(0, wordIndex)
+                .reduce((sum, w) => sum + w.length + 1, 0)
+              return (
+                <Fragment key={`${word}-${wordIndex}`}>
+                  <span className={styles.tw} aria-hidden="true">
+                    {Array.from(word).map((char, charIndex) => (
+                      <span
+                        key={charIndex}
+                        className={styles.tc}
+                        style={{ '--c': before + charIndex } as CSSProperties}
+                      >
+                        {char}
+                      </span>
+                    ))}
+                  </span>
+                  {wordIndex < words.length - 1 ? ' ' : null}
+                </Fragment>
+              )
+            })}
           </h2>
 
           <div className={styles.tracks}>

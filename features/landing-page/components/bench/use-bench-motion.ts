@@ -3,9 +3,11 @@
 import { useEffect, type RefObject } from 'react'
 
 import { BENCH_CHIPS } from './bench-copy'
+import { BENCH_DEVICES, benchDeviceFrames } from './bench-devices'
 import {
   BENCH_BAND_CLEARANCE,
   BENCH_HOLD,
+  BENCH_STAGE_BASE,
   benchFrame,
   benchRunway,
   type BenchFrame,
@@ -25,6 +27,8 @@ import {
  */
 const BENCH_QUERY =
   '(min-width: 769px) and (min-height: 700px) and (prefers-reduced-motion: no-preference)'
+
+const BENCH_STAGE_WIDTH = BENCH_STAGE_BASE.width
 
 type Gsap = (typeof import('gsap'))['gsap']
 type ScrollTriggerStatic =
@@ -198,6 +202,37 @@ function startBenchMotion({
     chipNodes.push(node)
   }
 
+  /**
+   * The flying devices, resolved in `BENCH_DEVICES` order for the same reason
+   * the chips are: `benchDeviceFrames` returns one frame per entry, and the
+   * pairing is only correct if the nodes are indexed the same way.
+   */
+  const deviceLayer = element.querySelector<HTMLElement>('[data-bench-devices]')
+  const deviceAnchors: HTMLElement[] = []
+  const deviceRots: HTMLElement[] = []
+  for (const device of BENCH_DEVICES) {
+    const anchor = element.querySelector<HTMLElement>(
+      `[data-bench-device="${device.id}"]`,
+    )
+    const rot = element.querySelector<HTMLElement>(
+      `[data-bench-device-rot="${device.id}"]`,
+    )
+    if (!anchor || !rot) {
+      console.error(
+        `Bench motion: device "${device.id}" is missing; leaving the native flow`,
+      )
+      return () => {}
+    }
+    deviceAnchors.push(anchor)
+    deviceRots.push(rot)
+  }
+  if (!deviceLayer) {
+    console.error(
+      'Bench motion: the device layer is missing; leaving the native flow',
+    )
+    return () => {}
+  }
+
   // Snapshot before anything is written, restore on the way out. The stage is
   // deliberately not in this list: the one thing written to it is `opacity`,
   // which the teardown removes outright rather than restoring, because the
@@ -220,7 +255,11 @@ function startBenchMotion({
     caption,
     ...chipNodes,
   ]
-  const snapshots = owned.map(
+  // The devices are restored like everything else, but kept out of `owned`:
+  // `gsap.set` on `owned` re-serialises a node's transform, and these carry
+  // 3D rotations that GSAP has no reason to parse.
+  const restorable = [...owned, deviceLayer, ...deviceAnchors, ...deviceRots]
+  const snapshots = restorable.map(
     (node) => [node, node.getAttribute('style')] as const,
   )
 
@@ -242,9 +281,14 @@ function startBenchMotion({
     // The far stratum and the principle's own entry are two translations on one
     // node, summed rather than nested: the principle is inside the sheet, and a
     // wrapper element would exist only to hold a number.
-    paper.style.transform = `translate3d(0, ${frame.farY}px, 0)`
+    // The sheet starts tipped back like a desk seen from a seat and lies flat
+    // as the drawing completes: the draw-on clock doubles as the tilt's.
+    const tilt = 16 * (1 - frame.artifactDraw)
+    paper.style.transform = `translate3d(0, ${frame.farY}px, 0) perspective(1600px) rotateX(${tilt}deg)`
     principle.style.transform = `translate3d(0, ${frame.farY + frame.principleY}px, 0)`
-    principle.style.opacity = String(frame.principleOpacity)
+    // The principle arrives word by word: the stylesheet derives each word's
+    // offset from this one number, so the box itself is never faded.
+    principle.style.setProperty('--e', String(frame.principleOpacity))
 
     // The middle stratum, plus the artifact's own lift and recede.
     //
@@ -287,6 +331,28 @@ function startBenchMotion({
     // registration brackets at once — and a long path and a short one finish
     // together rather than the long one lagging.
     artifact.style.setProperty('--bench-draw', String(frame.artifactDraw))
+    // The record plays as the page scrolls. Degrees, unbounded.
+    const spin = frame.progress * 900
+    artifact.style.setProperty('--bench-spin', String(spin))
+    deviceLayer.style.setProperty('--bench-spin', String(spin))
+
+    const unit = Math.min(
+      2,
+      Math.max(0.6, geometry.stageWidth / BENCH_STAGE_WIDTH),
+    )
+    const flights = benchDeviceFrames(
+      frame.progress,
+      geometry.stageHeight,
+      unit,
+    )
+    for (let index = 0; index < flights.length; index += 1) {
+      const flight = flights[index]
+      const anchor = deviceAnchors[index]
+      const rot = deviceRots[index]
+      anchor.style.transform = `translate3d(${flight.x}px, ${flight.y}px, 0) scale(${flight.scale})`
+      anchor.style.setProperty('--o', String(flight.opacity))
+      rot.style.transform = `rotateX(${flight.rotateX}deg) rotateY(${flight.rotateY}deg) rotateZ(${flight.rotateZ}deg)`
+    }
 
     if (element.dataset.benchState !== frame.state) {
       element.dataset.benchState = frame.state

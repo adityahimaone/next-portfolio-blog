@@ -57,6 +57,20 @@ export function VenLogo() {
   )
 }
 
+/**
+ * The rotary control, drawn to match the Patch's knob.
+ *
+ * Both faces of this page are cream faceplates, so both knobs are the same
+ * knob: a dark milled cap with one coloured index line. The dotted scale ring
+ * this used to carry is gone with it — the Patch's knob has no ring, and two
+ * knobs on one page that disagree about whether knobs have rings is the kind
+ * of drift that reads as a mistake.
+ *
+ * The one deliberate difference is the contract. This knob is a real input —
+ * it drags, it takes arrow keys and Home/End, and it is a `role="slider"` with
+ * a value. The Patch's knobs are readouts and say so. Same part, same look,
+ * different job; the look is what was asked to match.
+ */
 export function Knob({
   label,
   value,
@@ -104,7 +118,6 @@ export function Knob({
 
   return (
     <div className={styles.knobControl}>
-      <div className={styles.knobScale} aria-hidden="true" />
       <button
         type="button"
         data-skill-sequence="param"

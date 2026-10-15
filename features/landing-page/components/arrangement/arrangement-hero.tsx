@@ -3,12 +3,12 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { About } from '../../rack-01/section-about'
 import {
   ARRANGEMENT_CLIPS,
   ARRANGEMENT_LANES,
   ARRANGEMENT_MODE,
   RULER_AXIS_LABEL,
+  RULER_LABELS,
   YEAR_MAX,
   YEAR_MIN,
 } from './arrangement-data'
@@ -40,42 +40,44 @@ import styles from './arrangement.module.css'
  * mixed toward the hero's own ground, so the eye has exactly one thing to land
  * on. It is also the one documented exception to "a clip's width is a duration":
  * the name is not a stage, so it spans the record.
+ *
+ * ## Where the session ends
+ *
+ * The camera dives once into the PROFILE clip, and the machine is left there.
+ * What used to open out of that dive was the Patch — a synth faceplate built
+ * from the same kit as the mixer, sitting in the clip's interior. It is gone.
+ * The handoff now belongs to `components/bench/`, which carries the reader out
+ * of the device entirely and into an editorial About; this component's only
+ * part in it is to keep the stage pinned for `--arr-hold`, the length of the
+ * bench's own takeover, so the machine is still still while it is covered.
+ *
+ * Two older handoff contracts are still published and currently unread: the
+ * outgoing device's `data-matter-device` and the source region's
+ * `data-matter-source`, both of which the retired `components/matter/` bridge
+ * consumed. The bench deliberately arrives as a fresh sheet rather than
+ * continuing the signal, so it reads neither. They are kept because the
+ * publishing side is this component's own measurement and removing it would
+ * change nothing a reader can see.
+ *
+ * That is why there is no `#about` in this file. The clip's interior is not a
+ * section any more, and an anchor that resolves to the top of a long pinned
+ * runway lands a reader at the start of an animation instead of at the thing
+ * they asked for. There is exactly one `#about` on the page, and it is the
+ * heading of the biography.
  */
-export function ArrangementHero({
-  selected,
-  setSelected,
-  aboutProgress,
-  setAboutProgress,
-}: {
-  selected: number
-  setSelected: React.Dispatch<React.SetStateAction<number>>
-  aboutProgress: number
-  setAboutProgress: React.Dispatch<React.SetStateAction<number>>
-}) {
+export function ArrangementHero() {
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const cameraRef = useRef<HTMLDivElement>(null)
-  const seamRef = useRef<HTMLDivElement>(null)
   const [clock, setClock] = useState('')
 
-  useArrangementHero({
-    sectionRef,
-    trackRef,
-    cameraRef,
-    seamRef,
-    setAboutProgress,
-    // The hook owns which card the read has reached; `selected` is the same
-    // state the cards and the panel's clips read, and the one a click writes.
-    setAboutIndex: setSelected,
-  })
-  useHeroDockVisibility({ sectionRef, seamRef })
+  useArrangementHero({ sectionRef, trackRef, cameraRef })
+  useHeroDockVisibility({ sectionRef })
 
   // The clock is the one readout on this instrument that is true without being
   // invented. Seeded empty and filled in an effect, so the server and the client
   // agree on the first render. There is no BPM readout: nothing here keeps a
-  // tempo. The hero's own playhead parks on the PROFILE clip for the whole dive
-  // and About's travels only as far as the read takes it, so a number for that
-  // motion would be invented — which is the decoration §0.0 forbids.
+  // tempo.
   useEffect(() => {
     const tick = () =>
       setClock(
@@ -87,6 +89,25 @@ export function ArrangementHero({
     tick()
     const timer = window.setInterval(tick, 30000)
     return () => window.clearInterval(timer)
+  }, [])
+
+  // The clips record themselves in, once. `data-boot` is what makes that true
+  // rather than "on every re-render": it is set for 1.2s and then removed, and
+  // the animation is gated on it. A state flag rather than a CSS animation on
+  // load, because a CSS-only version would replay on every remount and would
+  // have no way to be retired for reduced motion beyond the media query.
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+    section.dataset.boot = ''
+    const timer = window.setTimeout(
+      () => section.removeAttribute('data-boot'),
+      1200,
+    )
+    return () => {
+      window.clearTimeout(timer)
+      section.removeAttribute('data-boot')
+    }
   }, [])
 
   const profile = ARRANGEMENT_CLIPS.find((clip) => clip.kind === 'profile')
@@ -123,6 +144,23 @@ export function ArrangementHero({
             <Link href="/bookmarks">Bookmarks</Link>
             <a href="#about">About</a>
           </nav>
+          {/* The story line. It names the stage the playhead is in, so the
+              ruler's ticks are read rather than decoded. Both writes are on
+              change only — three across the whole scroll.
+
+              `data-arr-stage-label`, not `data-arr-stage`: the latter is the
+              stage *wrapper* below (the hook measures its height, and
+              `about-chapter.ts` uses it as the "am I inside the arrangement"
+              marker). Reusing it here would make `querySelector` find the
+              wrapper — an ancestor wins document order — and the stage write
+              would replace the whole hero with one word. */}
+          <span
+            className={`${styles.lcd} ${styles.lcdStage}`}
+            aria-hidden="true"
+          >
+            <small data-arr-stage-label>{RULER_LABELS[0]}</small>
+            <b data-arr-caption />
+          </span>
           <div className={styles.transport}>
             <button
               type="button"
@@ -153,9 +191,26 @@ export function ArrangementHero({
           </div>
         </header>
 
-        <div ref={trackRef} className={styles.trackArea}>
-          <ArrangementRuler />
+        {/* The ruler is a child of the stage, not of the track area, and that is
+            the whole of "the ruler is structural". It is the one piece of the
+            instrument's furniture that does not belong to the world being
+            zoomed: it measures the arrangement from outside it, so it must not
+            be clipped by the window the camera dives through, and it must not be
+            painted over by whatever the dive reveals. A DAW has one ruler and
+            it is always at the top; this is the same rule.
 
+            It reads the camera's own properties (`--arr-zoom`, `--arr-camera-x`)
+            so its ticks track the clips under it. The hook writes those on the
+            track area *and* on this element — the two smallest nodes that read
+            them — which is why it carries `data-arr-ruler`. */}
+        <ArrangementRuler />
+
+        {/* `data-matter-device` is the handoff's own marker: this is the
+            outgoing device, and the only thing the bridge does to it is fade
+            it. It is on the track area rather than on the stage because the
+            stage holds the navigation and the transport, and nothing focusable
+            may sit inside an element that gets faded to nothing. */}
+        <div ref={trackRef} className={styles.trackArea} data-matter-device>
           <div ref={cameraRef} className={styles.camera}>
             <div className={styles.lanes}>
               {ARRANGEMENT_LANES.map((lane) => (
@@ -174,7 +229,12 @@ export function ArrangementHero({
                   {ARRANGEMENT_CLIPS.filter(
                     (clip) => clip.laneId === lane.id,
                   ).map((clip) => (
-                    <ArrangementClip key={clip.id} clip={clip} />
+                    <ArrangementClip
+                      key={clip.id}
+                      clip={clip}
+                      index={ARRANGEMENT_CLIPS.indexOf(clip)}
+                      source={clip.kind === 'profile'}
+                    />
                   ))}
                 </div>
               ))}
@@ -195,40 +255,7 @@ export function ArrangementHero({
         </div>
 
         <ArrangementMixer axis={axis} />
-
-        {/* The seam: the clip's interior, revealed by the dive rather than
-            reached by scrolling. It is laid out at its real size the whole time
-            and uncovered by a clip-path that starts as the PROFILE clip's own
-            rectangle — so this is a zoom, not a fade, and there is no second
-            copy of About anywhere on the page.
-
-            It is a child of the **stage**, not of `.trackArea`, and that is what
-            lets it cover the chrome and the proof once the window is fully open.
-            `.trackArea` is `overflow: hidden` (the camera's transformed lanes
-            have to be clipped to it), so a seam inside it could never paint over
-            the furniture above and below. Its clip-path insets are therefore
-            measured from the stage's edges — see `chromeHeight` / `proofHeight`
-            in `ArrangementGeometry`.
-
-            `inert` is not set here. The hook sets it on the first frame, and the
-            hook never runs on phones or under reduced motion — where the media
-            queries put this back in the flow and it must stay reachable. */}
-        <div ref={seamRef} className={styles.seam}>
-          <About
-            selected={selected}
-            setSelected={setSelected}
-            scrollProgress={aboutProgress}
-          />
-        </div>
       </div>
-
-      {/* The skip link and every `#about` link land here. Not on the seam
-          itself: a sticky element's rect is a function of scroll position, so
-          an `#about` inside the stage resolves to the hero's scroll origin and
-          the link would jump to the top of the hero instead of to the panel.
-          This anchor sits exactly where the pinned window ends, which is the
-          scroll offset at which the seam is fully open. */}
-      <div id="about" className={styles.aboutAnchor} aria-hidden="true" />
     </section>
   )
 }

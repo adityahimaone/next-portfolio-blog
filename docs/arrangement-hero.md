@@ -698,8 +698,8 @@ its plain percentage grid, which is why the first paint has a working scale
 rather than every tick stacked at one point.
 
 This needs an explicit escape hatch, because the pin is **CSS-only**  
-(`position: sticky` inside a 460svh section) and would otherwise apply with  
-scripting off, leaving 460svh of arrangement with About at `opacity: 0` behind  
+(`position: sticky` inside a 400svh section) and would otherwise apply with  
+scripting off, leaving 400svh of arrangement with About at `opacity: 0` behind  
 it. A `@media (scripting: none)` block un-pins the stage and returns the seam to  
 the flow. It is evaluated only when scripting is genuinely disabled, so it can  
 never fight the hook — and it needs no `data-live` flip, which would make the  
@@ -764,7 +764,7 @@ are not imported by anything here — see §11.
   the rack's chapter animations still load both on a phone (see §9).
 - [ ] No-JS (DevTools → disable JavaScript, desktop width): the stage is not  
   pinned, About is a readable block below the arrangement, and the page is not  
-  460svh of empty scroll.
+  400svh of empty scroll.
 - [ ] Phone, reduced motion and no-JS: the hero is **taller than its content**
   rather than collapsed — measured 1874px at 390×844, and 1153px under reduced
   motion and with scripting off at 1440×900. A hero of ~108px means `.aboutSeam`

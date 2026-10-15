@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { Work } from '../work/work'
 import type { ArchiveRepo } from '@/features/projects/lib/github'
 import { ArrangementHero } from '../components/arrangement/arrangement-hero'
+import { BenchAbout } from '../components/bench/bench-about'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
 import { Experience } from './section-experience'
@@ -34,12 +35,11 @@ export default function Rack01LandingPage({
   archiveRepos: readonly ArchiveRepo[]
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const [aboutIndex, setAboutIndex] = useState(0)
-  // The About section's scroll progress, and its selected card. Both are the
-  // same two pieces of state the page section had — the arrangement hook
-  // publishes them from the dive's own progress, because the About is the seam's
-  // interior and the read is the only scroll it gets. See §13.11.
-  const [aboutProgress, setAboutProgress] = useState(0)
+  // The arrangement's `aboutIndex` is gone with the Patch: the hero no longer
+  // owns a read that moves a module on, and the biography is its own section
+  // rather than a panel inside the dive. The experience strip's index is the
+  // one piece of scroll-written React state left on this page, and it moves on
+  // change only.
   const [experienceIndex, setExperienceIndex] = useState(0)
 
   useRackAnimations({ rootRef, setExperienceIndex })
@@ -59,12 +59,13 @@ export default function Rack01LandingPage({
       <a className={styles.skipLink} href="#about">
         Skip to content
       </a>
-      <ArrangementHero
-        selected={aboutIndex}
-        setSelected={setAboutIndex}
-        aboutProgress={aboutProgress}
-        setAboutProgress={setAboutProgress}
-      />
+      <ArrangementHero />
+      {/* The handoff, and the About it hands off to. It sits immediately after
+          the hero because that is what it is: the hero's last frame is the
+          source region grown to fill the frame, and this section's first frame
+          is that signal leaving the device behind — a sheet of graph paper
+          arriving over the machine with the constraints already on it. */}
+      <BenchAbout />
       <SignalDivider />
       <Skills />
       <CableDivider />

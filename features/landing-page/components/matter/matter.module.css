@@ -1,0 +1,764 @@
+/* Sound becomes matter.
+
+   The hero is a DAW session — a picture of a machine. This is what happens
+   when the machine is left behind: the same machine, drawn once more at the
+   bridge's own scale, coming apart into the signal it was carrying and the
+   person who was behind it the whole time.
+
+   The device shell is the piece that makes it one machine rather than a
+   scatter of icons. It is a compact sampler and turntable hybrid — mixer bank,
+   platter and tonearm, timeline lane, patch bay — drawn as a single decorative
+   SVG inside the `aria-hidden` stage, and it is the only thing on this page
+   allowed to look like hardware. It carries no brand, no label and no number:
+   every mark in it is abstract, because a decorative mark that read like a real
+   specification would be a claim the page cannot support.
+
+   Two rules the whole file obeys, and both of them are about not hiding
+   content behind a script:
+
+   1. **The decoration is opt-in.** `.stage` is `display: none` until the hook
+      sets `data-motion="ready"`, which it only does on a wide, tall viewport
+      with motion allowed. Phones, reduced motion and no-JavaScript therefore
+      get the editorial About on its own, in normal flow, with nothing to
+      scroll through and nothing to wait for. The media query below is the
+      *same* one the hook gates on — it is written out twice on purpose, so a
+      viewport that activates the motion also lays it out, and a viewport that
+      does not is never left with a sticky stage and no artwork.
+   2. **No decorative line ever crosses body text.** The reading panel is an
+      opaque surface at a higher z-index than the artwork, and the three
+      contours are authored in the band above it. The artwork is never a
+      backdrop for a sentence.
+
+   Everything the scroll writes is a transform or an opacity, and every one of
+   them is bounded by `matter-frame.ts` — this file reads the numbers, it does
+   not invent them. */
+
+.bridge {
+  position: relative;
+  isolation: isolate;
+  color: var(--foreground);
+  /* Shared by the section grid and every track's inner grid, so the two cannot
+     disagree about the gutter. */
+  --matter-gap: clamp(1rem, 2.2vw, 2.5rem);
+  --matter-pad: clamp(1.25rem, 5vw, 4.5rem);
+  /* The two colours the handoff inherits from the machine it is replacing.
+     They are copies of `.hero`'s `--arr-ground` and `--arr-ink`, and they are
+     copies because custom properties do not cross a sibling boundary — the
+     hero and this section are siblings, so neither can read the other's.
+     If the arrangement's palette moves, these two move with it. */
+  --matter-ground: #14171a;
+  --matter-ink: #eee9df;
+}
+
+/* Deliberately no `background` here. Under the motion query below this section
+   is pulled up over the hero's last viewport, and a background on the wrapper
+   would paint the page colour across the machine while it was still on screen.
+   The two surfaces that need to be opaque — the stage and the reading panel —
+   each carry their own. */
+
+/* ── The decorative stage ────────────────────────────────
+   Sticky, one viewport tall, and out of the flow entirely once it is sticky —
+   `margin-bottom: -100svh` pulls the reading panel up to start where the stage
+   starts, so the panel scrolls *over* the artwork rather than after it. */
+
+.stage {
+  display: none;
+  pointer-events: none;
+  overflow: clip;
+  color: var(--foreground);
+}
+
+/* The machine's ground, laid over the page colour and lifted as the device
+   leaves.
+ *
+ * This is the handoff's first move and it is why the section overlaps the hero:
+ * the layer is the *same colour* as the arrangement the reader is looking at,
+ * so it can arrive over the machine without the frame changing. It arrives
+ * across the hold, on the stage's own opacity, while the hero is still pinned —
+ * the machine is not moving, so the chrome resolving into this flat ground
+ * reads as one frame settling rather than as two frames cutting.
+ *
+ * It then leaves across `depart`, uncovering the page underneath, and the dark
+ * machine becomes the light page without a cut.
+ *
+ * Its opacity is the outgoing device's own, because it is the same fact: how
+ * much of the machine is still here. By the time that number moves, the device
+ * itself is behind an opaque stage, so this layer is what the reader actually
+ * sees leave. */
+.ground {
+  position: absolute;
+  inset: 0;
+  background: var(--matter-ground);
+}
+
+/* The runway is the measured gap between the stage's first frame and the
+   reading panel's first line. The hook writes `--matter-runway` in px from
+   `matterRunway()`: the panel's own height, floored at one viewport, and then
+   raised as far as needed to keep the panel's top edge out of the decorative
+   word band until SIGNAL starts leaving. That second term is what makes the
+   typography beats watchable — without it the panel climbs over the words
+   during their own window. It is zero — and therefore invisible — whenever the
+   motion is off. */
+.runway {
+  height: 0;
+}
+
+.contours {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* `none` rather than `slice`, and that is deliberate. Slice scales by the
+     larger axis, which moves the three contours to different fractions of the
+     viewport at every window size — and the one thing the artwork must
+     guarantee is that no line lands on body text. Stretching abstract curves
+     is free; moving them is not. */
+}
+
+.contour {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.contour[data-contour='far'] {
+  opacity: 0.1;
+}
+.contour[data-contour='middle'] {
+  opacity: 0.16;
+}
+/* The signal accent belongs to exactly one line. The other two are
+   low-intensity ink, so the accent still means something. */
+.contour[data-contour='near'] {
+  stroke: var(--primary);
+  opacity: 0.22;
+}
+
+/* The source proxy: the signal region itself, authored where the source was
+   measured and grown about its own centre by the frame. Its stroke is
+   non-scaling so it stays a hairline at 8x rather than becoming a slab. */
+.proxy {
+  position: absolute;
+  /* Above the ground and the contours, below the shell. The signal band is
+     what the machine is standing on, not a sheet laid across it. */
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--primary) 50%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  transform-origin: 50% 50%;
+}
+.proxySignal {
+  width: 100%;
+  height: 100%;
+}
+.proxySignal path {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The signal's own ink — the brightness the reader was already looking at,
+   because at p=0 the proxy sits exactly over the hero's PROFILE clip.
+ *
+ * It leaves with the ground, on the same number, so the region stays lit for
+ * exactly as long as the machine it belonged to is still here. What it
+ * uncovers is the proxy's own border and waveform, already drawn underneath,
+ * which is why the fill needs no second animation to hand over to them. */
+.proxyInk {
+  position: absolute;
+  inset: 0;
+  background: var(--matter-ink);
+}
+
+/* ── The device shell ────────────────────────────────────
+   The machine, drawn once. Its whole presence is one custom property the
+   binder writes — `--device-opacity` — and everything else in here is either
+   a material or a consumer of another property the binder writes. No rule in
+   this block animates on its own: the ScrollTrigger is the only clock.
+
+   The materials are what make it read as one physical body rather than as a
+   set of icons:
+
+   - the **chassis** is `--matter-ground`, the same dark the hero stood on, so
+     while the ground is still up the machine is nearly invisible against it
+     and only its thin edge shows. As the ground lifts across the departure the
+     same silhouette resolves against the light page — which is the handoff's
+     whole trick, and the reason the shell must be above the ground.
+   - the **faceplate** is a darker inset, so controls look mounted on something
+     rather than floating on the chassis.
+   - **shellPanel** is the same idea one level down: a mounting plate for a
+     knob, a fader cap, a socket. Using it everywhere is what keeps the
+     mounting geometry honest.
+   - **shellLine** / **shellDim** are the single stroke language, at two
+     intensities. Nothing here has its own stroke width.
+   - **shellAccentFill** / **shellAccentLine** are the one accent. Only the
+     indicator, the live clip, the label, the stylus, the cue light and the
+     signal route may use them. */
+
+.deviceShell {
+  position: absolute;
+  /* `inset: 12% 8% 18%` resolves to 84% by 70%, which is almost exactly the
+     1200 by 620 viewBox's aspect ratio — so `meet` fills the box at every
+     desktop size without stretching the machine. */
+  inset: 12% 8% 18%;
+  overflow: visible;
+  pointer-events: none;
+  color: var(--foreground);
+  z-index: 2;
+  opacity: var(--device-opacity, 0);
+  will-change: opacity;
+}
+
+.chassis {
+  fill: var(--matter-ground);
+  stroke: color-mix(in srgb, var(--foreground) 42%, transparent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.faceplate {
+  fill: color-mix(in srgb, var(--matter-ground) 72%, black);
+  stroke: color-mix(in srgb, var(--foreground) 18%, transparent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.shellPanel {
+  fill: color-mix(in srgb, var(--matter-ground) 78%, black);
+  stroke: color-mix(in srgb, var(--foreground) 22%, transparent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.shellLine {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.55;
+}
+
+.shellDim {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.26;
+}
+
+.shellAccentFill {
+  fill: var(--primary);
+  stroke: none;
+}
+
+.shellAccentLine {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+/* A waveform drawn over an accent-filled clip: the page's own surface, so the
+   clip reads as cut out of the ground rather than tinted. */
+.shellWave {
+  fill: none;
+  stroke: var(--background);
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The body and its inset lift together, one step ahead of the shell itself, so
+   the machine is seen to lose its body before it loses its outline.
+
+   Each rule is written as a local class compounded with the binder's data
+   marker. The class is what makes the selector legal in a CSS module — a bare
+   attribute selector is not pure and the bundler rejects it — and the marker is
+   kept so the rule still names the node the binder actually owns. */
+.deviceChassis[data-device-chassis],
+.deviceTimeline[data-device-timeline],
+.devicePatch[data-device-patch] {
+  opacity: var(--faceplate-opacity, 0);
+}
+
+/* The one primary-colour route: record, through the mixer bank, up to the
+   playhead lane. Its material lives on `.signalPath`; its presence — the part
+   that moves — lives on the marker, so a retime never has to touch a stroke. */
+.signalPath {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.signalPath[data-device-signal] {
+  opacity: var(--signal-opacity, 0);
+}
+
+/* The platter turns about its own centre in viewBox units — `transform-box:
+   view-box` makes `transform-origin` a user-space coordinate, so the origin is
+   the record's real centre rather than a percentage that would move with the
+   element's own box. The tonearm swings about its pivot the same way. */
+.devicePlatter[data-device-platter] {
+  transform-box: view-box;
+  transform-origin: 920px 246px;
+  transform: rotate(var(--platter-rotation, 0deg));
+}
+
+.deviceTonearm[data-device-tonearm] {
+  transform-box: view-box;
+  transform-origin: 1122px 96px;
+  transform: rotate(calc(var(--tonearm-progress, 0) * -12deg));
+}
+
+/* The meter scales from its baseline. `non-scaling-stroke` on the bars keeps
+   their width constant through the scale, so it reads as a level meter rather
+   than as three lines being stretched. */
+.deviceMeter[data-device-meter] {
+  transform-box: view-box;
+  transform-origin: 620px 560px;
+  transform: scaleY(var(--meter-level, 0.24));
+}
+
+/* ── The practice residue ────────────────────────────────
+   A quiet piece of the machine left for the first practice line.
+
+   This exists because the scene used to go empty exactly when the reader
+   arrived: by the time `Start with the user.` rose into place, every large part
+   had cleared, and the sentence landed over nothing. The residue is the
+   platter, its tonearm and a three-bar meter, drawn at the same geometry the
+   shell uses, so the heading has context instead of an empty stage.
+
+   Three things make it read as hardware rather than as a diagram, and all three
+   are corrections to the first version of this block:
+
+   - **It is the machine's own material.** It is ink, not accent — the same
+     `currentColor` language `shellLine` and `shellDim` are written in — with the
+     one primary accent on the spindle and the stylus, exactly as the shell
+     spends it. An all-primary fragment read as a chart mark; an ink fragment
+     reads as the device's remainder.
+   - **It is drawn at the size the moment needs.** At `min(23rem, 28vw)` it is
+     roughly the width of the practice heading it sits above, so it is a
+     presence in the band rather than a speck in the corner.
+   - **It is placed in the band the reading panel has not eaten yet.** The panel
+     is opaque and climbs from the bottom, so the only stage left at `p≈.80` is
+     the top of the frame. `top: 2%` with a 2:1 box keeps the whole fragment
+     above the panel's own top edge through the heading's whole beat — which the
+     previous `top: 16%` did not, burying the lower half of it under the panel.
+
+   It is *not* copy and never carries any: it is inside the `aria-hidden` stage
+   and is positioned in the right-hand band of the reading column, where the
+   practice statements live — never inside the body column, and never behind a
+   sentence, because the reading panel is opaque and above the whole stage. The
+   binder writes `--residue-opacity` and the measured left; the fallback
+   position below only stands when the reading column could not be measured. */
+
+.practiceResidue {
+  position: absolute;
+  top: 2%;
+  right: 6%;
+  width: min(23rem, 28vw);
+  aspect-ratio: 2 / 1;
+  /* The machine's own ink, not the accent — see the block comment above. */
+  color: var(--foreground);
+  opacity: var(--residue-opacity, 0);
+  pointer-events: none;
+  z-index: 6;
+  will-change: opacity;
+}
+
+.practiceResidue svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* One stroke language for the whole fragment, matching `shellLine`: the
+   elements opt in by being inside the residue, and the two modifiers below are
+   the only exceptions. `non-scaling-stroke` keeps the fragment's line weight
+   constant at every window size, which is what stops it going from drawing to
+   diagram as the box scales. */
+.practiceResidue circle,
+.practiceResidue line,
+.practiceResidue polygon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The secondary marks — grooves, the groove mark, the meter's baseline — at the
+   same two-intensity split the shell uses. */
+.practiceResidue [data-residue-dim] {
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+
+/* The one accent: the spindle and the stylus. Solid, like `shellAccentFill`. */
+.practiceResidue [data-residue-accent] {
+  fill: var(--primary);
+  stroke: none;
+}
+
+/* The two decorative words. One grid cell, two layers: the crossfade is a
+   change of opacity on the same measured bounds, not a reflow. */
+.typeStage {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  overflow: clip;
+  pointer-events: none;
+}
+.typeStage > span {
+  grid-area: 1 / 1;
+  font-family: var(--font-syne), sans-serif;
+  font-size: clamp(5rem, 17vw, 17rem);
+  font-weight: 750;
+  line-height: 0.84;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+  color: var(--foreground);
+}
+.typeStage span[data-matter-word] {
+  display: inline-flex;
+}
+.typeStage [data-letter] {
+  display: inline-block;
+  transform-origin: 50% 80%;
+}
+
+.flightStage {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+}
+.part {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  color: var(--foreground);
+  opacity: 0;
+}
+/* One paint order for the whole stage, written out in one place.
+
+   ground and contours are unpositioned siblings at the bottom; everything
+   above them takes an explicit level so the composition cannot be rearranged
+   by a change of DOM order. The order is the story: the machine stands on the
+   signal band, the far half of the cast passes behind the words, the near half
+   passes in front of them, and the practice residue is the last thing left. */
+.part[data-band='far'] {
+  z-index: 3;
+}
+.typeStage {
+  z-index: 4;
+}
+.part[data-band='near'] {
+  z-index: 5;
+}
+.part svg {
+  display: block;
+}
+
+/* Hidden states exist only after the observer is attached; static content is
+   the default for server render, no-JS, reduced motion, and narrow screens. */
+.bridge[data-reveal-ready] [data-reveal]:not(.statement):not([data-in]) {
+  opacity: 0;
+  transform: translateY(28px);
+  clip-path: inset(0 0 100% 0);
+}
+.bridge[data-reveal-ready] [data-reveal]:not(.statement) {
+  transition:
+    opacity 700ms cubic-bezier(0.23, 1, 0.32, 1) calc(var(--i, 0) * 70ms),
+    transform 700ms cubic-bezier(0.23, 1, 0.32, 1) calc(var(--i, 0) * 70ms),
+    clip-path 700ms cubic-bezier(0.23, 1, 0.32, 1) calc(var(--i, 0) * 70ms);
+}
+.bridge[data-reveal-ready] [data-reveal]:not(.statement)[data-in] {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0);
+}
+
+.statements {
+  display: grid;
+  gap: 0.35em;
+  margin-top: clamp(3rem, 6vw, 6rem);
+}
+.statement {
+  font-size: clamp(1.75rem, 4vw, 4rem);
+  line-height: 1.08;
+  max-width: 18ch;
+}
+.practice.statement {
+  max-width: 100%;
+}
+.wMask {
+  display: inline-block;
+  overflow: clip;
+  vertical-align: top;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.w {
+  display: inline-block;
+}
+.bridge[data-reveal-ready] .statement:not([data-in]) .w {
+  transform: translateY(120%);
+}
+.bridge[data-reveal-ready] .statement .w {
+  transition: transform 800ms cubic-bezier(0.23, 1, 0.32, 1)
+    calc(var(--w) * 45ms);
+}
+.statement[data-in] .w {
+  transform: none;
+}
+
+@supports (animation-timeline: view()) {
+  @media (min-width: 769px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+    .bridge[data-motion='ready'] .statement {
+      animation: statement-drift linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+    @keyframes statement-drift {
+      from {
+        translate: calc(var(--dir, 1) * -24px) 0;
+      }
+      to {
+        translate: calc(var(--dir, 1) * 24px) 0;
+      }
+    }
+  }
+}
+
+/* ── The reading panel ───────────────────────────────────
+   Ordinary document flow, opaque, and above the artwork. It is the only
+   container of the biography, which is what makes the page readable with the
+   script absent, failed or disabled. */
+
+.about {
+  position: relative;
+  z-index: 1;
+  background: var(--background);
+  padding: clamp(3.5rem, 9vw, 9rem) var(--matter-pad) clamp(4rem, 10vw, 10rem);
+  /* The skip link and every `#about` link land on the panel's first line, not
+     at the top of a long animation runway. The clearance is the height of the
+     fixed chrome a reader arrives under. */
+  scroll-margin-top: clamp(3.5rem, 8vh, 6rem);
+}
+
+.reading {
+  max-width: 78rem;
+  margin: 0 auto;
+}
+
+/* ── Typography ──────────────────────────────────────────
+   The section's whole argument is a change of register, so the type does the
+   work: one monumental display line, three large practice statements, and body
+   copy that is quiet, narrow and completely still. Nothing here animates
+   except the title's own bounded entry. */
+
+.title {
+  max-width: 12ch;
+  margin: 0 0 clamp(2rem, 5vw, 4.5rem);
+  font-family: var(--font-syne), sans-serif;
+  font-size: clamp(2.75rem, 8vw, 8rem);
+  font-weight: 750;
+  line-height: 0.94;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.tracks {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--matter-gap);
+  row-gap: clamp(2.5rem, 5vw, 5rem);
+}
+
+/* Each track is its own twelve-column band. The body sits in columns 2–6 and
+   the practice statement in 8–12, which is the editorial spread the design
+   asks for — two vertical bands, never overlapping boxes. The DOM order stays
+   statement-then-body, so the visual rearrangement costs assistive tech
+   nothing. */
+.track {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--matter-gap);
+  row-gap: clamp(0.6rem, 1.4vw, 1rem);
+  align-items: start;
+}
+
+.practice {
+  grid-column: 8 / 13;
+  grid-row: 1;
+  margin: 0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: clamp(1.75rem, 3.4vw, 3.25rem);
+  font-weight: 650;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.body {
+  grid-column: 2 / 7;
+  grid-row: 1;
+  display: grid;
+  gap: clamp(0.75rem, 1.6vw, 1.25rem);
+  align-content: start;
+}
+
+/* 46–60ch, always full contrast, never scrubbed. */
+.story {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-geist), sans-serif;
+  font-size: clamp(1rem, 1.15vw, 1.125rem);
+  line-height: 1.65;
+}
+
+.credits {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+.credits li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+.credits b {
+  font-weight: 650;
+  color: var(--foreground);
+}
+.credits span {
+  color: var(--muted-foreground);
+}
+
+.aside {
+  max-width: 60ch;
+  margin: 0;
+  font-family: var(--font-geist), sans-serif;
+  font-size: clamp(1rem, 1.15vw, 1.125rem);
+  line-height: 1.65;
+  color: var(--foreground);
+}
+
+.resume {
+  justify-self: start;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+.resume:hover,
+.resume:focus-visible {
+  color: var(--foreground);
+}
+
+/* ── The motion layout ───────────────────────────────────
+   The same query the hook gates on. Only when both agree does the stage become
+   a sticky layer, the runway take its measured height, and the two decorative
+   words get laid out. */
+
+@media (min-width: 769px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+  /* The handoff's clock starts where the camera's ends.
+   *
+   * The hero's pinned stage unsticks at the exact scroll its dive finishes —
+   * that is what `bottom bottom` on its trigger resolves to — and then spends
+   * one viewport sliding away with nothing animating in it. The bridge used to
+   * begin *after* that slide, so the reader scrolled about 1100px through a
+   * dead frame between the machine and the artwork.
+   *
+   * Two things fix that, and they are not interchangeable. Pulling this section
+   * up makes the two clocks *meet*, so there is no dead scroll left to fall
+   * through. And the hero's own hook grows its section by `--arr-hold` — the
+   * length of this stage's takeover — so the machine is still pinned, and
+   * therefore still still, while the takeover runs. Without the hold the two
+   * clocks would meet on a machine that was already moving, and the dissolve
+   * would be a dissolve across a slide.
+   *
+   * **The pull-up has to absorb the hold as well as the stage.** The bridge's
+   * own top edge is what its clock starts on, and that edge is derived from the
+   * hero's height — so pulling up by exactly one viewport would make p=0 track
+   * the hero's un-pin no matter how much the hero grew, and the hold would be
+   * spent as dead scroll *before* the bridge rather than as the bridge's first
+   * beat. Pulling up by the stage *and* the hold is what puts p=0 one hold
+   * earlier than the un-pin, which is the only arrangement in which the
+   * takeover happens over a machine that is standing still. */
+  .bridge[data-motion='ready'] {
+    margin-top: calc(-100svh - var(--arr-hold, 0px));
+  }
+  .bridge[data-motion='ready'] .stage {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    height: 100svh;
+    margin-bottom: -100svh;
+    background: var(--background);
+    /* Nothing here hides the stage at rest. The hook writes its opacity from
+       `stageOpacity`, which is zero on the first frame and whole at
+       `MATTER_HOLD` — so the pulled-up stage cannot climb over the hero during
+       the dive, and the machine is not covered until the reader has stopped
+       looking at it. There is deliberately no `visibility` fallback: an
+       `opacity: 0` stage that the hook never reaches is still invisible, which
+       is the same resting state by a different route. */
+  }
+  .bridge[data-motion='ready'] .runway {
+    height: var(--matter-runway, 0px);
+  }
+  .bridge[data-motion='ready'] .typeStage {
+    display: grid;
+  }
+}
+
+/* ── Below the breakpoint: one column, natural reading order ── */
+
+@media (max-width: 768px) {
+  .title {
+    max-width: none;
+  }
+  .track {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .practice,
+  .body {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .practice {
+    margin-bottom: 0.35rem;
+  }
+}
+
+/* Narrow desktops: the two bands stack rather than being squeezed. */
+@media (min-width: 769px) and (max-width: 1080px) {
+  .practice {
+    grid-column: 7 / 13;
+  }
+  .body {
+    grid-column: 1 / 6;
+  }
+}

@@ -1,0 +1,335 @@
+/* The Patch. A cream hardware faceplate, the clip opened.
+
+   Three properties are written on the seam per frame — `--patch-power`,
+   `--patch-bounce`, `--patch-cursor` — and one per module, `--patch-sweep-0..2`.
+   Everything else on this panel is derived from those in CSS. Every one of them
+   has a fallback of 1 (or 0 for the cursor), and the fallbacks together are the
+   settled panel: that is the no-script frame, the phone frame and the
+   reduced-motion frame, with no second ruleset. */
+
+.patch {
+  --p: var(--patch-power, 1);
+  --settle: var(--patch-bounce, 1);
+  --chassis: #ece6d8;
+  --chassis-lo: #d9d1bf;
+  --ink: #1b1d1f;
+  --ink-soft: rgb(27 29 31 / 0.62);
+
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, auto) minmax(0, 1fr) auto;
+  gap: clamp(10px, 1.6svh, 18px);
+  height: 100%;
+  padding: 0 clamp(14px, 2vw, 28px) clamp(12px, 2svh, 22px);
+  background: linear-gradient(180deg, var(--chassis), var(--chassis-lo));
+  color: var(--ink);
+}
+
+/* ── A. Nameplate ──────────────────────────────────────────
+   The PROFILE clip's header strip, same colour and label, now the panel's top
+   edge. The one element that crosses the seam unchanged. */
+
+.nameplate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 calc(-1 * clamp(14px, 2vw, 28px));
+  padding: 0 clamp(14px, 2vw, 28px);
+  height: 22px;
+  background: var(--clip-color);
+  color: #141210;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+.nameplate strong {
+  font-weight: 700;
+}
+
+/* ── B. Modules ────────────────────────────────────────────── */
+
+.modules {
+  position: relative;
+  display: grid;
+  gap: 2px;
+}
+.module {
+  /* Rise in on power-on: 12px, staggered by module. `--m` is the index. */
+  --rise: clamp(0, calc((var(--p) - var(--m) * 0.12) / 0.5), 1);
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  border: 1px solid rgb(27 29 31 / 0.18);
+  border-top: 3px solid var(--module-color);
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.32);
+  opacity: var(--rise);
+  transform: translate3d(0, calc((1 - var(--rise)) * 12px), 0);
+}
+.moduleHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.moduleHead :last-child {
+  margin-left: auto;
+  color: var(--ink-soft);
+}
+.module[data-active='true'] .moduleHead {
+  background: color-mix(in srgb, var(--module-color) 14%, transparent);
+}
+.bank {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-evenly;
+  gap: 4px;
+  min-height: 0;
+  padding: 8px 8px 10px;
+}
+.bank[data-control='knob'] {
+  align-items: center;
+  flex-wrap: wrap;
+  row-gap: 14px;
+}
+
+/* The cursor: the hero's playhead, continued. It sits over the modules and
+   walks them, `--patch-cursor` being 0..1 across all three. */
+.cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--patch-cursor, 0) * 100%);
+  width: 1px;
+  background: var(--signal-orange);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--signal-orange) 55%, transparent);
+  opacity: var(--p);
+  pointer-events: none;
+}
+
+/* ── C. LCD ────────────────────────────────────────────────── */
+
+.lcd {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  padding: clamp(14px, 2.4svh, 26px) clamp(16px, 2.4vw, 32px);
+  overflow: hidden;
+  border: 1px solid #0b0d0e;
+  border-radius: 4px;
+  /* A screen is not a void. A flat black rectangle reads as a hole in the
+     panel; a screen has a pitch, a grid and a glow. All three are static —
+     a pattern that animated would be a repaint every frame, and the rule on
+     this page is that nothing moves while nothing is happening. Alphas are
+     kept under 6% so the 14–17px body copy over them loses no contrast. */
+  background:
+    /* Scanlines, at the pitch a CRT is actually drawn at. */
+    repeating-linear-gradient(
+      0deg,
+      rgb(232 226 212 / 0.05) 0 1px,
+      transparent 1px 3px
+    ),
+    /* The phosphor grid, coarse enough to read as structure and not as noise. */
+    repeating-linear-gradient(
+      90deg,
+      rgb(232 226 212 / 0.035) 0 1px,
+      transparent 1px 24px
+    ),
+    /* The wash a lit panel throws up from its top edge. */
+    radial-gradient(
+      130% 90% at 50% 0%,
+      rgb(92 214 163 / 0.1),
+      transparent 62%
+    ),
+    #101315;
+  box-shadow:
+    inset 0 2px 8px rgb(0 0 0 / 0.7),
+    inset 0 0 0 1px rgb(232 226 212 / 0.04);
+  color: #e8e2d4;
+  opacity: calc(0.2 + 0.8 * var(--p));
+}
+/* The boot line shows while the panel wakes, then yields to take 1. */
+.lcdBoot {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0 24px;
+  font-family: var(--font-syne), sans-serif;
+  font-size: clamp(22px, 3.2vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-align: center;
+  opacity: clamp(0, calc((0.55 - var(--p)) * 4), 1);
+}
+
+/* All three takes share one grid cell. */
+.take {
+  grid-area: 1 / 1;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  max-width: 70ch;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 180ms linear,
+    visibility 0s linear 180ms;
+}
+.take[data-active='true'] {
+  opacity: clamp(0, calc((var(--p) - 0.5) * 4), 1);
+  visibility: visible;
+  transition-delay: 0s;
+}
+.take h3 {
+  margin: 0;
+  color: var(--module-color);
+  font-family: var(--font-syne), sans-serif;
+  font-size: clamp(22px, 2.8vw, 40px);
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+.take p {
+  margin: 0;
+  font-size: clamp(14px, 1.15vw, 17px);
+  line-height: 1.55;
+}
+.take ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.take li span {
+  color: rgb(232 226 212 / 0.6);
+}
+.aside {
+  color: var(--signal-orange);
+}
+.resume {
+  justify-self: start;
+  padding: 6px 12px;
+  border: 1px solid var(--signal-orange);
+  border-radius: 3px;
+  color: var(--signal-orange);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── D. Output stage ─────────────────────────────────────────
+   Decoration. It replaced a meter bridge that reprinted the hero's three
+   proof numbers, which made this panel an echo of the section above it. A
+   page should say a thing once.
+
+   Everything here is texture — a heatsink, a grille, a lamp — and it is all
+   `aria-hidden` in the markup, because there is nothing to read. The lamp and
+   the fins take their state from `--p` and `--settle`, which are the panel's
+   own power-on act, so even the decoration is telling the truth: at the
+   settled frame both are at 1 and the stage looks finished, and with no script
+   that is exactly the frame it lands in. */
+
+.outStage {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.8vw, 22px);
+  padding-top: 10px;
+  border-top: 1px solid rgb(27 29 31 / 0.2);
+}
+
+/* A milled heatsink: hairlines at the pitch a real one is finned at. It warms
+   up with the panel, so the fins catch the light as the amp settles. */
+.outFins {
+  flex: 0 0 auto;
+  width: clamp(56px, 8vw, 108px);
+  height: 22px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgb(27 29 31 / 0.4) 0 1px,
+    transparent 1px 5px
+  );
+  opacity: calc(0.4 + 0.6 * var(--settle));
+}
+
+/* A speaker grille. A dot matrix rather than bars, because a row of bars
+   reads as a meter and a meter reads as a value — and this is not one. */
+.outGrille {
+  flex: 1 1 auto;
+  height: 22px;
+  border-radius: 2px;
+  background-image: radial-gradient(
+    circle,
+    rgb(27 29 31 / 0.32) 1px,
+    transparent 1.5px
+  );
+  background-position: 3px 3px;
+  background-size: 6px 6px;
+  box-shadow: inset 0 0 0 1px rgb(27 29 31 / 0.12);
+}
+
+/* The power lamp. `--p` is the panel's own power-on act, so a lamp that is
+   dark while the panel is dark and lit when it is live is a real state. */
+.outLamp {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: color-mix(
+    in srgb,
+    var(--signal-orange) calc(var(--p) * 100%),
+    rgb(0 0 0 / 0.34)
+  );
+  box-shadow: 0 0 calc(var(--p) * 8px)
+    color-mix(in srgb, var(--signal-orange) 60%, transparent);
+}
+
+/* ── Phones, reduced motion, no script ─────────────────────── */
+
+@media (max-width: 768px) {
+  .patch {
+    height: auto;
+    grid-template-rows: none;
+  }
+  .modules {
+    grid-template-columns: 1fr !important; /* beats the inline count-based columns */
+  }
+  .lcd {
+    opacity: 1;
+  }
+  .lcdBoot {
+    display: none;
+  }
+  /* Every take, in order, inert nowhere: nothing is hidden on a phone. */
+  .take {
+    grid-area: auto;
+    position: static;
+    opacity: 1;
+    visibility: visible;
+    padding-bottom: 14px;
+  }
+  .cursor {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Only the parts this file owns. The lamp is the kit's — a `.led` selector
+     here would compile to this module's own hash and match nothing, so the
+     kit carries that rule itself. */
+  .module,
+  .take {
+    transition: none;
+  }
+}

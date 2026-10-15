@@ -35,8 +35,28 @@
  * Measured at five viewports, the overflow runs from 0px (1728×1117) to 304px
  * (1280×720) — it is a function of the viewport, not a constant, which is why
  * the read is driven by a measured number rather than a tuned one.
+ *
+ * ## Why 400 and not 460
+ *
+ * 460 was the window this was drawn against; it was never measured against the
+ * page. Measuring it did two things. The camera's own travel is this number
+ * less the viewport the stage is pinned for — 3240px at 1440×900 — and the
+ * hero's whole run is therefore the largest single cost between the top of the
+ * page and the SIGNAL word the handoff is built around.
+ *
+ * The bridge, meanwhile, has to be *longer* than it was: its runway now holds
+ * the reading panel clear of the decorative word band for the whole time SIGNAL
+ * is legible (see `matterRunway`), which is what makes that beat watchable at
+ * all, and it costs about 400px of scroll. Paying for it here is what keeps the
+ * total from growing: at 400 the hero gives back 540px, so the page is shorter
+ * than it was *and* the words get their window.
+ *
+ * 400 is also the floor both tests declare, so this is the shortest the hero is
+ * allowed to be without retiming the five phases themselves. The design doc
+ * anticipates the choice: "Final total hero length must be chosen after
+ * measuring current behavior."
  */
-export const ARRANGEMENT_SCROLL_SVH = 460
+export const ARRANGEMENT_SCROLL_SVH = 400
 
 export const ARRANGEMENT_PHASES = {
   open: 0,
@@ -54,6 +74,47 @@ export const ARRANGEMENT_PHASES = {
  * would give.
  */
 export const ARRANGEMENT_SEAM_OPEN = 0.82
+
+/**
+ * The immersive reading of the same window: where the eye is, rather than where
+ * the camera is.
+ *
+ * `ARRANGEMENT_PHASES` above times the camera. These time the *reader*: scan the
+ * session, lock onto PROFILE, dive into the clip, and read. They are the dials
+ * the depth layer is hung from, and they are deliberately a separate table —
+ * retiming the camera must not silently move the moment the profile clip
+ * becomes the focal point.
+ *
+ * `dive` sits after the camera's own `zoom`, so the depth is spent on a clip the
+ * camera has already framed.
+ */
+export const IMMERSIVE_PHASES = {
+  overview: 0,
+  scan: 0.24,
+  lock: 0.48,
+  dive: 0.7,
+  reveal: 0.84,
+  read: 1,
+} as const
+
+/** px of depth at full lock, and the extra earned by the dive. */
+export const IMMERSIVE_DEPTH_LOCK = 18
+export const IMMERSIVE_DEPTH_DIVE = 12
+
+/**
+ * What the supporting lanes are worth, at the two moments the reader's
+ * attention moves: still fully lit when the scan starts, down to `.72` once
+ * PROFILE has been locked, and down to `.16` once the clip has opened.
+ *
+ * These are opacities rather than a phase flag because the recession is
+ * continuous — the lanes dim as the eye travels, not when a boundary is
+ * crossed. The phase attribute still drives everything that changes *once* (the
+ * rail's slide, the mixer's fade), which is where a transition is cheaper than
+ * a per-tick value; contrast is the one thing that has to track the scroll, or
+ * the lanes would sit at full strength for a third of the window and then snap.
+ */
+export const IMMERSIVE_LANE_SCAN_OPACITY = 0.72
+export const IMMERSIVE_LANE_DIVE_OPACITY = 0.16
 
 export type ArrangementPhase = 'open' | 'settle' | 'travel' | 'zoom' | 'rail'
 
@@ -133,6 +194,34 @@ export type ArrangementFrame = {
    * keeping the timeline out of it is what preserves the original behaviour.
    */
   readTravel: number
+  /**
+   * px — how far the camera has pushed into the frame, in the third dimension.
+   * Written as `--arr-depth` and spent as `translateZ` on the lanes: the
+   * supporting tracks go back, the PROFILE lane comes forward, and the ruler,
+   * the playhead and the track headers stay where they are because they are not
+   * inside the camera.
+   *
+   * It is a *depth*, not a zoom. The zoom is already `scale`, and stacking a
+   * second one on top of it would make the two impossible to reason about
+   * separately; a `translateZ` under a fixed `perspective` is a different axis
+   * and reads as parallax rather than as more magnification.
+   */
+  depth: number
+  /**
+   * 0 → 1 — how much of the frame's attention belongs to the profile clip.
+   * Reaches 1 at `lock` and stays there. Written as `--arr-profile-focus` and
+   * spent as a small brightness lift on `.laneProfile`, so the focal point is
+   * established by contrast rather than by moving anything.
+   */
+  profileFocus: number
+  /**
+   * 1 → `.72` → `.16` — how much contrast the supporting lanes keep. Continuous,
+   * unlike the rest of the depth layer, because it is the signal that carries
+   * the reader's attention off the supporting tracks and onto PROFILE. Applied
+   * to every lane except `.laneProfile`, so the focal point is established by
+   * the others stepping back rather than by the profile clip doing anything.
+   */
+  laneOpacity: number
   phase: ArrangementPhase
 }
 
@@ -168,6 +257,45 @@ export function arrangementPhase(progress: number): ArrangementPhase {
   return 'rail'
 }
 
+/**
+ * The camera's scale: the measured fit, reached on the rail and held there.
+ *
+ * The dive is `ARRANGEMENT_PHASES.zoom → rail`, exactly as it was: the fit is
+ * derived from the profile clip's width against the world, so this function
+ * only ever moves between `1` and `zoomScale`, and it reaches `zoomScale` on the
+ * rail and stays there.
+ *
+ * ## There is deliberately no overshoot
+ *
+ * There used to be one: a 2.5% half-sine bump at `[0.84, 0.91]`, on the
+ * argument that a camera arriving at its mark and stopping dead reads as a
+ * cross-fade while one that overshoots reads as something with mass. It was
+ * removed because the reader sees it as exactly what it is. The dive goes in,
+ * the bump takes it back out, and the handoff then zooms in again — three
+ * changes of direction where the story only has one, which reads as a mistake
+ * rather than as weight. The sound-becomes-matter design rules the effect out
+ * by name: "no spring bounce, camera overshoot, blur pulses, velocity skew, or
+ * opacity flicker".
+ *
+ * The bump was never really a camera idea anyway. It existed so that the Patch
+ * panel's power-on act had something to spend it on — `patch-timeline.ts` drove
+ * the camera from `ARRANGEMENT_SEAM_OPEN` to `IMMERSIVE_OVERSHOOT_TO` for
+ * precisely that reason — and that clock left with the seam. A viewpoint that
+ * does not move should arrive at its mark and hold.
+ *
+ * Monotonicity is the property worth keeping, and a test asserts it: nothing
+ * downstream of the rail may move the scale, so the clip's edges land on the
+ * frame's edges at exactly `worldWidth / profileWidth` and stay there.
+ */
+export function cameraScale(progress: number, zoomScale: number): number {
+  const p = clamp01(progress)
+  return mix(
+    1,
+    zoomScale,
+    span(p, ARRANGEMENT_PHASES.zoom, ARRANGEMENT_PHASES.rail),
+  )
+}
+
 export function arrangementFrame(
   progress: number,
   geo: ArrangementGeometry,
@@ -194,9 +322,7 @@ export function arrangementFrame(
   const scale =
     p < ARRANGEMENT_PHASES.settle
       ? mix(OPEN_SCALE * OPEN_OVERSHOOT, 1, settleT)
-      : p < ARRANGEMENT_PHASES.zoom
-        ? 1
-        : mix(1, zoomScale, zoomT)
+      : cameraScale(p, zoomScale)
 
   // Both axes are `0` at the overview, which is what makes the CSS fallbacks
   // *be* the settled frame rather than a second rendering that has to be kept
@@ -251,6 +377,33 @@ export function arrangementFrame(
   const seamTop = clipTop + geo.chromeHeight
   const seamBottom = clipBottom + geo.proofHeight
 
+  // ── The depth layer ──
+  //
+  // Two spans, because the eye does two things. `lockT` is the supporting
+  // tracks falling away while the profile clip becomes the focal point; `diveT`
+  // is the clip opening into the frame. They are read from `IMMERSIVE_PHASES`
+  // rather than from the camera's own table, so this is a statement about
+  // attention and cannot drift when the zoom is retimed.
+  //
+  // `profileFocus` takes the max rather than the sum: it is a 0 → 1 signal for
+  // "is this the focal point", and adding the two would push it past 1 and make
+  // the brightness lift in the stylesheet unbounded.
+  const lockT = span(p, IMMERSIVE_PHASES.scan, IMMERSIVE_PHASES.lock)
+  const diveT = span(p, IMMERSIVE_PHASES.lock, IMMERSIVE_PHASES.dive)
+  const depth = lockT * IMMERSIVE_DEPTH_LOCK + diveT * IMMERSIVE_DEPTH_DIVE
+  const profileFocus = Math.max(lockT, diveT)
+
+  // Nested rather than summed, because the two spans overlap: `lockT` is 1 by
+  // the time `diveT` starts, so the second mix has to take the first one's
+  // result as its floor. A single `1 - lockT*a - diveT*b` would double-count the
+  // stretch where both are 1 and drive the lanes below the `.16` the contract
+  // asks for.
+  const laneOpacity = mix(
+    mix(1, IMMERSIVE_LANE_SCAN_OPACITY, lockT),
+    IMMERSIVE_LANE_DIVE_OPACITY,
+    diveT,
+  )
+
   return {
     scale,
     cameraX,
@@ -272,6 +425,9 @@ export function arrangementFrame(
     // The read. Exactly the measured overflow at the end, so the last card
     // arrives flush with the bottom of the frame and no scroll is wasted past it.
     readTravel: readT * Math.max(0, geo.readOverflow),
+    depth,
+    profileFocus,
+    laneOpacity,
     phase: arrangementPhase(p),
   }
 }

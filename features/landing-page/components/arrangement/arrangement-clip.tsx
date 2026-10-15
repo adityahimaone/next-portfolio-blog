@@ -29,15 +29,29 @@ const WAVE_PATH = (() => {
  *   dive opens into, so its fill is a wash that the page colour replaces.
  *
  * A clip is a `<div>` unless it is selectable, in which case it is a `<button>`.
+ *
+ * `source` marks the one clip the handoff reads its opening geometry from. It
+ * is an attribute rather than a class because the reader of it is a different
+ * component entirely — see `components/matter/use-matter-motion.ts`. That
+ * bridge is retired: the live About is `components/bench/`, which deliberately
+ * arrives as a fresh sheet rather than growing out of the signal, so nothing on
+ * the page reads this attribute today. It is kept for the same reason the hero
+ * keeps publishing it — see the note in `arrangement-hero.tsx`.
  */
 export function ArrangementClip({
   clip,
+  index = 0,
   onSelect,
   selected,
+  source,
 }: {
   clip: ClipData
+  /** The clip's position in the arrangement, for the one-time record-in. */
+  index?: number
   onSelect?: () => void
   selected?: boolean
+  /** Marks this clip as the source region the matter handoff grows from. */
+  source?: boolean
 }) {
   const className = [
     styles.clip,
@@ -55,6 +69,7 @@ export function ArrangementClip({
     // Overlapping clips share a lane in rows rather than on top of each other.
     '--clip-top': clip.top ?? 0,
     '--clip-height': clip.height ?? 1,
+    '--i': index,
   } as CSSProperties
 
   const count = clip.notes?.length ?? 0
@@ -102,6 +117,13 @@ export function ArrangementClip({
                     '--note': note,
                     '--row': index,
                     '--rows': count,
+                    // Where in the world this note sits. The notes spread across
+                    // the first 36% of their clip's span, which is how a pattern
+                    // sits inside a region in a DAW, and the playhead lights each
+                    // one as it arrives.
+                    '--at':
+                      clip.start +
+                      (clip.end - clip.start) * ((index / count) * 0.36),
                   } as CSSProperties
                 }
               />
@@ -116,7 +138,11 @@ export function ArrangementClip({
 
   if (!onSelect) {
     return (
-      <div className={className} style={style}>
+      <div
+        className={className}
+        style={style}
+        data-matter-source={source ? '' : undefined}
+      >
         {body}
       </div>
     )
@@ -129,6 +155,7 @@ export function ArrangementClip({
       style={style}
       aria-pressed={selected}
       onClick={onSelect}
+      data-matter-source={source ? '' : undefined}
     >
       {body}
     </button>

@@ -212,6 +212,40 @@ function unescapeCss(raw) {
     .replace(/\\(.)/g, '$1')
 }
 
+/**
+ * Rewrites a sheet's relative `url()` references to root-relative ones.
+ *
+ * This is the one thing inlining cannot leave alone. A stylesheet is fetched
+ * from `/_next/static/chunks/2loi2kj0yb3vp.css`, so its `@font-face` src of
+ * `../media/0acc7fdf-s.woff2` resolves against *that directory* and lands on
+ * `/_next/static/media/...` — which is where Next put the file. Move the same
+ * text into a `<style>` in `<head>` and the base changes to the document, so
+ * the identical token now means `/media/0acc7fdf-s.woff2`. Nothing is served
+ * there. The browser 404s every self-hosted face, paints the fallback, and
+ * re-requests the same files once the render-blocking `<link>` lands: five
+ * wasted round trips on the critical path and a visible font swap for a bug
+ * that is one string join deep.
+ *
+ * Rebasing happens per sheet, before the rules are split, because the
+ * directory is a property of the sheet and not of the rule. Only genuinely
+ * relative references are touched — `data:`, `http(s):`, protocol-relative,
+ * fragment and already-absolute URLs are returned byte-for-byte, so a
+ * Tailwind arbitrary-value selector such as `bg-[url('/noise.png')]` is
+ * unaffected. Escaped forms (`url\(\'...\'\)`, as they appear inside a
+ * selector) do not match the pattern at all and are likewise left alone.
+ */
+function rebaseUrls(css, href) {
+  const base = href.replace(/[^/]*$/, '')
+  return css.replace(
+    /url\(\s*(['"]?)([^'")]+)\1\s*\)/g,
+    (match, quote, url) => {
+      if (/^(?:data:|https?:|\/\/|#|\/)/i.test(url)) return match
+      const abs = path.posix.normalize(path.posix.join(base, url))
+      return `url(${quote}${abs}${quote})`
+    },
+  )
+}
+
 /** At-rules whose body is a list of nested rules we can filter individually. */
 const NESTED_AT_RULES = ['@media', '@supports', '@layer', '@container']
 
@@ -330,7 +364,11 @@ async function inlineIntoHtml(html) {
     const rel = href.replace(/^\/_next\//, '').replace(/^\/+/, '')
     const abs = path.join(ROOT, '.next', rel)
     try {
-      sheets.push({ href, css: await readFile(abs, 'utf8') })
+      // Rebased on the way in: the sheet's own directory is the base its
+      // relative `url()` tokens were written against, and the inline block
+      // does not keep it. See `rebaseUrls`.
+      const css = rebaseUrls(await readFile(abs, 'utf8'), href)
+      sheets.push({ href, css })
     } catch {
       // A sheet we cannot read is one we cannot inline; leave its <link> alone.
       log(`could not read ${abs}, leaving it as a link`)

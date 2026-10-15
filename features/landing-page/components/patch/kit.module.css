@@ -1,0 +1,153 @@
+/* The kit. Parts, not layouts.
+
+   Each part reads a unitless 0..1 `--lvl` and the colour the cascade gives it
+   (`--led`, `--module-color`). Section stylesheets decide size and place; this
+   file decides what a knob, a fader, a meter and an LED *are*. Both the hero's
+   mixer and the Patch's panel import it, which is the whole of "shared kit". */
+
+.silk {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.led {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  /* `--on` is the section's: 0..1, how live this lamp's channel is. A lamp
+     outside a scroll-driven section never sets it, so `data-on` below is the
+     whole of its behaviour; inside one, the section writes a number and the
+     lamp follows the scroll without a React update per frame. */
+  background: color-mix(
+    in srgb,
+    var(--led, var(--signal-orange)) calc(var(--on, 0) * 100%),
+    rgb(0 0 0 / 0.28)
+  );
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.5);
+  transition:
+    background-color 180ms linear,
+    box-shadow 180ms linear;
+}
+.led[data-on='true'] {
+  background: var(--led, var(--signal-orange));
+  box-shadow: 0 0 6px var(--led, var(--signal-orange));
+}
+
+/* ── Controls ───────────────────────────────────────────────
+   `--ctl` is this control's own sweep: the module's `--sweep`, delayed by its
+   index, rescaled so the last control still lands exactly on its value. It is
+   the CSS twin of `controlSweep()` in patch-timeline.ts and the two must agree;
+   the test pins the JS one and the numbers below mirror it. 0.1 is
+   `PATCH_STAGGER`. */
+
+.knob,
+.fader {
+  --ctl: clamp(0, calc((var(--sweep, 1) - var(--i) * 0.1) / var(--room, 1)), 1);
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+.knob {
+  width: 44px;
+}
+.knobCap {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #4a4f55, #1d2125 70%);
+  box-shadow:
+    0 2px 4px rgb(0 0 0 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
+  /* The only thing that moves, and it is a transform. */
+  transform: rotate(calc(-135deg + var(--lvl) * var(--ctl) * 270deg));
+  will-change: transform;
+}
+/* The pointer. It rides the cap, so the one rotation carries it. */
+.knobCap::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 2px;
+  height: 11px;
+  border-radius: 1px;
+  background: var(--module-color, var(--signal-orange));
+  transform: translateX(-50%);
+}
+
+.fader {
+  width: 34px;
+  height: 100%;
+  min-height: 96px;
+}
+.faderTrack {
+  position: absolute;
+  inset: 0 auto 18px 50%;
+  width: 4px;
+  border-radius: 2px;
+  background: rgb(0 0 0 / 0.55);
+  transform: translateX(-50%);
+}
+.faderCap {
+  position: absolute;
+  left: 50%;
+  bottom: calc(18px + (100% - 18px - 14px) * var(--lvl) * var(--ctl));
+  width: 26px;
+  height: 14px;
+  border-radius: 2px;
+  background: linear-gradient(#e6e1d6, #b9b4a9);
+  box-shadow: 0 2px 3px rgb(0 0 0 / 0.4);
+  transform: translateX(-50%);
+  will-change: bottom;
+}
+
+.controlName {
+  align-self: end;
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 7.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meter {
+  position: relative;
+  display: block;
+  height: 4px;
+  /* The groove, and the one thing a section may want to say about it: the
+     Patch's bridge sits on cream and wants a dark one, the hero's proof strip
+     sits on the dark ground and wants a light one. */
+  background: var(--meter-track, rgb(0 0 0 / 0.22));
+}
+.meter i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  /* `--settle` is the section's: 1 where nothing is scrubbing, so a meter
+     outside a scroll-driven section simply shows its ratio. */
+  width: calc(var(--ratio) * var(--settle, 1) * 100%);
+  background: var(--signal-orange);
+}
+
+/* ── Reduced motion ─────────────────────────────────────────
+   The kit carries its own rule because the parts are the kit's: a section
+   stylesheet cannot reach a class it does not define, since CSS Modules scopes
+   every name to its own file. A `.led` written in `patch.module.css` would
+   compile to a different hash and quietly match nothing. */
+
+@media (prefers-reduced-motion: reduce) {
+  .led {
+    transition: none;
+  }
+}

@@ -1,0 +1,1578 @@
+From 795557bd879757276281b7749120c77f771dcbd8 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 15 Oct 2026 02:06:32 +0000
+Subject: [PATCH] feat(about): continuous push handoff, shorter scroll,
+ chaptered 3D About
+
+Transition
+- hero dive 400svh -> 340svh (-540px at 900px tall); floors in two tests follow
+- bench phases tightened (hold 0.12 -> 0.10); entry stays inside the pinned budgets
+- the sheet's layers now arrive at 0.88 and keep growing into place during the
+  takeover, continuing the hero's dive direction instead of swapping surfaces
+
+Title to end of About
+- ticker: two rows of outlined type slide past each other as the title leaves
+- three chapters, each with a pinned real-3D device driven only by --p:
+  sampler (pads light in sequence), cassette (reels turn), record + level meter
+- headings and the closing offer reveal word by word (generic useBenchReveal)
+- finale: place, availability line and a pill resume link
+- left-edge playhead rail tracks the whole About
+- devices windows retimed to the tighter arc
+---
+ .../arrangement/arrangement-camera.ts         |   9 +-
+ .../arrangement/arrangement.module.css        |   2 +-
+ .../components/bench/bench-about.tsx          |  69 +--
+ .../bench/bench-chapters.module.css           | 489 ++++++++++++++++++
+ .../components/bench/bench-chapters.tsx       | 182 +++++++
+ .../components/bench/bench-device-layer.tsx   |  13 +-
+ .../components/bench/bench-devices.module.css |  47 +-
+ .../components/bench/bench-devices.ts         |  12 +-
+ .../components/bench/bench-frame.ts           |   8 +-
+ .../components/bench/bench.module.css         | 141 +----
+ .../components/bench/use-bench-motion.ts      |  93 +++-
+ .../components/bench/use-bench-reveal.ts      |  49 ++
+ .../bench/use-bench-title-reveal.ts           |  40 --
+ tests/arrangement-camera.test.ts              |   2 +-
+ tests/patch-scroll.test.ts                    |   2 +-
+ 15 files changed, 905 insertions(+), 253 deletions(-)
+ create mode 100644 features/landing-page/components/bench/bench-chapters.module.css
+ create mode 100644 features/landing-page/components/bench/bench-chapters.tsx
+ create mode 100644 features/landing-page/components/bench/use-bench-reveal.ts
+ delete mode 100644 features/landing-page/components/bench/use-bench-title-reveal.ts
+
+diff --git a/features/landing-page/components/arrangement/arrangement-camera.ts b/features/landing-page/components/arrangement/arrangement-camera.ts
+index 203b0ac..6d83b0d 100644
+--- a/features/landing-page/components/arrangement/arrangement-camera.ts
++++ b/features/landing-page/components/arrangement/arrangement-camera.ts
+@@ -36,6 +36,13 @@
+  * (1280×720) — it is a function of the viewport, not a constant, which is why
+  * the read is driven by a measured number rather than a tuned one.
+  *
++ * ## Why 340 (it was 400, and before that 460)
++ *
++ * 340 is the third retime. The handoff into About is now a continuous push
++ * (see `bench-frame.ts`), so the hero no longer needs 400svh to hide a seam; at
++ * 340 every phase keeps its shape and the dive costs 540px less at 900px tall.
++ * The paragraphs below describe the 400 reasoning and still hold in proportion.
++ *
+  * ## Why 400 and not 460
+  *
+  * 460 was the window this was drawn against; it was never measured against the
+@@ -56,7 +63,7 @@
+  * anticipates the choice: "Final total hero length must be chosen after
+  * measuring current behavior."
+  */
+-export const ARRANGEMENT_SCROLL_SVH = 400
++export const ARRANGEMENT_SCROLL_SVH = 340
+ 
+ export const ARRANGEMENT_PHASES = {
+   open: 0,
+diff --git a/features/landing-page/components/arrangement/arrangement.module.css b/features/landing-page/components/arrangement/arrangement.module.css
+index ca091ba..02fbfaa 100644
+--- a/features/landing-page/components/arrangement/arrangement.module.css
++++ b/features/landing-page/components/arrangement/arrangement.module.css
+@@ -49,7 +49,7 @@
+      holds the reading panel clear of the decorative word band, which costs
+      scroll, and the hero giving back 540px here is what pays for it. See
+      `ARRANGEMENT_SCROLL_SVH` for the measurement. */
+-  --arr-scroll: 400svh;
++  --arr-scroll: 340svh;
+ 
+   position: relative;
+   /* `--arr-hold` is the handoff's, and it defaults to nothing.
+diff --git a/features/landing-page/components/bench/bench-about.tsx b/features/landing-page/components/bench/bench-about.tsx
+index e93740f..c2a76ad 100644
+--- a/features/landing-page/components/bench/bench-about.tsx
++++ b/features/landing-page/components/bench/bench-about.tsx
+@@ -4,10 +4,17 @@ import { Fragment, useRef, type CSSProperties } from 'react'
+ 
+ import { ABOUT_TRACKS } from '../../rack-01/about-copy'
+ import { BENCH_CAPTION, BENCH_CHIPS, BENCH_PRINCIPLE } from './bench-copy'
++import {
++  BenchChapter,
++  BenchFinale,
++  BenchRail,
++  BenchTicker,
++} from './bench-chapters'
+ import { BenchDevices } from './bench-device-layer'
++import chapterStyles from './bench-chapters.module.css'
+ import styles from './bench.module.css'
+ import { useBenchMotion } from './use-bench-motion'
+-import { useBenchTitleReveal } from './use-bench-title-reveal'
++import { useBenchReveal } from './use-bench-reveal'
+ 
+ /**
+  * The artifact, drawn once.
+@@ -163,6 +170,12 @@ const PRINCIPLE_WORDS = BENCH_PRINCIPLE.split(' ')
+ 
+ const TITLE = 'The rules become the work.'
+ 
++/** The track that carries the availability line, if any. */
++const FINALE_TRACK = ABOUT_TRACKS.find((track) => track.aside)
++const FINALE = FINALE_TRACK?.aside
++  ? { aside: FINALE_TRACK.aside, resumeLink: FINALE_TRACK.resumeLink }
++  : null
++
+ /**
+  * Rules becoming play: the constraints, the thing they become, and the
+  * principle behind it — and then the biography.
+@@ -191,9 +204,8 @@ const TITLE = 'The rules become the work.'
+  */
+ export function BenchAbout() {
+   const root = useRef<HTMLElement>(null)
+-  const title = useRef<HTMLHeadingElement>(null)
+   useBenchMotion(root)
+-  useBenchTitleReveal(title)
++  useBenchReveal(root)
+ 
+   return (
+     <section ref={root} className={styles.bench} data-bench>
+@@ -281,10 +293,11 @@ export function BenchAbout() {
+         data-no-heading-reveal
+         aria-labelledby="about-title"
+       >
++        <BenchRail />
+         <div className={styles.reading}>
+           <h2
+-            ref={title}
+             id="about-title"
++            data-bench-reveal
+             className={styles.title}
+             aria-label={TITLE}
+           >
+@@ -313,47 +326,17 @@ export function BenchAbout() {
+             })}
+           </h2>
+ 
+-          <div className={styles.tracks}>
+-            {ABOUT_TRACKS.map((track) => (
+-              <article key={track.title} className={styles.track}>
+-                {/* The statement comes first in the DOM and is placed in the
+-                    right-hand band by the stylesheet, so the visual editorial
+-                    spread costs the reading order nothing. */}
+-                <p className={styles.practice} data-reveal>
+-                  {track.heading}
+-                </p>
+-                <div className={styles.body}>
+-                  <p className={styles.story} data-reveal>
+-                    {track.story}
+-                  </p>
+-                  {track.credits ? (
+-                    <ul className={styles.credits} data-reveal>
+-                      {track.credits.map((credit) => (
+-                        <li key={credit.name}>
+-                          <b>{credit.name}</b>
+-                          <span>{credit.note}</span>
+-                        </li>
+-                      ))}
+-                    </ul>
+-                  ) : null}
+-                  {track.aside ? (
+-                    <p className={styles.aside} data-reveal>
+-                      {track.aside}
+-                    </p>
+-                  ) : null}
+-                  {track.resumeLink ? (
+-                    <a
+-                      className={styles.resume}
+-                      href={track.resumeLink}
+-                      data-reveal
+-                    >
+-                      Résumé →
+-                    </a>
+-                  ) : null}
+-                </div>
+-              </article>
++          <BenchTicker words={BENCH_CHIPS.map((chip) => chip.text)} />
++
++          <div className={chapterStyles.chapters}>
++            {ABOUT_TRACKS.map((track, index) => (
++              <BenchChapter key={track.title} track={track} index={index} />
+             ))}
+           </div>
++
++          {FINALE ? (
++            <BenchFinale aside={FINALE.aside} resumeLink={FINALE.resumeLink} />
++          ) : null}
+         </div>
+       </section>
+     </section>
+diff --git a/features/landing-page/components/bench/bench-chapters.module.css b/features/landing-page/components/bench/bench-chapters.module.css
+new file mode 100644
+index 0000000..47d1fe3
+--- /dev/null
++++ b/features/landing-page/components/bench/bench-chapters.module.css
+@@ -0,0 +1,489 @@
++/* The chapters.
++
++   From the title to the last line, the About is one continuous scene made of
++   four things: a ticker that slides past the title, three chapters that each
++   pin a real 3D device beside their text, a finale, and a playhead down the
++   left edge. All of it is driven by custom properties the motion hook writes on
++   small nodes — `--m` on the ticker, `--p` on each chapter's visual, `--ap` on
++   the rail — and every pose, light and bar is arithmetic on those numbers.
++
++   Two rules the file obeys:
++
++   1. **A resting frame is always composed.** Every property declares its own
++      default (`--p: 0.5`, `--m: 0.5`, `--ap: 0`), so with the script absent,
++      failed, or reduced motion the page is a finished layout, not a hidden one.
++   2. **Decoration never sits under text.** The visual and the text occupy
++      different columns of the same row; the numeral is behind the *device*, not
++      behind a sentence. */
++
++/* ── The ticker ──────────────────────────────────────────── */
++
++.ticker {
++  --m: 0.5;
++  display: grid;
++  gap: 0.04em;
++  margin: clamp(2.5rem, 6vw, 5rem) calc(var(--bench-pad) * -1)
++    clamp(3rem, 7vw, 6rem);
++  overflow: clip;
++  font-family: var(--font-syne), sans-serif;
++  font-size: clamp(3.2rem, 10vw, 10rem);
++  font-weight: 750;
++  line-height: 0.95;
++  letter-spacing: -0.03em;
++  user-select: none;
++}
++
++.tickerRow {
++  display: flex;
++  gap: 0.7em;
++  width: max-content;
++  margin: 0;
++  white-space: nowrap;
++  color: transparent;
++  -webkit-text-stroke: 1px
++    color-mix(in srgb, var(--foreground) 45%, transparent);
++  paint-order: stroke fill;
++  transform: translate3d(calc(var(--m, 0.5) * -26%), 0, 0);
++  will-change: transform;
++}
++
++.tickerBack {
++  transform: translate3d(calc((var(--m, 0.5) - 1) * 26%), 0, 0);
++}
++
++.tickerRow span:nth-child(4n + 2) {
++  color: var(--foreground);
++  -webkit-text-stroke: 0;
++}
++
++.tickerRow span:nth-child(4n + 4) {
++  color: var(--primary);
++  -webkit-text-stroke: 0;
++}
++
++/* ── A chapter ───────────────────────────────────────────── */
++
++.chapters {
++  display: grid;
++  row-gap: clamp(1rem, 3vw, 3rem);
++}
++
++.chapter {
++  display: grid;
++  grid-template-columns: repeat(12, minmax(0, 1fr));
++  column-gap: var(--bench-gap);
++  align-items: start;
++  /* The pinned visual needs a stretch of scroll to be pinned for. Just over a
++     viewport: enough to turn the device through its whole arc, not enough to
++     drag. */
++  min-height: 108svh;
++}
++
++.visual {
++  --p: 0.5;
++  --dev-body: color-mix(in srgb, var(--background) 90%, var(--foreground));
++  --dev-body-deep: color-mix(in srgb, var(--background) 78%, var(--foreground));
++  --dev-edge: color-mix(in srgb, var(--foreground) 34%, transparent);
++  --dev-lcd: color-mix(in srgb, var(--primary) 32%, var(--background));
++  position: sticky;
++  top: 14svh;
++  grid-row: 1;
++  align-self: start;
++  height: 72svh;
++  display: grid;
++  place-items: center;
++  pointer-events: none;
++}
++
++.text {
++  grid-row: 1;
++  align-self: center;
++  display: grid;
++  gap: clamp(0.9rem, 1.8vw, 1.5rem);
++  align-content: center;
++  min-height: 72svh;
++}
++
++.chapter[data-side='left'] .visual {
++  grid-column: 1 / 7;
++}
++.chapter[data-side='left'] .text {
++  grid-column: 8 / 13;
++}
++.chapter[data-side='right'] .visual {
++  grid-column: 7 / 13;
++}
++.chapter[data-side='right'] .text {
++  grid-column: 2 / 7;
++}
++
++/* The numeral is the furthest layer: outlined, enormous, and it drifts against
++   the scroll so the device in front of it reads as nearer. */
++.numeral {
++  position: absolute;
++  left: 50%;
++  top: 50%;
++  z-index: 0;
++  translate: -50% calc(-50% + (var(--p) - 0.5) * -140px);
++  font-family: var(--font-syne), sans-serif;
++  font-size: clamp(11rem, 26vw, 24rem);
++  font-weight: 800;
++  line-height: 0.8;
++  letter-spacing: -0.06em;
++  color: transparent;
++  -webkit-text-stroke: 1px
++    color-mix(in srgb, var(--foreground) 16%, transparent);
++  user-select: none;
++}
++
++.stage {
++  --o: 1;
++  --bench-spin: calc(var(--p) * 900);
++  --k: 2.6;
++  position: relative;
++  z-index: 1;
++  width: 100%;
++  height: 100%;
++  display: grid;
++  place-items: center;
++  perspective: 1100px;
++}
++
++.stage[data-kind='cassette'] {
++  --k: 2.7;
++}
++.stage[data-kind='vinyl'] {
++  --k: 2.9;
++}
++
++.tilt,
++.scale {
++  width: 0;
++  height: 0;
++  transform-style: preserve-3d;
++}
++
++.scale {
++  transform: scale(var(--k));
++}
++
++.stage[data-kind='sampler'] .tilt {
++  transform: rotateX(calc(58deg - var(--p) * 46deg))
++    rotateY(calc(-36deg + var(--p) * 72deg))
++    rotateZ(calc(-10deg + var(--p) * 20deg));
++}
++
++.stage[data-kind='cassette'] .tilt {
++  transform: rotateX(calc(-30deg + var(--p) * 50deg))
++    rotateY(calc(44deg - var(--p) * 88deg))
++    rotateZ(calc(8deg - var(--p) * 16deg));
++}
++
++.stage[data-kind='vinyl'] .tilt {
++  transform: rotateX(calc(72deg - var(--p) * 58deg))
++    rotateY(calc(-20deg + var(--p) * 40deg))
++    rotateZ(calc(-12deg + var(--p) * 40deg));
++}
++
++.note {
++  position: absolute;
++  left: 0;
++  bottom: 0;
++  z-index: 1;
++  font-family: var(--font-geist-mono), monospace;
++  font-size: clamp(0.62rem, 0.78vw, 0.72rem);
++  letter-spacing: 0.14em;
++  text-transform: uppercase;
++  color: var(--muted-foreground);
++}
++
++/* The level meter under the record: sixteen bars, each a sine of the scroll at
++   its own phase. Where `sin()` is not supported the declared height stands, so
++   the meter is a still bar chart rather than nothing. */
++.meter {
++  position: absolute;
++  right: 0;
++  bottom: 0;
++  z-index: 1;
++  display: flex;
++  align-items: flex-end;
++  gap: 4px;
++  height: 12%;
++}
++
++.meter i {
++  display: block;
++  width: 5px;
++  height: 45%;
++  border-radius: 1px;
++  background: color-mix(in srgb, var(--foreground) 55%, transparent);
++}
++
++.meter i:nth-last-child(-n + 3) {
++  background: var(--primary);
++}
++
++@supports (width: calc(1px * sin(1))) {
++  .meter i {
++    height: calc(
++      12% + 88% * sin(calc(var(--p) * 9 + var(--i) * 0.55)) *
++        sin(calc(var(--p) * 9 + var(--i) * 0.55))
++    );
++  }
++}
++
++/* ── Chapter text ────────────────────────────────────────── */
++
++.kicker {
++  margin: 0;
++  font-family: var(--font-geist-mono), monospace;
++  font-size: 0.75rem;
++  letter-spacing: 0.16em;
++  text-transform: uppercase;
++  color: var(--muted-foreground);
++}
++
++.kicker b {
++  margin-right: 0.6em;
++  font-weight: 600;
++  color: var(--primary);
++}
++
++.heading,
++.offer {
++  margin: 0;
++  text-wrap: balance;
++}
++
++.heading {
++  font-family: var(--font-space-grotesk), sans-serif;
++  font-size: clamp(2rem, 4.2vw, 3.9rem);
++  font-weight: 650;
++  line-height: 1.04;
++  letter-spacing: -0.035em;
++}
++
++/* One word, one mask. */
++.rw {
++  display: inline-block;
++  overflow: clip;
++  padding-bottom: 0.14em;
++  margin-bottom: -0.14em;
++  vertical-align: top;
++}
++
++.rwIn {
++  display: inline-block;
++  transform-origin: 0 100%;
++}
++
++.heading[data-armed='true'] .rwIn,
++.offer[data-armed='true'] .rwIn {
++  translate: 0 112%;
++  rotate: 5deg;
++}
++
++.heading[data-armed='true'][data-in='true'] .rwIn,
++.offer[data-armed='true'][data-in='true'] .rwIn {
++  translate: 0 0;
++  rotate: 0deg;
++  transition:
++    translate 850ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i) * 70ms),
++    rotate 850ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i) * 70ms);
++}
++
++.story {
++  max-width: 52ch;
++  margin: 0;
++  color: var(--muted-foreground);
++  font-family: var(--font-geist), sans-serif;
++  font-size: clamp(1rem, 1.15vw, 1.125rem);
++  line-height: 1.65;
++}
++
++.credits {
++  display: grid;
++  gap: 0.35rem;
++  margin: 0;
++  padding: 0;
++  list-style: none;
++  font-family: var(--font-geist-mono), monospace;
++  font-size: 0.8125rem;
++  line-height: 1.4;
++  letter-spacing: 0.02em;
++}
++
++.credits li {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 0.5rem;
++  align-items: baseline;
++  padding-top: 0.35rem;
++  border-top: 1px solid var(--bench-edge);
++}
++
++.credits b {
++  font-weight: 650;
++  color: var(--foreground);
++}
++
++.credits span {
++  color: var(--muted-foreground);
++}
++
++/* ── The finale ──────────────────────────────────────────── */
++
++.finale {
++  display: grid;
++  gap: clamp(1rem, 2vw, 1.75rem);
++  margin-top: clamp(3rem, 7vw, 7rem);
++  padding-top: clamp(2rem, 4vw, 3.5rem);
++  border-top: 1px solid var(--bench-edge);
++}
++
++.place {
++  margin: 0;
++  font-family: var(--font-geist-mono), monospace;
++  font-size: 0.8125rem;
++  letter-spacing: 0.16em;
++  text-transform: uppercase;
++  color: var(--muted-foreground);
++}
++
++.offer {
++  max-width: 17ch;
++  font-family: var(--font-syne), sans-serif;
++  font-size: clamp(2.25rem, 6.4vw, 6.4rem);
++  font-weight: 750;
++  line-height: 0.98;
++  letter-spacing: -0.045em;
++}
++
++.resume {
++  justify-self: start;
++  display: inline-flex;
++  align-items: center;
++  gap: 0.9em;
++  padding: 0.95em 1.5em;
++  border: 1px solid var(--foreground);
++  border-radius: 999px;
++  font-family: var(--font-geist-mono), monospace;
++  font-size: 0.8125rem;
++  letter-spacing: 0.1em;
++  text-transform: uppercase;
++  color: var(--foreground);
++  text-decoration: none;
++  transition:
++    background-color 240ms ease,
++    color 240ms ease;
++}
++
++.resume i {
++  font-style: normal;
++  transition: translate 240ms cubic-bezier(0.16, 1, 0.3, 1);
++}
++
++.resume:hover,
++.resume:focus-visible {
++  background: var(--foreground);
++  color: var(--background);
++}
++
++.resume:hover i,
++.resume:focus-visible i {
++  translate: 0.35em 0;
++}
++
++/* ── The rail ────────────────────────────────────────────── */
++
++.rail {
++  --ap: 0;
++  display: none;
++  position: absolute;
++  left: clamp(0.5rem, 1.4vw, 1.4rem);
++  top: 0;
++  bottom: 0;
++  width: 1px;
++  background: color-mix(in srgb, var(--foreground) 14%, transparent);
++  pointer-events: none;
++}
++
++.railFill {
++  position: absolute;
++  inset: 0;
++  background: var(--primary);
++  transform-origin: 50% 0;
++  transform: scaleY(var(--ap, 0));
++  will-change: transform;
++}
++
++.railDot {
++  position: absolute;
++  left: -3px;
++  top: calc(var(--ap, 0) * 100%);
++  width: 7px;
++  height: 7px;
++  border-radius: 50%;
++  background: var(--primary);
++}
++
++@media (min-width: 1100px) {
++  .rail {
++    display: block;
++  }
++}
++
++/* ── Narrower than the editorial spread ──────────────────── */
++
++@media (min-width: 769px) and (max-width: 1080px) {
++  .stage {
++    --k: 2;
++  }
++  .stage[data-kind='cassette'] {
++    --k: 2.1;
++  }
++  .stage[data-kind='vinyl'] {
++    --k: 2.2;
++  }
++  .chapter[data-side='left'] .visual,
++  .chapter[data-side='right'] .visual {
++    grid-column: 1 / 6;
++  }
++  .chapter[data-side='left'] .text,
++  .chapter[data-side='right'] .text {
++    grid-column: 6 / 13;
++  }
++}
++
++@media (max-width: 768px) {
++  .chapter {
++    grid-template-columns: minmax(0, 1fr);
++    min-height: 0;
++    row-gap: 1.25rem;
++    padding-bottom: 2.5rem;
++  }
++  .visual {
++    position: relative;
++    top: auto;
++    height: 58vw;
++    min-height: 15rem;
++  }
++  .text {
++    min-height: 0;
++  }
++  .chapter[data-side='left'] .visual,
++  .chapter[data-side='right'] .visual,
++  .chapter[data-side='left'] .text,
++  .chapter[data-side='right'] .text {
++    grid-column: 1 / -1;
++    grid-row: auto;
++  }
++  .stage,
++  .stage[data-kind='cassette'],
++  .stage[data-kind='vinyl'] {
++    --k: 1.5;
++  }
++  .heading {
++    font-size: clamp(1.75rem, 8vw, 2.5rem);
++  }
++}
+diff --git a/features/landing-page/components/bench/bench-chapters.tsx b/features/landing-page/components/bench/bench-chapters.tsx
+new file mode 100644
+index 0000000..d627c7f
+--- /dev/null
++++ b/features/landing-page/components/bench/bench-chapters.tsx
+@@ -0,0 +1,182 @@
++import { Fragment, type CSSProperties } from 'react'
++
++import type { AboutTrack } from '../../rack-01/about-copy'
++import { Device } from './bench-device-layer'
++import type { BenchDeviceKind } from './bench-devices'
++import styles from './bench-chapters.module.css'
++
++/**
++ * The chapters: the biography, one device each.
++ *
++ * Each track of the About is a chapter with a visual that stays pinned while
++ * its text scrolls past. The visual is **decoration and aria-hidden**; the
++ * text is the real thing and is in ordinary flow in the DOM, before nothing and
++ * after nothing it depends on. The device is a real CSS solid (see
++ * `bench-device-layer.tsx`) whose whole pose is arithmetic on one custom
++ * property, `--p`, that the motion hook writes on `[data-bench-cvisual]`
++ * (0 as the chapter enters, 1 as it leaves). With the script absent `--p` is
++ * its declared resting `0.5`, which is a composed frame, not an empty one.
++ *
++ * Which device belongs to which track is a decision about the *work*, not the
++ * decoration, and it is the only authored content here:
++ *
++ * - INTERACTION is a sampler. Its pads light one by one as you scroll: the
++ *   interface being played, step by step.
++ * - SYSTEMS is a cassette. The reels turn: structure that keeps running.
++ * - PRODUCTION is a record and a level meter: the thing that has to keep
++ *   playing, and the reading that says whether it is.
++ */
++const KIND: readonly BenchDeviceKind[] = ['sampler', 'cassette', 'vinyl']
++
++const METER = Array.from({ length: 16 }, (_, index) => index)
++
++/** A heading, one mask per word, so each word rises out of its own line. */
++export function Words({ text, base = 0 }: { text: string; base?: number }) {
++  return (
++    <>
++      {text.split(' ').map((word, index, words) => (
++        <Fragment key={`${word}-${index}`}>
++          <span className={styles.rw}>
++            <span
++              className={styles.rwIn}
++              style={{ '--i': base + index } as CSSProperties}
++            >
++              {word}
++            </span>
++          </span>
++          {index < words.length - 1 ? ' ' : null}
++        </Fragment>
++      ))}
++    </>
++  )
++}
++
++export function BenchChapter({
++  track,
++  index,
++}: {
++  track: AboutTrack
++  index: number
++}) {
++  const kind = KIND[index % KIND.length]
++  const number = String(index + 1).padStart(2, '0')
++
++  return (
++    <article
++      className={styles.chapter}
++      data-bench-chapter
++      data-side={index % 2 === 0 ? 'left' : 'right'}
++    >
++      <div className={styles.visual} data-bench-cvisual aria-hidden="true">
++        <span className={styles.numeral}>{number}</span>
++        <div className={styles.stage} data-kind={kind}>
++          <div className={styles.tilt}>
++            <div className={styles.scale}>
++              <Device kind={kind} live />
++            </div>
++          </div>
++        </div>
++        {kind === 'vinyl' ? (
++          <span className={styles.meter}>
++            {METER.map((bar) => (
++              <i key={bar} style={{ '--i': bar } as CSSProperties} />
++            ))}
++          </span>
++        ) : null}
++        <span className={styles.note}>{track.note}</span>
++      </div>
++
++      <div className={styles.text}>
++        <p className={styles.kicker}>
++          <b>{number}</b> {track.title}
++        </p>
++        <h3
++          className={styles.heading}
++          data-bench-reveal
++          aria-label={track.heading}
++        >
++          <span aria-hidden="true">
++            <Words text={track.heading} />
++          </span>
++        </h3>
++        <p className={styles.story} data-reveal>
++          {track.story}
++        </p>
++        {track.credits ? (
++          <ul className={styles.credits} data-reveal>
++            {track.credits.map((credit) => (
++              <li key={credit.name}>
++                <b>{credit.name}</b>
++                <span>{credit.note}</span>
++              </li>
++            ))}
++          </ul>
++        ) : null}
++      </div>
++    </article>
++  )
++}
++
++/**
++ * The ticker: the constraints, as two rows of outlined type that slide past
++ * each other as the title leaves. Decoration; every word is already a chip.
++ */
++export function BenchTicker({ words }: { words: readonly string[] }) {
++  const upper = words.map((word) => word.toUpperCase())
++  const half = Math.ceil(upper.length / 2)
++  const rows = [upper.slice(0, half), upper.slice(half)]
++  return (
++    <div className={styles.ticker} data-bench-ticker aria-hidden="true">
++      {rows.map((row, rowIndex) => (
++        <p
++          key={rowIndex}
++          className={`${styles.tickerRow} ${rowIndex === 1 ? styles.tickerBack : ''}`}
++        >
++          {[...row, ...row, ...row].map((word, index) => (
++            <span key={index}>{word}</span>
++          ))}
++        </p>
++      ))}
++    </div>
++  )
++}
++
++/** The last beat: where the work is, and what it is available for. */
++export function BenchFinale({
++  aside,
++  resumeLink,
++}: {
++  aside: string
++  resumeLink?: string
++}) {
++  const cut = aside.indexOf('. ')
++  const place = cut === -1 ? '' : aside.slice(0, cut + 1)
++  const offer = cut === -1 ? aside : aside.slice(cut + 2)
++
++  return (
++    <section className={styles.finale} aria-label="Availability">
++      {place ? <p className={styles.place}>{place}</p> : null}
++      <p className={styles.offer} data-bench-reveal aria-label={offer}>
++        <span aria-hidden="true">
++          <Words text={offer} />
++        </span>
++      </p>
++      {resumeLink ? (
++        <a className={styles.resume} href={resumeLink} data-reveal>
++          <span>Résumé</span>
++          <i aria-hidden="true">→</i>
++        </a>
++      ) : null}
++    </section>
++  )
++}
++
++/** The playhead down the left edge of the About. Decoration. */
++export function BenchRail() {
++  return (
++    <div className={styles.rail} data-bench-rail aria-hidden="true">
++      <i className={styles.railFill} />
++      <i className={styles.railDot} />
++    </div>
++  )
++}
+diff --git a/features/landing-page/components/bench/bench-device-layer.tsx b/features/landing-page/components/bench/bench-device-layer.tsx
+index e3741d2..b3199e4 100644
+--- a/features/landing-page/components/bench/bench-device-layer.tsx
++++ b/features/landing-page/components/bench/bench-device-layer.tsx
+@@ -52,11 +52,19 @@ function Cuboid({
+   )
+ }
+ 
+-function Device({ kind }: { kind: BenchDeviceSpec['kind'] }) {
++export function Device({
++  kind,
++  live,
++}: {
++  kind: BenchDeviceSpec['kind']
++  /** Chapter mode: parts respond to `--p` instead of sitting still. */
++  live?: boolean
++}) {
+   switch (kind) {
+     case 'sampler':
+       return (
+         <Cuboid
++          className={live ? styles.live : undefined}
+           w={104}
+           h={78}
+           d={20}
+@@ -68,6 +76,7 @@ function Device({ kind }: { kind: BenchDeviceSpec['kind'] }) {
+                 {PADS.map((pad) => (
+                   <i
+                     key={pad}
++                    style={{ '--i': pad } as CSSProperties}
+                     className={`${styles.pad} ${
+                       ACCENT_PADS.has(pad) ? styles.padAccent : ''
+                     }`}
+@@ -130,7 +139,7 @@ function Device({ kind }: { kind: BenchDeviceSpec['kind'] }) {
+       )
+     case 'vinyl':
+       return (
+-        <span className={styles.vinyl}>
++        <span className={`${styles.vinyl} ${live ? styles.live : ''}`}>
+           <i className={`${styles.disc} ${styles.discFront}`}>
+             <b className={styles.discLabel} />
+           </i>
+diff --git a/features/landing-page/components/bench/bench-devices.module.css b/features/landing-page/components/bench/bench-devices.module.css
+index a3085e3..d5b446a 100644
+--- a/features/landing-page/components/bench/bench-devices.module.css
++++ b/features/landing-page/components/bench/bench-devices.module.css
+@@ -99,7 +99,8 @@
+ }
+ 
+ .back {
+-  transform: translate(-50%, -50%) rotateY(180deg) translateZ(calc(var(--d) / 2));
++  transform: translate(-50%, -50%) rotateY(180deg)
++    translateZ(calc(var(--d) / 2));
+   background: var(--dev-body-deep);
+ }
+ 
+@@ -111,7 +112,8 @@
+ }
+ 
+ .left {
+-  transform: translate(-50%, -50%) rotateY(-90deg) translateZ(calc(var(--w) / 2));
++  transform: translate(-50%, -50%) rotateY(-90deg)
++    translateZ(calc(var(--w) / 2));
+ }
+ 
+ .right {
+@@ -130,7 +132,8 @@
+ }
+ 
+ .bottom {
+-  transform: translate(-50%, -50%) rotateX(-90deg) translateZ(calc(var(--h) / 2));
++  transform: translate(-50%, -50%) rotateX(-90deg)
++    translateZ(calc(var(--h) / 2));
+ }
+ 
+ /* ── Sampler ─────────────────────────────────────────────── */
+@@ -217,8 +220,7 @@
+   width: 38%;
+   aspect-ratio: 1;
+   border-radius: 50%;
+-  background:
+-    radial-gradient(circle, var(--dev-body) 0 22%, transparent 24%),
++  background: radial-gradient(circle, var(--dev-body) 0 22%, transparent 24%),
+     conic-gradient(
+       var(--foreground) 0 12%,
+       transparent 12% 33%,
+@@ -355,13 +357,13 @@
+   border-radius: 50%;
+   opacity: var(--o);
+   backface-visibility: hidden;
+-  background:
+-    radial-gradient(circle, transparent 0 28%, rgb(0 0 0 / 0.16) 29% 30%, transparent 31%),
+-    repeating-radial-gradient(
++  background: radial-gradient(
+       circle,
+-      #1b1b1d 0 1.5px,
+-      #29292c 1.5px 3px
+-    );
++      transparent 0 28%,
++      rgb(0 0 0 / 0.16) 29% 30%,
++      transparent 31%
++    ),
++    repeating-radial-gradient(circle, #1b1b1d 0 1.5px, #29292c 1.5px 3px);
+   border: 1px solid var(--dev-edge);
+ }
+ 
+@@ -394,10 +396,23 @@
+   width: 34%;
+   aspect-ratio: 1;
+   border-radius: 50%;
+-  background: radial-gradient(
+-    circle,
+-    var(--dev-body) 0 8%,
+-    var(--primary) 10%
+-  );
++  background: radial-gradient(circle, var(--dev-body) 0 8%, var(--primary) 10%);
+   z-index: 1;
+ }
++
++/* ── Chapter mode ────────────────────────────────────────
++   The same solids, driven by `--p` (0 → 1 across a chapter) instead of by the
++   flight. `.live` is set by the chapter; nothing here runs on the flying ones. */
++
++.live .pad {
++  background: color-mix(
++    in srgb,
++    var(--primary) calc(clamp(0, var(--p, 0.5) * 22 - var(--i), 1) * 100%),
++    color-mix(in srgb, var(--foreground) 16%, var(--background))
++  );
++  border-color: transparent;
++}
++
++.live.vinyl .disc::after {
++  transform: rotate(calc(var(--bench-spin, 0) * 1deg));
++}
+diff --git a/features/landing-page/components/bench/bench-devices.ts b/features/landing-page/components/bench/bench-devices.ts
+index 88f1562..5c2d94c 100644
+--- a/features/landing-page/components/bench/bench-devices.ts
++++ b/features/landing-page/components/bench/bench-devices.ts
+@@ -71,7 +71,7 @@ export const BENCH_DEVICES: readonly BenchDeviceSpec[] = [
+     kind: 'sampler',
+     x: 7,
+     depth: 0.9,
+-    window: [0.1, 0.5],
++    window: [0.08, 0.44],
+     y: [118, 18],
+     sway: 26,
+     swayCycles: 1.2,
+@@ -84,7 +84,7 @@ export const BENCH_DEVICES: readonly BenchDeviceSpec[] = [
+     kind: 'vinyl',
+     x: 94,
+     depth: 0.8,
+-    window: [0.12, 0.54],
++    window: [0.1, 0.47],
+     y: [122, 20],
+     sway: 22,
+     swayCycles: 1,
+@@ -97,7 +97,7 @@ export const BENCH_DEVICES: readonly BenchDeviceSpec[] = [
+     kind: 'cassette',
+     x: 12,
+     depth: 0.45,
+-    window: [0.2, 0.56],
++    window: [0.17, 0.5],
+     y: [112, 24],
+     sway: 18,
+     swayCycles: 1.5,
+@@ -110,7 +110,7 @@ export const BENCH_DEVICES: readonly BenchDeviceSpec[] = [
+     kind: 'knob',
+     x: 88,
+     depth: 0.6,
+-    window: [0.16, 0.52],
++    window: [0.13, 0.46],
+     y: [116, 22],
+     sway: 16,
+     swayCycles: 1.3,
+@@ -123,7 +123,7 @@ export const BENCH_DEVICES: readonly BenchDeviceSpec[] = [
+     kind: 'player',
+     x: 4,
+     depth: 0.3,
+-    window: [0.24, 0.58],
++    window: [0.2, 0.52],
+     y: [108, 26],
+     sway: 12,
+     swayCycles: 1,
+@@ -136,7 +136,7 @@ export const BENCH_DEVICES: readonly BenchDeviceSpec[] = [
+     kind: 'vinyl',
+     x: 97,
+     depth: 0.25,
+-    window: [0.26, 0.6],
++    window: [0.22, 0.54],
+     y: [110, 28],
+     sway: 10,
+     swayCycles: 0.8,
+diff --git a/features/landing-page/components/bench/bench-frame.ts b/features/landing-page/components/bench/bench-frame.ts
+index 73feb7c..db0940b 100644
+--- a/features/landing-page/components/bench/bench-frame.ts
++++ b/features/landing-page/components/bench/bench-frame.ts
+@@ -183,13 +183,13 @@ export type BenchFrame = {
+  */
+ export const BENCH_PHASES = {
+   /** The chips give up their drift and begin falling toward their slots. */
+-  gather: [0.12, 0.31],
++  gather: [0.1, 0.27],
+   /** The artifact draws itself on while the ring closes around it. */
+-  assemble: [0.17, 0.36],
++  assemble: [0.14, 0.32],
+   /** The constraints hand over: the ring dims and tightens as the artifact wins. */
+-  resolve: [0.33, 0.4],
++  resolve: [0.3, 0.36],
+   /** The artifact recedes and the principle line rises into the cleared stage. */
+-  emerge: [0.43, 0.55],
++  emerge: [0.38, 0.49],
+ } as const
+ 
+ /**
+diff --git a/features/landing-page/components/bench/bench.module.css b/features/landing-page/components/bench/bench.module.css
+index 5506643..cc8d40e 100644
+--- a/features/landing-page/components/bench/bench.module.css
++++ b/features/landing-page/components/bench/bench.module.css
+@@ -94,8 +94,11 @@
+ .paper {
+   position: absolute;
+   inset: -8% -6%;
+-  background-image:
+-    linear-gradient(to right, var(--bench-rule) 1px, transparent 1px),
++  background-image: linear-gradient(
++      to right,
++      var(--bench-rule) 1px,
++      transparent 1px
++    ),
+     linear-gradient(to bottom, var(--bench-rule) 1px, transparent 1px);
+   background-size: var(--bench-cell) var(--bench-cell);
+   background-position: 50% 50%;
+@@ -106,8 +109,11 @@
+   content: '';
+   position: absolute;
+   inset: 0;
+-  background-image:
+-    linear-gradient(to right, var(--bench-rule-strong) 1px, transparent 1px),
++  background-image: linear-gradient(
++      to right,
++      var(--bench-rule-strong) 1px,
++      transparent 1px
++    ),
+     linear-gradient(to bottom, var(--bench-rule-strong) 1px, transparent 1px);
+   background-size: calc(var(--bench-cell) * 4) calc(var(--bench-cell) * 4);
+   background-position: 50% 50%;
+@@ -470,110 +476,6 @@
+   text-wrap: balance;
+ }
+ 
+-.tracks {
+-  display: grid;
+-  grid-template-columns: repeat(12, minmax(0, 1fr));
+-  column-gap: var(--bench-gap);
+-  row-gap: clamp(2.5rem, 5vw, 5rem);
+-}
+-
+-/* Each track is its own twelve-column band. The body sits in columns 2–6 and
+-   the practice statement in 8–12, which is the editorial spread the design asks
+-   for — two vertical bands, never overlapping boxes. The DOM order stays
+-   statement-then-body, so the visual rearrangement costs assistive tech
+-   nothing. */
+-.track {
+-  display: grid;
+-  grid-column: 1 / -1;
+-  grid-template-columns: repeat(12, minmax(0, 1fr));
+-  column-gap: var(--bench-gap);
+-  row-gap: clamp(0.6rem, 1.4vw, 1rem);
+-  align-items: start;
+-}
+-
+-.practice {
+-  grid-column: 8 / 13;
+-  grid-row: 1;
+-  margin: 0;
+-  font-family: var(--font-space-grotesk), sans-serif;
+-  font-size: clamp(1.75rem, 3.4vw, 3.25rem);
+-  font-weight: 650;
+-  line-height: 1.08;
+-  letter-spacing: -0.035em;
+-  text-wrap: balance;
+-}
+-
+-.body {
+-  grid-column: 2 / 7;
+-  grid-row: 1;
+-  display: grid;
+-  gap: clamp(0.75rem, 1.6vw, 1.25rem);
+-  align-content: start;
+-}
+-
+-/* 46–60ch, always full contrast, never scrubbed. */
+-.story {
+-  max-width: 60ch;
+-  margin: 0;
+-  color: var(--muted-foreground);
+-  font-family: var(--font-geist), sans-serif;
+-  font-size: clamp(1rem, 1.15vw, 1.125rem);
+-  line-height: 1.65;
+-}
+-
+-.credits {
+-  display: grid;
+-  gap: 0.35rem;
+-  margin: 0;
+-  padding: 0;
+-  list-style: none;
+-  font-family: var(--font-geist-mono), monospace;
+-  font-size: 0.8125rem;
+-  line-height: 1.4;
+-  letter-spacing: 0.02em;
+-}
+-
+-.credits li {
+-  display: flex;
+-  flex-wrap: wrap;
+-  gap: 0.5rem;
+-  align-items: baseline;
+-}
+-
+-.credits b {
+-  font-weight: 650;
+-  color: var(--foreground);
+-}
+-
+-.credits span {
+-  color: var(--muted-foreground);
+-}
+-
+-.aside {
+-  max-width: 60ch;
+-  margin: 0;
+-  font-family: var(--font-geist), sans-serif;
+-  font-size: clamp(1rem, 1.15vw, 1.125rem);
+-  line-height: 1.65;
+-  color: var(--foreground);
+-}
+-
+-.resume {
+-  justify-self: start;
+-  font-family: var(--font-geist-mono), monospace;
+-  font-size: 0.8125rem;
+-  letter-spacing: 0.06em;
+-  text-transform: uppercase;
+-  color: var(--primary);
+-  text-decoration: underline;
+-  text-underline-offset: 0.25em;
+-}
+-
+-.resume:hover,
+-.resume:focus-visible {
+-  color: var(--foreground);
+-}
+-
+ /* ── The panel's own entrance ────────────────────────────
+    A view timeline rather than an observer: the panel is ordinary flow, so
+    `view()` is exactly the right clock for it, and this way the biography's
+@@ -669,31 +571,10 @@
+   }
+ }
+ 
+-/* ── Below the breakpoint: one column, natural reading order ── */
++/* ── Below the breakpoint ─────────────────────────────── */
+ 
+ @media (max-width: 768px) {
+   .title {
+     max-width: none;
+   }
+-  .track {
+-    grid-template-columns: minmax(0, 1fr);
+-  }
+-  .practice,
+-  .body {
+-    grid-column: 1 / -1;
+-    grid-row: auto;
+-  }
+-  .practice {
+-    margin-bottom: 0.35rem;
+-  }
+-}
+-
+-/* Narrow desktops: the two bands stack rather than being squeezed. */
+-@media (min-width: 769px) and (max-width: 1080px) {
+-  .practice {
+-    grid-column: 7 / 13;
+-  }
+-  .body {
+-    grid-column: 1 / 6;
+-  }
+ }
+diff --git a/features/landing-page/components/bench/use-bench-motion.ts b/features/landing-page/components/bench/use-bench-motion.ts
+index f0fa7f8..3b36722 100644
+--- a/features/landing-page/components/bench/use-bench-motion.ts
++++ b/features/landing-page/components/bench/use-bench-motion.ts
+@@ -7,6 +7,7 @@ import { BENCH_DEVICES, benchDeviceFrames } from './bench-devices'
+ import {
+   BENCH_BAND_CLEARANCE,
+   BENCH_HOLD,
++  BENCH_SEAM_RISE,
+   BENCH_STAGE_BASE,
+   benchFrame,
+   benchRunway,
+@@ -30,6 +31,9 @@ const BENCH_QUERY =
+ 
+ const BENCH_STAGE_WIDTH = BENCH_STAGE_BASE.width
+ 
++/** The size the sheet's layers arrive at, as a fraction of their rest size. */
++const BENCH_PUSH_FROM = 0.88
++
+ type Gsap = (typeof import('gsap'))['gsap']
+ type ScrollTriggerStatic =
+   (typeof import('gsap/ScrollTrigger'))['ScrollTrigger']
+@@ -266,6 +270,23 @@ function startBenchMotion({
+   const geometry: BenchGeometry = { stageWidth: 1280, stageHeight: 760 }
+ 
+   const renderFrame = (frame: BenchFrame) => {
++    const unitNow = Math.min(
++      2,
++      Math.max(0.6, geometry.stageWidth / BENCH_STAGE_WIDTH),
++    )
++    /**
++     * The push. The hero ends mid-dive, everything in it growing toward the
++     * reader; if the sheet that replaces it arrived at full size it would be a
++     * new object standing still. So the sheet's layers arrive slightly small
++     * and *keep growing* into place over the takeover, which is the same
++     * direction of travel the hero was already in. `arrive` is the seam's own
++     * clock (derived from `stageY`, so it cannot drift from it), eased out so
++     * the growth decelerates onto the resting size instead of stopping dead.
++     */
++    const linear =
++      1 - Math.min(1, Math.max(0, frame.stageY / (BENCH_SEAM_RISE * unitNow)))
++    const arrive = 1 - (1 - linear) ** 3
++    const push = BENCH_PUSH_FROM + (1 - BENCH_PUSH_FROM) * arrive
+     stage.style.opacity = String(frame.stageOpacity)
+     // The sheet's arrival, and the reason the seam is not a dissolve. The stage
+     // is the opaque surface the machine is covered by, so giving it a direction
+@@ -284,7 +305,7 @@ function startBenchMotion({
+     // The sheet starts tipped back like a desk seen from a seat and lies flat
+     // as the drawing completes: the draw-on clock doubles as the tilt's.
+     const tilt = 16 * (1 - frame.artifactDraw)
+-    paper.style.transform = `translate3d(0, ${frame.farY}px, 0) perspective(1600px) rotateX(${tilt}deg)`
++    paper.style.transform = `translate3d(0, ${frame.farY}px, 0) perspective(1600px) rotateX(${tilt}deg) scale(${push})`
+     principle.style.transform = `translate3d(0, ${frame.farY + frame.principleY}px, 0)`
+     // The principle arrives word by word: the stylesheet derives each word's
+     // offset from this one number, so the box itself is never faded.
+@@ -301,7 +322,7 @@ function startBenchMotion({
+     // right of the stage's centre on the real page. Writing the centring as the
+     // first function of the transform this hook owns removes the dependency on
+     // what a third-party library does with a property it did not write.
+-    artifact.style.transform = `translate3d(-50%, -50%, 0) translate3d(0, ${frame.middleY + frame.artifactY}px, 0) scale(${frame.artifactScale})`
++    artifact.style.transform = `translate3d(-50%, -50%, 0) translate3d(0, ${frame.middleY + frame.artifactY}px, 0) scale(${frame.artifactScale * push})`
+     artifactFrame.style.opacity = String(frame.artifactOpacity)
+ 
+     // The construction marks, spent as the wireframe draws over them. They are
+@@ -317,7 +338,7 @@ function startBenchMotion({
+     // The near stratum's shared contraction. A uniform scale about the stage's
+     // own centre is the one transform the ring can take after it has landed
+     // without any chip leaving its slot relative to its neighbours.
+-    ring.style.transform = `scale(${frame.ringScale})`
++    ring.style.transform = `scale(${frame.ringScale * push})`
+ 
+     for (let index = 0; index < chipNodes.length; index += 1) {
+       const chip = frame.chips[index]
+@@ -336,14 +357,10 @@ function startBenchMotion({
+     artifact.style.setProperty('--bench-spin', String(spin))
+     deviceLayer.style.setProperty('--bench-spin', String(spin))
+ 
+-    const unit = Math.min(
+-      2,
+-      Math.max(0.6, geometry.stageWidth / BENCH_STAGE_WIDTH),
+-    )
+     const flights = benchDeviceFrames(
+       frame.progress,
+       geometry.stageHeight,
+-      unit,
++      unitNow,
+     )
+     for (let index = 0; index < flights.length; index += 1) {
+       const flight = flights[index]
+@@ -474,11 +491,18 @@ function startBenchMotion({
+ 
+   let stopped = false
+   let trigger: ReturnType<ScrollTriggerStatic['create']> | null = null
++  const readingTriggers: ReturnType<ScrollTriggerStatic['create']>[] = []
++  /** Every custom property the reading clocks wrote, so teardown can unwrite it. */
++  const written: (readonly [HTMLElement, string])[] = []
+ 
+   const teardown = () => {
+     stopped = true
+     trigger?.kill()
+     trigger = null
++    for (const t of readingTriggers) t.kill()
++    readingTriggers.length = 0
++    for (const [node, name] of written) node.style.removeProperty(name)
++    written.length = 0
+     for (const [node, style] of snapshots) {
+       if (style === null) node.removeAttribute('style')
+       else node.setAttribute('style', style)
+@@ -497,6 +521,57 @@ function startBenchMotion({
+     delete element.dataset.benchState
+   }
+ 
++  /**
++   * The reading panel's own clocks, from the title to the last line.
++   *
++   * Each is a scrubbed trigger that writes **one number on one small node**:
++   *
++   * - `--p` on each chapter's visual: 0 as the chapter enters, 1 as it leaves.
++   *   Every tilt, spin, lit pad and meter bar of that chapter's device is CSS
++   *   arithmetic on it, so the device is a pure function of scroll;
++   * - `--m` on the ticker, driving two rows in opposite directions;
++   * - `--ap` on the rail, the playhead along the whole About.
++   *
++   * The number is never written to the panel itself: a custom property change
++   * restyles the whole subtree below it, and the panel is most of the page.
++   * Without this function (phones, reduced motion, no JavaScript) every
++   * default in the stylesheet is a composed resting frame, not an empty one.
++   */
++  const bindReading = () => {
++    const bind = (
++      node: HTMLElement,
++      name: string,
++      start: string,
++      end: string,
++      source: HTMLElement = node,
++    ) => {
++      written.push([node, name])
++      readingTriggers.push(
++        ScrollTrigger.create({
++          trigger: source,
++          start,
++          end,
++          onRefresh: (self) =>
++            node.style.setProperty(name, self.progress.toFixed(4)),
++          onUpdate: (self) =>
++            node.style.setProperty(name, self.progress.toFixed(4)),
++        }),
++      )
++    }
++
++    for (const visual of element.querySelectorAll<HTMLElement>(
++      '[data-bench-cvisual]',
++    )) {
++      const chapter =
++        visual.closest<HTMLElement>('[data-bench-chapter]') ?? visual
++      bind(visual, '--p', 'top 85%', 'bottom 30%', chapter)
++    }
++    const ticker = element.querySelector<HTMLElement>('[data-bench-ticker]')
++    if (ticker) bind(ticker, '--m', 'top bottom', 'bottom top')
++    const rail = element.querySelector<HTMLElement>('[data-bench-rail]')
++    if (rail) bind(rail, '--ap', 'top 65%', 'bottom 65%', about)
++  }
++
+   try {
+     measure()
+ 
+@@ -520,6 +595,8 @@ function startBenchMotion({
+ 
+     renderFrame(benchFrame(trigger.progress, geometry))
+ 
++    bindReading()
++
+     // Text measured before the display face has loaded is the wrong height, and
+     // the wrong height is a runway that puts the principle in the wrong place.
+     // One coalesced refresh, once, and never on a scroll tick.
+diff --git a/features/landing-page/components/bench/use-bench-reveal.ts b/features/landing-page/components/bench/use-bench-reveal.ts
+new file mode 100644
+index 0000000..918f247
+--- /dev/null
++++ b/features/landing-page/components/bench/use-bench-reveal.ts
+@@ -0,0 +1,49 @@
++'use client'
++
++import { useEffect, type RefObject } from 'react'
++
++/**
++ * Arms every `[data-bench-reveal]` under the root and fires each once, when it
++ * is on screen.
++ *
++ * Until this runs, the headings it governs are ordinary, fully visible text.
++ * Arming (`data-armed`) is what lets the stylesheet hide their letters or
++ * words, and it only happens when the visitor allows motion and the browser
++ * can say when an element is in view. No script, no observer or reduced
++ * motion: the headings just read. A reveal that could strand a heading
++ * invisible would be a worse bug than no reveal at all.
++ */
++export function useBenchReveal(root: RefObject<HTMLElement | null>) {
++  useEffect(() => {
++    const element = root.current
++    if (!element) return
++    if (typeof IntersectionObserver === 'undefined') return
++    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
++
++    const targets = Array.from(
++      element.querySelectorAll<HTMLElement>('[data-bench-reveal]'),
++    )
++    for (const target of targets) target.dataset.armed = 'true'
++
++    const observer = new IntersectionObserver(
++      (entries) => {
++        for (const entry of entries) {
++          if (!entry.isIntersecting) continue
++          const target = entry.target as HTMLElement
++          target.dataset.in = 'true'
++          observer.unobserve(target)
++        }
++      },
++      { threshold: 0.4 },
++    )
++    for (const target of targets) observer.observe(target)
++
++    return () => {
++      observer.disconnect()
++      for (const target of targets) {
++        delete target.dataset.armed
++        delete target.dataset.in
++      }
++    }
++  }, [root])
++}
+diff --git a/features/landing-page/components/bench/use-bench-title-reveal.ts b/features/landing-page/components/bench/use-bench-title-reveal.ts
+deleted file mode 100644
+index e2b7252..0000000
+--- a/features/landing-page/components/bench/use-bench-title-reveal.ts
++++ /dev/null
+@@ -1,40 +0,0 @@
+-'use client'
+-
+-import { useEffect, type RefObject } from 'react'
+-
+-/**
+- * Arms the About title's letter reveal and fires it once, when it is in view.
+- *
+- * The title is ordinary, fully visible text until this hook runs. Arming is
+- * what lets the stylesheet hide the letters (`data-armed`), and it only
+- * happens when the visitor allows motion and the browser can tell us when the
+- * title is on screen. No script, no observer or reduced motion: the heading
+- * just reads. A reveal that could strand a heading invisible would be a worse
+- * bug than no reveal at all.
+- */
+-export function useBenchTitleReveal(ref: RefObject<HTMLElement | null>) {
+-  useEffect(() => {
+-    const element = ref.current
+-    if (!element) return
+-    if (typeof IntersectionObserver === 'undefined') return
+-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+-
+-    element.dataset.armed = 'true'
+-
+-    const observer = new IntersectionObserver(
+-      (entries) => {
+-        if (!entries.some((entry) => entry.isIntersecting)) return
+-        element.dataset.in = 'true'
+-        observer.disconnect()
+-      },
+-      { threshold: 0.4 },
+-    )
+-    observer.observe(element)
+-
+-    return () => {
+-      observer.disconnect()
+-      delete element.dataset.armed
+-      delete element.dataset.in
+-    }
+-  }, [ref])
+-}
+diff --git a/tests/arrangement-camera.test.ts b/tests/arrangement-camera.test.ts
+index 4cd582d..7658f4e 100644
+--- a/tests/arrangement-camera.test.ts
++++ b/tests/arrangement-camera.test.ts
+@@ -264,7 +264,7 @@ describe('arrangementFrame', () => {
+ 
+   it('spends at least a quarter of the window on the hold, and enough scroll to make it worth watching', () => {
+     expect(1 - ARRANGEMENT_PHASES.rail).toBeGreaterThanOrEqual(0.25)
+-    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(400)
++    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(340)
+   })
+ 
+   it('opens the window after the rail and finishes before the end, so the read owns its own stretch', () => {
+diff --git a/tests/patch-scroll.test.ts b/tests/patch-scroll.test.ts
+index 250700b..ed291e7 100644
+--- a/tests/patch-scroll.test.ts
++++ b/tests/patch-scroll.test.ts
+@@ -65,7 +65,7 @@ describe('section height', () => {
+     )
+     const match = css.match(/--arr-scroll:\s*([\d.]+)svh/)
+     expect(Number(match?.[1])).toBeCloseTo(ARRANGEMENT_SCROLL_SVH, 6)
+-    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(400)
++    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(340)
+   })
+ 
+   it('un-pins the hero on short viewports, where the hook declines to run', () => {
+-- 
+2.43.0
+

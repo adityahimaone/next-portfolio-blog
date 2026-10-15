@@ -1,0 +1,1425 @@
+From 5b926e73a5bb4c4b23d33cca82bfb747b6cd8883 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 15 Oct 2026 01:53:17 +0000
+Subject: [PATCH] feat(about): turntable artifact, flying 3D music devices,
+ split-text reveals, tilting sheet
+
+- replace the wireframe artifact with a record player drawn on the same
+  pathLength draw-on clock; the record's sheen turns with scroll (--bench-spin)
+- add six CSS-solid music devices (sampler, 2 records, cassette, knob, player)
+  flying up the gutters with depth-based parallax, tumbling in 3D, dissolving
+  before the principle band (bench-devices.ts is pure and unit-tested)
+- principle line rises word by word from one --e custom property
+- title 'The rules become the work.' reveals letter by letter, armed only when
+  motion is allowed
+- paper starts tipped back (perspective rotateX) and lies flat as the drawing
+  completes
+- bench-frame.ts untouched
+---
+ .../components/bench/bench-about.tsx          | 172 +++++---
+ .../components/bench/bench-device-layer.tsx   | 176 ++++++++
+ .../components/bench/bench-devices.module.css | 403 ++++++++++++++++++
+ .../components/bench/bench-devices.ts         | 230 ++++++++++
+ .../components/bench/bench.module.css         |  67 ++-
+ .../components/bench/use-bench-motion.ts      |  72 +++-
+ .../bench/use-bench-title-reveal.ts           |  40 ++
+ tests/bench-devices.test.ts                   |  58 +++
+ 8 files changed, 1164 insertions(+), 54 deletions(-)
+ create mode 100644 features/landing-page/components/bench/bench-device-layer.tsx
+ create mode 100644 features/landing-page/components/bench/bench-devices.module.css
+ create mode 100644 features/landing-page/components/bench/bench-devices.ts
+ create mode 100644 features/landing-page/components/bench/use-bench-title-reveal.ts
+ create mode 100644 tests/bench-devices.test.ts
+
+diff --git a/features/landing-page/components/bench/bench-about.tsx b/features/landing-page/components/bench/bench-about.tsx
+index 0d34942..e93740f 100644
+--- a/features/landing-page/components/bench/bench-about.tsx
++++ b/features/landing-page/components/bench/bench-about.tsx
+@@ -1,11 +1,13 @@
+ 'use client'
+ 
+-import { useRef } from 'react'
++import { Fragment, useRef, type CSSProperties } from 'react'
+ 
+ import { ABOUT_TRACKS } from '../../rack-01/about-copy'
+ import { BENCH_CAPTION, BENCH_CHIPS, BENCH_PRINCIPLE } from './bench-copy'
++import { BenchDevices } from './bench-device-layer'
+ import styles from './bench.module.css'
+ import { useBenchMotion } from './use-bench-motion'
++import { useBenchTitleReveal } from './use-bench-title-reveal'
+ 
+ /**
+  * The artifact, drawn once.
+@@ -73,6 +75,20 @@ const SCAFFOLD = (
+ 
+ const STROKE = { className: styles.artifactStroke, pathLength: 1 } as const
+ 
++/**
++ * The artifact: a record player, drawn once.
++ *
++ * It replaces the interface wireframe the section used to assemble around, and
++ * it keeps every property that drawing had: one `<svg>` on a fixed viewBox,
++ * `pathLength={1}` on every stroke so one dash offset draws the whole thing,
++ * and a single accent spent in a few places. The record and the tonearm are
++ * the two parts that move: the groove sheen turns with `--bench-spin`, which
++ * the hook writes from the scroll, so the record plays as the page does.
++ *
++ * Like the wireframe, it carries no label and no number. Every mark is
++ * abstract; a decorative mark that read like a specification would be a claim
++ * the page cannot support.
++ */
+ const ARTIFACT = (
+   <svg
+     className={styles.artifactFrame}
+@@ -81,64 +97,72 @@ const ARTIFACT = (
+     preserveAspectRatio="xMidYMid meet"
+     aria-hidden="true"
+   >
+-    {/* Registration brackets, outside the frame. */}
++    <defs>
++      <radialGradient id="bench-glow" cx="35%" cy="50%" r="60%">
++        <stop offset="0" stopColor="var(--primary)" stopOpacity="0.2" />
++        <stop offset="1" stopColor="var(--primary)" stopOpacity="0" />
++      </radialGradient>
++    </defs>
++
++    {/* The light the record gives off. Fades with the drawing, never alone. */}
++    <circle cx="120" cy="130" r="150" fill="url(#bench-glow)" />
++
++    {/* Registration brackets, outside the plinth. */}
+     <polyline {...STROKE} points="8,38 8,8 38,8" />
+     <polyline {...STROKE} points="302,8 332,8 332,38" />
+     <polyline {...STROKE} points="8,222 8,252 38,252" />
+     <polyline {...STROKE} points="302,252 332,252 332,222" />
+ 
+-    {/* The panel. */}
++    {/* The plinth and its feet. */}
+     <rect {...STROKE} x="22" y="22" width="296" height="216" rx="14" />
+-    <line {...STROKE} x1="22" y1="64" x2="318" y2="64" />
++    <line {...STROKE} x1="40" y1="238" x2="40" y2="246" />
++    <line {...STROKE} x1="300" y1="238" x2="300" y2="246" />
+ 
+-    {/* The header: a title pill, a segmented control, two window dots. */}
+-    <rect {...STROKE} x="38" y="34" width="68" height="12" rx="6" />
+-    <rect {...STROKE} x="128" y="32" width="104" height="16" rx="8" />
+-    <rect
+-      className={styles.artifactFill}
+-      x="132"
+-      y="36"
+-      width="48"
+-      height="8"
+-      rx="4"
+-    />
+-    <circle {...STROKE} cx="282" cy="40" r="4.5" />
+-    <circle {...STROKE} cx="298" cy="40" r="4.5" />
++    {/* The platter and the record. */}
++    <circle {...STROKE} cx="120" cy="130" r="88" />
++    <circle {...STROKE} cx="120" cy="130" r="80" />
++    <circle {...STROKE} cx="120" cy="130" r="68" />
++    <circle {...STROKE} cx="120" cy="130" r="58" />
++    <circle {...STROKE} cx="120" cy="130" r="48" />
++    <circle {...STROKE} cx="120" cy="130" r="27" />
++    <circle className={styles.artifactFill} cx="120" cy="130" r="21" />
++    <circle {...STROKE} cx="120" cy="130" r="3" />
+ 
+-    {/* The rail. */}
+-    <line {...STROKE} x1="110" y1="64" x2="110" y2="238" />
+-    <rect {...STROKE} x="38" y="86" width="54" height="9" rx="4.5" />
+-    <rect {...STROKE} x="38" y="110" width="40" height="9" rx="4.5" />
+-    <rect {...STROKE} x="38" y="134" width="48" height="9" rx="4.5" />
+-    <rect {...STROKE} x="38" y="158" width="34" height="9" rx="4.5" />
+-    {/* The one accent in the rail: the row that is selected. */}
+-    <rect
+-      className={styles.artifactFill}
+-      x="31"
+-      y="82"
+-      width="3"
+-      height="17"
+-      rx="1.5"
+-    />
++    {/* The sheen: the one part of the record that turns. */}
++    <g className={styles.vinylSpin}>
++      <line {...STROKE} x1="120" y1="58" x2="120" y2="82" />
++      <line {...STROKE} x1="120" y1="178" x2="120" y2="200" />
++    </g>
+ 
+-    {/* The content: a card and a primary action. */}
+-    <rect {...STROKE} x="128" y="78" width="84" height="52" rx="10" />
+-    <line {...STROKE} x1="142" y1="98" x2="200" y2="98" />
+-    <line {...STROKE} x1="142" y1="114" x2="182" y2="114" />
+-    <rect {...STROKE} x="228" y="78" width="78" height="26" rx="9" />
+-    <line {...STROKE} x1="244" y1="91" x2="292" y2="91" />
++    {/* The tonearm: pivot, counterweight, arm, headshell. */}
++    <circle {...STROKE} cx="286" cy="62" r="10" />
++    <circle {...STROKE} cx="286" cy="62" r="3" />
++    <rect {...STROKE} x="280" y="36" width="12" height="14" rx="3" />
++    <polyline {...STROKE} points="286,72 286,130 214,168" />
++    <polyline {...STROKE} points="214,168 202,176 196,170" />
++    <circle className={styles.artifactFill} cx="199" cy="173" r="3.4" />
+ 
+-    {/* The plot. */}
+-    <line {...STROKE} x1="128" y1="216" x2="306" y2="216" />
+-    <line {...STROKE} x1="128" y1="216" x2="128" y2="142" />
+-    <polyline
+-      {...STROKE}
+-      points="132,204 156,182 180,194 204,158 228,174 252,144 276,162 302,138"
+-    />
+-    <circle className={styles.artifactFill} cx="252" cy="144" r="5" />
++    {/* The controls: start, pitch, and the one lit indicator. */}
++    <rect {...STROKE} x="232" y="204" width="38" height="14" rx="7" />
++    <line {...STROKE} x1="306" y1="150" x2="306" y2="218" />
++    <rect {...STROKE} x="299" y="176" width="14" height="9" rx="2" />
++    <circle className={styles.artifactFill} cx="246" cy="211" r="3" />
+   </svg>
+ )
+ 
++/**
++ * The principle, one word per mask.
++ *
++ * Each word is an inline box that clips its own overflow with the word itself
++ * inside it, so a word rises *out of* a line rather than fading in on it. The
++ * stagger is arithmetic in the stylesheet, not a timeline: the hook writes one
++ * number (`--e`, the emerge progress) and every word derives its own offset
++ * from its index `--i` and the count `--n`.
++ */
++const PRINCIPLE_WORDS = BENCH_PRINCIPLE.split(' ')
++
++const TITLE = 'The rules become the work.'
++
+ /**
+  * Rules becoming play: the constraints, the thing they become, and the
+  * principle behind it — and then the biography.
+@@ -167,7 +191,9 @@ const ARTIFACT = (
+  */
+ export function BenchAbout() {
+   const root = useRef<HTMLElement>(null)
++  const title = useRef<HTMLHeadingElement>(null)
+   useBenchMotion(root)
++  useBenchTitleReveal(title)
+ 
+   return (
+     <section ref={root} className={styles.bench} data-bench>
+@@ -176,10 +202,29 @@ export function BenchAbout() {
+             read as the page's own surface rather than as a layer on it. */}
+         <div className={styles.paper} data-bench-paper />
+ 
++        {/* The flying devices: behind the artifact and the ring, in the
++            gutters, dissolving before they reach the principle's band. */}
++        <BenchDevices />
++
+         {/* The line the drawing is an argument for. It is in the far stratum
+             too: it was behind the experiment the whole time. */}
+-        <p className={styles.principle} data-bench-principle>
+-          {BENCH_PRINCIPLE}
++        <p
++          className={styles.principle}
++          data-bench-principle
++          style={{ '--n': PRINCIPLE_WORDS.length } as CSSProperties}
++        >
++          {PRINCIPLE_WORDS.map((word, index) => (
++            <Fragment key={`${word}-${index}`}>
++              <span className={styles.pw}>
++                <span
++                  className={styles.pwIn}
++                  style={{ '--i': index } as CSSProperties}
++                >
++                  {word}
++                </span>
++              </span>{' '}
++            </Fragment>
++          ))}
+         </p>
+ 
+         {/* The middle stratum: the thing the constraints become. */}
+@@ -237,8 +282,35 @@ export function BenchAbout() {
+         aria-labelledby="about-title"
+       >
+         <div className={styles.reading}>
+-          <h2 id="about-title" className={styles.title}>
+-            The rules become the work.
++          <h2
++            ref={title}
++            id="about-title"
++            className={styles.title}
++            aria-label={TITLE}
++          >
++            {TITLE.split(' ').map((word, wordIndex, words) => {
++              // A running character index across the whole line, so the
++              // stagger is one wave rather than a restart at every word.
++              const before = words
++                .slice(0, wordIndex)
++                .reduce((sum, w) => sum + w.length + 1, 0)
++              return (
++                <Fragment key={`${word}-${wordIndex}`}>
++                  <span className={styles.tw} aria-hidden="true">
++                    {Array.from(word).map((char, charIndex) => (
++                      <span
++                        key={charIndex}
++                        className={styles.tc}
++                        style={{ '--c': before + charIndex } as CSSProperties}
++                      >
++                        {char}
++                      </span>
++                    ))}
++                  </span>
++                  {wordIndex < words.length - 1 ? ' ' : null}
++                </Fragment>
++              )
++            })}
+           </h2>
+ 
+           <div className={styles.tracks}>
+diff --git a/features/landing-page/components/bench/bench-device-layer.tsx b/features/landing-page/components/bench/bench-device-layer.tsx
+new file mode 100644
+index 0000000..e3741d2
+--- /dev/null
++++ b/features/landing-page/components/bench/bench-device-layer.tsx
+@@ -0,0 +1,176 @@
++import type { CSSProperties } from 'react'
++
++import { BENCH_DEVICES, type BenchDeviceSpec } from './bench-devices'
++import styles from './bench-devices.module.css'
++
++/**
++ * The flying devices, built from CSS solids.
++ *
++ * Every object is real geometry in a 3D rendering context (faces placed in
++ * space, not a flat picture tilted), so a tumbling device shows its sides and
++ * its back as the hook rotates it. The hook owns two transforms per device:
++ * the **anchor** (position and scale) and the **rot** (orientation). A third
++ * wrapper, `bob`, carries a slow CSS idle float so a device is never dead
++ * between scroll ticks.
++ *
++ * Opacity is a custom property read by the faces (`--o`), not an `opacity` on
++ * the anchor: any `opacity` below 1 forces `transform-style: flat` and would
++ * collapse the solid into a sticker the moment it began to fade.
++ */
++
++const PADS = Array.from({ length: 16 }, (_, index) => index)
++const ACCENT_PADS = new Set([0, 5, 10, 15])
++const KNOB_LAYERS = Array.from({ length: 7 }, (_, index) => index)
++
++function Cuboid({
++  w,
++  h,
++  d,
++  front,
++  className,
++}: {
++  w: number
++  h: number
++  d: number
++  front: React.ReactNode
++  className?: string
++}) {
++  return (
++    <span
++      className={`${styles.solid} ${className ?? ''}`}
++      style={
++        { '--w': `${w}px`, '--h': `${h}px`, '--d': `${d}px` } as CSSProperties
++      }
++    >
++      <span className={`${styles.face} ${styles.front}`}>{front}</span>
++      <span className={`${styles.face} ${styles.back}`} />
++      <span className={`${styles.face} ${styles.left}`} />
++      <span className={`${styles.face} ${styles.right}`} />
++      <span className={`${styles.face} ${styles.top}`} />
++      <span className={`${styles.face} ${styles.bottom}`} />
++    </span>
++  )
++}
++
++function Device({ kind }: { kind: BenchDeviceSpec['kind'] }) {
++  switch (kind) {
++    case 'sampler':
++      return (
++        <Cuboid
++          w={104}
++          h={78}
++          d={20}
++          front={
++            <>
++              <i className={styles.samplerLcd} />
++              <i className={styles.samplerKnob} />
++              <span className={styles.pads}>
++                {PADS.map((pad) => (
++                  <i
++                    key={pad}
++                    className={`${styles.pad} ${
++                      ACCENT_PADS.has(pad) ? styles.padAccent : ''
++                    }`}
++                  />
++                ))}
++              </span>
++            </>
++          }
++        />
++      )
++    case 'cassette':
++      return (
++        <Cuboid
++          w={96}
++          h={60}
++          d={12}
++          front={
++            <>
++              <i className={styles.tapeLabel} />
++              <span className={styles.tapeWindow}>
++                <i className={styles.reel} />
++                <i className={styles.reel} />
++              </span>
++            </>
++          }
++        />
++      )
++    case 'player':
++      return (
++        <Cuboid
++          w={58}
++          h={92}
++          d={12}
++          front={
++            <>
++              <i className={styles.playerScreen}>
++                <b />
++                <b />
++                <b />
++              </i>
++              <i className={styles.playerWheel} />
++            </>
++          }
++        />
++      )
++    case 'knob':
++      return (
++        <span className={styles.knob}>
++          {KNOB_LAYERS.map((layer) => (
++            <i
++              key={layer}
++              className={styles.knobLayer}
++              style={{ '--i': layer } as CSSProperties}
++            />
++          ))}
++          <i className={styles.knobCap}>
++            <b />
++          </i>
++        </span>
++      )
++    case 'vinyl':
++      return (
++        <span className={styles.vinyl}>
++          <i className={`${styles.disc} ${styles.discFront}`}>
++            <b className={styles.discLabel} />
++          </i>
++          <i className={`${styles.disc} ${styles.discBack}`}>
++            <b className={styles.discLabel} />
++          </i>
++        </span>
++      )
++  }
++}
++
++/**
++ * The layer. `aria-hidden` and `pointer-events: none` by the stage it sits in;
++ * it is `display: none` unless the stage is.
++ */
++export function BenchDevices() {
++  return (
++    <div className={styles.layer} data-bench-devices aria-hidden="true">
++      {BENCH_DEVICES.map((spec, index) => (
++        <span
++          key={spec.id}
++          className={styles.anchor}
++          data-bench-device={spec.id}
++          style={{ left: `${spec.x}%` }}
++        >
++          <span
++            className={styles.bob}
++            style={
++              {
++                animationDuration: `${5.2 + index * 0.9}s`,
++                animationDelay: `${-index * 1.3}s`,
++              } as CSSProperties
++            }
++          >
++            <span className={styles.rot} data-bench-device-rot={spec.id}>
++              <Device kind={spec.kind} />
++            </span>
++          </span>
++        </span>
++      ))}
++    </div>
++  )
++}
+diff --git a/features/landing-page/components/bench/bench-devices.module.css b/features/landing-page/components/bench/bench-devices.module.css
+new file mode 100644
+index 0000000..a3085e3
+--- /dev/null
++++ b/features/landing-page/components/bench/bench-devices.module.css
+@@ -0,0 +1,403 @@
++/* The flying devices.
++
++   Real solids in a 3D rendering context: the layer carries the perspective,
++   and every element between it and a face keeps `preserve-3d`. Two rules the
++   file is built around:
++
++   1. **Opacity is a custom property.** `--o` is written on each anchor by the
++      hook and read by the faces. An `opacity` on any ancestor of a face would
++      force `transform-style: flat` and flatten the solid mid-fade.
++   2. **Only transforms move.** The hook writes the anchor's and the rot's
++      transform and `--o`; the idle float is a compositor-only keyframe. Nothing
++      here changes layout, filter or shadow per frame. */
++
++.layer {
++  position: absolute;
++  inset: 0;
++  z-index: 0;
++  perspective: 1100px;
++  perspective-origin: 50% 46%;
++  pointer-events: none;
++  --dev-ink: var(--foreground);
++  --dev-body: color-mix(in srgb, var(--background) 90%, var(--foreground));
++  --dev-body-deep: color-mix(in srgb, var(--background) 78%, var(--foreground));
++  --dev-edge: color-mix(in srgb, var(--foreground) 34%, transparent);
++  --dev-lcd: color-mix(in srgb, var(--primary) 32%, var(--background));
++}
++
++/* Zero-size: the hook's transform is about the point the device flies through,
++   not about the middle of a box. */
++.anchor {
++  position: absolute;
++  top: 0;
++  width: 0;
++  height: 0;
++  transform-style: preserve-3d;
++  will-change: transform;
++  --o: 0;
++}
++
++.bob,
++.rot {
++  position: absolute;
++  left: 0;
++  top: 0;
++  width: 0;
++  height: 0;
++  transform-style: preserve-3d;
++}
++
++.bob {
++  animation: bench-bob ease-in-out infinite alternate;
++}
++
++@keyframes bench-bob {
++  from {
++    transform: translate3d(0, -7px, 0);
++  }
++  to {
++    transform: translate3d(0, 7px, 0);
++  }
++}
++
++/* ── Cuboid ──────────────────────────────────────────────── */
++
++.solid {
++  position: absolute;
++  left: 0;
++  top: 0;
++  width: 0;
++  height: 0;
++  transform-style: preserve-3d;
++}
++
++.face {
++  position: absolute;
++  left: 0;
++  top: 0;
++  overflow: hidden;
++  backface-visibility: hidden;
++  opacity: var(--o);
++  background: var(--dev-body);
++  border: 1px solid var(--dev-edge);
++  border-radius: 5px;
++}
++
++.front,
++.back {
++  width: var(--w);
++  height: var(--h);
++}
++
++.front {
++  transform: translate(-50%, -50%) translateZ(calc(var(--d) / 2));
++  background: linear-gradient(
++    150deg,
++    color-mix(in srgb, var(--background) 96%, var(--foreground)),
++    var(--dev-body-deep)
++  );
++}
++
++.back {
++  transform: translate(-50%, -50%) rotateY(180deg) translateZ(calc(var(--d) / 2));
++  background: var(--dev-body-deep);
++}
++
++.left,
++.right {
++  width: var(--d);
++  height: var(--h);
++  background: var(--dev-body-deep);
++}
++
++.left {
++  transform: translate(-50%, -50%) rotateY(-90deg) translateZ(calc(var(--w) / 2));
++}
++
++.right {
++  transform: translate(-50%, -50%) rotateY(90deg) translateZ(calc(var(--w) / 2));
++}
++
++.top,
++.bottom {
++  width: var(--w);
++  height: var(--d);
++  background: var(--dev-body-deep);
++}
++
++.top {
++  transform: translate(-50%, -50%) rotateX(90deg) translateZ(calc(var(--h) / 2));
++}
++
++.bottom {
++  transform: translate(-50%, -50%) rotateX(-90deg) translateZ(calc(var(--h) / 2));
++}
++
++/* ── Sampler ─────────────────────────────────────────────── */
++
++.samplerLcd {
++  position: absolute;
++  left: 8%;
++  top: 9%;
++  width: 46%;
++  height: 20%;
++  border-radius: 2px;
++  background: var(--dev-lcd);
++  border: 1px solid var(--dev-edge);
++}
++
++.samplerKnob {
++  position: absolute;
++  right: 9%;
++  top: 8%;
++  width: 18%;
++  aspect-ratio: 1;
++  border-radius: 50%;
++  background: conic-gradient(
++    from 30deg,
++    var(--dev-body-deep),
++    var(--dev-body),
++    var(--dev-body-deep),
++    var(--dev-body)
++  );
++  border: 1px solid var(--dev-edge);
++}
++
++.pads {
++  position: absolute;
++  left: 8%;
++  right: 8%;
++  bottom: 9%;
++  top: 38%;
++  display: grid;
++  grid-template-columns: repeat(4, 1fr);
++  gap: 3px;
++}
++
++.pad {
++  border-radius: 2px;
++  background: color-mix(in srgb, var(--foreground) 16%, var(--background));
++  border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
++}
++
++.padAccent {
++  background: var(--primary);
++  border-color: transparent;
++}
++
++/* ── Cassette ────────────────────────────────────────────── */
++
++.tapeLabel {
++  position: absolute;
++  left: 8%;
++  right: 8%;
++  top: 10%;
++  height: 26%;
++  border-radius: 2px;
++  background: color-mix(in srgb, var(--primary) 22%, var(--background));
++  border: 1px solid var(--dev-edge);
++}
++
++.tapeWindow {
++  position: absolute;
++  left: 20%;
++  right: 20%;
++  bottom: 10%;
++  height: 40%;
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  padding: 0 7%;
++  border-radius: 999px;
++  background: color-mix(in srgb, var(--foreground) 22%, var(--background));
++  border: 1px solid var(--dev-edge);
++}
++
++.reel {
++  width: 38%;
++  aspect-ratio: 1;
++  border-radius: 50%;
++  background:
++    radial-gradient(circle, var(--dev-body) 0 22%, transparent 24%),
++    conic-gradient(
++      var(--foreground) 0 12%,
++      transparent 12% 33%,
++      var(--foreground) 33% 45%,
++      transparent 45% 66%,
++      var(--foreground) 66% 78%,
++      transparent 78%
++    );
++  transform: rotate(calc(var(--bench-spin, 0) * 1deg));
++}
++
++/* ── Player ──────────────────────────────────────────────── */
++
++.playerScreen {
++  position: absolute;
++  left: 12%;
++  right: 12%;
++  top: 8%;
++  height: 40%;
++  display: grid;
++  align-content: center;
++  gap: 4px;
++  padding: 0 8%;
++  border-radius: 3px;
++  background: var(--dev-lcd);
++  border: 1px solid var(--dev-edge);
++}
++
++.playerScreen b {
++  height: 3px;
++  border-radius: 2px;
++  background: var(--foreground);
++  opacity: 0.55;
++}
++
++.playerScreen b:nth-child(2) {
++  width: 62%;
++}
++
++.playerScreen b:nth-child(3) {
++  width: 38%;
++  background: var(--primary);
++  opacity: 1;
++}
++
++.playerWheel {
++  position: absolute;
++  left: 50%;
++  bottom: 9%;
++  width: 56%;
++  aspect-ratio: 1;
++  transform: translateX(-50%);
++  border-radius: 50%;
++  background: radial-gradient(
++    circle,
++    var(--primary) 0 16%,
++    var(--dev-body-deep) 18%
++  );
++  border: 1px solid var(--dev-edge);
++}
++
++/* ── Knob: a stack of discs, so it has a side ────────────── */
++
++.knob {
++  position: absolute;
++  left: 0;
++  top: 0;
++  width: 0;
++  height: 0;
++  transform-style: preserve-3d;
++}
++
++.knobLayer,
++.knobCap {
++  position: absolute;
++  left: 0;
++  top: 0;
++  width: 58px;
++  height: 58px;
++  border-radius: 50%;
++  opacity: var(--o);
++  backface-visibility: hidden;
++}
++
++.knobLayer {
++  transform: translate(-50%, -50%) translateZ(calc(var(--i) * -3px));
++  background: var(--dev-body-deep);
++  border: 1px solid var(--dev-edge);
++}
++
++.knobCap {
++  transform: translate(-50%, -50%) translateZ(3px);
++  background: conic-gradient(
++    from 0deg,
++    var(--dev-body),
++    var(--dev-body-deep),
++    var(--dev-body),
++    var(--dev-body-deep),
++    var(--dev-body)
++  );
++  border: 1px solid var(--dev-edge);
++}
++
++.knobCap b {
++  position: absolute;
++  left: 50%;
++  top: 8%;
++  width: 3px;
++  height: 30%;
++  transform: translateX(-50%);
++  border-radius: 2px;
++  background: var(--primary);
++}
++
++/* ── Vinyl: two faces back to back ───────────────────────── */
++
++.vinyl {
++  position: absolute;
++  left: 0;
++  top: 0;
++  width: 0;
++  height: 0;
++  transform-style: preserve-3d;
++}
++
++.disc {
++  position: absolute;
++  left: 0;
++  top: 0;
++  width: 92px;
++  height: 92px;
++  display: grid;
++  place-items: center;
++  border-radius: 50%;
++  opacity: var(--o);
++  backface-visibility: hidden;
++  background:
++    radial-gradient(circle, transparent 0 28%, rgb(0 0 0 / 0.16) 29% 30%, transparent 31%),
++    repeating-radial-gradient(
++      circle,
++      #1b1b1d 0 1.5px,
++      #29292c 1.5px 3px
++    );
++  border: 1px solid var(--dev-edge);
++}
++
++/* The sheen: a conic wedge that turns with the scroll. */
++.disc::after {
++  content: '';
++  position: absolute;
++  inset: 0;
++  border-radius: 50%;
++  background: conic-gradient(
++    from 0deg,
++    transparent 0 8%,
++    rgb(255 255 255 / 0.2) 12%,
++    transparent 18% 58%,
++    rgb(255 255 255 / 0.14) 62%,
++    transparent 68%
++  );
++  transform: rotate(calc(var(--bench-spin, 0) * 1.6deg));
++}
++
++.discFront {
++  transform: translate(-50%, -50%) translateZ(1px);
++}
++
++.discBack {
++  transform: translate(-50%, -50%) rotateY(180deg) translateZ(1px);
++}
++
++.discLabel {
++  width: 34%;
++  aspect-ratio: 1;
++  border-radius: 50%;
++  background: radial-gradient(
++    circle,
++    var(--dev-body) 0 8%,
++    var(--primary) 10%
++  );
++  z-index: 1;
++}
+diff --git a/features/landing-page/components/bench/bench-devices.ts b/features/landing-page/components/bench/bench-devices.ts
+new file mode 100644
+index 0000000..88f1562
+--- /dev/null
++++ b/features/landing-page/components/bench/bench-devices.ts
+@@ -0,0 +1,230 @@
++/**
++ * The flying music devices: pure flight maths.
++ *
++ * Six small objects (a sampler, two records, a cassette, a knob and a player)
++ * drift up through the gutters of the stage while the constraints assemble.
++ * They are decoration and they say nothing: no label, no number, no claim.
++ *
++ * Like `bench-frame.ts`, this file owns every number and the DOM owns none. The
++ * hook reads a frame per device and writes transforms and one custom property.
++ * Nothing here knows about React, GSAP or the stylesheet.
++ *
++ * Three rules shape the table:
++ *
++ * - **They live in the gutters.** The ring owns the middle of the sheet, so the
++ *   devices keep to the outer 14% either side, and paint *behind* the ring and
++ *   the artifact. A device passing a chip reads as depth, never as a collision.
++ * - **They dissolve before the principle line.** The principle owns the top
++ *   band of the stage, so every device fades out as it climbs into it
++ *   (`BENCH_DEVICE_CEILING`). Nothing flies through a sentence.
++ * - **Depth is speed.** A nearer device travels further, tumbles faster and is
++ *   drawn larger, which is what makes the layer read as parallax rather than as
++ *   six sprites sharing one clock.
++ */
++
++export type BenchDeviceKind =
++  | 'sampler'
++  | 'vinyl'
++  | 'cassette'
++  | 'knob'
++  | 'player'
++
++export type BenchDeviceSpec = {
++  id: string
++  kind: BenchDeviceKind
++  /** Horizontal anchor, % of the stage width. */
++  x: number
++  /** 0 = furthest back, 1 = closest. Drives scale and opacity. */
++  depth: number
++  /** Local-progress window the flight plays across. */
++  window: readonly [number, number]
++  /** Vertical anchor at the start and end of the flight, % of stage height. */
++  y: readonly [number, number]
++  /** Sideways sway, px at the base stage width, and its cycles per flight. */
++  sway: number
++  swayCycles: number
++  swayPhase: number
++  /** Orientation at the start of the flight, degrees. */
++  tilt: { x: number; y: number; z: number }
++  /** Extra rotation accumulated over the flight, degrees. */
++  spin: { x: number; y: number; z: number }
++}
++
++/**
++ * Below this height, as a % of the stage, a device is fading out.
++ *
++ * The principle line occupies roughly the first 13% of the stage; the fade
++ * finishes at `CEILING` and starts `BENCH_DEVICE_CEILING_SOFT` points below it.
++ */
++export const BENCH_DEVICE_CEILING = 15
++export const BENCH_DEVICE_CEILING_SOFT = 14
++
++/** The share of a flight spent fading in. */
++export const BENCH_DEVICE_FADE_IN = 0.14
++
++export const BENCH_DEVICE_SCALE = { far: 0.7, near: 1.25 } as const
++export const BENCH_DEVICE_OPACITY = { far: 0.55, near: 1 } as const
++
++export const BENCH_DEVICES: readonly BenchDeviceSpec[] = [
++  {
++    id: 'sampler',
++    kind: 'sampler',
++    x: 7,
++    depth: 0.9,
++    window: [0.1, 0.5],
++    y: [118, 18],
++    sway: 26,
++    swayCycles: 1.2,
++    swayPhase: 0,
++    tilt: { x: 58, y: -34, z: -14 },
++    spin: { x: -46, y: 70, z: 22 },
++  },
++  {
++    id: 'vinyl-a',
++    kind: 'vinyl',
++    x: 94,
++    depth: 0.8,
++    window: [0.12, 0.54],
++    y: [122, 20],
++    sway: 22,
++    swayCycles: 1,
++    swayPhase: 1.6,
++    tilt: { x: 64, y: 22, z: 0 },
++    spin: { x: 30, y: -80, z: 40 },
++  },
++  {
++    id: 'cassette',
++    kind: 'cassette',
++    x: 12,
++    depth: 0.45,
++    window: [0.2, 0.56],
++    y: [112, 24],
++    sway: 18,
++    swayCycles: 1.5,
++    swayPhase: 3.1,
++    tilt: { x: -28, y: 40, z: 12 },
++    spin: { x: 24, y: -54, z: -26 },
++  },
++  {
++    id: 'knob',
++    kind: 'knob',
++    x: 88,
++    depth: 0.6,
++    window: [0.16, 0.52],
++    y: [116, 22],
++    sway: 16,
++    swayCycles: 1.3,
++    swayPhase: 4.4,
++    tilt: { x: 52, y: 18, z: 0 },
++    spin: { x: -36, y: 90, z: 0 },
++  },
++  {
++    id: 'player',
++    kind: 'player',
++    x: 4,
++    depth: 0.3,
++    window: [0.24, 0.58],
++    y: [108, 26],
++    sway: 12,
++    swayCycles: 1,
++    swayPhase: 2.2,
++    tilt: { x: 18, y: -46, z: 8 },
++    spin: { x: 20, y: 62, z: -18 },
++  },
++  {
++    id: 'vinyl-b',
++    kind: 'vinyl',
++    x: 97,
++    depth: 0.25,
++    window: [0.26, 0.6],
++    y: [110, 28],
++    sway: 10,
++    swayCycles: 0.8,
++    swayPhase: 5.2,
++    tilt: { x: 70, y: -18, z: 10 },
++    spin: { x: -20, y: 50, z: 30 },
++  },
++] as const
++
++export type BenchDeviceFrame = {
++  id: string
++  /** px, from the anchor's authored `left`. */
++  x: number
++  /** px, from the top of the stage. */
++  y: number
++  scale: number
++  opacity: number
++  rotateX: number
++  rotateY: number
++  rotateZ: number
++}
++
++const clamp = (value: number, min: number, max: number) =>
++  Math.min(max, Math.max(min, value))
++
++const finite = (value: number, fallback: number) =>
++  Number.isFinite(value) ? value : fallback
++
++const lerp = (from: number, to: number, t: number) => from + (to - from) * t
++
++const smooth = (t: number) => t * t * (3 - 2 * t)
++
++/** `-0` is a real number and a real CSS token; never write one. */
++const zero = (value: number) => (Object.is(value, -0) ? 0 : value)
++
++export function benchDeviceFrame(
++  spec: BenchDeviceSpec,
++  progress: number,
++  stageHeight: number,
++  unit: number,
++): BenchDeviceFrame {
++  const p = clamp(finite(progress, 0), 0, 1)
++  const height = Math.max(1, finite(stageHeight, 760))
++  const u = clamp(finite(unit, 1), 0.6, 2)
++
++  const [start, end] = spec.window
++  const t = clamp((p - start) / Math.max(1e-6, end - start), 0, 1)
++
++  const yPct = lerp(spec.y[0], spec.y[1], t)
++  const fadeIn = smooth(clamp(t / BENCH_DEVICE_FADE_IN, 0, 1))
++  const ceiling = smooth(
++    clamp((yPct - BENCH_DEVICE_CEILING) / BENCH_DEVICE_CEILING_SOFT, 0, 1),
++  )
++  // Before it starts and after it has gone, a device is not on the sheet.
++  const live = p > start && p < end ? 1 : 0
++
++  const scale = lerp(
++    BENCH_DEVICE_SCALE.far,
++    BENCH_DEVICE_SCALE.near,
++    spec.depth,
++  )
++  const opacity = lerp(
++    BENCH_DEVICE_OPACITY.far,
++    BENCH_DEVICE_OPACITY.near,
++    spec.depth,
++  )
++
++  return {
++    id: spec.id,
++    x: zero(
++      Math.sin(t * Math.PI * 2 * spec.swayCycles + spec.swayPhase) *
++        spec.sway *
++        u,
++    ),
++    y: zero((yPct / 100) * height),
++    scale: scale * u,
++    opacity: opacity * fadeIn * ceiling * live,
++    rotateX: zero(spec.tilt.x + spec.spin.x * t),
++    rotateY: zero(spec.tilt.y + spec.spin.y * t),
++    rotateZ: zero(spec.tilt.z + spec.spin.z * t),
++  }
++}
++
++export const benchDeviceFrames = (
++  progress: number,
++  stageHeight: number,
++  unit: number,
++): BenchDeviceFrame[] =>
++  BENCH_DEVICES.map((spec) =>
++    benchDeviceFrame(spec, progress, stageHeight, unit),
++  )
+diff --git a/features/landing-page/components/bench/bench.module.css b/features/landing-page/components/bench/bench.module.css
+index 3b20423..5506643 100644
+--- a/features/landing-page/components/bench/bench.module.css
++++ b/features/landing-page/components/bench/bench.module.css
+@@ -159,7 +159,29 @@
+   letter-spacing: -0.03em;
+   text-wrap: balance;
+   color: var(--foreground);
+-  will-change: transform, opacity;
++  will-change: transform;
++  /* The arrival is the words', not the box's: `--e` is written by the hook. */
++  --e: 0;
++}
++
++/* One word, one mask. The word rises out of its own line. The padding and the
++   matching negative margin keep descenders inside the clip without changing
++   the line's height. */
++.pw {
++  display: inline-block;
++  overflow: clip;
++  padding-bottom: 0.14em;
++  margin-bottom: -0.14em;
++  vertical-align: top;
++}
++
++.pwIn {
++  display: inline-block;
++  --k: clamp(0, (var(--e) * (var(--n) + 3) - var(--i)) / 3, 1);
++  translate: 0 calc((1 - var(--k)) * 112%);
++  rotate: calc((1 - var(--k)) * 5deg);
++  transform-origin: 0 100%;
++  will-change: translate, rotate;
+ }
+ 
+ /* ── The middle stratum: the artifact ────────────────────
+@@ -240,6 +262,15 @@
+   opacity: 0.7;
+ }
+ 
++/* The groove sheen turns with the scroll: `--bench-spin` is degrees, written by
++   the hook onto the artifact. The origin is the platter's centre in the
++   drawing's own user units, which is what an SVG element's transform-origin
++   resolves against. */
++.vinylSpin {
++  transform-origin: 120px 130px;
++  transform: rotate(calc(var(--bench-spin, 0) * 1deg));
++}
++
+ /* The one accent, spent three times: the selected rail row, the segmented
+    control's knob, and the marked point on the plot. Filled marks cannot be
+    drawn on with a dash, so they fade in on the same clock instead. */
+@@ -388,6 +419,40 @@
+   margin: 0 auto;
+ }
+ 
++/* ── The title's letter reveal ───────────────────────────
++   Armed by `useBenchTitleReveal` and only then: with the script absent, failed
++   or reduced-motion, none of these rules match and the heading is just text.
++   Each letter is clipped by its word and rises on a wave: `--c` is its index
++   along the line. `translate`/`rotate` are the individual properties, so the
++   whole thing is compositor work and never touches layout. */
++
++.tw {
++  display: inline-block;
++  overflow: clip;
++  white-space: nowrap;
++  padding: 0.04em 0.02em 0.16em;
++  margin: -0.04em -0.02em -0.16em;
++  vertical-align: top;
++}
++
++.tc {
++  display: inline-block;
++  transform-origin: 0 100%;
++}
++
++.title[data-armed='true'] .tc {
++  translate: 0 115%;
++  rotate: 8deg;
++}
++
++.title[data-armed='true'][data-in='true'] .tc {
++  translate: 0 0;
++  rotate: 0deg;
++  transition:
++    translate 900ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--c) * 34ms),
++    rotate 900ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--c) * 34ms);
++}
++
+ /* ── Typography ──────────────────────────────────────────
+    The section's whole argument is a change of register, so the type does the
+    work: one monumental display line, three large practice statements, and body
+diff --git a/features/landing-page/components/bench/use-bench-motion.ts b/features/landing-page/components/bench/use-bench-motion.ts
+index 1944bfb..f0fa7f8 100644
+--- a/features/landing-page/components/bench/use-bench-motion.ts
++++ b/features/landing-page/components/bench/use-bench-motion.ts
+@@ -3,9 +3,11 @@
+ import { useEffect, type RefObject } from 'react'
+ 
+ import { BENCH_CHIPS } from './bench-copy'
++import { BENCH_DEVICES, benchDeviceFrames } from './bench-devices'
+ import {
+   BENCH_BAND_CLEARANCE,
+   BENCH_HOLD,
++  BENCH_STAGE_BASE,
+   benchFrame,
+   benchRunway,
+   type BenchFrame,
+@@ -26,6 +28,8 @@ import {
+ const BENCH_QUERY =
+   '(min-width: 769px) and (min-height: 700px) and (prefers-reduced-motion: no-preference)'
+ 
++const BENCH_STAGE_WIDTH = BENCH_STAGE_BASE.width
++
+ type Gsap = (typeof import('gsap'))['gsap']
+ type ScrollTriggerStatic =
+   (typeof import('gsap/ScrollTrigger'))['ScrollTrigger']
+@@ -198,6 +202,37 @@ function startBenchMotion({
+     chipNodes.push(node)
+   }
+ 
++  /**
++   * The flying devices, resolved in `BENCH_DEVICES` order for the same reason
++   * the chips are: `benchDeviceFrames` returns one frame per entry, and the
++   * pairing is only correct if the nodes are indexed the same way.
++   */
++  const deviceLayer = element.querySelector<HTMLElement>('[data-bench-devices]')
++  const deviceAnchors: HTMLElement[] = []
++  const deviceRots: HTMLElement[] = []
++  for (const device of BENCH_DEVICES) {
++    const anchor = element.querySelector<HTMLElement>(
++      `[data-bench-device="${device.id}"]`,
++    )
++    const rot = element.querySelector<HTMLElement>(
++      `[data-bench-device-rot="${device.id}"]`,
++    )
++    if (!anchor || !rot) {
++      console.error(
++        `Bench motion: device "${device.id}" is missing; leaving the native flow`,
++      )
++      return () => {}
++    }
++    deviceAnchors.push(anchor)
++    deviceRots.push(rot)
++  }
++  if (!deviceLayer) {
++    console.error(
++      'Bench motion: the device layer is missing; leaving the native flow',
++    )
++    return () => {}
++  }
++
+   // Snapshot before anything is written, restore on the way out. The stage is
+   // deliberately not in this list: the one thing written to it is `opacity`,
+   // which the teardown removes outright rather than restoring, because the
+@@ -220,7 +255,11 @@ function startBenchMotion({
+     caption,
+     ...chipNodes,
+   ]
+-  const snapshots = owned.map(
++  // The devices are restored like everything else, but kept out of `owned`:
++  // `gsap.set` on `owned` re-serialises a node's transform, and these carry
++  // 3D rotations that GSAP has no reason to parse.
++  const restorable = [...owned, deviceLayer, ...deviceAnchors, ...deviceRots]
++  const snapshots = restorable.map(
+     (node) => [node, node.getAttribute('style')] as const,
+   )
+ 
+@@ -242,9 +281,14 @@ function startBenchMotion({
+     // The far stratum and the principle's own entry are two translations on one
+     // node, summed rather than nested: the principle is inside the sheet, and a
+     // wrapper element would exist only to hold a number.
+-    paper.style.transform = `translate3d(0, ${frame.farY}px, 0)`
++    // The sheet starts tipped back like a desk seen from a seat and lies flat
++    // as the drawing completes: the draw-on clock doubles as the tilt's.
++    const tilt = 16 * (1 - frame.artifactDraw)
++    paper.style.transform = `translate3d(0, ${frame.farY}px, 0) perspective(1600px) rotateX(${tilt}deg)`
+     principle.style.transform = `translate3d(0, ${frame.farY + frame.principleY}px, 0)`
+-    principle.style.opacity = String(frame.principleOpacity)
++    // The principle arrives word by word: the stylesheet derives each word's
++    // offset from this one number, so the box itself is never faded.
++    principle.style.setProperty('--e', String(frame.principleOpacity))
+ 
+     // The middle stratum, plus the artifact's own lift and recede.
+     //
+@@ -287,6 +331,28 @@ function startBenchMotion({
+     // registration brackets at once — and a long path and a short one finish
+     // together rather than the long one lagging.
+     artifact.style.setProperty('--bench-draw', String(frame.artifactDraw))
++    // The record plays as the page scrolls. Degrees, unbounded.
++    const spin = frame.progress * 900
++    artifact.style.setProperty('--bench-spin', String(spin))
++    deviceLayer.style.setProperty('--bench-spin', String(spin))
++
++    const unit = Math.min(
++      2,
++      Math.max(0.6, geometry.stageWidth / BENCH_STAGE_WIDTH),
++    )
++    const flights = benchDeviceFrames(
++      frame.progress,
++      geometry.stageHeight,
++      unit,
++    )
++    for (let index = 0; index < flights.length; index += 1) {
++      const flight = flights[index]
++      const anchor = deviceAnchors[index]
++      const rot = deviceRots[index]
++      anchor.style.transform = `translate3d(${flight.x}px, ${flight.y}px, 0) scale(${flight.scale})`
++      anchor.style.setProperty('--o', String(flight.opacity))
++      rot.style.transform = `rotateX(${flight.rotateX}deg) rotateY(${flight.rotateY}deg) rotateZ(${flight.rotateZ}deg)`
++    }
+ 
+     if (element.dataset.benchState !== frame.state) {
+       element.dataset.benchState = frame.state
+diff --git a/features/landing-page/components/bench/use-bench-title-reveal.ts b/features/landing-page/components/bench/use-bench-title-reveal.ts
+new file mode 100644
+index 0000000..e2b7252
+--- /dev/null
++++ b/features/landing-page/components/bench/use-bench-title-reveal.ts
+@@ -0,0 +1,40 @@
++'use client'
++
++import { useEffect, type RefObject } from 'react'
++
++/**
++ * Arms the About title's letter reveal and fires it once, when it is in view.
++ *
++ * The title is ordinary, fully visible text until this hook runs. Arming is
++ * what lets the stylesheet hide the letters (`data-armed`), and it only
++ * happens when the visitor allows motion and the browser can tell us when the
++ * title is on screen. No script, no observer or reduced motion: the heading
++ * just reads. A reveal that could strand a heading invisible would be a worse
++ * bug than no reveal at all.
++ */
++export function useBenchTitleReveal(ref: RefObject<HTMLElement | null>) {
++  useEffect(() => {
++    const element = ref.current
++    if (!element) return
++    if (typeof IntersectionObserver === 'undefined') return
++    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
++
++    element.dataset.armed = 'true'
++
++    const observer = new IntersectionObserver(
++      (entries) => {
++        if (!entries.some((entry) => entry.isIntersecting)) return
++        element.dataset.in = 'true'
++        observer.disconnect()
++      },
++      { threshold: 0.4 },
++    )
++    observer.observe(element)
++
++    return () => {
++      observer.disconnect()
++      delete element.dataset.armed
++      delete element.dataset.in
++    }
++  }, [ref])
++}
+diff --git a/tests/bench-devices.test.ts b/tests/bench-devices.test.ts
+new file mode 100644
+index 0000000..57961e4
+--- /dev/null
++++ b/tests/bench-devices.test.ts
+@@ -0,0 +1,58 @@
++import {
++  BENCH_DEVICES,
++  BENCH_DEVICE_CEILING,
++  benchDeviceFrame,
++  benchDeviceFrames,
++} from '@/features/landing-page/components/bench/bench-devices'
++
++describe('benchDeviceFrame', () => {
++  it('keeps every device off the sheet before and after its flight', () => {
++    for (const spec of BENCH_DEVICES) {
++      expect(benchDeviceFrame(spec, 0, 760, 1).opacity).toBe(0)
++      expect(
++        benchDeviceFrame(spec, spec.window[1] + 0.01, 760, 1).opacity,
++      ).toBe(0)
++    }
++  })
++
++  it('fades a device out before it reaches the principle band', () => {
++    for (const spec of BENCH_DEVICES) {
++      const end = benchDeviceFrame(spec, spec.window[1] - 1e-4, 760, 1)
++      expect(spec.y[1]).toBeGreaterThanOrEqual(BENCH_DEVICE_CEILING)
++      expect(end.opacity).toBeLessThan(0.9)
++    }
++  })
++
++  it('makes nearer devices travel further and draw larger', () => {
++    const [far, near] = [...BENCH_DEVICES]
++      .sort((a, b) => a.depth - b.depth)
++      .filter((_, i, all) => i === 0 || i === all.length - 1)
++    expect(benchDeviceFrame(near, 0.3, 760, 1).scale).toBeGreaterThan(
++      benchDeviceFrame(far, 0.3, 760, 1).scale,
++    )
++  })
++
++  it('rises monotonically through the flight', () => {
++    for (const spec of BENCH_DEVICES) {
++      let last = Infinity
++      for (let p = spec.window[0]; p <= spec.window[1]; p += 0.01) {
++        const y = benchDeviceFrame(spec, p, 760, 1).y
++        expect(y).toBeLessThanOrEqual(last + 1e-6)
++        last = y
++      }
++    }
++  })
++
++  it('never writes NaN, Infinity or negative zero', () => {
++    for (const progress of [NaN, -1, 0, 0.3, 1, 2, Infinity]) {
++      for (const frame of benchDeviceFrames(progress, NaN, NaN)) {
++        for (const value of Object.values(frame)) {
++          if (typeof value === 'number') {
++            expect(Number.isFinite(value)).toBe(true)
++            expect(Object.is(value, -0)).toBe(false)
++          }
++        }
++      }
++    }
++  })
++})
+-- 
+2.43.0
+

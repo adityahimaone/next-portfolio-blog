@@ -1,0 +1,45 @@
+/* One glass device.
+
+   The host is the zero-size origin every device in this folder's callers is
+   built around (the anchor, the `rot` and the `fit` are all zero-size boxes the
+   device is centred on). The canvas is 208 x 156 CSS px, which is 4.16 x 3.12
+   model units at 50 px per unit, centred on that origin. */
+
+.host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+.fallback {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+.canvas {
+  position: absolute;
+  left: -104px;
+  top: -78px;
+  width: 208px;
+  height: 156px;
+  display: none;
+  pointer-events: none;
+  /* The fade the callers write on the anchor. A canvas is flat, so an opacity
+     on it costs nothing and does not flatten any 3D context. */
+  opacity: var(--o, 1);
+}
+
+.host[data-glass='on'] > .canvas {
+  display: block;
+}
+
+.host[data-glass='on'] > .fallback {
+  display: none;
+}

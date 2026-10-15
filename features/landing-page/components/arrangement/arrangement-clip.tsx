@@ -1,17 +1,9 @@
 import type { CSSProperties } from 'react'
 import { nameWave, type ArrangementClip as ClipData } from './arrangement-data'
+import { NameTitle } from './name-title'
 import styles from './arrangement.module.css'
 
 const NAME_WAVE = nameWave('ADITYA HIMAWAN')
-
-/** Each word of the name and the index of its first letter along the line. */
-function nameWords(label: string) {
-  const words = label.split(' ')
-  return words.map((word, index) => ({
-    word,
-    start: words.slice(0, index).reduce((sum, w) => sum + w.length, 0),
-  }))
-}
 
 /** The name's samples as a mirrored waveform path in a 0..100 x 0..100 box. */
 const WAVE_PATH = (() => {
@@ -109,31 +101,7 @@ export function ArrangementClip({
             >
               <path d={WAVE_PATH} />
             </svg>
-            <h1 className={styles.clipNameTitle} aria-label={clip.label}>
-              {/* The name is the brand, so it is set as a *waveform*: every
-                  letter its own bar of the wave drawn behind it. The letters
-                  rise out of their words on load, then keep a slow, phase-
-                  shifted swell, so the name reads as signal rather than as a
-                  heading. The accessible name is the label; the letters are
-                  `aria-hidden`. */}
-              {nameWords(clip.label).map(({ word, start }) => (
-                <span
-                  key={`${word}-${start}`}
-                  className={styles.nameWord}
-                  aria-hidden="true"
-                >
-                  {Array.from(word).map((char, charIndex) => (
-                    <span
-                      key={charIndex}
-                      className={styles.nameChar}
-                      style={{ '--c': start + charIndex } as CSSProperties}
-                    >
-                      {char}
-                    </span>
-                  ))}
-                </span>
-              ))}
-            </h1>
+            <NameTitle label={clip.label} />
             <span className={styles.srOnly}> — Frontend Engineer, Jakarta</span>
           </>
         ) : clip.notes ? (

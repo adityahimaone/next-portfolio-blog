@@ -3,6 +3,11 @@
 import { useEffect, type RefObject } from 'react'
 
 import { BENCH_CHIPS } from './bench-copy'
+import {
+  chapterPose,
+  setGlassPose,
+  type GlassKind,
+} from '../glass/glass-registry'
 import { BENCH_DEVICES, benchDeviceFrames } from './bench-devices'
 import {
   BENCH_BAND_CLEARANCE,
@@ -514,7 +519,16 @@ function startBenchMotion({
       const rot = deviceRots[index]
       anchor.style.transform = `translate3d(${flight.x}px, ${flight.y}px, 0) scale(${flight.scale})`
       anchor.style.setProperty('--o', String(flight.opacity))
-      rot.style.transform = `rotateX(${flight.rotateX}deg) rotateY(${flight.rotateY}deg) rotateZ(${flight.rotateZ}deg)`
+      const posed = setGlassPose(rot, {
+        rx: flight.rotateX,
+        ry: flight.rotateY,
+        rz: flight.rotateZ,
+        p: Math.min(1, frame.progress * 2),
+        spin: spin,
+      })
+      if (!posed) {
+        rot.style.transform = `rotateX(${flight.rotateX}deg) rotateY(${flight.rotateY}deg) rotateZ(${flight.rotateZ}deg)`
+      }
     }
 
     if (element.dataset.benchState !== frame.state) {
@@ -696,17 +710,20 @@ function startBenchMotion({
       start: string,
       end: string,
       source: HTMLElement = node,
+      also?: (progress: number) => void,
     ) => {
       written.push([node, name])
+      const write = (progress: number) => {
+        node.style.setProperty(name, progress.toFixed(4))
+        also?.(progress)
+      }
       readingTriggers.push(
         ScrollTrigger.create({
           trigger: source,
           start,
           end,
-          onRefresh: (self) =>
-            node.style.setProperty(name, self.progress.toFixed(4)),
-          onUpdate: (self) =>
-            node.style.setProperty(name, self.progress.toFixed(4)),
+          onRefresh: (self) => write(self.progress),
+          onUpdate: (self) => write(self.progress),
         }),
       )
     }
@@ -716,7 +733,21 @@ function startBenchMotion({
     )) {
       const chapter =
         visual.closest<HTMLElement>('[data-bench-chapter]') ?? visual
-      bind(visual, '--p', 'top 85%', 'bottom 30%', chapter)
+      // A glass device cannot read the stylesheet's `calc()`, so the same pose
+      // is also handed to it as numbers. If there is no glass device (yet), the
+      // stylesheet's tilt is what turns.
+      const kind = visual.querySelector<HTMLElement>('[data-kind]')?.dataset
+        .kind as GlassKind | undefined
+      bind(
+        visual,
+        '--p',
+        'top 85%',
+        'bottom 30%',
+        chapter,
+        kind
+          ? (progress) => setGlassPose(visual, chapterPose(kind, progress))
+          : undefined,
+      )
     }
     const ticker = element.querySelector<HTMLElement>('[data-bench-ticker]')
     if (ticker) bind(ticker, '--m', 'top bottom', 'bottom top')

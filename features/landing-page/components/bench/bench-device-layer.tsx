@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 
+import { GlassDevice } from '../glass/glass-device'
 import { BENCH_DEVICES, type BenchDeviceSpec } from './bench-devices'
 import styles from './bench-devices.module.css'
 
@@ -175,7 +176,10 @@ export function BenchDevices() {
             }
           >
             <span className={styles.rot} data-bench-device-rot={spec.id}>
-              <Device kind={spec.kind} />
+              <GlassDevice
+                kind={spec.kind}
+                fallback={<Device kind={spec.kind} />}
+              />
             </span>
           </span>
         </span>

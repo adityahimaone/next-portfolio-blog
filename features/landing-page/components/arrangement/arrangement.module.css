@@ -673,8 +673,9 @@ button.clip {
   font-family: var(--font-syne), sans-serif;
   /* One line, not two. The name used to stack so it could fit the lane's
      height, which capped it at ~96px; on one line the ceiling is the width
-     (fourteen letters across the viewport) or the lane's height, whichever is
-     smaller, and the name is half as large again. The name is the brand, so
+     (fourteen letters across the clip) or the lane's height, whichever is
+     smaller, and `--name-fit` (written by `NameTitle`, which measures) takes
+     off whatever the display face's width still will not fit. The name is the brand, so
      it is the biggest thing on the page. */
   font-size: clamp(40px, min(8.7vw, calc(var(--arr-lane-tall) - 40px)), 176px);
   font-weight: 800;
@@ -1268,7 +1269,7 @@ button.clip {
     min-height: 44px;
   }
   .clipNameTitle {
-    font-size: clamp(30px, 9vw, 52px);
+    font-size: calc(clamp(30px, 9vw, 52px) * var(--name-fit, 1));
     white-space: normal;
   }
   .nameWord {

@@ -184,6 +184,10 @@
   transform: scale(var(--k));
 }
 
+.stage:has([data-glass='on']) .tilt {
+  transform: none !important;
+}
+
 .stage[data-kind='sampler'] .tilt {
   transform: rotateX(calc(58deg - var(--p) * 46deg))
     rotateY(calc(-36deg + var(--p) * 72deg))

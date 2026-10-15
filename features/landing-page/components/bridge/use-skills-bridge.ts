@@ -2,6 +2,7 @@
 
 import { useEffect, type RefObject } from 'react'
 
+import { setGlassPose } from '../glass/glass-registry'
 import {
   BRIDGE_DEVICES,
   bridgeFrame,
@@ -98,27 +99,26 @@ function startBridge({
   ScrollTrigger: ScrollTriggerStatic
   element: HTMLElement
 }): () => void {
-  const stage = element.querySelector<HTMLElement>('[data-bridge-stage]')
-  const statement = element.querySelector<HTMLElement>(
-    '[data-bridge-statement]',
-  )
-  const room = element.querySelector<HTMLElement>('[data-bridge-room]')
-  const rack = element.querySelector<HTMLElement>('[data-bridge-rack]')
-  const caption = element.querySelector<HTMLElement>('[data-bridge-caption]')
-  const cables = element.querySelector<SVGElement>('[data-bridge-cables]')
-  const slots = Array.from(
-    element.querySelectorAll<HTMLElement>('[data-bridge-slot]'),
-  )
+  const one = <T extends Element>(selector: string) =>
+    element.querySelector<T>(selector)
+  const all = <T extends Element>(selector: string) =>
+    Array.from(element.querySelectorAll<T>(selector))
+
+  const stage = one<HTMLElement>('[data-bridge-stage]')
+  const statement = one<HTMLElement>('[data-bridge-statement]')
+  const room = one<HTMLElement>('[data-bridge-room]')
+  const core = one<HTMLElement>('[data-bridge-core]')
+  const horizon = one<HTMLElement>('[data-bridge-horizon]')
+  const caption = one<HTMLElement>('[data-bridge-caption]')
+  const words = all<HTMLElement>('[data-bridge-word]')
+  const rings = all<HTMLElement>('[data-bridge-ring]')
+  const slots = all<HTMLElement>('[data-bridge-slot]')
 
   const anchors: HTMLElement[] = []
   const rots: HTMLElement[] = []
   for (const device of BRIDGE_DEVICES) {
-    const anchor = element.querySelector<HTMLElement>(
-      `[data-bridge-device="${device.id}"]`,
-    )
-    const rot = element.querySelector<HTMLElement>(
-      `[data-bridge-rot="${device.id}"]`,
-    )
+    const anchor = one<HTMLElement>(`[data-bridge-device="${device.id}"]`)
+    const rot = one<HTMLElement>(`[data-bridge-rot="${device.id}"]`)
     if (anchor) anchors.push(anchor)
     if (rot) rots.push(rot)
   }
@@ -127,10 +127,10 @@ function startBridge({
     !stage ||
     !statement ||
     !room ||
-    !rack ||
+    !core ||
+    !horizon ||
     !caption ||
-    !cables ||
-    slots.length !== BRIDGE_DEVICES.length ||
+    slots.length !== 3 ||
     anchors.length !== BRIDGE_DEVICES.length ||
     rots.length !== BRIDGE_DEVICES.length
   ) {
@@ -151,37 +151,67 @@ function startBridge({
   const render = (frame: BridgeFrame) => {
     statement.style.setProperty('--s', String(frame.statement))
     room.style.setProperty('--r', String(frame.iris))
-    rack.style.setProperty('--rack', String(frame.rack))
+    horizon.style.setProperty('--r', String(frame.iris))
+    core.style.setProperty('--core', String(frame.core))
     caption.style.setProperty('--k', String(frame.caption))
 
     frame.devices.forEach((device, index) => {
       anchors[index].style.transform =
         `translate3d(${device.x}px, ${device.y}px, 0) scale(${device.scale})`
       anchors[index].style.setProperty('--o', String(device.opacity))
-      rots[index].style.transform =
-        `rotateX(${device.rx}deg) rotateY(${device.ry}deg) rotateZ(${device.rz}deg)`
-      slots[index].style.setProperty('--lit', String(device.lit))
-      cables.style.setProperty(`--c${index}`, String(device.cable))
+      const posed = setGlassPose(rots[index], {
+        rx: device.rx,
+        ry: device.ry,
+        rz: device.rz,
+        p: Math.min(1, frame.progress * 2),
+        spin: device.spin,
+      })
+      if (!posed) {
+        rots[index].style.transform =
+          `rotateX(${device.rx}deg) rotateY(${device.ry}deg) rotateZ(${device.rz}deg)`
+      }
+    })
+
+    frame.words.forEach((word, index) => {
+      const node = words[index]
+      if (!node) return
+      node.style.transform = `translate3d(${word.x}px, ${word.y}px, ${word.z}px)`
+      node.style.opacity = String(word.opacity)
+    })
+    frame.rings.forEach((ring, index) => {
+      const node = rings[index]
+      if (!node) return
+      node.style.transform = `translate3d(0, 0, ${ring.z}px)`
+      node.style.opacity = String(ring.opacity)
+    })
+    frame.plates.forEach((plate, index) => {
+      slots[index].style.translate = `0 0 ${plate.z}px`
+      slots[index].style.opacity = String(plate.opacity)
+      slots[index].style.setProperty('--lit', String(plate.lit))
     })
   }
 
   measure()
+  const draw = (progress: number) =>
+    render(bridgeFrame(progress, width, height, words.length))
+
   const trigger = ScrollTrigger.create({
     trigger: element,
     start: 'top top',
     end: 'bottom bottom',
     invalidateOnRefresh: true,
     onRefreshInit: measure,
-    onRefresh: (self) => render(bridgeFrame(self.progress, width, height)),
-    onUpdate: (self) => render(bridgeFrame(self.progress, width, height)),
+    onRefresh: (self) => draw(self.progress),
+    onUpdate: (self) => draw(self.progress),
   })
-  render(bridgeFrame(trigger.progress, width, height))
+  draw(trigger.progress)
 
   return () => {
     trigger.kill()
     statement.style.removeProperty('--s')
     room.style.removeProperty('--r')
-    rack.style.removeProperty('--rack')
+    horizon.style.removeProperty('--r')
+    core.style.removeProperty('--core')
     caption.style.removeProperty('--k')
     anchors.forEach((anchor) => {
       anchor.style.transform = ''
@@ -190,9 +220,14 @@ function startBridge({
     rots.forEach((rot) => {
       rot.style.transform = ''
     })
-    slots.forEach((slot) => slot.style.removeProperty('--lit'))
-    for (let index = 0; index < BRIDGE_DEVICES.length; index += 1) {
-      cables.style.removeProperty(`--c${index}`)
+    for (const node of [...words, ...rings]) {
+      node.style.transform = ''
+      node.style.opacity = ''
     }
+    slots.forEach((slot) => {
+      slot.style.translate = ''
+      slot.style.opacity = ''
+      slot.style.removeProperty('--lit')
+    })
   }
 }

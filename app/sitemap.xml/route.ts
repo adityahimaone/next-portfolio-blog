@@ -27,6 +27,9 @@ export async function GET() {
     },
     { url: '/guides/vps-vs-vercel', changefreq: 'monthly', priority: 0.7 },
     { url: '/bookmarks', changefreq: 'weekly', priority: 0.8 },
+    // Reachable from /bookmarks rather than the dock. Listed because it is a
+    // real page a crawler can index, not because it is in the navigation.
+    { url: '/skills', changefreq: 'monthly', priority: 0.7 },
     { url: '/music', changefreq: 'monthly', priority: 0.8 },
     // /contact, /about, /work and /guides are absent on purpose. Their content
     // was folded into the landing profile deck, the landing contact section,

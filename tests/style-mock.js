@@ -1,16 +1,10 @@
 /**
- * CSS Modules under Jest.
- *
- * ts-jest only transforms `.ts`/`.tsx`, so a component that imports a
- * `.module.css` file dies on load in a jsdom suite. Jest is not a browser and
- * none of these suites assert on styling, so the mapper hands back a proxy
- * that echoes the class name it was asked for — `styles.scp` is `'scp'`. That
- * is enough for a class name to reach the DOM, and it means a component can be
- * rendered in a test without the test having to know about CSS at all.
+ * CSS modules are a build-time concern. Jest has no pipeline for them, so a
+ * suite that renders a component importing one would die on the CSS syntax
+ * rather than on anything under test. Every class resolves to `undefined`,
+ * which is all a render assertion needs.
  */
 module.exports = new Proxy(
   {},
-  {
-    get: (_target, key) => (typeof key === 'string' ? key : undefined),
-  },
+  { get: (_target, key) => (key === '__esModule' ? false : String(key)) },
 )

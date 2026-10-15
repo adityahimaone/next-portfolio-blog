@@ -19,6 +19,9 @@ import { BoothShell } from '@/features/booth'
 const ROUTE_HUES: Record<string, string> = {
   '/projects': '#ff5a1f',
   '/bookmarks': '#2dd4bf',
+  // /skills is reached from the bookmarks page rather than the dock, so it gets
+  // a wash of its own to read as somewhere else, not a second bookmarks view.
+  '/skills': '#e879f9',
   '/blog': '#a78bfa',
   // The guides are the blog's long-form sibling and wear the same reader, so
   // they take the same wash. Without this they inherited the orange default,

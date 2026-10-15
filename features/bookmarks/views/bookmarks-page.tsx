@@ -10,14 +10,17 @@ import {
 } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
+  ArrowUpRight,
   ChevronDown,
   FolderSearch,
   Plus,
   RefreshCw,
   Shuffle,
+  Sparkles,
   Unlock,
   X,
 } from 'lucide-react'
+import Link from 'next/link'
 import { AnimatePresence, motion } from 'motion/react'
 import type { Bookmark, BookmarkFormData } from '../types'
 import type { BookmarkPage } from '../lib/bookmarks'
@@ -522,6 +525,28 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
             </>
           }
         />
+
+        <Link href="/skills" className={styles.skillsCta}>
+          <Sparkles
+            size={15}
+            className={styles.skillsCtaIcon}
+            aria-hidden="true"
+          />
+          <span>
+            <span className={styles.skillsCtaTitle}>
+              Agent skills worth installing
+            </span>
+            <span className={styles.skillsCtaText}>
+              The skills I actually run, plus the ones from the directory worth
+              the install.
+            </span>
+          </span>
+          <ArrowUpRight
+            size={14}
+            className={styles.skillsCtaArrow}
+            aria-hidden="true"
+          />
+        </Link>
 
         <div className={styles.library}>
           <aside className={`${styles.sidebar} glass`} aria-label="Playlists">

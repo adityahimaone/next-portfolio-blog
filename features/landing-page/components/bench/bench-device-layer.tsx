@@ -52,11 +52,19 @@ function Cuboid({
   )
 }
 
-function Device({ kind }: { kind: BenchDeviceSpec['kind'] }) {
+export function Device({
+  kind,
+  live,
+}: {
+  kind: BenchDeviceSpec['kind']
+  /** Chapter mode: parts respond to `--p` instead of sitting still. */
+  live?: boolean
+}) {
   switch (kind) {
     case 'sampler':
       return (
         <Cuboid
+          className={live ? styles.live : undefined}
           w={104}
           h={78}
           d={20}
@@ -68,6 +76,7 @@ function Device({ kind }: { kind: BenchDeviceSpec['kind'] }) {
                 {PADS.map((pad) => (
                   <i
                     key={pad}
+                    style={{ '--i': pad } as CSSProperties}
                     className={`${styles.pad} ${
                       ACCENT_PADS.has(pad) ? styles.padAccent : ''
                     }`}
@@ -130,7 +139,7 @@ function Device({ kind }: { kind: BenchDeviceSpec['kind'] }) {
       )
     case 'vinyl':
       return (
-        <span className={styles.vinyl}>
+        <span className={`${styles.vinyl} ${live ? styles.live : ''}`}>
           <i className={`${styles.disc} ${styles.discFront}`}>
             <b className={styles.discLabel} />
           </i>

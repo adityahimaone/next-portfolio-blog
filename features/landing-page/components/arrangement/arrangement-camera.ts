@@ -36,6 +36,13 @@
  * (1280×720) — it is a function of the viewport, not a constant, which is why
  * the read is driven by a measured number rather than a tuned one.
  *
+ * ## Why 340 (it was 400, and before that 460)
+ *
+ * 340 is the third retime. The handoff into About is now a continuous push
+ * (see `bench-frame.ts`), so the hero no longer needs 400svh to hide a seam; at
+ * 340 every phase keeps its shape and the dive costs 540px less at 900px tall.
+ * The paragraphs below describe the 400 reasoning and still hold in proportion.
+ *
  * ## Why 400 and not 460
  *
  * 460 was the window this was drawn against; it was never measured against the
@@ -56,7 +63,7 @@
  * anticipates the choice: "Final total hero length must be chosen after
  * measuring current behavior."
  */
-export const ARRANGEMENT_SCROLL_SVH = 400
+export const ARRANGEMENT_SCROLL_SVH = 340
 
 export const ARRANGEMENT_PHASES = {
   open: 0,

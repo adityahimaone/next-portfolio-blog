@@ -94,8 +94,11 @@
 .paper {
   position: absolute;
   inset: -8% -6%;
-  background-image:
-    linear-gradient(to right, var(--bench-rule) 1px, transparent 1px),
+  background-image: linear-gradient(
+      to right,
+      var(--bench-rule) 1px,
+      transparent 1px
+    ),
     linear-gradient(to bottom, var(--bench-rule) 1px, transparent 1px);
   background-size: var(--bench-cell) var(--bench-cell);
   background-position: 50% 50%;
@@ -106,8 +109,11 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(to right, var(--bench-rule-strong) 1px, transparent 1px),
+  background-image: linear-gradient(
+      to right,
+      var(--bench-rule-strong) 1px,
+      transparent 1px
+    ),
     linear-gradient(to bottom, var(--bench-rule-strong) 1px, transparent 1px);
   background-size: calc(var(--bench-cell) * 4) calc(var(--bench-cell) * 4);
   background-position: 50% 50%;
@@ -470,110 +476,6 @@
   text-wrap: balance;
 }
 
-.tracks {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: var(--bench-gap);
-  row-gap: clamp(2.5rem, 5vw, 5rem);
-}
-
-/* Each track is its own twelve-column band. The body sits in columns 2–6 and
-   the practice statement in 8–12, which is the editorial spread the design asks
-   for — two vertical bands, never overlapping boxes. The DOM order stays
-   statement-then-body, so the visual rearrangement costs assistive tech
-   nothing. */
-.track {
-  display: grid;
-  grid-column: 1 / -1;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: var(--bench-gap);
-  row-gap: clamp(0.6rem, 1.4vw, 1rem);
-  align-items: start;
-}
-
-.practice {
-  grid-column: 8 / 13;
-  grid-row: 1;
-  margin: 0;
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-size: clamp(1.75rem, 3.4vw, 3.25rem);
-  font-weight: 650;
-  line-height: 1.08;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
-}
-
-.body {
-  grid-column: 2 / 7;
-  grid-row: 1;
-  display: grid;
-  gap: clamp(0.75rem, 1.6vw, 1.25rem);
-  align-content: start;
-}
-
-/* 46–60ch, always full contrast, never scrubbed. */
-.story {
-  max-width: 60ch;
-  margin: 0;
-  color: var(--muted-foreground);
-  font-family: var(--font-geist), sans-serif;
-  font-size: clamp(1rem, 1.15vw, 1.125rem);
-  line-height: 1.65;
-}
-
-.credits {
-  display: grid;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  letter-spacing: 0.02em;
-}
-
-.credits li {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: baseline;
-}
-
-.credits b {
-  font-weight: 650;
-  color: var(--foreground);
-}
-
-.credits span {
-  color: var(--muted-foreground);
-}
-
-.aside {
-  max-width: 60ch;
-  margin: 0;
-  font-family: var(--font-geist), sans-serif;
-  font-size: clamp(1rem, 1.15vw, 1.125rem);
-  line-height: 1.65;
-  color: var(--foreground);
-}
-
-.resume {
-  justify-self: start;
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 0.8125rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--primary);
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
-}
-
-.resume:hover,
-.resume:focus-visible {
-  color: var(--foreground);
-}
-
 /* ── The panel's own entrance ────────────────────────────
    A view timeline rather than an observer: the panel is ordinary flow, so
    `view()` is exactly the right clock for it, and this way the biography's
@@ -669,31 +571,10 @@
   }
 }
 
-/* ── Below the breakpoint: one column, natural reading order ── */
+/* ── Below the breakpoint ─────────────────────────────── */
 
 @media (max-width: 768px) {
   .title {
     max-width: none;
-  }
-  .track {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .practice,
-  .body {
-    grid-column: 1 / -1;
-    grid-row: auto;
-  }
-  .practice {
-    margin-bottom: 0.35rem;
-  }
-}
-
-/* Narrow desktops: the two bands stack rather than being squeezed. */
-@media (min-width: 769px) and (max-width: 1080px) {
-  .practice {
-    grid-column: 7 / 13;
-  }
-  .body {
-    grid-column: 1 / 6;
   }
 }

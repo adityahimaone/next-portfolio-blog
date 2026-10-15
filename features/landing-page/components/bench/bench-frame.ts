@@ -183,13 +183,13 @@ export type BenchFrame = {
  */
 export const BENCH_PHASES = {
   /** The chips give up their drift and begin falling toward their slots. */
-  gather: [0.12, 0.31],
+  gather: [0.1, 0.27],
   /** The artifact draws itself on while the ring closes around it. */
-  assemble: [0.17, 0.36],
+  assemble: [0.14, 0.32],
   /** The constraints hand over: the ring dims and tightens as the artifact wins. */
-  resolve: [0.33, 0.4],
+  resolve: [0.3, 0.36],
   /** The artifact recedes and the principle line rises into the cleared stage. */
-  emerge: [0.43, 0.55],
+  emerge: [0.38, 0.49],
 } as const
 
 /**

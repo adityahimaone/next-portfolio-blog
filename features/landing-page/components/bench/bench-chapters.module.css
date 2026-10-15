@@ -1,0 +1,489 @@
+/* The chapters.
+
+   From the title to the last line, the About is one continuous scene made of
+   four things: a ticker that slides past the title, three chapters that each
+   pin a real 3D device beside their text, a finale, and a playhead down the
+   left edge. All of it is driven by custom properties the motion hook writes on
+   small nodes — `--m` on the ticker, `--p` on each chapter's visual, `--ap` on
+   the rail — and every pose, light and bar is arithmetic on those numbers.
+
+   Two rules the file obeys:
+
+   1. **A resting frame is always composed.** Every property declares its own
+      default (`--p: 0.5`, `--m: 0.5`, `--ap: 0`), so with the script absent,
+      failed, or reduced motion the page is a finished layout, not a hidden one.
+   2. **Decoration never sits under text.** The visual and the text occupy
+      different columns of the same row; the numeral is behind the *device*, not
+      behind a sentence. */
+
+/* ── The ticker ──────────────────────────────────────────── */
+
+.ticker {
+  --m: 0.5;
+  display: grid;
+  gap: 0.04em;
+  margin: clamp(2.5rem, 6vw, 5rem) calc(var(--bench-pad) * -1)
+    clamp(3rem, 7vw, 6rem);
+  overflow: clip;
+  font-family: var(--font-syne), sans-serif;
+  font-size: clamp(3.2rem, 10vw, 10rem);
+  font-weight: 750;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  user-select: none;
+}
+
+.tickerRow {
+  display: flex;
+  gap: 0.7em;
+  width: max-content;
+  margin: 0;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px
+    color-mix(in srgb, var(--foreground) 45%, transparent);
+  paint-order: stroke fill;
+  transform: translate3d(calc(var(--m, 0.5) * -26%), 0, 0);
+  will-change: transform;
+}
+
+.tickerBack {
+  transform: translate3d(calc((var(--m, 0.5) - 1) * 26%), 0, 0);
+}
+
+.tickerRow span:nth-child(4n + 2) {
+  color: var(--foreground);
+  -webkit-text-stroke: 0;
+}
+
+.tickerRow span:nth-child(4n + 4) {
+  color: var(--primary);
+  -webkit-text-stroke: 0;
+}
+
+/* ── A chapter ───────────────────────────────────────────── */
+
+.chapters {
+  display: grid;
+  row-gap: clamp(1rem, 3vw, 3rem);
+}
+
+.chapter {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--bench-gap);
+  align-items: start;
+  /* The pinned visual needs a stretch of scroll to be pinned for. Just over a
+     viewport: enough to turn the device through its whole arc, not enough to
+     drag. */
+  min-height: 108svh;
+}
+
+.visual {
+  --p: 0.5;
+  --dev-body: color-mix(in srgb, var(--background) 90%, var(--foreground));
+  --dev-body-deep: color-mix(in srgb, var(--background) 78%, var(--foreground));
+  --dev-edge: color-mix(in srgb, var(--foreground) 34%, transparent);
+  --dev-lcd: color-mix(in srgb, var(--primary) 32%, var(--background));
+  position: sticky;
+  top: 14svh;
+  grid-row: 1;
+  align-self: start;
+  height: 72svh;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.text {
+  grid-row: 1;
+  align-self: center;
+  display: grid;
+  gap: clamp(0.9rem, 1.8vw, 1.5rem);
+  align-content: center;
+  min-height: 72svh;
+}
+
+.chapter[data-side='left'] .visual {
+  grid-column: 1 / 7;
+}
+.chapter[data-side='left'] .text {
+  grid-column: 8 / 13;
+}
+.chapter[data-side='right'] .visual {
+  grid-column: 7 / 13;
+}
+.chapter[data-side='right'] .text {
+  grid-column: 2 / 7;
+}
+
+/* The numeral is the furthest layer: outlined, enormous, and it drifts against
+   the scroll so the device in front of it reads as nearer. */
+.numeral {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  translate: -50% calc(-50% + (var(--p) - 0.5) * -140px);
+  font-family: var(--font-syne), sans-serif;
+  font-size: clamp(11rem, 26vw, 24rem);
+  font-weight: 800;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  color: transparent;
+  -webkit-text-stroke: 1px
+    color-mix(in srgb, var(--foreground) 16%, transparent);
+  user-select: none;
+}
+
+.stage {
+  --o: 1;
+  --bench-spin: calc(var(--p) * 900);
+  --k: 2.6;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  perspective: 1100px;
+}
+
+.stage[data-kind='cassette'] {
+  --k: 2.7;
+}
+.stage[data-kind='vinyl'] {
+  --k: 2.9;
+}
+
+.tilt,
+.scale {
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+.scale {
+  transform: scale(var(--k));
+}
+
+.stage[data-kind='sampler'] .tilt {
+  transform: rotateX(calc(58deg - var(--p) * 46deg))
+    rotateY(calc(-36deg + var(--p) * 72deg))
+    rotateZ(calc(-10deg + var(--p) * 20deg));
+}
+
+.stage[data-kind='cassette'] .tilt {
+  transform: rotateX(calc(-30deg + var(--p) * 50deg))
+    rotateY(calc(44deg - var(--p) * 88deg))
+    rotateZ(calc(8deg - var(--p) * 16deg));
+}
+
+.stage[data-kind='vinyl'] .tilt {
+  transform: rotateX(calc(72deg - var(--p) * 58deg))
+    rotateY(calc(-20deg + var(--p) * 40deg))
+    rotateZ(calc(-12deg + var(--p) * 40deg));
+}
+
+.note {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 1;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(0.62rem, 0.78vw, 0.72rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* The level meter under the record: sixteen bars, each a sine of the scroll at
+   its own phase. Where `sin()` is not supported the declared height stands, so
+   the meter is a still bar chart rather than nothing. */
+.meter {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 12%;
+}
+
+.meter i {
+  display: block;
+  width: 5px;
+  height: 45%;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.meter i:nth-last-child(-n + 3) {
+  background: var(--primary);
+}
+
+@supports (width: calc(1px * sin(1))) {
+  .meter i {
+    height: calc(
+      12% + 88% * sin(calc(var(--p) * 9 + var(--i) * 0.55)) *
+        sin(calc(var(--p) * 9 + var(--i) * 0.55))
+    );
+  }
+}
+
+/* ── Chapter text ────────────────────────────────────────── */
+
+.kicker {
+  margin: 0;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.kicker b {
+  margin-right: 0.6em;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.heading,
+.offer {
+  margin: 0;
+  text-wrap: balance;
+}
+
+.heading {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: clamp(2rem, 4.2vw, 3.9rem);
+  font-weight: 650;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+}
+
+/* One word, one mask. */
+.rw {
+  display: inline-block;
+  overflow: clip;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+  vertical-align: top;
+}
+
+.rwIn {
+  display: inline-block;
+  transform-origin: 0 100%;
+}
+
+.heading[data-armed='true'] .rwIn,
+.offer[data-armed='true'] .rwIn {
+  translate: 0 112%;
+  rotate: 5deg;
+}
+
+.heading[data-armed='true'][data-in='true'] .rwIn,
+.offer[data-armed='true'][data-in='true'] .rwIn {
+  translate: 0 0;
+  rotate: 0deg;
+  transition:
+    translate 850ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i) * 70ms),
+    rotate 850ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i) * 70ms);
+}
+
+.story {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-geist), sans-serif;
+  font-size: clamp(1rem, 1.15vw, 1.125rem);
+  line-height: 1.65;
+}
+
+.credits {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+.credits li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--bench-edge);
+}
+
+.credits b {
+  font-weight: 650;
+  color: var(--foreground);
+}
+
+.credits span {
+  color: var(--muted-foreground);
+}
+
+/* ── The finale ──────────────────────────────────────────── */
+
+.finale {
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.75rem);
+  margin-top: clamp(3rem, 7vw, 7rem);
+  padding-top: clamp(2rem, 4vw, 3.5rem);
+  border-top: 1px solid var(--bench-edge);
+}
+
+.place {
+  margin: 0;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.offer {
+  max-width: 17ch;
+  font-family: var(--font-syne), sans-serif;
+  font-size: clamp(2.25rem, 6.4vw, 6.4rem);
+  font-weight: 750;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.resume {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9em;
+  padding: 0.95em 1.5em;
+  border: 1px solid var(--foreground);
+  border-radius: 999px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--foreground);
+  text-decoration: none;
+  transition:
+    background-color 240ms ease,
+    color 240ms ease;
+}
+
+.resume i {
+  font-style: normal;
+  transition: translate 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.resume:hover,
+.resume:focus-visible {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.resume:hover i,
+.resume:focus-visible i {
+  translate: 0.35em 0;
+}
+
+/* ── The rail ────────────────────────────────────────────── */
+
+.rail {
+  --ap: 0;
+  display: none;
+  position: absolute;
+  left: clamp(0.5rem, 1.4vw, 1.4rem);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--foreground) 14%, transparent);
+  pointer-events: none;
+}
+
+.railFill {
+  position: absolute;
+  inset: 0;
+  background: var(--primary);
+  transform-origin: 50% 0;
+  transform: scaleY(var(--ap, 0));
+  will-change: transform;
+}
+
+.railDot {
+  position: absolute;
+  left: -3px;
+  top: calc(var(--ap, 0) * 100%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+@media (min-width: 1100px) {
+  .rail {
+    display: block;
+  }
+}
+
+/* ── Narrower than the editorial spread ──────────────────── */
+
+@media (min-width: 769px) and (max-width: 1080px) {
+  .stage {
+    --k: 2;
+  }
+  .stage[data-kind='cassette'] {
+    --k: 2.1;
+  }
+  .stage[data-kind='vinyl'] {
+    --k: 2.2;
+  }
+  .chapter[data-side='left'] .visual,
+  .chapter[data-side='right'] .visual {
+    grid-column: 1 / 6;
+  }
+  .chapter[data-side='left'] .text,
+  .chapter[data-side='right'] .text {
+    grid-column: 6 / 13;
+  }
+}
+
+@media (max-width: 768px) {
+  .chapter {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    row-gap: 1.25rem;
+    padding-bottom: 2.5rem;
+  }
+  .visual {
+    position: relative;
+    top: auto;
+    height: 58vw;
+    min-height: 15rem;
+  }
+  .text {
+    min-height: 0;
+  }
+  .chapter[data-side='left'] .visual,
+  .chapter[data-side='right'] .visual,
+  .chapter[data-side='left'] .text,
+  .chapter[data-side='right'] .text {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .stage,
+  .stage[data-kind='cassette'],
+  .stage[data-kind='vinyl'] {
+    --k: 1.5;
+  }
+  .heading {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+}

@@ -4,10 +4,17 @@ import { Fragment, useRef, type CSSProperties } from 'react'
 
 import { ABOUT_TRACKS } from '../../rack-01/about-copy'
 import { BENCH_CAPTION, BENCH_CHIPS, BENCH_PRINCIPLE } from './bench-copy'
+import {
+  BenchChapter,
+  BenchFinale,
+  BenchRail,
+  BenchTicker,
+} from './bench-chapters'
 import { BenchDevices } from './bench-device-layer'
+import chapterStyles from './bench-chapters.module.css'
 import styles from './bench.module.css'
 import { useBenchMotion } from './use-bench-motion'
-import { useBenchTitleReveal } from './use-bench-title-reveal'
+import { useBenchReveal } from './use-bench-reveal'
 
 /**
  * The artifact, drawn once.
@@ -163,6 +170,12 @@ const PRINCIPLE_WORDS = BENCH_PRINCIPLE.split(' ')
 
 const TITLE = 'The rules become the work.'
 
+/** The track that carries the availability line, if any. */
+const FINALE_TRACK = ABOUT_TRACKS.find((track) => track.aside)
+const FINALE = FINALE_TRACK?.aside
+  ? { aside: FINALE_TRACK.aside, resumeLink: FINALE_TRACK.resumeLink }
+  : null
+
 /**
  * Rules becoming play: the constraints, the thing they become, and the
  * principle behind it — and then the biography.
@@ -191,9 +204,8 @@ const TITLE = 'The rules become the work.'
  */
 export function BenchAbout() {
   const root = useRef<HTMLElement>(null)
-  const title = useRef<HTMLHeadingElement>(null)
   useBenchMotion(root)
-  useBenchTitleReveal(title)
+  useBenchReveal(root)
 
   return (
     <section ref={root} className={styles.bench} data-bench>
@@ -281,10 +293,11 @@ export function BenchAbout() {
         data-no-heading-reveal
         aria-labelledby="about-title"
       >
+        <BenchRail />
         <div className={styles.reading}>
           <h2
-            ref={title}
             id="about-title"
+            data-bench-reveal
             className={styles.title}
             aria-label={TITLE}
           >
@@ -313,47 +326,17 @@ export function BenchAbout() {
             })}
           </h2>
 
-          <div className={styles.tracks}>
-            {ABOUT_TRACKS.map((track) => (
-              <article key={track.title} className={styles.track}>
-                {/* The statement comes first in the DOM and is placed in the
-                    right-hand band by the stylesheet, so the visual editorial
-                    spread costs the reading order nothing. */}
-                <p className={styles.practice} data-reveal>
-                  {track.heading}
-                </p>
-                <div className={styles.body}>
-                  <p className={styles.story} data-reveal>
-                    {track.story}
-                  </p>
-                  {track.credits ? (
-                    <ul className={styles.credits} data-reveal>
-                      {track.credits.map((credit) => (
-                        <li key={credit.name}>
-                          <b>{credit.name}</b>
-                          <span>{credit.note}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {track.aside ? (
-                    <p className={styles.aside} data-reveal>
-                      {track.aside}
-                    </p>
-                  ) : null}
-                  {track.resumeLink ? (
-                    <a
-                      className={styles.resume}
-                      href={track.resumeLink}
-                      data-reveal
-                    >
-                      Résumé →
-                    </a>
-                  ) : null}
-                </div>
-              </article>
+          <BenchTicker words={BENCH_CHIPS.map((chip) => chip.text)} />
+
+          <div className={chapterStyles.chapters}>
+            {ABOUT_TRACKS.map((track, index) => (
+              <BenchChapter key={track.title} track={track} index={index} />
             ))}
           </div>
+
+          {FINALE ? (
+            <BenchFinale aside={FINALE.aside} resumeLink={FINALE.resumeLink} />
+          ) : null}
         </div>
       </section>
     </section>

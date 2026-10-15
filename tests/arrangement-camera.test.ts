@@ -264,7 +264,7 @@ describe('arrangementFrame', () => {
 
   it('spends at least a quarter of the window on the hold, and enough scroll to make it worth watching', () => {
     expect(1 - ARRANGEMENT_PHASES.rail).toBeGreaterThanOrEqual(0.25)
-    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(400)
+    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(340)
   })
 
   it('opens the window after the rail and finishes before the end, so the read owns its own stretch', () => {

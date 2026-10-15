@@ -7,6 +7,7 @@ import { BENCH_DEVICES, benchDeviceFrames } from './bench-devices'
 import {
   BENCH_BAND_CLEARANCE,
   BENCH_HOLD,
+  BENCH_SEAM_RISE,
   BENCH_STAGE_BASE,
   benchFrame,
   benchRunway,
@@ -29,6 +30,9 @@ const BENCH_QUERY =
   '(min-width: 769px) and (min-height: 700px) and (prefers-reduced-motion: no-preference)'
 
 const BENCH_STAGE_WIDTH = BENCH_STAGE_BASE.width
+
+/** The size the sheet's layers arrive at, as a fraction of their rest size. */
+const BENCH_PUSH_FROM = 0.88
 
 type Gsap = (typeof import('gsap'))['gsap']
 type ScrollTriggerStatic =
@@ -266,6 +270,23 @@ function startBenchMotion({
   const geometry: BenchGeometry = { stageWidth: 1280, stageHeight: 760 }
 
   const renderFrame = (frame: BenchFrame) => {
+    const unitNow = Math.min(
+      2,
+      Math.max(0.6, geometry.stageWidth / BENCH_STAGE_WIDTH),
+    )
+    /**
+     * The push. The hero ends mid-dive, everything in it growing toward the
+     * reader; if the sheet that replaces it arrived at full size it would be a
+     * new object standing still. So the sheet's layers arrive slightly small
+     * and *keep growing* into place over the takeover, which is the same
+     * direction of travel the hero was already in. `arrive` is the seam's own
+     * clock (derived from `stageY`, so it cannot drift from it), eased out so
+     * the growth decelerates onto the resting size instead of stopping dead.
+     */
+    const linear =
+      1 - Math.min(1, Math.max(0, frame.stageY / (BENCH_SEAM_RISE * unitNow)))
+    const arrive = 1 - (1 - linear) ** 3
+    const push = BENCH_PUSH_FROM + (1 - BENCH_PUSH_FROM) * arrive
     stage.style.opacity = String(frame.stageOpacity)
     // The sheet's arrival, and the reason the seam is not a dissolve. The stage
     // is the opaque surface the machine is covered by, so giving it a direction
@@ -284,7 +305,7 @@ function startBenchMotion({
     // The sheet starts tipped back like a desk seen from a seat and lies flat
     // as the drawing completes: the draw-on clock doubles as the tilt's.
     const tilt = 16 * (1 - frame.artifactDraw)
-    paper.style.transform = `translate3d(0, ${frame.farY}px, 0) perspective(1600px) rotateX(${tilt}deg)`
+    paper.style.transform = `translate3d(0, ${frame.farY}px, 0) perspective(1600px) rotateX(${tilt}deg) scale(${push})`
     principle.style.transform = `translate3d(0, ${frame.farY + frame.principleY}px, 0)`
     // The principle arrives word by word: the stylesheet derives each word's
     // offset from this one number, so the box itself is never faded.
@@ -301,7 +322,7 @@ function startBenchMotion({
     // right of the stage's centre on the real page. Writing the centring as the
     // first function of the transform this hook owns removes the dependency on
     // what a third-party library does with a property it did not write.
-    artifact.style.transform = `translate3d(-50%, -50%, 0) translate3d(0, ${frame.middleY + frame.artifactY}px, 0) scale(${frame.artifactScale})`
+    artifact.style.transform = `translate3d(-50%, -50%, 0) translate3d(0, ${frame.middleY + frame.artifactY}px, 0) scale(${frame.artifactScale * push})`
     artifactFrame.style.opacity = String(frame.artifactOpacity)
 
     // The construction marks, spent as the wireframe draws over them. They are
@@ -317,7 +338,7 @@ function startBenchMotion({
     // The near stratum's shared contraction. A uniform scale about the stage's
     // own centre is the one transform the ring can take after it has landed
     // without any chip leaving its slot relative to its neighbours.
-    ring.style.transform = `scale(${frame.ringScale})`
+    ring.style.transform = `scale(${frame.ringScale * push})`
 
     for (let index = 0; index < chipNodes.length; index += 1) {
       const chip = frame.chips[index]
@@ -336,14 +357,10 @@ function startBenchMotion({
     artifact.style.setProperty('--bench-spin', String(spin))
     deviceLayer.style.setProperty('--bench-spin', String(spin))
 
-    const unit = Math.min(
-      2,
-      Math.max(0.6, geometry.stageWidth / BENCH_STAGE_WIDTH),
-    )
     const flights = benchDeviceFrames(
       frame.progress,
       geometry.stageHeight,
-      unit,
+      unitNow,
     )
     for (let index = 0; index < flights.length; index += 1) {
       const flight = flights[index]
@@ -474,11 +491,18 @@ function startBenchMotion({
 
   let stopped = false
   let trigger: ReturnType<ScrollTriggerStatic['create']> | null = null
+  const readingTriggers: ReturnType<ScrollTriggerStatic['create']>[] = []
+  /** Every custom property the reading clocks wrote, so teardown can unwrite it. */
+  const written: (readonly [HTMLElement, string])[] = []
 
   const teardown = () => {
     stopped = true
     trigger?.kill()
     trigger = null
+    for (const t of readingTriggers) t.kill()
+    readingTriggers.length = 0
+    for (const [node, name] of written) node.style.removeProperty(name)
+    written.length = 0
     for (const [node, style] of snapshots) {
       if (style === null) node.removeAttribute('style')
       else node.setAttribute('style', style)
@@ -495,6 +519,57 @@ function startBenchMotion({
     document.documentElement.style.removeProperty('--arr-hold')
     delete element.dataset.motion
     delete element.dataset.benchState
+  }
+
+  /**
+   * The reading panel's own clocks, from the title to the last line.
+   *
+   * Each is a scrubbed trigger that writes **one number on one small node**:
+   *
+   * - `--p` on each chapter's visual: 0 as the chapter enters, 1 as it leaves.
+   *   Every tilt, spin, lit pad and meter bar of that chapter's device is CSS
+   *   arithmetic on it, so the device is a pure function of scroll;
+   * - `--m` on the ticker, driving two rows in opposite directions;
+   * - `--ap` on the rail, the playhead along the whole About.
+   *
+   * The number is never written to the panel itself: a custom property change
+   * restyles the whole subtree below it, and the panel is most of the page.
+   * Without this function (phones, reduced motion, no JavaScript) every
+   * default in the stylesheet is a composed resting frame, not an empty one.
+   */
+  const bindReading = () => {
+    const bind = (
+      node: HTMLElement,
+      name: string,
+      start: string,
+      end: string,
+      source: HTMLElement = node,
+    ) => {
+      written.push([node, name])
+      readingTriggers.push(
+        ScrollTrigger.create({
+          trigger: source,
+          start,
+          end,
+          onRefresh: (self) =>
+            node.style.setProperty(name, self.progress.toFixed(4)),
+          onUpdate: (self) =>
+            node.style.setProperty(name, self.progress.toFixed(4)),
+        }),
+      )
+    }
+
+    for (const visual of element.querySelectorAll<HTMLElement>(
+      '[data-bench-cvisual]',
+    )) {
+      const chapter =
+        visual.closest<HTMLElement>('[data-bench-chapter]') ?? visual
+      bind(visual, '--p', 'top 85%', 'bottom 30%', chapter)
+    }
+    const ticker = element.querySelector<HTMLElement>('[data-bench-ticker]')
+    if (ticker) bind(ticker, '--m', 'top bottom', 'bottom top')
+    const rail = element.querySelector<HTMLElement>('[data-bench-rail]')
+    if (rail) bind(rail, '--ap', 'top 65%', 'bottom 65%', about)
   }
 
   try {
@@ -519,6 +594,8 @@ function startBenchMotion({
     })
 
     renderFrame(benchFrame(trigger.progress, geometry))
+
+    bindReading()
 
     // Text measured before the display face has loaded is the wrong height, and
     // the wrong height is a runway that puts the principle in the wrong place.

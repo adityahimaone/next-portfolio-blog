@@ -65,7 +65,7 @@ describe('section height', () => {
     )
     const match = css.match(/--arr-scroll:\s*([\d.]+)svh/)
     expect(Number(match?.[1])).toBeCloseTo(ARRANGEMENT_SCROLL_SVH, 6)
-    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(400)
+    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(340)
   })
 
   it('un-pins the hero on short viewports, where the hook declines to run', () => {

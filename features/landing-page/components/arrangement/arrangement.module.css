@@ -49,7 +49,7 @@
      holds the reading panel clear of the decorative word band, which costs
      scroll, and the hero giving back 540px here is what pays for it. See
      `ARRANGEMENT_SCROLL_SVH` for the measurement. */
-  --arr-scroll: 400svh;
+  --arr-scroll: 340svh;
 
   position: relative;
   /* `--arr-hold` is the handoff's, and it defaults to nothing.

@@ -480,13 +480,47 @@
    change once — the rail's slide, the mixer's fade — where a transition is
    cheaper than a per-tick value.
 
-   `.laneProfile` is excluded, which is the whole point: the focal point is
-   established by the others stepping back, not by the profile clip doing
-   anything. `will-change` is deliberately absent: the value changes every tick
-   during the dive, and promoting ten full-width lanes for it would cost more
-   than the compositing it saves. */
+   `.laneProfile` is excluded from *that* factor, which is the whole point: the
+   focal point is established by the others stepping back, not by the profile
+   clip doing anything. `will-change` is deliberately absent: the value changes
+   every tick during the dive, and promoting ten full-width lanes for it would
+   cost more than the compositing it saves.
+
+   `--arr-fade` is the second factor and it is the handoff's. The seam has to
+   dissolve the clip content, and it cannot do that with an `opacity` on
+   `.camera`: the camera carries `transform-style: preserve-3d`, and an opacity
+   below 1 is a grouping property value — it renders the subtree into a flat
+   plane, so the lanes' `translateZ` would vanish on the frame the dissolve
+   began. The lanes are leaves with no 3D descendants of their own, so their
+   opacity can fall without flattening anything, and the seam writes one number
+   here instead. Every lane reads it, the profile lane included: this is the
+   whole timeline dissolving, not a recession of its supporting tracks. Unset it
+   is `1`, which is what every non-motion layout gets. */
 .lane:not(.laneProfile) {
-  opacity: var(--arr-lane-opacity, 1);
+  opacity: calc(var(--arr-lane-opacity, 1) * var(--arr-fade, 1));
+}
+.laneProfile {
+  opacity: var(--arr-fade, 1);
+}
+
+/* The handoff turns the lanes' smoothing off while it runs.
+ *
+ * The `opacity` half of `.lane`'s transition is the hero's: it smooths the
+ * per-tick recession of the dive, which is spread across a fifth of a 340svh
+ * section and can afford to trail the scroll by 120ms. The handoff's dissolve
+ * is a different animal. It is packed into the hold, which is a fraction of a
+ * section, so its window can be *shorter than the smoothing itself* — and a
+ * transition that outlasts the signal leaves the timeline visibly half-faded on
+ * the frame the stage parks its `visibility`, which is a pop rather than a
+ * dissolve. So the seam declares its own window with `data-seam-locked` on the
+ * stage and the lanes are exactly scroll-locked for as long as it is set.
+ *
+ * The `filter` half is kept. `.laneProfile`'s brightness lift is the hero's and
+ * nothing about it changes while the seam runs, so there is nothing to
+ * un-smooth — and dropping it would be a claim about the hero this rule has no
+ * business making. See `use-bench-motion.ts` for the write. */
+.stage[data-seam-locked] .lane {
+  transition: filter 120ms linear;
 }
 
 /* ── Clips ──────────────────────────────────────────────────
@@ -1474,5 +1508,87 @@ button.clip {
 @media (min-width: 769px) and (max-width: 940px) {
   .lcdPos {
     display: none;
+  }
+}
+
+/* ── The ground ───────────────────────────────────────────
+   The dark the instrument is drawn on, as a layer of its own rather than as the
+   stage's own `background`.
+
+   It has to be separate because it is the one part of the machine the handoff
+   *dissolves* while everything else leaves: opacity multiplies down a tree, so
+   a fade on the stage would take the chrome, the ruler, the lanes and the mixer
+   with it, and the furniture would be half-gone before it had finished moving.
+   As a sibling at `z-index: -1` inside the stage's own stacking context it can
+   be faded on its own and the pieces above it stay whole.
+
+   `display: none` at rest. Outside the motion layout the stage keeps its own
+   background and this element has nothing to do — and leaving it in the flow
+   would be actively wrong, because on a phone the stage is `position: static`
+   and this would resolve its `inset: 0` against the hero section instead. */
+.ground {
+  display: none;
+}
+
+/* ── The handoff: the machine is the near surface ─────────
+   The About's sheet is pulled up *under* this section, so on the first frame of
+   the handoff two full-viewport stages are stacked in exactly the same place,
+   and the hold is spent taking this one apart to uncover the other.
+
+   That only reads if the machine is in front, and the pull-up's own DOM order
+   says the opposite: the About is a later sibling, so with both stages at the
+   same level it paints on top and the whole handoff would happen behind an
+   opaque page. This z-index is the whole fix.
+
+   It is scoped to the one layout where the two sections overlap — the same
+   three conditions the About's own motion gates on, written out here because
+   CSS cannot ask whether a script ran. A viewport that fails any of them has no
+   pull-up and no handoff, and the stage is a plain sticky panel with no z-index
+   to leak.
+
+   Two is chosen, not inherited: the fixed furniture above this page — the
+   magnetic dock at 40, the music widget and the top bar at 50, the theme toggle
+   at 60 — all sit at positive z-indices of their own, and this must stay under
+   every one of them. It only ever has to beat the About's stage, which is at
+   zero.
+
+   The stage's own background is handed to `.ground` here and nowhere else, so
+   the fallback layouts keep a stage that is opaque on its own and a `.ground`
+   that is `display: none`.
+
+   `will-change` is declared per piece, and the camera is deliberately absent
+   from the list. It carries `transform-style: preserve-3d`, and promoting it —
+   or writing an `opacity` below 1 to it — is the documented way to flatten a 3D
+   subtree: the lanes' `translateZ` would be rendered into the camera's own
+   plane and the depth layer would stop existing. Its dissolve is therefore
+   delivered through the lanes' opacity instead, which is why `--arr-fade` is
+   read there and not here. See `BenchHeroExitMode`. */
+@media (min-width: 769px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+  .stage {
+    z-index: 2;
+    background: transparent;
+  }
+
+  .ground {
+    display: block;
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: var(--arr-ground);
+    pointer-events: none;
+    will-change: opacity;
+  }
+
+  .chrome,
+  .ruler,
+  .rail,
+  .proof {
+    will-change: translate;
+  }
+
+  /* The playhead leaves by dissolving rather than by moving — it is a hairline
+     with no axis to leave on — so it is hinted for opacity, not translate. */
+  .playhead {
+    will-change: opacity;
   }
 }

@@ -11,6 +11,7 @@ export function ArrangementPlayhead() {
     <div
       className={styles.playhead}
       data-flight-source="playhead"
+      data-arr-playhead
       aria-hidden="true"
     />
   )

@@ -10,11 +10,16 @@ export const GHOST_TRACKS = 8
  * name; the lane's colour is its clip's colour, so the header and the clip it
  * heads are the same hue. Rows use the same heights and gap as the lanes, so
  * the two columns line up by construction.
+ *
+ * `data-arr-rail` is the handoff's marker rather than a readout's: this is the
+ * column the seam slides out to the left when it takes the machine apart, and
+ * it is on the column and not on its rows so the whole thing leaves as one
+ * piece. See `BENCH_HERO_EXITS`.
  */
 export function ArrangementRail() {
   const offset = ARRANGEMENT_LANES.length
   return (
-    <div className={styles.rail} aria-hidden="true">
+    <div className={styles.rail} data-arr-rail aria-hidden="true">
       {ARRANGEMENT_LANES.map((lane, index) => {
         const clip = ARRANGEMENT_CLIPS.find((item) => item.laneId === lane.id)
         return (

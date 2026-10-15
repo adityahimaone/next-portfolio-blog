@@ -522,8 +522,8 @@
    * reader falling through that dead frame, and they are not interchangeable.
    * Pulling this section up makes the two clocks *meet*, so there is no dead
    * scroll left to fall through. And the hero's own hook grows its section by
-   * `--arr-hold` — the length of this stage's takeover — so the machine is
-   * still pinned, and therefore still still, while the takeover runs.
+   * `--arr-hold` — the length of the exits — so the machine is still pinned,
+   * and therefore still still, while it comes apart.
    *
    * **The pull-up has to absorb the hold as well as the stage.** This section's
    * own top edge is what its clock starts on, and that edge is derived from the
@@ -531,7 +531,7 @@
    * the hero's un-pin no matter how much the hero grew, and the hold would be
    * spent as dead scroll *before* this section rather than as its first beat.
    * Pulling up by the stage *and* the hold is what puts p=0 one hold earlier
-   * than the un-pin, which is the only arrangement in which the takeover
+   * than the un-pin, which is the only arrangement in which the disassembly
    * happens over a machine that is standing still. */
   .bench[data-motion='ready'] {
     margin-top: calc(-100svh - var(--arr-hold, 0px));
@@ -541,29 +541,21 @@
     display: block;
     position: sticky;
     top: 0;
+    /* Below the hero's own stage, and that is the handoff now: this sheet is the
+       *page*, pulled up under the machine and sitting there, and the hold is
+       spent taking the machine apart to uncover it. See
+       `arrangement.module.css` for the other half of the pair — the hero's stage
+       is raised to a positive z-index over this one, which the pull-up's own DOM
+       order would otherwise invert. */
     z-index: 0;
     height: 100svh;
     margin-bottom: -100svh;
     background: var(--background);
-    /* The two properties the hook animates, promoted once here rather than per
-       frame. The stage is a full-viewport layer carrying a grid, ten labels and
-       an SVG, so both the opacity ramp and the arrival translate are worth a
-       compositor layer — and `transform` in particular is what keeps the sheet's
-       settle off the main thread. */
-    will-change: transform, opacity;
-    /* Nothing here hides the stage at rest. The hook writes its opacity from
-       `stageOpacity`, which is zero on the first frame and whole before
-       `BENCH_HOLD` — so the pulled-up stage cannot climb over the hero during
-       the dive, and the machine is not covered until the reader has stopped
-       looking at it. There is deliberately no `visibility` fallback: an
-       `opacity: 0` stage that the hook never reaches is still invisible, which
-       is the same resting state by a different route.
-
-       The arrival offset is the hook's too, and for the same reason: it is the
-       seam's own number and it belongs with the rest of the frame maths rather
-       than split between two files. It is written as the first function of the
-       transform the hook owns, never as a standalone `translate` declaration —
-       see `.artifact` for what GSAP does to a property it did not write. */
+    /* No `will-change` and no animated property, on purpose. The stage used to
+       carry the seam — an opacity ramp and an arrival translate — and both are
+       gone: a surface that is *uncovered* does not move. The only node the
+       handoff animates now is the hero's stage, and the compositor layer it
+       needs is declared with it. */
   }
 
   .bench[data-motion='ready'] .runway {

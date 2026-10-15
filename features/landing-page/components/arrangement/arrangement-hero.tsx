@@ -47,17 +47,21 @@ import styles from './arrangement.module.css'
  * What used to open out of that dive was the Patch — a synth faceplate built
  * from the same kit as the mixer, sitting in the clip's interior. It is gone.
  * The handoff now belongs to `components/bench/`, which carries the reader out
- * of the device entirely and into an editorial About; this component's only
- * part in it is to keep the stage pinned for `--arr-hold`, the length of the
- * bench's own takeover, so the machine is still still while it is covered.
+ * of the device entirely and into an editorial About. This component's part in
+ * it is passive and it is three things: keeping the stage pinned for
+ * `--arr-hold` — the length of the bench's own hold — so the machine is still
+ * while it comes apart, publishing `data-arr-stage` on the stage, and marking
+ * each piece the bench takes away with a `data-arr-*` marker of its own. Nothing
+ * here animates the exit itself; the seam's clock is the bench's, and a second
+ * clock over the same scroll would only be a second thing to keep in step.
  *
  * Two older handoff contracts are still published and currently unread: the
  * outgoing device's `data-matter-device` and the source region's
  * `data-matter-source`, both of which the retired `components/matter/` bridge
- * consumed. The bench deliberately arrives as a fresh sheet rather than
- * continuing the signal, so it reads neither. They are kept because the
- * publishing side is this component's own measurement and removing it would
- * change nothing a reader can see.
+ * consumed. The bench continues neither — it takes the machine apart in place
+ * rather than carrying the signal out of the clip — so it reads neither. They
+ * are kept because the publishing side is this component's own measurement and
+ * removing it would change nothing a reader can see.
  *
  * That is why there is no `#about` in this file. The clip's interior is not a
  * section any more, and an anchor that resolves to the top of a long pinned
@@ -132,7 +136,24 @@ export function ArrangementHero() {
       }
     >
       <div className={styles.stage} data-arr-stage>
-        <header className={styles.chrome}>
+        {/* The ground the whole instrument is drawn on, and the one part of the
+            machine the seam dissolves rather than moves.
+
+            It has to be its own layer rather than the stage's own `background`,
+            because the stage's background cannot be faded without taking every
+            piece with it — opacity multiplies down the tree. So the stage's
+            background is handed to this element in the motion layout and this
+            element's opacity becomes the seam's to write, which leaves the
+            furniture free to leave at full strength over the About it uncovers.
+            It sits at `z-index: -1` inside the stage's own stacking context, so
+            it paints behind the chrome, the ruler, the lanes and the mixer
+            without needing to be a sibling of any of them. */}
+        <div className={styles.ground} data-arr-ground aria-hidden="true" />
+
+        {/* `data-arr-chrome` is the seam's marker, not a readout's: the toolbar
+            is the piece that leaves upward when the handoff takes the machine
+            apart. See `BENCH_HERO_EXITS`. */}
+        <header className={styles.chrome} data-arr-chrome>
           <div className={styles.brand}>
             <i className={styles.brandMark} aria-hidden="true" />
             <span>ADITYA HIMAWAN</span>
@@ -205,13 +226,22 @@ export function ArrangementHero() {
             them — which is why it carries `data-arr-ruler`. */}
         <ArrangementRuler />
 
-        {/* `data-matter-device` is the handoff's own marker: this is the
-            outgoing device, and the only thing the bridge does to it is fade
-            it. It is on the track area rather than on the stage because the
-            stage holds the navigation and the transport, and nothing focusable
-            may sit inside an element that gets faded to nothing. */}
+        {/* `data-matter-device` is a retired handoff's marker — see the header.
+            The live one is `data-arr-stage` on the stage above, which is what
+            the bench takes apart. It is the *stage* and not this track area on
+            purpose: the handoff takes the whole machine away, chrome, ruler,
+            transport and all, so that what is left around it is only the About
+            behind it. The focusable chrome it carries is why the seam has to
+            park the stage's `visibility` once the exits are done — an
+            `opacity: 0` layer would leave the nav and the transport in the tab
+            order over a page that is no longer on screen. */}
         <div ref={trackRef} className={styles.trackArea} data-matter-device>
-          <div ref={cameraRef} className={styles.camera}>
+          {/* `data-arr-camera` is the seam's, and it is on the camera rather
+              than on the track area so that the rail and the playhead can leave
+              on their own axes while the clip content dissolves where it
+              stands. It is the one piece with no direction to leave in: the
+              camera *is* the frame at the end of the dive. */}
+          <div ref={cameraRef} className={styles.camera} data-arr-camera>
             <div className={styles.lanes}>
               {ARRANGEMENT_LANES.map((lane) => (
                 <div

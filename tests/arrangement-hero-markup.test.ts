@@ -115,3 +115,84 @@ describe('every element the hook reaches for resolves', () => {
     expect(container.querySelectorAll(`[${attribute}]`)).toHaveLength(1)
   })
 })
+
+/**
+ * The seam's markers, which are the contract with `use-bench-motion`.
+ *
+ * The About's hook reaches *outside its own section* to take the machine apart:
+ * the hero and the About are sibling sections, and the About has been pulled up
+ * under the hero, so the nodes that move belong to this component and the clock
+ * that moves them belongs to the other one. These attributes are the whole of
+ * that agreement.
+ *
+ * A rename on either side fails silently rather than loudly — the hook looks
+ * each piece up with `querySelector` and *skips* one it cannot find, because a
+ * page rendered without a hero above it is a real state and not an error. So a
+ * missing marker renders as a machine that simply keeps that part while
+ * everything else leaves, which is the kind of defect that only shows up in a
+ * browser. Pinned here instead.
+ *
+ * Each is asserted exactly once, because the hook resolves them with a single
+ * `querySelector`: a second element carrying the same marker would be
+ * unreachable and would never move.
+ */
+describe('the seam markers the bench takes the machine apart by', () => {
+  /**
+   * Two of these are also the hero's own readout targets — the ruler and the
+   * mixer both carry a `data-arr-*` marker the hero's hook writes into and the
+   * seam then moves. That is deliberate and it is safe: the hero writes custom
+   * properties to them and the seam writes `translate`, and neither property
+   * can clobber the other.
+   */
+  const PIECES = [
+    ['data-arr-ground', 'the ground that dissolves'],
+    ['data-arr-chrome', 'the toolbar that leaves upward'],
+    ['data-arr-ruler', 'the ruler that leaves upward'],
+    ['data-arr-camera', 'the clip content that dissolves'],
+    ['data-arr-rail', 'the track headers that leave leftward'],
+    ['data-arr-playhead', 'the playhead that fades'],
+    ['data-arr-proof', 'the mixer that leaves downward'],
+  ] as const
+
+  it('marks the stage the seam moves, exactly once', () => {
+    const { container } = renderHero()
+    expect(container.querySelectorAll('[data-arr-stage]')).toHaveLength(1)
+  })
+
+  it.each(PIECES)('finds exactly one %s — %s', (attribute) => {
+    const { container } = renderHero()
+    expect(container.querySelectorAll(`[${attribute}]`)).toHaveLength(1)
+  })
+
+  it('puts every piece inside the stage, which is what the hook scopes to', () => {
+    // `use-bench-motion` resolves each piece with `heroStage.querySelector`, so
+    // a marker that sat outside the stage would be a piece the seam never
+    // touched — and it would be invisible to the lookup above, which is
+    // document-wide.
+    const { container } = renderHero()
+    const stage = container.querySelector('[data-arr-stage]')!
+    for (const [attribute] of PIECES) {
+      expect(stage.querySelectorAll(`[${attribute}]`)).toHaveLength(1)
+    }
+  })
+
+  it('keeps the rail and the playhead out of the camera', () => {
+    // The camera dissolves and the rail slides, so the two must not be nested.
+    // The rail is the track headers — furniture pinned beside the world rather
+    // than part of it — and the playhead measures the world from outside it; a
+    // rail inside the camera would be dissolved by the camera's own exit before
+    // its slide had finished, and would read as the wrong piece leaving.
+    const { container } = renderHero()
+    const camera = container.querySelector('[data-arr-camera]')!
+    expect(camera.querySelector('[data-arr-rail]')).toBeNull()
+    expect(camera.querySelector('[data-arr-playhead]')).toBeNull()
+    expect(camera.querySelector('[data-arr-proof]')).toBeNull()
+  })
+
+  it('marks the ground as decorative, because it is a field of colour', () => {
+    const { container } = renderHero()
+    const ground = container.querySelector('[data-arr-ground]')!
+    expect(ground.getAttribute('aria-hidden')).toBe('true')
+    expect(ground.textContent).toBe('')
+  })
+})

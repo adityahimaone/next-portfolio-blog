@@ -7,12 +7,12 @@ import { BENCH_DEVICES, benchDeviceFrames } from './bench-devices'
 import {
   BENCH_BAND_CLEARANCE,
   BENCH_HOLD,
-  BENCH_SEAM_RISE,
   BENCH_STAGE_BASE,
   benchFrame,
   benchRunway,
   type BenchFrame,
   type BenchGeometry,
+  type BenchHeroPiece,
   type BenchRunwayBand,
 } from './bench-frame'
 
@@ -30,9 +30,6 @@ const BENCH_QUERY =
   '(min-width: 769px) and (min-height: 700px) and (prefers-reduced-motion: no-preference)'
 
 const BENCH_STAGE_WIDTH = BENCH_STAGE_BASE.width
-
-/** The size the sheet's layers arrive at, as a fraction of their rest size. */
-const BENCH_PUSH_FROM = 0.88
 
 type Gsap = (typeof import('gsap'))['gsap']
 type ScrollTriggerStatic =
@@ -69,7 +66,16 @@ type ScrollTriggerStatic =
  * **Every owned inline style is snapshotted and restored.** Direct style writes
  * are not captured by GSAP's context, so a resize across the breakpoint would
  * otherwise strand a half-scattered ring behind a layout that no longer runs
- * any motion.
+ * any motion. The hero's stage is in that set even though it is not this
+ * component's node — it is the node the seam moves, and a teardown that left it
+ * shrunk would leave a whole section of the page unreadable.
+ *
+ * **The seam writes outside this section.** The handoff is not an arrival any
+ * more; it is the outgoing machine being taken apart. So the section that owns
+ * the clock is not the section that owns the things that move, and the hero's
+ * own `data-arr-*` markers are the contract between them. They are looked up
+ * once, never asserted, and restored by the same snapshot pass as everything
+ * else.
  */
 export function useBenchMotion(root: RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -160,6 +166,48 @@ function startBenchMotion({
   const reading = element.querySelector<HTMLElement>('[data-bench-about] > *')
   const about = element.querySelector<HTMLElement>('[data-bench-about]')
 
+  /**
+   * The outgoing machine — the nodes this hook writes that are not inside this
+   * section.
+   *
+   * They cannot be found on `element`, and that is the handoff's whole
+   * geometry: the hero and the About are separate sibling sections, and this one
+   * has been pulled up *under* the other. The stage marker is the hero's own
+   * `data-arr-stage`; the pieces hang off it by the same `data-arr-*` prefix the
+   * hero's own hook uses for its readouts.
+   *
+   * A missing node is deliberately not an error, for either the stage or any
+   * piece. The About can be rendered without a hero above it, and the correct
+   * rendering of "there is nothing to take apart" is a handoff that only holds
+   * — which is what the rest of the frame already does.
+   */
+  const heroStage = document.querySelector<HTMLElement>('[data-arr-stage]')
+
+  /**
+   * Every piece of the machine, by the marker it carries.
+   *
+   * Resolved in `BENCH_HERO_EXITS` order and stored in a map rather than read
+   * out of the DOM in document order, for the same reason the chips are: the
+   * frame returns one entry per piece of that table, and the only thing that
+   * makes the pairing correct is that the two are indexed the same way.
+   */
+  const HERO_PIECES: readonly (readonly [BenchHeroPiece, string])[] = [
+    ['rail', '[data-arr-rail]'],
+    ['proof', '[data-arr-proof]'],
+    ['playhead', '[data-arr-playhead]'],
+    ['camera', '[data-arr-camera]'],
+    ['chrome', '[data-arr-chrome]'],
+    ['ruler', '[data-arr-ruler]'],
+    ['ground', '[data-arr-ground]'],
+  ]
+  const heroPieces = new Map<BenchHeroPiece, HTMLElement>()
+  if (heroStage) {
+    for (const [id, selector] of HERO_PIECES) {
+      const node = heroStage.querySelector<HTMLElement>(selector)
+      if (node) heroPieces.set(id, node)
+    }
+  }
+
   // A missing node is a markup change, not a condition to paper over. There is
   // no `!` assertion anywhere in this file: aborting leaves the native flow,
   // which is the correct rendering of "the decoration did not set up".
@@ -237,11 +285,10 @@ function startBenchMotion({
     return () => {}
   }
 
-  // Snapshot before anything is written, restore on the way out. The stage is
-  // deliberately not in this list: the one thing written to it is `opacity`,
-  // which the teardown removes outright rather than restoring, because the
-  // stylesheet declares no opacity for it and an un-owned stage is
-  // `display: none` besides.
+  // Snapshot before anything is written, restore on the way out. This section's
+  // own stage is deliberately not in this list: nothing is written to it any
+  // more. The seam used to be its opacity and its arrival offset; it is now the
+  // *hero's* stage that moves, and that node is in the list below.
   //
   // The artifact is in the list but its *drawing* is a separate node, and that
   // split is not cosmetic. The caption is a sibling of the drawing inside the
@@ -262,10 +309,46 @@ function startBenchMotion({
   // The devices are restored like everything else, but kept out of `owned`:
   // `gsap.set` on `owned` re-serialises a node's transform, and these carry
   // 3D rotations that GSAP has no reason to parse.
+  //
+  // The hero's stage and its pieces are the same case one step further out.
+  // They belong to another component, GSAP never touches them, and the hook
+  // that *does* own them writes custom properties to the track area and the
+  // ruler rather than any of the properties this seam writes — so the only
+  // inline styles these nodes can carry are the ones this hook puts there, and
+  // a snapshot is a complete restoration.
+  //
+  // The pieces are snapshotted individually as well as the stage: a teardown
+  // that restored the stage but left a toolbar translated off the top of it
+  // would leave the machine visibly missing a part.
   const restorable = [...owned, deviceLayer, ...deviceAnchors, ...deviceRots]
+  if (heroStage) restorable.push(heroStage)
+  restorable.push(...heroPieces.values())
   const snapshots = restorable.map(
     (node) => [node, node.getAttribute('style')] as const,
   )
+  /**
+   * Whether the seam has taken the machine out of the interaction tree.
+   *
+   * Tracked rather than read back off the node because it is written on change
+   * only — a style write per frame for a value that flips once is the kind of
+   * cost this hook is otherwise built to avoid.
+   */
+  let heroCleared = false
+
+  /**
+   * Whether the seam is holding the lanes' opacity to the scroll.
+   *
+   * The dissolve is delivered through the lanes' own `opacity` — the property
+   * the hero also scrubs — and the hero gives that property a 120ms transition
+   * to smooth its recession. That smoothing can outlast this seam's whole
+   * window, so the seam turns it off while it runs by marking the hero's stage;
+   * the stylesheet then drops the half of the transition the seam is writing.
+   * See `arrangement.module.css`.
+   *
+   * Tracked for the same reason `heroCleared` is: written on change only, and
+   * it flips twice across the whole page.
+   */
+  let seamRunning = false
 
   const geometry: BenchGeometry = { stageWidth: 1280, stageHeight: 760 }
 
@@ -274,30 +357,93 @@ function startBenchMotion({
       2,
       Math.max(0.6, geometry.stageWidth / BENCH_STAGE_WIDTH),
     )
-    /**
-     * The push. The hero ends mid-dive, everything in it growing toward the
-     * reader; if the sheet that replaces it arrived at full size it would be a
-     * new object standing still. So the sheet's layers arrive slightly small
-     * and *keep growing* into place over the takeover, which is the same
-     * direction of travel the hero was already in. `arrive` is the seam's own
-     * clock (derived from `stageY`, so it cannot drift from it), eased out so
-     * the growth decelerates onto the resting size instead of stopping dead.
-     */
-    const linear =
-      1 - Math.min(1, Math.max(0, frame.stageY / (BENCH_SEAM_RISE * unitNow)))
-    const arrive = 1 - (1 - linear) ** 3
-    const push = BENCH_PUSH_FROM + (1 - BENCH_PUSH_FROM) * arrive
-    stage.style.opacity = String(frame.stageOpacity)
-    // The sheet's arrival, and the reason the seam is not a dissolve. The stage
-    // is the opaque surface the machine is covered by, so giving it a direction
-    // turns a two-frame blend into a leading edge sweeping upward — the strip of
-    // machine left below it is the edge, and it closes to nothing at the
-    // handoff. See `BENCH_SEAM_FADE`.
+
+    // The lanes' dissolve is exactly scroll-locked while the seam runs. The
+    // hero smooths their `opacity` with a 120ms transition, and that smoothing
+    // is longer than this seam's window — so a dissolve left behind it would
+    // still be half-faded on the frame the park below lands on. The marker is
+    // set for as long as the seam's clock is running at all and cleared the
+    // moment it is not, which is well before the hero's own dive resumes on the
+    // way back up. Written on change only, like the park.
     //
-    // Safe to write as a plain transform because GSAP never touches this node:
-    // it is deliberately absent from `owned` (nothing else on the stage is
-    // animated, and it is `display: none` whenever the motion is off).
-    stage.style.transform = `translate3d(0, ${frame.stageY}px, 0)`
+    // It is declared *before* the exits are written, and that order is the
+    // point: the first frame of the seam is the one frame where `--arr-fade`
+    // moves from exactly 1, and declaring ownership first means there is no
+    // frame in which the transition is still live to catch it.
+    const seamLive = frame.progress > 0
+    if (heroStage && seamLive !== seamRunning) {
+      seamRunning = seamLive
+      if (seamLive) heroStage.dataset.seamLocked = ''
+      else delete heroStage.dataset.seamLocked
+    }
+
+    /**
+     * The seam: the machine above this section, coming apart.
+     *
+     * The sheet this section is drawn on does not arrive and does not move — it
+     * is the page, pulled up under the hero and sitting behind it, whole, from
+     * the first frame of the handoff. What the hold spends is the instrument
+     * leaving, one piece at a time and each along its own axis, so what the
+     * reader sees is the About being *uncovered* rather than a second page
+     * fading in on top of the first. See `BENCH_HERO_EXITS`.
+     *
+     * Written as direct property writes on the piece rather than through a
+     * custom property on an ancestor, and that is a cost decision with a
+     * measurement behind it: a custom property set on the hero's stage
+     * invalidates that stage's entire subtree, and that subtree is the whole
+     * DAW — the same mistake the hero's own hook documents at 1613ms against
+     * 166ms. One write per piece restyles that piece alone.
+     *
+     * `translate` rather than `transform`, and that is correctness rather than
+     * taste. `.rail`, `.playhead` and `.camera` already carry a `transform` the
+     * stylesheet composes from the hero's own custom properties — the rail's
+     * phase slide, the camera's zoom and pan. Writing `transform` here would
+     * replace that outright and the pieces would jump to the world's origin the
+     * moment the seam touched them. The individual `translate` property
+     * composes *after* `transform`, so the exit is added to whatever the hero
+     * has already done rather than instead of it.
+     *
+     * The camera is the one piece that is not written directly, and the reason
+     * is in `BenchHeroExitMode`: `.camera` carries a 3D rendering context, and
+     * an `opacity` below 1 on it would flatten the lanes' `translateZ` into its
+     * own plane — so its content is dissolved through `--arr-fade` instead, a
+     * custom property the lanes multiply into their own opacity. That write
+     * lands on the camera and not on an ancestor, and the subtree it invalidates
+     * is the timeline, which the hero's own hook is already invalidating every
+     * frame with `--arr-depth` and `--arr-lane-opacity` — so this is a property
+     * of a tree that was being restyled anyway, not a new one.
+     */
+    for (const exit of frame.heroExits) {
+      const node = heroPieces.get(exit.id)
+      if (!node) continue
+      if (exit.mode === 'slide') {
+        node.style.translate = `${exit.x}% ${exit.y}%`
+      } else if (exit.mode === 'fade') {
+        // The pieces that leave by direction never reach this branch, and that
+        // is load-bearing: `.chrome` and `.proof` declare a `transition:
+        // opacity`, and an inline write behind a 400ms transition is a smear
+        // rather than a fade. They are clipped on their way out and must keep
+        // whatever opacity the hero's own phases gave them.
+        node.style.opacity = String(exit.opacity)
+      } else {
+        node.style.setProperty('--arr-fade', String(exit.opacity))
+      }
+    }
+
+    // Once the machine is gone it has to leave the *interaction* tree as well as
+    // the paint one, and an empty frame does neither: the stage is a sticky
+    // layer that outlives the exits by a viewport of scrolling, and the About's
+    // own links climb past where it was — so an un-hidden stage is an invisible
+    // full-viewport sheet that swallows every pointer event and keeps the
+    // transport and the nav in the tab order. This is not tidiness.
+    //
+    // `visibility` rather than `pointer-events`, because it fixes both: a hidden
+    // subtree is not hit-tested and its focusable descendants drop out of the
+    // tab order. Written on change only — it flips once, each way.
+    if (heroStage && frame.heroCleared !== heroCleared) {
+      heroCleared = frame.heroCleared
+      heroStage.style.visibility = heroCleared ? 'hidden' : ''
+    }
 
     // The far stratum and the principle's own entry are two translations on one
     // node, summed rather than nested: the principle is inside the sheet, and a
@@ -305,7 +451,7 @@ function startBenchMotion({
     // The sheet starts tipped back like a desk seen from a seat and lies flat
     // as the drawing completes: the draw-on clock doubles as the tilt's.
     const tilt = 16 * (1 - frame.artifactDraw)
-    paper.style.transform = `translate3d(0, ${frame.farY}px, 0) perspective(1600px) rotateX(${tilt}deg) scale(${push})`
+    paper.style.transform = `translate3d(0, ${frame.farY}px, 0) perspective(1600px) rotateX(${tilt}deg)`
     principle.style.transform = `translate3d(0, ${frame.farY + frame.principleY}px, 0)`
     // The principle arrives word by word: the stylesheet derives each word's
     // offset from this one number, so the box itself is never faded.
@@ -322,7 +468,7 @@ function startBenchMotion({
     // right of the stage's centre on the real page. Writing the centring as the
     // first function of the transform this hook owns removes the dependency on
     // what a third-party library does with a property it did not write.
-    artifact.style.transform = `translate3d(-50%, -50%, 0) translate3d(0, ${frame.middleY + frame.artifactY}px, 0) scale(${frame.artifactScale * push})`
+    artifact.style.transform = `translate3d(-50%, -50%, 0) translate3d(0, ${frame.middleY + frame.artifactY}px, 0) scale(${frame.artifactScale})`
     artifactFrame.style.opacity = String(frame.artifactOpacity)
 
     // The construction marks, spent as the wireframe draws over them. They are
@@ -338,7 +484,7 @@ function startBenchMotion({
     // The near stratum's shared contraction. A uniform scale about the stage's
     // own centre is the one transform the ring can take after it has landed
     // without any chip leaving its slot relative to its neighbours.
-    ring.style.transform = `scale(${frame.ringScale * push})`
+    ring.style.transform = `scale(${frame.ringScale})`
 
     for (let index = 0; index < chipNodes.length; index += 1) {
       const chip = frame.chips[index]
@@ -383,17 +529,14 @@ function startBenchMotion({
    * them — measuring a drifted sheet and then re-applying the drift compounds
    * it a little on every resize. `renderFrame` puts the current progress back
    * immediately afterwards, so nothing is ever painted between the two.
+   *
+   * This section's own stage is not in `owned` and needs no clearing: nothing
+   * in this hook writes a transform to it any more. The node the seam moves is
+   * the hero's, and it is outside every box measured here — the hero's stage is
+   * a sibling section's, and none of the bands below are read from it.
    */
   const measure = () => {
     gsap.set(owned, { x: 0, y: 0, scale: 1 })
-    // The stage's own arrival offset is cleared too, for the same reason and by
-    // a different mechanism. It happens to cancel — both bands are measured
-    // relative to the stage's own top edge, so a uniform translate drops out of
-    // both differences — but the bands are only scroll-invariant while that is
-    // true, and a measurement that depends on an invariant holding elsewhere is
-    // a measurement that will be wrong the first time someone reads an absolute
-    // box here. `renderFrame` puts the current offset straight back.
-    stage.style.removeProperty('transform')
 
     const stageWidth = Math.max(1, stage.clientWidth)
     const stageHeight = Math.max(1, stage.clientHeight)
@@ -507,11 +650,20 @@ function startBenchMotion({
       if (style === null) node.removeAttribute('style')
       else node.setAttribute('style', style)
     }
-    // Not a snapshot restore: the stylesheet declares no opacity or transform
-    // for the stage, so removing the inline values is the restoration — and
-    // with `data-motion` gone the stage is `display: none` regardless.
-    stage.style.removeProperty('opacity')
-    stage.style.removeProperty('transform')
+    // The hero's stage and its pieces are restored by the snapshot above like
+    // any other node — they are all in `restorable` — so there is nothing to
+    // unwrite here. They are deliberately *not* unwritten by hand: the hero's
+    // own hook may already have inline custom properties on the track area and
+    // the ruler, and the snapshot is the only restoration that is guaranteed to
+    // leave each node exactly as it was found.
+    //
+    // `data-seam-locked` is the one exception, and it is not a style: a
+    // snapshot of `style` cannot reach an attribute, so the marker has to be
+    // lifted by hand or it would outlive the hook and hold the hero's own
+    // smoothing off for the rest of the session.
+    heroCleared = false
+    seamRunning = false
+    if (heroStage) delete heroStage.dataset.seamLocked
     element.style.removeProperty('--bench-runway')
     // The hero is not this hook's to keep. Leaving the hold behind would leave
     // a section below it with a stretch of scroll nothing animates in, which is

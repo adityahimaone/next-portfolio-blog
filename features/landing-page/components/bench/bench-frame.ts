@@ -73,28 +73,31 @@ export type BenchFrame = {
   progress: number
   state: BenchState
   /**
-   * 0 → 1 across the hold: this stage's own presence over the machine above it.
+   * The seam, one entry per `BENCH_HERO_EXITS` — and every one of these is a
+   * fact about the *outgoing* section, not about this one's artwork.
    *
-   * It is separate from every other number here because it is not a fact about
-   * the artwork — it is the *seam*. The section is pulled up over the hero's
-   * last viewport, so before this section's clock starts its opaque ground
-   * would already be sitting inside a frame the hero still owns. The hero is
-   * pinned there — on its camera's final frame — for exactly as long as this
-   * takes, which is the whole reason the hold exists: the machine cannot move
-   * while it is being covered. So what the reader sees is one frame resolving
-   * rather than two frames swapping.
+   * The About's sheet does not arrive; it is the page. This section is pulled
+   * up under the hero, so its opaque ground is already sitting behind the
+   * machine on the first frame of the handoff and it never moves again. What
+   * the hold spends is the machine coming apart — see `BENCH_HERO_EXITS` for
+   * which piece goes where and why. There is deliberately no `stageY` beside
+   * these any more: a surface that is *uncovered* has no arrival of its own to
+   * time, and the two-clock seam it used to need went with the arrival.
+   *
+   * The hero is pinned for exactly as long as the exits take, which is the
+   * whole reason the hold exists — the machine cannot scroll away while it is
+   * still on screen being dismantled. See `BENCH_HOLD`.
    */
-  stageOpacity: number
+  heroExits: BenchHeroExit[]
   /**
-   * px — how far the sheet is still below its resting place.
+   * True once the last piece has gone, which is the handoff boundary itself.
    *
-   * Positive means the sheet has not arrived yet: the whole stage, and every
-   * mark on it, is painted that far down, and the strip of frame above it still
-   * belongs to the machine. It reaches zero at `BENCH_HOLD`, which is one beat
-   * after the opacity finished — see `BENCH_SEAM_FADE` for why those two are
-   * deliberately not the same clock.
+   * Published rather than left for the hook to re-derive from `progress`,
+   * because the hook hangs an *interaction* change off it — the stage has to
+   * leave the tab order and stop being hit-tested — and a boundary that two
+   * files compute separately is a boundary that will eventually disagree.
    */
-  stageY: number
+  heroCleared: boolean
   /**
    * px — the far stratum: the graph paper and the principle line.
    *
@@ -222,14 +225,14 @@ export const BENCH_READING_AT = BENCH_PHASES.emerge[1]
  * camera sits still on its final frame.
  *
  * The hold is what makes this number a *constant of the pair* rather than a
- * taste: it must be exactly the takeover's length, or the stage is either still
- * half-transparent when the machine starts moving (a dissolve and a slide at
- * once) or fully opaque while the machine is still standing there (a machine
- * fading behind a wall).
+ * taste: it must be exactly the exits' length, or the machine is still coming
+ * apart when it starts scrolling (a disassembly and a slide at once, which is
+ * the one thing the disassembly exists to avoid) or already gone while the
+ * reader is still being asked to look at it.
  *
  * It is deliberately the top of `gather` and not a number of its own. The ring
- * begins to close where the takeover ends, so the two beats meet at one
- * boundary instead of two that would have to be kept in step.
+ * begins to close where the exits end, so the two beats meet at one boundary
+ * instead of two that would have to be kept in step.
  *
  * ## Why it is short, and why shortening it was not a compromise
  *
@@ -239,9 +242,10 @@ export const BENCH_READING_AT = BENCH_PHASES.emerge[1]
  * and is now `0.12`, which on the rendered page is 387px down to 207px.
  *
  * That is a *quality* gain rather than a saving, because of what the hold
- * contains. See `BENCH_SEAM_FADE`: the takeover is the one beat where two dense
- * full-viewport surfaces are both partly visible, and every pixel of overlap is
- * a pixel of mush. Shortening the hold shortens the mush directly.
+ * contains. See `BENCH_HERO_EXITS`: the hold is the one beat where the machine
+ * is on screen and is no longer the thing being read, and every pixel of it is
+ * a pixel of a composition on its way out. Shortening it shortens that
+ * directly.
  */
 export const BENCH_HOLD = BENCH_PHASES.gather[0]
 
@@ -301,46 +305,106 @@ export const BENCH_CHIP_SPREAD = 2.2
 export const BENCH_CHIP_STAGGER = 0.11
 
 /**
- * The fraction of the hold over which the sheet's opacity completes.
+ * The pieces of the outgoing machine, and how each one leaves.
  *
- * ## Why the seam is not a straight cross-dissolve
+ * ## Why the seam is a disassembly rather than an arrival
  *
- * The handoff is two opaque, full-viewport, *busy* compositions — a rack at its
- * final zoom and a sheet of graph paper with ten labelled chips already on it.
- * A linear dissolve between two frames like that does not read as one surface
- * becoming another; it reads as both of them at once, at half contrast, for as
- * long as the blend lasts. Measured on the rendered page at `p=0.08` the
- * machine's rail, its lane rules and its playhead were all legible through the
- * paper, and the chips were legible on top of them. That is the mush, and it
- * lasted 387px.
+ * The handoff used to be the About's sheet *arriving*: an opaque surface rose
+ * over a machine that was pinned still underneath it, and because both surfaces
+ * were dense and full-viewport the overlap read as two pictures at half
+ * contrast for as long as the blend lasted.
  *
- * So the opacity finishes at 70% of the hold and the sheet is still travelling
- * when it does. What the reader sees is a surface *arriving* — a leading edge
- * that sweeps the old frame away — rather than two frames fading through each
- * other. The remaining 30% is a settle, at full opacity, which is where the
- * arrival reads as having landed rather than stopped.
+ * It is now the machine *coming apart*. The About's sheet is the page the whole
+ * time — the next section is pulled up under the hero and sits there, whole,
+ * from the first frame of the handoff — and the hold is spent taking the
+ * instrument away one piece at a time, each along the axis it already lives on:
+ * the track headers slide out to the left, the mixer drops out of the bottom,
+ * the toolbar and the ruler ride up off the top, the clip content and the
+ * ground dissolve where they stand. What the reader watches is an interface
+ * being dismantled, which is a thing the eye already has a grammar for, and the
+ * About is simply what was behind it.
  *
- * This is deliberately not `1`. A fade that completes exactly on the handoff
- * boundary would be a dissolve whose last frame is also the frame the machine
- * starts moving on, which is the one frame that must not be ambiguous.
+ * ## Why the whole stage is not scaled instead
+ *
+ * One `scale()` on the stage would be a third of the code, and it is the wrong
+ * picture. A full-viewport composition shrunk toward its own centre reads as a
+ * *picture* of a device being resized — a screenshot in a window — and it
+ * flattens every piece into a single object. The pieces are what carry the
+ * meaning here: a toolbar leaving upward says "this was an application", and a
+ * rail leaving sideways says the same thing again from another direction.
+ *
+ * ## Why the furniture translates but does not fade
+ *
+ * The stage clips (`overflow: hidden`), so a piece that has left its own box
+ * has already left the frame; a fade on top of that would be a second,
+ * redundant statement of the same fact. Worse, it would fight the stylesheet —
+ * `.chrome` and `.proof` both declare a `transition: opacity`, and an inline
+ * opacity written every frame behind a 400ms transition is a smear, not a fade.
+ * Of the *furniture*, the pieces that genuinely dissolve are the two with no
+ * axis to leave on: the playhead, which is a line, and the ground, which is
+ * what the whole machine is drawn on. The clip content dissolves as well, but
+ * through a different channel entirely — see `BenchHeroExitMode`.
+ *
+ * ## The stagger
+ *
+ * Every exit ends on the same frame and starts later the later it is delayed,
+ * so a delayed piece is a *faster* piece — the same shape the chip gather uses.
+ * The ground is last and longest on purpose: while it holds, the furniture is
+ * read leaving against the dark it was drawn on, and only once it goes is the
+ * About simply there.
+ *
+ * `x` and `y` are percentages of the piece's own box, which is why the rail
+ * clears itself with a smaller number than the ruler needs: the ruler is short
+ * and has the toolbar above it to get past.
  */
-export const BENCH_SEAM_FADE = 0.7
+export const BENCH_HERO_EXITS = [
+  { id: 'rail', x: -135, y: 0, mode: 'slide', delay: 0 },
+  { id: 'proof', x: 0, y: 135, mode: 'slide', delay: 0.06 },
+  { id: 'playhead', x: 0, y: 0, mode: 'fade', delay: 0.1 },
+  { id: 'camera', x: 0, y: 0, mode: 'dissolve', delay: 0.14 },
+  { id: 'chrome', x: 0, y: -135, mode: 'slide', delay: 0.18 },
+  { id: 'ruler', x: 0, y: -250, mode: 'slide', delay: 0.24 },
+  { id: 'ground', x: 0, y: 0, mode: 'fade', delay: 0.34 },
+] as const
+
+/** Every piece of the machine the seam knows how to take away. */
+export type BenchHeroPiece = (typeof BENCH_HERO_EXITS)[number]['id']
 
 /**
- * px — how far below its resting place the sheet starts, before it settles.
+ * How one piece is taken away — and the third case is not a synonym for the
+ * second.
  *
- * The direction is the whole point. The sheet comes *up* over a machine that is
- * being held still, so the reader's model is "something is rising into place",
- * not "something is appearing". It is scaled by the same `unit` every other px
- * constant here is, so a larger display gets a proportionally larger settle
- * rather than one that has shrunk to a nudge.
- *
- * It has to stay small enough that the strip of machine left uncovered at the
- * bottom of the frame never reads as a separate object — at 64px against a
- * 900px viewport it is 7% of the frame, which is a leading edge rather than a
- * second window.
+ * - `slide` — the piece leaves along its own axis and nothing else about it
+ *   changes. Its opacity is deliberately left alone, because two of the sliding
+ *   pieces declare a `transition: opacity` the stylesheet owns.
+ * - `fade` — the piece itself dissolves. Correct for a node that is a single
+ *   painted thing: the playhead is a hairline, the ground is a field of colour.
+ * - `dissolve` — the piece's **content** dissolves while the node's own opacity
+ *   stays at 1. This exists for exactly one piece, the camera, and the reason is
+ *   mechanical rather than stylistic: `.camera` carries
+ *   `transform-style: preserve-3d`, and `opacity` below 1 is a *grouping
+ *   property value* — it forces the element to render its subtree into a flat
+ *   plane. Fading the camera would therefore flatten the depth layer mid-seam,
+ *   and the profile lane's `translateZ` would vanish on the frame the fade
+ *   began: a ~2.5% geometry snap at the exact moment the reader is meant to be
+ *   watching the machine come apart, at full opacity. The lanes inside it are
+ *   leaves — they have no 3D descendants — so their opacity can fall without
+ *   flattening anything, and the dissolve is delivered through them instead.
+ *   See `arrangement.module.css` for the `--arr-fade` half of the contract.
  */
-export const BENCH_SEAM_RISE = 64
+export type BenchHeroExitMode = 'slide' | 'fade' | 'dissolve'
+
+/** Where one piece of the machine is, and how much of it is left, this frame. */
+export type BenchHeroExit = {
+  id: BenchHeroPiece
+  /** % of the piece's own box. Zero for a piece that does not slide. */
+  x: number
+  y: number
+  /** 1 for a piece that leaves by direction; falls to 0 for one that fades. */
+  opacity: number
+  /** How the piece is taken away. See `BenchHeroExitMode`. */
+  mode: BenchHeroExitMode
+}
 
 /** The size a chip is drawn at, furthest back to closest. */
 export const BENCH_CHIP_SCALE = { far: 0.8, near: 1.08 } as const
@@ -517,8 +581,6 @@ export function benchFrame(
     BENCH_UNIT_RANGE.max,
   )
 
-  const takeover = phase(p, 0, BENCH_HOLD * BENCH_SEAM_FADE)
-  const settle = phase(p, 0, BENCH_HOLD)
   const assemble = phase(p, ...BENCH_PHASES.assemble)
   const resolve = phase(p, ...BENCH_PHASES.resolve)
   const emerge = phase(p, ...BENCH_PHASES.emerge)
@@ -526,16 +588,28 @@ export function benchFrame(
   return {
     progress: p,
     state: benchState(p),
-    // Spent over the hold, against a machine that is not moving. This is the
-    // only number in the frame that is about the seam rather than the artwork.
+    // The seam, spent over the hold on a machine that is not moving. These are
+    // the only numbers in the frame that are about the handoff rather than the
+    // artwork: the About's sheet never moves, and the machine above it is taken
+    // apart out of the way. See `BENCH_HERO_EXITS`.
     //
-    // It finishes before the hold does, on purpose, and the sheet is still
-    // rising when it gets there: the arrival is a leading edge sweeping the
-    // machine away, not a blend of the two. See `BENCH_SEAM_FADE`.
-    stageOpacity: takeover,
-    // The sheet's own settle. Zero at the handoff boundary, so the surface the
-    // reader is left looking at is exactly where the layout put it.
-    stageY: unsignedZero(BENCH_SEAM_RISE * unit * (1 - settle)),
+    // Nothing here is scaled by `unit`. Every distance is a percentage of the
+    // piece's own box, so a piece clears itself by its own size at any viewport
+    // — which is the one measurement this table cannot be given and does not
+    // need.
+    heroExits: BENCH_HERO_EXITS.map((exit) => {
+      const leave = phase(p, BENCH_HOLD * exit.delay, BENCH_HOLD)
+      return {
+        id: exit.id,
+        x: unsignedZero(exit.x * leave),
+        y: unsignedZero(exit.y * leave),
+        // A sliding piece keeps whatever opacity the hero's own phases gave it;
+        // only a piece that dissolves carries a falling one.
+        opacity: exit.mode === 'slide' ? 1 : 1 - leave,
+        mode: exit.mode,
+      }
+    }),
+    heroCleared: p >= BENCH_HOLD,
     // The two continuous strata. Linear, because a constant-velocity drift is
     // what a layer bolted to the page actually does; easing them would make
     // them read as objects that start and stop.

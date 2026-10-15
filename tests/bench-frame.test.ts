@@ -6,13 +6,12 @@ import {
   BENCH_CHIP_OPACITY,
   BENCH_CHIP_RESOLVE_FLOOR,
   BENCH_CHIP_SCALE,
+  BENCH_HERO_EXITS,
   BENCH_HOLD,
   BENCH_PHASES,
   BENCH_PRINCIPLE_TRAVEL,
   BENCH_READING_AT,
   BENCH_RING_TIGHTEN,
-  BENCH_SEAM_FADE,
-  BENCH_SEAM_RISE,
   BENCH_STAGE_BASE,
   BENCH_STRATA_TRAVEL,
   BENCH_UNIT_RANGE,
@@ -43,6 +42,35 @@ const chip = (frame: BenchFrame, id: string) => {
   const found = frame.chips.find((entry) => entry.id === id)
   if (!found) throw new Error(`no chip "${id}" in the frame`)
   return found
+}
+
+const exitFor = (frame: BenchFrame, id: string) => {
+  const found = frame.heroExits.find((entry) => entry.id === id)
+  if (!found) throw new Error(`no hero exit "${id}" in the frame`)
+  return found
+}
+
+const authoredExit = (id: string) => {
+  const found = BENCH_HERO_EXITS.find((entry) => entry.id === id)
+  if (!found) throw new Error(`no authored exit "${id}"`)
+  return found
+}
+
+/**
+ * How far along its own exit a piece is, 0 → 1.
+ *
+ * The two kinds are read through different numbers — a sliding piece by how
+ * much of its offset it has covered, a dissolving one by how much opacity it
+ * has given up — so that the stagger can be asserted across both.
+ */
+const exitProgress = (frame: BenchFrame, id: string) => {
+  const exit = exitFor(frame, id)
+  const authored = authoredExit(id)
+  if (authored.mode === 'slide') {
+    const authoredDistance = Math.abs(authored.x || authored.y)
+    return Math.abs(exit.x || exit.y) / authoredDistance
+  }
+  return 1 - exit.opacity
 }
 
 /** Every number in a frame, chips included. */
@@ -108,31 +136,116 @@ describe('benchFrame — the opening tableau', () => {
   })
 })
 
-describe('benchFrame — the stage takes over while the hero holds', () => {
-  it('adds nothing at all on the first frame', () => {
-    // At p=0 the reader is still looking at the machine. Anything the section
-    // paints here is a second picture of the same moment, and two pictures of
-    // one moment can only disagree — which is exactly what a visible cut is.
-    expect(benchFrame(0, GEO).stageOpacity).toBe(0)
-  })
-
-  it('is whole at the hold and stays whole afterwards', () => {
-    expect(benchFrame(BENCH_HOLD, GEO).stageOpacity).toBe(1)
-    for (const p of [0.2, 0.5, BENCH_READING_AT, 1]) {
-      expect(benchFrame(p, GEO).stageOpacity).toBe(1)
+describe('benchFrame — the machine comes apart to uncover the About', () => {
+  it('leaves every piece exactly as the camera left it on the first frame', () => {
+    // At p=0 the reader is still looking at the machine at its final zoom.
+    // Anything the seam did to it here would be a second picture of the same
+    // moment, and two pictures of one moment can only disagree — which is
+    // exactly what a visible cut is.
+    const opening = benchFrame(0, GEO)
+    expect(opening.heroCleared).toBe(false)
+    for (const exit of opening.heroExits) {
+      expect(exit.x).toBe(0)
+      expect(exit.y).toBe(0)
+      expect(exit.opacity).toBe(1)
     }
   })
 
-  it('rises monotonically across the hold', () => {
-    let previous = -1
+  it('returns one exit per piece of the machine, in the authored order', () => {
+    // The frame and the table are indexed the same way, and that is the only
+    // thing that makes the pairing correct: the hook resolves its nodes from
+    // the same order, so a reordering of either would animate one piece to
+    // another piece's exit.
+    expect(benchFrame(0.4, GEO).heroExits.map((exit) => exit.id)).toEqual(
+      BENCH_HERO_EXITS.map((exit) => exit.id),
+    )
+  })
+
+  it('has taken every piece all the way out by the handoff boundary', () => {
+    // The stage unsticks on this frame. A machine still on screen would be
+    // leaving and scrolling at once, and the exits are the one thing the hold
+    // exists to spend.
+    const gone = benchFrame(BENCH_HOLD, GEO)
+    expect(gone.heroCleared).toBe(true)
+    for (const authored of BENCH_HERO_EXITS) {
+      const exit = exitFor(gone, authored.id)
+      if (authored.mode === 'slide') {
+        expect(exit.x).toBe(authored.x)
+        expect(exit.y).toBe(authored.y)
+        // A piece that leaves by direction keeps its opacity, and the branch is
+        // load-bearing: two of them declare a `transition: opacity` that the
+        // stylesheet owns, so an inline write would smear rather than fade.
+        expect(exit.opacity).toBe(1)
+      } else {
+        expect(exit.opacity).toBe(0)
+      }
+    }
+  })
+
+  it('never brings a piece back afterwards', () => {
+    const landed = benchFrame(BENCH_HOLD, GEO)
+    for (const p of SWEEP.filter((value) => value >= BENCH_HOLD)) {
+      const frame = benchFrame(p, GEO)
+      expect(frame.heroCleared).toBe(true)
+      expect(frame.heroExits).toEqual(landed.heroExits)
+    }
+  })
+
+  it('only ever leaves and only ever fades, inside its declared bounds', () => {
+    const previous = BENCH_HERO_EXITS.map(() => 0)
+    for (const p of SWEEP) {
+      const frame = benchFrame(p, GEO)
+      for (let index = 0; index < BENCH_HERO_EXITS.length; index += 1) {
+        const progress = exitProgress(frame, BENCH_HERO_EXITS[index].id)
+        expect(progress).toBeGreaterThanOrEqual(previous[index] - 1e-9)
+        expect(progress).toBeGreaterThanOrEqual(0)
+        expect(progress).toBeLessThanOrEqual(1)
+        previous[index] = progress
+      }
+    }
+  })
+
+  it('never overshoots the offset a sliding piece was authored with', () => {
+    // The offsets are percentages of the piece's own box and the stage clips on
+    // its way out, so an exit that travelled past its authored number would be
+    // one that had already left the frame and kept going.
+    for (const p of SWEEP) {
+      const frame = benchFrame(p, GEO)
+      for (const authored of BENCH_HERO_EXITS) {
+        const exit = exitFor(frame, authored.id)
+        expect(Math.abs(exit.x)).toBeLessThanOrEqual(Math.abs(authored.x))
+        expect(Math.abs(exit.y)).toBeLessThanOrEqual(Math.abs(authored.y))
+      }
+    }
+  })
+
+  it('staggers the exits so a delayed piece has always left less far', () => {
+    // Every exit ends on the same frame and starts later the later it is
+    // delayed, so a delayed piece is a *faster* piece — the same shape the chip
+    // gather uses. The rail is the first to move and the ground the last.
+    const ordered = [...BENCH_HERO_EXITS].sort((a, b) => a.delay - b.delay)
     for (const p of SWEEP.filter((value) => value <= BENCH_HOLD)) {
-      const value = benchFrame(p, GEO).stageOpacity
-      expect(value).toBeGreaterThanOrEqual(previous)
-      previous = value
+      const frame = benchFrame(p, GEO)
+      for (let index = 1; index < ordered.length; index += 1) {
+        expect(exitProgress(frame, ordered[index].id)).toBeLessThanOrEqual(
+          exitProgress(frame, ordered[index - 1].id) + 1e-9,
+        )
+      }
     }
   })
 
-  it('starts gathering exactly where the takeover ends', () => {
+  it('holds the ground until the furniture has left it', () => {
+    // The ground is what the machine is drawn on, and it is deliberately last
+    // and longest: while it holds, the pieces are read leaving against the dark
+    // they were drawn on, and only once it goes is the About simply there. Half
+    // way through the hold the rail is most of the way out and the ground has
+    // barely begun.
+    const mid = benchFrame(BENCH_HOLD * 0.5, GEO)
+    expect(exitProgress(mid, 'rail')).toBeGreaterThan(0.4)
+    expect(exitProgress(mid, 'ground')).toBeLessThan(0.2)
+  })
+
+  it('starts gathering exactly where the exits end', () => {
     // The two beats meet at one boundary rather than two that have to be kept
     // in step: the hold *is* the top of `gather`.
     expect(BENCH_HOLD).toBe(BENCH_PHASES.gather[0])
@@ -141,54 +254,25 @@ describe('benchFrame — the stage takes over while the hero holds', () => {
   })
 })
 
-describe('benchFrame — the seam is an arrival, not a dissolve', () => {
-  it('starts the sheet below its resting place and brings it up', () => {
-    // The direction is the whole point: the reader's model is that a surface is
-    // rising over a machine being held still, not that a surface is appearing
-    // out of it.
-    expect(benchFrame(0, GEO).stageY).toBe(BENCH_SEAM_RISE)
-    expect(benchFrame(BENCH_HOLD, GEO).stageY).toBe(0)
+describe('benchFrame — the sheet is the page, not an arrival', () => {
+  it('has no arrival of its own left to time', () => {
+    // The About's ground is pulled up under the hero, so it is already there
+    // when the handoff starts. A surface that is *uncovered* does not move, and
+    // the second clock an arrival needed went with it — a `stageY` or a
+    // `stageOpacity` creeping back would be the old seam returning.
+    const frame = benchFrame(BENCH_HOLD, GEO)
+    expect(frame).not.toHaveProperty('stageY')
+    expect(frame).not.toHaveProperty('stageOpacity')
   })
 
-  it('has fully settled by the handoff boundary and never moves again', () => {
-    // At `BENCH_HOLD` the hero's stage unsticks and starts sliding away. A sheet
-    // still travelling on that frame would be two motions in one viewport, and
-    // the one the reader is meant to be following is the machine leaving.
-    for (const p of SWEEP.filter((value) => value >= BENCH_HOLD)) {
-      expect(benchFrame(p, GEO).stageY).toBe(0)
-    }
-  })
-
-  it('only ever rises', () => {
-    let previous = Infinity
-    for (const p of SWEEP) {
-      const value = benchFrame(p, GEO).stageY
-      expect(value).toBeLessThanOrEqual(previous + 1e-9)
-      expect(value).toBeGreaterThanOrEqual(0)
-      previous = value
-    }
-  })
-
-  it('finishes the opacity while the sheet is still travelling', () => {
-    // Two clocks on purpose. The opacity decides how long the reader can see
-    // both surfaces at once; the settle is what gives the arrival its edge. If
-    // they ended together, the last blended frame would also be the frame the
-    // machine starts moving on — the one frame that must not be ambiguous.
-    const faded = BENCH_HOLD * BENCH_SEAM_FADE
-    expect(faded).toBeLessThan(BENCH_HOLD)
-    expect(benchFrame(faded, GEO).stageOpacity).toBe(1)
-    expect(benchFrame(faded, GEO).stageY).toBeGreaterThan(0)
-  })
-
-  it('spends the minority of the hold below full opacity', () => {
-    // This is the number the rendered page fixed. At a straight 0→1 fade over
-    // the whole hold, the section spent 387px — more than a third of a viewport
-    // — with the rack at its final zoom and the sheet both partly visible, and
-    // both were legible through each other. The share of the hold below full
-    // opacity is exactly the share spent in that state, so it is bounded here
-    // rather than left to taste.
-    expect(BENCH_SEAM_FADE).toBeGreaterThan(0.5)
-    expect(BENCH_SEAM_FADE).toBeLessThanOrEqual(0.75)
+  it('opens the artwork only after the machine has gone', () => {
+    // The hold belongs to the recede. If a chip were gathering or the artifact
+    // were drawing inside it, the reader would be watching two things happen to
+    // two different objects in the same beat.
+    expect(BENCH_PHASES.gather[0]).toBe(BENCH_HOLD)
+    expect(BENCH_PHASES.assemble[0]).toBeGreaterThanOrEqual(BENCH_HOLD)
+    expect(BENCH_PHASES.resolve[0]).toBeGreaterThan(BENCH_HOLD)
+    expect(BENCH_PHASES.emerge[0]).toBeGreaterThan(BENCH_HOLD)
   })
 })
 
@@ -542,11 +626,17 @@ describe('benchFrame — the stage unit', () => {
       )
     }
 
-    // The seam's rise is a px constant like the rest, so it scales too — a
-    // larger display gets a proportionally larger settle rather than one that
-    // has shrunk to a nudge.
-    expect(baseScatter.stageY).toBe(BENCH_SEAM_RISE)
-    expect(wideScatter.stageY).toBeCloseTo(BENCH_SEAM_RISE * 2, 6)
+    // The seam is the one table that deliberately does *not* scale with the
+    // stage, and that is not an oversight. Every exit is a percentage of the
+    // piece's own box, so a piece clears itself by its own size at any
+    // viewport — the one measurement this table cannot be given and does not
+    // need. A px offset here would need the toolbar's height, the rail's width
+    // and the mixer's height, and would be wrong on every viewport whose type
+    // scale differs.
+    expect(
+      benchFrame(BENCH_HOLD, { stageWidth: BENCH_STAGE_BASE.width * 2 })
+        .heroExits,
+    ).toEqual(benchFrame(BENCH_HOLD, GEO).heroExits)
   })
 
   it('clamps the unit at both ends rather than tracking an absurd box', () => {

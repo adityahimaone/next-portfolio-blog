@@ -65,7 +65,10 @@
 
 .chapters {
   display: grid;
-  row-gap: clamp(1rem, 3vw, 3rem);
+  /* The three chapters are one scene, not three sections. The gap is a breath
+     between beats, not a page break, so it stays well under the height of the
+     text it separates. */
+  row-gap: clamp(0.5rem, 1.5vw, 1.5rem);
 }
 
 .chapter {
@@ -73,10 +76,13 @@
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--bench-gap);
   align-items: start;
-  /* The pinned visual needs a stretch of scroll to be pinned for. Just over a
-     viewport: enough to turn the device through its whole arc, not enough to
-     drag. */
-  min-height: 108svh;
+  /* The pinned visual needs a stretch of scroll to be pinned for, and this is
+     the whole of the scene's scroll budget: three of these. The pin is the
+     difference between this and the visual's height, and that difference is
+     unchanged — so what the old `108svh` bought was not a longer pin but 24svh
+     of scroll *after* the device had finished its arc and left the frame. That
+     band held no animation and no text; it was the dead space this drops. */
+  min-height: 84svh;
 }
 
 .visual {
@@ -86,10 +92,19 @@
   --dev-edge: color-mix(in srgb, var(--foreground) 34%, transparent);
   --dev-lcd: color-mix(in srgb, var(--primary) 32%, var(--background));
   position: sticky;
-  top: 14svh;
+  /* The pin is `min-height` above minus this height, so the box was shrunk with
+     the chapter rather than after it: 48svh against the old 72svh holds the pin
+     at the 36svh it has always had, and the device is on screen for the same
+     1224px of scroll it always was — what went is the empty margin around it.
+     Because the chapter is shorter, the arc that used to spend its first 13%
+     and last 4% off the frame now plays out entirely on screen.
+     `26svh` + `48svh` keeps its resting centre on the 50svh line, so the
+     composition is unmoved: 26svh of headroom above it and 26svh below, where
+     the old pair left 14svh on each side of a taller box. */
+  top: 26svh;
   grid-row: 1;
   align-self: start;
-  height: 72svh;
+  height: 48svh;
   display: grid;
   place-items: center;
   pointer-events: none;
@@ -99,9 +114,11 @@
   grid-row: 1;
   align-self: center;
   display: grid;
-  gap: clamp(0.9rem, 1.8vw, 1.5rem);
+  /* The stack inside one chapter: kicker, heading, story, credits. It reads as
+     one block, so the gap between its parts is the smallest in the scene. */
+  gap: clamp(0.6rem, 1.1vw, 1rem);
   align-content: center;
-  min-height: 72svh;
+  min-height: 48svh;
 }
 
 .chapter[data-side='left'] .visual {
@@ -335,9 +352,14 @@
 
 .finale {
   display: grid;
-  gap: clamp(1rem, 2vw, 1.75rem);
-  margin-top: clamp(3rem, 7vw, 7rem);
-  padding-top: clamp(2rem, 4vw, 3.5rem);
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
+  /* The rule and the room above it are one seam between the last chapter and
+     the closing line, so both are set from the same small scale. The old pair
+     (`7vw` + `4vw`) was a section boundary — which this is not: the finale is
+     the last beat of the scene the chapters started, and it should arrive
+     without a page turn. */
+  margin-top: clamp(1.5rem, 3.5vw, 3.5rem);
+  padding-top: clamp(1.25rem, 2.5vw, 2.25rem);
   border-top: 1px solid var(--bench-edge);
 }
 
@@ -459,14 +481,14 @@
   .chapter {
     grid-template-columns: minmax(0, 1fr);
     min-height: 0;
-    row-gap: 1.25rem;
-    padding-bottom: 2.5rem;
+    row-gap: 1rem;
+    padding-bottom: 1.75rem;
   }
   .visual {
     position: relative;
     top: auto;
-    height: 58vw;
-    min-height: 15rem;
+    height: 52vw;
+    min-height: 13.5rem;
   }
   .text {
     min-height: 0;

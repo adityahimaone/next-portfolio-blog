@@ -5,13 +5,12 @@ import { Fragment, useRef, type CSSProperties } from 'react'
 import { ABOUT_TRACKS } from '../../rack-01/about-copy'
 import { BENCH_CAPTION, BENCH_CHIPS, BENCH_PRINCIPLE } from './bench-copy'
 import {
-  BenchChapter,
+  BenchChapters,
   BenchFinale,
   BenchRail,
   BenchTicker,
 } from './bench-chapters'
 import { BenchDevices } from './bench-device-layer'
-import chapterStyles from './bench-chapters.module.css'
 import styles from './bench.module.css'
 import { useBenchMotion } from './use-bench-motion'
 import { useBenchReveal } from './use-bench-reveal'
@@ -328,11 +327,7 @@ export function BenchAbout() {
 
           <BenchTicker words={BENCH_CHIPS.map((chip) => chip.text)} />
 
-          <div className={chapterStyles.chapters}>
-            {ABOUT_TRACKS.map((track, index) => (
-              <BenchChapter key={track.title} track={track} index={index} />
-            ))}
-          </div>
+          <BenchChapters tracks={ABOUT_TRACKS} />
 
           {FINALE ? (
             <BenchFinale aside={FINALE.aside} resumeLink={FINALE.resumeLink} />

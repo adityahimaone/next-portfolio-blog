@@ -4,11 +4,15 @@
    on (`use-skills-bridge.ts`):
 
    - The BASE rules are the static composition, and they are a finished page:
-     the sentence, three devices, three labelled slots, a caption. It is what a
-     phone, a reduced-motion visitor and a page with no script get.
-   - The `@media (motion)` block at the bottom turns it into the pinned scene:
-     the stage sticks, the sheet and the room overlap, the room is masked by an
-     iris, and the devices fly.
+     the sentence and three devices on the dark ground, with the Skills section
+     following in ordinary flow. It is what a phone, a reduced-motion visitor
+     and a page with no script get.
+   - The `@media (motion)` block at the bottom makes it the pinned scene. The
+     stage sticks; the sheet is masked by a hole; and `.lift` pulls the Skills
+     section up one viewport so that it is *under* the stage while it is
+     pinned. That is the whole trick of the transition: nothing is drawn to
+     look like the Skills section, the hole is cut in the sheet and the real
+     section is behind it.
 
    The script writes only custom properties and transforms on small nodes.
    Every default below is the *resting* value, so with the script absent the
@@ -109,92 +113,18 @@
   transform: scale(1.2);
 }
 
-/* ── The room: caption, slots and cables ─────────────────── */
-
-.room {
-  order: 3;
-  display: grid;
-  gap: clamp(1.25rem, 3vw, 2rem);
-}
-
-.rack {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(0.75rem, 2vw, 1.5rem);
-}
-
-.slot {
-  --lit: 1;
-  display: grid;
-  align-content: start;
-  gap: 0.75rem;
-  padding: clamp(0.9rem, 1.6vw, 1.4rem);
-  border: 1px solid rgb(255 255 255 / 0.16);
-  border-radius: 10px;
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.05), transparent 40%),
-    rgb(255 255 255 / 0.025);
-}
-
-.slotHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.slotLabel {
-  font-family: var(--font-geist-mono), monospace;
-  font-size: clamp(0.66rem, 0.85vw, 0.78rem);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--room-ink, #f1eee5);
-}
-
-.led {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: color-mix(
-    in srgb,
-    var(--signal-orange, #ff5a1f) calc(var(--lit, 1) * 100%),
-    #3a3d3a
-  );
-}
-
-.slotChannels {
-  margin: 0;
-  font-family: var(--font-geist-mono), monospace;
-  font-size: clamp(0.64rem, 0.8vw, 0.74rem);
-  line-height: 1.6;
-  letter-spacing: 0.06em;
-  color: var(--room-ink-muted, #b6b3a9);
-}
-
+/* Decoration that exists only in the pinned scene. */
 .core,
-.depth,
 .horizon {
   display: none;
 }
 
-.caption {
-  margin: 0;
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--room-ink-muted, #b6b3a9);
-}
-
-.caption b {
-  margin-left: 0.8em;
-  font-weight: 500;
-  color: var(--signal-orange, #ff5a1f);
+/* The static composition has no lift. */
+.lift {
+  position: relative;
 }
 
 @media (max-width: 768px) {
-  .rack {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .anchor {
     height: 6.5rem;
   }
@@ -206,25 +136,46 @@
 /* ── The pinned scene ────────────────────────────────────── */
 
 @media (min-width: 769px) and (min-height: 600px) and (prefers-reduced-motion: no-preference) {
-  /* Just over two viewports: one is the stage, the rest is the scene's travel.
-     It is the cost of the transition, so it is kept as short as the choreography
-     allows. */
+  /* A little over two viewports: one is the stage, the rest is the scene's
+     travel. The travel is also exactly how far the Skills section has to rise
+     to arrive, which is why it is not shorter: the section must start below
+     the screen and finish aligned with it, and it moves at the speed of the
+     scroll. */
   .bridge {
-    height: 230svh;
+    height: 210svh;
     padding: 0;
-    background: var(--background);
+    /* What the hole opens onto before the Skills section reaches it: not a
+       colour of the Skills' own but deeper than any of them, so the hole is
+       dark before it is anything. */
+    background: #0b0c0b;
   }
 
   .stage {
     position: sticky;
     top: 0;
+    z-index: 2;
     display: block;
     height: 100svh;
     max-width: none;
     overflow: clip;
+    /* The stage is above the Skills section for the whole of the scene; it
+       must never take a click meant for it. */
+    pointer-events: none;
   }
 
+  /* The Skills section, lifted to sit under the stage (see `SkillsLift`). Its
+     z-index puts it above the bridge's own background and below the stage. */
+  .lift {
+    z-index: 1;
+    margin-top: -100svh;
+  }
+
+  /* The sheet is the About's own: the same ground, the same graph paper, so at
+     progress 0 it is indistinguishable from where the About ended. A hole is
+     cut in it by a mask whose radius is a number written per frame; the mask is
+     the only thing that repaints. */
   .sheet {
+    --r: 0;
     position: absolute;
     inset: 0;
     display: grid;
@@ -243,6 +194,16 @@
         )
         0 0 / 48px 48px,
       var(--background);
+    -webkit-mask-image: radial-gradient(
+      circle at 50% 44%,
+      transparent calc(var(--r, 0) * 1%),
+      #000 calc(var(--r, 0) * 1% + 0.6%)
+    );
+    mask-image: radial-gradient(
+      circle at 50% 44%,
+      transparent calc(var(--r, 0) * 1%),
+      #000 calc(var(--r, 0) * 1% + 0.6%)
+    );
   }
 
   .statement {
@@ -251,118 +212,8 @@
     margin-top: -6svh;
   }
 
-  /* The room is the Skills' own ground, and it is revealed by an iris from the
-     middle of the sheet. The radius is a number written per frame; the mask is
-     the only thing that repaints. */
-  .room {
-    --r: 0;
-    position: absolute;
-    inset: 0;
-    display: block;
-    background:
-      radial-gradient(
-        circle at 10% 15%,
-        rgba(46, 63, 92, 0.34),
-        transparent 28%
-      ),
-      linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px) 0
-        0 / 32px 32px,
-      var(--room-base, #14161a);
-    -webkit-mask-image: radial-gradient(
-      circle at 50% 44%,
-      #000 calc(var(--r, 0) * 1%),
-      transparent calc(var(--r, 0) * 1% + 0.6%)
-    );
-    mask-image: radial-gradient(
-      circle at 50% 44%,
-      #000 calc(var(--r, 0) * 1%),
-      transparent calc(var(--r, 0) * 1% + 0.6%)
-    );
-  }
-
-  .rack {
-    position: absolute;
-    inset: 0;
-    display: block;
-    perspective: 900px;
-    perspective-origin: 50% 44%;
-  }
-
-  .slot {
-    --lit: 0;
-    position: absolute;
-    left: var(--sx);
-    top: var(--sy);
-    width: min(27vw, 22.5rem);
-    height: min(46svh, 21rem);
-    grid-template-rows: auto 1fr auto;
-    /* The script writes `opacity` and `translate` (a z offset out of the
-       depth); the centring stays in `transform`. */
-    opacity: 0;
-    transform: translate(-50%, -50%);
-  }
-
-  .slotChannels {
-    align-self: end;
-  }
-
-  /* The depth layer: every word and ring is a direct child of a perspective
-     element, so each is projected through it individually and the script can
-     place them with one translate3d. They sit at the hole's centre and are
-     moved out from there. */
-  .depth {
-    display: block;
-    position: absolute;
-    inset: 0;
-    perspective: 900px;
-    perspective-origin: 50% 44%;
-    pointer-events: none;
-  }
-
-  .word,
-  .ring {
-    position: absolute;
-    left: 50%;
-    top: 44%;
-    translate: -50% -50%;
-    opacity: 0;
-    will-change: transform, opacity;
-  }
-
-  .word {
-    font-family: var(--font-geist-mono), monospace;
-    font-size: clamp(0.95rem, 1.7vw, 1.6rem);
-    font-weight: 600;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    color: var(--room-ink, #f1eee5);
-  }
-
-  .word[data-group='0'] {
-    color: var(--signal-orange, #ff5a1f);
-  }
-
-  .word[data-group='2'] {
-    color: #c9a574;
-  }
-
-  .ring {
-    width: min(70vmin, 44rem);
-    aspect-ratio: 1;
-    border-radius: 50%;
-    border: 1px solid rgb(255 255 255 / 0.3);
-  }
-
-  .ring:nth-child(odd) {
-    border-color: color-mix(
-      in srgb,
-      var(--signal-orange, #ff5a1f) 55%,
-      transparent
-    );
-  }
-
-  /* The light at the singularity, behind everything in the room. */
+  /* The light at the singularity: under the sheet, so it is seen only through
+     the hole, and gone by the time the section has arrived. */
   .core {
     --core: 0;
     display: block;
@@ -383,9 +234,10 @@
     transform: scale(calc(0.4 + 0.6 * var(--core, 0)));
   }
 
-  /* The hole's rim: a lit ring and a shimmer that turns with the radius, drawn
-     on the sheet (outside the room's mask, or the mask would cut it off) at
-     the same radius the mask has. */
+  /* The hole's rim: a lit ring and a shimmer that turns as it grows, drawn on
+     top of the sheet (a mask would cut it off) at the same radius the mask
+     has. It fades as the radius passes the corners of the screen, so the rim
+     leaves rather than being cropped. */
   .horizon {
     --r: 0;
     display: block;
@@ -393,7 +245,7 @@
     inset: 0;
     z-index: 2;
     pointer-events: none;
-    opacity: clamp(0, calc((104 - var(--r, 0)) / 6), 1);
+    opacity: clamp(0, calc((104 - var(--r, 0)) / 14), 1);
     background: radial-gradient(
       circle at 50% 44%,
       transparent calc(var(--r, 0) * 1% - 2.6%),
@@ -431,19 +283,10 @@
     );
   }
 
-  .caption {
-    --k: 0;
-    position: absolute;
-    left: 50%;
-    top: clamp(4.5rem, 11svh, 7rem);
-    white-space: nowrap;
-    opacity: var(--k, 0);
-    translate: -50% calc((1 - var(--k, 0)) * 10px);
-  }
-
   .devices {
     position: absolute;
     inset: 0;
+    z-index: 3;
     display: block;
     perspective-origin: 50% 46%;
   }

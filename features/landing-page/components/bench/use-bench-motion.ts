@@ -9,6 +9,7 @@ import {
   type GlassKind,
 } from '../glass/glass-registry'
 import { BENCH_DEVICES, benchDeviceFrames } from './bench-devices'
+import { chapterPosition, slideFrame } from './bench-stage'
 import {
   BENCH_BAND_CLEARANCE,
   BENCH_HOLD,
@@ -651,6 +652,8 @@ function startBenchMotion({
   const readingTriggers: ReturnType<ScrollTriggerStatic['create']>[] = []
   /** Every custom property the reading clocks wrote, so teardown can unwrite it. */
   const written: (readonly [HTMLElement, string])[] = []
+  /** The stage's slides, whose inline styles teardown must clear. */
+  const styledSlides: HTMLElement[] = []
 
   const teardown = () => {
     stopped = true
@@ -660,6 +663,13 @@ function startBenchMotion({
     readingTriggers.length = 0
     for (const [node, name] of written) node.style.removeProperty(name)
     written.length = 0
+    for (const slide of styledSlides) {
+      slide.style.opacity = ''
+      slide.style.visibility = ''
+      slide.style.transform = ''
+      slide.style.removeProperty('--p')
+    }
+    styledSlides.length = 0
     for (const [node, style] of snapshots) {
       if (style === null) node.removeAttribute('style')
       else node.setAttribute('style', style)
@@ -703,6 +713,75 @@ function startBenchMotion({
    * Without this function (phones, reduced motion, no JavaScript) every
    * default in the stylesheet is a composed resting frame, not an empty one.
    */
+  /**
+   * The chapters' pinned stage. One trigger over the whole chapters block; on
+   * every update it turns the scroll position into `g` (see `bench-stage.ts`)
+   * and poses each device from it. Both the centres of the texts and the
+   * stage's height are measured at refresh, never per frame.
+   */
+  const bindStage = () => {
+    const chapters = element.querySelector<HTMLElement>('[data-bench-chapters]')
+    const pin = element.querySelector<HTMLElement>('[data-bench-pin]')
+    const slides = Array.from(
+      element.querySelectorAll<HTMLElement>('[data-bench-slide]'),
+    )
+    const texts = Array.from(
+      element.querySelectorAll<HTMLElement>('[data-bench-chapter]'),
+    )
+    if (!chapters || !pin || slides.length === 0) return
+    if (texts.length !== slides.length) return
+
+    const kinds = slides.map(
+      (slide) => slide.dataset.kind as GlassKind | undefined,
+    )
+    const stages = slides.map((slide) =>
+      slide.querySelector<HTMLElement>(':scope > [data-kind]'),
+    )
+
+    let centers: number[] = []
+    let pinHeight = 0
+    const measureStage = () => {
+      const scrolled = window.scrollY
+      centers = texts.map((text) => {
+        const box = text.getBoundingClientRect()
+        return box.top + box.height / 2 + scrolled
+      })
+      pinHeight = pin.clientHeight
+    }
+
+    const drawStage = (scroll: number) => {
+      const g = chapterPosition(scroll + window.innerHeight / 2, centers)
+      slides.forEach((slide, index) => {
+        const frame = slideFrame(g, index)
+        slide.style.opacity = String(frame.opacity)
+        slide.style.visibility = frame.opacity > 0.005 ? '' : 'hidden'
+        slide.style.transform = `translate3d(0, ${frame.y * pinHeight}px, 0) scale(${frame.scale})`
+        slide.style.setProperty('--p', frame.p.toFixed(4))
+        const kind = kinds[index]
+        const stage = stages[index]
+        if (kind && stage && frame.opacity > 0.005) {
+          setGlassPose(stage, chapterPose(kind, frame.p))
+        }
+      })
+    }
+
+    styledSlides.push(...slides)
+    readingTriggers.push(
+      ScrollTrigger.create({
+        trigger: chapters,
+        start: 'top bottom',
+        end: 'bottom top',
+        invalidateOnRefresh: true,
+        onRefreshInit: measureStage,
+        onRefresh: (self) => {
+          measureStage()
+          drawStage(self.scroll())
+        },
+        onUpdate: (self) => drawStage(self.scroll()),
+      }),
+    )
+  }
+
   const bindReading = () => {
     const bind = (
       node: HTMLElement,
@@ -728,27 +807,8 @@ function startBenchMotion({
       )
     }
 
-    for (const visual of element.querySelectorAll<HTMLElement>(
-      '[data-bench-cvisual]',
-    )) {
-      const chapter =
-        visual.closest<HTMLElement>('[data-bench-chapter]') ?? visual
-      // A glass device cannot read the stylesheet's `calc()`, so the same pose
-      // is also handed to it as numbers. If there is no glass device (yet), the
-      // stylesheet's tilt is what turns.
-      const kind = visual.querySelector<HTMLElement>('[data-kind]')?.dataset
-        .kind as GlassKind | undefined
-      bind(
-        visual,
-        '--p',
-        'top 85%',
-        'bottom 30%',
-        chapter,
-        kind
-          ? (progress) => setGlassPose(visual, chapterPose(kind, progress))
-          : undefined,
-      )
-    }
+    bindStage()
+
     const ticker = element.querySelector<HTMLElement>('[data-bench-ticker]')
     if (ticker) bind(ticker, '--m', 'top bottom', 'bottom top')
     const rail = element.querySelector<HTMLElement>('[data-bench-rail]')

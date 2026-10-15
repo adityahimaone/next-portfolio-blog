@@ -687,11 +687,15 @@ button.clip {
 .nameWord {
   display: inline-block;
   /* A mask per word: the letters rise out of it. The padding and the matching
-     negative margin keep the swell and the descenders inside the clip without
-     changing the line's box. */
+     negative margin keep the swell, the descenders *and the last letter's
+     overhang* inside the clip without changing the line's box. The overhang is
+     the part that matters: the name is set with negative letter-spacing, which
+     pulls each word's box in by 0.055em on the right, so the final glyph of a
+     word ('A', 'N') extends past its own box, and a mask padded by less than
+     that cuts it off. */
   overflow: clip;
-  padding: 0.06em 0.03em 0.1em;
-  margin: -0.06em -0.03em -0.1em;
+  padding: 0.08em 0.11em 0.14em 0.05em;
+  margin: -0.08em -0.11em -0.14em -0.05em;
   vertical-align: top;
 }
 .nameWord + .nameWord {
@@ -1276,7 +1280,7 @@ button.clip {
     display: block;
   }
   .nameWord + .nameWord {
-    margin-left: -0.03em;
+    margin-left: -0.05em;
   }
   .pinned {
     position: static;

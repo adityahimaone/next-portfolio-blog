@@ -44,12 +44,27 @@ export function NameTitle({ label }: { label: string }) {
       element.style.setProperty('--name-fit', '1')
       const style = getComputedStyle(element)
       const padding = parseFloat(style.paddingLeft) || 0
-      // A little air on the right, so the last letter is never on the edge.
+      const em = parseFloat(style.fontSize) || 0
+
+      // Width. The last glyph overhangs its box by the letter-spacing, so the
+      // line needs a little more than its measured width, and a little air is
+      // left on the right so the last letter is never on the edge.
       const available = body.clientWidth - padding - 16
-      const needed = element.scrollWidth - padding
-      const factor =
+      const needed = element.scrollWidth - padding + em * 0.12
+      const byWidth =
         needed > 0 && available > 0 ? Math.min(1, available / needed) : 1
-      element.style.setProperty('--name-fit', factor.toFixed(4))
+
+      // Height, only where the clip has a fixed height to overflow: a clip that
+      // grows with its content (the phone layout) is never too short for it.
+      const byHeight =
+        element.offsetHeight > 0 && body.clientHeight < element.offsetHeight
+          ? Math.min(1, (body.clientHeight / element.offsetHeight) * 0.94)
+          : 1
+
+      element.style.setProperty(
+        '--name-fit',
+        Math.min(byWidth, byHeight).toFixed(4),
+      )
     }
 
     fit()

@@ -6,7 +6,7 @@ import { Work } from '../work/work'
 import type { ArchiveRepo } from '@/features/projects/lib/github'
 import { ArrangementHero } from '../components/arrangement/arrangement-hero'
 import { BenchAbout } from '../components/bench/bench-about'
-import { SkillsBridge } from '../components/bridge/skills-bridge'
+import { SkillsBridge, SkillsLift } from '../components/bridge/skills-bridge'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
 import { Experience } from './section-experience'
@@ -66,9 +66,13 @@ export default function Rack01LandingPage({
           is that signal leaving the device behind — a sheet of graph paper
           arriving over the machine with the constraints already on it. */}
       <BenchAbout />
-      {/* The About's three devices dock into the Skills' three groups. */}
+      {/* The About's three devices fall into a black hole, and the hole opens
+          onto the Skills section, which is under the bridge's stage (see
+          `SkillsLift`) rather than after it. */}
       <SkillsBridge />
-      <Skills />
+      <SkillsLift>
+        <Skills />
+      </SkillsLift>
       <CableDivider />
       <Experience selected={experienceIndex} setSelected={setExperienceIndex} />
       <Work archiveRepos={archiveRepos} />

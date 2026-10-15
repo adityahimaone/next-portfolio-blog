@@ -20,6 +20,9 @@ import styles from './glass-device.module.css'
  * fold. three.js is imported inside that path, so none of it is part of first
  * load.
  */
+/** One warm-up for the whole page, however many devices there are. */
+let warmRequested = false
+
 export function GlassDevice({
   kind,
   fallback,
@@ -66,6 +69,32 @@ export function GlassDevice({
       }
     }
 
+    // A few screens out, compile everything while the page is idle, so the
+    // first device to arrive does not pay for it.
+    const warm = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return
+        warm.disconnect()
+        if (warmRequested) return
+        warmRequested = true
+        const run = () =>
+          void import('./glass-devices').then((module) => module.warmGlass())
+        // Not every browser has an idle callback; those get a short delay.
+        const idle = (
+          window as Window & {
+            requestIdleCallback?: (
+              callback: () => void,
+              options?: { timeout: number },
+            ) => number
+          }
+        ).requestIdleCallback
+        if (idle) idle(run, { timeout: 3000 })
+        else window.setTimeout(run, 200)
+      },
+      { rootMargin: '3200px' },
+    )
+    warm.observe(hostEl)
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
@@ -79,6 +108,7 @@ export function GlassDevice({
 
     return () => {
       disposed = true
+      warm.disconnect()
       observer.disconnect()
       handle?.dispose()
       handle = null

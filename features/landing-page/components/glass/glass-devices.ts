@@ -522,7 +522,12 @@ type Controller = {
   scene: THREE.Scene
   camera: THREE.PerspectiveCamera
   model: Model
+  /** What is drawn now. It eases toward `target` rather than jumping to it. */
   pose: Required<GlassPose>
+  target: Required<GlassPose>
+  /** False until the first pose arrives, which is taken as it is, not eased to. */
+  posed: boolean
+  moving: boolean
   dirty: boolean
   visible: boolean
 }
@@ -533,26 +538,69 @@ let frame = 0
 /** The most devices drawn in one animation frame. The rest wait their turn. */
 const BUDGET = 6
 
+/**
+ * How fast a pose eases toward its target, per second. The scroll hooks hand
+ * over a new target every tick; drawing the target directly would turn every
+ * step of the scroll into a step of the device. Easing with a time constant of
+ * about 60ms makes the device a low-pass filter of the scroll, so it moves in
+ * one continuous motion however unevenly the page is being scrolled, at the
+ * price of a lag too short to read as one.
+ */
+const EASE_RATE = 16
+
+let lastTime = 0
+
 function schedule() {
   if (frame || typeof window === 'undefined') return
-  frame = window.requestAnimationFrame(() => {
+  frame = window.requestAnimationFrame((now) => {
     frame = 0
+    const dt = Math.min(
+      0.05,
+      Math.max(0.001, (now - (lastTime || now - 16)) / 1000),
+    )
+    lastTime = now
+
     const resources = getShared()
     if (!resources) return
 
     let drawn = 0
-    let waiting = false
+    let again = false
     for (const controller of controllers) {
-      if (!controller.dirty || !controller.visible) continue
+      if (!controller.visible) continue
+      if (controller.moving) {
+        step(controller, dt)
+        again = again || controller.moving
+      }
+      if (!controller.dirty) continue
       if (drawn >= BUDGET) {
-        waiting = true
+        again = true
         continue
       }
       draw(controller, resources)
       drawn += 1
     }
-    if (waiting) schedule()
+    if (again) schedule()
+    else lastTime = 0
   })
+}
+
+const FIELDS = ['rx', 'ry', 'rz', 'p', 'spin'] as const
+const EPSILON = { rx: 0.05, ry: 0.05, rz: 0.05, p: 0.001, spin: 0.1 } as const
+
+function step(controller: Controller, dt: number) {
+  const k = 1 - Math.exp(-dt * EASE_RATE)
+  let settled = true
+  for (const field of FIELDS) {
+    const delta = controller.target[field] - controller.pose[field]
+    if (Math.abs(delta) <= EPSILON[field]) {
+      controller.pose[field] = controller.target[field]
+    } else {
+      controller.pose[field] += delta * k
+      settled = false
+    }
+  }
+  controller.dirty = true
+  if (settled) controller.moving = false
 }
 
 function draw(
@@ -621,6 +669,15 @@ export async function attachGlass(
         p: rest.p ?? 0,
         spin: rest.spin ?? 0,
       },
+      target: {
+        rx: rest.rx,
+        ry: rest.ry,
+        rz: rest.rz,
+        p: rest.p ?? 0,
+        spin: rest.spin ?? 0,
+      },
+      posed: false,
+      moving: false,
       dirty: true,
       visible: true,
     }
@@ -649,19 +706,27 @@ export async function attachGlass(
           rx: next.rx,
           ry: next.ry,
           rz: next.rz,
-          p: next.p ?? controller.pose.p,
-          spin: next.spin ?? controller.pose.spin,
+          p: next.p ?? controller.target.p,
+          spin: next.spin ?? controller.target.spin,
         }
-        // A pose that moved less than a tenth of a degree is not worth a draw.
+        // A target that moved less than a tenth of a degree is not worth a draw.
         const same =
-          Math.abs(merged.rx - controller.pose.rx) < 0.1 &&
-          Math.abs(merged.ry - controller.pose.ry) < 0.1 &&
-          Math.abs(merged.rz - controller.pose.rz) < 0.1 &&
-          Math.abs(merged.p - controller.pose.p) < 0.002 &&
-          Math.abs(merged.spin - controller.pose.spin) < 0.2
-        if (same) return
-        controller.pose = merged
-        controller.dirty = true
+          Math.abs(merged.rx - controller.target.rx) < 0.1 &&
+          Math.abs(merged.ry - controller.target.ry) < 0.1 &&
+          Math.abs(merged.rz - controller.target.rz) < 0.1 &&
+          Math.abs(merged.p - controller.target.p) < 0.002 &&
+          Math.abs(merged.spin - controller.target.spin) < 0.2
+        if (same && controller.posed) return
+        controller.target = merged
+        if (!controller.posed) {
+          // The first pose is where the device starts, not somewhere to ease to
+          // from its resting orientation.
+          controller.pose = { ...merged }
+          controller.posed = true
+          controller.dirty = true
+        } else {
+          controller.moving = true
+        }
         schedule()
       },
       dispose: () => {
@@ -680,4 +745,39 @@ export async function attachGlass(
   } catch {
     return null
   }
+}
+
+/**
+ * Compile every device's shaders ahead of the first one scrolling into view.
+ *
+ * The first draw of a device is the expensive one: the environment map is
+ * generated and the physical materials compile their programs, which on a
+ * mid-range machine is long enough to be seen as a stall at exactly the moment
+ * the chapters begin. This does that work when the page is idle and a screen or
+ * two away, on a scene that is never drawn. It keeps the models alive: a
+ * compiled program is released when the last material using it is disposed, so
+ * disposing them would throw the work away.
+ */
+let warmed: Promise<void> | null = null
+const warmScene = new THREE.Scene()
+
+export function warmGlass(): Promise<void> {
+  if (warmed) return warmed
+  warmed = (async () => {
+    const resources = getShared()
+    if (!resources) return
+    warmScene.environment = resources.env
+    const camera = new THREE.PerspectiveCamera(20, 4 / 3, 0.1, 40)
+    camera.position.set(0, 0, 8.85)
+    warmScene.add(new THREE.DirectionalLight(0xffffff, 1.6))
+    for (const kind of Object.keys(BUILDERS) as GlassKind[]) {
+      warmScene.add(BUILDERS[kind]().root)
+    }
+    try {
+      await resources.renderer.compileAsync(warmScene, camera)
+    } catch {
+      // The first real draw compiles instead. Nothing is lost but the head start.
+    }
+  })()
+  return warmed
 }

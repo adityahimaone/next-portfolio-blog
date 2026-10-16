@@ -7,7 +7,7 @@
   max-width: var(--shell-max);
   margin-inline: auto;
   min-height: 100vh;
-  /* Bottom padding clears the fixed MagneticDock (h-14 at bottom-5). */
+  /* Bottom padding clears the fixed MagneticDock (h-12 at bottom-5). */
   padding: 4rem clamp(1rem, 3vw, 2rem) 7rem;
   background: var(--background);
 }
@@ -851,7 +851,7 @@
 /* ─── Paper toggle ───────────────────────────────────────────── */
 
 /* Paper toggle: parked mid-left so it clears both the footer copy and the
-   MagneticDock (h-14 at bottom-5) when scrolled to the end of an article. */
+   MagneticDock (h-12 at bottom-5) when scrolled to the end of an article. */
 .togglePod {
   position: fixed;
   bottom: 11rem;

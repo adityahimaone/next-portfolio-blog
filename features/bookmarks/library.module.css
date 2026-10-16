@@ -5,8 +5,8 @@
   width: 100%;
   max-width: 1280px;
   margin-inline: auto;
-  /* Clears the fixed dock. The magnetic magnify grows a 44px icon to ~61px,
-     so the capsule is ~68px tall before the 1.25rem offset. */
+  /* Clears the fixed dock. The magnetic magnify grows a 36px icon to ~50px,
+     so the capsule is ~62px tall before the 1.25rem offset. */
   padding: 4rem 1.5rem 10rem;
   background: var(--room-base);
 }

@@ -8194,7 +8194,7 @@
   justify-content: flex-start;
   padding-bottom: clamp(12px, 2.2vh, 24px);
 }
-/* The magnetic dock is fixed to the bottom of the viewport (52px tall plus
+/* The magnetic dock is fixed to the bottom of the viewport (44px tall plus
    `bottom-4`), and the hero panel is bottom-aligned inside a 100dvh section —
    so on a phone the hero's own content ends underneath the dock. Measured at
    390x844 the second row of hero actions was covered by 32px, and 172px at
@@ -8203,7 +8203,12 @@
    Pre-existing rather than caused by the two-row CTA layout, but the CTA change
    made it visible: a full-width primary plus a second row pushed the actions far
    enough down to sit behind the bar. The clearance is mobile-only because the
-   dock hides itself at desktop widths where there is room. */
+   dock hides itself at desktop widths where there is room.
+
+   The dock has since lost 8px of height, so the 72px below now carries that
+   much more slack. Left as measured rather than tightened: the extra is
+   breathing room at the foot of the hero, and re-deriving it would move hero
+   content for no gain. */
 @media (max-width: 768px) {
   .heroImmersiveContent {
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));

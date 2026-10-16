@@ -21,8 +21,12 @@ type DockItem = (typeof NAV_ITEMS)[number]
 
 const DOCK_ROUTES = NAV_ITEMS.map((item) => item.href)
 
-// The icon box is a fixed 44px, which is what the magnify springs from.
-const ICON_SIZE = 44
+// The icon box is a fixed 36px, which is what the magnify springs from.
+// Deliberately the same number as DOCK_ICON_SIZE in
+// features/booth/dock-magnify.ts: the two docks are meant to read as one
+// control, so a size change belongs in both or the bar jumps size when you
+// cross between / and /projects.
+const ICON_SIZE = 36
 const MAX_SCALE = 1.38
 const MAGNETIC_DISTANCE = 130
 const SPRING = { damping: 20, stiffness: 300, mass: 0.5 }
@@ -64,7 +68,7 @@ export function MagneticDock() {
 
   // A phone has no pointer to be near, so the magnify never fires there. The
   // dock still earns its place as a persistent route between sections, but it
-  // drops to a static bar at the tap floor and the icons stop resizing.
+  // drops to a static bar at ICON_SIZE and the icons stop resizing.
   const magnify = !shouldReduceMotion && !isMobile
 
   return (
@@ -74,9 +78,13 @@ export function MagneticDock() {
         onMouseMove={(event) => mouseX.set(event.clientX)}
         onMouseLeave={() => mouseX.set(Infinity)}
         className={cn(
-          'dock-rise border-border bg-background/85 pointer-events-auto flex h-[52px] items-center gap-1 rounded-2xl border p-1',
+          // The height is the icon box plus its padding, so it is set by
+          // ICON_SIZE and not independently: 36 + 4*2 mobile, 36 + 6*2 on
+          // md. Setting a height the icons cannot fill is how the magnify
+          // ends up floating in dead space.
+          'dock-rise border-border bg-background/85 pointer-events-auto flex h-11 items-center gap-1 rounded-xl border p-1',
           'shadow-[0_18px_45px_-22px_rgba(0,0,0,0.6)] backdrop-blur-xl',
-          'md:h-14 md:items-end md:gap-1.5 md:p-1.5',
+          'md:h-12 md:items-end md:gap-1.5 md:p-1.5',
         )}
       >
         {NAV_ITEMS.map((item) => (
@@ -142,11 +150,15 @@ function DockIcon({
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
-      className="focus-visible:ring-ring focus-visible:ring-offset-background relative flex items-center justify-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+      className="focus-visible:ring-ring focus-visible:ring-offset-background relative flex items-center justify-center rounded-[10px] outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
     >
       <span
         className={cn(
-          'border-border bg-card relative flex size-full items-center justify-center overflow-hidden rounded-xl border',
+          // Radius scaled with the box, not held at 12px: a fixed radius on a
+          // smaller chip eats a larger share of each corner and the capsule
+          // drifts back toward the pill the booth dock deliberately moved
+          // away from.
+          'border-border bg-card relative flex size-full items-center justify-center overflow-hidden rounded-[10px] border',
           'shadow-[0_8px_20px_-12px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.05)]',
           isActive && 'border-primary/60',
         )}

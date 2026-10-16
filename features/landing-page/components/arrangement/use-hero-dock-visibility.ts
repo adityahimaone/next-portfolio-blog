@@ -10,12 +10,16 @@ import {
 /**
  * The dock's own claim on the bottom of the viewport.
  *
- * It sits at `bottom-4`/`bottom-5` with an `h-14` body, so it occupies roughly
- * the last 76px of the window. Anything whose top edge reaches this line is
+ * It sits at `bottom-4`/`bottom-5` with an `h-12` body, so it occupies roughly
+ * the last 68px of the window. Anything whose top edge reaches this line is
  * about to be read, and once it has, the dock can come back without landing on
  * top of it — which is what makes this the threshold rather than a tuned guess.
+ *
+ * Kept in step with the dock's own height: it was 76 when the dock was `h-14`,
+ * so a resize of the bar has to move this number with it or the dock returns
+ * early and lands on the thing it was waiting for.
  */
-const DOCK_CLEARANCE = 76
+const DOCK_CLEARANCE = 68
 
 /** The layouts that un-pin the hero and stack the page beneath it. */
 const FLOW_LAYOUT = '(max-width: 768px), (prefers-reduced-motion: reduce)'

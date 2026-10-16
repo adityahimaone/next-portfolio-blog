@@ -3,8 +3,12 @@
 import { useRef, type RefObject } from 'react'
 import { useSpring, useTransform, type MotionValue } from 'motion/react'
 
-/** Shared magnify constants, so nav icons and slot items move identically. */
-export const DOCK_ICON_SIZE = 44
+/** Shared magnify constants, so nav icons and slot items move identically.
+ *  DOCK_ICON_SIZE is deliberately the same number as ICON_SIZE in
+ *  features/layout/components/magnetic-dock.tsx — the two docks are meant to
+ *  read as one control, so the capsule must not change size when you cross
+ *  between / and /projects. */
+export const DOCK_ICON_SIZE = 36
 export const DOCK_MAX_SCALE = 1.38
 export const DOCK_MAGNETIC_DISTANCE = 130
 export const DOCK_SPRING = { damping: 20, stiffness: 300, mass: 0.5 }

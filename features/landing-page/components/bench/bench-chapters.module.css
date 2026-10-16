@@ -78,23 +78,18 @@
   align-items: start;
   /* The pinned visual needs a stretch of scroll to be pinned for, and this is
      the whole of the scene's scroll budget: three of these. The pin is
-     `min-height` minus the visual's height — 48svh here against 48svh of
-     visual — and that is now the *only* thing the number buys, because the
-     device's arc is bound to the pin rather than to the chapter's whole travel
-     (see `bindReading` in `use-bench-motion.ts`).
+     `min-height` minus the visual's height — 36svh here against 48svh of
+     visual.
 
-     So this is the length of the tumble, and it is the one number to move if
-     the device turns too fast or too slow. `84svh` left a 36svh pin, which put
-     a ~90° arc into roughly a single wheel-flick; the old `108svh` did not
-     help, because the visual was `72svh` then and the pin was the same 36svh.
-     `96svh` keeps the visual at `48svh` and grows the pin to 48svh, so the
-     rotation plays out over about 430px of scroll instead of 320px.
-
-     It is deliberately not larger. The section's runway is measured from the
-     panel and both are in flow, so every svh added here costs the document
-     two — `104svh` was a full extra viewport of scroll for another 70px of
-     pin, which is a bad trade for a beat this short. */
-  min-height: 96svh;
+     It is not what sets the length of the device's arc. That is the range in
+     `bindReading`, which runs from the frame the device enters to the frame it
+     has left, so this number only decides how long the device is held still
+     and centred while the text beside it is read. It was briefly `96svh` to
+     lengthen the arc, which was the wrong lever twice over: the arc had already
+     been bound to the pin, so growing the pin only stretched the tumble, and
+     the section's runway is measured from the panel with both in flow, so every
+     svh here costs the document two. */
+  min-height: 84svh;
 }
 
 .visual {
@@ -104,10 +99,7 @@
   --dev-edge: color-mix(in srgb, var(--foreground) 34%, transparent);
   --dev-lcd: color-mix(in srgb, var(--primary) 32%, var(--background));
   position: sticky;
-  /* The pin is the chapter's `min-height` minus this height, and the device's
-     whole arc is bound to it, so this box and the chapter are one mechanism:
-     the chapter grew to `96svh` and this stayed at `48svh` precisely so the
-     pin would grow with it.
+  /* The pin is the chapter's `min-height` minus this height.
      `26svh` + `48svh` keeps its resting centre on the 50svh line, so the
      composition is unmoved: 26svh of headroom above it and 26svh below. */
   top: 26svh;

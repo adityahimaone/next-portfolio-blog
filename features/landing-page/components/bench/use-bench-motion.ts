@@ -519,6 +519,11 @@ function startBenchMotion({
         rz: flight.rotateZ,
         p: Math.min(1, frame.progress * 2),
         spin: spin,
+        // The flight fades these to nothing once the stage is behind the
+        // reading panel. Saying so lets the renderer drop them from its frame
+        // budget instead of spending a full render on an invisible device —
+        // which is what starved the chapter devices.
+        alpha: flight.opacity,
       })
       if (!posed) {
         rot.style.transform = `rotateX(${flight.rotateX}deg) rotateY(${flight.rotateY}deg) rotateZ(${flight.rotateZ}deg)`
@@ -732,25 +737,31 @@ function startBenchMotion({
       // stylesheet's tilt is what turns.
       const kind = visual.querySelector<HTMLElement>('[data-kind]')?.dataset
         .kind as GlassKind | undefined
-      // The arc is bound to the **pinned** window, not to the chapter's whole
-      // travel. Those were the same thing when the trigger ran from `top 85%`
-      // to `bottom 30%`, and they are not: the visual sticks at `top: 26svh`
-      // and is released when its bottom meets the chapter's, so the pin is
-      // exactly `chapterH - visualH` long and the old range was nearly four
-      // times that. Three quarters of the tumble therefore played while the
-      // device was still climbing into frame or already on its way out of it,
-      // and the part a reader actually watched — held still, centred — was the
-      // remaining quarter. That is why the device read as barely moving.
+      // The arc spans the device's **whole visible life** — it starts turning
+      // the moment it comes into view and finishes as it leaves.
       //
-      // `top 26%` is the sticky offset and `bottom 74%` is that offset plus the
-      // visual's own height, so the two ends land on the pin's first and last
-      // frame. Both are the stylesheet's numbers: change `top` or `height` on
-      // `.visual` and these have to move with them.
+      // Two other ranges were tried and both were wrong in opposite directions.
+      // The original, `top 85%` to `bottom 30%`, put three quarters of the
+      // tumble off the ends of the frame. Binding it to the sticky window
+      // instead (`top 26%` to `bottom 74%`) made the reverse mistake: the
+      // device was pinned and perfectly still for the whole 666px it took to
+      // climb into the pin, which is the first thing a reader sees of it, so it
+      // read as a still object that suddenly lurched. Neither is what the
+      // composition is for — the device is *supposed* to be turning whenever it
+      // is on screen, and to be held still and centred while it does.
+      //
+      // `top bottom` is the chapter's top meeting the viewport's bottom, which
+      // is the frame the visual (which sits at the chapter's top) enters by;
+      // `bottom top` is the chapter's bottom leaving the top, which is the
+      // frame the visual has just gone off by. Both ends are exact, so `--p` is
+      // 0 only while the device is invisible and 1 only once it is gone, and
+      // the pinned window falls in the middle of the range where the rotation
+      // is fastest.
       bind(
         visual,
         '--p',
-        'top 26%',
-        'bottom 74%',
+        'top bottom',
+        'bottom top',
         chapter,
         kind
           ? (progress) => setGlassPose(visual, chapterPose(kind, progress))

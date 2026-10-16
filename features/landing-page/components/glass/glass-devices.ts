@@ -523,20 +523,40 @@ type Controller = {
   camera: THREE.PerspectiveCamera
   model: Model
   /** What is drawn now. It eases toward `target` rather than jumping to it. */
-  pose: Required<GlassPose>
-  target: Required<GlassPose>
+  pose: Pose
+  target: Pose
   /** False until the first pose arrives, which is taken as it is, not eased to. */
   posed: boolean
   moving: boolean
   dirty: boolean
   visible: boolean
+  /** True when the caller has faded the host out. Not drawn while it is. */
+  hidden: boolean
 }
+
+/** The numbers that are eased. `alpha` is not one of them — it is a flag. */
+type Pose = Required<Omit<GlassPose, 'alpha'>>
 
 const controllers = new Set<Controller>()
 let frame = 0
 
-/** The most devices drawn in one animation frame. The rest wait their turn. */
+/**
+ * The most devices drawn in one animation frame. The rest wait their turn.
+ *
+ * "Their turn" is the whole point: this used to walk `controllers` from the
+ * front every frame, so once more devices were live than the budget allowed,
+ * the same first few were drawn over and over and every device after them was
+ * never drawn at all. The About hit that exactly — six flying devices sit in
+ * the stage behind the chapters, and once they had faded to nothing they were
+ * still first in the set, still `visible`, still dirty, and still eating all
+ * six slots. The three chapter devices were added last and drew **zero** frames
+ * across a full scroll of all three chapters, which is what "the device is
+ * static" was. `cursor` rotates the starting point so the budget is shared.
+ */
 const BUDGET = 6
+
+/** Where the next frame starts in `controllers`. */
+let cursor = 0
 
 /**
  * How fast a pose eases toward its target, per second. The scroll hooks hand
@@ -563,10 +583,17 @@ function schedule() {
     const resources = getShared()
     if (!resources) return
 
+    const all = [...controllers]
+    const count = all.length
     let drawn = 0
     let again = false
-    for (const controller of controllers) {
-      if (!controller.visible) continue
+    /** Where the budget ran out, so the next frame resumes there. */
+    let stopAt = -1
+
+    for (let i = 0; i < count; i += 1) {
+      const index = (cursor + i) % count
+      const controller = all[index]
+      if (!controller.visible || controller.hidden) continue
       if (controller.moving) {
         step(controller, dt)
         again = again || controller.moving
@@ -574,11 +601,14 @@ function schedule() {
       if (!controller.dirty) continue
       if (drawn >= BUDGET) {
         again = true
-        continue
+        stopAt = index
+        break
       }
       draw(controller, resources)
       drawn += 1
     }
+
+    if (count > 0) cursor = stopAt >= 0 ? stopAt : (cursor + drawn) % count
     if (again) schedule()
     else lastTime = 0
   })
@@ -680,6 +710,7 @@ export async function attachGlass(
       moving: false,
       dirty: true,
       visible: true,
+      hidden: false,
     }
     controllers.add(controller)
 
@@ -709,8 +740,13 @@ export async function attachGlass(
           p: next.p ?? controller.target.p,
           spin: next.spin ?? controller.target.spin,
         }
+        // A fully faded device is not worth a draw, and the budget is the
+        // scarcest thing here — see BUDGET. Below a thousandth of an opacity
+        // there is nothing on screen to draw for.
+        const hidden = (next.alpha ?? 1) <= 0.001
         // A target that moved less than a tenth of a degree is not worth a draw.
         const same =
+          hidden === controller.hidden &&
           Math.abs(merged.rx - controller.target.rx) < 0.1 &&
           Math.abs(merged.ry - controller.target.ry) < 0.1 &&
           Math.abs(merged.rz - controller.target.rz) < 0.1 &&
@@ -718,6 +754,7 @@ export async function attachGlass(
           Math.abs(merged.spin - controller.target.spin) < 0.2
         if (same && controller.posed) return
         controller.target = merged
+        controller.hidden = hidden
         if (!controller.posed) {
           // The first pose is where the device starts, not somewhere to ease to
           // from its resting orientation.

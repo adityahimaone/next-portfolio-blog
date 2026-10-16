@@ -149,6 +149,10 @@ function startBridge({
         rz: device.rz,
         p: Math.min(1, frame.progress * 2),
         spin: device.spin,
+        // The devices dissolve into the hole, so most of the scene's frames
+        // have them at nothing. Skipping those keeps the renderer's per-frame
+        // budget for the ones that are actually on screen.
+        alpha: device.opacity,
       })
       if (!posed) {
         rots[index].style.transform =

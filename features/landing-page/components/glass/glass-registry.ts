@@ -9,6 +9,13 @@ export type GlassPose = {
   p?: number
   /** Degrees. Turns the reels and the record. */
   spin?: number
+  /**
+   * The host's opacity, 0..1, if the caller animates one. A device faded to
+   * nothing costs a full render to produce a frame nobody can see, and the
+   * renderer only draws a few devices a frame — so a hidden one is skipped
+   * rather than drawn. Defaults to 1 (always drawn).
+   */
+  alpha?: number
 }
 
 export type GlassHandle = {

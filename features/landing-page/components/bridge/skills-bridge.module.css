@@ -145,21 +145,31 @@
     height: 210svh;
     padding: 0;
     /* The Skills section's own ground, not a darker colour of its own: the same
-       floor and the same 32px rule grid that `.skills` paints (see the room
-       tokens in `rack-01.module.css`), so the area the hole opens onto before
-       the section has risen is the same surface as the section itself. The
-       grid is vertical lines measured from each element's left edge and both
-       elements are full width, so the rules meet at the seam.
+       floor and the same rule grid that `.skills` paints, read from the deck
+       theme so the two cannot drift apart again. They did drift: this band kept
+       the legacy 32px `--room-fill` grid after the skills floor moved to the
+       deck's 30px `--deck-grid-cell`, so the rules jumped at the seam.
+       Both directions are painted, because `.skills` paints both. With only the
+       vertical rule this band was a set of stripes while the section was a
+       grid, and the seam read as two different materials meeting. The grid is
+       measured from each element's left edge and both elements are full width,
+       so the rules meet at the seam.
        The room's warm/cool radials are deliberately left out: they are stage
        lighting on the section's own box, so painting them here too would put a
        glow in the band that the section then moves away from. */
     background:
       linear-gradient(
           90deg,
-          var(--room-fill, rgb(255 255 255 / 0.035)) 1px,
+          var(--deck-grid-line, rgb(255 255 255 / 0.05)) 1px,
           transparent 1px
         )
-        0 0 / 32px 32px,
+        0 0 / var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px),
+      linear-gradient(
+          0deg,
+          var(--deck-grid-line, rgb(255 255 255 / 0.05)) 1px,
+          transparent 1px
+        )
+        0 0 / var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px),
       var(--room-base, #14161a);
   }
 

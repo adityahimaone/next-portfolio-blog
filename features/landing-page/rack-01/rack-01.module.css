@@ -22,7 +22,9 @@
   --room-base: #14161a;
   --room-ink: #f1eee5;
   --room-ink-muted: #b6b3a9;
-  --room-fill: rgb(255 255 255 / 0.035);
+  /* `--room-fill` used to live here: the 3.5% white rule the room floors were
+     gridded with. The floors now read the deck theme's `--deck-grid-line`, so
+     nothing referenced it and it was removed with its last consumer. */
 
   /* The tan band. Warm and pale by day, absorbed into the room at night. */
   --band-tan: #c8a474;
@@ -3636,11 +3638,12 @@
     transform: scaleY(1);
   }
 } /* Studio rack refinement */
+/* The page's rule grid is painted by the LAST `.root` rule in the file, so that
+   it cannot be restated at a stale pitch by an earlier block. This rule keeps
+   only the anchor offset; it used to paint a 24px grid that the final rule
+   overrode — the same kind of dead restatement that let the skills floor and
+   the cable divider drift onto different pitches. */
 .root {
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px) 0
-      0 / 24px 24px,
-    var(--graphite);
   scroll-padding-top: 76px;
 }
 .section,
@@ -5650,10 +5653,18 @@
   opacity: 0.7;
 }
 .contact {
+  /* The rule grid reads the deck theme instead of restating itself. It used to
+     be a hardcoded `rgba(29 30 28 / 0.04)` at a literal 30px, which had two
+     consequences: the pitch could not follow `--deck-grid-cell`, and because the
+     colour never flipped, the band kept near-black rules in the dark theme
+     where its own chassis is dark — so the grid disappeared entirely at night.
+     It also ran one way only. Both are fixed here. */
   background:
     radial-gradient(circle at 86% 16%, rgba(46, 63, 92, 0.16), transparent 28%),
-    linear-gradient(90deg, rgba(29, 30, 28, 0.04) 1px, transparent 1px) 0 0 /
-      30px 30px,
+    linear-gradient(90deg, var(--deck-paper-grid) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    linear-gradient(0deg, var(--deck-paper-grid) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
     var(--chassis);
 }
 .patchScreen {
@@ -10058,16 +10069,13 @@
   background: rgb(241 238 229 / 0.68);
 }
 
-/* The skills room: the floor and the ink on it, and nothing else. This
-   supersedes the warm/cool radials still declared on the earlier .skills
-   rule above, so the surface is the same flat floor and rule grid the cable
-   divider continues below it. */
+/* The skills room: the ink on the floor, and nothing else. The floor itself —
+   the flat surface and its rule grid — is painted by the LAST `.skills` rule in
+   the file, the one the cable divider continues below. This rule used to
+   restate that floor at the legacy 32px pitch, which is precisely what let the
+   two drift apart; the restatement is gone and only the ink is left. */
 .skills {
   color: var(--room-ink);
-  background:
-    linear-gradient(90deg, var(--room-fill) 1px, transparent 1px) 0 0 / 32px
-      32px,
-    var(--room-base);
 }
 
 /* Copy that sits directly on the room floor. The panels keep their own
@@ -10201,10 +10209,15 @@
    wall the experience section continues on — so the divider reads as the
    seam between the two.
 
-   Only the bottom half carries the band grid here. The top half gets its
-   grid from ::before below, which repeats the skills room's own rule grid
-   verbatim; laying the 30px band grid under it as well just muddied the
-   line. */
+   The bottom half carries the grid here and the top half gets its own from
+   ::before below, which repeats the skills room's rule grid verbatim; laying
+   the band grid under the top half as well just muddied the line.
+
+   The bottom rules are spelled out in the deck theme's paper grid rather than
+   borrowed from `--band-grid`, which is the single-direction overlay the tan
+   panels still use. This band needs both directions, and `--deck-paper-grid`
+   flips in step with `--band-tan` (paper by day, ground at night), so the
+   lines stay legible in either theme. */
 .cableDividerInner {
   /* Anchors the seam rule in ::after and the room grid in ::before. */
   position: relative;
@@ -10213,13 +10226,19 @@
       var(--room-base) 0 50%,
       transparent 50% 100%
     ),
-    var(--band-grid), var(--band-tan);
+    linear-gradient(90deg, var(--deck-paper-grid) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    linear-gradient(0deg, var(--deck-paper-grid) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    var(--band-tan);
 }
 
 /* The top half is the skills floor, so it borrows the skills floor's exact
-   pattern: the same 32px pitch and the same --room-fill line the .skills
-   section paints. Without it the floor and the divider met on a 32px grid
-   against a 30px one and the seam read as a change of surface. */
+   pattern: the same pitch, the same line and now the same two directions the
+   .skills section paints, read from the deck theme rather than restated.
+   Restating is exactly how this broke — the floor moved to the deck's 30px
+   `--deck-grid-cell` while this kept the legacy 32px `--room-fill`, so the
+   seam read as a change of surface. */
 .cableDividerInner::before {
   position: absolute;
   z-index: 0;
@@ -10227,8 +10246,11 @@
   right: 0;
   left: 0;
   height: 50%;
-  background: linear-gradient(90deg, var(--room-fill) 1px, transparent 1px) 0 0 /
-    32px 32px;
+  background:
+    linear-gradient(90deg, var(--deck-grid-line) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    linear-gradient(0deg, var(--deck-grid-line) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell);
   content: '';
   pointer-events: none;
 }
@@ -10903,10 +10925,15 @@
 }
 
 /* One ground. The hero, the skills room and the work booth were three
-   charcoals; the page behind them is the hero's. */
+   charcoals; the page behind them is the hero's. The rules run BOTH ways: with
+   only the vertical one the surface was a set of stripes, so a band that showed
+   the full grid (the skills room, the experience sheet) met a band that did not
+   and the seam read as a change of material. */
 .root {
   background:
     linear-gradient(90deg, var(--deck-grid-line) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    linear-gradient(0deg, var(--deck-grid-line) 1px, transparent 1px) 0 0 /
       var(--deck-grid-cell) var(--deck-grid-cell),
     var(--deck-ground);
 }
@@ -11052,6 +11079,12 @@
    reads as one surface from About to Contact. The wash is orange stage light
    where it used to be wine. */
 .experience {
+  /* The band is paper, so its ink is the paper's, not the room's. Without this
+     the heading inherited `--deck-ground-ink` (#eee9df) and painted cream on
+     cream — about 1.05:1, so "What shipped, and where." was invisible in the
+     light theme. Both tokens follow the theme, so this is dark-on-paper by day
+     and light-on-ground at night. */
+  color: var(--deck-paper-ink);
   background:
     radial-gradient(circle at 14% 22%, var(--deck-wash), transparent 28%),
     linear-gradient(90deg, var(--deck-paper-grid) 1px, transparent 1px) 0 0 /
@@ -11063,6 +11096,8 @@
 .cableDivider {
   background:
     linear-gradient(90deg, var(--deck-paper-grid) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    linear-gradient(0deg, var(--deck-paper-grid) 1px, transparent 1px) 0 0 /
       var(--deck-grid-cell) var(--deck-grid-cell),
     var(--band-tan);
 }

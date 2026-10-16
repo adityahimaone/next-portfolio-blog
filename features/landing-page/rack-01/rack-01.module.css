@@ -1772,13 +1772,6 @@
   padding: 0;
   background: #0b0d0c;
   color: #f4f0e8;
-  --footer-gap: clamp(30px, 5vw, 68px);
-  /* The lead connector spans from the panel's edge to the band. Its height is
-     measured up from the band, so it has to cover the gap *plus* whatever
-     padding `.footerDeck` adds below the panel — a value that differs per
-     breakpoint (48px on desktop, 0 on a phone) and so cannot be guessed here.
-     It is restated inside the deck's own mobile fork, which is the only rule
-     that knows the number. */
   gap: 0;
 }
 .footer::before {
@@ -1807,38 +1800,6 @@
   );
   pointer-events: none;
 }
-.footerTangle {
-  position: relative;
-  z-index: 1;
-  display: block;
-  /* Capped, and centred. Full-bleed the band was width / 2 tall — 720px at a
-     1440 viewport — so the nest grew until its rings ran off all four sides of
-     the frame and the arcs were cropped mid-stroke, with empty black between
-     them. The nest's own proportion is what the rings are built around, so the
-     cap has to come from the WIDTH: 1100px keeps the band at 550px, which still
-     reads as a wide arc at every desktop size while leaving the outermost ring
-     inside the frame. Below the cap the band is exactly the screen's own width
-     and unchanged, which is why the phone case needed no separate rule. */
-  width: min(100%, 1100px);
-  margin-inline: auto;
-  background: #0b0d0c !important;
-}
-
-/* The band's height is derived from its own width, so the width cap IS the
-   height cap — 1100px produced a 550px band, which is more than half a
-   1000px-tall viewport spent on decoration at the bottom of the page.
-   Narrowing the nest to 720px on a desktop drops the band to 360px without
-   touching the geometry: the rings still fill the box edge to edge at their
-   own `width / 2` proportion, so nothing is cropped and no black opens up
-   between the outermost arc and the frame. Below 1024px the base cap still
-   stands, which is the tablet and phone case the original 1100px was sized
-   for. */
-@media (min-width: 1024px) {
-  .footerTangle {
-    width: min(100%, 720px);
-  }
-}
-
 @media (max-width: 768px) {
   .footer {
     margin-top: 72px;
@@ -6564,10 +6525,8 @@
   .footer {
     align-items: flex-start;
     flex-direction: column;
-    /* No gap. This column already spaces itself with `--footer-gap` on
-       `.footerSignal`, and a row gap here silently added to it — so the band
-       sat 12px further from the panel than the connector was drawn, leaving the
-       lead's top 12px short of the panel it is meant to leave. */
+    /* No gap. The band is the footer's only in-flow child, so a row gap here
+       would only push it down from the transition strip above it. */
     gap: 0;
     margin-top: 0;
   } /* ── Mobile Navigation (Section Dropdown Trigger + Direct Route Links) ── */
@@ -8953,12 +8912,6 @@
     margin-top: 56px;
   }
 
-  /* Mobile only, and only while the band itself is hidden above — a height on a
-     display:none element is inert, but leaving it here would resurrect the band
-     the moment the hide is ever scoped down. */
-  .root .footerTangle {
-    margin-top: 12px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -9635,242 +9588,24 @@
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
-} /* ─────────────────────────────────────────────────────────────
-   FOOTER OUTPUT UNIT — a rack device driving the signal tangle
+}
+
+/* ─────────────────────────────────────────────────────────────
+   FOOTER SIGNAL BAND — the halftone wordmark that closes the page
    ───────────────────────────────────────────────────────────── */
-/* The tangle band used to close the foot of the page, so the deck's flush
-   bottom now needs the breathing room it was borrowing. */
-.footerDeck {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: clamp(28px, 3.6vw, 48px) clamp(20px, 5vw, 78px)
-    clamp(28px, 3.6vw, 48px);
-}
-
-.footerPanel {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: clamp(18px, 3vw, 44px);
-  padding: clamp(16px, 1.8vw, 22px) clamp(18px, 2.4vw, 30px);
-  border: 1px solid rgba(231, 226, 216, 0.1);
-  border-radius: 14px;
-  background: linear-gradient(
-      180deg,
-      rgba(231, 226, 216, 0.04),
-      rgba(231, 226, 216, 0) 46%
-    ),
-    #0e100f;
-  box-shadow:
-    inset 0 1px 0 rgba(231, 226, 216, 0.06),
-    0 24px 48px -34px rgba(0, 0, 0, 0.9);
-}
-
-.footerBrand {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.footerBrandName {
-  color: rgba(231, 226, 216, 0.88);
-  font:
-    650 12px var(--deck-font-mono),
-    monospace;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.footerBrandMeta {
-  color: rgba(231, 226, 216, 0.4);
-  font:
-    500 9px var(--deck-font-mono),
-    monospace;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.footerUnit {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 9px;
-  text-align: center;
-}
-
-.footerEmitter {
-  position: relative;
-  display: grid;
-  width: 50px;
-  height: 50px;
-  place-items: center;
-  color: rgba(231, 226, 216, 0.75);
-  border: 1px solid rgba(231, 226, 216, 0.3);
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(231, 226, 216, 0.07),
-    rgba(231, 226, 216, 0) 70%
-  );
-}
-
-/* The disc fills the bezel with no inset: the SVG draws its own rules to the
-   clip edge, and a gap here would read as a second, unlit ring. */
-.footerEmitterScan {
-  width: 100%;
-  height: 100%;
-}
-
-.footerMotto {
-  margin: 0;
-  max-width: 32ch;
-  color: rgba(231, 226, 216, 0.72);
-  font:
-    500 clamp(13px, 1.05vw, 15px) / 1.45 var(--deck-font-ui),
-    sans-serif;
-  letter-spacing: 0.01em;
-}
-
-.footerControls {
-  justify-self: end;
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.footerPower {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--signal-orange);
-  box-shadow: 0 0 7px var(--signal-orange);
-  animation: record-pulse 2.4s ease-in-out infinite;
-}
-
-.footerTop {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 1px solid rgba(255, 90, 31, 0.35);
-  border-radius: 11px;
-  background: transparent;
-  color: #ff8a5e;
-  cursor: pointer;
-  transition:
-    background-color 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease,
-    transform 180ms ease;
-}
-
-.footerTop:hover {
-  border-color: var(--signal-orange);
-  background: var(--signal-orange);
-  color: var(--lcd-black);
-  transform: translateY(-2px);
-}
-
-.footerTop:focus-visible {
-  outline: 2px solid var(--signal-orange);
-  outline-offset: 2px;
-}
-
+/* The deck panel that used to sit here (brand, motto, back-to-top) has been
+   removed, so there is no longer a panel for a lead connector to reach: the
+   band is the footer's only in-flow child, and its height is derived from the
+   word rather than from a rule here. */
 .footerSignal {
   position: relative;
   z-index: 1;
-  margin-top: var(--footer-gap);
-  /* Distance from the band back to the panel's own edge. The lead is measured
-     up from here, so it has to cross this as well as the gap — without it the
-     line stops at the deck's padding and reads as floating clear of the panel.
-     The deck is a sibling, so its padding is mirrored here rather than
-     inherited; the mobile fork at the end of this file sets the phone value. */
-  --footer-inset: clamp(28px, 3.6vw, 48px);
-}
-
-.footerLead {
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  left: 50%;
-  width: 1px;
-  /* The line spans the gap *and* the inset back to the panel's edge, so it
-     actually connects the two rather than stopping short of the panel. */
-  height: calc(var(--footer-gap) + var(--footer-inset));
-  transform: translate(-50%, -100%);
-  background: linear-gradient(
-    to bottom,
-    rgba(231, 226, 216, 0.46),
-    rgba(231, 226, 216, 0.1)
-  );
-}
-
-.footerLead::after {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 7px;
-  height: 7px;
-  transform: translate(-50%, 50%);
-  border-radius: 50%;
-  background: var(--signal-orange);
-  box-shadow: 0 0 8px rgba(255, 90, 31, 0.7);
-  content: '';
-}
-
-@media (max-width: 768px) {
-  .footerDeck {
-    padding: 26px 18px 0;
-  }
-
-  /* Stacked and centred, but tightened: three stacked bands plus a fixed dock
-     is the whole viewport, and at 22px of panel padding the back-to-top control
-     ended up underneath the dock rather than above it. The gaps are what shrink,
-     not the type. */
-  .footerPanel {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    gap: 12px;
-    padding: 16px 18px;
-    text-align: center;
-  }
-
-  .footerBrand {
-    gap: 4px;
-  }
-
-  .footerControls {
-    justify-self: center;
-    margin-top: 2px;
-  }
-
-  /* This used to reserve `clamp(64px, 10svh, 84px)` below the footer to clear
-     the fixed dock, and it could not do that job at all: the padding sits
-     AFTER .footerSignal's tangle band, which is the footer's last child, so the
-     reserved space fell below the end of the document and pushed 80px of
-     unpainted floor under the tangle. A reader who scrolled to the bottom
-     landed on a blank strip with the rings cut off above it.
-
-     Nothing needs the reservation now. The dock is fixed to the viewport, so
-     it floats over the tangle band rather than pushing it, and the band is the
-     thing that closes the page. The clearance the dock actually needs belongs
-     above the band, in the gap --footer-gap already puts between the panel and
-     the tangle, not after it. */
-}
-
-@media (prefers-reduced-motion: reduce) {
-  /* The emitter's scan handles its own reduced-motion case inside
-     scan-loader.module.css, so only the power LED is left here. */
-  .footerPower {
-    animation: none;
-  }
+  /* `.footer` is a flex column and the band's canvas is absolutely positioned,
+     so the wrapper takes its width from the container rather than from its own
+     content. `align-self` is explicit because the mobile fork sets
+     `align-items: flex-start` on `.footer`. */
+  align-self: stretch;
+  width: 100%;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -10005,24 +9740,6 @@
     0 42px 70px -36px rgba(0, 0, 0, 0.8);
   -webkit-backdrop-filter: blur(14px) saturate(1.45);
   backdrop-filter: blur(14px) saturate(1.45);
-}
-
-/* ─── Footer panel ─────────────────────────────────────────────
-   Was near-invisible at 0.04 alpha. Lifted to a readable frosted
-   plate, still the quietest surface on the page. */
-.footerPanel {
-  border: 1px solid rgba(231, 226, 216, 0.16);
-  background: linear-gradient(
-      180deg,
-      rgba(231, 226, 216, 0.1),
-      rgba(231, 226, 216, 0.02)
-    ),
-    rgba(14, 16, 15, 0.6);
-  box-shadow:
-    inset 0 1px 0 rgba(231, 226, 216, 0.12),
-    0 24px 48px -34px rgba(0, 0, 0, 0.9);
-  -webkit-backdrop-filter: blur(12px) saturate(1.4);
-  backdrop-filter: blur(12px) saturate(1.4);
 }
 
 /* ─── Skills controller: density pass ───────────────────────────
@@ -10220,7 +9937,6 @@
 @media (prefers-reduced-transparency: reduce) {
   .cassetteDeck,
   .contactDeck,
-  .footerPanel,
   .heroPanelTitle,
   .heroEditorialPanel .primaryButton,
   .heroEditorialPanel .heroResumeLink {
@@ -10253,10 +9969,6 @@
 
   .contactDeck {
     background: #20221f;
-  }
-
-  .footerPanel {
-    background: #0e100f;
   }
 }
 
@@ -10713,53 +10425,6 @@
   }
 }
 
-/* ─── Footer tangle, restated after the base rules ───────────
-   `.footerSignal` and `.footerTangle` are declared around line 2023 and 10848,
-   *after* every mobile fork for them, so at equal specificity the base rules
-   kept winning. That is why the band could not be given a mobile height or a
-   stretch: the values were being discarded on source order rather than
-   conflicting. This block is last so it actually applies. */
-@media (max-width: 768px) {
-  .footerSignal {
-    display: block;
-    /* `--footer-gap` is 30-68px and belongs to the desktop composition. The
-       lead is a connector that spans this gap exactly, so the two must read
-       from one value or the line stops short and the band looks unattached.
-       Declared here, on the element that owns both the margin and the lead's
-       height, so they cannot drift apart. */
-    --footer-gap: clamp(30px, 9vw, 48px);
-    margin-top: var(--footer-gap);
-    /* `.footer` is a flex column, so this wrapper is a flex item sized by its
-       content — and the band's content is an SVG the component only renders once
-       it has measured a non-zero width. With no width, no SVG, and the flex item
-       collapsing to 0px forever. Stretching breaks the circular dependency by
-       taking the width from the container instead of from itself. */
-    align-self: stretch;
-    width: 100%;
-  }
-
-  .footerTangle {
-    display: block !important;
-    /* `min(100%, 1100px)` rather than the desktop's narrower 720px cap: this
-       block is restated *after* the base rules, so at equal specificity it wins
-       regardless of viewport — including on the desktop widths the 720px cap
-       exists for. Only the phone range reaches this fork, where 1100px resolves
-       to the screen width anyway, so the two never actually disagree. */
-    width: min(100%, 1100px);
-    /* No forced height: the component derives the band from its own width, and
-       pinning one here would re-crop the semicircle it is meant to fit. */
-    margin-top: 0;
-  }
-
-  /* Reaches from the band's top edge back to the panel's bottom edge. On a
-     phone the deck's bottom padding is 0, so the panel's edge *is* the deck's
-     edge and the inset is nothing — the panel's own 16px sits inside its box
-     and is already counted. Desktop's inset is the deck's 48px, declared on
-     `.footerSignal` above. */
-  .footerSignal {
-    --footer-inset: 0px;
-  }
-}
 
 .deckFlip {
   position: relative;
@@ -11409,4 +11074,16 @@
 }
 .contact .contactPad {
   border-radius: var(--deck-r-key);
+}
+
+/* ─── Footer wordmark band ───────────────────────────────────
+   Replaces the tangle band, and the deck panel that used to precede it. The
+   component owns its own height (derived from the word) and its own
+   stylesheet; this only seats it in the footer. */
+.footerWordmark {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  margin: 0;
 }

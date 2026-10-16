@@ -1,10 +1,9 @@
 'use client'
 
-import { FOOTER_MOTTO, FOOTER_TANGLE_LINES, RESUME_URL } from './shared'
+import { RESUME_URL } from './shared'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ScanLoader } from '../scan-loader'
-import { TangleFooter } from '@/components/ui/tangle-footer'
+import HalftoneWordmarkFooter from '@/components/ui/halftone-wordmark-footer'
 import {
   Accordion,
   AccordionContent,
@@ -19,14 +18,7 @@ import {
 } from '../constants'
 import styles from './rack-01.module.css'
 import { SectionHeading } from './section-heading'
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Mail,
-  Pause,
-  Play,
-  Square,
-} from 'lucide-react'
+import { Mail, Square } from 'lucide-react'
 import { Screw } from '@/components/ui/screw'
 import { SilkscreenLabel } from './primitives'
 
@@ -63,6 +55,14 @@ const CONTACT_QUESTIONS = [
       'Frontend work, design engineering, and hard interface problems. Replies usually land within a couple of days.',
   },
 ] as const
+
+/** The top row of the footer's wordmark band. */
+const FOOTER_LINKS = [
+  { label: 'Email', href: `mailto:${EMAIL}` },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/adityahimaone' },
+  { label: 'GitHub', href: 'https://github.com/adityahimaone' },
+  { label: 'Resume', href: RESUME_URL },
+]
 
 const CONTACT_PADS = [
   { label: 'Email', detail: EMAIL, href: `mailto:${EMAIL}`, note: 261.63 },
@@ -147,7 +147,6 @@ function OutCluster({ onClear }: { onClear: () => void }) {
 }
 
 export function Contact() {
-  const currentYear = new Date().getFullYear()
   const [activePad, setActivePad] = useState<number | null>(null)
   const [loopingPads, setLoopingPads] = useState<Set<number>>(new Set())
   const [sweepingPads, setSweepingPads] = useState<Set<number>>(new Set())
@@ -573,55 +572,33 @@ export function Contact() {
       <footer className={styles.footer}>
         <div className={styles.footerTransition} aria-hidden="true" />
 
-        <div className={styles.footerDeck}>
-          <div className={styles.footerPanel}>
-            <div className={styles.footerBrand}>
-              <span className={styles.footerBrandName}>Aditya Himawan</span>
-              <span className={styles.footerBrandMeta}>
-                © {currentYear} · adityahimaone.space
-              </span>
-            </div>
-
-            <div className={styles.footerUnit}>
-              <span className={styles.footerEmitter} aria-hidden="true">
-                <ScanLoader className={styles.footerEmitterScan} />
-              </span>
-              <p className={styles.footerMotto}>{FOOTER_MOTTO}</p>
-            </div>
-
-            <div className={styles.footerControls}>
-              <span className={styles.footerPower} aria-hidden="true" />
-              <button
-                type="button"
-                className={styles.footerTop}
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                aria-label="Back to top"
-              >
-                <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-        </div>
-
         <div className={styles.footerSignal}>
-          <span className={styles.footerLead} aria-hidden="true" />
           {/*
-            No `height` prop. Passing 350 fixed the band at 350px on a desktop
-            and let the component cap it to `width / 2` on a narrow one — which
-            is correct geometry, but it left the rings' own 350px-tall drawing
-            cropped to 195px at 390px wide, so the arcs were sliced through
-            mid-ring. Deriving the band from its own width instead keeps the
-            `width / 2` proportion the rings are built around, so the nest
-            always fits the box and the page still closes on it.
+            The band is the whole footer now: the deck panel that used to sit
+            above it (brand, motto, back-to-top) has been removed, so nothing
+            sits above or below the word. The name is cropped by the bottom edge
+            of the document; the footer's height is derived from the word, not
+            set here (see the component's header for why). Colours are this
+            footer's own: the ground is the same #0b0d0c as `.footer`, so there
+            is no seam, and the warm channel is the signal orange the page
+            already uses.
+
+            `stretch` is 2.5 rather than the component's 1.5 default: the band is
+            the entire footer now, so it carries more height. Stretch scales the
+            glyphs vertically after they have been fitted to the width, so the
+            word keeps its full width and only gets taller.
           */}
-          <TangleFooter
-            className={styles.footerTangle}
-            lines={[...FOOTER_TANGLE_LINES]}
+          <HalftoneWordmarkFooter
+            className={styles.footerWordmark}
+            wordmark="HIMAWAN"
+            kicker="Aditya"
+            kickerMeta="Frontend Engineer · Jakarta"
+            links={FOOTER_LINKS}
             background="#0b0d0c"
-            ribbon="#e7e2d8"
-            textColor="#0b0d0c"
-            seed={23}
-            label="Rotating portfolio footer signal"
+            ink="#e7e2d8"
+            warm="#ff5a1f"
+            stretch={2.5}
+            label="Aditya Himawan, signal band"
           />
         </div>
       </footer>

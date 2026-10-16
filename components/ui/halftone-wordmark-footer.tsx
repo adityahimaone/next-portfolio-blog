@@ -1,0 +1,803 @@
+'use client'
+
+// Halftone Wordmark Footer.
+//
+// A footer whose name is set enormous and cropped by the bottom edge of the
+// page, printed as a field of halftone dots. Each dot is sized by how much of
+// a letter covers its cell, so the type keeps its edges at any scale.
+//
+// Three things move it, and all three belong to the page's music-hardware
+// theme rather than to a generic "interactive footer":
+//
+// - A **playhead** sweeps the word like a DAW transport, looping every four
+//   bars. Dots under it swell and warm to the signal orange, then cool as it
+//   passes. A bar / beat readout in the top row is driven by the same clock.
+// - The **pointer** parts the dots on springs, and they warm as they are
+//   pushed off their place.
+// - A **click** sends a shock ring through the word.
+//
+// ## Why it is built like this
+//
+// - **One static layer.** The resting field (every dot, plus the print grain)
+//   is painted once per layout into an offscreen canvas. A frame is one
+//   `drawImage` of that layer plus only the dots that are displaced or under
+//   the playhead, each preceded by an erase of its home. A word of ten thousand
+//   dots therefore costs a few hundred arcs a frame, not ten thousand, which is
+//   what lets the playhead run continuously.
+// - **The height is derived, not guessed.** The word is fitted to the width,
+//   stretched vertically by `stretch`, and cropped by `crop`; the footer's
+//   height is whatever that leaves under the top row. The kicker is placed from
+//   the same measurement, so it can never collide with the word.
+// - **It degrades.** Reduced motion paints one still frame: no playhead, no
+//   springs. The name is also in the DOM as visually hidden text, the links are
+//   real anchors, and the canvas is `aria-hidden`.
+//
+// Every rule in the scoped <style> is `.hwf-` prefixed. Nothing is fetched.
+
+import { useEffect, useRef } from 'react'
+import type { CSSProperties } from 'react'
+
+export interface HalftoneFooterLink {
+  label: string
+  href: string
+}
+
+export interface HalftoneWordmarkFooterProps {
+  /** The giant word printed in dots. */
+  wordmark?: string
+  /** The small line above the word, left. */
+  kicker?: string
+  /** The small line above the word, right. Hidden on narrow screens. */
+  kickerMeta?: string
+  /** Links along the top row. */
+  links?: HalftoneFooterLink[]
+  /** IANA zone for the clock in the top row. */
+  timeZone?: string
+  /** Name printed beside the clock. */
+  zoneLabel?: string
+  /** Tempo of the playhead, in BPM. One sweep is four bars. */
+  tempo?: number
+  /** The footer background. */
+  background?: string
+  /** The dots at rest. */
+  ink?: string
+  /** The colour dots warm toward. */
+  warm?: string
+  /** Distance between dot centres, in CSS px. */
+  dotGap?: number
+  /** How far the pointer pushes, in CSS px. */
+  radius?: number
+  /** Share of the word's height hanging below the bottom edge, 0–0.6. */
+  crop?: number
+  /** Vertical stretch of the glyphs. Taller type reads as a poster. */
+  stretch?: number
+  /** Print grain, 0–1. */
+  grain?: number
+  /** Pointer and click response. */
+  interactive?: boolean
+  /** The sweeping playhead. */
+  playhead?: boolean
+  /** Face for the word. A CSS variable is fine: it is resolved at runtime. */
+  fontFamily?: string
+  /** Weight of the word. */
+  fontWeight?: number
+  /** Face for the small type. */
+  monoFamily?: string
+  /** Fixed root height. Omit to derive it from the word. */
+  height?: string
+  className?: string
+  /** Accessible name for the footer's signal band. */
+  label?: string
+}
+
+const SANS_STACK =
+  'var(--font-syne), var(--font-space-grotesk), "Helvetica Neue", Arial, system-ui, sans-serif'
+const MONO_STACK =
+  'var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace'
+
+/** The playhead's halo, in CSS px either side of its centre. */
+const PLAYHEAD_SPAN = 64
+/** The row between the top row and the word, where the kicker lives. */
+const KICKER_BAND = 64
+
+// #region halftone
+// Pure helpers, exercised by tests/halftone-wordmark-footer.test.ts.
+
+/** Hex → [r, g, b] in 0–255, or null for anything that isn't #rgb / #rrggbb. */
+export function hwfHex(hex: string): [number, number, number] | null {
+  const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec((hex || '').trim())
+  if (!m) return null
+  const h =
+    m[1].length === 3
+      ? m[1]
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : m[1]
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+  ]
+}
+
+/** Dot radius for a cell coverage in [0, 1]: area-true, so tone stays even. */
+export function hwfRadius(coverage: number, gap: number) {
+  const c = coverage < 0 ? 0 : coverage > 1 ? 1 : coverage
+  return Math.sqrt(c) * gap * 0.52
+}
+
+/**
+ * One step of a dot's spring back to its home, plus the push from a pointer at
+ * (px, py) within radius r. Away from the pointer a displaced dot always heads
+ * home and comes to rest.
+ */
+export function hwfStep(
+  x: number,
+  y: number,
+  vx: number,
+  vy: number,
+  hx: number,
+  hy: number,
+  px: number,
+  py: number,
+  r: number,
+): [number, number, number, number] {
+  const dx = x - px
+  const dy = y - py
+  const d2 = dx * dx + dy * dy
+  if (r > 0 && d2 < r * r) {
+    const d = Math.sqrt(d2) + 0.001
+    const f = (1 - d / r) * 2.6
+    vx += (dx / d) * f
+    vy += (dy / d) * f
+  }
+  vx = (vx + (hx - x) * 0.05) * 0.84
+  vy = (vy + (hy - y) * 0.05) * 0.84
+  return [x + vx, y + vy, vx, vy]
+}
+
+/** How warm a displaced dot is drawn: 0 at home, 1 at `span` px or more away. */
+export function hwfWarmth(
+  x: number,
+  y: number,
+  hx: number,
+  hy: number,
+  span: number,
+) {
+  const d = Math.hypot(x - hx, y - hy)
+  return span > 0 ? Math.min(1, d / span) : 0
+}
+
+/** Font size that sets `measured` (a width taken at 100px) to fill `width`. */
+export function hwfFitSize(measured: number, width: number) {
+  return measured > 0 ? (width / measured) * 100 : 0
+}
+
+/**
+ * How strongly the playhead lights a dot: 1 directly under it, easing to 0 at
+ * `span` px either side. Eased, so the edge of the halo has no visible step.
+ */
+export function hwfLift(dx: number, span: number) {
+  const t = 1 - Math.abs(dx) / span
+  return t <= 0 ? 0 : t * t * (3 - 2 * t)
+}
+
+/** Where the playhead is, 0–1 across the width, `period` ms per loop. */
+export function hwfPhase(now: number, period: number) {
+  return period > 0 ? (((now % period) + period) % period) / period : 0
+}
+
+/** The transport readout for a phase: four bars of four beats. */
+export function hwfTransport(phase: number, tempo: number) {
+  const p = phase < 0 ? 0 : phase >= 1 ? 0.999999 : phase
+  const bar = Math.floor(p * 4) + 1
+  const beat = Math.floor((p * 16) % 4) + 1
+  return `BAR ${String(bar).padStart(2, '0')} · BEAT ${beat} · ${Math.round(tempo)} BPM`
+}
+// #endregion
+
+const HWF_CSS = `
+.hwf-root {
+  position: relative; width: 100%; overflow: hidden; isolation: isolate;
+  height: var(--hwf-h, clamp(320px, 34vw, 520px));
+  background: var(--hwf-bg); color: var(--hwf-ink);
+  -webkit-font-smoothing: antialiased; touch-action: pan-y;
+}
+.hwf-root canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; max-width: none; }
+.hwf-top {
+  position: relative; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
+  padding: 18px clamp(20px, 3.4vw, 44px) 0;
+  font-family: var(--hwf-mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; line-height: 1.8;
+}
+.hwf-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 clamp(16px, 2.4vw, 32px); }
+.hwf-links a {
+  color: inherit; text-decoration: none; opacity: .78;
+  background-image: linear-gradient(currentColor, currentColor); background-size: 0% 1px;
+  background-repeat: no-repeat; background-position: 0 100%;
+  transition: opacity .25s ease, background-size .35s cubic-bezier(.2,.7,.1,1);
+}
+.hwf-links a:hover { opacity: 1; background-size: 100% 1px; }
+.hwf-links a:focus-visible { outline: 1px solid currentColor; outline-offset: 3px; opacity: 1; }
+.hwf-meta { text-align: right; white-space: nowrap; }
+.hwf-meta span { display: block; opacity: .55; }
+.hwf-meta span:first-child { opacity: .8; }
+.hwf-meta b { font-weight: 500; color: var(--hwf-warm); }
+.hwf-kicker {
+  position: absolute; z-index: 1; pointer-events: none;
+  left: var(--hwf-x, 4%); width: var(--hwf-w, 92%);
+  top: calc(var(--hwf-cap-top, 180px) - 40px);
+  display: flex; align-items: center; gap: 14px;
+}
+.hwf-kname {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-family: var(--hwf-display); font-weight: 700; font-size: clamp(13px, 1.5vw, 20px);
+  letter-spacing: .42em; text-transform: uppercase; line-height: 1;
+}
+.hwf-kname::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--hwf-warm);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--hwf-warm) 70%, transparent);
+}
+.hwf-kline { flex: 1; height: 0; border-top: 0.5px solid color-mix(in srgb, var(--hwf-ink) 22%, transparent); }
+.hwf-kmeta { font-family: var(--hwf-mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; opacity: .5; white-space: nowrap; }
+.hwf-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 640px) {
+  .hwf-top { flex-direction: column; gap: 10px; }
+  .hwf-meta { text-align: left; }
+  .hwf-kmeta { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hwf-links a { transition: none; }
+}
+`
+
+export default function HalftoneWordmarkFooter({
+  wordmark = 'HIMAWAN',
+  kicker = 'Aditya',
+  kickerMeta = 'Frontend Engineer · Jakarta',
+  links = [],
+  timeZone = 'Asia/Jakarta',
+  zoneLabel = 'Jakarta',
+  tempo = 120,
+  background = '#0b0d0c',
+  ink = '#e7e2d8',
+  warm = '#ff5a1f',
+  dotGap = 6,
+  radius = 90,
+  crop = 0.4,
+  stretch = 1.5,
+  grain = 0.5,
+  interactive = true,
+  playhead = true,
+  fontFamily = SANS_STACK,
+  fontWeight = 800,
+  monoFamily = MONO_STACK,
+  height,
+  className = '',
+  label = 'Halftone wordmark',
+}: HalftoneWordmarkFooterProps) {
+  const rootRef = useRef<HTMLElement | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const topRef = useRef<HTMLDivElement | null>(null)
+  const faceRef = useRef<HTMLSpanElement | null>(null)
+  const transportRef = useRef<HTMLSpanElement | null>(null)
+  const clockRef = useRef<HTMLElement | null>(null)
+
+  // Everything the frame loop reads live. Written in an effect, not during
+  // render, so a render never mutates a ref the loop is reading.
+  const opts = useRef({
+    background,
+    ink,
+    warm,
+    dotGap,
+    radius,
+    crop,
+    stretch,
+    grain,
+    interactive,
+    playhead,
+    fontWeight,
+    wordmark,
+    tempo,
+    height,
+  })
+  useEffect(() => {
+    opts.current = {
+      background,
+      ink,
+      warm,
+      dotGap,
+      radius,
+      crop,
+      stretch,
+      grain,
+      interactive,
+      playhead,
+      fontWeight,
+      wordmark,
+      tempo,
+      height,
+    }
+  })
+
+  // The layout is rebuilt only when one of these changes. The rest is read
+  // live, so tuning the pointer radius never re-measures the word.
+  const key = [
+    wordmark,
+    dotGap,
+    crop,
+    stretch,
+    grain,
+    fontFamily,
+    fontWeight,
+    background,
+    ink,
+    warm,
+    height ?? '',
+  ].join('|')
+
+  useEffect(() => {
+    const root = rootRef.current
+    const canvas = canvasRef.current
+    const top = topRef.current
+    const face = faceRef.current
+    if (!root || !canvas || !top || !face) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const reduced = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+    const inkRgb = hwfHex(opts.current.ink) ?? [231, 226, 216]
+    const warmRgb = hwfHex(opts.current.warm) ?? [255, 90, 31]
+
+    let w = 0
+    let h = 0
+    let dpr = 1
+    let capTop = 0
+    let wordX = 0
+    let wordW = 0
+    let px = -1e5
+    let py = -1e5
+    let raf = 0
+    let visible = true
+    let alive = true
+    let awake = true
+    let ring = { x: 0, y: 0, t: -1 }
+    let lastTransport = ''
+    // Flat arrays, 7 per dot: x, y, vx, vy, hx, hy, r.
+    let dots = new Float32Array(0)
+    let count = 0
+    let layer: HTMLCanvasElement | null = null
+
+    const layout = () => {
+      const o = opts.current
+      w = Math.max(1, Math.round(root.clientWidth))
+      dpr = Math.min(window.devicePixelRatio || 1, 2)
+
+      // Canvas wants a concrete family; the prop may be a CSS variable, which
+      // the hidden face element resolves for us.
+      const cs = getComputedStyle(face)
+      const family = cs.fontFamily || 'sans-serif'
+
+      const scratch = document.createElement('canvas').getContext('2d')
+      if (!scratch) return
+      const word = o.wordmark || ' '
+      scratch.font = `${o.fontWeight} 100px ${family}`
+      const fit = hwfFitSize(scratch.measureText(word).width, w * 0.98)
+      scratch.font = `${o.fontWeight} ${fit}px ${family}`
+      const box = scratch.measureText(word)
+      const cap = box.actualBoundingBoxAscent || fit * 0.72
+
+      // Narrow screens get a taller word: the width is the limit there, and an
+      // unstretched wordmark would be a thin strip.
+      const sy = (w < 560 ? 1.5 : 1) * Math.max(0.5, o.stretch)
+      const capH = cap * sy
+      const c = Math.max(0, Math.min(0.6, o.crop))
+
+      capTop = top.offsetTop + top.offsetHeight + KICKER_BAND
+      h = o.height
+        ? Math.max(1, Math.round(root.clientHeight))
+        : Math.ceil(capTop + capH * (1 - c))
+      if (!o.height) root.style.setProperty('--hwf-h', `${h}px`)
+      wordW = box.width
+      wordX = (w - box.width) / 2
+      root.style.setProperty('--hwf-x', `${wordX}px`)
+      root.style.setProperty('--hwf-w', `${wordW}px`)
+      root.style.setProperty('--hwf-cap-top', `${capTop}px`)
+
+      canvas.width = Math.round(w * dpr)
+      canvas.height = Math.round(h * dpr)
+
+      // Set the word once, at 1x, on a mask. The baseline hangs `c` of the
+      // stretched cap height below the bottom edge.
+      const mask = document.createElement('canvas')
+      mask.width = w
+      mask.height = h
+      const m = mask.getContext('2d', { willReadFrequently: true })
+      if (!m) return
+      m.font = `${o.fontWeight} ${fit}px ${family}`
+      m.fillStyle = '#000'
+      m.textBaseline = 'alphabetic'
+      const baseline = h + capH * c
+      m.setTransform(1, 0, 0, sy, 0, 0)
+      m.fillText(word, wordX, baseline / sy)
+      m.setTransform(1, 0, 0, 1, 0, 0)
+      const img = m.getImageData(0, 0, w, h).data
+
+      const gap = Math.max(3, o.dotGap)
+      const cols = Math.ceil(w / gap)
+      const rows = Math.ceil(h / gap)
+      const tmp: number[] = []
+      for (let gy = 0; gy < rows; gy++) {
+        for (let gx = 0; gx < cols; gx++) {
+          // Coverage: average alpha over a 3×3 sample of the cell.
+          let sum = 0
+          for (let sy2 = 0; sy2 < 3; sy2++) {
+            for (let sx = 0; sx < 3; sx++) {
+              const x = Math.min(
+                w - 1,
+                Math.floor(gx * gap + ((sx + 0.5) * gap) / 3),
+              )
+              const y = Math.min(
+                h - 1,
+                Math.floor(gy * gap + ((sy2 + 0.5) * gap) / 3),
+              )
+              sum += img[(y * w + x) * 4 + 3]
+            }
+          }
+          const cov = sum / (9 * 255)
+          if (cov < 0.06) continue
+          const hx = gx * gap + gap / 2
+          const hy = gy * gap + gap / 2
+          tmp.push(hx, hy, 0, 0, hx, hy, hwfRadius(cov, gap))
+        }
+      }
+      dots = new Float32Array(tmp)
+      count = tmp.length / 7
+
+      // The resting field, painted once: background, every dot in one fill,
+      // and a fixed tile of print grain.
+      layer = document.createElement('canvas')
+      layer.width = canvas.width
+      layer.height = canvas.height
+      const l = layer.getContext('2d')
+      if (l) {
+        l.setTransform(dpr, 0, 0, dpr, 0, 0)
+        l.fillStyle = o.background
+        l.fillRect(0, 0, w, h)
+        l.fillStyle = o.ink
+        l.beginPath()
+        for (let i = 0; i < count; i++) {
+          const j = i * 7
+          l.moveTo(dots[j + 4] + dots[j + 6], dots[j + 5])
+          l.arc(dots[j + 4], dots[j + 5], dots[j + 6], 0, 6.2832)
+        }
+        l.fill()
+
+        if (o.grain > 0) {
+          const tile = document.createElement('canvas')
+          tile.width = 256
+          tile.height = 256
+          const g = tile.getContext('2d')
+          if (g) {
+            const id = g.createImageData(256, 256)
+            for (let i = 0; i < id.data.length; i += 4) {
+              const v = Math.random() * 255
+              id.data[i] = id.data[i + 1] = id.data[i + 2] = v
+              id.data[i + 3] = Math.random() < 0.5 ? 0 : 255
+            }
+            g.putImageData(id, 0, 0)
+            l.globalAlpha = Math.min(1, o.grain) * 0.09
+            l.globalCompositeOperation = 'overlay'
+            const pattern = l.createPattern(tile, 'repeat')
+            if (pattern) {
+              l.fillStyle = pattern
+              l.fillRect(0, 0, w, h)
+            }
+            l.globalAlpha = 1
+            l.globalCompositeOperation = 'source-over'
+          }
+        }
+      }
+      awake = true
+    }
+
+    const periodMs = () =>
+      ((4 * 4 * 60) / Math.max(30, opts.current.tempo)) * 1000
+
+    const draw = (now: number) => {
+      const o = opts.current
+      if (!layer) return
+
+      // 1. The resting field, in device pixels.
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.drawImage(layer, 0, 0)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+      const r = o.interactive && !reduced ? Math.max(0, o.radius) : 0
+      const ringAge = ring.t < 0 ? 1e9 : now - ring.t
+      const ringOn = ringAge < 900
+      const ringR = ringAge * 0.9
+      const pointerOn = px > -1e4
+      const phase = o.playhead && !reduced ? hwfPhase(now, periodMs()) : -1
+      const phx = phase < 0 ? -1e5 : phase * w
+      let moving = false
+
+      // 2. Only the dots that are away from home or under the playhead.
+      for (let i = 0; i < count; i++) {
+        const j = i * 7
+        let x = dots[j]
+        let y = dots[j + 1]
+        let vx = dots[j + 2]
+        let vy = dots[j + 3]
+        const hx = dots[j + 4]
+        const hy = dots[j + 5]
+        const rad = dots[j + 6]
+
+        const lift = phase < 0 ? 0 : hwfLift(hx - phx, PLAYHEAD_SPAN)
+        const atRest = vx === 0 && vy === 0 && x === hx && y === hy
+        const pointerNear =
+          pointerOn &&
+          r > 0 &&
+          (hx - px) * (hx - px) + (hy - py) * (hy - py) < r * r
+
+        if (atRest && !ringOn && !pointerNear) {
+          if (lift <= 0.01) continue
+        } else if (!reduced) {
+          if (ringOn) {
+            const dx = hx - ring.x
+            const dy = hy - ring.y
+            const d = Math.sqrt(dx * dx + dy * dy) + 0.001
+            const band = 1 - Math.min(1, Math.abs(d - ringR) / 26)
+            if (band > 0) {
+              const f = band * 3.2 * (1 - ringAge / 900)
+              vx += (dx / d) * f
+              vy += (dy / d) * f
+            }
+          }
+          const s = hwfStep(x, y, vx, vy, hx, hy, px, py, r)
+          x = s[0]
+          y = s[1]
+          vx = s[2]
+          vy = s[3]
+          if (
+            Math.abs(vx) + Math.abs(vy) > 0.02 ||
+            Math.abs(x - hx) + Math.abs(y - hy) > 0.05
+          ) {
+            moving = true
+          } else {
+            x = hx
+            y = hy
+            vx = 0
+            vy = 0
+          }
+          dots[j] = x
+          dots[j + 1] = y
+          dots[j + 2] = vx
+          dots[j + 3] = vy
+        }
+
+        const away = hwfWarmth(x, y, hx, hy, 28)
+        const k = Math.max(away, lift * 0.92)
+        if (x === hx && y === hy && k <= 0.01) continue
+
+        // Wipe the dot's home so it is not drawn twice, then draw it where it
+        // is, bigger and warmer if the playhead is on it. The wipe is only
+        // 0.45px wider than the dot: dots at full tone overlap their
+        // neighbours by a fraction of a pixel, and a wider wipe would nibble
+        // them as the pointer crosses a solid stroke.
+        ctx.fillStyle = o.background
+        ctx.beginPath()
+        ctx.arc(hx, hy, rad + 0.45, 0, 6.2832)
+        ctx.fill()
+        ctx.fillStyle =
+          k > 0.02
+            ? `rgb(${Math.round(inkRgb[0] + (warmRgb[0] - inkRgb[0]) * k)},${Math.round(
+                inkRgb[1] + (warmRgb[1] - inkRgb[1]) * k,
+              )},${Math.round(inkRgb[2] + (warmRgb[2] - inkRgb[2]) * k)})`
+            : o.ink
+        ctx.beginPath()
+        ctx.arc(x, y, rad * (1 + 0.38 * lift), 0, 6.2832)
+        ctx.fill()
+      }
+
+      // 3. The playhead itself: a hairline and a small flag, like a DAW's.
+      if (phase >= 0) {
+        const y0 = Math.max(0, capTop - 14)
+        const grad = ctx.createLinearGradient(0, y0, 0, h)
+        grad.addColorStop(0, o.warm)
+        grad.addColorStop(1, 'rgba(0,0,0,0)')
+        ctx.fillStyle = grad
+        ctx.globalAlpha = 0.7
+        ctx.fillRect(phx - 0.5, y0, 1, h - y0)
+        ctx.globalAlpha = 1
+        ctx.fillStyle = o.warm
+        ctx.beginPath()
+        ctx.moveTo(phx - 5, y0)
+        ctx.lineTo(phx + 5, y0)
+        ctx.lineTo(phx, y0 + 7)
+        ctx.closePath()
+        ctx.fill()
+
+        const text = hwfTransport(phase, o.tempo)
+        if (text !== lastTransport && transportRef.current) {
+          lastTransport = text
+          transportRef.current.textContent = text
+        }
+      }
+
+      // Sleep once everything is home, nothing is pushing, and there is no
+      // playhead to keep moving.
+      awake = phase >= 0 || moving || ringOn || pointerOn
+    }
+
+    const loop = (now: number) => {
+      raf = 0
+      if (!visible || !alive) return
+      draw(now)
+      if (awake) raf = requestAnimationFrame(loop)
+    }
+    const wake = () => {
+      awake = true
+      if (!raf && visible && alive) raf = requestAnimationFrame(loop)
+    }
+
+    const toLocal = (e: PointerEvent): [number, number] => {
+      const b = canvas.getBoundingClientRect()
+      return [e.clientX - b.left, e.clientY - b.top]
+    }
+    const onMove = (e: PointerEvent) => {
+      if (!opts.current.interactive) return
+      const p = toLocal(e)
+      px = p[0]
+      py = p[1]
+      wake()
+    }
+    const onLeave = () => {
+      px = -1e5
+      py = -1e5
+      wake()
+    }
+    const onDown = (e: PointerEvent) => {
+      if (!opts.current.interactive || reduced) return
+      if ((e.target as HTMLElement).closest('a,button')) return
+      const p = toLocal(e)
+      ring = { x: p[0], y: p[1], t: performance.now() }
+      wake()
+    }
+
+    layout()
+    draw(performance.now())
+    wake()
+
+    root.addEventListener('pointermove', onMove)
+    root.addEventListener('pointerleave', onLeave)
+    root.addEventListener('pointerdown', onDown)
+
+    // The height is written by `layout`, which would re-trigger this observer
+    // forever; only a change of width is a reason to measure again.
+    const ro = new ResizeObserver(() => {
+      if (Math.round(root.clientWidth) === w && !opts.current.height) return
+      layout()
+      wake()
+    })
+    ro.observe(root)
+    const io = new IntersectionObserver((entries) => {
+      visible = entries[0] ? entries[0].isIntersecting : true
+      if (visible) wake()
+    })
+    io.observe(root)
+
+    // A web font that lands late re-sets the word in its real face. The face
+    // element is what asks for the font, so loading is already under way; the
+    // explicit load makes it deterministic.
+    if (document.fonts) {
+      const family = getComputedStyle(face).fontFamily
+      void document.fonts
+        .load(
+          `${opts.current.fontWeight} 100px ${family}`,
+          opts.current.wordmark,
+        )
+        .catch(() => undefined)
+      void document.fonts.ready.then(() => {
+        if (!alive) return
+        layout()
+        wake()
+      })
+    }
+
+    return () => {
+      alive = false
+      cancelAnimationFrame(raf)
+      ro.disconnect()
+      io.disconnect()
+      root.removeEventListener('pointermove', onMove)
+      root.removeEventListener('pointerleave', onLeave)
+      root.removeEventListener('pointerdown', onDown)
+    }
+  }, [key])
+
+  // The clock. Written to the DOM on a timer, so a tick never re-renders; the
+  // server renders a placeholder, so hydration has nothing to disagree about.
+  useEffect(() => {
+    const el = clockRef.current
+    if (!el) return
+    let format: Intl.DateTimeFormat
+    try {
+      format = new Intl.DateTimeFormat('en-GB', {
+        timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      })
+    } catch {
+      return
+    }
+    const tick = () => {
+      el.textContent = format.format(new Date())
+    }
+    tick()
+    const id = window.setInterval(tick, 1000)
+    return () => window.clearInterval(id)
+  }, [timeZone])
+
+  return (
+    <footer
+      ref={rootRef}
+      aria-label={label}
+      className={`hwf-root ${className}`.trim()}
+      style={
+        {
+          ...(height ? { height } : null),
+          '--hwf-bg': background,
+          '--hwf-ink': ink,
+          '--hwf-warm': warm,
+          '--hwf-mono': monoFamily,
+          '--hwf-display': fontFamily,
+        } as CSSProperties
+      }
+    >
+      <style>{HWF_CSS}</style>
+      <canvas ref={canvasRef} aria-hidden="true" />
+      {/* The real name, for assistive tech and search; it is also the element
+          that asks the browser for the display face. */}
+      <span ref={faceRef} className="hwf-sr" style={{ fontFamily, fontWeight }}>
+        {kicker} {wordmark}
+      </span>
+
+      <div ref={topRef} className="hwf-top">
+        <ul className="hwf-links">
+          {links.map((l) => {
+            const external = /^https?:/i.test(l.href)
+            return (
+              <li key={l.label}>
+                <a
+                  href={l.href}
+                  {...(external
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : null)}
+                >
+                  {l.label}
+                </a>
+              </li>
+            )
+          })}
+        </ul>
+        <div className="hwf-meta" aria-hidden="true">
+          <span>
+            {zoneLabel} · <b ref={clockRef}>--:--:--</b>
+          </span>
+          <span ref={transportRef}>{hwfTransport(0, tempo)}</span>
+        </div>
+      </div>
+
+      <div className="hwf-kicker" aria-hidden="true">
+        <span className="hwf-kname">{kicker}</span>
+        <i className="hwf-kline" />
+        {kickerMeta ? <span className="hwf-kmeta">{kickerMeta}</span> : null}
+      </div>
+    </footer>
+  )
+}

@@ -77,12 +77,24 @@
   column-gap: var(--bench-gap);
   align-items: start;
   /* The pinned visual needs a stretch of scroll to be pinned for, and this is
-     the whole of the scene's scroll budget: three of these. The pin is the
-     difference between this and the visual's height, and that difference is
-     unchanged — so what the old `108svh` bought was not a longer pin but 24svh
-     of scroll *after* the device had finished its arc and left the frame. That
-     band held no animation and no text; it was the dead space this drops. */
-  min-height: 84svh;
+     the whole of the scene's scroll budget: three of these. The pin is
+     `min-height` minus the visual's height — 48svh here against 48svh of
+     visual — and that is now the *only* thing the number buys, because the
+     device's arc is bound to the pin rather than to the chapter's whole travel
+     (see `bindReading` in `use-bench-motion.ts`).
+
+     So this is the length of the tumble, and it is the one number to move if
+     the device turns too fast or too slow. `84svh` left a 36svh pin, which put
+     a ~90° arc into roughly a single wheel-flick; the old `108svh` did not
+     help, because the visual was `72svh` then and the pin was the same 36svh.
+     `96svh` keeps the visual at `48svh` and grows the pin to 48svh, so the
+     rotation plays out over about 430px of scroll instead of 320px.
+
+     It is deliberately not larger. The section's runway is measured from the
+     panel and both are in flow, so every svh added here costs the document
+     two — `104svh` was a full extra viewport of scroll for another 70px of
+     pin, which is a bad trade for a beat this short. */
+  min-height: 96svh;
 }
 
 .visual {
@@ -92,15 +104,12 @@
   --dev-edge: color-mix(in srgb, var(--foreground) 34%, transparent);
   --dev-lcd: color-mix(in srgb, var(--primary) 32%, var(--background));
   position: sticky;
-  /* The pin is `min-height` above minus this height, so the box was shrunk with
-     the chapter rather than after it: 48svh against the old 72svh holds the pin
-     at the 36svh it has always had, and the device is on screen for the same
-     1224px of scroll it always was — what went is the empty margin around it.
-     Because the chapter is shorter, the arc that used to spend its first 13%
-     and last 4% off the frame now plays out entirely on screen.
+  /* The pin is the chapter's `min-height` minus this height, and the device's
+     whole arc is bound to it, so this box and the chapter are one mechanism:
+     the chapter grew to `96svh` and this stayed at `48svh` precisely so the
+     pin would grow with it.
      `26svh` + `48svh` keeps its resting centre on the 50svh line, so the
-     composition is unmoved: 26svh of headroom above it and 26svh below, where
-     the old pair left 14svh on each side of a taller box. */
+     composition is unmoved: 26svh of headroom above it and 26svh below. */
   top: 26svh;
   grid-row: 1;
   align-self: start;
@@ -184,7 +193,14 @@
   transform: scale(var(--k));
 }
 
-.stage:has([data-glass='on']) .tilt {
+/* The canvas poses the device itself, so the stylesheet must stop posing it —
+   but only once the hook that poses the canvas is actually running. `--p` is
+   written by `bindReading`, and if the dependencies failed to load the hook
+   bails before setting `data-motion`, which would leave a canvas frozen on the
+   three.js rest orientation and the CSS tilt switched off underneath it. The
+   glass device is gated on the same media query for the same reason; this
+   second condition covers the import failing inside a matching viewport. */
+[data-motion='ready'] .stage:has([data-glass='on']) .tilt {
   transform: none !important;
 }
 

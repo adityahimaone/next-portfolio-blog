@@ -4,6 +4,7 @@ import { Fragment, useRef, type CSSProperties, type ReactNode } from 'react'
 
 import { Device } from '../bench/bench-device-layer'
 import { GlassDevice } from '../glass/glass-device'
+import { BRIDGE_QUERY } from '../motion-gate'
 import { BRIDGE_DEVICES } from './skills-bridge-frame'
 import styles from './skills-bridge.module.css'
 import { useSkillsBridge } from './use-skills-bridge'
@@ -84,6 +85,7 @@ export function SkillsBridge() {
                   <span className={styles.fit}>
                     <GlassDevice
                       kind={spec.id}
+                      gate={BRIDGE_QUERY}
                       fallback={<Device kind={spec.id} />}
                     />
                   </span>

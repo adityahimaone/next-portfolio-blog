@@ -3,19 +3,12 @@
 import { useEffect, type RefObject } from 'react'
 
 import { setGlassPose } from '../glass/glass-registry'
+import { BRIDGE_QUERY } from '../motion-gate'
 import {
   BRIDGE_DEVICES,
   bridgeFrame,
   type BridgeFrame,
 } from './skills-bridge-frame'
-
-/**
- * The one media query the scene gates on, written out here and in
- * `skills-bridge.module.css`: wide enough, tall enough, motion allowed. A
- * viewport that fails any of them gets the static composition from both.
- */
-const BRIDGE_QUERY =
-  '(min-width: 769px) and (min-height: 600px) and (prefers-reduced-motion: no-preference)'
 
 type Gsap = (typeof import('gsap'))['gsap']
 type ScrollTriggerStatic =

@@ -8,6 +8,7 @@ import {
   setGlassPose,
   type GlassKind,
 } from '../glass/glass-registry'
+import { BENCH_QUERY } from '../motion-gate'
 import { BENCH_DEVICES, benchDeviceFrames } from './bench-devices'
 import {
   BENCH_BAND_CLEARANCE,
@@ -22,18 +23,11 @@ import {
 } from './bench-frame'
 
 /**
- * The one media query the section gates on, written out here and in
- * `bench.module.css`.
- *
- * It is duplicated on purpose. CSS cannot ask whether the motion setup
- * succeeded, and JS cannot style a sticky stage; so the query is the contract
- * between them. Both sides read the same three conditions — wide enough, tall
- * enough, motion allowed — and a viewport that fails any one of them gets the
- * editorial About in normal flow from both.
+ * The section's own media query lives in `../motion-gate`, because the CSS
+ * solids the glass devices replace have to read it too: a canvas cannot be
+ * posed by a hook that never ran, so it must not take over from a CSS solid
+ * that the stylesheet would otherwise have left in a composed resting frame.
  */
-const BENCH_QUERY =
-  '(min-width: 769px) and (min-height: 700px) and (prefers-reduced-motion: no-preference)'
-
 const BENCH_STAGE_WIDTH = BENCH_STAGE_BASE.width
 
 type Gsap = (typeof import('gsap'))['gsap']
@@ -738,11 +732,25 @@ function startBenchMotion({
       // stylesheet's tilt is what turns.
       const kind = visual.querySelector<HTMLElement>('[data-kind]')?.dataset
         .kind as GlassKind | undefined
+      // The arc is bound to the **pinned** window, not to the chapter's whole
+      // travel. Those were the same thing when the trigger ran from `top 85%`
+      // to `bottom 30%`, and they are not: the visual sticks at `top: 26svh`
+      // and is released when its bottom meets the chapter's, so the pin is
+      // exactly `chapterH - visualH` long and the old range was nearly four
+      // times that. Three quarters of the tumble therefore played while the
+      // device was still climbing into frame or already on its way out of it,
+      // and the part a reader actually watched — held still, centred — was the
+      // remaining quarter. That is why the device read as barely moving.
+      //
+      // `top 26%` is the sticky offset and `bottom 74%` is that offset plus the
+      // visual's own height, so the two ends land on the pin's first and last
+      // frame. Both are the stylesheet's numbers: change `top` or `height` on
+      // `.visual` and these have to move with them.
       bind(
         visual,
         '--p',
-        'top 85%',
-        'bottom 30%',
+        'top 26%',
+        'bottom 74%',
         chapter,
         kind
           ? (progress) => setGlassPose(visual, chapterPose(kind, progress))

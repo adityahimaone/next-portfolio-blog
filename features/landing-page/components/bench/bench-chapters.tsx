@@ -2,6 +2,7 @@ import { Fragment, type CSSProperties } from 'react'
 
 import type { AboutTrack } from '../../rack-01/about-copy'
 import { GlassDevice } from '../glass/glass-device'
+import { BENCH_QUERY } from '../motion-gate'
 import { Device } from './bench-device-layer'
 import type { BenchDeviceKind } from './bench-devices'
 import styles from './bench-chapters.module.css'
@@ -73,7 +74,11 @@ export function BenchChapter({
         <div className={styles.stage} data-kind={kind}>
           <div className={styles.tilt}>
             <div className={styles.scale}>
-              <GlassDevice kind={kind} fallback={<Device kind={kind} live />} />
+              <GlassDevice
+                kind={kind}
+                gate={BENCH_QUERY}
+                fallback={<Device kind={kind} live />}
+              />
             </div>
           </div>
         </div>

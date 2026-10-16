@@ -677,7 +677,10 @@ button.clip {
      smaller, and `--name-fit` (written by `NameTitle`, which measures) takes
      off whatever the display face's width still will not fit. The name is the brand, so
      it is the biggest thing on the page. */
-  font-size: clamp(40px, min(8.7vw, calc(var(--arr-lane-tall) - 40px)), 176px);
+  font-size: calc(
+    clamp(40px, min(8.7vw, calc(var(--arr-lane-tall) - 40px)), 176px) *
+      var(--name-fit, 1)
+  );
   font-weight: 800;
   letter-spacing: -0.055em;
   line-height: 0.96;

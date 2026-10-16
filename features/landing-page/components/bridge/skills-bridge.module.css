@@ -144,10 +144,23 @@
   .bridge {
     height: 210svh;
     padding: 0;
-    /* What the hole opens onto before the Skills section reaches it: not a
-       colour of the Skills' own but deeper than any of them, so the hole is
-       dark before it is anything. */
-    background: #0b0c0b;
+    /* The Skills section's own ground, not a darker colour of its own: the same
+       floor and the same 32px rule grid that `.skills` paints (see the room
+       tokens in `rack-01.module.css`), so the area the hole opens onto before
+       the section has risen is the same surface as the section itself. The
+       grid is vertical lines measured from each element's left edge and both
+       elements are full width, so the rules meet at the seam.
+       The room's warm/cool radials are deliberately left out: they are stage
+       lighting on the section's own box, so painting them here too would put a
+       glow in the band that the section then moves away from. */
+    background:
+      linear-gradient(
+          90deg,
+          var(--room-fill, rgb(255 255 255 / 0.035)) 1px,
+          transparent 1px
+        )
+        0 0 / 32px 32px,
+      var(--room-base, #14161a);
   }
 
   .stage {

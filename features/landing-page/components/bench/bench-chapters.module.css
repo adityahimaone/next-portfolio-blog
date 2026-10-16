@@ -1,20 +1,20 @@
 /* The chapters.
 
    From the title to the last line, the About is one continuous scene made of
-   four things: a ticker that slides past the title, three chapters whose texts
-   scroll past one pinned stage, a finale, and a playhead down the left edge.
-   All of it is driven by custom properties the motion hook writes on small
-   nodes — `--m` on the ticker, `--p` on each slide, `--ap` on the rail — and
-   every pose, light and bar is arithmetic on those numbers.
+   four things: a ticker that slides past the title, three chapters that each
+   pin a real 3D device beside their text, a finale, and a playhead down the
+   left edge. All of it is driven by custom properties the motion hook writes on
+   small nodes — `--m` on the ticker, `--p` on each chapter's visual, `--ap` on
+   the rail — and every pose, light and bar is arithmetic on those numbers.
 
    Two rules the file obeys:
 
    1. **A resting frame is always composed.** Every property declares its own
       default (`--p: 0.5`, `--m: 0.5`, `--ap: 0`), so with the script absent,
       failed, or reduced motion the page is a finished layout, not a hidden one.
-   2. **Decoration never sits under text.** The stage column and the texts
-      column occupy different columns of the same row; the numeral is behind the
-      *device*, not behind a sentence. */
+   2. **Decoration never sits under text.** The visual and the text occupy
+      different columns of the same row; the numeral is behind the *device*, not
+      behind a sentence. */
 
 /* ── The ticker ──────────────────────────────────────────── */
 
@@ -65,63 +65,83 @@
 
 .chapters {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: var(--bench-gap);
-  align-items: start;
-}
-
-/* The stage column holds the pinned stage; the texts column is the scroll. */
-.stageCol {
-  grid-column: 1 / 7;
-  grid-row: 1;
-  align-self: stretch;
-}
-
-.texts {
-  grid-column: 8 / 13;
-  grid-row: 1;
-  display: grid;
+  /* The three chapters are one scene, not three sections. The gap is a breath
+     between beats, not a page break, so it stays well under the height of the
+     text it separates. */
+  row-gap: clamp(0.5rem, 1.5vw, 1.5rem);
 }
 
 .chapter {
   display: grid;
-  align-content: center;
-  gap: clamp(0.9rem, 1.8vw, 1.5rem);
-  /* Each text takes a viewport, so the stage has the whole of a chapter to
-     carry its device through. Just a viewport: enough to turn the device
-     through its arc, not enough to drag. */
-  min-height: 100svh;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--bench-gap);
+  align-items: start;
+  /* The pinned visual needs a stretch of scroll to be pinned for, and this is
+     the whole of the scene's scroll budget: three of these. The pin is the
+     difference between this and the visual's height, and that difference is
+     unchanged — so what the old `108svh` bought was not a longer pin but 24svh
+     of scroll *after* the device had finished its arc and left the frame. That
+     band held no animation and no text; it was the dead space this drops. */
+  min-height: 84svh;
 }
 
-/* The base layout is the resting one: three devices in a column beside the
-   text, none of them posed by the script. The pinned stage is the motion
-   query's, below. */
-.pin {
+.visual {
+  --p: 0.5;
   --dev-body: color-mix(in srgb, var(--background) 90%, var(--foreground));
   --dev-body-deep: color-mix(in srgb, var(--background) 78%, var(--foreground));
   --dev-edge: color-mix(in srgb, var(--foreground) 34%, transparent);
   --dev-lcd: color-mix(in srgb, var(--primary) 32%, var(--background));
+  position: sticky;
+  /* The pin is `min-height` above minus this height, so the box was shrunk with
+     the chapter rather than after it: 48svh against the old 72svh holds the pin
+     at the 36svh it has always had, and the device is on screen for the same
+     1224px of scroll it always was — what went is the empty margin around it.
+     Because the chapter is shorter, the arc that used to spend its first 13%
+     and last 4% off the frame now plays out entirely on screen.
+     `26svh` + `48svh` keeps its resting centre on the 50svh line, so the
+     composition is unmoved: 26svh of headroom above it and 26svh below, where
+     the old pair left 14svh on each side of a taller box. */
+  top: 26svh;
+  grid-row: 1;
+  align-self: start;
+  height: 48svh;
   display: grid;
-  gap: clamp(1rem, 3vw, 2.5rem);
+  place-items: center;
   pointer-events: none;
 }
 
-.slide {
-  --p: 0.5;
-  position: relative;
+.text {
+  grid-row: 1;
+  align-self: center;
   display: grid;
-  place-items: center;
-  height: 22rem;
+  /* The stack inside one chapter: kicker, heading, story, credits. It reads as
+     one block, so the gap between its parts is the smallest in the scene. */
+  gap: clamp(0.6rem, 1.1vw, 1rem);
+  align-content: center;
+  min-height: 48svh;
 }
 
-/* The numeral is the furthest layer: outlined, enormous, and it travels with
-   its device. */
+.chapter[data-side='left'] .visual {
+  grid-column: 1 / 7;
+}
+.chapter[data-side='left'] .text {
+  grid-column: 8 / 13;
+}
+.chapter[data-side='right'] .visual {
+  grid-column: 7 / 13;
+}
+.chapter[data-side='right'] .text {
+  grid-column: 2 / 7;
+}
+
+/* The numeral is the furthest layer: outlined, enormous, and it drifts against
+   the scroll so the device in front of it reads as nearer. */
 .numeral {
   position: absolute;
   left: 50%;
   top: 50%;
   z-index: 0;
-  translate: -50% -50%;
+  translate: -50% calc(-50% + (var(--p) - 0.5) * -140px);
   font-family: var(--font-syne), sans-serif;
   font-size: clamp(11rem, 26vw, 24rem);
   font-weight: 800;
@@ -164,8 +184,6 @@
   transform: scale(var(--k));
 }
 
-/* The CSS tilt is the fallback for a device that has no glass model. When the
-   model is on, the script poses it in numbers and this must not also turn it. */
 .stage:has([data-glass='on']) .tilt {
   transform: none !important;
 }
@@ -232,34 +250,6 @@
       12% + 88% * sin(calc(var(--p) * 9 + var(--i) * 0.55)) *
         sin(calc(var(--p) * 9 + var(--i) * 0.55))
     );
-  }
-}
-
-/* ── The pinned stage ────────────────────────────────────
-   The same gate the motion hook uses (`use-bench-motion.ts`): wide enough, tall
-   enough, motion allowed. Anything else keeps the resting column above. */
-
-@media (min-width: 769px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
-  .pin {
-    position: sticky;
-    top: 14svh;
-    display: block;
-    height: 72svh;
-  }
-
-  /* The three slides share the stage and are posed by the script: `opacity`
-     and `transform` are written per frame, so the rest state is deliberately
-     the first chapter, in place. */
-  .slide {
-    position: absolute;
-    inset: 0;
-    height: auto;
-    opacity: 0;
-    will-change: transform, opacity;
-  }
-
-  .slide[data-bench-slide='0'] {
-    opacity: 1;
   }
 }
 
@@ -481,45 +471,43 @@
   .stage[data-kind='vinyl'] {
     --k: 2.2;
   }
-  .stageCol {
+  .chapter[data-side='left'] .visual,
+  .chapter[data-side='right'] .visual {
     grid-column: 1 / 6;
   }
-  .texts {
+  .chapter[data-side='left'] .text,
+  .chapter[data-side='right'] .text {
     grid-column: 6 / 13;
   }
 }
 
 @media (max-width: 768px) {
-  .chapters {
+  .chapter {
     grid-template-columns: minmax(0, 1fr);
-    row-gap: 1.5rem;
+    min-height: 0;
+    row-gap: 1rem;
+    padding-bottom: 1.75rem;
   }
-  .stageCol,
-  .texts {
+  .visual {
+    position: relative;
+    top: auto;
+    height: 52vw;
+    min-height: 13.5rem;
+  }
+  .text {
+    min-height: 0;
+  }
+  .chapter[data-side='left'] .visual,
+  .chapter[data-side='right'] .visual,
+  .chapter[data-side='left'] .text,
+  .chapter[data-side='right'] .text {
     grid-column: 1 / -1;
     grid-row: auto;
-  }
-  /* Three devices in a row above the text. */
-  .pin {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.5rem;
-  }
-  .slide {
-    height: 8rem;
-  }
-  .numeral,
-  .note,
-  .meter {
-    display: none;
   }
   .stage,
   .stage[data-kind='cassette'],
   .stage[data-kind='vinyl'] {
-    --k: 0.9;
-  }
-  .chapter {
-    min-height: 0;
-    padding-bottom: 2.5rem;
+    --k: 1.5;
   }
   .heading {
     font-size: clamp(1.75rem, 8vw, 2.5rem);

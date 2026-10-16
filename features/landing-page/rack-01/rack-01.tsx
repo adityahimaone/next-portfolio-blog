@@ -10,6 +10,7 @@ import { SkillsBridge, SkillsLift } from '../components/bridge/skills-bridge'
 import { CableDivider } from './section-cabledivider'
 import { Contact } from './section-contact'
 import { Experience } from './section-experience'
+import { SeamSpectrum } from './seam-spectrum'
 import { Skills } from './section-skills'
 import styles from './rack-01.module.css'
 import { SEAM_SVH } from '../constants/seam'
@@ -77,6 +78,10 @@ export default function Rack01LandingPage({
       <Experience selected={experienceIndex} setSelected={setExperienceIndex} />
       <Work archiveRepos={archiveRepos} />
       <Contact />
+      {/* The Experience → Work seam's wall. Fixed over the viewport, so it
+          can cover the Experience section on the way in and the Work section
+          on the way out; inert and invisible outside the seam. */}
+      <SeamSpectrum />
     </main>
   )
 }

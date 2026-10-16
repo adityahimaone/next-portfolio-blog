@@ -15,72 +15,47 @@
  */
 
 /**
- * The window is deliberately longer than the five phases need.
+ * The camera's whole run, in viewport heights of scroll beyond the one the
+ * stage is pinned for.
  *
- * The rail reveal completes at `rail`, and everything from there to 1.0 is a
- * **hold**: the panel the camera dived into stays put, fully revealed, for about
- * a screen and a bit of scrolling. Without it About would be a flash — the
- * reader would watch the zoom land and then be swept straight past the thing the
- * whole move was for. `rail` is early enough that the hold is roughly a quarter
- * of the window.
+ * ## Why 292 (it was 340)
  *
- * The hold is split in two, because About does not fit the window it is revealed
- * in and the reader still has to be able to reach all of it:
+ * The camera used to be 340 and its last 28% was dead. The dive lands on `rail`
+ * (0.72), the rail slides in and the clip becomes the page by `seamOpen`
+ * (0.82), and from there to 1 nothing moved: `readOverflow` is 0 now that the
+ * panel the read used to travel through is its own section, so the reader
+ * scrolled about 550px at 1440×900 looking at a still frame of a cream band.
+ * That is the beat the hero→About handoff felt least smooth in — the zoom
+ * landed, the page stopped, and only then did the machine start coming apart.
  *
- * - `rail → seamOpen` — the clip-path window finishes opening. Short and
- *   decisive, so the reveal reads as a cut rather than a fade.
- * - `seamOpen → 1` — **the read.** The panel's content translates up by exactly
- *   its measured overflow, so the last card is reachable instead of clipped.
+ * 292 is 340 with that tail taken out and a short beat (about 13svh) left so
+ * the clip becoming the page is still seen to land. Every phase boundary was
+ * rescaled by 340/292 so that **each phase spans exactly the scroll it did
+ * before**: the settle, the walk and the dive are the same distance in px, and
+ * only the stretch of nothing is gone. The dive is then immediately followed by
+ * the fold below and by the handoff's exits.
  *
- * Measured at five viewports, the overflow runs from 0px (1728×1117) to 304px
- * (1280×720) — it is a function of the viewport, not a constant, which is why
- * the read is driven by a measured number rather than a tuned one.
- *
- * ## Why 340 (it was 400, and before that 460)
- *
- * 340 is the third retime. The handoff into About is now a continuous push
- * (see `bench-frame.ts`), so the hero no longer needs 400svh to hide a seam; at
- * 340 every phase keeps its shape and the dive costs 540px less at 900px tall.
- * The paragraphs below describe the 400 reasoning and still hold in proportion.
- *
- * ## Why 400 and not 460
- *
- * 460 was the window this was drawn against; it was never measured against the
- * page. Measuring it did two things. The camera's own travel is this number
- * less the viewport the stage is pinned for — 3240px at 1440×900 — and the
- * hero's whole run is therefore the largest single cost between the top of the
- * page and the SIGNAL word the handoff is built around.
- *
- * The bridge, meanwhile, has to be *longer* than it was: its runway now holds
- * the reading panel clear of the decorative word band for the whole time SIGNAL
- * is legible (see `matterRunway`), which is what makes that beat watchable at
- * all, and it costs about 400px of scroll. Paying for it here is what keeps the
- * total from growing: at 400 the hero gives back 540px, so the page is shorter
- * than it was *and* the words get their window.
- *
- * 400 is also the floor both tests declare, so this is the shortest the hero is
- * allowed to be without retiming the five phases themselves. The design doc
- * anticipates the choice: "Final total hero length must be chosen after
- * measuring current behavior."
+ * The earlier history (460 → 400 → 340) is the same argument made against the
+ * same dead stretch at lower resolution: the hold was sized for a read that no
+ * longer lives in this section.
  */
-export const ARRANGEMENT_SCROLL_SVH = 340
+export const ARRANGEMENT_SCROLL_SVH = 292
 
 export const ARRANGEMENT_PHASES = {
   open: 0,
-  settle: 0.1,
-  travel: 0.3,
-  zoom: 0.52,
-  rail: 0.72,
+  settle: 0.1164,
+  travel: 0.3493,
+  zoom: 0.6055,
+  rail: 0.8384,
 } as const
 
 /**
- * Where the window has finished opening and the read begins. The window gets
- * `rail → seamOpen` to open and the read gets everything after it, so the read
- * is the longer half: at 1440×900 that is 324px to open and 583px to read 191px
- * of overflow, which paces at about 3:1 instead of the 4.75:1 a single hold
- * would give.
+ * Where the clip has finished becoming the page. It gets `rail → seamOpen` to
+ * do it, and what is left of the window after it is the short beat the page is
+ * allowed to rest in before the handoff's exits begin — about 13svh, or 118px
+ * at 900px tall.
  */
-export const ARRANGEMENT_SEAM_OPEN = 0.82
+export const ARRANGEMENT_SEAM_OPEN = 0.955
 
 /**
  * The immersive reading of the same window: where the eye is, rather than where
@@ -97,10 +72,10 @@ export const ARRANGEMENT_SEAM_OPEN = 0.82
  */
 export const IMMERSIVE_PHASES = {
   overview: 0,
-  scan: 0.24,
-  lock: 0.48,
-  dive: 0.7,
-  reveal: 0.84,
+  scan: 0.28,
+  lock: 0.56,
+  dive: 0.82,
+  reveal: 0.94,
   read: 1,
 } as const
 
@@ -122,6 +97,27 @@ export const IMMERSIVE_DEPTH_DIVE = 12
  */
 export const IMMERSIVE_LANE_SCAN_OPACITY = 0.72
 export const IMMERSIVE_LANE_DIVE_OPACITY = 0.16
+
+/**
+ * When the supporting lanes fold into the profile lane.
+ *
+ * The dive used to leave the other lanes where they were and only dim them to
+ * `.16`, so for the second half of the zoom the profile clip landed on a frame
+ * still full of ghost tracks above and below it, and the handoff then had to
+ * dismantle a machine that was mostly already invisible. They now **tuck behind
+ * the profile lane**: each lane slides along the world's Y axis to the profile
+ * lane's centre while it flattens, so the stack collapses into the one lane the
+ * camera is landing on — a window minimising into its own title bar, with the
+ * focal point as the title bar.
+ *
+ * The window straddles the landing on purpose. It starts late in the zoom, when
+ * the eye has already left the supporting tracks (`laneOpacity` is well down
+ * by then), and it finishes just after `rail`, so the last of the stack is
+ * leaving as the rail slides in and the clip turns into the page. Finishing
+ * before the landing would make the dive land on an empty frame; finishing long
+ * after it would put the fold back in the dead stretch it was added to remove.
+ */
+export const ARRANGEMENT_FOLD = [0.7, 0.9] as const
 
 export type ArrangementPhase = 'open' | 'settle' | 'travel' | 'zoom' | 'rail'
 
@@ -229,6 +225,14 @@ export type ArrangementFrame = {
    * the others stepping back rather than by the profile clip doing anything.
    */
   laneOpacity: number
+  /**
+   * 0 → 1 — how far the supporting lanes have folded into the profile lane.
+   * Written as `--arr-fold` on the track area and spent in the stylesheet as a
+   * translate toward the profile lane and a flatten, per lane. The distance
+   * each lane travels is its own measured offset (`--lane-dy`), so a taller
+   * lane or a different lane count needs no change here.
+   */
+  fold: number
   phase: ArrangementPhase
 }
 
@@ -435,6 +439,7 @@ export function arrangementFrame(
     depth,
     profileFocus,
     laneOpacity,
+    fold: span(p, ARRANGEMENT_FOLD[0], ARRANGEMENT_FOLD[1]),
     phase: arrangementPhase(p),
   }
 }

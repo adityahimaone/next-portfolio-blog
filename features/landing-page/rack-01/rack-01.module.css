@@ -10457,106 +10457,26 @@
   position: relative;
   width: min(1050px, 100%);
   margin: 0 auto;
-  perspective: 2200px;
-  perspective-origin: 50% 50%;
 }
 
 .deckFlipInner {
   position: relative;
   width: 100%;
-  transform-origin: 50% 50%;
-  transform-style: preserve-3d;
-  will-change: transform;
+}
+
+/* The deck is pushed back into the dark by the spectrum curtain (see
+   `seam-frame.ts`): scaled down, lifted a little and faded. Only the
+   desktop-with-motion layout runs it, so only that layout promotes the box. */
+@media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
+  .deckFlip {
+    transform-origin: 50% 55%;
+    will-change: transform, opacity;
+  }
 }
 
 .deckFlip .cassetteDeck.deckFront {
   width: 100%;
   margin: 0;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-.deckBack {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 10px;
-  width: var(--back-w, 100%);
-  height: var(--back-h, 100%);
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: clamp(14px, 1.3vw, 20px);
-  background: linear-gradient(
-    150deg,
-    rgba(30, 32, 36, 0.96),
-    rgba(9, 10, 12, 0.98)
-  );
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 30px 80px rgba(0, 0, 0, 0.55);
-  transform: translate(-50%, -50%) rotateY(180deg);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-.deckBackChrome {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.deckBackDots,
-.deckBackTabs {
-  display: inline-flex;
-  gap: 6px;
-}
-
-.deckBackTabs {
-  flex: 1;
-  gap: 8px;
-}
-
-.deckBackDots i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.deckBackTabs i {
-  width: 54px;
-  height: 7px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.deckBackSearch {
-  width: 18%;
-  height: 16px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.deckBackColumns {
-  display: grid;
-  grid-template-columns: 22% minmax(0, 1fr) 24%;
-  gap: 10px;
-  min-height: 0;
-}
-
-.deckBackColumns span {
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.045);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-}
-
-.deckBackBar {
-  height: 34px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .seamWash {
@@ -10589,13 +10509,8 @@
 }
 
 @media (max-width: 768px), (prefers-reduced-motion: reduce) {
-  .deckBack,
   .seamWash {
     display: none;
-  }
-
-  .deckFlip {
-    perspective: none;
   }
 }
 

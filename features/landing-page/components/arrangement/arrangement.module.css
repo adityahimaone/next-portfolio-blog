@@ -45,11 +45,12 @@
      `splitProgress`. It left with the seam. A test reads this line and compares
      it to `ARRANGEMENT_SCROLL_SVH`, so the two cannot drift.
 
-     400 rather than the 460 this was drawn against: the bridge's runway now
-     holds the reading panel clear of the decorative word band, which costs
-     scroll, and the hero giving back 540px here is what pays for it. See
+     292, down from 340 and before that 400 and 460: each cut took out a
+     stretch of the window in which nothing moved. The last one removed the
+     dead tail after the dive lands, with every phase rescaled so the settle,
+     the walk and the dive are the distance they always were. See
      `ARRANGEMENT_SCROLL_SVH` for the measurement. */
-  --arr-scroll: 340svh;
+  --arr-scroll: 292svh;
 
   position: relative;
   /* `--arr-hold` is the handoff's, and it defaults to nothing.
@@ -280,6 +281,10 @@
      nothing is focused, so the no-JavaScript frame needs no second ruleset. */
   --arr-depth: 0px;
   --arr-profile-focus: 0;
+  /* 0 is every lane in its own place, so the no-JavaScript frame is the
+     overview. The hook writes it on this node and each lane's own
+     `--lane-dy` (its distance to the profile lane) at refresh. */
+  --arr-fold: 0;
   --arr-playhead: calc(
     (1 - var(--arr-profile-centre)) * var(--arr-rail-w) +
       var(--arr-profile-centre) * 100%
@@ -503,10 +508,32 @@
   opacity: var(--arr-fade, 1);
 }
 
+/* The fold: the supporting lanes tuck behind the profile lane as the dive
+   lands. `--lane-dy` is the world-space distance from the lane's centre to the
+   profile lane's, measured once per refresh and written on the lane, so each
+   lane travels exactly as far as it has to whatever its height. It flattens as
+   it goes (never to nothing, so a hairline of it is the last thing seen) and
+   the profile lane is `z-index: 2` and brought forward, so the others pass
+   *behind* it rather than through it.
+
+   The same `translateZ` the lanes already carry is kept as the last term, so
+   the depth layer is unchanged; at `--arr-fold: 0` this resolves to exactly the
+   old `translateZ(...)`. Specificity is one class higher than `.laneGhost`'s so
+   the ghost tracks fold too — their depth is the supporting lanes', which is
+   the factor they fold at. */
+.lane:not(.laneProfile) {
+  transform: translate3d(
+      0,
+      calc(var(--lane-dy, 0px) * var(--arr-fold, 0)),
+      calc(var(--arr-depth) * -0.18)
+    )
+    scaleY(calc(1 - var(--arr-fold, 0) * 0.92));
+}
+
 /* The handoff turns the lanes' smoothing off while it runs.
  *
  * The `opacity` half of `.lane`'s transition is the hero's: it smooths the
- * per-tick recession of the dive, which is spread across a fifth of a 340svh
+ * per-tick recession of the dive, which is spread across a fifth of a 292svh
  * section and can afford to trail the scroll by 120ms. The handoff's dissolve
  * is a different animal. It is packed into the hold, which is a fraction of a
  * section, so its window can be *shorter than the smoothing itself* — and a

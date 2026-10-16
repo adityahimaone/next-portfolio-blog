@@ -7,7 +7,8 @@ import {
   unregisterSmoothScroll,
 } from '../lib/smooth-scroll'
 import { EXPERIENCES } from '../constants'
-import { FLIP_DEGREES, SEAM_SVH } from '../constants/seam'
+import { SEAM_SVH } from '../constants/seam'
+import { SEAM_PANELS, seamFrame } from './seam-frame'
 import styles from './rack-01.module.css'
 
 /**
@@ -381,131 +382,167 @@ export function useRackAnimations({
             },
           })
 
-          // ── Experience → Work: the radio flips into the player ──
+          // ── Experience → Work: the spectrum curtain ──
+          //
+          // The radio is pushed back into the dark, a wall of equaliser columns
+          // rises over the screen, closes, and drops from the centre outward
+          // onto the player. The choreography is `seamFrame` (pure, tested);
+          // this block finds the nodes, writes the frame, and puts everything
+          // back on teardown. See `seam-frame.ts` for why it is a wall and not
+          // a second turn of the radio.
           const experienceSection = rootRef.current?.querySelector<HTMLElement>(
             `.${styles.experience}`,
-          )
-          const experienceStage = experienceSection?.querySelector<HTMLElement>(
-            `.${styles.experienceStage}`,
           )
           const experienceHeading =
             experienceSection?.querySelector<HTMLElement>(
               `.${styles.sectionHeading}`,
             )
-          const flipHost =
+          const deck =
             experienceSection?.querySelector<HTMLElement>('[data-deck-flip]')
-          const flipInner = experienceSection?.querySelector<HTMLElement>(
-            '[data-deck-flip-inner]',
-          )
           const seamWash =
             experienceSection?.querySelector<HTMLElement>('[data-seam-wash]')
           const workSection =
             rootRef.current?.querySelector<HTMLElement>('#work')
-          const workStage =
-            workSection?.querySelector<HTMLElement>('[data-work-stage]')
           const workShell =
             workSection?.querySelector<HTMLElement>('[data-work-shell]')
+          const wall =
+            rootRef.current?.querySelector<HTMLElement>('[data-seam-wall]')
+          const wallColumns = wall
+            ? Array.from(wall.querySelectorAll<HTMLElement>('[data-seam-col]'))
+            : []
+          const wallCaps = wall
+            ? Array.from(wall.querySelectorAll<HTMLElement>('[data-seam-cap]'))
+            : []
+          const wallLabel =
+            wall?.querySelector<HTMLElement>('[data-seam-label]') ?? null
 
           if (
             experienceSection &&
-            experienceStage &&
             experienceHeading &&
-            flipHost &&
-            flipInner &&
+            deck &&
             seamWash &&
             workSection &&
-            workStage &&
-            workShell
+            workShell &&
+            wall &&
+            wallColumns.length > 0 &&
+            wallColumns.length === wallCaps.length
           ) {
-            const geometry = { scale: 1, dy: 0 }
-            const clamp01 = (n: number) => Math.min(1, Math.max(0, n))
-            const easeInOut = (t: number) =>
-              t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-            const smooth = (t: number) => t * t * (3 - 2 * t)
+            // The player's own panels, staggered in once the wall is down. The
+            // shell's direct children are the chrome, the banner, the three
+            // columns and the transport bar, in that order.
+            const panels = Array.from(workShell.children).slice(
+              0,
+              SEAM_PANELS,
+            ) as HTMLElement[]
 
-            const measure = () => {
-              const hostRect = flipHost.getBoundingClientRect()
-              const stageRect = experienceStage.getBoundingClientRect()
-              const shellRect = workShell.getBoundingClientRect()
-              const workStageRect = workStage.getBoundingClientRect()
-              const deckW = flipHost.offsetWidth
-              const shellW = workShell.offsetWidth
-              const shellH = workShell.offsetHeight
-              if (!deckW || !shellW) return
-
-              const scale = shellW / deckW
-              const deckCenter =
-                hostRect.top - stageRect.top + flipHost.offsetHeight / 2
-              const shellCenter = shellRect.top - workStageRect.top + shellH / 2
-
-              geometry.scale = scale
-              geometry.dy = shellCenter - deckCenter
-              flipInner.style.setProperty('--back-w', `${deckW}px`)
-              flipInner.style.setProperty('--back-h', `${shellH / scale}px`)
+            // Write only what changed: forty-eight nodes are touched per tick,
+            // and an identical string is a style invalidation for nothing. One
+            // memo per property, because a node carries several.
+            const memo = {
+              transform: new WeakMap<HTMLElement, string>(),
+              opacity: new WeakMap<HTMLElement, string>(),
+              visibility: new WeakMap<HTMLElement, string>(),
+            }
+            const put = (
+              node: HTMLElement,
+              prop: 'transform' | 'opacity' | 'visibility',
+              value: string,
+            ) => {
+              if (memo[prop].get(node) === value) return
+              memo[prop].set(node, value)
+              node.style[prop] = value
             }
 
             const apply = (progress: number) => {
-              const swing = clamp01((progress - 0.06) / 0.78)
-              const turn = easeInOut(swing)
-              const grow = easeInOut(clamp01((progress - 0.02) / 0.84))
-              const arc = Math.sin(swing * Math.PI)
-              const settle = Math.sin(
-                clamp01((progress - 0.74) / 0.2) * Math.PI,
+              const frame = seamFrame(progress, wallColumns.length)
+              const height = window.innerHeight
+
+              put(experienceHeading, 'opacity', String(frame.headingOpacity))
+              put(seamWash, 'opacity', String(frame.washOpacity))
+              put(
+                deck,
+                'transform',
+                `translate3d(0, ${frame.deck.y}%, 0) scale(${frame.deck.scale})`,
+              )
+              put(deck, 'opacity', String(frame.deck.opacity))
+              put(
+                experienceSection,
+                'visibility',
+                frame.experienceHidden ? 'hidden' : '',
               )
 
-              gsap.set(flipInner, {
-                rotationY: FLIP_DEGREES * turn + settle * 5,
-                rotationX: -6 * arc,
-                rotationZ: 1.6 * arc,
-                z: 120 * arc,
-                scale: 1 + (geometry.scale - 1) * grow,
-                y: geometry.dy * grow,
+              put(workShell, 'opacity', String(frame.shell.opacity))
+              put(
+                workShell,
+                'transform',
+                frame.shell.scale === 1 ? '' : `scale(${frame.shell.scale})`,
+              )
+              panels.forEach((panel, index) => {
+                const reveal = frame.panels[index] ?? 1
+                put(panel, 'opacity', reveal >= 0.999 ? '' : String(reveal))
+                put(
+                  panel,
+                  'transform',
+                  reveal >= 0.999
+                    ? ''
+                    : `translate3d(0, ${(1 - reveal) * 18}px, 0)`,
+                )
               })
-              experienceHeading.style.opacity = String(
-                1 - clamp01(progress / 0.28),
+
+              put(
+                wall,
+                'visibility',
+                frame.overlayVisible ? 'visible' : 'hidden',
               )
-              seamWash.style.opacity = String(
-                smooth(clamp01((progress - 0.04) / 0.52)),
-              )
-              workShell.style.opacity = String(clamp01((progress - 0.6) / 0.22))
-              const cover = 1 - clamp01((progress - 0.86) / 0.12)
-              experienceSection.style.opacity = String(cover)
-              experienceSection.style.visibility =
-                cover <= 0.001 ? 'hidden' : ''
+              if (wallLabel) {
+                put(wallLabel, 'opacity', String(frame.labelOpacity))
+              }
+              frame.columns.forEach((top, index) => {
+                const y = `${top * height}px`
+                put(
+                  wallColumns[index],
+                  'transform',
+                  `translate3d(0, ${y}, 0) scaleY(${1 - top})`,
+                )
+                put(wallCaps[index], 'transform', `translate3d(0, ${y}, 0)`)
+                put(wallCaps[index], 'opacity', String(frame.caps[index]))
+              })
             }
 
             const seamLength = () => (SEAM_SVH / 100) * window.innerHeight
-            measure()
             apply(0)
             ScrollTrigger.create({
               trigger: workSection,
               start: 'top top',
               end: () => `+=${seamLength()}`,
               invalidateOnRefresh: true,
-              onEnter: (self) => {
-                measure()
-                apply(self.progress)
-              },
-              onEnterBack: (self) => {
-                measure()
-                apply(self.progress)
-              },
-              onRefresh: (self) => {
-                measure()
-                apply(self.progress)
-              },
+              onEnter: (self) => apply(self.progress),
+              onEnterBack: (self) => apply(self.progress),
+              onRefresh: (self) => apply(self.progress),
               onUpdate: (self) => apply(self.progress),
               onLeave: () => apply(1),
               onLeaveBack: () => apply(0),
             })
 
             return () => {
-              experienceSection.style.opacity = ''
               experienceSection.style.visibility = ''
               experienceHeading.style.opacity = ''
               seamWash.style.opacity = ''
+              deck.style.transform = ''
+              deck.style.opacity = ''
               workShell.style.opacity = ''
-              gsap.set(flipInner, { clearProps: 'all' })
+              workShell.style.transform = ''
+              panels.forEach((panel) => {
+                panel.style.opacity = ''
+                panel.style.transform = ''
+              })
+              wall.style.visibility = ''
+              if (wallLabel) wallLabel.style.opacity = ''
+              wallColumns.forEach((node) => (node.style.transform = ''))
+              wallCaps.forEach((node) => {
+                node.style.transform = ''
+                node.style.opacity = ''
+              })
             }
           }
         })

@@ -1,0 +1,134 @@
+/* ── Experience → Work: the spectrum curtain ─────────────────
+   A wall of equaliser columns, fixed over the whole viewport, painted only
+   while the seam is live. Every number that moves is written by the seam's
+   timeline (see `seam-frame.ts`); this file owns what the wall looks like.
+
+   The look is the page's: the columns are the hero's ground, so the closed
+   wall *is* the dark the Work section is drawn on and the swap behind it
+   cannot be seen; the caps are the signal orange; the label is the same mono
+   silkscreen every instrument on the page is lettered in.
+
+   Everything here is a transform or an opacity. Nothing animates layout, and
+   no node carries a filter or a blend mode, because forty-eight of them are
+   rewritten every scroll tick.
+
+   Desktop with motion only. Phones and reduced motion never get the overlay,
+   and the swap they get instead is the plain section boundary. */
+
+.wall {
+  --n: 24;
+  position: fixed;
+  z-index: 6;
+  inset: 0;
+  display: none;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+  contain: layout paint;
+}
+
+@media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
+  .wall {
+    display: block;
+  }
+}
+
+.col,
+.cap {
+  position: absolute;
+  top: 0;
+  left: calc(var(--i) * (100% / var(--n)));
+  width: calc(100% / var(--n) + 1px);
+  /* Written by the timeline. Parked below the viewport until it first runs, so
+     a frame that paints before the hook does shows nothing. */
+  transform: translate3d(0, 100vh, 0);
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* The fill. Scaled from its own top edge, so a column is exactly as tall as the
+   wall is at that moment. Alternate columns are a shade apart: the wall reads
+   as separate columns while it is half-built and as one dark surface once it is
+   closed (the shade difference is a few percent, below what reads as a seam
+   when every column is fully up). */
+.col {
+  height: 100vh;
+  background: var(--deck-ground, #14171a);
+}
+.col:nth-child(odd) {
+  background: var(--deck-ground-2, #1b1f23);
+}
+
+/* The cap: a bright line on a column's top edge and a short wash below it. It
+   is a separate node from the fill, so scaling the fill never stretches it. */
+.cap {
+  height: 0;
+  opacity: 0;
+  transition: opacity 90ms linear;
+}
+.cap::before {
+  position: absolute;
+  top: -2px;
+  right: 1px;
+  left: 0;
+  height: 3px;
+  border-radius: 1px;
+  background: var(--deck-orange, #ff5a1f);
+  box-shadow: 0 0 14px 1px
+    color-mix(in srgb, var(--deck-orange, #ff5a1f) 70%, transparent);
+  content: '';
+}
+.cap::after {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  left: 0;
+  height: 22vh;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--deck-orange, #ff5a1f) 28%, transparent),
+    transparent
+  );
+  content: '';
+}
+
+/* The label that names the move, at the centre of the closed wall. */
+.label {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  color: var(--deck-ground-ink, #eee9df);
+  opacity: 0;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+.label small {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: color-mix(in srgb, var(--deck-ground-ink, #eee9df) 62%, transparent);
+  font: 650 11px var(--deck-font-mono, ui-monospace, monospace);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+.label small::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--deck-orange, #ff5a1f);
+  box-shadow: 0 0 10px
+    color-mix(in srgb, var(--deck-orange, #ff5a1f) 80%, transparent);
+  content: '';
+}
+.label strong {
+  font-family: var(--deck-font-display, var(--font-syne), sans-serif);
+  font-size: clamp(30px, 5.4vw, 84px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}

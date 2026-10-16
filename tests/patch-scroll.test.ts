@@ -65,7 +65,11 @@ describe('section height', () => {
     )
     const match = css.match(/--arr-scroll:\s*([\d.]+)svh/)
     expect(Number(match?.[1])).toBeCloseTo(ARRANGEMENT_SCROLL_SVH, 6)
-    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(340)
+    // 292 is the camera with its dead tail taken out (see the constant); it is
+    // still comfortably more than the one viewport the stage is pinned for, so
+    // the dive keeps its full travel. The floor is what the phases need, not
+    // what the old design spent.
+    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(280)
   })
 
   it('un-pins the hero on short viewports, where the hook declines to run', () => {

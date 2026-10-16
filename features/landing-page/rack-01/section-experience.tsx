@@ -85,7 +85,7 @@ export function Experience({
             What shipped, and where.
           </SectionHeading>
           <div className={styles.deckFlip} data-deck-flip>
-            <div className={styles.deckFlipInner} data-deck-flip-inner>
+            <div className={styles.deckFlipInner}>
               <div className={`${styles.cassetteDeck} ${styles.deckFront}`}>
                 <Screw className={styles.screwTopLeft} />
                 <Screw className={styles.screwTopRight} />
@@ -219,32 +219,6 @@ export function Experience({
                     </ul>
                   </div>
                 </div>
-              </div>
-              <div
-                className={styles.deckBack}
-                data-deck-back
-                aria-hidden="true"
-              >
-                <div className={styles.deckBackChrome}>
-                  <span className={styles.deckBackDots}>
-                    <i />
-                    <i />
-                    <i />
-                  </span>
-                  <span className={styles.deckBackTabs}>
-                    <i />
-                    <i />
-                    <i />
-                    <i />
-                  </span>
-                  <span className={styles.deckBackSearch} />
-                </div>
-                <div className={styles.deckBackColumns}>
-                  <span />
-                  <span />
-                  <span />
-                </div>
-                <div className={styles.deckBackBar} />
               </div>
             </div>
           </div>

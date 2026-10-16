@@ -157,6 +157,23 @@ export function useArrangementHero({
         // reads it too, and it is outside the track area.
         host.style.setProperty('--arr-rail-w', `${gutter}px`)
         host.style.setProperty('--arr-profile-centre', String(profileCentre))
+
+        // The fold's distances. Each supporting lane's own offset to the
+        // profile lane's centre, in world px (offsets are layout, so they are
+        // already unaffected by the camera's transform). Written on the lane
+        // that reads it, once per refresh — never per frame.
+        const profileCentreY = profileLaneTop + laneHeight / 2
+        const lanesEl = camera.firstElementChild
+        if (lanesEl) {
+          for (const node of Array.from(lanesEl.children)) {
+            const lane = node as HTMLElement
+            if (lane === laneEl) continue
+            lane.style.setProperty(
+              '--lane-dy',
+              `${profileCentreY - (lane.offsetTop + lane.offsetHeight / 2)}px`,
+            )
+          }
+        }
         rulerEl?.style.setProperty('--arr-rail-w', `${gutter}px`)
 
         geo = {
@@ -265,6 +282,9 @@ export function useArrangementHero({
           '--arr-lane-opacity',
           frame.laneOpacity.toFixed(3),
         )
+        // The fold. Per tick: it is the stack collapsing into the profile lane
+        // as the dive lands, and a boundary would make it a pop.
+        host.style.setProperty('--arr-fold', frame.fold.toFixed(3))
 
         // ── The story line, the transport and the strip meters ──
         //
@@ -381,6 +401,7 @@ export function useArrangementHero({
           '--arr-depth',
           '--arr-profile-focus',
           '--arr-lane-opacity',
+          '--arr-fold',
           '--arr-rail-w',
           '--arr-profile-centre',
           '--arr-play',
@@ -393,6 +414,9 @@ export function useArrangementHero({
           rulerEl?.style.removeProperty(property),
         )
         proofEl?.style.removeProperty('--arr-play')
+        Array.from(camera.firstElementChild?.children ?? []).forEach((lane) =>
+          (lane as HTMLElement).style.removeProperty('--lane-dy'),
+        )
       }
     }
 

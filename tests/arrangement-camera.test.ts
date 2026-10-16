@@ -1,4 +1,5 @@
 import {
+  ARRANGEMENT_FOLD,
   ARRANGEMENT_PHASES,
   ARRANGEMENT_SCROLL_SVH,
   ARRANGEMENT_SEAM_OPEN,
@@ -262,9 +263,27 @@ describe('arrangementFrame', () => {
     }
   })
 
-  it('spends at least a quarter of the window on the hold, and enough scroll to make it worth watching', () => {
-    expect(1 - ARRANGEMENT_PHASES.rail).toBeGreaterThanOrEqual(0.25)
-    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(340)
+  it('keeps each phase exactly as long, in scroll, as it was before the dead tail was cut', () => {
+    // The camera used to be 340svh with its last 28% dead: the dive landed, the
+    // clip became the page, and nothing moved for ~550px. The tail was taken out
+    // and every boundary rescaled, so the settle, the walk and the dive must
+    // still cover the distances they were drawn at (34, 102, 176.8, 244.8svh).
+    // If this fails, the fix is not to loosen it: a phase that got shorter in px
+    // is a move that got faster, and the dive is the one the reader watches.
+    const px = (p: number) => p * ARRANGEMENT_SCROLL_SVH
+    expect(px(ARRANGEMENT_PHASES.settle)).toBeCloseTo(34, 0)
+    expect(px(ARRANGEMENT_PHASES.travel)).toBeCloseTo(102, 0)
+    expect(px(ARRANGEMENT_PHASES.zoom)).toBeCloseTo(176.8, 0)
+    expect(px(ARRANGEMENT_PHASES.rail)).toBeCloseTo(244.8, 0)
+  })
+
+  it('leaves no dead stretch after the clip has become the page', () => {
+    // Everything after `seamOpen` is scroll in which nothing in the camera
+    // moves (the read has no overflow to travel). It is allowed to be a short
+    // beat — about 13svh — and no more. The old window left 18% of 340svh.
+    const tail = (1 - ARRANGEMENT_SEAM_OPEN) * ARRANGEMENT_SCROLL_SVH
+    expect(tail).toBeGreaterThan(5)
+    expect(tail).toBeLessThanOrEqual(16)
   })
 
   it('opens the window after the rail and finishes before the end, so the read owns its own stretch', () => {
@@ -522,5 +541,53 @@ describe('arrangement data', () => {
       expect(clips.filter((clip) => clip.kind === 'name')).toHaveLength(1)
       expect(clips.filter((clip) => clip.kind === 'profile')).toHaveLength(1)
     })
+  })
+})
+
+/**
+ * The fold: the supporting lanes tucking behind the profile lane as the dive
+ * lands. It is the hero half of the hero→About handoff — the machine
+ * minimising into its own title bar — and, like the rest of the camera, a pure
+ * function of progress.
+ */
+describe('the fold', () => {
+  it('is open at the overview, so the CSS fallback is the settled frame', () => {
+    expect(arrangementFrame(0, GEO).fold).toBe(0)
+    expect(arrangementFrame(ARRANGEMENT_FOLD[0], GEO).fold).toBe(0)
+  })
+
+  it('is complete by the time the clip has become the page', () => {
+    expect(arrangementFrame(ARRANGEMENT_FOLD[1], GEO).fold).toBe(1)
+    expect(arrangementFrame(ARRANGEMENT_SEAM_OPEN, GEO).fold).toBe(1)
+    expect(arrangementFrame(1, GEO).fold).toBe(1)
+  })
+
+  it('straddles the landing: it starts in the dive and ends after it', () => {
+    // Starting before the zoom would fold the stack under a camera that has not
+    // moved; ending before `rail` would land the dive on an empty frame.
+    expect(ARRANGEMENT_FOLD[0]).toBeGreaterThan(ARRANGEMENT_PHASES.zoom)
+    expect(ARRANGEMENT_FOLD[0]).toBeLessThan(ARRANGEMENT_PHASES.rail)
+    expect(ARRANGEMENT_FOLD[1]).toBeGreaterThan(ARRANGEMENT_PHASES.rail)
+    expect(ARRANGEMENT_FOLD[1]).toBeLessThanOrEqual(ARRANGEMENT_SEAM_OPEN)
+  })
+
+  it('only ever closes, inside 0 to 1, and never springs back', () => {
+    let previous = -1
+    for (let p = 0; p <= 1.0001; p += 0.005) {
+      const { fold } = arrangementFrame(p, GEO)
+      expect(fold).toBeGreaterThanOrEqual(0)
+      expect(fold).toBeLessThanOrEqual(1)
+      expect(fold).toBeGreaterThanOrEqual(previous - 1e-12)
+      previous = fold
+    }
+  })
+
+  it('has the other lanes already well down by the time it starts', () => {
+    // The eye leaves the supporting tracks first and the stack folds second;
+    // folding lanes that are still at full contrast would read as the layout
+    // breaking rather than as the camera settling.
+    expect(
+      arrangementFrame(ARRANGEMENT_FOLD[0], GEO).laneOpacity,
+    ).toBeLessThanOrEqual(IMMERSIVE_LANE_SCAN_OPACITY)
   })
 })

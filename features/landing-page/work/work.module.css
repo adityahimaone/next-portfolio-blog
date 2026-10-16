@@ -1,6 +1,6 @@
 .work {
   position: relative;
-  background: var(--lcd-black);
+  background: var(--deck-ground);
   /* The client is a dark window in both themes, so its ink is light in both.
      This was var(--chassis), which used to be cream and only read correctly
      because --chassis has since become a themed panel-surface token. */
@@ -41,12 +41,12 @@
   align-self: center;
   margin-inline: auto;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: clamp(14px, 1.3vw, 20px);
+  border: 1px solid var(--deck-hair);
+  border-radius: var(--deck-r-shell);
   background: linear-gradient(
     150deg,
-    rgba(28, 30, 34, 0.72),
-    rgba(9, 10, 12, 0.86)
+    color-mix(in srgb, var(--deck-ground-3) 78%, transparent),
+    color-mix(in srgb, var(--deck-ground) 90%, transparent)
   );
   backdrop-filter: blur(26px) saturate(1.5);
   -webkit-backdrop-filter: blur(26px) saturate(1.5);
@@ -74,7 +74,7 @@
   padding-top: 4px;
   border-top: 1px solid rgba(255, 255, 255, 0.32);
   color: rgba(244, 240, 232, 0.82);
-  font: 750 8.5px var(--font-geist-mono);
+  font: 750 8.5px var(--deck-font-mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -97,7 +97,7 @@
      which does not change with the theme. It inherited the themed --chassis
      and went dark-on-dark in dark mode. */
   color: var(--on-dark-ink);
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: clamp(19px, min(5.6vh, 3.4vw), 48px);
   font-weight: 650;
   letter-spacing: -0.05em;
@@ -258,7 +258,7 @@
 
 .silkscreen {
   color: var(--slate);
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
   letter-spacing: 0.11em;
   text-transform: uppercase;
 } /* The active line is scroll-linked and can change several times a second, so
@@ -337,7 +337,7 @@
 
 .linerBody h3 {
   margin: 6px 0 10px;
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: clamp(24px, 2.6vw, 38px);
   font-weight: 650;
   letter-spacing: -0.035em;
@@ -354,7 +354,7 @@
 .linerBody h4 {
   margin: 18px 0 8px;
   color: var(--slate);
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -380,7 +380,7 @@
   width: fit-content;
   margin-top: 4px;
   color: var(--chassis);
-  font: 10px var(--font-geist-mono);
+  font: 10px var(--deck-font-mono);
   letter-spacing: 0.06em;
   text-decoration: none;
   transition:
@@ -417,7 +417,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
   letter-spacing: 0.06em;
 } /* ─── Utility ──────────────────────────────────────────── */
 
@@ -513,7 +513,7 @@
 }
 
 .sidebarTitle {
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: 14px;
   font-weight: 650;
   letter-spacing: -0.02em;
@@ -821,7 +821,7 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   color: var(--slate);
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
   letter-spacing: 0.05em;
 }
 
@@ -865,7 +865,7 @@
 
 .lyricLine {
   color: var(--chassis);
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: clamp(14px, min(2.4vh, 1.6vw), 25px);
   font-weight: 650;
   letter-spacing: -0.035em;
@@ -922,7 +922,7 @@
 
 .artistTitle {
   min-width: 0;
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: 14px;
   font-weight: 650;
   letter-spacing: -0.02em;
@@ -1003,7 +1003,7 @@
   border-radius: 9px;
   background: rgba(255, 255, 255, 0.07);
   color: var(--chassis);
-  font: 10px var(--font-geist-mono);
+  font: 10px var(--deck-font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
@@ -1155,7 +1155,7 @@
 
 .playerTime {
   color: var(--slate);
-  font: 10px var(--font-geist-mono);
+  font: 10px var(--deck-font-mono);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1496,7 +1496,7 @@
 
 .bannerTitle {
   margin: 0;
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   /* min() against vh caps the size on short, wide windows, where a vw-based
      clamp produced a 58px title wider than the banner and clipped the tail. */
   font-size: clamp(18px, min(5vh, 3vw), 40px);
@@ -1607,7 +1607,7 @@
   border: 0;
   background: transparent;
   color: var(--slate);
-  font: 8.5px var(--font-geist-mono);
+  font: 8.5px var(--deck-font-mono);
   letter-spacing: 0.12em;
   text-align: left;
   text-transform: uppercase;
@@ -1656,7 +1656,7 @@
   gap: 5px;
   padding: 3px 10px 6px;
   color: var(--slate);
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
   letter-spacing: 0.08em;
   text-decoration: none;
   transition: color 160ms ease;
@@ -1781,7 +1781,7 @@
 }
 
 .artistPromoTitle {
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: 13px;
   font-weight: 650;
   letter-spacing: -0.02em;
@@ -1810,7 +1810,7 @@
   /* Dark ink on the accent, not the light ink the reset was supplying. Every
      track palette is a mid-tone, so light-on-accent fails across all six. */
   color: #0b0d0c;
-  font: 10px var(--font-geist-mono);
+  font: 10px var(--deck-font-mono);
   letter-spacing: 0.08em;
   text-decoration: none;
   text-transform: uppercase;

@@ -6,7 +6,7 @@
    mixer and the Patch's panel import it, which is the whole of "shared kit". */
 
 .silk {
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -114,7 +114,7 @@
   align-self: end;
   max-width: 100%;
   overflow: hidden;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 7.5px;
   font-weight: 600;
   letter-spacing: 0.06em;

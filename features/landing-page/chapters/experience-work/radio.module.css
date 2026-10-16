@@ -62,7 +62,7 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  border-radius: clamp(14px, 1.3vw, 20px);
+  border-radius: var(--deck-r-shell);
   transform: translateZ(-320px);
 }
 

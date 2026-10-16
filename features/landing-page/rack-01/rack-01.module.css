@@ -102,7 +102,7 @@
   overflow: clip;
   background: var(--room-base);
   color: var(--room-ink);
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--deck-font-ui);
 }
 
 :global(.dark) .root {
@@ -192,7 +192,7 @@
 
 .silkscreen {
   display: inline-block;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 10px;
   font-weight: 650;
   line-height: 1.2;
@@ -200,7 +200,7 @@
   text-transform: uppercase;
 }
 .segmentCounter {
-  font-family: var(--font-orbitron), var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-readout);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
 }
@@ -323,7 +323,7 @@
   inset: clamp(84px, 12vh, 118px) clamp(22px, 4vw, 64px) clamp(66px, 8vh, 88px);
   border: 1px solid rgba(231, 226, 216, 0.2);
   color: rgba(231, 226, 216, 0.78);
-  font: 8px var(--font-geist-mono);
+  font: 8px var(--deck-font-mono);
   letter-spacing: 0.12em;
   pointer-events: none;
 }
@@ -429,7 +429,7 @@
   border-bottom: 1px solid rgba(244, 240, 232, 0.32);
   padding-bottom: 15px;
   color: var(--chassis-hi);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -571,7 +571,7 @@
 }
 .heroCopy h1 {
   margin: 18px 0 22px;
-  font-family: var(--font-space-grotesk), sans-serif;
+  font-family: var(--deck-font-ui);
   font-size: clamp(62px, 9.1vw, 158px);
   font-weight: 700;
   line-height: 0.77;
@@ -612,7 +612,7 @@
   box-shadow:
     0 2px 3px rgba(0, 0, 0, 0.24),
     inset 0 1px rgba(255, 255, 255, 0.24);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.09em;
@@ -676,7 +676,7 @@
   box-shadow:
     inset 0 1px rgba(255, 255, 255, 0.1),
     0 0 18px rgba(224, 183, 90, 0.14);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.09em;
@@ -771,7 +771,7 @@
   padding: 24px 28px;
 }
 .samplerTop strong {
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: 42px;
   line-height: 0.74;
   letter-spacing: -0.08em;
@@ -820,7 +820,7 @@
   display: flex;
   justify-content: space-between;
   color: var(--slate);
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
   letter-spacing: 0.12em;
 }
 .lcdReadout {
@@ -847,7 +847,7 @@
   display: flex;
   justify-content: space-between;
   color: var(--signal-orange);
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
 }
 .glyphStrip span {
   opacity: 0.25;
@@ -925,7 +925,7 @@
   box-shadow:
     0 2px 2px rgba(0, 0, 0, 0.32),
     inset 0 1px rgba(255, 255, 255, 0.12);
-  font: 12px var(--font-geist-mono);
+  font: 12px var(--deck-font-mono);
   cursor: pointer;
   transition:
     transform 100ms ease,
@@ -956,14 +956,14 @@
   justify-content: space-between;
   gap: 16px;
   color: rgba(244, 240, 232, 0.72);
-  font: 10px var(--font-geist-mono);
+  font: 10px var(--deck-font-mono);
   letter-spacing: 0.1em;
 }
 
 .encryptedChar {
   color: var(--signal-orange);
   opacity: 0.85;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   text-shadow: 0 0 8px rgba(255, 90, 31, 0.4);
 }
 
@@ -1001,7 +1001,7 @@
   align-items: center;
   gap: 10px;
   color: rgba(244, 240, 232, 0.72);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1079,7 +1079,7 @@
   padding-top: 6px;
   border-top: 1.5px solid rgba(244, 240, 232, 0.4);
   color: #ffffff;
-  font: 750 10.5px var(--font-geist-mono);
+  font: 750 10.5px var(--deck-font-mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   will-change: transform, opacity;
@@ -1106,7 +1106,7 @@
 .sectionHeading h2 {
   max-width: 1000px;
   margin: 0;
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: clamp(42px, 6.6vw, 104px);
   font-weight: 650;
   line-height: 0.9;
@@ -1118,7 +1118,7 @@
 .lead {
   max-width: 520px;
   margin: 0;
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: clamp(22px, 2.5vw, 38px);
   line-height: 1.15;
   letter-spacing: -0.03em;
@@ -1205,7 +1205,7 @@
   gap: 4px;
 }
 .controllerBrand strong {
-  font: 800 18px var(--font-space-grotesk);
+  font: 800 18px var(--deck-font-ui);
   letter-spacing: -0.02em;
   color: #121412;
 }
@@ -1232,7 +1232,7 @@
   justify-content: space-between;
   border-bottom: 1px solid rgba(92, 214, 163, 0.18);
   padding-bottom: 4px;
-  font: 750 7.5px var(--font-geist-mono);
+  font: 750 7.5px var(--deck-font-mono);
   letter-spacing: 0.12em;
   color: var(--lcd-green);
   text-transform: uppercase;
@@ -1248,7 +1248,7 @@
   border: 1px solid rgba(92, 214, 163, 0.3);
   background: transparent;
   color: var(--lcd-green);
-  font: 700 7px var(--font-geist-mono);
+  font: 700 7px var(--deck-font-mono);
   cursor: pointer;
   letter-spacing: 0.08em;
   transition: all 120ms ease;
@@ -1294,13 +1294,13 @@
   min-width: 0;
 }
 .programReadout span {
-  font: 7px var(--font-geist-mono);
+  font: 7px var(--deck-font-mono);
   color: #79a891;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 .programReadout strong {
-  font: 800 clamp(16px, 2vw, 24px) var(--font-space-grotesk);
+  font: 800 clamp(16px, 2vw, 24px) var(--deck-font-ui);
   color: var(--signal-orange);
   text-transform: uppercase;
   white-space: nowrap;
@@ -1349,7 +1349,7 @@
   box-shadow: 0 0 4px #ff3333;
 }
 .telemetryStats {
-  font: 700 7.5px var(--font-geist-mono);
+  font: 700 7.5px var(--deck-font-mono);
   color: #8da396;
   letter-spacing: 0.08em;
   line-height: 1.35;
@@ -1373,7 +1373,7 @@
   border-radius: 4px;
   background: linear-gradient(180deg, #383a37, #232522);
   color: #f2efe9;
-  font: 800 8.5px var(--font-geist-mono);
+  font: 800 8.5px var(--deck-font-mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
@@ -1412,7 +1412,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font: 800 8px var(--font-geist-mono);
+  font: 800 8px var(--deck-font-mono);
   color: #2b2e2a;
   cursor: pointer;
   background: none;
@@ -1478,7 +1478,7 @@
   display: flex;
   justify-content: space-between;
   padding: 7px 0px;
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
   letter-spacing: 0.12em;
 }
 .cassetteWindow {
@@ -1541,7 +1541,7 @@
 }
 .tapeLabel strong {
   margin: 8px 0 2px;
-  font: 600 clamp(22px, 3vw, 40px) var(--font-space-grotesk);
+  font: 600 clamp(22px, 3vw, 40px) var(--deck-font-ui);
 }
 .tapeLabelContent {
   display: flex;
@@ -1551,7 +1551,7 @@
 }
 .tapeLabelContent > span:not(.segmentCounter) {
   color: #b5b4ac;
-  font: 10px var(--font-geist-mono);
+  font: 10px var(--deck-font-mono);
 }
 .tapeLabel .segmentCounter {
   margin-top: 15px;
@@ -1585,13 +1585,13 @@
 }
 .experienceSelector button span {
   grid-row: 1 / 3;
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
 }
 .experienceSelector button strong {
-  font: 11px var(--font-geist-mono);
+  font: 11px var(--deck-font-mono);
 }
 .experienceSelector button small {
-  font: 7px var(--font-geist-mono);
+  font: 7px var(--deck-font-mono);
 }
 .experienceNotes {
   padding: 2px 20px;
@@ -1673,7 +1673,7 @@
   color: var(--lcd-green);
 }
 .patchScreen strong {
-  font: 650 clamp(39px, 5vw, 76px) / 0.85 var(--font-space-grotesk);
+  font: 650 clamp(39px, 5vw, 76px) / 0.85 var(--deck-font-ui);
   letter-spacing: -0.06em;
 }
 .patchScreen strong em {
@@ -1682,7 +1682,7 @@
 }
 .patchScreen > span:last-child {
   color: var(--slate);
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
 }
 .contactLaunchpad {
   padding: clamp(18px, 3vw, 36px);
@@ -1715,7 +1715,7 @@
 }
 .launchpadHeader strong {
   color: var(--signal-orange);
-  font: 600 clamp(18px, 2vw, 30px) var(--font-space-grotesk);
+  font: 600 clamp(18px, 2vw, 30px) var(--deck-font-ui);
   text-transform: uppercase;
 }
 .launchpadGrid {
@@ -1737,7 +1737,7 @@
   box-shadow:
     0 2px 3px rgba(0, 0, 0, 0.42),
     inset 0 1px rgba(255, 255, 255, 0.11);
-  font: 8px var(--font-geist-mono);
+  font: 8px var(--deck-font-mono);
   text-align: left;
   cursor: pointer;
   transition:
@@ -1926,7 +1926,7 @@
   align-items: center;
   gap: 7px;
   padding: 0 4px;
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
   font-weight: 700;
   letter-spacing: 0.1em;
   color: rgba(244, 240, 232, 0.75);
@@ -1961,7 +1961,7 @@
 .transportStatus .segmentCounter {
   width: 100%;
   font-variant-numeric: tabular-nums;
-  font-family: var(--font-orbitron), var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-readout);
   text-align: center;
   letter-spacing: 0.08em;
   padding: 3px 6px;
@@ -2013,7 +2013,7 @@
   border: 1px solid transparent;
   border-radius: 999px;
   color: rgba(244, 240, 232, 0.68);
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2108,7 +2108,7 @@
   border-radius: 999px;
   background: rgba(244, 240, 232, 0.04);
   color: rgba(244, 240, 232, 0.72);
-  font: 9px var(--font-geist-mono);
+  font: 9px var(--deck-font-mono);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2251,7 +2251,7 @@
 }
 .heroViewfinderLabel,
 .heroViewfinderActions {
-  font: 8px var(--font-geist-mono);
+  font: 8px var(--deck-font-mono);
   letter-spacing: 0.12em;
 }
 .heroViewfinderLabel {
@@ -2278,7 +2278,7 @@
 .heroViewfinderReadout h1 {
   flex: 0 0 auto;
   margin: 0;
-  font-family: var(--font-space-grotesk), sans-serif;
+  font-family: var(--deck-font-ui);
   font-size: clamp(52px, 6vw, 96px);
   font-weight: 680;
   line-height: 0.72;
@@ -2352,7 +2352,7 @@
     0 3px 5px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.14),
     inset 0 -1px 0 rgba(0, 0, 0, 0.6);
-  font: 8.5px var(--font-geist-mono);
+  font: 8.5px var(--deck-font-mono);
   text-align: left;
   cursor: pointer;
   touch-action: manipulation;
@@ -2420,7 +2420,7 @@
   border-radius: 2px;
   background: rgba(0, 0, 0, 0.45);
   color: rgba(244, 240, 232, 0.45);
-  font: 700 6.5px var(--font-geist-mono);
+  font: 700 6.5px var(--deck-font-mono);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .padBank button:hover .padShortcutHint,
@@ -2465,7 +2465,7 @@
   justify-items: center;
   gap: 8px;
   min-width: 0;
-  font: 7px var(--font-geist-mono);
+  font: 7px var(--deck-font-mono);
   text-align: center;
 }
 .faderBank output {
@@ -2600,7 +2600,7 @@
 }
 
 .wheelLabel {
-  font: 700 7px var(--font-geist-mono);
+  font: 700 7px var(--deck-font-mono);
   color: #4a4b49;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -2692,7 +2692,7 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  font: 700 6px var(--font-geist-mono);
+  font: 700 6px var(--deck-font-mono);
   color: rgba(255, 255, 255, 0.25);
   padding: 4px 0;
   pointer-events: none;
@@ -2881,7 +2881,7 @@
   border-radius: 2px;
   background: var(--field-navy);
   color: var(--chassis-hi);
-  font: 700 8px var(--font-geist-mono);
+  font: 700 8px var(--deck-font-mono);
   letter-spacing: 0.1em;
 }
 .speakerGrille {
@@ -2953,14 +2953,14 @@
 .frequencyDisplay span {
   grid-row: 1;
   grid-column: 1;
-  font: 700 7px var(--font-geist-mono);
+  font: 700 7px var(--deck-font-mono);
   letter-spacing: 0.11em;
   white-space: nowrap;
 }
 .frequencyDisplay small {
   grid-row: 2;
   grid-column: 1;
-  font: 700 7px var(--font-geist-mono);
+  font: 700 7px var(--deck-font-mono);
   letter-spacing: 0.09em;
   white-space: nowrap;
   color: rgba(92, 214, 163, 0.72);
@@ -2974,8 +2974,8 @@
   text-align: right;
   color: #dbb16f;
   font:
-    650 20px / 1 var(--font-orbitron),
-    var(--font-geist-mono);
+    650 20px / 1 var(--deck-font-readout),
+    var(--deck-font-mono);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -2995,7 +2995,7 @@
     ),
     #1c201d;
   color: #d8d3c7;
-  font: 6px var(--font-geist-mono);
+  font: 6px var(--deck-font-mono);
 }
 .frequencyScale i {
   position: absolute;
@@ -3016,7 +3016,7 @@
   display: grid;
   gap: 3px;
   justify-items: center;
-  font: 6px var(--font-geist-mono);
+  font: 6px var(--deck-font-mono);
   /* The VOL/TUNE captions were light ink on the radio's light chassis at
      1.76:1. They sit below the knob on the face plate, so they take the same
      graphite the surrounding chassis legends use. */
@@ -3106,7 +3106,7 @@
 }
 .cassetteBrand,
 .cassetteFooter {
-  font: 7px var(--font-geist-mono);
+  font: 7px var(--deck-font-mono);
   letter-spacing: 0.12em;
 }
 .cassetteLabel {
@@ -3119,13 +3119,13 @@
 .cassetteLabel small,
 .cassetteLabel span {
   display: block;
-  font: 7px var(--font-geist-mono);
+  font: 7px var(--deck-font-mono);
 }
 .cassetteLabel strong {
   display: block;
   overflow: hidden;
   margin: 4px 0 2px;
-  font: 650 clamp(14px, 2vw, 23px) var(--font-space-grotesk);
+  font: 650 clamp(14px, 2vw, 23px) var(--deck-font-ui);
   letter-spacing: -0.035em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3357,7 +3357,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font: 8px var(--font-geist-mono);
+  font: 8px var(--deck-font-mono);
 }
 .launchpadTransport input {
   -webkit-appearance: none;
@@ -3577,7 +3577,7 @@
 .contactSignalGroup span {
   display: flex;
   align-items: center;
-  font: 700 8px var(--font-geist-mono);
+  font: 700 8px var(--deck-font-mono);
   letter-spacing: 0.14em;
   white-space: nowrap;
 }
@@ -3603,7 +3603,7 @@
   align-items: center;
   gap: 7px;
   color: var(--lcd-green);
-  font: 700 7px var(--font-geist-mono);
+  font: 700 7px var(--deck-font-mono);
   letter-spacing: 0.08em;
 }
 .contactScreenStatus i {
@@ -4318,7 +4318,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.44),
     0 5px 12px -9px rgba(15, 23, 42, 0.52);
   color: #f0eadf;
-  font: 700 7px var(--font-geist-mono);
+  font: 700 7px var(--deck-font-mono);
   letter-spacing: 0.1em;
   white-space: nowrap;
   backdrop-filter: blur(8px) saturate(1.45);
@@ -4529,7 +4529,7 @@
   gap: 5px;
   padding: 3px 8px;
   border-radius: 2px;
-  font: 800 7.5px var(--font-geist-mono);
+  font: 800 7.5px var(--deck-font-mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   pointer-events: none;
@@ -4569,7 +4569,7 @@
   align-items: baseline;
   gap: 8px;
   flex: 0 0 auto;
-  font: 750 clamp(20px, 2.4vw, 38px) / 0.95 var(--font-space-grotesk);
+  font: 750 clamp(20px, 2.4vw, 38px) / 0.95 var(--deck-font-ui);
   letter-spacing: -0.045em;
   white-space: nowrap;
   user-select: none;
@@ -4582,7 +4582,7 @@
 }
 .signalDividerTrackIndex,
 .signalDividerTrackIndexBottom {
-  font: 800 8.5px var(--font-geist-mono);
+  font: 800 8.5px var(--deck-font-mono);
   letter-spacing: 0.1em;
   padding: 1px 4px;
   border-radius: 2px;
@@ -4648,7 +4648,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font: 800 7px var(--font-geist-mono);
+  font: 800 7px var(--deck-font-mono);
   letter-spacing: 0.14em;
   color: var(--lcd-green);
 }
@@ -4660,7 +4660,7 @@
   box-shadow: 0 0 6px var(--lcd-green);
 }
 .signalBridgeLeft strong {
-  font: 800 10px var(--font-geist-mono);
+  font: 800 10px var(--deck-font-mono);
   letter-spacing: 0.08em;
   color: #edeae3;
   white-space: nowrap;
@@ -4701,7 +4701,7 @@
   background: var(--signal-orange);
 }
 .signalBridgeCenter span {
-  font: 750 7.5px var(--font-geist-mono);
+  font: 750 7.5px var(--deck-font-mono);
   letter-spacing: 0.1em;
   color: #79a891;
   white-space: nowrap;
@@ -4715,13 +4715,13 @@
   text-align: right;
 }
 .signalBridgeRight span {
-  font: 750 7px var(--font-geist-mono);
+  font: 750 7px var(--deck-font-mono);
   letter-spacing: 0.14em;
   color: #8f948a;
   text-transform: uppercase;
 }
 .signalBridgeRight strong {
-  font: 700 clamp(10px, 0.95vw, 13px) var(--font-space-grotesk);
+  font: 700 clamp(10px, 0.95vw, 13px) var(--deck-font-ui);
   color: var(--signal-orange);
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -4774,7 +4774,7 @@
   left: -0.025em;
   overflow: hidden;
   color: rgba(231, 226, 216, 0.233);
-  font-family: var(--font-space-grotesk), sans-serif;
+  font-family: var(--deck-font-ui);
   font-weight: 700;
   font-size: clamp(100px, min(22vw, 34vh), 320px);
   line-height: 0.72;
@@ -4900,7 +4900,7 @@
   justify-content: space-between;
   gap: 20px;
   margin: 0;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   text-transform: uppercase;
 }
 .cableDividerLabel span {
@@ -5318,7 +5318,7 @@
 .signalBridgeLeft strong,
 .signalBridgeRight strong {
   color: #111310;
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: clamp(10px, 0.9vw, 13px);
   font-weight: 620;
   letter-spacing: -0.02em;
@@ -5612,7 +5612,7 @@
   bottom: 7px;
   left: 12px;
   overflow: hidden;
-  font: 7px var(--font-geist-mono);
+  font: 7px var(--deck-font-mono);
   letter-spacing: 0.08em;
   text-overflow: ellipsis;
   text-transform: uppercase;
@@ -5637,7 +5637,7 @@
   display: block;
   margin-bottom: 3px;
   color: #646661;
-  font: 7px var(--font-geist-mono);
+  font: 7px var(--deck-font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -5753,12 +5753,12 @@
 }
 .contactDeckDisplay strong {
   overflow-wrap: anywhere;
-  font: 700 clamp(29px, 4vw, 58px) / 0.95 var(--font-space-grotesk);
+  font: 700 clamp(29px, 4vw, 58px) / 0.95 var(--deck-font-ui);
   letter-spacing: -0.045em;
   text-transform: uppercase;
 }
 .contactDeckDisplay > span:last-child {
-  font: 700 9px var(--font-geist-mono);
+  font: 700 9px var(--deck-font-mono);
   letter-spacing: 0.14em;
 }
 .contactDeckControls {
@@ -5768,7 +5768,7 @@
   justify-content: space-between;
   gap: 18px;
   color: var(--chassis);
-  font: 700 10px var(--font-geist-mono);
+  font: 700 10px var(--deck-font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -5827,12 +5827,12 @@
   content: '';
 }
 .contactPad > span {
-  font: 700 9px var(--font-geist-mono);
+  font: 700 9px var(--deck-font-mono);
   color: #aeb1ac;
 }
 .contactPad strong {
   margin-top: 8px;
-  font: 750 clamp(15px, 1.5vw, 21px) var(--font-space-grotesk);
+  font: 750 clamp(15px, 1.5vw, 21px) var(--deck-font-ui);
 }
 .contactPad small {
   width: 100%;
@@ -6630,7 +6630,7 @@
     border-radius: 999px;
     background: rgba(255, 90, 31, 0.14);
     color: #fff;
-    font: 9px var(--font-geist-mono);
+    font: 9px var(--deck-font-mono);
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -6766,7 +6766,7 @@
     border-radius: 8px;
     background: rgba(244, 240, 232, 0.04);
     color: rgba(244, 240, 232, 0.75);
-    font: 9px var(--font-geist-mono);
+    font: 9px var(--deck-font-mono);
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -7044,7 +7044,7 @@
   justify-content: space-between;
   margin-bottom: 22px;
   color: #e9e6de;
-  font-family: var(--font-geist-mono);
+  font-family: var(--deck-font-mono);
   text-transform: uppercase;
 }
 .contactDeckBrand div {
@@ -7088,19 +7088,19 @@
     0 1px rgba(255, 255, 255, 0.08);
 }
 .contactDeckDisplay > span {
-  font: 700 8px var(--font-geist-mono);
+  font: 700 8px var(--deck-font-mono);
   letter-spacing: 0.1em;
 }
 .contactDeckDisplay strong {
   grid-column: 1 / -1;
-  font: 650 clamp(22px, 3.5vw, 34px) / 1 var(--font-space-grotesk);
+  font: 650 clamp(22px, 3.5vw, 34px) / 1 var(--deck-font-ui);
   letter-spacing: -0.035em;
   text-transform: uppercase;
 }
 .contactDeckDisplay small {
   grid-column: 2;
   grid-row: 1;
-  font: 700 8px var(--font-geist-mono);
+  font: 700 8px var(--deck-font-mono);
 }
 .contactDial {
   position: relative;
@@ -7108,7 +7108,7 @@
   justify-items: center;
   gap: 4px;
   color: #d7d5ce;
-  font-family: var(--font-geist-mono);
+  font-family: var(--deck-font-mono);
   text-transform: uppercase;
 }
 .contactDial input {
@@ -7222,7 +7222,7 @@
   border-radius: 5px;
   background: #383b37;
   color: #c8cbc5;
-  font: 750 10px var(--font-geist-mono);
+  font: 750 10px var(--deck-font-mono);
   cursor: pointer;
 }
 .contactModeRail button[aria-pressed='true'] {
@@ -7233,7 +7233,7 @@
 .contactModeRail > span {
   margin-top: auto;
   color: #737771;
-  font: 700 7px var(--font-geist-mono);
+  font: 700 7px var(--deck-font-mono);
   letter-spacing: 0.1em;
   text-align: center;
   text-transform: uppercase;
@@ -7308,7 +7308,7 @@
 .contactDeckNote {
   margin: 20px 60px 0;
   color: #8b8f88;
-  font: 700 11px/1.5 var(--font-geist-mono);
+  font: 700 11px/1.5 var(--deck-font-mono);
   letter-spacing: 0.04em;
   text-align: center;
 }
@@ -7371,7 +7371,7 @@
 }
 .contactBriefCount {
   color: var(--panel-ink-muted);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 10px;
   font-weight: 650;
   letter-spacing: 0.1em;
@@ -7412,7 +7412,7 @@
      (`Start with the user.`), and the questions are written as sentences — so
      caps were doing work the type already does, at the cost of a line each. */
   color: var(--panel-ink-muted);
-  font-family: var(--font-syne), var(--font-space-grotesk), sans-serif;
+  font-family: var(--deck-font-display);
   font-size: clamp(16px, 1.5vw, 21px);
   font-weight: 700;
   line-height: 1.2;
@@ -7457,7 +7457,7 @@
   border-radius: 7px;
   background: var(--panel-fill);
   color: var(--panel-ink-muted);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 10px;
   font-weight: 650;
   letter-spacing: 0.06em;
@@ -7483,7 +7483,7 @@
   padding: 0 26px 20px
     calc(26px + 30px + clamp(12px, 1.4vw, 20px));
   color: var(--panel-ink-muted);
-  font-family: var(--font-space-grotesk), sans-serif;
+  font-family: var(--deck-font-ui);
   font-size: 14.5px;
   line-height: 1.62;
   text-wrap: pretty;
@@ -7840,12 +7840,12 @@
 .heroAboutHandoff span {
   padding-top: 0;
   border-top: 0;
-  font: 700 8px var(--font-geist-mono);
+  font: 700 8px var(--deck-font-mono);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 .heroAboutHandoff strong {
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: clamp(42px, 7vw, 104px);
   font-weight: 620;
   line-height: 0.76;
@@ -7875,7 +7875,7 @@
   gap: 10px;
   margin-bottom: clamp(18px, 3vh, 30px);
   color: rgba(244, 240, 232, 0.7);
-  font: 650 9px var(--font-geist-mono);
+  font: 650 9px var(--deck-font-mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -7888,7 +7888,7 @@
 }
 .heroIdentity h1 {
   margin: 0;
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: clamp(68px, 10.8vw, 170px);
   font-style: normal;
   font-weight: 650;
@@ -7931,7 +7931,7 @@
   gap: 7px;
   border-bottom: 1px solid rgba(244, 240, 232, 0.55);
   color: var(--chassis-hi);
-  font: 700 10px var(--font-geist-mono);
+  font: 700 10px var(--deck-font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   transition:
@@ -7985,7 +7985,7 @@
 }
 .heroProof strong {
   color: var(--signal-orange);
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: 29px;
   font-variant-numeric: tabular-nums;
 }
@@ -8004,7 +8004,7 @@
   align-items: center;
   justify-content: space-between;
   color: rgba(244, 240, 232, 0.5);
-  font: 650 8px var(--font-geist-mono);
+  font: 650 8px var(--deck-font-mono);
   letter-spacing: 0.11em;
   text-transform: uppercase;
 }
@@ -8142,7 +8142,7 @@
   align-items: center;
   gap: 10px;
   color: rgba(244, 240, 232, 0.78);
-  font: 700 8px var(--font-geist-mono);
+  font: 700 8px var(--deck-font-mono);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   transform: translate(-50%, -50%);
@@ -8169,7 +8169,7 @@
   width: auto !important;
   height: auto !important;
   flex-direction: column;
-  font-family: var(--font-space-grotesk), 'Hiragino Kaku Gothic ProN',
+  font-family: var(--deck-font-ui), 'Hiragino Kaku Gothic ProN',
     'Noto Sans JP', sans-serif;
   font-size: clamp(100px, 14vw, 220px);
   font-weight: 680;
@@ -8264,7 +8264,7 @@
   max-width: 19ch;
   grid-column: 1;
   grid-row: 2;
-  font-family: var(--font-space-grotesk);
+  font-family: var(--deck-font-ui);
   font-size: clamp(20px, 2vw, 29px);
   font-weight: 560;
   line-height: 1;
@@ -8311,7 +8311,7 @@
   padding-top: 8px;
   border-top: 0;
   color: rgba(244, 240, 232, 0.58);
-  font: 650 8px var(--font-geist-mono);
+  font: 650 8px var(--deck-font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -8981,7 +8981,7 @@
   display: block;
   margin-bottom: 4px;
   color: #646661;
-  font: 7px var(--font-geist-mono);
+  font: 7px var(--deck-font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -9074,7 +9074,7 @@
   max-width: none;
   padding: 0 clamp(22px, 4vw, 64px) 0 0;
   color: currentColor;
-  font-family: var(--font-space-grotesk), sans-serif;
+  font-family: var(--deck-font-ui);
   font-size: clamp(19px, 2.25vw, 31px);
   font-weight: 500;
   letter-spacing: -0.015em;
@@ -9086,7 +9086,7 @@
 .signalDividerPhrase::after {
   content: '  /  ';
   color: #b36b46;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 0.5em;
   letter-spacing: 0.08em;
   vertical-align: middle;
@@ -9679,7 +9679,7 @@
 .footerBrandName {
   color: rgba(231, 226, 216, 0.88);
   font:
-    650 12px var(--font-geist-mono),
+    650 12px var(--deck-font-mono),
     monospace;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -9689,7 +9689,7 @@
 .footerBrandMeta {
   color: rgba(231, 226, 216, 0.4);
   font:
-    500 9px var(--font-geist-mono),
+    500 9px var(--deck-font-mono),
     monospace;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -9731,7 +9731,7 @@
   max-width: 32ch;
   color: rgba(231, 226, 216, 0.72);
   font:
-    500 clamp(13px, 1.05vw, 15px) / 1.45 var(--font-space-grotesk),
+    500 clamp(13px, 1.05vw, 15px) / 1.45 var(--deck-font-ui),
     sans-serif;
   letter-spacing: 0.01em;
 }
@@ -10944,7 +10944,7 @@
    this rule could set on the letters. */
 .heroBackdropName {
   --hero-chroma: 0;
-  font-family: var(--font-syne), var(--font-space-grotesk),
+  font-family: var(--deck-font-display),
     'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
   /* Measured, not estimated: Syne at 800 runs about 1.24em per cap, so
      "HIMAWAN" at the 180px this started on measured 1562px inside a 1440px
@@ -10997,7 +10997,7 @@
     inset 0 1px 3px #000,
     0 1px 0 rgba(255, 255, 255, 0.05);
   color: rgba(178, 226, 205, 0.78);
-  font: 650 8.5px var(--font-geist-mono);
+  font: 650 8.5px var(--deck-font-mono);
   letter-spacing: 0.14em;
 }
 .heroKickerReadout {
@@ -11037,7 +11037,7 @@
     inset 0 -2px 5px rgba(0, 0, 0, 0.5),
     0 3px 9px rgba(0, 0, 0, 0.4);
   color: rgba(244, 240, 232, 0.9);
-  font: 700 10px var(--font-geist-mono);
+  font: 700 10px var(--deck-font-mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   transition:
@@ -11195,4 +11195,218 @@
     height: auto;
     min-height: calc(100svh - 142px);
   }
+}
+
+/* ═══ Deck theme ═════════════════════════════════════════════════════════════
+   Everything below is the last word on colour, face, corner and material. It
+   restates nothing about size or position, so no layout moves.
+
+   The tokens live in app/deck-theme.css and are read off the hero's DAW and
+   the About section's glass hardware. The rack's own palette is re-pointed at
+   them here, then the two devices that used to look like different products
+   (the Skills controller, the Experience radio) are re-skinned in the About
+   device's language: a frosted cream shell with a dark rim, an opaque chassis
+   inside it, near-black LCDs, dark pads that light orange.
+
+   It is last in the file on purpose. Earlier blocks restate the same rules for
+   breakpoints; equal specificity plus source order is what lets this one win
+   at every size without `!important`. */
+
+.root,
+:global(.dark) .root {
+  --chassis: var(--deck-paper);
+  --chassis-hi: var(--deck-paper-hi);
+  --graphite: var(--deck-ground-2);
+  --lcd-black: var(--deck-lcd-fill);
+  --signal-orange: var(--deck-orange);
+  --field-navy: var(--deck-navy);
+  --lcd-green: var(--deck-lcd-green);
+  --room-base: var(--deck-ground);
+  --room-ink: var(--deck-ground-ink);
+  --band-tan: var(--deck-paper);
+  --band-tan-wash: var(--deck-wash);
+  --panel-ink: var(--deck-paper-ink);
+  --panel-ink-muted: var(--deck-paper-muted);
+  --label-ink: var(--deck-paper-muted);
+  --band-grid-line: var(--deck-paper-grid);
+  --dev-accent: var(--deck-orange);
+  --dev-amber: var(--deck-amber);
+  font-family: var(--deck-font-ui);
+}
+:global(.dark) .root {
+  --band-tan: var(--deck-ground);
+}
+
+/* One ground. The hero, the skills room and the work booth were three
+   charcoals; the page behind them is the hero's. */
+.root {
+  background:
+    linear-gradient(90deg, var(--deck-grid-line) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    var(--deck-ground);
+}
+
+/* ── Skills: the room ── */
+.skills {
+  background:
+    radial-gradient(
+      70% 46% at 50% 0%,
+      color-mix(in srgb, var(--deck-orange) 9%, transparent),
+      transparent 72%
+    ),
+    linear-gradient(90deg, var(--deck-grid-line) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    linear-gradient(0deg, var(--deck-grid-line) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    var(--deck-ground);
+}
+.skillsIntro > p {
+  color: var(--deck-ground-muted);
+}
+
+/* ── The shell: one recipe for every device on the page ── */
+.controller,
+.experience .radioFace {
+  border: 1px solid var(--deck-shell-edge);
+  border-radius: var(--deck-r-shell);
+  background: var(--deck-shell-fill);
+  background-color: var(--deck-paper-lo);
+  box-shadow: var(--deck-shell-hi), var(--deck-shell-lo),
+    var(--deck-shell-shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--deck-cream-ink);
+}
+.experience .radioFace {
+  /* The radio floats over paper rather than the dark room, so its drop is the
+     lighter one the About devices cast. */
+  box-shadow: var(--deck-shell-hi), var(--deck-shell-lo),
+    0 18px 40px -22px rgb(0 0 0 / 0.5), 0 2px 4px rgb(0 0 0 / 0.16);
+}
+
+/* The chassis inside the shell. */
+.controllerTopbar {
+  border-bottom-color: rgb(27 28 26 / 0.22);
+}
+.controlBank + .controlBank {
+  border-left-color: rgb(27 28 26 / 0.2);
+}
+.keyboardBed,
+.experience .radioSpeaker,
+.experience .radioTuner,
+.experience .radioDials {
+  border: 1px solid rgb(27 28 26 / 0.26);
+  border-radius: var(--deck-r-inner);
+  background: var(--deck-chassis-fill);
+  box-shadow: var(--deck-shell-hi), var(--deck-shell-lo);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.experience .radioSpeakerBadge {
+  border-radius: var(--deck-r-chip);
+  background: var(--deck-lcd-fill);
+  color: var(--deck-lcd-peach);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* ── Screens: near-black glass, mono type ── */
+.controllerDisplay,
+.experience .radioLevel,
+.experience .frequencyDisplay,
+.experience .frequencyScale {
+  border: 2px solid var(--deck-lcd-edge);
+  border-radius: var(--deck-r-lcd);
+  background-color: var(--deck-lcd-fill);
+  box-shadow: var(--deck-lcd-glow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  font-family: var(--deck-font-mono);
+}
+.experience .frequencyDisplay {
+  font-family: var(--deck-font-readout);
+  color: var(--deck-lcd-peach);
+}
+.experience .radioLevel i {
+  box-shadow: 0 0 5px color-mix(in srgb, var(--deck-lcd-green) 30%, transparent);
+}
+.experience .radioLevel i:nth-child(3n) {
+  box-shadow: 0 0 5px color-mix(in srgb, var(--deck-orange) 34%, transparent);
+}
+
+/* ── Pads and keys: dark caps that light orange ── */
+.padBank button {
+  border-color: var(--deck-pad-edge);
+  border-radius: var(--deck-r-key);
+  background: var(--deck-pad-fill);
+}
+.padBank button:hover {
+  border-color: var(--deck-orange);
+}
+.padBank button.padActive {
+  background: var(--deck-pad-lit) !important;
+  border-color: var(--deck-orange) !important;
+}
+.whiteKeys button,
+.blackKeys button {
+  border-radius: 1px 1px var(--deck-r-key) var(--deck-r-key);
+}
+
+/* ── Radio dials: the same brushed knob the sampler wears ── */
+.experience .radioDials span > i {
+  border-color: rgb(255 255 255 / 0.5);
+  background:
+    linear-gradient(
+      90deg,
+      transparent 48%,
+      var(--deck-orange) 48% 52%,
+      transparent 52%
+    ),
+    radial-gradient(circle at 32% 22%, #f0ede6, #b9b5aa 70%, #8d8a82);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.4), var(--deck-shell-hi);
+}
+
+/* ── Selector chips: the key recipe, in cream ── */
+.experience .experienceSelector button {
+  border: 1px solid rgb(27 28 26 / 0.3);
+  border-radius: var(--deck-r-inner);
+  background: var(--deck-chassis-fill);
+  box-shadow: var(--deck-shell-hi), var(--deck-shell-lo);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--deck-cream-ink);
+}
+.experience .experienceSelector button:hover,
+.experience .experienceSelector button[aria-selected='true'] {
+  border-color: var(--deck-orange);
+}
+
+/* ── Experience: paper, not tan ──
+   The band is the same graph paper the About sheet is drawn on, so the page
+   reads as one surface from About to Contact. The wash is orange stage light
+   where it used to be wine. */
+.experience {
+  background:
+    radial-gradient(circle at 14% 22%, var(--deck-wash), transparent 28%),
+    linear-gradient(90deg, var(--deck-paper-grid) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    linear-gradient(0deg, var(--deck-paper-grid) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    var(--band-tan);
+}
+.cableDivider {
+  background:
+    linear-gradient(90deg, var(--deck-paper-grid) 1px, transparent 1px) 0 0 /
+      var(--deck-grid-cell) var(--deck-grid-cell),
+    var(--band-tan);
+}
+
+/* ── Contact: same chassis as everything else ── */
+.contact .contactLaunchpad,
+.contact .contactDeck {
+  border-radius: var(--deck-r-shell);
+}
+.contact .contactPad {
+  border-radius: var(--deck-r-key);
 }

@@ -27,14 +27,14 @@
 }
 
 .hero {
-  --arr-ground: #14171a;
-  --arr-panel: #1b1f23;
-  --arr-panel-hi: #252a2f;
-  --arr-grid: rgb(238 233 223 / 0.05);
-  --arr-grid-bar: rgb(238 233 223 / 0.11);
-  --arr-hair: rgb(238 233 223 / 0.13);
-  --arr-ink: #eee9df;
-  --arr-muted: #8e928e;
+  --arr-ground: var(--deck-ground);
+  --arr-panel: var(--deck-ground-2);
+  --arr-panel-hi: var(--deck-ground-3);
+  --arr-grid: var(--deck-grid-line);
+  --arr-grid-bar: var(--deck-grid-line-strong);
+  --arr-hair: var(--deck-hair);
+  --arr-ink: var(--deck-ground-ink);
+  --arr-muted: var(--deck-ground-muted);
   /* The section's height, and it is one thing now: the camera's own distance,
      `ARRANGEMENT_SCROLL_SVH`. One viewport of it is the sticky stage and the
      rest is travel, so the trigger's progress *is* the camera's progress — the
@@ -98,7 +98,7 @@
   padding: 0 clamp(12px, 2vw, 24px);
   border-bottom: 1px solid var(--arr-hair);
   background: linear-gradient(#272c31, #1d2125);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 10px;
   font-weight: 650;
   letter-spacing: 0.12em;
@@ -220,7 +220,7 @@
 .lcd b,
 .lcd time {
   color: var(--signal-orange);
-  font-family: var(--font-orbitron), var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-readout);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.06em;
@@ -311,7 +311,7 @@
   overflow: hidden;
   border-bottom: 1px solid var(--arr-hair);
   background: var(--arr-panel);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   pointer-events: none;
 }
 .rulerGrid {
@@ -542,7 +542,7 @@
   background: color-mix(in srgb, var(--clip-color) 24%, var(--arr-ground));
   box-shadow: 0 1px 0 rgb(0 0 0 / 0.35);
   color: var(--arr-ink);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   text-align: left;
 }
 button.clip {
@@ -670,7 +670,7 @@ button.clip {
   position: relative;
   margin: 0;
   padding-left: clamp(14px, 2vw, 28px);
-  font-family: var(--font-syne), sans-serif;
+  font-family: var(--deck-font-display);
   /* One line, not two. The name used to stack so it could fit the lane's
      height, which capped it at ~96px; on one line the ceiling is the width
      (fourteen letters across the clip) or the lane's height, whichever is
@@ -870,7 +870,7 @@ button.clip {
     color-mix(in srgb, var(--lane-color) 30%, var(--arr-panel)),
     var(--arr-panel) 85%
   );
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 9px;
   letter-spacing: 0.12em;
   white-space: nowrap;
@@ -932,7 +932,7 @@ button.clip {
   height: var(--arr-mixer-h);
   border-top: 1px solid var(--arr-hair);
   background: var(--arr-panel);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-mono);
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -962,7 +962,7 @@ button.clip {
 }
 .proofReadouts b {
   color: var(--arr-ink);
-  font-family: var(--font-orbitron), var(--font-geist-mono), monospace;
+  font-family: var(--deck-font-readout);
   font-size: 14px;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;

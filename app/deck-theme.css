@@ -1,0 +1,115 @@
+/* The deck theme.
+
+   One source of truth for the landing page's look. It is read off the two
+   devices the page is built around: the hero's DAW (charcoal ground, hairline
+   panels, orange / amber / moss signals) and the About section's glass
+   hardware (frosted cream shell with a dark rim, an opaque cream chassis
+   inside it, a peach LCD, dark pads that light orange).
+
+   Everything that used to restate a colour, a face or a corner radius for
+   itself (`--arr-*`, `--bench-*`, the rack's `.root` tokens, the bridge's local
+   palette) now aliases these. Change a value here and every section follows.
+
+   Only colour, type, shape and material live here. Nothing in this file moves
+   or sizes a box, so adopting it cannot shift a layout.
+
+   The ground stays dark in both themes (a backlit equipment wall has no
+   daylight reading). The paper and its ink follow the theme. */
+
+:root {
+  /* ── Type: three roles, no more ─────────────────────────
+     display  headings, brand lines, the big words
+     ui       labels, buttons, running text on devices
+     mono     readouts, silkscreen, LCDs, numbers
+     readout  the one LCD numeral face (hero clock, frequency display) */
+  --deck-font-display: var(--font-syne), var(--font-space-grotesk), system-ui,
+    sans-serif;
+  --deck-font-ui: var(--font-space-grotesk), system-ui, sans-serif;
+  --deck-font-mono: var(--font-geist-mono), ui-monospace, 'SFMono-Regular',
+    monospace;
+  /* LCD numerals only: the hero's clock and the frequency readouts. */
+  --deck-font-readout: var(--font-orbitron), var(--font-geist-mono),
+    ui-monospace, monospace;
+
+  /* ── Ground: the equipment wall behind every device ──── */
+  --deck-ground: #14171a;
+  --deck-ground-2: #1b1f23;
+  --deck-ground-3: #252a2f;
+  --deck-ground-ink: #eee9df;
+  --deck-ground-muted: #8e928e;
+  --deck-hair: rgb(238 233 223 / 0.13);
+  --deck-grid-cell: 30px;
+  --deck-grid-line: rgb(238 233 223 / 0.05);
+  --deck-grid-line-strong: rgb(238 233 223 / 0.11);
+
+  /* ── Paper: the cream the About sheet and the chassis share ── */
+  --deck-paper: #e7e2d8;
+  --deck-paper-hi: #f4f0e8;
+  --deck-paper-lo: #cfc9bc;
+  --deck-paper-ink: #101211;
+  --deck-paper-muted: #5e625c;
+  --deck-paper-grid: rgb(29 30 28 / 0.05);
+  /* The glass hardware's own cream. Unlike the paper it never flips with the
+     theme: the devices are the same object by day and by night. */
+  --deck-cream: #e7e2d8;
+  --deck-cream-ink: #1d1e1c;
+  /* Stage light on paper. It was a wine radial; the page has no wine in it. */
+  --deck-wash: rgb(255 90 31 / 0.1);
+
+  /* ── Signals ─────────────────────────────────────────── */
+  --deck-orange: #ff5a1f;
+  --deck-orange-deep: #e04810;
+  --deck-amber: #e0b75a;
+  --deck-moss: #7abb5e;
+  --deck-lcd-green: #5cd6a3;
+  --deck-lcd-peach: #f0c7ae;
+  --deck-navy: #2e3f5c;
+
+  /* ── Shape: the glass device's proportions in CSS ────────
+     The sampler is a 2.08 x 1.56 box with a 0.16 corner: about 10% of its
+     short side. Shell, chassis, screen and key keep that ratio. */
+  --deck-r-shell: 14px;
+  --deck-r-inner: 9px;
+  --deck-r-lcd: 5px;
+  --deck-r-key: 5px;
+  --deck-r-chip: 3px;
+
+  /* ── Material: frosted cream glass over an opaque chassis ── */
+  --deck-shell-fill: linear-gradient(
+      145deg,
+      rgb(243 239 230 / 0.9),
+      rgb(217 211 198 / 0.82)
+    ),
+    #d9d3c6;
+  --deck-shell-edge: rgb(27 28 26 / 0.5);
+  --deck-shell-hi: inset 0 1px 0 rgb(255 255 255 / 0.7);
+  --deck-shell-lo: inset 0 -1px 0 rgb(0 0 0 / 0.1);
+  --deck-shell-shadow: 0 22px 58px rgb(0 0 0 / 0.42),
+    0 2px 4px rgb(0 0 0 / 0.22);
+  --deck-chassis-fill: linear-gradient(145deg, #d6d0c3, #c3bdaf);
+  --deck-lcd-fill: #0b0d0c;
+  --deck-lcd-edge: #282a27;
+  --deck-lcd-glow: inset 0 4px 18px #000, 0 1px rgb(255 255 255 / 0.4);
+  --deck-pad-fill: linear-gradient(145deg, #373935, #222421);
+  --deck-pad-edge: #141613;
+  --deck-pad-lit: linear-gradient(145deg, #ff6a35, var(--deck-orange-deep));
+}
+
+.dark {
+  --deck-paper: #23262a;
+  --deck-paper-hi: #2e3237;
+  --deck-paper-lo: #1a1c1f;
+  --deck-paper-ink: #f1eee5;
+  --deck-paper-muted: #b6b3a9;
+  --deck-paper-grid: rgb(255 255 255 / 0.022);
+  --deck-wash: rgb(255 90 31 / 0.12);
+  /* No device overrides here on purpose: the glass hardware is one object
+     photographed in two rooms, so --deck-shell-* and --deck-chassis-* are the
+     same in both. */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --deck-motion-scale: 0;
+  }
+}

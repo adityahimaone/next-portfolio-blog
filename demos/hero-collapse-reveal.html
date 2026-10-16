@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Profile lane expands → About behind — example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  /* ============================================================
+     Profile lane expands → About behind
+     ------------------------------------------------------------
+     The transition is NOT a uniform zoom and NOT a fade. Inside the
+     DAW hero the lanes do the work:
+
+       · every lane EXCEPT PROFILE collapses — height → 0, fades out,
+         clips its own content as it goes ("minimize");
+       · the PROFILE lane EXPANDS to take the whole track area, and
+         its clip stretches to full width;
+       · the hero panel (now essentially just PROFILE) then shrinks,
+         rounds off and dissolves.
+
+     About was sitting BEHIND the hero the entire time (lower
+     z-index, pulled up under the pinned stage), so the collapse
+     uncovers it rather than About arriving.
+
+     One number, p (0 → 1), drives all of it. Tune it in the panel.
+     ============================================================ */
+
+  :root {
+    --background: #141817;
+    --card: #222827;
+    --card-2: #1a201e;
+    --foreground: #e7e6dd;
+    --muted: #8d938c;
+    --primary: #ff5a1f;
+    --secondary: #7abb5e;
+    --accent: #e0b75a;
+    --lcd-bg: #0d1110;
+    --lcd-text: #7abb5e;
+    --line: color-mix(in srgb, var(--foreground) 12%, transparent);
+    --line-strong: color-mix(in srgb, var(--foreground) 22%, transparent);
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --disp: 'Syne', system-ui, sans-serif;
+    --grotesk: 'Space Grotesk', system-ui, sans-serif;
+
+    /* live tunables (written by the control panel) */
+    --min-scale: 0.78;
+    --corner: 22px;
+    --lift: 6;
+    --dim: 0.6;
+    --blur: 3px;
+    --about-settle: 0.04;
+    --runway: 260;
+    --overlap: 160;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--grotesk);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* ============================================================
+     1. HERO  — pinned above About
+     ============================================================ */
+
+  .hero-track { height: calc(var(--runway) * 1svh); position: relative; }
+
+  .hero-sticky {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    perspective: 1800px;
+  }
+
+  .hero-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(120% 90% at 50% 0%, #1c2321 0%, var(--background) 62%),
+      var(--background);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    transform-origin: 50% 42%;
+    will-change: transform, opacity, border-radius, filter;
+    transform: translate3d(0, 0, 0) scale(1);
+    border-radius: 0;
+  }
+
+  .hero-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px);
+    background-size: 46px 46px;
+    mask-image: radial-gradient(120% 80% at 50% 40%, #000 40%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── chrome ── */
+  .chrome {
+    position: relative;
+    z-index: 3;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 0.85rem clamp(1rem, 3vw, 2.25rem);
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--background) 72%, transparent);
+    backdrop-filter: blur(6px);
+  }
+  .brand { display: flex; align-items: center; gap: 0.6rem; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.14em; }
+  .brand small { color: var(--muted); letter-spacing: 0.18em; }
+  .mark { width: 9px; height: 9px; background: var(--primary); box-shadow: 0 0 12px var(--primary); }
+  .menu { display: flex; gap: 1.15rem; margin-left: auto; font-size: 0.82rem; color: var(--muted); }
+  .menu a:hover { color: var(--foreground); }
+  .transport { display: flex; align-items: center; gap: 0.5rem; }
+  .tbtn {
+    width: 26px; height: 26px; display: grid; place-items: center;
+    border: 1px solid var(--line-strong); background: var(--card-2);
+    color: var(--muted); font-size: 0.6rem; cursor: pointer;
+  }
+  .tbtn.play { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 45%, transparent); }
+  .lcd {
+    display: flex; flex-direction: column; gap: 1px;
+    padding: 0.25rem 0.5rem; min-width: 62px;
+    background: var(--lcd-bg); border: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em;
+  }
+  .lcd small { color: var(--muted); font-size: 0.5rem; }
+  .lcd b { color: var(--lcd-text); font-weight: 600; }
+
+  /* ── ruler ── */
+  .ruler {
+    position: relative; z-index: 3; flex: none;
+    display: flex; justify-content: space-between;
+    padding: 0.5rem clamp(1rem, 3vw, 2.25rem) 0.35rem;
+    font-family: var(--mono); font-size: 0.56rem; letter-spacing: 0.16em;
+    color: var(--muted); text-transform: uppercase;
+  }
+  .ruler span { position: relative; }
+  .ruler span::before {
+    content: ''; position: absolute; left: 0; top: -0.35rem; width: 1px; height: 0.3rem;
+    background: var(--line-strong);
+  }
+
+  /* ── lanes ──
+     The stack is the thing that folds. Each lane clips its own content
+     (`overflow: hidden`) so a lane collapsing to zero height reads as the
+     lane folding away, not as the text being squashed. */
+  .lanes {
+    position: relative; z-index: 2; flex: 1; min-height: 0;
+    padding: 0.5rem clamp(1rem, 3vw, 2.25rem);
+    display: flex; flex-direction: column;
+  }
+  .lane-stack { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+  .lane {
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-top: 1px solid var(--line);
+    will-change: height, opacity;
+  }
+  .lane-name { border-top: none; }
+
+  .clip {
+    position: relative; height: 30px;
+    display: flex; align-items: center; padding: 0 0.6rem;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--secondary) 16%, transparent), color-mix(in srgb, var(--secondary) 7%, transparent));
+    border: 1px solid color-mix(in srgb, var(--secondary) 32%, transparent);
+    border-radius: 3px;
+    font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em;
+    color: color-mix(in srgb, var(--foreground) 82%, transparent);
+    white-space: nowrap; overflow: hidden;
+  }
+  .clip-name {
+    height: 100%; flex: 1;
+    background: none; border: none; padding: 0;
+    font-family: var(--disp); font-weight: 800;
+    font-size: clamp(2rem, 6.5vw, 5.2rem); letter-spacing: -0.04em; line-height: 1;
+    color: var(--foreground); text-transform: uppercase;
+  }
+
+  /* ── the PROFILE lane: the one that survives and expands ── */
+  .lane-profile { border-top: 1px solid color-mix(in srgb, var(--primary) 30%, transparent); }
+  .clip-profile {
+    height: calc(100% - 6px);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 22%, transparent), color-mix(in srgb, var(--primary) 9%, transparent));
+    border: 1px solid color-mix(in srgb, var(--primary) 55%, transparent);
+    border-radius: 4px;
+    color: var(--foreground);
+    font-size: 0.68rem;
+    justify-content: space-between;
+    padding: 0 clamp(0.7rem, 1.6vw, 1.4rem);
+    box-shadow: 0 0 0 rgba(255, 90, 31, 0);
+    will-change: width, box-shadow, font-size;
+  }
+  .clip-profile .p-label { display: flex; align-items: center; gap: 0.55rem; }
+  .clip-profile .p-dot { width: 7px; height: 7px; background: var(--primary); box-shadow: 0 0 12px var(--primary); }
+  .clip-profile .p-meta { color: color-mix(in srgb, var(--foreground) 70%, transparent); }
+
+  .playhead {
+    position: absolute; z-index: 4; top: 0; bottom: 0; left: 62%;
+    width: 1px; background: var(--primary); opacity: 0.85;
+  }
+  .playhead::before {
+    content: ''; position: absolute; top: 0; left: -4px;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-top: 7px solid var(--primary);
+  }
+
+  .mixer {
+    position: absolute; z-index: 3; right: clamp(1rem, 3vw, 2.25rem); bottom: 1rem;
+    display: flex; gap: 0.4rem; align-items: flex-end; height: 76px;
+  }
+  .meter { width: 8px; background: var(--lcd-bg); border: 1px solid var(--line); position: relative; overflow: hidden; }
+  .meter::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(180deg, var(--primary), var(--secondary));
+    animation: meter 2.4s ease-in-out infinite alternate;
+  }
+  .meter:nth-child(1)::after { height: 62%; animation-delay: -0.2s; }
+  .meter:nth-child(2)::after { height: 38%; animation-delay: -1.1s; }
+  .meter:nth-child(3)::after { height: 78%; animation-delay: -0.6s; }
+  .meter:nth-child(4)::after { height: 24%; animation-delay: -1.6s; }
+  .meter:nth-child(5)::after { height: 54%; animation-delay: -0.9s; }
+  @keyframes meter { from { transform: scaleY(0.6); } to { transform: scaleY(1); } }
+
+  /* ============================================================
+     2. ABOUT  — behind the hero
+     ============================================================ */
+
+  .about {
+    position: relative;
+    z-index: 1;
+    margin-top: calc(var(--overlap) * -1svh);
+    background: var(--background);
+    padding: clamp(4rem, 12vh, 9rem) clamp(1.25rem, 6vw, 6rem) clamp(5rem, 14vh, 11rem);
+    transform-origin: 50% 0%;
+    will-change: transform;
+    border-top: 1px solid var(--line);
+  }
+  .about-inner { max-width: 62rem; margin: 0 auto; }
+
+  .eyebrow {
+    margin: 0 0 1.5rem; font-family: var(--mono); font-size: 0.62rem;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);
+  }
+  .eyebrow b { color: var(--primary); font-weight: 600; }
+  .title {
+    margin: 0 0 clamp(1.5rem, 4vw, 3rem);
+    font-family: var(--disp); font-weight: 800;
+    font-size: clamp(2.4rem, 7vw, 6rem); line-height: 0.94; letter-spacing: -0.045em;
+    max-width: 14ch;
+  }
+  .lede { max-width: 60ch; font-size: clamp(1rem, 1.5vw, 1.2rem); line-height: 1.6; color: color-mix(in srgb, var(--foreground) 82%, transparent); }
+  .chapters { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.5rem; margin-top: clamp(2.5rem, 6vw, 4.5rem); }
+  .chapter { border-top: 1px solid var(--line-strong); padding-top: 1rem; }
+  .chapter h3 { margin: 0 0 0.5rem; font-family: var(--grotesk); font-weight: 600; font-size: 1.05rem; letter-spacing: -0.01em; }
+  .chapter p { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.65; }
+  .outro { margin-top: clamp(3rem, 8vw, 5rem); font-family: var(--disp); font-weight: 700; font-size: clamp(1.3rem, 3vw, 2.2rem); letter-spacing: -0.03em; max-width: 22ch; }
+  .outro b { color: var(--primary); }
+
+  /* ============================================================
+     3. HUD
+     ============================================================ */
+
+  .hud {
+    position: fixed; z-index: 100; left: 1rem; bottom: 1rem;
+    width: 272px; padding: 0.9rem 1rem;
+    background: color-mix(in srgb, var(--card) 88%, transparent);
+    border: 1px solid var(--line-strong);
+    backdrop-filter: blur(12px);
+    font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.06em;
+    color: var(--muted);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  }
+  .hud h4 { margin: 0 0 0.7rem; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--foreground); display: flex; justify-content: space-between; align-items: center; }
+  .hud h4 button { background: none; border: 1px solid var(--line-strong); color: var(--muted); font-family: var(--mono); font-size: 0.55rem; padding: 0.15rem 0.4rem; cursor: pointer; letter-spacing: 0.1em; }
+  .hud h4 button:hover { color: var(--foreground); border-color: var(--foreground); }
+  .readout { display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--lcd-text); }
+  .readout b { color: var(--foreground); }
+  .progress { height: 3px; background: var(--lcd-bg); margin-bottom: 0.8rem; overflow: hidden; }
+  .progress i { display: block; height: 100%; width: 0%; background: var(--primary); }
+  .row { margin-bottom: 0.6rem; }
+  .row label { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
+  .row label span:last-child { color: var(--foreground); }
+  input[type='range'] { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: var(--line-strong); outline: none; }
+  input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 11px; height: 11px; background: var(--primary); cursor: pointer; border-radius: 0; }
+  input[type='range']::-moz-range-thumb { width: 11px; height: 11px; background: var(--primary); border: none; cursor: pointer; border-radius: 0; }
+  .hint { margin-top: 0.6rem; font-size: 0.55rem; line-height: 1.5; color: color-mix(in srgb, var(--muted) 80%, transparent); }
+
+  @media (max-width: 720px) {
+    .menu, .lcd { display: none; }
+    .hud { left: 0.5rem; right: 0.5rem; width: auto; bottom: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ══ 1. HERO (in front) ══════════════════════════════════════ -->
+  <div class="hero-track" id="heroTrack">
+    <div class="hero-sticky">
+      <div class="hero-panel" id="heroPanel" data-phase="open">
+        <header class="chrome">
+          <div class="brand"><i class="mark"></i><span>ADITYA HIMAWAN</span><small>FRONTEND SESSION</small></div>
+          <nav class="menu">
+            <a href="#">Projects</a><a href="#">Notes</a><a href="#">Bookmarks</a><a href="#about">About</a>
+          </nav>
+          <span class="lcd"><small>STAGE</small><b id="stageRead">ARRANGEMENT</b></span>
+          <div class="transport">
+            <button class="tbtn" id="stopBtn" title="Back to start">■</button>
+            <button class="tbtn play" title="Play">▶</button>
+            <span class="lcd"><small>BAR</small><b id="barRead">001:01</b></span>
+            <span class="lcd"><small>LOCAL</small><b id="clock">--:--</b></span>
+          </div>
+        </header>
+
+        <div class="ruler">
+          <span>Session</span><span>Signal</span><span>Interface</span><span>Systems</span><span>Profile</span>
+        </div>
+
+        <div class="lanes">
+          <div class="lane-stack" id="laneStack">
+            <div class="lane lane-name" id="laneName">
+              <div class="clip clip-name">Aditya Himawan</div>
+            </div>
+            <div class="lane" data-support>
+              <div class="clip" style="width: 34%">SIGNAL / WEB AUDIO</div>
+              <div class="clip" style="width: 18%">RACK-01</div>
+            </div>
+            <div class="lane lane-profile" id="laneProfile">
+              <div class="clip clip-profile" id="profileClip">
+                <span class="p-label"><i class="p-dot"></i>PROFILE</span>
+                <span class="p-meta">12 YRS · BUILDING FOR THE WEB</span>
+              </div>
+            </div>
+            <div class="lane" data-support>
+              <div class="clip" style="width: 24%">DESIGN SYSTEM</div>
+              <div class="clip" style="width: 30%">PERFORMANCE</div>
+            </div>
+            <div class="lane" data-support>
+              <div class="clip" style="width: 18%">MOTION</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="playhead"></div>
+
+        <div class="mixer" aria-hidden="true">
+          <div class="meter"></div><div class="meter"></div><div class="meter"></div>
+          <div class="meter"></div><div class="meter"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 2. ABOUT (behind the hero) ══════════════════════════════ -->
+  <section class="about" id="about">
+    <div class="about-inner">
+      <p class="eyebrow">About — <b>02</b> / the rules become the work</p>
+      <h2 class="title">The rules become the work.</h2>
+      <p class="lede">
+        I build interfaces where the constraint is the composition. Every element on this
+        page is derived from real data — a clip's width is how much of the craft it covers,
+        a ruler tick is a stage of production, a meter is a live signal. Nothing here is
+        decoration that happens to look technical.
+      </p>
+
+      <div class="chapters">
+        <article class="chapter">
+          <h3>Signal</h3>
+          <p>Interaction is an instrument. Inputs are read, state is audible, and the interface responds on the frame the reader acts — not the frame after.</p>
+        </article>
+        <article class="chapter">
+          <h3>Systems</h3>
+          <p>Tokens, primitives, and a single motion vocabulary. One number drives a whole surface, so the parts cannot drift apart from each other.</p>
+        </article>
+        <article class="chapter">
+          <h3>Craft</h3>
+          <p>Motion is spent, never sprayed. Every transition has a reason and a measured cost, and it reverses frame-for-frame on the way back up.</p>
+        </article>
+      </div>
+
+      <p class="outro">The session folds down to the <b>profile</b>, the profile steps aside — and the work is already there.</p>
+    </div>
+  </section>
+
+  <!-- ══ 3. HUD ═════════════════════════════════════════════════ -->
+  <aside class="hud">
+    <h4>Lane focus → About <button id="resetBtn">RESET</button></h4>
+    <div class="readout">
+      <span>PHASE <b id="phaseRead">OPEN</b></span>
+      <span>p <b id="pRead">0.00</b></span>
+    </div>
+    <div class="readout" style="color:var(--muted)">
+      <span>PROFILE LANE <b id="laneRead">20%</b></span>
+      <span>OTHERS <b id="othersRead">80%</b></span>
+    </div>
+    <div class="progress"><i id="pBar"></i></div>
+
+    <div class="row">
+      <label><span>lane fold</span><span id="vFold">1.00</span></label>
+      <input type="range" id="fold" min="0" max="1" step="0.02" value="1" />
+    </div>
+    <div class="row">
+      <label><span>collapse scale</span><span id="vScale">0.78</span></label>
+      <input type="range" id="minScale" min="0.4" max="1" step="0.01" value="0.78" />
+    </div>
+    <div class="row">
+      <label><span>corner radius</span><span id="vCorner">22px</span></label>
+      <input type="range" id="corner" min="0" max="56" step="1" value="22" />
+    </div>
+    <div class="row">
+      <label><span>upward lift</span><span id="vLift">6%</span></label>
+      <input type="range" id="lift" min="0" max="22" step="1" value="6" />
+    </div>
+    <div class="row">
+      <label><span>mid opacity</span><span id="vDim">0.60</span></label>
+      <input type="range" id="dim" min="0" max="1" step="0.01" value="0.6" />
+    </div>
+    <div class="row">
+      <label><span>blur at end</span><span id="vBlur">3px</span></label>
+      <input type="range" id="blur" min="0" max="10" step="0.5" value="3" />
+    </div>
+    <div class="row">
+      <label><span>about settle-in</span><span id="vSettle">0.04</span></label>
+      <input type="range" id="settle" min="0" max="0.12" step="0.01" value="0.04" />
+    </div>
+    <p class="hint">Scroll. The other lanes fold away and PROFILE takes the track area — then the panel itself shrinks and dissolves, uncovering About, which was behind it all along. Drag “lane fold” to 0 to see the flat version.</p>
+  </aside>
+
+<script>
+  /* ============================================================
+     One number, p (0 → 1). Everything is a pure function of it,
+     so reverse scroll reproduces the forward pass exactly.
+
+     Two things happen in sequence, and they overlap on purpose:
+       1. the LANES fold — non-profile lanes collapse to zero and
+          fade, PROFILE expands to fill the track area;
+       2. the PANEL collapses — scale down, round off, dissolve.
+     ============================================================ */
+  (function () {
+    var panel = document.getElementById('heroPanel')
+    var about = document.getElementById('about')
+    var stack = document.getElementById('laneStack')
+    var laneName = document.getElementById('laneName')
+    var laneProfile = document.getElementById('laneProfile')
+    var profileClip = document.getElementById('profileClip')
+    var supports = Array.prototype.slice.call(document.querySelectorAll('[data-support]'))
+
+    var phaseRead = document.getElementById('phaseRead')
+    var pRead = document.getElementById('pRead')
+    var pBar = document.getElementById('pBar')
+    var laneRead = document.getElementById('laneRead')
+    var othersRead = document.getElementById('othersRead')
+
+    var cfg = {
+      fold: 1,
+      minScale: 0.78,
+      corner: 22,
+      lift: 6,
+      dim: 0.6,
+      blur: 3,
+      settle: 0.04,
+    }
+
+    var clamp = function (v, lo, hi) { return Math.min(hi, Math.max(lo, v)) }
+    var easeOut = function (t) { return 1 - Math.pow(1 - t, 3) }
+    var smooth = function (t) { return t * t * (3 - 2 * t) }
+
+    // Lane weights at rest. PROFILE's share is `PROFILE_SHARE`; the other
+    // lanes split the rest by weight (the name lane is the tallest). Derived
+    // from the actual lane count so adding a track cannot silently break it.
+    var PROFILE_SHARE = 0.2
+    var NAME_WEIGHT = 1.5
+    var SUPPORT_WEIGHT = 1.0
+    var nSupports = supports.length
+    var nLanes = 1 + nSupports + 1
+    var OTHERS_WEIGHT = NAME_WEIGHT + nSupports * SUPPORT_WEIGHT
+    var GAP0 = 8                      // px between lanes at rest
+
+    var lastPhase = ''
+    function setPhase(name) {
+      if (name === lastPhase) return
+      lastPhase = name
+      panel.dataset.phase = name
+      phaseRead.textContent = name.toUpperCase()
+    }
+
+    var ticking = false
+    function render() {
+      ticking = false
+      var vh = window.innerHeight
+      var y = window.scrollY || window.pageYOffset
+
+      // The transition window, in viewport heights. It finishes before the
+      // hero's track unpins (160svh), so the hero is gone before it could
+      // ever slide up over About.
+      var start = vh * 0.72
+      var end = vh * 1.42
+      var p = clamp((y - start) / (end - start), 0, 1)
+
+      var e = easeOut(p)
+      var s = smooth(p)
+
+      // ── 1. THE LANES ────────────────────────────────────────
+      // `fold` is how far the non-profile lanes collapse (1 = all the way).
+      var fold = clamp(p * cfg.fold, 0, 1)
+      var foldE = smooth(fold)
+
+      var H = stack.clientHeight
+      var gap = GAP0 * (1 - foldE)
+      var avail = Math.max(0, H - (nLanes - 1) * gap)
+
+      var othersTotal = avail * (1 - PROFILE_SHARE) * (1 - foldE)
+      var profileH = avail - othersTotal
+
+      var nameH = othersTotal * (NAME_WEIGHT / OTHERS_WEIGHT)
+      var supportH = othersTotal * (SUPPORT_WEIGHT / OTHERS_WEIGHT)
+
+      // Lanes fade a touch faster than they shrink, so a collapsing lane is
+      // already ghosting out before it reaches zero height.
+      var othersOpacity = clamp(1 - fold / 0.8, 0, 1)
+
+      stack.style.gap = gap + 'px'
+      laneName.style.height = nameH + 'px'
+      laneName.style.opacity = String(othersOpacity)
+      for (var i = 0; i < supports.length; i += 1) {
+        supports[i].style.height = supportH + 'px'
+        supports[i].style.opacity = String(othersOpacity)
+      }
+      laneProfile.style.height = profileH + 'px'
+
+      // The PROFILE clip stretches to the full width and brightens as it takes
+      // the frame — it is the one element that grows, so it carries the beat.
+      var clipW = 46 + 54 * foldE
+      profileClip.style.width = clipW + '%'
+      profileClip.style.boxShadow =
+        '0 0 ' + (44 * foldE).toFixed(0) + 'px rgba(255,90,31,' + (0.22 * foldE).toFixed(2) + ')'
+      profileClip.style.fontSize = (0.68 + 0.5 * foldE).toFixed(3) + 'rem'
+
+      // ── 2. THE PANEL ────────────────────────────────────────
+      var scale = 1 + (cfg.minScale - 1) * e
+      var lift = cfg.lift * e
+      var radius = cfg.corner * e
+      // Two-stage fade: 1 → dim → 0, so the panel is fully gone as the
+      // collapse lands.
+      var midT = clamp((p - 0.5) / 0.35, 0, 1)
+      var tailT = clamp((p - 0.85) / 0.15, 0, 1)
+      var opacity = (1 + (cfg.dim - 1) * midT) * (1 - tailT)
+      var blur = cfg.blur * easeOut(clamp((p - 0.5) / 0.5, 0, 1))
+
+      panel.style.transform = 'translate3d(0,' + (-lift) + '%,0) scale(' + scale + ')'
+      panel.style.borderRadius = radius + 'px'
+      panel.style.opacity = String(opacity)
+      panel.style.filter = blur > 0.01 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none'
+      panel.style.boxShadow = radius > 0.5
+        ? '0 ' + (18 * e).toFixed(0) + 'px ' + (60 * e).toFixed(0) + 'px rgba(0,0,0,' + (0.55 * e).toFixed(2) + ')'
+        : 'none'
+
+      // ── 3. ABOUT COMING FORWARD ─────────────────────────────
+      var aboutScale = 1 + cfg.settle * (1 - s)
+      about.style.transform = 'scale(' + aboutScale.toFixed(4) + ')'
+
+      // ── readouts ──
+      var profilePct = avail > 0 ? Math.round((profileH / avail) * 100) : 0
+      laneRead.textContent = profilePct + '%'
+      othersRead.textContent = (100 - profilePct) + '%'
+      pRead.textContent = p.toFixed(2)
+      pBar.style.width = (p * 100).toFixed(1) + '%'
+      setPhase(p <= 0.001 ? 'open' : p < 0.45 ? 'focusing' : p < 0.99 ? 'collapsing' : 'revealed')
+      document.getElementById('stageRead').textContent = p < 0.5 ? 'ARRANGEMENT' : 'PROFILE'
+      document.getElementById('barRead').textContent =
+        '001:' + String(1 + Math.round(p * 58)).padStart(2, '0')
+    }
+
+    function onScroll() {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(render)
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', render)
+    requestAnimationFrame(render)
+
+    function tick() {
+      document.getElementById('clock').textContent =
+        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+    tick()
+    setInterval(tick, 30000)
+
+    document.getElementById('stopBtn').addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+
+    function bind(id, key, out, fmt) {
+      var el = document.getElementById(id)
+      var label = document.getElementById(out)
+      var apply = function () {
+        cfg[key] = parseFloat(el.value)
+        label.textContent = fmt ? fmt(el.value) : el.value
+        render()
+      }
+      el.addEventListener('input', apply)
+      apply()
+    }
+    bind('fold', 'fold', 'vFold', function (v) { return Number(v).toFixed(2) })
+    bind('minScale', 'minScale', 'vScale', function (v) { return Number(v).toFixed(2) })
+    bind('corner', 'corner', 'vCorner', function (v) { return v + 'px' })
+    bind('lift', 'lift', 'vLift', function (v) { return v + '%' })
+    bind('dim', 'dim', 'vDim', function (v) { return Number(v).toFixed(2) })
+    bind('blur', 'blur', 'vBlur', function (v) { return v + 'px' })
+    bind('settle', 'settle', 'vSettle', function (v) { return Number(v).toFixed(2) })
+
+    document.getElementById('resetBtn').addEventListener('click', function () {
+      var defaults = { fold: 1, minScale: 0.78, corner: 22, lift: 6, dim: 0.6, blur: 3, settle: 0.04 }
+      var ids = { fold: 'fold', minScale: 'minScale', corner: 'corner', lift: 'lift', dim: 'dim', blur: 'blur', settle: 'settle' }
+      Object.keys(ids).forEach(function (k) {
+        document.getElementById(ids[k]).value = defaults[k]
+        cfg[k] = defaults[k]
+        document.getElementById(ids[k]).dispatchEvent(new Event('input'))
+      })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+  })()
+</script>
+</body>
+</html>

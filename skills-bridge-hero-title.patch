@@ -1,0 +1,1404 @@
+From 2aacf84c61e0a37cb4937e3179bbef285423c0a2 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 15 Oct 2026 07:03:04 +0000
+Subject: [PATCH] feat: About-to-Skills bridge scene and a larger, waveform
+ hero name
+
+Bridge (replaces the signal divider between About and Skills)
+- pinned scene: the About's sheet carries a sentence; the sampler, cassette and
+  record from the About's chapters fly in; the Skills' room opens from the
+  sheet's centre as an iris; the devices dock into three rack slots labelled
+  FRONTEND / APP + DATA / DELIVERY + INFRA (real MIXER_DATA text); cables run
+  out of the bottom into the Skills controller
+- pure, tested frame maths; one hook, writes custom properties and transforms
+  on small nodes only; static composition for phones, reduced motion, no script
+- removed section-signaldivider and its scroll timeline
+
+Hero name
+- one line instead of two (ceiling 96px -> 176px; 8.7vw), weight 800
+- letters rise out of per-word masks on load, then swell on a phase-shifted
+  wave so the name reads as the waveform behind it; reduced motion disables
+- accessible name via aria-label; letters aria-hidden
+---
+ .../arrangement/arrangement-clip.tsx          |  35 +-
+ .../arrangement/arrangement.module.css        |  80 +++-
+ .../components/bridge/skills-bridge-frame.ts  | 198 ++++++++++
+ .../bridge/skills-bridge.module.css           | 374 ++++++++++++++++++
+ .../components/bridge/skills-bridge.tsx       | 171 ++++++++
+ .../components/bridge/use-skills-bridge.ts    | 198 ++++++++++
+ features/landing-page/rack-01/rack-01.tsx     |   5 +-
+ .../rack-01/section-signaldivider.tsx         |  69 ----
+ .../rack-01/use-rack-animations.ts            |  47 ---
+ tests/skills-bridge-frame.test.ts             |  78 ++++
+ 10 files changed, 1120 insertions(+), 135 deletions(-)
+ create mode 100644 features/landing-page/components/bridge/skills-bridge-frame.ts
+ create mode 100644 features/landing-page/components/bridge/skills-bridge.module.css
+ create mode 100644 features/landing-page/components/bridge/skills-bridge.tsx
+ create mode 100644 features/landing-page/components/bridge/use-skills-bridge.ts
+ delete mode 100644 features/landing-page/rack-01/section-signaldivider.tsx
+ create mode 100644 tests/skills-bridge-frame.test.ts
+
+diff --git a/features/landing-page/components/arrangement/arrangement-clip.tsx b/features/landing-page/components/arrangement/arrangement-clip.tsx
+index ac4509b..1731ba1 100644
+--- a/features/landing-page/components/arrangement/arrangement-clip.tsx
++++ b/features/landing-page/components/arrangement/arrangement-clip.tsx
+@@ -4,6 +4,15 @@ import styles from './arrangement.module.css'
+ 
+ const NAME_WAVE = nameWave('ADITYA HIMAWAN')
+ 
++/** Each word of the name and the index of its first letter along the line. */
++function nameWords(label: string) {
++  const words = label.split(' ')
++  return words.map((word, index) => ({
++    word,
++    start: words.slice(0, index).reduce((sum, w) => sum + w.length, 0),
++  }))
++}
++
+ /** The name's samples as a mirrored waveform path in a 0..100 x 0..100 box. */
+ const WAVE_PATH = (() => {
+   const step = 100 / (NAME_WAVE.length - 1)
+@@ -100,9 +109,29 @@ export function ArrangementClip({
+             >
+               <path d={WAVE_PATH} />
+             </svg>
+-            <h1 className={styles.clipNameTitle}>
+-              {clip.label.split(' ').map((word) => (
+-                <span key={word}>{word}</span>
++            <h1 className={styles.clipNameTitle} aria-label={clip.label}>
++              {/* The name is the brand, so it is set as a *waveform*: every
++                  letter its own bar of the wave drawn behind it. The letters
++                  rise out of their words on load, then keep a slow, phase-
++                  shifted swell, so the name reads as signal rather than as a
++                  heading. The accessible name is the label; the letters are
++                  `aria-hidden`. */}
++              {nameWords(clip.label).map(({ word, start }) => (
++                <span
++                  key={`${word}-${start}`}
++                  className={styles.nameWord}
++                  aria-hidden="true"
++                >
++                  {Array.from(word).map((char, charIndex) => (
++                    <span
++                      key={charIndex}
++                      className={styles.nameChar}
++                      style={{ '--c': start + charIndex } as CSSProperties}
++                    >
++                      {char}
++                    </span>
++                  ))}
++                </span>
+               ))}
+             </h1>
+             <span className={styles.srOnly}> — Frontend Engineer, Jakarta</span>
+diff --git a/features/landing-page/components/arrangement/arrangement.module.css b/features/landing-page/components/arrangement/arrangement.module.css
+index 02fbfaa..2f2f1fb 100644
+--- a/features/landing-page/components/arrangement/arrangement.module.css
++++ b/features/landing-page/components/arrangement/arrangement.module.css
+@@ -637,22 +637,67 @@ button.clip {
+   margin: 0;
+   padding-left: clamp(14px, 2vw, 28px);
+   font-family: var(--font-syne), sans-serif;
+-  /* The ceiling is the smaller of the width's and the lane's: two lines at
+-     0.92 line-height, inside a lane that is `--arr-lane-tall` tall less the
+-     clip's margin, its header and a little air. Width alone overflowed the
+-     lane at short viewports. */
+-  font-size: clamp(
+-    34px,
+-    min(6.5vw, calc((var(--arr-lane-tall) - 44px) / 1.86)),
+-    96px
+-  );
+-  font-weight: 700;
+-  letter-spacing: -0.035em;
+-  line-height: 0.92;
++  /* One line, not two. The name used to stack so it could fit the lane's
++     height, which capped it at ~96px; on one line the ceiling is the width
++     (fourteen letters across the viewport) or the lane's height, whichever is
++     smaller, and the name is half as large again. The name is the brand, so
++     it is the biggest thing on the page. */
++  font-size: clamp(40px, min(8.7vw, calc(var(--arr-lane-tall) - 40px)), 176px);
++  font-weight: 800;
++  letter-spacing: -0.055em;
++  line-height: 0.96;
+   text-transform: uppercase;
++  white-space: nowrap;
+ }
+-.clipNameTitle span {
+-  display: block;
++.nameWord {
++  display: inline-block;
++  /* A mask per word: the letters rise out of it. The padding and the matching
++     negative margin keep the swell and the descenders inside the clip without
++     changing the line's box. */
++  overflow: clip;
++  padding: 0.06em 0.03em 0.1em;
++  margin: -0.06em -0.03em -0.1em;
++  vertical-align: top;
++}
++.nameWord + .nameWord {
++  margin-left: 0.2em;
++}
++/* Entrance, then a swell. `translate`/`rotate` are the entrance and the
++   `transform` is the swell, so the two compose rather than fight. Both are
++   compositor-only. Each letter's phase is its index, so the swell travels
++   along the name like a wave travelling along the waveform behind it. */
++.nameChar {
++  display: inline-block;
++  transform-origin: 0 100%;
++  animation:
++    name-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) both,
++    name-swell 5200ms ease-in-out infinite;
++  animation-delay: calc(450ms + var(--c) * 45ms),
++    calc(1700ms + var(--c) * -230ms);
++}
++@keyframes name-rise {
++  from {
++    translate: 0 115%;
++    rotate: 7deg;
++  }
++  to {
++    translate: 0 0;
++    rotate: 0deg;
++  }
++}
++@keyframes name-swell {
++  0%,
++  100% {
++    transform: translateY(0) scaleY(1);
++  }
++  50% {
++    transform: translateY(-3.5%) scaleY(1.025);
++  }
++}
++@media (prefers-reduced-motion: reduce) {
++  .nameChar {
++    animation: none;
++  }
+ }
+ .srOnly {
+   position: absolute;
+@@ -1190,6 +1235,13 @@ button.clip {
+   }
+   .clipNameTitle {
+     font-size: clamp(30px, 9vw, 52px);
++    white-space: normal;
++  }
++  .nameWord {
++    display: block;
++  }
++  .nameWord + .nameWord {
++    margin-left: -0.03em;
+   }
+   .pinned {
+     position: static;
+diff --git a/features/landing-page/components/bridge/skills-bridge-frame.ts b/features/landing-page/components/bridge/skills-bridge-frame.ts
+new file mode 100644
+index 0000000..3180148
+--- /dev/null
++++ b/features/landing-page/components/bridge/skills-bridge-frame.ts
+@@ -0,0 +1,198 @@
++/**
++ * The bridge from About to Skills: pure frame maths.
++ *
++ * The About ends on a light sheet, the Skills section is a dark room, and the
++ * two used to be separated by a ticker. This scene is the thing that makes them
++ * one object. The three devices the About pinned beside its chapters (a
++ * sampler, a cassette and a record) leave the sheet, the sheet is eaten from
++ * its centre by the room, and the devices dock into three rack slots whose
++ * labels are the three groups of the stack. Cables then run from the slots out
++ * of the bottom of the scene, into the controller that the Skills section is.
++ *
++ * The pairing is the argument, so it is authored, not decorative:
++ *
++ * - INTERACTION (sampler)  ->  FRONTEND
++ * - SYSTEMS (cassette)     ->  APP + DATA
++ * - PRODUCTION (record)    ->  DELIVERY + INFRA
++ *
++ * As everywhere in this folder, this file owns every number and the DOM owns
++ * none. The hook reads a frame and writes a handful of custom properties and
++ * transforms. Nothing here knows about React, GSAP or the stylesheet.
++ */
++
++export type BridgeDeviceKind = 'sampler' | 'cassette' | 'vinyl'
++
++type Pose = {
++  /** % of the stage. */
++  x: number
++  y: number
++  scale: number
++  rx: number
++  ry: number
++  rz: number
++}
++
++export type BridgeDeviceSpec = {
++  id: BridgeDeviceKind
++  /** Where it enters from, off the sheet. */
++  start: Pose
++  /** Where it hovers while the sheet is being eaten. */
++  hover: Pose
++  /** The slot it docks into, face on. */
++  dock: Pose
++  /** Sway at the hover, px at the base stage width. */
++  sway: number
++  swayPhase: number
++}
++
++export const BRIDGE_PHASES = {
++  /** The statement arrives, word by word, and the devices fly in. */
++  arrive: [0, 0.28],
++  /** The room opens from the centre of the sheet. */
++  iris: [0.3, 0.58],
++  /** The rack slots appear inside the room. */
++  rack: [0.46, 0.62],
++  /** Each device docks; the next one starts a little after the last. */
++  dock: [0.5, 0.76],
++  dockStagger: 0.05,
++  /** A cable is drawn out of a slot only once that slot's device has docked. */
++  cables: [0.78, 0.9],
++  cableStagger: 0.05,
++  /** The caption comes up last, once everything is in place. */
++  caption: [0.8, 0.92],
++} as const
++
++/** The slot row's height, % of the stage. Shared with the stylesheet. */
++export const BRIDGE_SLOT_Y = 47
++
++export const BRIDGE_DEVICES: readonly BridgeDeviceSpec[] = [
++  {
++    id: 'sampler',
++    start: { x: 4, y: 128, scale: 1.05, rx: 62, ry: -40, rz: -16 },
++    hover: { x: 11, y: 72, scale: 1.55, rx: 36, ry: 24, rz: -8 },
++    dock: { x: 20, y: BRIDGE_SLOT_Y, scale: 1.9, rx: 0, ry: 0, rz: 0 },
++    sway: 14,
++    swayPhase: 0,
++  },
++  {
++    id: 'cassette',
++    start: { x: 96, y: 118, scale: 1.05, rx: -34, ry: 46, rz: 14 },
++    hover: { x: 89, y: 24, scale: 1.55, rx: -18, ry: -26, rz: 6 },
++    dock: { x: 50, y: BRIDGE_SLOT_Y, scale: 2, rx: 0, ry: 0, rz: 0 },
++    sway: 12,
++    swayPhase: 2.1,
++  },
++  {
++    id: 'vinyl',
++    start: { x: 70, y: 134, scale: 1, rx: 74, ry: 18, rz: 20 },
++    hover: { x: 88, y: 76, scale: 1.6, rx: 48, ry: -14, rz: 24 },
++    dock: { x: 80, y: BRIDGE_SLOT_Y, scale: 1.95, rx: 0, ry: 0, rz: 0 },
++    sway: 16,
++    swayPhase: 4.2,
++  },
++] as const
++
++export type BridgeDeviceFrame = {
++  id: BridgeDeviceKind
++  /** px from the stage's top-left. */
++  x: number
++  y: number
++  scale: number
++  opacity: number
++  rx: number
++  ry: number
++  rz: number
++  /** 0 until the device has docked, then 1: the slot's LED. */
++  lit: number
++  /** 0..1, how much of this device's cable is drawn. */
++  cable: number
++}
++
++export type BridgeFrame = {
++  progress: number
++  /** 0..1 clock for the statement's words. */
++  statement: number
++  /** The room's radius, % of the stage diagonal. */
++  iris: number
++  rack: number
++  caption: number
++  devices: BridgeDeviceFrame[]
++}
++
++const clamp = (value: number, min: number, max: number) =>
++  Math.min(max, Math.max(min, value))
++const finite = (value: number, fallback: number) =>
++  Number.isFinite(value) ? value : fallback
++const lerp = (from: number, to: number, t: number) => from + (to - from) * t
++const phase = (p: number, [start, end]: readonly [number, number]) =>
++  clamp((p - start) / Math.max(1e-6, end - start), 0, 1)
++const easeOut = (t: number) => 1 - (1 - t) ** 3
++const easeInOut = (t: number) =>
++  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
++/** `-0` is a real number and a real CSS token; never write one. */
++const zero = (value: number) => (Object.is(value, -0) ? 0 : value)
++
++export function bridgeFrame(
++  progress: number,
++  stageWidth: number,
++  stageHeight: number,
++): BridgeFrame {
++  const p = clamp(finite(progress, 0), 0, 1)
++  const width = Math.max(1, finite(stageWidth, 1440))
++  const height = Math.max(1, finite(stageHeight, 900))
++  const unit = clamp(width / 1440, 0.7, 1.3)
++
++  const arrive = easeOut(phase(p, BRIDGE_PHASES.arrive))
++  const devices = BRIDGE_DEVICES.map((spec, index): BridgeDeviceFrame => {
++    const dockWindow: [number, number] = [
++      BRIDGE_PHASES.dock[0] + index * BRIDGE_PHASES.dockStagger,
++      BRIDGE_PHASES.dock[1] + index * BRIDGE_PHASES.dockStagger,
++    ]
++    const dock = easeInOut(phase(p, dockWindow))
++    const cableWindow: [number, number] = [
++      BRIDGE_PHASES.cables[0] + index * BRIDGE_PHASES.cableStagger,
++      BRIDGE_PHASES.cables[1] + index * BRIDGE_PHASES.cableStagger,
++    ]
++
++    const pose = (key: keyof Pose) => {
++      const flown = lerp(spec.start[key], spec.hover[key], arrive)
++      return lerp(flown, spec.dock[key], dock)
++    }
++
++    // The hover is alive until it is told to dock: a sway that dies with `dock`
++    // so the device arrives still, not mid-wobble.
++    const sway =
++      Math.sin(p * Math.PI * 2 * 1.4 + spec.swayPhase) *
++      spec.sway *
++      unit *
++      (1 - dock) *
++      arrive
++
++    return {
++      id: spec.id,
++      x: zero((pose('x') / 100) * width + sway),
++      y: zero((pose('y') / 100) * height),
++      scale: pose('scale') * unit,
++      opacity: smoothIn(p / 0.05),
++      rx: zero(pose('rx') + (1 - dock) * arrive * 18 * Math.sin(p * 9 + index)),
++      ry: zero(pose('ry') + (1 - dock) * arrive * 22 * Math.sin(p * 7 + index)),
++      rz: zero(pose('rz')),
++      lit: smoothIn((dock - 0.9) / 0.1),
++      cable: phase(p, cableWindow),
++    }
++  })
++
++  return {
++    progress: p,
++    statement: phase(p, BRIDGE_PHASES.arrive),
++    iris: zero(easeInOut(phase(p, BRIDGE_PHASES.iris)) * 104),
++    rack: phase(p, BRIDGE_PHASES.rack),
++    caption: phase(p, BRIDGE_PHASES.caption),
++    devices,
++  }
++}
++
++function smoothIn(t: number) {
++  const c = clamp(t, 0, 1)
++  return c * c * (3 - 2 * c)
++}
+diff --git a/features/landing-page/components/bridge/skills-bridge.module.css b/features/landing-page/components/bridge/skills-bridge.module.css
+new file mode 100644
+index 0000000..a042417
+--- /dev/null
++++ b/features/landing-page/components/bridge/skills-bridge.module.css
+@@ -0,0 +1,374 @@
++/* The bridge from About to Skills.
++
++   Two layouts share one DOM, selected by the same media query the hook gates
++   on (`use-skills-bridge.ts`):
++
++   - The BASE rules are the static composition, and they are a finished page:
++     the sentence, three devices, three labelled slots, a caption. It is what a
++     phone, a reduced-motion visitor and a page with no script get.
++   - The `@media (motion)` block at the bottom turns it into the pinned scene:
++     the stage sticks, the sheet and the room overlap, the room is masked by an
++     iris, and the devices fly.
++
++   The script writes only custom properties and transforms on small nodes.
++   Every default below is the *resting* value, so with the script absent the
++   scene is at its end, not its start. */
++
++.bridge {
++  --dev-body: #e7e2d8;
++  --dev-body-deep: #cfc9bc;
++  --dev-edge: rgb(20 20 20 / 0.34);
++  --dev-lcd: color-mix(in srgb, var(--signal-orange, #ff5a1f) 32%, #e7e2d8);
++  position: relative;
++  color: var(--room-ink, #f1eee5);
++  background: var(--room-base, #14161a);
++  padding: clamp(4rem, 9vw, 8rem) clamp(1.25rem, 5vw, 5rem);
++}
++
++.stage {
++  display: grid;
++  gap: clamp(1.5rem, 4vw, 3rem);
++  max-width: 80rem;
++  margin-inline: auto;
++}
++
++/* ── The sheet and its sentence ──────────────────────────── */
++
++.sheet {
++  order: 1;
++}
++
++.statement {
++  --s: 1;
++  max-width: 13ch;
++  margin: 0;
++  font-family: var(--font-syne), sans-serif;
++  font-size: clamp(2.6rem, 8vw, 7.2rem);
++  font-weight: 750;
++  line-height: 0.96;
++  letter-spacing: -0.045em;
++  text-wrap: balance;
++}
++
++.sw {
++  display: inline-block;
++  overflow: clip;
++  padding-bottom: 0.14em;
++  margin-bottom: -0.14em;
++  vertical-align: top;
++}
++
++.swIn {
++  display: inline-block;
++  --k: clamp(0, (var(--s) * (var(--n) + 2) - var(--i)) / 2, 1);
++  translate: 0 calc((1 - var(--k)) * 112%);
++  rotate: calc((1 - var(--k)) * 5deg);
++  transform-origin: 0 100%;
++}
++
++/* ── The devices ─────────────────────────────────────────── */
++
++.devices {
++  order: 2;
++  display: grid;
++  grid-template-columns: repeat(3, minmax(0, 1fr));
++  perspective: 1100px;
++  pointer-events: none;
++  /* Device parts read `--foreground` / `--background` / `--primary`; pinned
++     here so the hardware is the same cream chassis in either theme. */
++  --foreground: #1d1e1c;
++  --background: #e7e2d8;
++  --primary: var(--signal-orange, #ff5a1f);
++}
++
++.anchor {
++  --o: 1;
++  position: relative;
++  height: 9.5rem;
++  transform-style: preserve-3d;
++}
++
++.bob,
++.rot,
++.fit {
++  position: absolute;
++  left: 50%;
++  top: 50%;
++  width: 0;
++  height: 0;
++  transform-style: preserve-3d;
++}
++
++.rot {
++  transform: rotateX(-14deg) rotateY(20deg);
++}
++
++.fit {
++  left: 0;
++  top: 0;
++  transform: scale(1.2);
++}
++
++/* ── The room: caption, slots and cables ─────────────────── */
++
++.room {
++  order: 3;
++  display: grid;
++  gap: clamp(1.25rem, 3vw, 2rem);
++}
++
++.rack {
++  --rack: 1;
++  display: grid;
++  grid-template-columns: repeat(3, minmax(0, 1fr));
++  gap: clamp(0.75rem, 2vw, 1.5rem);
++}
++
++.slot {
++  --lit: 1;
++  display: grid;
++  align-content: start;
++  gap: 0.75rem;
++  padding: clamp(0.9rem, 1.6vw, 1.4rem);
++  border: 1px solid rgb(255 255 255 / 0.16);
++  border-radius: 10px;
++  background: linear-gradient(180deg, rgb(255 255 255 / 0.05), transparent 40%),
++    rgb(255 255 255 / 0.025);
++}
++
++.slotHead {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  gap: 0.75rem;
++}
++
++.slotLabel {
++  font-family: var(--font-geist-mono), monospace;
++  font-size: clamp(0.66rem, 0.85vw, 0.78rem);
++  letter-spacing: 0.16em;
++  text-transform: uppercase;
++  color: var(--room-ink, #f1eee5);
++}
++
++.led {
++  width: 8px;
++  height: 8px;
++  border-radius: 50%;
++  background: color-mix(
++    in srgb,
++    var(--signal-orange, #ff5a1f) calc(var(--lit, 1) * 100%),
++    #3a3d3a
++  );
++}
++
++.slotChannels {
++  margin: 0;
++  font-family: var(--font-geist-mono), monospace;
++  font-size: clamp(0.64rem, 0.8vw, 0.74rem);
++  line-height: 1.6;
++  letter-spacing: 0.06em;
++  color: var(--room-ink-muted, #b6b3a9);
++}
++
++.cables {
++  display: none;
++}
++
++.caption {
++  margin: 0;
++  font-family: var(--font-geist-mono), monospace;
++  font-size: 0.72rem;
++  letter-spacing: 0.16em;
++  text-transform: uppercase;
++  color: var(--room-ink-muted, #b6b3a9);
++}
++
++.caption b {
++  margin-left: 0.8em;
++  font-weight: 500;
++  color: var(--signal-orange, #ff5a1f);
++}
++
++@media (max-width: 768px) {
++  .rack {
++    grid-template-columns: minmax(0, 1fr);
++  }
++  .anchor {
++    height: 6.5rem;
++  }
++  .fit {
++    transform: scale(0.8);
++  }
++}
++
++/* ── The pinned scene ────────────────────────────────────── */
++
++@media (min-width: 769px) and (min-height: 600px) and (prefers-reduced-motion: no-preference) {
++  /* Just over two viewports: one is the stage, the rest is the scene's travel.
++     It is the cost of the transition, so it is kept as short as the choreography
++     allows. */
++  .bridge {
++    height: 230svh;
++    padding: 0;
++    background: var(--background);
++  }
++
++  .stage {
++    position: sticky;
++    top: 0;
++    display: block;
++    height: 100svh;
++    max-width: none;
++    overflow: clip;
++  }
++
++  .sheet {
++    position: absolute;
++    inset: 0;
++    display: grid;
++    place-items: center;
++    color: var(--foreground);
++    background:
++      linear-gradient(
++          color-mix(in srgb, var(--foreground) 6%, transparent) 1px,
++          transparent 1px
++        )
++        0 0 / 48px 48px,
++      linear-gradient(
++          90deg,
++          color-mix(in srgb, var(--foreground) 6%, transparent) 1px,
++          transparent 1px
++        )
++        0 0 / 48px 48px,
++      var(--background);
++  }
++
++  .statement {
++    --s: 0;
++    text-align: center;
++    margin-top: -6svh;
++  }
++
++  /* The room is the Skills' own ground, and it is revealed by an iris from the
++     middle of the sheet. The radius is a number written per frame; the mask is
++     the only thing that repaints. */
++  .room {
++    --r: 0;
++    position: absolute;
++    inset: 0;
++    display: block;
++    background:
++      radial-gradient(
++        circle at 10% 15%,
++        rgba(46, 63, 92, 0.34),
++        transparent 28%
++      ),
++      linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px) 0
++        0 / 32px 32px,
++      var(--room-base, #14161a);
++    -webkit-mask-image: radial-gradient(
++      circle at 50% 44%,
++      #000 calc(var(--r, 0) * 1%),
++      transparent calc(var(--r, 0) * 1% + 0.6%)
++    );
++    mask-image: radial-gradient(
++      circle at 50% 44%,
++      #000 calc(var(--r, 0) * 1%),
++      transparent calc(var(--r, 0) * 1% + 0.6%)
++    );
++  }
++
++  .rack {
++    --rack: 0;
++    position: absolute;
++    inset: 0;
++    display: block;
++  }
++
++  .slot {
++    --lit: 0;
++    position: absolute;
++    left: var(--sx);
++    top: var(--sy);
++    width: min(27vw, 22.5rem);
++    height: min(46svh, 21rem);
++    grid-template-rows: auto 1fr auto;
++    opacity: var(--rack, 0);
++    transform: translate(-50%, -50%) scale(calc(0.94 + 0.06 * var(--rack, 0)));
++  }
++
++  .slotChannels {
++    align-self: end;
++  }
++
++  .cables {
++    display: block;
++    position: absolute;
++    inset: 0;
++    width: 100%;
++    height: 100%;
++    pointer-events: none;
++  }
++
++  .cable,
++  .cableGlow {
++    fill: none;
++    stroke-dasharray: 1;
++    vector-effect: non-scaling-stroke;
++    stroke-linecap: round;
++  }
++
++  .cable {
++    stroke: var(--signal-orange, #ff5a1f);
++    stroke-width: 2px;
++  }
++
++  .cableGlow {
++    stroke: var(--signal-orange, #ff5a1f);
++    stroke-width: 8px;
++    opacity: 0.16;
++  }
++
++  .caption {
++    --k: 0;
++    position: absolute;
++    left: 50%;
++    top: clamp(4.5rem, 11svh, 7rem);
++    white-space: nowrap;
++    opacity: var(--k, 0);
++    translate: -50% calc((1 - var(--k, 0)) * 10px);
++  }
++
++  .devices {
++    position: absolute;
++    inset: 0;
++    display: block;
++    perspective-origin: 50% 46%;
++  }
++
++  .anchor {
++    --o: 0;
++    position: absolute;
++    left: 0;
++    top: 0;
++    width: 0;
++    height: 0;
++    will-change: transform;
++  }
++
++  .bob {
++    left: 0;
++    top: 0;
++  }
++
++  .rot {
++    left: 0;
++    top: 0;
++    transform: none;
++  }
++
++  .fit {
++    transform: none;
++  }
++}
+diff --git a/features/landing-page/components/bridge/skills-bridge.tsx b/features/landing-page/components/bridge/skills-bridge.tsx
+new file mode 100644
+index 0000000..f462658
+--- /dev/null
++++ b/features/landing-page/components/bridge/skills-bridge.tsx
+@@ -0,0 +1,171 @@
++'use client'
++
++import { Fragment, useRef, type CSSProperties } from 'react'
++
++import { MIXER_DATA } from '../../constants'
++import { Device } from '../bench/bench-device-layer'
++import { BRIDGE_DEVICES, BRIDGE_SLOT_Y } from './skills-bridge-frame'
++import styles from './skills-bridge.module.css'
++import { useSkillsBridge } from './use-skills-bridge'
++
++const STATEMENT = 'Every rule needs an instrument.'
++const STATEMENT_WORDS = STATEMENT.split(' ')
++
++/** Slot x, % of the stage. The docks in `skills-bridge-frame.ts` match these. */
++const SLOT_X = [20, 50, 80] as const
++
++/** How many channel names a slot prints before it says how many more. */
++const SHOWN = 4
++
++/**
++ * The bridge between the About and the Skills.
++ *
++ * ## What it is
++ *
++ * A pinned scene. On the About's own sheet a sentence arrives and three
++ * devices fly in; the Skills' room opens from the middle of the sheet like an
++ * iris; the devices dock into three rack slots labelled with the three groups
++ * of the stack; cables run out of the bottom of the scene. See
++ * `skills-bridge-frame.ts` for why those three devices and those three slots.
++ *
++ * ## What the DOM guarantees
++ *
++ * The slots (group names and the technologies in them) are real text in
++ * ordinary flow, so the section says the same thing with the script absent,
++ * with reduced motion, and on a phone, where it is a static composition: the
++ * sentence, three devices, three labelled slots. The devices, cables and
++ * caption are decoration and `aria-hidden`.
++ *
++ * Nothing in the DOM here is positioned by the script except transforms and
++ * custom properties; see `use-skills-bridge.ts`.
++ */
++export function SkillsBridge() {
++  const root = useRef<HTMLElement>(null)
++  useSkillsBridge(root)
++
++  return (
++    <section
++      ref={root}
++      className={styles.bridge}
++      aria-label="From practice to toolkit"
++    >
++      <div className={styles.stage} data-bridge-stage>
++        <div className={styles.sheet}>
++          <p
++            className={styles.statement}
++            data-bridge-statement
++            style={{ '--n': STATEMENT_WORDS.length } as CSSProperties}
++          >
++            {STATEMENT_WORDS.map((word, index) => (
++              <Fragment key={`${word}-${index}`}>
++                <span className={styles.sw}>
++                  <span
++                    className={styles.swIn}
++                    style={{ '--i': index } as CSSProperties}
++                  >
++                    {word}
++                  </span>
++                </span>{' '}
++              </Fragment>
++            ))}
++          </p>
++        </div>
++
++        <div className={styles.room} data-bridge-room>
++          <div className={styles.rack} data-bridge-rack>
++            {MIXER_DATA.map((group, index) => (
++              <div
++                key={group.id}
++                className={styles.slot}
++                data-bridge-slot
++                style={
++                  {
++                    '--sx': `${SLOT_X[index]}%`,
++                    '--sy': `${BRIDGE_SLOT_Y}%`,
++                  } as CSSProperties
++                }
++              >
++                <div className={styles.slotHead}>
++                  <span className={styles.slotLabel}>{group.label}</span>
++                  <i className={styles.led} aria-hidden="true" />
++                </div>
++                <p className={styles.slotChannels}>
++                  {group.channels
++                    .slice(0, SHOWN)
++                    .map((channel) => channel.name)
++                    .join(' · ')}
++                  {group.channels.length > SHOWN
++                    ? ` · +${group.channels.length - SHOWN}`
++                    : ''}
++                </p>
++              </div>
++            ))}
++          </div>
++
++          <svg
++            className={styles.cables}
++            data-bridge-cables
++            viewBox="0 0 100 100"
++            preserveAspectRatio="none"
++            aria-hidden="true"
++          >
++            {CABLES.map((d, index) => (
++              <Fragment key={d}>
++                <path
++                  className={styles.cableGlow}
++                  d={d}
++                  pathLength={1}
++                  style={{
++                    strokeDashoffset: `calc(1 - var(--c${index}, 1))`,
++                  }}
++                />
++                <path
++                  className={styles.cable}
++                  d={d}
++                  pathLength={1}
++                  style={{
++                    strokeDashoffset: `calc(1 - var(--c${index}, 1))`,
++                  }}
++                />
++              </Fragment>
++            ))}
++          </svg>
++
++          <p className={styles.caption} data-bridge-caption aria-hidden="true">
++            03 / Toolkit <b>routing three devices to stack control</b>
++          </p>
++        </div>
++
++        <div className={styles.devices} data-bridge-devices aria-hidden="true">
++          {BRIDGE_DEVICES.map((spec) => (
++            <span
++              key={spec.id}
++              className={styles.anchor}
++              data-bridge-device={spec.id}
++            >
++              <span className={styles.bob}>
++                <span className={styles.rot} data-bridge-rot={spec.id}>
++                  <span className={styles.fit}>
++                    <Device kind={spec.id} />
++                  </span>
++                </span>
++              </span>
++            </span>
++          ))}
++        </div>
++      </div>
++    </section>
++  )
++}
++
++/**
++ * The cables, in the room's own 100 x 100 space (`preserveAspectRatio="none"`,
++ * with non-scaling strokes). Each leaves the bottom of its slot and the three
++ * meet on one bus that runs off the bottom of the scene, which is where the
++ * Skills' controller begins.
++ */
++const CABLES = [
++  `M${SLOT_X[0]} ${BRIDGE_SLOT_Y + 25} C${SLOT_X[0]} 88, 50 80, 50 101`,
++  `M${SLOT_X[1]} ${BRIDGE_SLOT_Y + 25} L50 101`,
++  `M${SLOT_X[2]} ${BRIDGE_SLOT_Y + 25} C${SLOT_X[2]} 88, 50 80, 50 101`,
++] as const
+diff --git a/features/landing-page/components/bridge/use-skills-bridge.ts b/features/landing-page/components/bridge/use-skills-bridge.ts
+new file mode 100644
+index 0000000..661fa40
+--- /dev/null
++++ b/features/landing-page/components/bridge/use-skills-bridge.ts
+@@ -0,0 +1,198 @@
++'use client'
++
++import { useEffect, type RefObject } from 'react'
++
++import {
++  BRIDGE_DEVICES,
++  bridgeFrame,
++  type BridgeFrame,
++} from './skills-bridge-frame'
++
++/**
++ * The one media query the scene gates on, written out here and in
++ * `skills-bridge.module.css`: wide enough, tall enough, motion allowed. A
++ * viewport that fails any of them gets the static composition from both.
++ */
++const BRIDGE_QUERY =
++  '(min-width: 769px) and (min-height: 600px) and (prefers-reduced-motion: no-preference)'
++
++type Gsap = (typeof import('gsap'))['gsap']
++type ScrollTriggerStatic =
++  (typeof import('gsap/ScrollTrigger'))['ScrollTrigger']
++
++/**
++ * The bridge's motion: one pinned trigger, one pure frame, a handful of writes.
++ *
++ * The shape is the one `use-bench-motion.ts` established and it is kept on
++ * purpose. Dependencies are imported inside the activation path, so a phone or
++ * a reduced-motion visitor never pays for them. There is no ticker and no
++ * smoother here: the page's single Lenis instance owns the scroll position.
++ * Every write is a transform or a custom property on one small node, never on
++ * the section, so a scroll tick restyles a few nodes rather than the page.
++ * Everything written is unwritten on teardown, so a resize across the
++ * breakpoint leaves the static composition exactly as the stylesheet drew it.
++ */
++export function useSkillsBridge(root: RefObject<HTMLElement | null>) {
++  useEffect(() => {
++    const element = root.current
++    if (!element) return
++
++    const query = window.matchMedia(BRIDGE_QUERY)
++    let disposed = false
++    let token = 0
++    let teardown: (() => void) | null = null
++
++    const activate = async () => {
++      if (disposed || teardown) return
++      const mine = ++token
++
++      let gsap: Gsap
++      let ScrollTrigger: ScrollTriggerStatic
++      try {
++        ;[{ gsap }, { ScrollTrigger }] = await Promise.all([
++          import('gsap'),
++          import('gsap/ScrollTrigger'),
++        ])
++      } catch (error) {
++        console.error('Skills bridge: dependencies failed to load', error)
++        return
++      }
++      if (disposed || mine !== token || root.current !== element) return
++
++      gsap.registerPlugin(ScrollTrigger)
++      const stop = startBridge({ ScrollTrigger, element })
++      if (disposed || mine !== token || root.current !== element) {
++        stop()
++        return
++      }
++      teardown = stop
++    }
++
++    const sync = () => {
++      if (query.matches) {
++        void activate()
++        return
++      }
++      token += 1
++      teardown?.()
++      teardown = null
++    }
++
++    sync()
++    query.addEventListener('change', sync)
++
++    return () => {
++      disposed = true
++      token += 1
++      query.removeEventListener('change', sync)
++      teardown?.()
++      teardown = null
++    }
++  }, [root])
++}
++
++function startBridge({
++  ScrollTrigger,
++  element,
++}: {
++  ScrollTrigger: ScrollTriggerStatic
++  element: HTMLElement
++}): () => void {
++  const stage = element.querySelector<HTMLElement>('[data-bridge-stage]')
++  const statement = element.querySelector<HTMLElement>(
++    '[data-bridge-statement]',
++  )
++  const room = element.querySelector<HTMLElement>('[data-bridge-room]')
++  const rack = element.querySelector<HTMLElement>('[data-bridge-rack]')
++  const caption = element.querySelector<HTMLElement>('[data-bridge-caption]')
++  const cables = element.querySelector<SVGElement>('[data-bridge-cables]')
++  const slots = Array.from(
++    element.querySelectorAll<HTMLElement>('[data-bridge-slot]'),
++  )
++
++  const anchors: HTMLElement[] = []
++  const rots: HTMLElement[] = []
++  for (const device of BRIDGE_DEVICES) {
++    const anchor = element.querySelector<HTMLElement>(
++      `[data-bridge-device="${device.id}"]`,
++    )
++    const rot = element.querySelector<HTMLElement>(
++      `[data-bridge-rot="${device.id}"]`,
++    )
++    if (anchor) anchors.push(anchor)
++    if (rot) rots.push(rot)
++  }
++
++  if (
++    !stage ||
++    !statement ||
++    !room ||
++    !rack ||
++    !caption ||
++    !cables ||
++    slots.length !== BRIDGE_DEVICES.length ||
++    anchors.length !== BRIDGE_DEVICES.length ||
++    rots.length !== BRIDGE_DEVICES.length
++  ) {
++    console.error(
++      'Skills bridge: markup is incomplete; leaving the static flow',
++    )
++    return () => {}
++  }
++
++  let width = 1440
++  let height = 900
++  const measure = () => {
++    const box = stage.getBoundingClientRect()
++    width = box.width || 1440
++    height = box.height || 900
++  }
++
++  const render = (frame: BridgeFrame) => {
++    statement.style.setProperty('--s', String(frame.statement))
++    room.style.setProperty('--r', String(frame.iris))
++    rack.style.setProperty('--rack', String(frame.rack))
++    caption.style.setProperty('--k', String(frame.caption))
++
++    frame.devices.forEach((device, index) => {
++      anchors[index].style.transform =
++        `translate3d(${device.x}px, ${device.y}px, 0) scale(${device.scale})`
++      anchors[index].style.setProperty('--o', String(device.opacity))
++      rots[index].style.transform =
++        `rotateX(${device.rx}deg) rotateY(${device.ry}deg) rotateZ(${device.rz}deg)`
++      slots[index].style.setProperty('--lit', String(device.lit))
++      cables.style.setProperty(`--c${index}`, String(device.cable))
++    })
++  }
++
++  measure()
++  const trigger = ScrollTrigger.create({
++    trigger: element,
++    start: 'top top',
++    end: 'bottom bottom',
++    invalidateOnRefresh: true,
++    onRefreshInit: measure,
++    onRefresh: (self) => render(bridgeFrame(self.progress, width, height)),
++    onUpdate: (self) => render(bridgeFrame(self.progress, width, height)),
++  })
++  render(bridgeFrame(trigger.progress, width, height))
++
++  return () => {
++    trigger.kill()
++    statement.style.removeProperty('--s')
++    room.style.removeProperty('--r')
++    rack.style.removeProperty('--rack')
++    caption.style.removeProperty('--k')
++    anchors.forEach((anchor) => {
++      anchor.style.transform = ''
++      anchor.style.removeProperty('--o')
++    })
++    rots.forEach((rot) => {
++      rot.style.transform = ''
++    })
++    slots.forEach((slot) => slot.style.removeProperty('--lit'))
++    for (let index = 0; index < BRIDGE_DEVICES.length; index += 1) {
++      cables.style.removeProperty(`--c${index}`)
++    }
++  }
++}
+diff --git a/features/landing-page/rack-01/rack-01.tsx b/features/landing-page/rack-01/rack-01.tsx
+index acb6eb3..ef1c36f 100644
+--- a/features/landing-page/rack-01/rack-01.tsx
++++ b/features/landing-page/rack-01/rack-01.tsx
+@@ -6,10 +6,10 @@ import { Work } from '../work/work'
+ import type { ArchiveRepo } from '@/features/projects/lib/github'
+ import { ArrangementHero } from '../components/arrangement/arrangement-hero'
+ import { BenchAbout } from '../components/bench/bench-about'
++import { SkillsBridge } from '../components/bridge/skills-bridge'
+ import { CableDivider } from './section-cabledivider'
+ import { Contact } from './section-contact'
+ import { Experience } from './section-experience'
+-import { SignalDivider } from './section-signaldivider'
+ import { Skills } from './section-skills'
+ import styles from './rack-01.module.css'
+ import { SEAM_SVH } from '../constants/seam'
+@@ -66,7 +66,8 @@ export default function Rack01LandingPage({
+           is that signal leaving the device behind — a sheet of graph paper
+           arriving over the machine with the constraints already on it. */}
+       <BenchAbout />
+-      <SignalDivider />
++      {/* The About's three devices dock into the Skills' three groups. */}
++      <SkillsBridge />
+       <Skills />
+       <CableDivider />
+       <Experience selected={experienceIndex} setSelected={setExperienceIndex} />
+diff --git a/features/landing-page/rack-01/section-signaldivider.tsx b/features/landing-page/rack-01/section-signaldivider.tsx
+deleted file mode 100644
+index 2a320a9..0000000
+--- a/features/landing-page/rack-01/section-signaldivider.tsx
++++ /dev/null
+@@ -1,69 +0,0 @@
+-'use client'
+-
+-import styles from './rack-01.module.css'
+-import {
+-  ArrowDownRight,
+-  ArrowUpRight,
+-  Mail,
+-  Pause,
+-  Play,
+-  Square,
+-} from 'lucide-react'
+-import { Screw } from '@/components/ui/screw'
+-import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
+-import { SectionHeading } from './section-heading'
+-export function SignalDivider() {
+-  const topStory = 'Frontend systems / clear interfaces.'
+-  const bottomStory = 'React / Next.js / product work.'
+-
+-  return (
+-    <section
+-      className={styles.signalDivider}
+-      aria-label="Frontend systems dock alongside the production stack."
+-    >
+-      <div className={styles.signalDividerStage}>
+-        <div
+-          className={`${styles.signalDividerLane} ${styles.signalDividerLaneTop}`}
+-          aria-hidden="true"
+-        >
+-          <div
+-            className={`${styles.signalDividerRail} ${styles.signalDividerTopRail}`}
+-          >
+-            {Array.from({ length: 8 }, (_, groupIndex) => (
+-              <span
+-                className={styles.signalDividerTrackGroup}
+-                key={`top-story-${groupIndex}`}
+-              >
+-                <span className={styles.signalDividerPhrase}>{topStory}</span>
+-              </span>
+-            ))}
+-          </div>
+-        </div>
+-
+-        <div className={styles.signalDock} aria-hidden="true">
+-          <span className={styles.signalDockRule} />
+-        </div>
+-
+-        <div
+-          className={`${styles.signalDividerLane} ${styles.signalDividerLaneBottom}`}
+-          aria-hidden="true"
+-        >
+-          <div
+-            className={`${styles.signalDividerRail} ${styles.signalDividerBottomRail}`}
+-          >
+-            {Array.from({ length: 8 }, (_, groupIndex) => (
+-              <span
+-                className={styles.signalDividerTrackGroup}
+-                key={`bottom-story-${groupIndex}`}
+-              >
+-                <span className={styles.signalDividerPhrase}>
+-                  {bottomStory}
+-                </span>
+-              </span>
+-            ))}
+-          </div>
+-        </div>
+-      </div>
+-    </section>
+-  )
+-}
+diff --git a/features/landing-page/rack-01/use-rack-animations.ts b/features/landing-page/rack-01/use-rack-animations.ts
+index 7c06ac2..3e1284d 100644
+--- a/features/landing-page/rack-01/use-rack-animations.ts
++++ b/features/landing-page/rack-01/use-rack-animations.ts
+@@ -510,53 +510,6 @@ export function useRackAnimations({
+           }
+         })
+ 
+-        const dividerDockRule = rootRef.current?.querySelector<HTMLElement>(
+-          `.${styles.signalDockRule}`,
+-        )
+-        const dividerTopRail = rootRef.current?.querySelector<HTMLElement>(
+-          `.${styles.signalDividerTopRail}`,
+-        )
+-        const dividerBottomRail = rootRef.current?.querySelector<HTMLElement>(
+-          `.${styles.signalDividerBottomRail}`,
+-        )
+-
+-        if (dividerTopRail && dividerBottomRail && dividerDockRule) {
+-          const horizontalTravel = () =>
+-            window.innerWidth < 769
+-              ? Math.min(22, window.innerWidth * 0.055)
+-              : Math.min(48, window.innerWidth * 0.035)
+-
+-          gsap
+-            .timeline({
+-              scrollTrigger: {
+-                trigger: `.${styles.signalDivider}`,
+-                start: 'top 85%',
+-                end: 'bottom 15%',
+-                scrub: 0.8,
+-                invalidateOnRefresh: true,
+-              },
+-              defaults: { ease: 'none' },
+-            })
+-            .fromTo(
+-              dividerTopRail,
+-              { x: () => -horizontalTravel() },
+-              { x: 0, duration: 0.7, force3D: true },
+-              0,
+-            )
+-            .fromTo(
+-              dividerBottomRail,
+-              { x: () => horizontalTravel() },
+-              { x: 0, duration: 0.7, force3D: true },
+-              0,
+-            )
+-            .fromTo(
+-              dividerDockRule,
+-              { scaleX: 0.18, opacity: 0.5 },
+-              { scaleX: 1, opacity: 0.82, duration: 0.52 },
+-              0.22,
+-            )
+-        }
+-
+         const cableMaleHalf = rootRef.current?.querySelector<HTMLElement>(
+           `.${styles.cableMaleHalf}`,
+         )
+diff --git a/tests/skills-bridge-frame.test.ts b/tests/skills-bridge-frame.test.ts
+new file mode 100644
+index 0000000..9484e49
+--- /dev/null
++++ b/tests/skills-bridge-frame.test.ts
+@@ -0,0 +1,78 @@
++import {
++  BRIDGE_DEVICES,
++  BRIDGE_PHASES,
++  bridgeFrame,
++} from '@/features/landing-page/components/bridge/skills-bridge-frame'
++
++describe('bridgeFrame', () => {
++  it('starts on the light sheet and ends with the room fully open', () => {
++    const start = bridgeFrame(0, 1440, 900)
++    const end = bridgeFrame(1, 1440, 900)
++    expect(start.iris).toBe(0)
++    expect(start.rack).toBe(0)
++    expect(end.iris).toBeGreaterThanOrEqual(100)
++    expect(end.rack).toBe(1)
++    expect(end.caption).toBe(1)
++  })
++
++  it('opens the room only after the sentence has arrived', () => {
++    expect(BRIDGE_PHASES.iris[0]).toBeGreaterThanOrEqual(
++      BRIDGE_PHASES.arrive[1],
++    )
++    expect(bridgeFrame(BRIDGE_PHASES.arrive[1], 1440, 900).statement).toBe(1)
++  })
++
++  it('docks every device into its slot, face on and lit, at the end', () => {
++    const end = bridgeFrame(1, 1440, 900)
++    end.devices.forEach((device, index) => {
++      const dock = BRIDGE_DEVICES[index].dock
++      expect(device.x).toBeCloseTo((dock.x / 100) * 1440, 5)
++      expect(device.y).toBeCloseTo((dock.y / 100) * 900, 5)
++      expect(device.rx).toBeCloseTo(0, 5)
++      expect(device.ry).toBeCloseTo(0, 5)
++      expect(device.lit).toBe(1)
++      expect(device.cable).toBe(1)
++    })
++  })
++
++  it('keeps the devices off the sheet until they have started flying in', () => {
++    expect(
++      bridgeFrame(0, 1440, 900).devices.every((d) => d.opacity === 0),
++    ).toBe(true)
++  })
++
++  it('draws a cable only after its device has docked', () => {
++    for (let p = 0; p <= 1; p += 0.01) {
++      for (const device of bridgeFrame(p, 1440, 900).devices) {
++        if (device.cable > 0) expect(device.lit).toBeGreaterThan(0)
++      }
++    }
++  })
++
++  it('never writes NaN, Infinity or negative zero', () => {
++    for (const progress of [NaN, -1, 0, 0.4, 1, 2, Infinity]) {
++      const frame = bridgeFrame(progress, NaN, NaN)
++      const values = [
++        frame.statement,
++        frame.iris,
++        frame.rack,
++        frame.caption,
++        ...frame.devices.flatMap((d) => [
++          d.x,
++          d.y,
++          d.scale,
++          d.opacity,
++          d.rx,
++          d.ry,
++          d.rz,
++          d.lit,
++          d.cable,
++        ]),
++      ]
++      for (const value of values) {
++        expect(Number.isFinite(value)).toBe(true)
++        expect(Object.is(value, -0)).toBe(false)
++      }
++    }
++  })
++})
+-- 
+2.43.0
+

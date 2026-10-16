@@ -1,0 +1,2306 @@
+From f2a8af08eab413d7df1363012dda5cd3a404e6c3 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 15 Oct 2026 11:59:06 +0000
+Subject: [PATCH] feat: three.js glass devices, black-hole/warp bridge, hero
+ name fits
+
+Hero
+- the name is measured and scaled to fit its clip (--name-fit), at every zoom
+
+Glass devices (three.js)
+- sampler, cassette, player, knob and record modelled as single rounded solids
+  with a clearcoated frosted shell, dark rim and opaque internals showing through
+- one shared off-screen renderer and environment; each device copies its frame
+  into its own canvas; drawn only when visible and posed
+- scroll hooks pose them through a three-free registry; CSS solids remain as
+  the fallback (no WebGL, failed import) and the tilt falls back to CSS
+- used for the About's flying devices, the chapters and the bridge
+
+Bridge v2
+- keeps the sentence and the iris; adds a lit accretion rim
+- devices spiral into the hole; the stack streams out as a word-and-ring
+  tunnel; three frosted plates (real group text) settle out of the depth
+- cables and docking removed; static composition unchanged in structure
+---
+ .../arrangement/arrangement-clip.tsx          |  36 +-
+ .../arrangement/arrangement.module.css        |   7 +-
+ .../components/arrangement/name-title.tsx     |  90 +++
+ .../bench/bench-chapters.module.css           |   4 +
+ .../components/bench/bench-chapters.tsx       |   3 +-
+ .../components/bench/bench-device-layer.tsx   |   6 +-
+ .../components/bench/use-bench-motion.ts      |  43 +-
+ .../components/bridge/skills-bridge-frame.ts  | 236 ++++--
+ .../bridge/skills-bridge.module.css           | 143 +++-
+ .../components/bridge/skills-bridge.tsx       | 103 ++-
+ .../components/bridge/use-skills-bridge.ts    |  99 ++-
+ .../components/glass/glass-device.module.css  |  45 ++
+ .../components/glass/glass-device.tsx         | 100 +++
+ .../components/glass/glass-devices.ts         | 683 ++++++++++++++++++
+ .../components/glass/glass-registry.ts        |  80 ++
+ tests/skills-bridge-frame.test.ts             |  90 ++-
+ 16 files changed, 1509 insertions(+), 259 deletions(-)
+ create mode 100644 features/landing-page/components/arrangement/name-title.tsx
+ create mode 100644 features/landing-page/components/glass/glass-device.module.css
+ create mode 100644 features/landing-page/components/glass/glass-device.tsx
+ create mode 100644 features/landing-page/components/glass/glass-devices.ts
+ create mode 100644 features/landing-page/components/glass/glass-registry.ts
+
+diff --git a/features/landing-page/components/arrangement/arrangement-clip.tsx b/features/landing-page/components/arrangement/arrangement-clip.tsx
+index 1731ba1..d4a431a 100644
+--- a/features/landing-page/components/arrangement/arrangement-clip.tsx
++++ b/features/landing-page/components/arrangement/arrangement-clip.tsx
+@@ -1,18 +1,10 @@
+ import type { CSSProperties } from 'react'
+ import { nameWave, type ArrangementClip as ClipData } from './arrangement-data'
++import { NameTitle } from './name-title'
+ import styles from './arrangement.module.css'
+ 
+ const NAME_WAVE = nameWave('ADITYA HIMAWAN')
+ 
+-/** Each word of the name and the index of its first letter along the line. */
+-function nameWords(label: string) {
+-  const words = label.split(' ')
+-  return words.map((word, index) => ({
+-    word,
+-    start: words.slice(0, index).reduce((sum, w) => sum + w.length, 0),
+-  }))
+-}
+-
+ /** The name's samples as a mirrored waveform path in a 0..100 x 0..100 box. */
+ const WAVE_PATH = (() => {
+   const step = 100 / (NAME_WAVE.length - 1)
+@@ -109,31 +101,7 @@ export function ArrangementClip({
+             >
+               <path d={WAVE_PATH} />
+             </svg>
+-            <h1 className={styles.clipNameTitle} aria-label={clip.label}>
+-              {/* The name is the brand, so it is set as a *waveform*: every
+-                  letter its own bar of the wave drawn behind it. The letters
+-                  rise out of their words on load, then keep a slow, phase-
+-                  shifted swell, so the name reads as signal rather than as a
+-                  heading. The accessible name is the label; the letters are
+-                  `aria-hidden`. */}
+-              {nameWords(clip.label).map(({ word, start }) => (
+-                <span
+-                  key={`${word}-${start}`}
+-                  className={styles.nameWord}
+-                  aria-hidden="true"
+-                >
+-                  {Array.from(word).map((char, charIndex) => (
+-                    <span
+-                      key={charIndex}
+-                      className={styles.nameChar}
+-                      style={{ '--c': start + charIndex } as CSSProperties}
+-                    >
+-                      {char}
+-                    </span>
+-                  ))}
+-                </span>
+-              ))}
+-            </h1>
++            <NameTitle label={clip.label} />
+             <span className={styles.srOnly}> — Frontend Engineer, Jakarta</span>
+           </>
+         ) : clip.notes ? (
+diff --git a/features/landing-page/components/arrangement/arrangement.module.css b/features/landing-page/components/arrangement/arrangement.module.css
+index 2f2f1fb..de7257c 100644
+--- a/features/landing-page/components/arrangement/arrangement.module.css
++++ b/features/landing-page/components/arrangement/arrangement.module.css
+@@ -639,8 +639,9 @@ button.clip {
+   font-family: var(--font-syne), sans-serif;
+   /* One line, not two. The name used to stack so it could fit the lane's
+      height, which capped it at ~96px; on one line the ceiling is the width
+-     (fourteen letters across the viewport) or the lane's height, whichever is
+-     smaller, and the name is half as large again. The name is the brand, so
++     (fourteen letters across the clip) or the lane's height, whichever is
++     smaller, and `--name-fit` (written by `NameTitle`, which measures) takes
++     off whatever the display face's width still will not fit. The name is the brand, so
+      it is the biggest thing on the page. */
+   font-size: clamp(40px, min(8.7vw, calc(var(--arr-lane-tall) - 40px)), 176px);
+   font-weight: 800;
+@@ -1234,7 +1235,7 @@ button.clip {
+     min-height: 44px;
+   }
+   .clipNameTitle {
+-    font-size: clamp(30px, 9vw, 52px);
++    font-size: calc(clamp(30px, 9vw, 52px) * var(--name-fit, 1));
+     white-space: normal;
+   }
+   .nameWord {
+diff --git a/features/landing-page/components/arrangement/name-title.tsx b/features/landing-page/components/arrangement/name-title.tsx
+new file mode 100644
+index 0000000..4a32447
+--- /dev/null
++++ b/features/landing-page/components/arrangement/name-title.tsx
+@@ -0,0 +1,90 @@
++'use client'
++
++import { useEffect, useRef, type CSSProperties } from 'react'
++
++import styles from './arrangement.module.css'
++
++/** Each word of the name and the index of its first letter along the line. */
++function nameWords(label: string) {
++  const words = label.split(' ')
++  return words.map((word, index) => ({
++    word,
++    start: words.slice(0, index).reduce((sum, w) => sum + w.length, 0),
++  }))
++}
++
++/**
++ * The hero's name, set to fit.
++ *
++ * The name is the brand, so it is set as large as the lane will take, and the
++ * display face it is set in (Syne ExtraBold) is among the widest type there
++ * is: a size chosen against the viewport alone overflowed the clip at some
++ * widths and was cut off at its edge. Guessing a `vw` that is safe everywhere
++ * is a guess about glyph widths that a font swap silently breaks, so this
++ * measures instead.
++ *
++ * It measures at the nominal size, then writes one number, `--name-fit`, the
++ * share of that size that fits (never above 1). The stylesheet multiplies the
++ * font size by it. Both measurements are layout widths (`offsetWidth` and
++ * `clientWidth`), which the camera's transforms do not touch, so the name fits
++ * the clip it is in at every zoom, not the clip as it is currently drawn.
++ *
++ * It re-measures when the clip resizes and when the display face has loaded,
++ * since a width measured in the fallback font is the wrong width.
++ */
++export function NameTitle({ label }: { label: string }) {
++  const title = useRef<HTMLHeadingElement>(null)
++
++  useEffect(() => {
++    const element = title.current
++    const body = element?.parentElement
++    if (!element || !body) return
++
++    const fit = () => {
++      element.style.setProperty('--name-fit', '1')
++      const style = getComputedStyle(element)
++      const padding = parseFloat(style.paddingLeft) || 0
++      // A little air on the right, so the last letter is never on the edge.
++      const available = body.clientWidth - padding - 16
++      const needed = element.scrollWidth - padding
++      const factor =
++        needed > 0 && available > 0 ? Math.min(1, available / needed) : 1
++      element.style.setProperty('--name-fit', factor.toFixed(4))
++    }
++
++    fit()
++    const observer =
++      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit)
++    observer?.observe(body)
++    void document.fonts?.ready.then(fit)
++
++    return () => observer?.disconnect()
++  }, [label])
++
++  return (
++    <h1 ref={title} className={styles.clipNameTitle} aria-label={label}>
++      {/* The name is the brand, so it is set as a *waveform*: every letter its
++          own bar of the wave drawn behind it. The letters rise out of their
++          words on load, then keep a slow, phase-shifted swell, so the name
++          reads as signal rather than as a heading. The accessible name is the
++          label; the letters are `aria-hidden`. */}
++      {nameWords(label).map(({ word, start }) => (
++        <span
++          key={`${word}-${start}`}
++          className={styles.nameWord}
++          aria-hidden="true"
++        >
++          {Array.from(word).map((char, charIndex) => (
++            <span
++              key={charIndex}
++              className={styles.nameChar}
++              style={{ '--c': start + charIndex } as CSSProperties}
++            >
++              {char}
++            </span>
++          ))}
++        </span>
++      ))}
++    </h1>
++  )
++}
+diff --git a/features/landing-page/components/bench/bench-chapters.module.css b/features/landing-page/components/bench/bench-chapters.module.css
+index 47d1fe3..748f310 100644
+--- a/features/landing-page/components/bench/bench-chapters.module.css
++++ b/features/landing-page/components/bench/bench-chapters.module.css
+@@ -167,6 +167,10 @@
+   transform: scale(var(--k));
+ }
+ 
++.stage:has([data-glass='on']) .tilt {
++  transform: none !important;
++}
++
+ .stage[data-kind='sampler'] .tilt {
+   transform: rotateX(calc(58deg - var(--p) * 46deg))
+     rotateY(calc(-36deg + var(--p) * 72deg))
+diff --git a/features/landing-page/components/bench/bench-chapters.tsx b/features/landing-page/components/bench/bench-chapters.tsx
+index d627c7f..976774e 100644
+--- a/features/landing-page/components/bench/bench-chapters.tsx
++++ b/features/landing-page/components/bench/bench-chapters.tsx
+@@ -1,6 +1,7 @@
+ import { Fragment, type CSSProperties } from 'react'
+ 
+ import type { AboutTrack } from '../../rack-01/about-copy'
++import { GlassDevice } from '../glass/glass-device'
+ import { Device } from './bench-device-layer'
+ import type { BenchDeviceKind } from './bench-devices'
+ import styles from './bench-chapters.module.css'
+@@ -72,7 +73,7 @@ export function BenchChapter({
+         <div className={styles.stage} data-kind={kind}>
+           <div className={styles.tilt}>
+             <div className={styles.scale}>
+-              <Device kind={kind} live />
++              <GlassDevice kind={kind} fallback={<Device kind={kind} live />} />
+             </div>
+           </div>
+         </div>
+diff --git a/features/landing-page/components/bench/bench-device-layer.tsx b/features/landing-page/components/bench/bench-device-layer.tsx
+index b3199e4..86c1e49 100644
+--- a/features/landing-page/components/bench/bench-device-layer.tsx
++++ b/features/landing-page/components/bench/bench-device-layer.tsx
+@@ -1,5 +1,6 @@
+ import type { CSSProperties } from 'react'
+ 
++import { GlassDevice } from '../glass/glass-device'
+ import { BENCH_DEVICES, type BenchDeviceSpec } from './bench-devices'
+ import styles from './bench-devices.module.css'
+ 
+@@ -175,7 +176,10 @@ export function BenchDevices() {
+             }
+           >
+             <span className={styles.rot} data-bench-device-rot={spec.id}>
+-              <Device kind={spec.kind} />
++              <GlassDevice
++                kind={spec.kind}
++                fallback={<Device kind={spec.kind} />}
++              />
+             </span>
+           </span>
+         </span>
+diff --git a/features/landing-page/components/bench/use-bench-motion.ts b/features/landing-page/components/bench/use-bench-motion.ts
+index 3b36722..95edd00 100644
+--- a/features/landing-page/components/bench/use-bench-motion.ts
++++ b/features/landing-page/components/bench/use-bench-motion.ts
+@@ -3,6 +3,11 @@
+ import { useEffect, type RefObject } from 'react'
+ 
+ import { BENCH_CHIPS } from './bench-copy'
++import {
++  chapterPose,
++  setGlassPose,
++  type GlassKind,
++} from '../glass/glass-registry'
+ import { BENCH_DEVICES, benchDeviceFrames } from './bench-devices'
+ import {
+   BENCH_BAND_CLEARANCE,
+@@ -368,7 +373,16 @@ function startBenchMotion({
+       const rot = deviceRots[index]
+       anchor.style.transform = `translate3d(${flight.x}px, ${flight.y}px, 0) scale(${flight.scale})`
+       anchor.style.setProperty('--o', String(flight.opacity))
+-      rot.style.transform = `rotateX(${flight.rotateX}deg) rotateY(${flight.rotateY}deg) rotateZ(${flight.rotateZ}deg)`
++      const posed = setGlassPose(rot, {
++        rx: flight.rotateX,
++        ry: flight.rotateY,
++        rz: flight.rotateZ,
++        p: Math.min(1, frame.progress * 2),
++        spin: spin,
++      })
++      if (!posed) {
++        rot.style.transform = `rotateX(${flight.rotateX}deg) rotateY(${flight.rotateY}deg) rotateZ(${flight.rotateZ}deg)`
++      }
+     }
+ 
+     if (element.dataset.benchState !== frame.state) {
+@@ -544,17 +558,20 @@ function startBenchMotion({
+       start: string,
+       end: string,
+       source: HTMLElement = node,
++      also?: (progress: number) => void,
+     ) => {
+       written.push([node, name])
++      const write = (progress: number) => {
++        node.style.setProperty(name, progress.toFixed(4))
++        also?.(progress)
++      }
+       readingTriggers.push(
+         ScrollTrigger.create({
+           trigger: source,
+           start,
+           end,
+-          onRefresh: (self) =>
+-            node.style.setProperty(name, self.progress.toFixed(4)),
+-          onUpdate: (self) =>
+-            node.style.setProperty(name, self.progress.toFixed(4)),
++          onRefresh: (self) => write(self.progress),
++          onUpdate: (self) => write(self.progress),
+         }),
+       )
+     }
+@@ -564,7 +581,21 @@ function startBenchMotion({
+     )) {
+       const chapter =
+         visual.closest<HTMLElement>('[data-bench-chapter]') ?? visual
+-      bind(visual, '--p', 'top 85%', 'bottom 30%', chapter)
++      // A glass device cannot read the stylesheet's `calc()`, so the same pose
++      // is also handed to it as numbers. If there is no glass device (yet), the
++      // stylesheet's tilt is what turns.
++      const kind = visual.querySelector<HTMLElement>('[data-kind]')?.dataset
++        .kind as GlassKind | undefined
++      bind(
++        visual,
++        '--p',
++        'top 85%',
++        'bottom 30%',
++        chapter,
++        kind
++          ? (progress) => setGlassPose(visual, chapterPose(kind, progress))
++          : undefined,
++      )
+     }
+     const ticker = element.querySelector<HTMLElement>('[data-bench-ticker]')
+     if (ticker) bind(ticker, '--m', 'top bottom', 'bottom top')
+diff --git a/features/landing-page/components/bridge/skills-bridge-frame.ts b/features/landing-page/components/bridge/skills-bridge-frame.ts
+index 3180148..3246388 100644
+--- a/features/landing-page/components/bridge/skills-bridge-frame.ts
++++ b/features/landing-page/components/bridge/skills-bridge-frame.ts
+@@ -1,19 +1,26 @@
+ /**
+  * The bridge from About to Skills: pure frame maths.
+  *
+- * The About ends on a light sheet, the Skills section is a dark room, and the
+- * two used to be separated by a ticker. This scene is the thing that makes them
+- * one object. The three devices the About pinned beside its chapters (a
+- * sampler, a cassette and a record) leave the sheet, the sheet is eaten from
+- * its centre by the room, and the devices dock into three rack slots whose
+- * labels are the three groups of the stack. Cables then run from the slots out
+- * of the bottom of the scene, into the controller that the Skills section is.
++ * The About ends on a light sheet, the Skills section is a dark room, and this
++ * scene is what makes them one object. It has four beats, in this order:
+  *
+- * The pairing is the argument, so it is authored, not decorative:
++ * 1. **The sentence.** "Every rule needs an instrument." arrives on the About's
++ *    own sheet, and the three devices the About pinned beside its chapters (a
++ *    sampler, a cassette and a record) fly in around it.
++ * 2. **The hole.** The Skills' room opens from the middle of the sheet like an
++ *    iris, a black hole with a lit rim, and eats the sentence. The three
++ *    devices are drawn in: they fall toward its centre in a tightening spiral,
++ *    tumbling faster as they go, and vanish at the singularity.
++ * 3. **The stream.** Out of the hole comes the stack: every technology in the
++ *    Skills section streams past the viewer on a tunnel of rings, the way
++ *    stars do at warp. It decelerates as it arrives.
++ * 4. **The plates.** Three frosted plates settle out of the depth, one for each
++ *    group of the stack, and the scene hands over to the controller they
++ *    belong to.
+  *
+- * - INTERACTION (sampler)  ->  FRONTEND
+- * - SYSTEMS (cassette)     ->  APP + DATA
+- * - PRODUCTION (record)    ->  DELIVERY + INFRA
++ * The pairing of the About's practices with the stack's groups is the argument
++ * and is authored, not decorative: INTERACTION (sampler) is FRONTEND, SYSTEMS
++ * (cassette) is APP + DATA, PRODUCTION (record) is DELIVERY + INFRA.
+  *
+  * As everywhere in this folder, this file owns every number and the DOM owns
+  * none. The hook reads a frame and writes a handful of custom properties and
+@@ -36,57 +43,61 @@ export type BridgeDeviceSpec = {
+   id: BridgeDeviceKind
+   /** Where it enters from, off the sheet. */
+   start: Pose
+-  /** Where it hovers while the sheet is being eaten. */
++  /** Where it hovers before the hole opens. */
+   hover: Pose
+-  /** The slot it docks into, face on. */
+-  dock: Pose
+   /** Sway at the hover, px at the base stage width. */
+   sway: number
+   swayPhase: number
+ }
+ 
+ export const BRIDGE_PHASES = {
+-  /** The statement arrives, word by word, and the devices fly in. */
+-  arrive: [0, 0.28],
+-  /** The room opens from the centre of the sheet. */
+-  iris: [0.3, 0.58],
+-  /** The rack slots appear inside the room. */
+-  rack: [0.46, 0.62],
+-  /** Each device docks; the next one starts a little after the last. */
+-  dock: [0.5, 0.76],
+-  dockStagger: 0.05,
+-  /** A cable is drawn out of a slot only once that slot's device has docked. */
+-  cables: [0.78, 0.9],
+-  cableStagger: 0.05,
+-  /** The caption comes up last, once everything is in place. */
+-  caption: [0.8, 0.92],
++  /** The sentence arrives and the devices fly in. */
++  arrive: [0, 0.2],
++  /** The hole opens from the centre of the sheet. */
++  iris: [0.22, 0.5],
++  /** The devices spiral into it. Each starts a little after the last. */
++  fall: [0.26, 0.5],
++  fallStagger: 0.03,
++  /** The stream: how far the tunnel has travelled. */
++  stream: [0.34, 0.9],
++  /** The plates settle out of the depth. */
++  plates: [0.68, 0.88],
++  platesStagger: 0.04,
++  /** The caption comes up last. */
++  caption: [0.84, 0.95],
+ } as const
+ 
+-/** The slot row's height, % of the stage. Shared with the stylesheet. */
+-export const BRIDGE_SLOT_Y = 47
++/** Where the hole is, % of the stage. Shared with the stylesheet. */
++export const BRIDGE_HOLE = { x: 50, y: 44 } as const
++
++/** The plates' row, % of the stage height. Shared with the stylesheet. */
++export const BRIDGE_PLATE_Y = 60
++
++/** The perspective the depth layers are drawn through, px. Shared with the stylesheet. */
++export const BRIDGE_PERSPECTIVE = 900
++
++/** How many rings the tunnel has. */
++export const BRIDGE_RING_COUNT = 5
+ 
+ export const BRIDGE_DEVICES: readonly BridgeDeviceSpec[] = [
+   {
+     id: 'sampler',
+     start: { x: 4, y: 128, scale: 1.05, rx: 62, ry: -40, rz: -16 },
+-    hover: { x: 11, y: 72, scale: 1.55, rx: 36, ry: 24, rz: -8 },
+-    dock: { x: 20, y: BRIDGE_SLOT_Y, scale: 1.9, rx: 0, ry: 0, rz: 0 },
++    hover: { x: 14, y: 72, scale: 1.55, rx: 36, ry: 24, rz: -8 },
+     sway: 14,
+     swayPhase: 0,
+   },
+   {
+     id: 'cassette',
+     start: { x: 96, y: 118, scale: 1.05, rx: -34, ry: 46, rz: 14 },
+-    hover: { x: 89, y: 24, scale: 1.55, rx: -18, ry: -26, rz: 6 },
+-    dock: { x: 50, y: BRIDGE_SLOT_Y, scale: 2, rx: 0, ry: 0, rz: 0 },
++    hover: { x: 86, y: 22, scale: 1.55, rx: -18, ry: -26, rz: 6 },
+     sway: 12,
+     swayPhase: 2.1,
+   },
+   {
+     id: 'vinyl',
+     start: { x: 70, y: 134, scale: 1, rx: 74, ry: 18, rz: 20 },
+-    hover: { x: 88, y: 76, scale: 1.6, rx: 48, ry: -14, rz: 24 },
+-    dock: { x: 80, y: BRIDGE_SLOT_Y, scale: 1.95, rx: 0, ry: 0, rz: 0 },
++    hover: { x: 84, y: 76, scale: 1.6, rx: 48, ry: -14, rz: 24 },
+     sway: 16,
+     swayPhase: 4.2,
+   },
+@@ -102,21 +113,38 @@ export type BridgeDeviceFrame = {
+   rx: number
+   ry: number
+   rz: number
+-  /** 0 until the device has docked, then 1: the slot's LED. */
++  /** Degrees, for the reels and the record. */
++  spin: number
++}
++
++export type BridgeWordFrame = {
++  /** px from the hole's centre; z is the depth along the tunnel. */
++  x: number
++  y: number
++  z: number
++  opacity: number
++}
++
++export type BridgePlateFrame = {
++  z: number
++  opacity: number
++  /** 0 until the plate has settled, then 1: its LED. */
+   lit: number
+-  /** 0..1, how much of this device's cable is drawn. */
+-  cable: number
+ }
+ 
+ export type BridgeFrame = {
+   progress: number
+   /** 0..1 clock for the statement's words. */
+   statement: number
+-  /** The room's radius, % of the stage diagonal. */
++  /** The hole's radius, % of the stage diagonal. */
+   iris: number
+-  rack: number
++  /** 0..1, the light at the singularity. */
++  core: number
+   caption: number
+   devices: BridgeDeviceFrame[]
++  words: BridgeWordFrame[]
++  rings: { z: number; opacity: number }[]
++  plates: BridgePlateFrame[]
+ }
+ 
+ const clamp = (value: number, min: number, max: number) =>
+@@ -127,58 +155,126 @@ const lerp = (from: number, to: number, t: number) => from + (to - from) * t
+ const phase = (p: number, [start, end]: readonly [number, number]) =>
+   clamp((p - start) / Math.max(1e-6, end - start), 0, 1)
+ const easeOut = (t: number) => 1 - (1 - t) ** 3
++const easeIn = (t: number) => t * t * t
+ const easeInOut = (t: number) =>
+   t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
++const smooth = (t: number) => {
++  const c = clamp(t, 0, 1)
++  return c * c * (3 - 2 * c)
++}
+ /** `-0` is a real number and a real CSS token; never write one. */
+ const zero = (value: number) => (Object.is(value, -0) ? 0 : value)
+ 
++/** The golden angle, so the words never line up in spokes. */
++const GOLDEN = 2.399963229728653
++
++/** Where the tunnel starts and how far it travels, px of depth. */
++const TUNNEL_DEPTH = 2800
++const TUNNEL_TRAVEL = 3000
++
+ export function bridgeFrame(
+   progress: number,
+   stageWidth: number,
+   stageHeight: number,
++  wordCount: number,
+ ): BridgeFrame {
+   const p = clamp(finite(progress, 0), 0, 1)
+   const width = Math.max(1, finite(stageWidth, 1440))
+   const height = Math.max(1, finite(stageHeight, 900))
++  const count = Math.max(0, Math.floor(finite(wordCount, 0)))
+   const unit = clamp(width / 1440, 0.7, 1.3)
+ 
++  const holeX = (BRIDGE_HOLE.x / 100) * width
++  const holeY = (BRIDGE_HOLE.y / 100) * height
++
+   const arrive = easeOut(phase(p, BRIDGE_PHASES.arrive))
++
+   const devices = BRIDGE_DEVICES.map((spec, index): BridgeDeviceFrame => {
+-    const dockWindow: [number, number] = [
+-      BRIDGE_PHASES.dock[0] + index * BRIDGE_PHASES.dockStagger,
+-      BRIDGE_PHASES.dock[1] + index * BRIDGE_PHASES.dockStagger,
+-    ]
+-    const dock = easeInOut(phase(p, dockWindow))
+-    const cableWindow: [number, number] = [
+-      BRIDGE_PHASES.cables[0] + index * BRIDGE_PHASES.cableStagger,
+-      BRIDGE_PHASES.cables[1] + index * BRIDGE_PHASES.cableStagger,
++    const fallWindow: [number, number] = [
++      BRIDGE_PHASES.fall[0] + index * BRIDGE_PHASES.fallStagger,
++      BRIDGE_PHASES.fall[1] + index * BRIDGE_PHASES.fallStagger * 0.5,
+     ]
++    const fall = easeIn(phase(p, fallWindow))
+ 
+-    const pose = (key: keyof Pose) => {
+-      const flown = lerp(spec.start[key], spec.hover[key], arrive)
+-      return lerp(flown, spec.dock[key], dock)
+-    }
++    const pose = (key: keyof Pose) =>
++      lerp(spec.start[key], spec.hover[key], arrive)
+ 
+-    // The hover is alive until it is told to dock: a sway that dies with `dock`
+-    // so the device arrives still, not mid-wobble.
+     const sway =
+       Math.sin(p * Math.PI * 2 * 1.4 + spec.swayPhase) *
+       spec.sway *
+       unit *
+-      (1 - dock) *
++      (1 - fall) *
+       arrive
+ 
++    // Hover position, then a polar fall about the hole: the radius shrinks to
++    // nothing while the angle keeps turning, which is what makes it a spiral
++    // and not a slide.
++    const hx = (pose('x') / 100) * width + sway
++    const hy = (pose('y') / 100) * height
++    const dx = hx - holeX
++    const dy = hy - holeY
++    const radius = Math.hypot(dx, dy) * (1 - fall) ** 1.25
++    const angle = Math.atan2(dy, dx) + fall * Math.PI * 3.4
++
+     return {
+       id: spec.id,
+-      x: zero((pose('x') / 100) * width + sway),
+-      y: zero((pose('y') / 100) * height),
+-      scale: pose('scale') * unit,
+-      opacity: smoothIn(p / 0.05),
+-      rx: zero(pose('rx') + (1 - dock) * arrive * 18 * Math.sin(p * 9 + index)),
+-      ry: zero(pose('ry') + (1 - dock) * arrive * 22 * Math.sin(p * 7 + index)),
+-      rz: zero(pose('rz')),
+-      lit: smoothIn((dock - 0.9) / 0.1),
+-      cable: phase(p, cableWindow),
++      x: zero(holeX + Math.cos(angle) * radius),
++      y: zero(holeY + Math.sin(angle) * radius),
++      scale: pose('scale') * unit * (1 - fall * 0.94),
++      opacity: smooth(p / 0.05) * (1 - smooth((fall - 0.8) / 0.2)),
++      rx: zero(
++        pose('rx') +
++          (1 - fall) * arrive * 18 * Math.sin(p * 9 + index) +
++          fall * 380,
++      ),
++      ry: zero(pose('ry') + (1 - fall) * arrive * 22 * Math.sin(p * 7 + index)),
++      rz: zero(pose('rz') + fall * 540),
++      spin: zero(p * 900 + fall * 720),
++    }
++  })
++
++  // The stream decelerates into its end: it arrives, it does not stop.
++  const travel = easeOut(phase(p, BRIDGE_PHASES.stream)) * TUNNEL_TRAVEL
++  const reach = Math.min(width, height) * 0.62
++
++  const words = Array.from({ length: count }, (_, index): BridgeWordFrame => {
++    const angle = index * GOLDEN
++    const fraction = (index * 0.6180339887) % 1
++    const rho = 0.3 + 0.62 * fraction
++    const z0 =
++      -TUNNEL_DEPTH + (index / Math.max(1, count)) * (TUNNEL_DEPTH - 500)
++    const z = z0 + travel
++    const far = smooth((z + 2300) / 700)
++    const near = 1 - smooth((z - 180) / 360)
++    return {
++      x: zero(Math.cos(angle) * rho * reach),
++      y: zero(Math.sin(angle) * rho * reach * 0.82),
++      z,
++      opacity: far * near * smooth(phase(p, BRIDGE_PHASES.stream) / 0.1),
++    }
++  })
++
++  const rings = Array.from({ length: BRIDGE_RING_COUNT }, (_, index) => {
++    const z =
++      -TUNNEL_DEPTH + (index / BRIDGE_RING_COUNT) * TUNNEL_DEPTH + travel
++    const far = smooth((z + 2300) / 700)
++    const near = 1 - smooth((z - 120) / 360)
++    return {
++      z,
++      opacity: far * near * smooth(phase(p, BRIDGE_PHASES.stream) / 0.1) * 0.55,
++    }
++  })
++
++  const plates = [0, 1, 2].map((index): BridgePlateFrame => {
++    const window: [number, number] = [
++      BRIDGE_PHASES.plates[0] + index * BRIDGE_PHASES.platesStagger,
++      BRIDGE_PHASES.plates[1] + index * BRIDGE_PHASES.platesStagger,
++    ]
++    const t = easeOut(phase(p, window))
++    return {
++      z: zero(-1200 * (1 - t)),
++      opacity: t,
++      lit: smooth((t - 0.9) / 0.1),
+     }
+   })
+ 
+@@ -186,13 +282,11 @@ export function bridgeFrame(
+     progress: p,
+     statement: phase(p, BRIDGE_PHASES.arrive),
+     iris: zero(easeInOut(phase(p, BRIDGE_PHASES.iris)) * 104),
+-    rack: phase(p, BRIDGE_PHASES.rack),
++    core: smooth(phase(p, [0.3, 0.6])),
+     caption: phase(p, BRIDGE_PHASES.caption),
+     devices,
++    words,
++    rings,
++    plates,
+   }
+ }
+-
+-function smoothIn(t: number) {
+-  const c = clamp(t, 0, 1)
+-  return c * c * (3 - 2 * c)
+-}
+diff --git a/features/landing-page/components/bridge/skills-bridge.module.css b/features/landing-page/components/bridge/skills-bridge.module.css
+index a042417..76c1c7e 100644
+--- a/features/landing-page/components/bridge/skills-bridge.module.css
++++ b/features/landing-page/components/bridge/skills-bridge.module.css
+@@ -118,7 +118,6 @@
+ }
+ 
+ .rack {
+-  --rack: 1;
+   display: grid;
+   grid-template-columns: repeat(3, minmax(0, 1fr));
+   gap: clamp(0.75rem, 2vw, 1.5rem);
+@@ -171,7 +170,9 @@
+   color: var(--room-ink-muted, #b6b3a9);
+ }
+ 
+-.cables {
++.core,
++.depth,
++.horizon {
+   display: none;
+ }
+ 
+@@ -280,10 +281,11 @@
+   }
+ 
+   .rack {
+-    --rack: 0;
+     position: absolute;
+     inset: 0;
+     display: block;
++    perspective: 900px;
++    perspective-origin: 50% 44%;
+   }
+ 
+   .slot {
+@@ -294,40 +296,139 @@
+     width: min(27vw, 22.5rem);
+     height: min(46svh, 21rem);
+     grid-template-rows: auto 1fr auto;
+-    opacity: var(--rack, 0);
+-    transform: translate(-50%, -50%) scale(calc(0.94 + 0.06 * var(--rack, 0)));
++    /* The script writes `opacity` and `translate` (a z offset out of the
++       depth); the centring stays in `transform`. */
++    opacity: 0;
++    transform: translate(-50%, -50%);
+   }
+ 
+   .slotChannels {
+     align-self: end;
+   }
+ 
+-  .cables {
++  /* The depth layer: every word and ring is a direct child of a perspective
++     element, so each is projected through it individually and the script can
++     place them with one translate3d. They sit at the hole's centre and are
++     moved out from there. */
++  .depth {
+     display: block;
+     position: absolute;
+     inset: 0;
+-    width: 100%;
+-    height: 100%;
++    perspective: 900px;
++    perspective-origin: 50% 44%;
+     pointer-events: none;
+   }
+ 
+-  .cable,
+-  .cableGlow {
+-    fill: none;
+-    stroke-dasharray: 1;
+-    vector-effect: non-scaling-stroke;
+-    stroke-linecap: round;
++  .word,
++  .ring {
++    position: absolute;
++    left: 50%;
++    top: 44%;
++    translate: -50% -50%;
++    opacity: 0;
++    will-change: transform, opacity;
++  }
++
++  .word {
++    font-family: var(--font-geist-mono), monospace;
++    font-size: clamp(0.95rem, 1.7vw, 1.6rem);
++    font-weight: 600;
++    letter-spacing: 0.2em;
++    text-transform: uppercase;
++    white-space: nowrap;
++    color: var(--room-ink, #f1eee5);
++  }
++
++  .word[data-group='0'] {
++    color: var(--signal-orange, #ff5a1f);
++  }
++
++  .word[data-group='2'] {
++    color: #c9a574;
++  }
++
++  .ring {
++    width: min(70vmin, 44rem);
++    aspect-ratio: 1;
++    border-radius: 50%;
++    border: 1px solid rgb(255 255 255 / 0.3);
++  }
++
++  .ring:nth-child(odd) {
++    border-color: color-mix(
++      in srgb,
++      var(--signal-orange, #ff5a1f) 55%,
++      transparent
++    );
++  }
++
++  /* The light at the singularity, behind everything in the room. */
++  .core {
++    --core: 0;
++    display: block;
++    position: absolute;
++    left: 50%;
++    top: 44%;
++    width: 52vmin;
++    aspect-ratio: 1;
++    translate: -50% -50%;
++    border-radius: 50%;
++    background: radial-gradient(
++      circle,
++      rgb(255 150 70 / 0.5),
++      rgb(255 90 31 / 0.16) 42%,
++      transparent 70%
++    );
++    opacity: var(--core, 0);
++    transform: scale(calc(0.4 + 0.6 * var(--core, 0)));
+   }
+ 
+-  .cable {
+-    stroke: var(--signal-orange, #ff5a1f);
+-    stroke-width: 2px;
++  /* The hole's rim: a lit ring and a shimmer that turns with the radius, drawn
++     on the sheet (outside the room's mask, or the mask would cut it off) at
++     the same radius the mask has. */
++  .horizon {
++    --r: 0;
++    display: block;
++    position: absolute;
++    inset: 0;
++    z-index: 2;
++    pointer-events: none;
++    opacity: clamp(0, calc((104 - var(--r, 0)) / 6), 1);
++    background: radial-gradient(
++      circle at 50% 44%,
++      transparent calc(var(--r, 0) * 1% - 2.6%),
++      rgb(255 176 110 / 0.85) calc(var(--r, 0) * 1% - 0.5%),
++      rgb(255 90 31 / 0.5) calc(var(--r, 0) * 1% + 0.3%),
++      transparent calc(var(--r, 0) * 1% + 4.5%)
++    );
+   }
+ 
+-  .cableGlow {
+-    stroke: var(--signal-orange, #ff5a1f);
+-    stroke-width: 8px;
+-    opacity: 0.16;
++  .horizon::after {
++    content: '';
++    position: absolute;
++    inset: 0;
++    background: conic-gradient(
++      from calc(var(--r, 0) * 9deg) at 50% 44%,
++      transparent,
++      rgb(255 214 170 / 0.5) 12%,
++      transparent 30%,
++      rgb(255 90 31 / 0.4) 58%,
++      transparent 78%
++    );
++    -webkit-mask-image: radial-gradient(
++      circle at 50% 44%,
++      transparent calc(var(--r, 0) * 1% - 5%),
++      #000 calc(var(--r, 0) * 1% - 0.5%),
++      #000 calc(var(--r, 0) * 1% + 0.5%),
++      transparent calc(var(--r, 0) * 1% + 5%)
++    );
++    mask-image: radial-gradient(
++      circle at 50% 44%,
++      transparent calc(var(--r, 0) * 1% - 5%),
++      #000 calc(var(--r, 0) * 1% - 0.5%),
++      #000 calc(var(--r, 0) * 1% + 0.5%),
++      transparent calc(var(--r, 0) * 1% + 5%)
++    );
+   }
+ 
+   .caption {
+diff --git a/features/landing-page/components/bridge/skills-bridge.tsx b/features/landing-page/components/bridge/skills-bridge.tsx
+index f462658..b16c970 100644
+--- a/features/landing-page/components/bridge/skills-bridge.tsx
++++ b/features/landing-page/components/bridge/skills-bridge.tsx
+@@ -4,37 +4,48 @@ import { Fragment, useRef, type CSSProperties } from 'react'
+ 
+ import { MIXER_DATA } from '../../constants'
+ import { Device } from '../bench/bench-device-layer'
+-import { BRIDGE_DEVICES, BRIDGE_SLOT_Y } from './skills-bridge-frame'
++import { GlassDevice } from '../glass/glass-device'
++import {
++  BRIDGE_DEVICES,
++  BRIDGE_PLATE_Y,
++  BRIDGE_RING_COUNT,
++} from './skills-bridge-frame'
+ import styles from './skills-bridge.module.css'
+ import { useSkillsBridge } from './use-skills-bridge'
+ 
+ const STATEMENT = 'Every rule needs an instrument.'
+ const STATEMENT_WORDS = STATEMENT.split(' ')
+ 
+-/** Slot x, % of the stage. The docks in `skills-bridge-frame.ts` match these. */
+-const SLOT_X = [20, 50, 80] as const
++/** Plate x, % of the stage. */
++const PLATE_X = [20, 50, 80] as const
+ 
+ /** How many channel names a slot prints before it says how many more. */
+ const SHOWN = 4
+ 
++/** Every technology in the Skills section, with the group it belongs to. */
++const WORDS = MIXER_DATA.flatMap((group, groupIndex) =>
++  group.channels.map((channel) => ({ name: channel.name, group: groupIndex })),
++)
++
+ /**
+  * The bridge between the About and the Skills.
+  *
+  * ## What it is
+  *
+- * A pinned scene. On the About's own sheet a sentence arrives and three
+- * devices fly in; the Skills' room opens from the middle of the sheet like an
+- * iris; the devices dock into three rack slots labelled with the three groups
+- * of the stack; cables run out of the bottom of the scene. See
+- * `skills-bridge-frame.ts` for why those three devices and those three slots.
++ * A pinned scene. On the About's own sheet a sentence arrives and three glass
++ * devices fly in; the Skills' room opens from the middle of the sheet as a
++ * black hole with a lit rim; the devices spiral into it; the stack streams out
++ * of it as a tunnel of words and rings; three frosted plates, one per group of
++ * the stack, settle out of the depth. See `skills-bridge-frame.ts` for the
++ * beats and for why those devices and those plates.
+  *
+  * ## What the DOM guarantees
+  *
+- * The slots (group names and the technologies in them) are real text in
++ * The plates (group names and the technologies in them) are real text in
+  * ordinary flow, so the section says the same thing with the script absent,
+  * with reduced motion, and on a phone, where it is a static composition: the
+- * sentence, three devices, three labelled slots. The devices, cables and
+- * caption are decoration and `aria-hidden`.
++ * sentence, three devices, three labelled plates. The devices, the tunnel, the
++ * rim and the caption are decoration and `aria-hidden`.
+  *
+  * Nothing in the DOM here is positioned by the script except transforms and
+  * custom properties; see `use-skills-bridge.ts`.
+@@ -72,6 +83,24 @@ export function SkillsBridge() {
+         </div>
+ 
+         <div className={styles.room} data-bridge-room>
++          <i className={styles.core} data-bridge-core aria-hidden="true" />
++
++          <div className={styles.depth} aria-hidden="true">
++            {Array.from({ length: BRIDGE_RING_COUNT }, (_, index) => (
++              <i key={index} className={styles.ring} data-bridge-ring />
++            ))}
++            {WORDS.map((word, index) => (
++              <span
++                key={`${word.name}-${index}`}
++                className={styles.word}
++                data-bridge-word
++                data-group={word.group}
++              >
++                {word.name}
++              </span>
++            ))}
++          </div>
++
+           <div className={styles.rack} data-bridge-rack>
+             {MIXER_DATA.map((group, index) => (
+               <div
+@@ -80,8 +109,8 @@ export function SkillsBridge() {
+                 data-bridge-slot
+                 style={
+                   {
+-                    '--sx': `${SLOT_X[index]}%`,
+-                    '--sy': `${BRIDGE_SLOT_Y}%`,
++                    '--sx': `${PLATE_X[index]}%`,
++                    '--sy': `${BRIDGE_PLATE_Y}%`,
+                   } as CSSProperties
+                 }
+               >
+@@ -102,40 +131,13 @@ export function SkillsBridge() {
+             ))}
+           </div>
+ 
+-          <svg
+-            className={styles.cables}
+-            data-bridge-cables
+-            viewBox="0 0 100 100"
+-            preserveAspectRatio="none"
+-            aria-hidden="true"
+-          >
+-            {CABLES.map((d, index) => (
+-              <Fragment key={d}>
+-                <path
+-                  className={styles.cableGlow}
+-                  d={d}
+-                  pathLength={1}
+-                  style={{
+-                    strokeDashoffset: `calc(1 - var(--c${index}, 1))`,
+-                  }}
+-                />
+-                <path
+-                  className={styles.cable}
+-                  d={d}
+-                  pathLength={1}
+-                  style={{
+-                    strokeDashoffset: `calc(1 - var(--c${index}, 1))`,
+-                  }}
+-                />
+-              </Fragment>
+-            ))}
+-          </svg>
+-
+           <p className={styles.caption} data-bridge-caption aria-hidden="true">
+             03 / Toolkit <b>routing three devices to stack control</b>
+           </p>
+         </div>
+ 
++        <i className={styles.horizon} data-bridge-horizon aria-hidden="true" />
++
+         <div className={styles.devices} data-bridge-devices aria-hidden="true">
+           {BRIDGE_DEVICES.map((spec) => (
+             <span
+@@ -146,7 +148,10 @@ export function SkillsBridge() {
+               <span className={styles.bob}>
+                 <span className={styles.rot} data-bridge-rot={spec.id}>
+                   <span className={styles.fit}>
+-                    <Device kind={spec.id} />
++                    <GlassDevice
++                      kind={spec.id}
++                      fallback={<Device kind={spec.id} />}
++                    />
+                   </span>
+                 </span>
+               </span>
+@@ -157,15 +162,3 @@ export function SkillsBridge() {
+     </section>
+   )
+ }
+-
+-/**
+- * The cables, in the room's own 100 x 100 space (`preserveAspectRatio="none"`,
+- * with non-scaling strokes). Each leaves the bottom of its slot and the three
+- * meet on one bus that runs off the bottom of the scene, which is where the
+- * Skills' controller begins.
+- */
+-const CABLES = [
+-  `M${SLOT_X[0]} ${BRIDGE_SLOT_Y + 25} C${SLOT_X[0]} 88, 50 80, 50 101`,
+-  `M${SLOT_X[1]} ${BRIDGE_SLOT_Y + 25} L50 101`,
+-  `M${SLOT_X[2]} ${BRIDGE_SLOT_Y + 25} C${SLOT_X[2]} 88, 50 80, 50 101`,
+-] as const
+diff --git a/features/landing-page/components/bridge/use-skills-bridge.ts b/features/landing-page/components/bridge/use-skills-bridge.ts
+index 661fa40..fc1e0ed 100644
+--- a/features/landing-page/components/bridge/use-skills-bridge.ts
++++ b/features/landing-page/components/bridge/use-skills-bridge.ts
+@@ -2,6 +2,7 @@
+ 
+ import { useEffect, type RefObject } from 'react'
+ 
++import { setGlassPose } from '../glass/glass-registry'
+ import {
+   BRIDGE_DEVICES,
+   bridgeFrame,
+@@ -98,27 +99,26 @@ function startBridge({
+   ScrollTrigger: ScrollTriggerStatic
+   element: HTMLElement
+ }): () => void {
+-  const stage = element.querySelector<HTMLElement>('[data-bridge-stage]')
+-  const statement = element.querySelector<HTMLElement>(
+-    '[data-bridge-statement]',
+-  )
+-  const room = element.querySelector<HTMLElement>('[data-bridge-room]')
+-  const rack = element.querySelector<HTMLElement>('[data-bridge-rack]')
+-  const caption = element.querySelector<HTMLElement>('[data-bridge-caption]')
+-  const cables = element.querySelector<SVGElement>('[data-bridge-cables]')
+-  const slots = Array.from(
+-    element.querySelectorAll<HTMLElement>('[data-bridge-slot]'),
+-  )
++  const one = <T extends Element>(selector: string) =>
++    element.querySelector<T>(selector)
++  const all = <T extends Element>(selector: string) =>
++    Array.from(element.querySelectorAll<T>(selector))
++
++  const stage = one<HTMLElement>('[data-bridge-stage]')
++  const statement = one<HTMLElement>('[data-bridge-statement]')
++  const room = one<HTMLElement>('[data-bridge-room]')
++  const core = one<HTMLElement>('[data-bridge-core]')
++  const horizon = one<HTMLElement>('[data-bridge-horizon]')
++  const caption = one<HTMLElement>('[data-bridge-caption]')
++  const words = all<HTMLElement>('[data-bridge-word]')
++  const rings = all<HTMLElement>('[data-bridge-ring]')
++  const slots = all<HTMLElement>('[data-bridge-slot]')
+ 
+   const anchors: HTMLElement[] = []
+   const rots: HTMLElement[] = []
+   for (const device of BRIDGE_DEVICES) {
+-    const anchor = element.querySelector<HTMLElement>(
+-      `[data-bridge-device="${device.id}"]`,
+-    )
+-    const rot = element.querySelector<HTMLElement>(
+-      `[data-bridge-rot="${device.id}"]`,
+-    )
++    const anchor = one<HTMLElement>(`[data-bridge-device="${device.id}"]`)
++    const rot = one<HTMLElement>(`[data-bridge-rot="${device.id}"]`)
+     if (anchor) anchors.push(anchor)
+     if (rot) rots.push(rot)
+   }
+@@ -127,10 +127,10 @@ function startBridge({
+     !stage ||
+     !statement ||
+     !room ||
+-    !rack ||
++    !core ||
++    !horizon ||
+     !caption ||
+-    !cables ||
+-    slots.length !== BRIDGE_DEVICES.length ||
++    slots.length !== 3 ||
+     anchors.length !== BRIDGE_DEVICES.length ||
+     rots.length !== BRIDGE_DEVICES.length
+   ) {
+@@ -151,37 +151,67 @@ function startBridge({
+   const render = (frame: BridgeFrame) => {
+     statement.style.setProperty('--s', String(frame.statement))
+     room.style.setProperty('--r', String(frame.iris))
+-    rack.style.setProperty('--rack', String(frame.rack))
++    horizon.style.setProperty('--r', String(frame.iris))
++    core.style.setProperty('--core', String(frame.core))
+     caption.style.setProperty('--k', String(frame.caption))
+ 
+     frame.devices.forEach((device, index) => {
+       anchors[index].style.transform =
+         `translate3d(${device.x}px, ${device.y}px, 0) scale(${device.scale})`
+       anchors[index].style.setProperty('--o', String(device.opacity))
+-      rots[index].style.transform =
+-        `rotateX(${device.rx}deg) rotateY(${device.ry}deg) rotateZ(${device.rz}deg)`
+-      slots[index].style.setProperty('--lit', String(device.lit))
+-      cables.style.setProperty(`--c${index}`, String(device.cable))
++      const posed = setGlassPose(rots[index], {
++        rx: device.rx,
++        ry: device.ry,
++        rz: device.rz,
++        p: Math.min(1, frame.progress * 2),
++        spin: device.spin,
++      })
++      if (!posed) {
++        rots[index].style.transform =
++          `rotateX(${device.rx}deg) rotateY(${device.ry}deg) rotateZ(${device.rz}deg)`
++      }
++    })
++
++    frame.words.forEach((word, index) => {
++      const node = words[index]
++      if (!node) return
++      node.style.transform = `translate3d(${word.x}px, ${word.y}px, ${word.z}px)`
++      node.style.opacity = String(word.opacity)
++    })
++    frame.rings.forEach((ring, index) => {
++      const node = rings[index]
++      if (!node) return
++      node.style.transform = `translate3d(0, 0, ${ring.z}px)`
++      node.style.opacity = String(ring.opacity)
++    })
++    frame.plates.forEach((plate, index) => {
++      slots[index].style.translate = `0 0 ${plate.z}px`
++      slots[index].style.opacity = String(plate.opacity)
++      slots[index].style.setProperty('--lit', String(plate.lit))
+     })
+   }
+ 
+   measure()
++  const draw = (progress: number) =>
++    render(bridgeFrame(progress, width, height, words.length))
++
+   const trigger = ScrollTrigger.create({
+     trigger: element,
+     start: 'top top',
+     end: 'bottom bottom',
+     invalidateOnRefresh: true,
+     onRefreshInit: measure,
+-    onRefresh: (self) => render(bridgeFrame(self.progress, width, height)),
+-    onUpdate: (self) => render(bridgeFrame(self.progress, width, height)),
++    onRefresh: (self) => draw(self.progress),
++    onUpdate: (self) => draw(self.progress),
+   })
+-  render(bridgeFrame(trigger.progress, width, height))
++  draw(trigger.progress)
+ 
+   return () => {
+     trigger.kill()
+     statement.style.removeProperty('--s')
+     room.style.removeProperty('--r')
+-    rack.style.removeProperty('--rack')
++    horizon.style.removeProperty('--r')
++    core.style.removeProperty('--core')
+     caption.style.removeProperty('--k')
+     anchors.forEach((anchor) => {
+       anchor.style.transform = ''
+@@ -190,9 +220,14 @@ function startBridge({
+     rots.forEach((rot) => {
+       rot.style.transform = ''
+     })
+-    slots.forEach((slot) => slot.style.removeProperty('--lit'))
+-    for (let index = 0; index < BRIDGE_DEVICES.length; index += 1) {
+-      cables.style.removeProperty(`--c${index}`)
++    for (const node of [...words, ...rings]) {
++      node.style.transform = ''
++      node.style.opacity = ''
+     }
++    slots.forEach((slot) => {
++      slot.style.translate = ''
++      slot.style.opacity = ''
++      slot.style.removeProperty('--lit')
++    })
+   }
+ }
+diff --git a/features/landing-page/components/glass/glass-device.module.css b/features/landing-page/components/glass/glass-device.module.css
+new file mode 100644
+index 0000000..b6e258b
+--- /dev/null
++++ b/features/landing-page/components/glass/glass-device.module.css
+@@ -0,0 +1,45 @@
++/* One glass device.
++
++   The host is the zero-size origin every device in this folder's callers is
++   built around (the anchor, the `rot` and the `fit` are all zero-size boxes the
++   device is centred on). The canvas is 208 x 156 CSS px, which is 4.16 x 3.12
++   model units at 50 px per unit, centred on that origin. */
++
++.host {
++  position: absolute;
++  left: 0;
++  top: 0;
++  width: 0;
++  height: 0;
++  transform-style: preserve-3d;
++}
++
++.fallback {
++  position: absolute;
++  left: 0;
++  top: 0;
++  width: 0;
++  height: 0;
++  transform-style: preserve-3d;
++}
++
++.canvas {
++  position: absolute;
++  left: -104px;
++  top: -78px;
++  width: 208px;
++  height: 156px;
++  display: none;
++  pointer-events: none;
++  /* The fade the callers write on the anchor. A canvas is flat, so an opacity
++     on it costs nothing and does not flatten any 3D context. */
++  opacity: var(--o, 1);
++}
++
++.host[data-glass='on'] > .canvas {
++  display: block;
++}
++
++.host[data-glass='on'] > .fallback {
++  display: none;
++}
+diff --git a/features/landing-page/components/glass/glass-device.tsx b/features/landing-page/components/glass/glass-device.tsx
+new file mode 100644
+index 0000000..2091774
+--- /dev/null
++++ b/features/landing-page/components/glass/glass-device.tsx
+@@ -0,0 +1,100 @@
++'use client'
++
++import { useEffect, useRef, type ReactNode } from 'react'
++
++import type { GlassHandle, GlassKind } from './glass-registry'
++import styles from './glass-device.module.css'
++
++/**
++ * One glass device: a canvas, and the CSS device it replaces until it is ready.
++ *
++ * The fallback is in the DOM from the first render, so a device is never blank:
++ * it is the old CSS solid until the model has loaded and drawn a first frame,
++ * and it stays the CSS solid if WebGL is unavailable or anything throws. Once a
++ * frame is on the canvas, `data-glass="on"` is set on the host and the
++ * stylesheet swaps them. That attribute is also what the chapter stylesheet
++ * asks (`:has`) before it stops applying its own CSS tilt.
++ *
++ * The model is loaded when the device first comes within a screen of the
++ * viewport, not on mount: the page has a dozen of them and most are below the
++ * fold. three.js is imported inside that path, so none of it is part of first
++ * load.
++ */
++export function GlassDevice({
++  kind,
++  fallback,
++}: {
++  kind: GlassKind
++  fallback: ReactNode
++}) {
++  const host = useRef<HTMLSpanElement>(null)
++  const canvas = useRef<HTMLCanvasElement>(null)
++
++  useEffect(() => {
++    const hostEl = host.current
++    const canvasEl = canvas.current
++    if (!hostEl || !canvasEl) return
++
++    let disposed = false
++    let handle: GlassHandle | null = null
++    let started = false
++
++    const start = async () => {
++      if (started) return
++      started = true
++      try {
++        const { attachGlass } = await import('./glass-devices')
++        if (disposed) return
++        handle = await attachGlass(canvasEl, kind)
++        if (!handle) return
++        if (disposed) {
++          handle.dispose()
++          handle = null
++          return
++        }
++        hostEl.dataset.glass = 'on'
++      } catch (error) {
++        // The CSS device stays. Nothing else is lost.
++        console.error('Glass device: could not start', error)
++      }
++    }
++
++    if (typeof IntersectionObserver === 'undefined') {
++      void start()
++      return () => {
++        disposed = true
++      }
++    }
++
++    const observer = new IntersectionObserver(
++      (entries) => {
++        if (entries.some((entry) => entry.isIntersecting)) {
++          observer.disconnect()
++          void start()
++        }
++      },
++      { rootMargin: '480px' },
++    )
++    observer.observe(hostEl)
++
++    return () => {
++      disposed = true
++      observer.disconnect()
++      handle?.dispose()
++      handle = null
++      delete hostEl.dataset.glass
++    }
++  }, [kind])
++
++  return (
++    <span ref={host} className={styles.host}>
++      <span className={styles.fallback}>{fallback}</span>
++      <canvas
++        ref={canvas}
++        className={styles.canvas}
++        data-glass-canvas=""
++        aria-hidden="true"
++      />
++    </span>
++  )
++}
+diff --git a/features/landing-page/components/glass/glass-devices.ts b/features/landing-page/components/glass/glass-devices.ts
+new file mode 100644
+index 0000000..e74a286
+--- /dev/null
++++ b/features/landing-page/components/glass/glass-devices.ts
+@@ -0,0 +1,683 @@
++import * as THREE from 'three'
++import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
++import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
++
++/**
++ * The glass devices.
++ *
++ * Five small pieces of hardware (a sampler, a cassette, a player, a knob and a
++ * record), modelled in three.js and drawn into ordinary 2D canvases, so the
++ * page can fly them, pin them and dock them with the transforms it already
++ * uses for everything else.
++ *
++ * ## Why this replaced the CSS solids
++ *
++ * The CSS devices were six rectangles placed in space. Each face had its own
++ * border and its own radius, so a tumbling device showed its sides as separate
++ * slabs that did not meet the front: nothing fused. A real model is one rounded
++ * solid, so its edge is continuous, and it can be lit: the gloss and the frost
++ * come from a clearcoat on a rough physical material under a small
++ * environment, which is how the Contact controller's pads and the Skills
++ * controller read as glass, taken off the CSS and rebuilt in 3D.
++ *
++ * ## Why it is built like this
++ *
++ * - **One renderer for everything.** A WebGL context per device would be a
++ *   dozen contexts and a dozen environment maps. There is one off-screen
++ *   renderer and one environment; each device owns a scene, renders into the
++ *   shared surface, and copies the result into its own canvas with
++ *   `drawImage`. The copy has to happen in the same task as the render, which
++ *   is why the render loop does both together and never separates them.
++ * - **Render on demand.** A device is drawn only when it is on screen and its
++ *   pose has changed. A page at rest draws nothing.
++ * - **No transmission pass.** Real transmission needs the opaque scene behind
++ *   it, and there is none: the canvas is transparent and the page is the
++ *   background. The glass is a translucent clearcoated shell (back faces, then
++ *   front faces, so a closed convex shell sorts correctly) over opaque inner
++ *   parts that show through it: the pads, the screen, the reels.
++ * - **A dark rim.** On cream paper a cream glass shell has no edge. A slightly
++ *   larger back-face shell in near-black gives every device a contour on any
++ *   ground.
++ * - **It can fail.** No WebGL, a lost context, a failed import: `attachGlass`
++ *   resolves to `null` and the CSS device it replaced is still in the DOM. The
++ *   component only hides the fallback once a first frame is on the canvas.
++ *
++ * Units: one unit is 50 CSS px at scale 1, so the sampler's 2.08 x 1.56 body is
++ * the same 104 x 78 the CSS device was, and every transform the page already
++ * applies still means what it meant.
++ */
++
++import {
++  registerGlass,
++  unregisterGlass,
++  type GlassHandle,
++  type GlassKind,
++  type GlassPose,
++} from './glass-registry'
++
++export type { GlassHandle, GlassKind, GlassPose }
++
++/** The canvas's backing size. Its CSS size is 208 x 156 (4.16 x 3.12 units). */
++export const GLASS_CANVAS = { width: 512, height: 384 } as const
++
++const ORANGE = new THREE.Color('#ff5a1f')
++const DEG = Math.PI / 180
++
++/** Looks, in one place, because they are tuned by eye and not derivable. */
++const LOOK = {
++  shellOpacity: 0.46,
++  backOpacity: 0.3,
++  rimOpacity: 0.5,
++  roughness: 0.34,
++  envIntensity: 1.25,
++  exposure: 1.05,
++} as const
++
++let shared: {
++  renderer: THREE.WebGLRenderer
++  env: THREE.Texture
++} | null = null
++let sharedFailed = false
++
++function getShared() {
++  if (shared) return shared
++  if (sharedFailed) return null
++  try {
++    const renderer = new THREE.WebGLRenderer({
++      antialias: true,
++      alpha: true,
++      powerPreference: 'low-power',
++    })
++    renderer.setPixelRatio(1)
++    renderer.setSize(GLASS_CANVAS.width, GLASS_CANVAS.height, false)
++    renderer.setClearColor(0x000000, 0)
++    renderer.toneMapping = THREE.ACESFilmicToneMapping
++    renderer.toneMappingExposure = LOOK.exposure
++    renderer.outputColorSpace = THREE.SRGBColorSpace
++
++    const pmrem = new THREE.PMREMGenerator(renderer)
++    const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
++    pmrem.dispose()
++
++    renderer.domElement.addEventListener('webglcontextlost', (event) => {
++      event.preventDefault()
++      sharedFailed = true
++      shared = null
++    })
++
++    shared = { renderer, env }
++    return shared
++  } catch {
++    sharedFailed = true
++    return null
++  }
++}
++
++/* ── Materials ───────────────────────────────────────────── */
++
++function shellMaterials() {
++  const front = new THREE.MeshPhysicalMaterial({
++    color: 0xf3efe6,
++    transparent: true,
++    opacity: LOOK.shellOpacity,
++    roughness: LOOK.roughness,
++    metalness: 0,
++    clearcoat: 1,
++    clearcoatRoughness: 0.2,
++    envMapIntensity: LOOK.envIntensity,
++    ior: 1.45,
++    depthWrite: false,
++  })
++  const back = new THREE.MeshPhysicalMaterial({
++    color: 0xd9d3c6,
++    transparent: true,
++    opacity: LOOK.backOpacity,
++    roughness: 0.5,
++    side: THREE.BackSide,
++    envMapIntensity: 0.6,
++    depthWrite: false,
++  })
++  const rim = new THREE.MeshBasicMaterial({
++    color: 0x1b1c1a,
++    transparent: true,
++    opacity: LOOK.rimOpacity,
++    side: THREE.BackSide,
++    depthWrite: false,
++  })
++  return { front, back, rim }
++}
++
++const inner = (color: number, roughness = 0.6) =>
++  new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 })
++
++const emissive = (color: number, intensity: number) =>
++  new THREE.MeshStandardMaterial({
++    color,
++    emissive: color,
++    emissiveIntensity: intensity,
++    roughness: 0.5,
++  })
++
++/**
++ * A translucent rounded shell with a dark rim: three meshes of one geometry.
++ * Draw order is explicit so the rim is behind the back faces, which are behind
++ * the front faces, which are behind nothing.
++ */
++function glassShell(
++  geometry: THREE.BufferGeometry,
++  scaleRim = 1.025,
++): THREE.Group {
++  const { front, back, rim } = shellMaterials()
++  const group = new THREE.Group()
++
++  const rimMesh = new THREE.Mesh(geometry, rim)
++  rimMesh.scale.setScalar(scaleRim)
++  rimMesh.renderOrder = 1
++  const backMesh = new THREE.Mesh(geometry, back)
++  backMesh.renderOrder = 2
++  const frontMesh = new THREE.Mesh(geometry, front)
++  frontMesh.renderOrder = 4
++
++  group.add(rimMesh, backMesh, frontMesh)
++  return group
++}
++
++function box(
++  w: number,
++  h: number,
++  d: number,
++  material: THREE.Material,
++  radius = 0.03,
++) {
++  return new THREE.Mesh(
++    new RoundedBoxGeometry(w, h, d, 3, Math.min(radius, d / 2 - 0.001)),
++    material,
++  )
++}
++
++/* ── Models ──────────────────────────────────────────────── */
++
++type Model = {
++  root: THREE.Group
++  update: (p: number, spin: number) => void
++  dispose: () => void
++}
++
++function buildSampler(): Model {
++  const root = new THREE.Group()
++  const w = 2.08
++  const h = 1.56
++  const d = 0.44
++
++  root.add(glassShell(new RoundedBoxGeometry(w, h, d, 6, 0.16)))
++
++  // The chassis the glass sits over: opaque, a little smaller than the shell.
++  root.add(box(w - 0.14, h - 0.14, d - 0.16, inner(0xcfc9bc), 0.12))
++
++  const z = d / 2 - 0.02
++
++  const lcd = box(0.92, 0.3, 0.05, emissive(0xf0c7ae, 0.35), 0.03)
++  lcd.position.set(-0.36, 0.5, z)
++  root.add(lcd)
++
++  const knob = new THREE.Mesh(
++    new THREE.CylinderGeometry(0.17, 0.17, 0.1, 40),
++    new THREE.MeshStandardMaterial({
++      color: 0xdedbd4,
++      metalness: 1,
++      roughness: 0.28,
++    }),
++  )
++  knob.rotation.x = Math.PI / 2
++  knob.position.set(0.72, 0.5, z + 0.02)
++  root.add(knob)
++
++  const pads: { material: THREE.MeshStandardMaterial; accent: boolean }[] = []
++  for (let row = 0; row < 4; row += 1) {
++    for (let col = 0; col < 4; col += 1) {
++      const index = row * 4 + col
++      const accent = [0, 5, 10, 15].includes(index)
++      const material = new THREE.MeshStandardMaterial({
++        color: 0x2a2e2b,
++        emissive: ORANGE,
++        emissiveIntensity: 0,
++        roughness: 0.28,
++      })
++      const pad = box(0.38, 0.19, 0.07, material, 0.035)
++      pad.position.set(-0.66 + col * 0.44, 0.1 - row * 0.25, z)
++      root.add(pad)
++      pads.push({ material, accent })
++    }
++  }
++
++  return {
++    root,
++    update: (p) => {
++      pads.forEach(({ material, accent }, index) => {
++        const lit = THREE.MathUtils.clamp(p * 22 - index, 0, 1)
++        const level = Math.max(lit, accent ? 0.55 : 0)
++        material.emissiveIntensity = level * 1.4
++      })
++    },
++    dispose: () => disposeTree(root),
++  }
++}
++
++function buildCassette(): Model {
++  const root = new THREE.Group()
++  const w = 1.92
++  const h = 1.2
++  const d = 0.26
++
++  root.add(glassShell(new RoundedBoxGeometry(w, h, d, 6, 0.12)))
++  root.add(box(w - 0.12, h - 0.12, d - 0.1, inner(0xcfc9bc), 0.1))
++
++  const z = d / 2 - 0.02
++  const label = box(1.5, 0.36, 0.03, emissive(0xf0c7ae, 0.3), 0.03)
++  label.position.set(0, 0.32, z)
++  root.add(label)
++
++  const slot = box(1.12, 0.5, 0.03, inner(0x1d1f1e, 0.25), 0.22)
++  slot.position.set(0, -0.2, z)
++  root.add(slot)
++
++  const reels: THREE.Group[] = []
++  for (const x of [-0.34, 0.34]) {
++    const reel = new THREE.Group()
++    const hub = new THREE.Mesh(
++      new THREE.CylinderGeometry(0.17, 0.17, 0.04, 36),
++      inner(0x2c2e2d, 0.4),
++    )
++    hub.rotation.x = Math.PI / 2
++    reel.add(hub)
++    for (let spoke = 0; spoke < 3; spoke += 1) {
++      const bar = box(0.035, 0.28, 0.045, inner(0xe7e2d8, 0.5), 0.015)
++      bar.rotation.z = (spoke * Math.PI) / 3
++      reel.add(bar)
++    }
++    reel.position.set(x, -0.2, z + 0.03)
++    root.add(reel)
++    reels.push(reel)
++  }
++
++  return {
++    root,
++    update: (_p, spin) => {
++      reels.forEach((reel, index) => {
++        reel.rotation.z = -spin * DEG * (index === 0 ? 1 : 0.8)
++      })
++    },
++    dispose: () => disposeTree(root),
++  }
++}
++
++function buildPlayer(): Model {
++  const root = new THREE.Group()
++  const w = 1.16
++  const h = 1.84
++  const d = 0.26
++
++  root.add(glassShell(new RoundedBoxGeometry(w, h, d, 6, 0.14)))
++  root.add(box(w - 0.12, h - 0.12, d - 0.1, inner(0xcfc9bc), 0.12))
++
++  const z = d / 2 - 0.02
++  const screen = box(0.86, 0.74, 0.03, emissive(0xf0c7ae, 0.35), 0.05)
++  screen.position.set(0, 0.5, z)
++  root.add(screen)
++  ;[
++    { y: 0.7, w: 0.6, color: 0x4b4f4c },
++    { y: 0.56, w: 0.44, color: 0x4b4f4c },
++    { y: 0.4, w: 0.3, color: 0xff5a1f },
++  ].forEach((line) => {
++    const bar = box(line.w, 0.035, 0.02, inner(line.color, 0.5), 0.01)
++    bar.position.set(-(0.6 - line.w) / 2 - 0.02, line.y - 0.02, z + 0.025)
++    root.add(bar)
++  })
++
++  const wheel = new THREE.Mesh(
++    new THREE.TorusGeometry(0.3, 0.06, 18, 48),
++    inner(0xe7e2d8, 0.35),
++  )
++  wheel.position.set(0, -0.5, z)
++  root.add(wheel)
++  const center = new THREE.Mesh(
++    new THREE.CylinderGeometry(0.11, 0.11, 0.05, 32),
++    emissive(0xff5a1f, 0.55),
++  )
++  center.rotation.x = Math.PI / 2
++  center.position.set(0, -0.5, z + 0.01)
++  root.add(center)
++
++  return {
++    root,
++    update: () => {},
++    dispose: () => disposeTree(root),
++  }
++}
++
++function buildKnob(): Model {
++  const root = new THREE.Group()
++  const profile = [
++    [0, -0.24],
++    [0.44, -0.24],
++    [0.5, -0.18],
++    [0.5, 0.18],
++    [0.44, 0.24],
++    [0, 0.24],
++  ].map(([x, y]) => new THREE.Vector2(x, y))
++
++  const shell = glassShell(new THREE.LatheGeometry(profile, 72))
++  const body = new THREE.Group()
++  body.add(shell)
++
++  const core = new THREE.Mesh(
++    new THREE.CylinderGeometry(0.34, 0.34, 0.46, 48),
++    new THREE.MeshStandardMaterial({
++      color: 0xdedbd4,
++      metalness: 1,
++      roughness: 0.3,
++    }),
++  )
++  body.add(core)
++
++  const tick = box(0.06, 0.3, 0.03, emissive(0xff5a1f, 0.8), 0.015)
++  tick.rotation.x = Math.PI / 2
++  tick.position.set(0, 0.245, -0.14)
++  body.add(tick)
++
++  // The lathe's axis is Y; the knob faces the viewer along Z.
++  body.rotation.x = Math.PI / 2
++  root.add(body)
++
++  return {
++    root,
++    update: (_p, spin) => {
++      body.rotation.y = spin * DEG * 0.35
++    },
++    dispose: () => disposeTree(root),
++  }
++}
++
++function grooveTexture() {
++  const size = 512
++  const canvas = document.createElement('canvas')
++  canvas.width = size
++  canvas.height = size
++  const ctx = canvas.getContext('2d')
++  if (ctx) {
++    ctx.fillStyle = '#141416'
++    ctx.fillRect(0, 0, size, size)
++    for (let r = 40; r < size / 2; r += 3) {
++      ctx.strokeStyle = r % 6 === 0 ? '#1f1f23' : '#101012'
++      ctx.lineWidth = 1
++      ctx.beginPath()
++      ctx.arc(size / 2, size / 2, r, 0, Math.PI * 2)
++      ctx.stroke()
++    }
++    // A broad sheen, so the record reads as lacquer and not as a flat disc.
++    const sheen = ctx.createConicGradient(0.4, size / 2, size / 2)
++    sheen.addColorStop(0, 'rgba(255,255,255,0)')
++    sheen.addColorStop(0.08, 'rgba(255,255,255,0.12)')
++    sheen.addColorStop(0.16, 'rgba(255,255,255,0)')
++    sheen.addColorStop(0.55, 'rgba(255,255,255,0)')
++    sheen.addColorStop(0.62, 'rgba(255,255,255,0.09)')
++    sheen.addColorStop(0.7, 'rgba(255,255,255,0)')
++    ctx.fillStyle = sheen
++    ctx.fillRect(0, 0, size, size)
++  }
++  const texture = new THREE.CanvasTexture(canvas)
++  texture.colorSpace = THREE.SRGBColorSpace
++  texture.anisotropy = 4
++  return texture
++}
++
++function buildVinyl(): Model {
++  const root = new THREE.Group()
++  const disc = new THREE.Group()
++
++  const side = new THREE.MeshStandardMaterial({
++    color: 0x121214,
++    roughness: 0.4,
++  })
++  const top = new THREE.MeshPhysicalMaterial({
++    map: grooveTexture(),
++    roughness: 0.38,
++    clearcoat: 1,
++    clearcoatRoughness: 0.25,
++    envMapIntensity: 1.1,
++  })
++  const vinyl = new THREE.Mesh(
++    new THREE.CylinderGeometry(0.95, 0.95, 0.05, 96),
++    [side, top, top],
++  )
++  disc.add(vinyl)
++
++  const label = new THREE.Mesh(
++    new THREE.CylinderGeometry(0.31, 0.31, 0.056, 64),
++    emissive(0xff5a1f, 0.25),
++  )
++  disc.add(label)
++
++  const hole = new THREE.Mesh(
++    new THREE.CylinderGeometry(0.04, 0.04, 0.06, 24),
++    inner(0xe7e2d8, 0.4),
++  )
++  disc.add(hole)
++
++  // A frosted ring around the rim, so the record has the same glass edge as
++  // everything else in the set.
++  const ring = glassShell(new THREE.TorusGeometry(0.95, 0.045, 16, 96), 1.05)
++  ring.rotation.x = Math.PI / 2
++  disc.add(ring)
++
++  disc.rotation.x = Math.PI / 2
++  root.add(disc)
++
++  return {
++    root,
++    update: (_p, spin) => {
++      // The disc's own axis is Y once laid flat; spin about it.
++      vinyl.rotation.y = -spin * DEG
++      label.rotation.y = -spin * DEG
++    },
++    dispose: () => {
++      top.map?.dispose()
++      disposeTree(root)
++    },
++  }
++}
++
++function disposeTree(root: THREE.Object3D) {
++  root.traverse((object) => {
++    const mesh = object as THREE.Mesh
++    mesh.geometry?.dispose()
++    const material = mesh.material
++    if (Array.isArray(material)) material.forEach((m) => m.dispose())
++    else material?.dispose()
++  })
++}
++
++const BUILDERS: Record<GlassKind, () => Model> = {
++  sampler: buildSampler,
++  cassette: buildCassette,
++  player: buildPlayer,
++  knob: buildKnob,
++  vinyl: buildVinyl,
++}
++
++/** The orientation a device rests in when nothing has posed it. */
++const REST: Record<GlassKind, GlassPose> = {
++  sampler: { rx: -14, ry: 20, rz: 0 },
++  cassette: { rx: -14, ry: 20, rz: 0 },
++  player: { rx: -10, ry: 22, rz: 0 },
++  knob: { rx: 24, ry: 16, rz: 0, p: 0.5 },
++  vinyl: { rx: 52, ry: 14, rz: 0, spin: 40 },
++}
++
++/* ── Controllers and the render loop ─────────────────────── */
++
++type Controller = {
++  canvas: HTMLCanvasElement
++  ctx: CanvasRenderingContext2D
++  scene: THREE.Scene
++  camera: THREE.PerspectiveCamera
++  model: Model
++  pose: Required<GlassPose>
++  dirty: boolean
++  visible: boolean
++}
++
++const controllers = new Set<Controller>()
++let frame = 0
++
++/** The most devices drawn in one animation frame. The rest wait their turn. */
++const BUDGET = 6
++
++function schedule() {
++  if (frame || typeof window === 'undefined') return
++  frame = window.requestAnimationFrame(() => {
++    frame = 0
++    const resources = getShared()
++    if (!resources) return
++
++    let drawn = 0
++    let waiting = false
++    for (const controller of controllers) {
++      if (!controller.dirty || !controller.visible) continue
++      if (drawn >= BUDGET) {
++        waiting = true
++        continue
++      }
++      draw(controller, resources)
++      drawn += 1
++    }
++    if (waiting) schedule()
++  })
++}
++
++function draw(
++  controller: Controller,
++  resources: NonNullable<ReturnType<typeof getShared>>,
++) {
++  const { pose, model, scene, camera, ctx, canvas } = controller
++  controller.dirty = false
++
++  // CSS and three.js disagree on which way is up: x and z turn the other way.
++  model.root.rotation.set(-pose.rx * DEG, pose.ry * DEG, -pose.rz * DEG, 'XYZ')
++  model.update(pose.p, pose.spin)
++
++  resources.renderer.render(scene, camera)
++  ctx.clearRect(0, 0, canvas.width, canvas.height)
++  ctx.drawImage(resources.renderer.domElement, 0, 0)
++  canvas.dataset.glassDrawn = 'true'
++}
++
++export async function attachGlass(
++  canvas: HTMLCanvasElement,
++  kind: GlassKind,
++): Promise<GlassHandle | null> {
++  const resources = getShared()
++  const ctx = canvas.getContext('2d')
++  if (!resources || !ctx) return null
++
++  try {
++    canvas.width = GLASS_CANVAS.width
++    canvas.height = GLASS_CANVAS.height
++
++    const scene = new THREE.Scene()
++    scene.environment = resources.env
++
++    // Visible height at the origin is 3.12 units, the canvas's 156 CSS px at
++    // 50 px per unit. A narrow lens keeps the perspective gentle.
++    const fov = 20
++    const camera = new THREE.PerspectiveCamera(
++      fov,
++      GLASS_CANVAS.width / GLASS_CANVAS.height,
++      0.1,
++      40,
++    )
++    camera.position.set(0, 0, 3.12 / 2 / Math.tan((fov / 2) * DEG))
++
++    const key = new THREE.DirectionalLight(0xffffff, 1.6)
++    key.position.set(-2.4, 3.2, 4)
++    const fill = new THREE.DirectionalLight(0xffe9d6, 0.5)
++    fill.position.set(3, -1.5, 2)
++    scene.add(key, fill)
++
++    const model = BUILDERS[kind]()
++    scene.add(model.root)
++
++    const rest = REST[kind]
++    const controller: Controller = {
++      canvas,
++      ctx,
++      scene,
++      camera,
++      model,
++      pose: {
++        rx: rest.rx,
++        ry: rest.ry,
++        rz: rest.rz,
++        p: rest.p ?? 0,
++        spin: rest.spin ?? 0,
++      },
++      dirty: true,
++      visible: true,
++    }
++    controllers.add(controller)
++
++    const observer =
++      typeof IntersectionObserver === 'undefined'
++        ? null
++        : new IntersectionObserver(
++            (entries) => {
++              for (const entry of entries) {
++                controller.visible = entry.isIntersecting
++                if (entry.isIntersecting) {
++                  controller.dirty = true
++                  schedule()
++                }
++              }
++            },
++            { rootMargin: '240px' },
++          )
++    observer?.observe(canvas)
++
++    const handle: GlassHandle = {
++      setPose: (next) => {
++        const merged = {
++          rx: next.rx,
++          ry: next.ry,
++          rz: next.rz,
++          p: next.p ?? controller.pose.p,
++          spin: next.spin ?? controller.pose.spin,
++        }
++        // A pose that moved less than a tenth of a degree is not worth a draw.
++        const same =
++          Math.abs(merged.rx - controller.pose.rx) < 0.1 &&
++          Math.abs(merged.ry - controller.pose.ry) < 0.1 &&
++          Math.abs(merged.rz - controller.pose.rz) < 0.1 &&
++          Math.abs(merged.p - controller.pose.p) < 0.002 &&
++          Math.abs(merged.spin - controller.pose.spin) < 0.2
++        if (same) return
++        controller.pose = merged
++        controller.dirty = true
++        schedule()
++      },
++      dispose: () => {
++        observer?.disconnect()
++        controllers.delete(controller)
++        model.dispose()
++        unregisterGlass(canvas)
++      },
++    }
++    registerGlass(canvas, handle)
++
++    // Draw the first frame now, so the caller can hide the fallback knowing
++    // there is something on the canvas to take its place.
++    draw(controller, resources)
++    return handle
++  } catch {
++    return null
++  }
++}
+diff --git a/features/landing-page/components/glass/glass-registry.ts b/features/landing-page/components/glass/glass-registry.ts
+new file mode 100644
+index 0000000..0b46795
+--- /dev/null
++++ b/features/landing-page/components/glass/glass-registry.ts
+@@ -0,0 +1,80 @@
++export type GlassKind = 'sampler' | 'cassette' | 'player' | 'knob' | 'vinyl'
++
++export type GlassPose = {
++  /** Degrees. The same axes and order as the CSS `rotateX() rotateY() rotateZ()`. */
++  rx: number
++  ry: number
++  rz: number
++  /** 0..1, how far the scene has played. Lights the sampler's pads in order. */
++  p?: number
++  /** Degrees. Turns the reels and the record. */
++  spin?: number
++}
++
++export type GlassHandle = {
++  setPose: (pose: GlassPose) => void
++  dispose: () => void
++}
++
++/**
++ * The registry the scroll hooks talk to.
++ *
++ * It lives apart from `glass-devices.ts` on purpose: that file imports three.js,
++ * and the hooks that pose the devices are part of the page's first load. They
++ * import this file, which is a few lines of plain TypeScript, and three.js
++ * arrives later, only when a device actually scrolls near the viewport.
++ */
++
++const handles = new WeakMap<HTMLCanvasElement, GlassHandle>()
++const hosts = new WeakMap<Element, HTMLCanvasElement | null>()
++
++export function registerGlass(canvas: HTMLCanvasElement, handle: GlassHandle) {
++  handles.set(canvas, handle)
++}
++
++export function unregisterGlass(canvas: HTMLCanvasElement) {
++  handles.delete(canvas)
++}
++
++/**
++ * Pose whatever glass device lives under `host`. Returns whether there was one.
++ *
++ * The callers are the scroll hooks, which used to write a CSS rotation. They
++ * call this first and write the CSS rotation only if it returns false, so a
++ * device whose model has not loaded yet (or never will) still turns. When it
++ * does return true it also clears any CSS rotation left on `host`, otherwise
++ * the canvas would turn twice.
++ */
++export function setGlassPose(host: HTMLElement, pose: GlassPose): boolean {
++  let canvas = hosts.get(host)
++  if (canvas === undefined || (canvas && !canvas.isConnected)) {
++    canvas = host.querySelector<HTMLCanvasElement>('canvas[data-glass-canvas]')
++    hosts.set(host, canvas)
++  }
++  const handle = canvas ? handles.get(canvas) : undefined
++  if (!canvas || !handle) return false
++  if (host.style.transform) host.style.transform = ''
++  handle.setPose(pose)
++  return true
++}
++
++const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
++
++/**
++ * A chapter's device pose from its scroll progress `p` (0 as the chapter enters,
++ * 1 as it leaves). This is `bench-chapters.module.css`'s `.tilt` arithmetic,
++ * restated in numbers, because a canvas cannot read a CSS `calc()`. The CSS
++ * version stays as the fallback for a device whose model has not loaded.
++ */
++export function chapterPose(kind: GlassKind, progress: number): GlassPose {
++  const p = clamp01(Number.isFinite(progress) ? progress : 0.5)
++  const spin = p * 900
++  switch (kind) {
++    case 'sampler':
++      return { rx: 58 - p * 46, ry: -36 + p * 72, rz: -10 + p * 20, p, spin }
++    case 'cassette':
++      return { rx: -30 + p * 50, ry: 44 - p * 88, rz: 8 - p * 16, p, spin }
++    default:
++      return { rx: 72 - p * 58, ry: -20 + p * 40, rz: -12 + p * 40, p, spin }
++  }
++}
+diff --git a/tests/skills-bridge-frame.test.ts b/tests/skills-bridge-frame.test.ts
+index 9484e49..f3841b2 100644
+--- a/tests/skills-bridge-frame.test.ts
++++ b/tests/skills-bridge-frame.test.ts
+@@ -1,63 +1,81 @@
+ import {
+   BRIDGE_DEVICES,
+   BRIDGE_PHASES,
++  BRIDGE_RING_COUNT,
+   bridgeFrame,
+ } from '@/features/landing-page/components/bridge/skills-bridge-frame'
+ 
++const WORDS = 14
++const frame = (p: number) => bridgeFrame(p, 1440, 900, WORDS)
++
+ describe('bridgeFrame', () => {
+-  it('starts on the light sheet and ends with the room fully open', () => {
+-    const start = bridgeFrame(0, 1440, 900)
+-    const end = bridgeFrame(1, 1440, 900)
+-    expect(start.iris).toBe(0)
+-    expect(start.rack).toBe(0)
+-    expect(end.iris).toBeGreaterThanOrEqual(100)
+-    expect(end.rack).toBe(1)
+-    expect(end.caption).toBe(1)
++  it('starts on the light sheet and ends with the hole fully open', () => {
++    expect(frame(0).iris).toBe(0)
++    expect(frame(1).iris).toBeGreaterThanOrEqual(100)
++    expect(frame(1).caption).toBe(1)
+   })
+ 
+-  it('opens the room only after the sentence has arrived', () => {
++  it('opens the hole only after the sentence has arrived', () => {
+     expect(BRIDGE_PHASES.iris[0]).toBeGreaterThanOrEqual(
+       BRIDGE_PHASES.arrive[1],
+     )
+-    expect(bridgeFrame(BRIDGE_PHASES.arrive[1], 1440, 900).statement).toBe(1)
++    expect(frame(BRIDGE_PHASES.arrive[1]).statement).toBe(1)
++  })
++
++  it('draws every device into the hole and leaves none on the sheet', () => {
++    const hole = { x: 720, y: 396 }
++    for (const device of frame(1).devices) {
++      expect(device.opacity).toBeLessThan(0.05)
++      expect(Math.hypot(device.x - hole.x, device.y - hole.y)).toBeLessThan(2)
++    }
+   })
+ 
+-  it('docks every device into its slot, face on and lit, at the end', () => {
+-    const end = bridgeFrame(1, 1440, 900)
+-    end.devices.forEach((device, index) => {
+-      const dock = BRIDGE_DEVICES[index].dock
+-      expect(device.x).toBeCloseTo((dock.x / 100) * 1440, 5)
+-      expect(device.y).toBeCloseTo((dock.y / 100) * 900, 5)
+-      expect(device.rx).toBeCloseTo(0, 5)
+-      expect(device.ry).toBeCloseTo(0, 5)
+-      expect(device.lit).toBe(1)
+-      expect(device.cable).toBe(1)
++  it('tightens each device spiral monotonically', () => {
++    const hole = { x: 720, y: 396 }
++    BRIDGE_DEVICES.forEach((_, index) => {
++      let last = Infinity
++      for (let p = BRIDGE_PHASES.fall[0] + 0.1; p <= 0.6; p += 0.01) {
++        const d = frame(p).devices[index]
++        const radius = Math.hypot(d.x - hole.x, d.y - hole.y)
++        // Sway is gone by now, so the radius only shrinks.
++        expect(radius).toBeLessThanOrEqual(last + 1e-6)
++        last = radius
++      }
+     })
+   })
+ 
+-  it('keeps the devices off the sheet until they have started flying in', () => {
++  it('keeps the stream out of view until the hole is opening', () => {
++    expect(frame(0).words.every((w) => w.opacity === 0)).toBe(true)
+     expect(
+-      bridgeFrame(0, 1440, 900).devices.every((d) => d.opacity === 0),
++      frame(BRIDGE_PHASES.stream[0]).words.every((w) => w.opacity === 0),
+     ).toBe(true)
+   })
+ 
+-  it('draws a cable only after its device has docked', () => {
+-    for (let p = 0; p <= 1; p += 0.01) {
+-      for (const device of bridgeFrame(p, 1440, 900).devices) {
+-        if (device.cable > 0) expect(device.lit).toBeGreaterThan(0)
+-      }
++  it('moves every word toward the viewer and out of sight past it', () => {
++    const early = frame(0.5).words
++    const late = frame(0.9).words
++    early.forEach((word, i) => expect(late[i].z).toBeGreaterThan(word.z))
++    expect(frame(1).rings).toHaveLength(BRIDGE_RING_COUNT)
++  })
++
++  it('settles all three plates, lit, at the end', () => {
++    expect(frame(0).plates.every((plate) => plate.opacity === 0)).toBe(true)
++    for (const plate of frame(1).plates) {
++      expect(plate.z).toBe(0)
++      expect(plate.opacity).toBe(1)
++      expect(plate.lit).toBe(1)
+     }
+   })
+ 
+   it('never writes NaN, Infinity or negative zero', () => {
+     for (const progress of [NaN, -1, 0, 0.4, 1, 2, Infinity]) {
+-      const frame = bridgeFrame(progress, NaN, NaN)
++      const f = bridgeFrame(progress, NaN, NaN, WORDS)
+       const values = [
+-        frame.statement,
+-        frame.iris,
+-        frame.rack,
+-        frame.caption,
+-        ...frame.devices.flatMap((d) => [
++        f.statement,
++        f.iris,
++        f.core,
++        f.caption,
++        ...f.devices.flatMap((d) => [
+           d.x,
+           d.y,
+           d.scale,
+@@ -65,9 +83,11 @@ describe('bridgeFrame', () => {
+           d.rx,
+           d.ry,
+           d.rz,
+-          d.lit,
+-          d.cable,
++          d.spin,
+         ]),
++        ...f.words.flatMap((w) => [w.x, w.y, w.z, w.opacity]),
++        ...f.rings.flatMap((r) => [r.z, r.opacity]),
++        ...f.plates.flatMap((pl) => [pl.z, pl.opacity, pl.lit]),
+       ]
+       for (const value of values) {
+         expect(Number.isFinite(value)).toBe(true)
+-- 
+2.43.0
+

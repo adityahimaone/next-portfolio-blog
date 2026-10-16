@@ -16,12 +16,21 @@
    The ground stays dark in both themes (a backlit equipment wall has no
    daylight reading). The paper and its ink follow the theme. */
 
-:root {
-  /* ── Type: three roles, no more ─────────────────────────
-     display  headings, brand lines, the big words
-     ui       labels, buttons, running text on devices
-     mono     readouts, silkscreen, LCDs, numbers
-     readout  the one LCD numeral face (hero clock, frequency display) */
+/* ── Type: three roles, no more ─────────────────────────
+   display  headings, brand lines, the big words
+   ui       labels, buttons, running text on devices
+   mono     readouts, silkscreen, LCDs, numbers
+   readout  the one LCD numeral face (hero clock, frequency display)
+
+   These four are declared on `body`, NOT on `:root`, and that is load-bearing.
+   The `--font-*` faces are injected by next/font on `<body>` (app/layout.tsx),
+   and a custom property's `var()` is substituted on the element where it is
+   *declared*. An alias sitting on `:root` would therefore be looking for
+   `--font-space-grotesk` on `<html>`, where it does not exist: the alias
+   resolves to the guaranteed-invalid value, and every `font:` shorthand that
+   reads it is dropped — so the element silently inherits the 16px body face
+   instead of the 6–12px silkscreen the rule asked for. */
+body {
   --deck-font-display: var(--font-syne), var(--font-space-grotesk), system-ui,
     sans-serif;
   --deck-font-ui: var(--font-space-grotesk), system-ui, sans-serif;
@@ -30,7 +39,9 @@
   /* LCD numerals only: the hero's clock and the frequency readouts. */
   --deck-font-readout: var(--font-orbitron), var(--font-geist-mono),
     ui-monospace, monospace;
+}
 
+:root {
   /* ── Ground: the equipment wall behind every device ──── */
   --deck-ground: #14171a;
   --deck-ground-2: #1b1f23;

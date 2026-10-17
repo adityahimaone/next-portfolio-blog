@@ -17,44 +17,81 @@
  * "no" on native mobile is kept, because a no saves both people a week.
  */
 
-export type Channel = {
-  /** Silkscreen label on the strip. */
-  tag: string
+export type FaqEntry = {
   question: string
   answer: string
+  category: (typeof FAQ_CATEGORIES)[number]
 }
 
-export const CHANNELS: readonly Channel[] = [
+export const FAQ_CATEGORIES = ['Scope', 'Process', 'Practical'] as const
+
+/**
+ * The questions people ask before they write, answered straight.
+ *
+ * Written as answers, not a pitch: the React Native line is a no, because a
+ * page that hedges on what it cannot do wastes the reader's time and the
+ * writer's. Nothing here promises a date, a rate or a client; the only promise
+ * is the one the old page already made, that replies usually land within a
+ * couple of days.
+ */
+export const FAQ_ITEMS: readonly FaqEntry[] = [
   {
-    tag: 'SCOPE',
+    category: 'Scope',
     question: 'What kind of work do you take on?',
     answer:
       'Frontend work where the hard part is the state or the edge cases rather than the styling: internal tools, content-heavy public sites, and products that have to work on a phone or on a bad connection.',
   },
   {
-    tag: 'BACKEND',
+    category: 'Scope',
     question: 'Do you work with existing backends?',
     answer:
       'Mostly. Most of the shipped work is a frontend over a service that already exists. Running the infrastructure too is something I do when the product genuinely needs it.',
   },
   {
-    tag: 'MOBILE',
+    category: 'Scope',
     question: 'Do you do React Native or native mobile?',
     answer:
       'No. The mobile work here is responsive web. The habits transfer, the stack does not, and I would rather say so now than take it and hand it back.',
   },
   {
-    tag: 'REPLY',
+    category: 'Process',
+    question: 'How do we start?',
+    answer:
+      'Send a brief; the builder above writes the email for you. I reply with the questions that change the plan, then a plan small enough to disagree with.',
+  },
+  {
+    category: 'Process',
+    question: 'What should the first message say?',
+    answer:
+      'The problem, who it is for, and the constraint that hurts: a date, a budget, a stack you cannot change. A link helps if there is one. Two paragraphs beat a deck.',
+  },
+  {
+    category: 'Process',
+    question: 'How do you work once it starts?',
+    answer:
+      'In small increments, with a working build you can click at every step instead of a deck about one. It ends with code someone else can run and notes that outlive the project.',
+  },
+  {
+    category: 'Practical',
     question: 'How fast do you reply?',
     answer:
       'Usually within a couple of days. If there is a date that matters, put it in the first line so it is the first thing I read.',
   },
   {
-    tag: 'FIRST MAIL',
-    question: 'What should the first message say?',
+    category: 'Practical',
+    question: 'Which time zone do you work in?',
     answer:
-      'The problem, who it is for, and the constraint that hurts: a date, a budget, a stack you cannot change. A link helps if there is one. Two paragraphs beat a deck.',
+      'Jakarta, UTC+7. The European morning and the whole Asia-Pacific day fall inside ordinary hours; the Americas mean an early or a late call.',
   },
+]
+
+/** The short phrases that run on the FAQ's moving line. */
+export const FAQ_TICKER: readonly string[] = [
+  'Frontend',
+  'Design engineering',
+  'Replies in ~2 days',
+  'Channel open',
+  'Jakarta · UTC+7',
 ]
 
 export type Stage = { step: string; title: string; copy: string }
@@ -164,37 +201,4 @@ export function composeBrief(input: BriefInput, to: string): Brief {
     brief = build(note)
   }
   return brief
-}
-
-/** The first `progress` (0–1) of `text`, for the monitor's typed answer. */
-export function typedSlice(text: string, progress: number): string {
-  const p = Number.isFinite(progress) ? Math.min(1, Math.max(0, progress)) : 0
-  return text.slice(0, Math.round(text.length * p))
-}
-
-/**
- * The next channel for a key press on the strip list, or `null` for a key that
- * is not navigation. Arrow keys wrap, Home and End jump; both axes work because
- * the strips are a column on desktop and a grid on a phone.
- */
-export function nextChannel(
-  key: string,
-  index: number,
-  count: number,
-): number | null {
-  if (count <= 0) return null
-  switch (key) {
-    case 'ArrowDown':
-    case 'ArrowRight':
-      return (index + 1) % count
-    case 'ArrowUp':
-    case 'ArrowLeft':
-      return (index - 1 + count) % count
-    case 'Home':
-      return 0
-    case 'End':
-      return count - 1
-    default:
-      return null
-  }
 }

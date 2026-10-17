@@ -1,5 +1,6 @@
 import {
-  CHANNELS,
+  FAQ_CATEGORIES,
+  FAQ_ITEMS,
   MAX_HREF,
   NOTE_LIMIT,
   PATH,
@@ -7,19 +8,26 @@ import {
   TIMELINES,
   cleanNote,
   composeBrief,
-  nextChannel,
-  typedSlice,
 } from '@/features/landing-page/rack-01/contact-desk/contact-content'
 
 const TO = 'hello@example.com'
 
 describe('content', () => {
   it('has distinct, non-empty channels and stages', () => {
-    expect(CHANNELS.length).toBeGreaterThanOrEqual(4)
-    expect(new Set(CHANNELS.map((c) => c.tag)).size).toBe(CHANNELS.length)
-    for (const c of CHANNELS) {
+    expect(FAQ_ITEMS.length).toBeGreaterThanOrEqual(6)
+    expect(new Set(FAQ_ITEMS.map((c) => c.question)).size).toBe(
+      FAQ_ITEMS.length,
+    )
+    for (const c of FAQ_ITEMS) {
       expect(c.question.endsWith('?')).toBe(true)
       expect(c.answer.length).toBeGreaterThan(40)
+      expect(FAQ_CATEGORIES).toContain(c.category)
+    }
+    // Every category has at least two questions, or its chip is a dead end.
+    for (const category of FAQ_CATEGORIES) {
+      expect(
+        FAQ_ITEMS.filter((i) => i.category === category).length,
+      ).toBeGreaterThanOrEqual(2)
     }
     expect(PATH).toHaveLength(4)
     expect(new Set(PROJECT_TYPES.map((t) => t.id)).size).toBe(
@@ -29,15 +37,15 @@ describe('content', () => {
   })
 
   it('keeps the honest no on native mobile', () => {
-    const mobile = CHANNELS.find((c) => c.tag === 'MOBILE')
+    const mobile = FAQ_ITEMS.find((c) => c.question.includes('React Native'))
     expect(mobile?.answer.startsWith('No.')).toBe(true)
   })
 
   it('makes no promise beyond the one the page always made', () => {
-    const text = CHANNELS.map((c) => c.answer)
+    const text = FAQ_ITEMS.map((c) => c.answer)
       .join(' ')
       .toLowerCase()
-    expect(text).not.toMatch(/\$|per hour|rate|booked|available (from|until)/)
+    expect(text).not.toMatch(/\$|per hour|\brates?\b|booked|available (from|until)/)
   })
 })
 
@@ -107,33 +115,5 @@ describe('cleanNote', () => {
     expect(brief.href.length).toBeLessThanOrEqual(MAX_HREF)
     // And it is still a brief with a note, not an empty one.
     expect(brief.body).toContain('About it:')
-  })
-})
-
-describe('typedSlice', () => {
-  it('reveals proportionally and clamps', () => {
-    expect(typedSlice('abcdefghij', 0)).toBe('')
-    expect(typedSlice('abcdefghij', 0.5)).toBe('abcde')
-    expect(typedSlice('abcdefghij', 1)).toBe('abcdefghij')
-    expect(typedSlice('abcdefghij', 9)).toBe('abcdefghij')
-    expect(typedSlice('abcdefghij', -1)).toBe('')
-    expect(typedSlice('abcdefghij', Number.NaN)).toBe('')
-  })
-})
-
-describe('nextChannel', () => {
-  it('wraps on the arrow keys, both axes', () => {
-    expect(nextChannel('ArrowDown', 4, 5)).toBe(0)
-    expect(nextChannel('ArrowRight', 1, 5)).toBe(2)
-    expect(nextChannel('ArrowUp', 0, 5)).toBe(4)
-    expect(nextChannel('ArrowLeft', 3, 5)).toBe(2)
-  })
-
-  it('jumps on Home and End and ignores everything else', () => {
-    expect(nextChannel('Home', 3, 5)).toBe(0)
-    expect(nextChannel('End', 0, 5)).toBe(4)
-    expect(nextChannel('Enter', 0, 5)).toBeNull()
-    expect(nextChannel('a', 0, 5)).toBeNull()
-    expect(nextChannel('ArrowDown', 0, 0)).toBeNull()
   })
 })

@@ -5,12 +5,6 @@ import { RESUME_URL } from './shared'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import HalftoneWordmarkFooter from '@/components/ui/halftone-wordmark-footer'
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
-import {
   CONTACT_PAD_COLORS,
   EMAIL,
   EXPERIENCES,
@@ -19,42 +13,8 @@ import {
 import styles from './rack-01.module.css'
 import { SectionHeading } from './section-heading'
 import { Mail, Square } from 'lucide-react'
-import { Screw } from '@/components/ui/screw'
-import { SilkscreenLabel } from './primitives'
-
-/**
- * The questions people actually ask before emailing, answered honestly.
- *
- * Written as straight answers rather than a sales pitch: the "React Native"
- * line is a no, because a portfolio that hedges on what it cannot do wastes the
- * reader's time and the writer's.
- *
- * No links live here. Pads 01 to 04 are Email, LinkedIn, GitHub and Résumé,
- * and a second list of the same four destinations below the deck made the pad
- * grid look like an oversight rather than the point.
- */
-const CONTACT_QUESTIONS = [
-  {
-    question: 'What kind of work do you take on?',
-    answer:
-      'Frontend work where the hard part is the state or the edge cases rather than the styling: internal tools, content-heavy public sites, and products that need to work on a phone or on a bad connection.',
-  },
-  {
-    question: 'Do you work with existing backends?',
-    answer:
-      'Mostly. Most of the shipped work is a frontend over an existing service. Running the infrastructure too is something I do when the product genuinely needs it.',
-  },
-  {
-    question: 'Do you do React Native or native mobile?',
-    answer:
-      'No. The mobile work here is responsive web. The habit that matters transfers, but the stack does not, and I would rather say so than take it and hand it back.',
-  },
-  {
-    question: 'What is your availability?',
-    answer:
-      'Frontend work, design engineering, and hard interface problems. Replies usually land within a couple of days.',
-  },
-] as const
+import { ContactDesk } from './contact-desk/contact-desk'
+import { ContactStatus } from './contact-desk/contact-status'
 
 /** The top row of the footer's wordmark band. */
 const FOOTER_LINKS = [
@@ -332,6 +292,8 @@ export function Contact() {
         </p>
       </div>
 
+      <ContactStatus />
+
       <div className={styles.contactDeck}>
         <div className={styles.contactDeckBrand}>
           <div>
@@ -484,90 +446,18 @@ export function Contact() {
       </div>
 
       {/*
-        What used to be the standalone `/contact` route: the questions people
-        actually ask before emailing, answered where the deck is.
+        Everything under the controller is the rest of the session desk: the
+        recall console (what used to be the FAQ accordion), the signal path and
+        the brief builder. It sits between `.contactDeck` and `<footer>` on
+        purpose: `use-rack-animations.ts` queries specific children of
+        `.contactDeck` by class and applies 3D transforms to each, so a child
+        added inside it would sit unanimated in a moving container.
 
-        The four link channels this block used to carry are gone. Pads 01 to 04
-        are already Email, LinkedIn, GitHub and Résumé, in the same controller,
-        with the same numbers on them — so a second list below the deck said
-        the same four things twice and made the pad grid look like an accident.
-        One copy of a link is the point.
-
-        Read as the deck's own documentation rather than as a page of copy: the
-        controller above is the hardware, this is the printed insert that ships
-        in the box with it. Hence the panel, the corner screws, and the head
-        strip — label on the left, entry count on the right, the same
-        left/right shape as the deck's own brand bar. It is a card, not a
-        second device: one border, one hairline between rows, no dials.
-
-        A Radix accordion rather than an open `<dl>`. Four always-open answers
-        is a wall of text that reads as a page of copy below the deck; four
-        collapsed ones read as a list of things this person has already
-        answered, which is what they are. It is also why the questions have to
-        be legible on their own — collapsed, they are all the reader sees. The
-        shadcn demo styles its trigger at `text-foreground/20`, which is the
-        near-invisible version of this component, so the ink comes from the
-        contact section's own `--panel-ink` tokens instead and the demo's
-        ghosted `01`-style numbering is kept but given real contrast.
-
-        Each row is a channel strip: number cell, question, chevron cell. The
-        number is boxed rather than set free because the box is what makes it
-        read as a channel assignment instead of a list marker — the same reason
-        the deck's pads carry numbers. The open row lights its number and takes
-        the panel's own 4% fill, so the state is visible at a glance without
-        the row changing size.
-
-        Placement is deliberate: between `.contactDeck` and `<footer>`, because
-        `use-rack-animations.ts:444-522` queries specific children of
-        `.contactDeck` by class name and applies 3D transforms to each. A child
-        added in there would sit unanimated inside a moving container.
-
-        `CONTACT_PADS` is untouched: its indices are hardcoded in `triggerSound`
-        (5, 6, 10, 13, 4, 8, 12) and in the sweep order, so reordering or
-        padding the array would re-map the audio.
+        `CONTACT_PADS` is untouched: its indices are hardcoded in
+        `triggerSound` (5, 6, 10, 13, 4, 8, 12) and in the sweep order, so
+        reordering or padding the array would re-map the audio.
       */}
-      <div className={styles.contactBrief}>
-        <div className={styles.contactBriefPanel}>
-          <Screw className={styles.screwTopLeft} />
-          <Screw className={styles.screwTopRight} />
-          <div className={styles.contactBriefHead}>
-            <SilkscreenLabel>Before you write</SilkscreenLabel>
-            <span className={styles.contactBriefCount}>
-              {String(CONTACT_QUESTIONS.length).padStart(2, '0')} entries
-            </span>
-          </div>
-          <Accordion
-            type="single"
-            collapsible
-            defaultValue="0"
-            className={styles.contactBriefAccordion}
-          >
-            {CONTACT_QUESTIONS.map((entry, index) => (
-              <AccordionItem
-                key={entry.question}
-                value={String(index)}
-                className={styles.contactBriefAccordionItem}
-              >
-                <AccordionTrigger
-                  className={styles.contactBriefAccordionTrigger}
-                >
-                  <span className={styles.contactBriefAccordionIndex}>
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span className={styles.contactBriefAccordionQuestion}>
-                    {entry.question}
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent
-                  className={styles.contactBriefAccordionContent}
-                >
-                  {entry.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </div>
+      <ContactDesk />
 
       <footer className={styles.footer}>
         <div className={styles.footerTransition} aria-hidden="true" />

@@ -10,14 +10,13 @@ import {
   beatMs,
   clipDuration,
   clock,
-  hash,
-  moveFocus,
+  linearFocus,
   nextBeatDelay,
   progressAt,
   tracksOf,
   transportAt,
   typedAt,
-  waveformBars,
+  wordsOf,
 } from '@/features/landing-page/rack-01/contact-desk/scene-logic'
 
 describe('the content', () => {
@@ -121,47 +120,6 @@ describe('the transport readout', () => {
   })
 })
 
-describe('waveformBars', () => {
-  it('is deterministic and the right length', () => {
-    expect(waveformBars('scope', 24)).toEqual(waveformBars('scope', 24))
-    expect(waveformBars('scope', 24)).toHaveLength(24)
-    expect(waveformBars('x', 0)).toEqual([])
-  })
-
-  it('differs between clips, so nine thumbnails are nine shapes', () => {
-    const shapes = new Set(
-      FAQ_ITEMS.map((i) => waveformBars(i.id, 24).join(',')),
-    )
-    expect(shapes.size).toBe(FAQ_ITEMS.length)
-  })
-
-  it('stays inside 0.14–1 and has a body, not a flat line', () => {
-    for (const item of FAQ_ITEMS) {
-      const bars = waveformBars(item.id, 64)
-      for (const v of bars) {
-        expect(v).toBeGreaterThanOrEqual(0.14)
-        expect(v).toBeLessThanOrEqual(1)
-      }
-      expect(Math.max(...bars) - Math.min(...bars)).toBeGreaterThan(0.25)
-    }
-  })
-
-  it('swells toward the middle', () => {
-    const bars = waveformBars('envelope', 64)
-    const edge =
-      (bars.slice(0, 6).reduce((a, b) => a + b) +
-        bars.slice(-6).reduce((a, b) => a + b)) /
-      12
-    const mid = bars.slice(26, 38).reduce((a, b) => a + b) / 12
-    expect(mid).toBeGreaterThan(edge)
-  })
-
-  it('hashes stably', () => {
-    expect(hash('a')).toBe(hash('a'))
-    expect(hash('a')).not.toBe(hash('b'))
-  })
-})
-
 describe('tracksOf', () => {
   it('groups clips by track and keeps each one’s flat index', () => {
     const tracks = tracksOf()
@@ -173,27 +131,34 @@ describe('tracksOf', () => {
   })
 })
 
-describe('moveFocus', () => {
-  const counts = [3, 3, 2]
-
-  it('moves between tracks keeping the row, clamped to a shorter track', () => {
-    expect(moveFocus('ArrowRight', 0, 1, counts)).toEqual([1, 1])
-    expect(moveFocus('ArrowRight', 1, 2, counts)).toEqual([2, 1])
-    expect(moveFocus('ArrowRight', 2, 1, counts)).toEqual([2, 1])
-    expect(moveFocus('ArrowLeft', 0, 2, counts)).toEqual([0, 2])
-    expect(moveFocus('ArrowLeft', 2, 1, counts)).toEqual([1, 1])
+describe('wordsOf', () => {
+  it('splits on any whitespace and drops empties', () => {
+    expect(wordsOf('one  two\nthree ')).toEqual(['one', 'two', 'three'])
+    expect(wordsOf('')).toEqual([])
   })
 
-  it('walks a track and wraps', () => {
-    expect(moveFocus('ArrowDown', 0, 2, counts)).toEqual([0, 0])
-    expect(moveFocus('ArrowUp', 0, 0, counts)).toEqual([0, 2])
-    expect(moveFocus('ArrowDown', 2, 1, counts)).toEqual([2, 0])
+  it('keeps every answer a lyric sheet of a readable length', () => {
+    for (const item of FAQ_ITEMS) {
+      const n = wordsOf(item.answer).length
+      expect(n).toBeGreaterThan(12)
+      expect(n).toBeLessThan(60)
+    }
+  })
+})
+
+describe('linearFocus', () => {
+  it('walks the whole column and wraps, across groups', () => {
+    expect(linearFocus('ArrowDown', 2, 9)).toBe(3)
+    expect(linearFocus('ArrowDown', 8, 9)).toBe(0)
+    expect(linearFocus('ArrowUp', 0, 9)).toBe(8)
+    expect(linearFocus('ArrowRight', 4, 9)).toBe(5)
+    expect(linearFocus('ArrowLeft', 4, 9)).toBe(3)
   })
 
-  it('jumps to the ends of the track and ignores other keys', () => {
-    expect(moveFocus('Home', 2, 1, counts)).toEqual([2, 0])
-    expect(moveFocus('End', 2, 0, counts)).toEqual([2, 1])
-    expect(moveFocus('Enter', 0, 0, counts)).toBeNull()
-    expect(moveFocus('ArrowDown', 0, 0, [])).toBeNull()
+  it('jumps to the ends and ignores other keys', () => {
+    expect(linearFocus('Home', 5, 9)).toBe(0)
+    expect(linearFocus('End', 0, 9)).toBe(8)
+    expect(linearFocus('Enter', 0, 9)).toBe(-1)
+    expect(linearFocus('ArrowDown', 0, 0)).toBe(-1)
   })
 })

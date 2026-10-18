@@ -69,47 +69,6 @@ export function transportAt(elapsed: number, bpm: number = BPM): string {
   return `BAR ${String(bar).padStart(2, '0')}.${(beats % 4) + 1}`
 }
 
-/** A 32-bit string hash (FNV-1a), for seeding. */
-export function hash(text: string): number {
-  let h = 0x811c9dc5
-  for (let i = 0; i < text.length; i += 1) {
-    h ^= text.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
-  }
-  return h >>> 0
-}
-
-/**
- * A waveform for a clip: `count` bar heights in 0.14–1, the same every time for
- * the same seed. Each clip's thumbnail is its own shape, so nine clips do not
- * look like one clip nine times.
- *
- * Built from a seeded generator and then smoothed with a short moving average
- * and an envelope that swells in the middle, because raw noise reads as static
- * and a clip reads as audio when it has a body.
- */
-export function waveformBars(seed: string, count: number): number[] {
-  let state = hash(seed) || 1
-  const next = () => {
-    // xorshift32
-    state ^= state << 13
-    state >>>= 0
-    state ^= state >>> 17
-    state ^= state << 5
-    state >>>= 0
-    return state / 0xffffffff
-  }
-  const raw = Array.from({ length: count }, () => next())
-  return raw.map((_, i) => {
-    const a = raw[Math.max(0, i - 1)]
-    const b = raw[i]
-    const c = raw[Math.min(count - 1, i + 1)]
-    const smooth = (a + b * 2 + c) / 4
-    const envelope = 0.55 + 0.45 * Math.sin((Math.PI * (i + 0.5)) / count)
-    return Math.min(1, Math.max(0.14, 0.14 + smooth * envelope * 0.9))
-  })
-}
-
 /** The clips grouped by track, each with its index in the flat list. */
 export function tracksOf(items: readonly FaqEntry[] = FAQ_ITEMS) {
   return TRACKS.map((name) => ({
@@ -120,42 +79,22 @@ export function tracksOf(items: readonly FaqEntry[] = FAQ_ITEMS) {
   }))
 }
 
+/** The answer's words, in order, for the lyric sheet. */
+export function wordsOf(text: string): string[] {
+  return text.split(/\s+/).filter(Boolean)
+}
+
 /**
- * Where focus goes from clip (`track`, `row`) on a key press, across a grid of
- * tracks with `counts[t]` clips each; `null` for a key it does not own.
- *
- * Left and right change track and keep the row, clamped to the shorter track;
- * up and down walk the track and wrap; Home and End are the ends of the track.
+ * Where focus goes on a key press in the setlist, a single column read top to
+ * bottom whichever group a song is in: down and up walk it and wrap, Home and
+ * End are its ends. `-1` for a key it does not own.
  */
-export function moveFocus(
-  key: string,
-  track: number,
-  row: number,
-  counts: readonly number[],
-): [number, number] | null {
-  const tracks = counts.length
-  if (!tracks) return null
-  const clamp = (t: number, r: number): [number, number] => [
-    t,
-    Math.max(0, Math.min(r, Math.max(0, counts[t] - 1))),
-  ]
-  switch (key) {
-    case 'ArrowRight':
-      return clamp(Math.min(tracks - 1, track + 1), row)
-    case 'ArrowLeft':
-      return clamp(Math.max(0, track - 1), row)
-    case 'ArrowDown':
-      return [track, counts[track] ? (row + 1) % counts[track] : 0]
-    case 'ArrowUp':
-      return [
-        track,
-        counts[track] ? (row - 1 + counts[track]) % counts[track] : 0,
-      ]
-    case 'Home':
-      return [track, 0]
-    case 'End':
-      return [track, Math.max(0, counts[track] - 1)]
-    default:
-      return null
-  }
+export function linearFocus(key: string, index: number, count: number): number {
+  if (!count) return -1
+  if (key === 'ArrowDown' || key === 'ArrowRight') return (index + 1) % count
+  if (key === 'ArrowUp' || key === 'ArrowLeft')
+    return (index - 1 + count) % count
+  if (key === 'Home') return 0
+  if (key === 'End') return count - 1
+  return -1
 }

@@ -188,6 +188,12 @@ export function createEngine(deps: EngineDeps): Engine {
       if (immediate) {
         start(index, performance.now())
       } else {
+        // The stage switches to the new clip now and the new clip starts on the
+        // beat. Whatever was playing ends here: left running it would keep
+        // writing its progress onto a stage that is already showing another
+        // clip's words, lighting them to the wrong place for up to a beat.
+        if (playing !== null) finish(playing, false)
+        els.master()?.style.setProperty('--p', '0')
         queued = index
         lastBeat = beatIndex(performance.now())
         deps.setView((view) => ({ ...view, selected: index, queued: index }))

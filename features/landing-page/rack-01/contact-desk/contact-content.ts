@@ -14,6 +14,13 @@
 export const TRACKS = ['Scope', 'Process', 'Practical'] as const
 export type Track = (typeof TRACKS)[number]
 
+/** The setlist's own names for the three tracks, in running order. */
+export const SIDES: Record<Track, string> = {
+  Scope: 'Side A',
+  Process: 'Side B',
+  Practical: 'Encore',
+}
+
 export type FaqEntry = {
   /** Stable id, used for the #hash deep link. */
   id: string

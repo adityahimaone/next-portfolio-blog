@@ -118,6 +118,22 @@ describe('the scene engine', () => {
     expect(h.view().playing).toBe(0)
   })
 
+  it('ends the playing clip and resets the stage the moment another is queued', () => {
+    h.engine.launch(0, true)
+    h.advance(1500)
+    expect(Number(h.master.props['--p'])).toBeGreaterThan(0)
+    h.engine.launch(3)
+    expect(h.view().playing).toBeNull()
+    expect(h.view().played).toEqual([0])
+    expect(h.view().selected).toBe(3)
+    expect(h.master.props['--p']).toBe('0')
+    // The old clip must not keep writing onto the new clip's stage.
+    h.advance(100)
+    expect(h.master.props['--p']).toBe('0')
+    h.advance(600)
+    expect(h.view().playing).toBe(3)
+  })
+
   it('launches immediately when asked to, as a deep link does', () => {
     h.engine.launch(4, true)
     expect(h.view().playing).toBe(4)
@@ -236,5 +252,31 @@ describe('with reduced motion', () => {
     expect(h.typed.textContent).toBe(FAQ_ITEMS[7].answer)
     expect(h.master.props['--p']).toBe('1')
     expect(h.pending()).toBe(0)
+  })
+})
+
+describe('without a typed-text element', () => {
+  it('plays, advances and finishes without one (the lyric sheet lights by CSS)', () => {
+    const h2 = setup()
+    // Rebuild the engine with no typed element.
+    const engine = createEngine({
+      items: FAQ_ITEMS,
+      setView: () => undefined,
+      reduced: () => false,
+      els: {
+        unit: () => null,
+        master: () => h2.master as unknown as HTMLElement,
+        typed: () => null,
+        time: () => null,
+        bar: () => null,
+        clip: () => null,
+      },
+    })
+    expect(() => {
+      engine.launch(0, true)
+      h2.advance(clipDuration(FAQ_ITEMS[0].answer) + 300)
+    }).not.toThrow()
+    expect(h2.master.props['--p']).toBe('1')
+    engine.destroy()
   })
 })

@@ -1,0 +1,604 @@
+/* ── The setlist ─────────────────────────────────────────────
+   The FAQ as a printed setlist and a lyric sheet, set straight onto the
+   section's own graph paper. There is no chassis here: no panel, no screen, no
+   shadow, no border box. What carries the design is type, rules, one stage to
+   read on, and a lamp that lights the paper under the pointer.
+
+   Everything reads the section's own ink (`--panel-ink`, which flips with the
+   theme), so it sits on the cream sheet by day and the dark chassis by night
+   without a second set of colours. The three accents are the performance
+   controller's own pad colours, so the setlist and the deck above it share a
+   palette.
+
+   The lyric sheet is arithmetic on one number. The playback engine writes
+   `--p` (0 to 1) onto the stage, and a word's brightness, the highlighter that
+   rides the word being sung, and the scribble under the playing title are all
+   `calc()` on it. Every animated property is an opacity, a transform, a
+   clip or a custom property: nothing animates layout. Motion is behind
+   `prefers-reduced-motion: no-preference`; with it off a press selects a song
+   and the whole lyric is lit at once. */
+
+.srOnly {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.set {
+  --ink: var(--panel-ink, #101211);
+  --muted: var(--panel-ink-muted, rgb(29 30 28 / 0.66));
+  --rule: color-mix(in srgb, var(--ink) 24%, transparent);
+  --display: var(--deck-font-display, sans-serif);
+  --ui: var(--deck-font-ui, sans-serif);
+  --mono: var(--deck-font-mono, ui-monospace, monospace);
+  --orange: var(--deck-orange, #ff5a1f);
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+  position: relative;
+  isolation: isolate;
+  width: min(1120px, 100%);
+  margin: clamp(72px, 10vw, 140px) auto 0;
+  color: var(--ink);
+}
+
+/* The lamp: the graph paper, stronger, but only under the pointer. */
+.lamp {
+  position: absolute;
+  z-index: -1;
+  inset: -48px -40px -24px;
+  background-image: linear-gradient(90deg, var(--rule) 1px, transparent 1px),
+    linear-gradient(0deg, var(--rule) 1px, transparent 1px);
+  background-size: var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px);
+  mask-image: radial-gradient(
+    circle 260px at var(--mx, 72%) var(--my, 18%),
+    #000 0%,
+    transparent 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    circle 260px at var(--mx, 72%) var(--my, 18%),
+    #000 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+@media (hover: none) {
+  .lamp {
+    display: none;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ink);
+  font: 700 11px var(--mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.head h3 {
+  margin: 0;
+  font: inherit;
+}
+.head span {
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(28px, 5vw, 88px);
+  margin-top: clamp(28px, 4vw, 56px);
+}
+
+/* ── The list ── */
+.side {
+  margin-bottom: clamp(20px, 2.6vw, 36px);
+}
+.sideHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  font: 700 10px var(--mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.sideHead i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c);
+}
+.sideHead em {
+  color: var(--muted);
+  font-style: normal;
+}
+.songs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.song {
+  position: relative;
+}
+.song::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--rule);
+  content: '';
+  transform-origin: left;
+}
+.songBtn {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.4em minmax(0, 1fr) 14px;
+  align-items: start;
+  gap: 12px;
+  width: 100%;
+  padding: 15px 0 16px 16px;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: 700 clamp(17px, 1.6vw, 22px) / 1.16 var(--display);
+  letter-spacing: -0.02em;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+/* The marker: a bar in the side's colour beside the selected song. */
+.songBtn::before {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 0;
+  width: 3px;
+  background: var(--c);
+  content: '';
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 0.3s var(--ease);
+}
+.song[data-selected='true'] .songBtn::before {
+  transform: scaleY(1);
+}
+.songBtn:focus-visible {
+  outline: 2px solid var(--c);
+  outline-offset: 2px;
+}
+.num {
+  padding-top: 0.28em;
+  color: var(--muted);
+  font: 700 11px var(--mono);
+  letter-spacing: 0.14em;
+  transition: color 0.2s ease;
+}
+.song[data-selected='true'] .num,
+.song[data-state='playing'] .num {
+  color: var(--ink);
+}
+.title {
+  position: relative;
+  display: block;
+  padding-bottom: 7px;
+  transition: transform 0.3s var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .songBtn:hover .title {
+    transform: translateX(0.3em);
+  }
+}
+
+/* The scribble: a hand-drawn underline that draws itself as the song plays. */
+.scribble {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  overflow: visible;
+}
+.scribble path {
+  fill: none;
+  stroke: var(--c);
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  stroke-linecap: round;
+  stroke-width: 2.4;
+  vector-effect: non-scaling-stroke;
+}
+.song[data-state='playing'] .scribble path {
+  stroke-dashoffset: calc(1 - var(--p, 0));
+}
+.song[data-state='played'] .scribble path {
+  opacity: 0.5;
+  stroke-dashoffset: 0;
+}
+
+/* The state glyph: a play triangle, blinking while queued, bars while playing,
+   a dot once played. */
+.icon {
+  position: relative;
+  display: block;
+  width: 12px;
+  height: 12px;
+  margin-top: 0.42em;
+  color: var(--muted);
+}
+.icon::before {
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  clip-path: polygon(14% 6%, 14% 94%, 94% 50%);
+  content: '';
+}
+.song[data-selected='true'] .icon {
+  color: var(--ink);
+}
+.song[data-state='queued'] .icon,
+.song[data-state='playing'] .icon {
+  color: var(--c);
+}
+.song[data-state='playing'] .icon::before {
+  clip-path: polygon(
+    0 100%,
+    0 30%,
+    28% 30%,
+    28% 100%,
+    36% 100%,
+    36% 0,
+    64% 0,
+    64% 100%,
+    72% 100%,
+    72% 55%,
+    100% 55%,
+    100% 100%
+  );
+}
+.song[data-state='played'] .icon::before {
+  clip-path: circle(28% at 50% 50%);
+}
+@keyframes cue {
+  50% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .song[data-state='queued'] .icon,
+  .song[data-state='queued'] .num {
+    animation: cue 0.5s steps(1, end) infinite;
+  }
+}
+
+/* ── The stage ── */
+.stage {
+  position: sticky;
+  top: clamp(16px, 4vh, 48px);
+  isolation: isolate;
+  display: grid;
+  align-content: start;
+  align-self: start;
+  gap: 18px;
+  min-height: clamp(400px, 38vw, 540px);
+  overflow: hidden;
+  padding: 4px 0 8px;
+}
+.ghost {
+  position: absolute;
+  z-index: -1;
+  top: -6%;
+  right: -3%;
+  color: transparent;
+  font: 800 clamp(180px, 24vw, 360px) / 0.8 var(--display);
+  letter-spacing: -0.06em;
+  pointer-events: none;
+  user-select: none;
+  -webkit-text-stroke: 1.5px color-mix(in srgb, var(--c) 50%, transparent);
+}
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  color: var(--muted);
+  font: 700 10px var(--mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.q {
+  margin: 0;
+  font: 800 clamp(20px, 2.1vw, 30px) / 1.08 var(--display);
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.stage[data-state='queued'] .q {
+  animation: cue 0.5s steps(1, end) infinite;
+}
+
+/* The lyric sheet: the whole answer, set at once so nothing reflows, lit word
+   by word as the playhead passes. */
+.lyrics {
+  margin: 0;
+  font: 600 clamp(22px, 2.5vw, 36px) / 1.2 var(--ui);
+  letter-spacing: -0.025em;
+  text-wrap: pretty;
+}
+.w {
+  /* How far the playhead is into this word, in words: 0 to 1 while it is on it. */
+  --d: calc(var(--p, 0) * var(--n, 1) - var(--i, 0));
+  /* Lit: 0 before the playhead, 1 once it has passed. */
+  --on: clamp(0, calc(var(--d) * 1.6), 1);
+  /* The highlighter: a parabola in the same distance, so it peaks on the word
+     being sung and is zero on both sides of it. */
+  --cur: clamp(0, calc(1 - (var(--d) - 0.5) * (var(--d) - 0.5) * 4), 1);
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--c) calc(var(--cur) * 62%), transparent),
+    color-mix(in srgb, var(--c) calc(var(--cur) * 62%), transparent)
+  );
+  background-position: 0 92%;
+  background-repeat: no-repeat;
+  background-size: 100% 0.52em;
+  box-decoration-break: clone;
+  opacity: calc(0.15 + var(--on) * 0.85);
+}
+
+/* The rail: nine ticks, one per song, and a cursor where you are. */
+.rail {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+  align-items: end;
+  height: 24px;
+}
+.tick {
+  height: 8px;
+  background: var(--rule);
+  transition:
+    height 0.25s var(--ease),
+    background 0.25s ease;
+}
+.tick[data-on='true'] {
+  height: 20px;
+  background: var(--c);
+}
+.cursor {
+  position: absolute;
+  bottom: -2px;
+  left: calc((var(--k, 0) + var(--p, 0)) / 9 * 100%);
+  width: 2px;
+  height: 26px;
+  background: var(--ink);
+  opacity: 0;
+}
+.stage[data-state='playing'] .cursor {
+  opacity: 1;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+}
+.tools button {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  font: 700 11px var(--mono);
+  letter-spacing: 0.16em;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  text-transform: uppercase;
+}
+.tools button[aria-pressed='true'] {
+  text-decoration-color: var(--c);
+  text-decoration-thickness: 3px;
+}
+.tools button:disabled {
+  cursor: default;
+  opacity: 0.4;
+  text-decoration: none;
+}
+.tools button:focus-visible,
+.cta:focus-visible {
+  outline: 2px solid var(--c, var(--orange));
+  outline-offset: 3px;
+}
+
+/* ── The way out ── */
+.cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 56px;
+  margin-top: clamp(28px, 4vw, 60px);
+  padding: 0 6px;
+  border-bottom: 2px solid var(--ink);
+  background: linear-gradient(var(--orange), var(--orange)) 0 100% / 0% 100%
+    no-repeat;
+  color: var(--ink);
+  font: 800 clamp(20px, 2.3vw, 32px) var(--display);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  transition:
+    background-size 0.45s var(--ease),
+    color 0.2s ease;
+}
+.cta i {
+  position: relative;
+  width: 0.9em;
+  height: 0.9em;
+  transition: transform 0.45s var(--ease);
+}
+.cta i::before,
+.cta i::after {
+  position: absolute;
+  background: currentColor;
+  content: '';
+}
+.cta i::before {
+  top: 0;
+  right: 0;
+  left: 18%;
+  height: 2px;
+}
+.cta i::after {
+  top: 0;
+  right: 0;
+  bottom: 18%;
+  width: 2px;
+}
+.cta:hover {
+  background-size: 100% 100%;
+  color: #14171a;
+}
+.cta:hover i {
+  transform: translate(3px, -3px);
+}
+
+/* Without a script the whole FAQ is plain text. */
+.plain {
+  display: grid;
+  gap: 22px;
+  max-width: 62ch;
+  margin: 28px 0 0;
+}
+.plain dt {
+  font: 800 20px / 1.2 var(--display);
+}
+.plain dd {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font: 500 16px / 1.6 var(--ui);
+}
+
+/* ── Arrival ── */
+.set[data-reveal='armed'] .song,
+.set[data-reveal='armed'] .sideHead,
+.set[data-reveal='armed'] .stage,
+.set[data-reveal='armed'] .head,
+.set[data-reveal='armed'] .cta {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .set[data-reveal='in'] .head,
+  .set[data-reveal='in'] .sideHead {
+    animation: rise 0.7s var(--ease) backwards;
+  }
+  .set[data-reveal='in'] .song {
+    animation: rise 0.7s var(--ease) backwards;
+    animation-delay: calc(var(--n) * 70ms + 150ms);
+  }
+  .set[data-reveal='in'] .song::before {
+    animation: draw 0.9s var(--ease) backwards;
+    animation-delay: calc(var(--n) * 70ms + 100ms);
+  }
+  .set[data-reveal='in'] .stage {
+    animation: stageIn 0.9s var(--ease) 0.25s backwards;
+  }
+  .set[data-reveal='in'] .cta {
+    animation: rise 0.7s var(--ease) 0.9s backwards;
+  }
+  .ghost {
+    animation: numIn 0.8s var(--ease) backwards;
+  }
+
+  /* On the beat the giant numeral kicks, while a song plays. Pairs, because a
+     changing selector alone does not restart an animation; a changing name
+     does. */
+  .set[data-beat='0'] .ghost[data-playing='true'],
+  .set[data-beat='2'] .ghost[data-playing='true'] {
+    animation: kickA 0.48s ease-out;
+  }
+  .set[data-beat='1'] .ghost[data-playing='true'],
+  .set[data-beat='3'] .ghost[data-playing='true'] {
+    animation: kickB 0.48s ease-out;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .set[data-reveal='armed'] .song,
+  .set[data-reveal='armed'] .sideHead,
+  .set[data-reveal='armed'] .stage,
+  .set[data-reveal='armed'] .head,
+  .set[data-reveal='armed'] .cta {
+    opacity: 1;
+  }
+  .songBtn::before,
+  .title,
+  .tick,
+  .cta,
+  .cta i {
+    transition: none;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+@keyframes draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes stageIn {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+@keyframes numIn {
+  from {
+    opacity: 0;
+    transform: translateY(24%);
+  }
+}
+@keyframes kickA {
+  from {
+    transform: scale(1.045);
+    -webkit-text-stroke-color: var(--c);
+  }
+}
+@keyframes kickB {
+  from {
+    transform: scale(1.045);
+    -webkit-text-stroke-color: var(--c);
+  }
+}
+
+/* ── Narrow screens: the stage comes first, the list under it ── */
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+  .stage {
+    position: relative;
+    top: auto;
+    order: -1;
+    min-height: 340px;
+  }
+  .ghost {
+    font-size: clamp(150px, 46vw, 260px);
+  }
+}
+
+/* Grid items must be allowed to shrink below their content's width. */
+.list,
+.stage {
+  min-width: 0;
+}

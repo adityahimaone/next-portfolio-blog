@@ -54,17 +54,39 @@ jest.mock('next/navigation', () => ({
 }))
 
 // Mock motion
+//
+// The contact FAQ renders a real component tree on the server, and its
+// magnetic layer calls the motion value hooks. A complete-enough mock keeps
+// those hooks pure and synchronous while still letting the rest of the page's
+// server-rendered markup be asserted. Motion components become their plain
+// HTML tags; the spring/transform hooks return inert values, which is all a
+// static-markup test needs.
+const mockMotionValue = (value) => ({
+  get: () => value,
+  getPrevious: () => value,
+  set: jest.fn(),
+  jump: jest.fn(),
+  on: jest.fn(() => () => {}),
+  destroy: jest.fn(),
+})
+
+const mockMotionComponent = new Proxy(
+  {},
+  { get: (_target, tag) => String(tag) },
+)
+
 jest.mock('motion/react', () => ({
-  m: {
-    div: 'div',
-    p: 'p',
-    h1: 'h1',
-    span: 'span',
-  },
+  m: mockMotionComponent,
+  motion: mockMotionComponent,
   useScroll: () => ({
     scrollYProgress: { current: 0 },
   }),
   useTransform: () => 0,
+  useSpring: (value) => value,
+  useMotionValue: (value) => mockMotionValue(value),
+  useMotionValueEvent: () => {},
+  useReducedMotion: () => false,
+  useAnimationFrame: () => {},
   AnimatePresence: ({ children }) => children,
   // `motion.create(Component)` wraps a component; several booth components use
   // it at module scope, so it has to exist for anything importing them.

@@ -2,7 +2,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 
 import { ContactDesk } from '@/features/landing-page/rack-01/contact-desk/contact-desk'
-import { ContactStatus } from '@/features/landing-page/rack-01/contact-desk/contact-status'
 import {
   FAQ_ITEMS,
   SIDES,
@@ -105,13 +104,5 @@ describe('the setlist, server-rendered', () => {
     ]) {
       expect(html).not.toContain(gone)
     }
-  })
-})
-
-describe('the status strip, server-rendered', () => {
-  it('renders a placeholder clock so hydration has nothing to disagree about', () => {
-    const strip = renderToStaticMarkup(<ContactStatus />)
-    expect(strip).toContain('--:--:--')
-    expect(strip).toContain('aria-label="Channel status"')
   })
 })

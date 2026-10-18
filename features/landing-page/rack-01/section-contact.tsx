@@ -14,7 +14,6 @@ import styles from './rack-01.module.css'
 import { SectionHeading } from './section-heading'
 import { Mail, Square } from 'lucide-react'
 import { ContactDesk } from './contact-desk/contact-desk'
-import { ContactStatus } from './contact-desk/contact-status'
 
 /** The top row of the footer's wordmark band. */
 const FOOTER_LINKS = [
@@ -291,8 +290,6 @@ export function Contact() {
           applications that need clearer structure.
         </p>
       </div>
-
-      <ContactStatus />
 
       <div className={styles.contactDeck}>
         <div className={styles.contactDeckBrand}>

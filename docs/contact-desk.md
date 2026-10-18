@@ -39,7 +39,6 @@ controller's pad colours as the three side accents.
 | `scene-engine.ts` | The playback machine: one rAF loop, the queue, the playhead. Plain module, tested against a fake clock |
 | `scene-logic.ts` | Pure: the beat clock, clip length, progress, words, focus movement |
 | `contact-content.ts` | The nine questions and answers, and the side names (edit copy here) |
-| `contact-status.tsx` | The status strip under the heading |
 
 The engine writes one number, `--p` (0 to 1), onto the stage and the playing
 song. Everything visual is `calc()` on it: a word's brightness is
@@ -63,4 +62,4 @@ selects a song and its whole lyric is lit at once.
 ## Removed
 
 The signal-path and brief-builder panels (the `.desk` block), the slit-type
-title, the full-bleed FAQ band, and the scene-launcher device.
+title, the full-bleed FAQ band, the scene-launcher device, and the status strip.

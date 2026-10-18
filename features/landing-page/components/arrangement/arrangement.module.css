@@ -229,6 +229,19 @@
 .lcd time {
   color: var(--arr-ink);
 }
+/* The BAR readout is fixed-width: a bar number that gains a digit must not
+   resize the transport. The number slot is six characters (001:01) and the
+   digits are tabular, so only the container needs a width. */
+.lcdPos {
+  flex: 0 0 auto;
+  justify-content: space-between;
+  width: 104px;
+}
+.lcdPos b {
+  flex: 1 1 auto;
+  min-width: 6ch;
+  text-align: right;
+}
 /* The story line. One caption per ruler stage, shown while the playhead is
    inside it — so the ruler's ticks are named as the reader reaches them rather
    than being a legend to decode. It takes the toolbar's free space between the

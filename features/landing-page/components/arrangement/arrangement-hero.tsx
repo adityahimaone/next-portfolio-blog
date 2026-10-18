@@ -160,10 +160,11 @@ export function ArrangementHero() {
             <small>FRONTEND SESSION</small>
           </div>
           <nav className={styles.menu} aria-label="Portfolio">
-            <a href="#work">Projects</a>
+            <Link href="/projects">Projects</Link>
             <Link href="/blog">Notes</Link>
             <Link href="/bookmarks">Bookmarks</Link>
-            <a href="#about">About</a>
+            <Link href="/skills">Skills</Link>
+            <Link href="/music">Mixtape</Link>
           </nav>
           {/* The story line. It names the stage the playhead is in, so the
               ruler's ticks are read rather than decoded. Both writes are on

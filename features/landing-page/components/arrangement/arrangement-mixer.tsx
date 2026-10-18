@@ -101,10 +101,11 @@ export function ArrangementMixer({ axis }: { axis: string }) {
       {/* The nav is hidden in the toolbar on phones, where the header has one
           line and no room for four links. It reappears here, in the flow. */}
       <nav className={styles.proofNav} aria-label="Portfolio">
-        <a href="#work">Projects</a>
+        <Link href="/projects">Projects</Link>
         <Link href="/blog">Notes</Link>
         <Link href="/bookmarks">Bookmarks</Link>
-        <a href="#about">About</a>
+        <Link href="/skills">Skills</Link>
+        <Link href="/music">Mixtape</Link>
       </nav>
     </footer>
   )

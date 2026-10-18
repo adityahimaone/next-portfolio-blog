@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
-import SlatCountPreloader from '@/components/ui/slat-count-preloader'
+import SignalLockPreloader from '@/components/ui/signal-lock-preloader'
 
 /**
  * The session's key. `sessionStorage`, not `localStorage`: the boot belongs to
@@ -11,21 +11,13 @@ import SlatCountPreloader from '@/components/ui/slat-count-preloader'
  */
 const SESSION_KEY = 'aditya-landing-session-boot'
 
-/** Hoisted so the boot cannot restart on an unrelated re-render: the sequence
- *  and the palette are props of the preloader, and an inline object would be a
- *  new identity every time this component renders. */
-const BOOT_SEQUENCE = ['003', '002', '001', 'READY'] as const
-const BOOT_PALETTE = {
-  background: '#14171a',
-  ink: '#eee9df',
-  accent: '#ff5a1f',
-} as const
-
 /**
- * Boots the rack once per session, over the top of the landing page.
+ * Plays the Signal Lock preloader once per session, over the top of the landing
+ * page: a playhead sweeps three track lanes, the name decodes out of vertical
+ * reels, and the lanes shutter open (1.4s in all).
  *
  * The page stays mounted underneath. That is the point: the arrangement has to
- * be measured and laid out before the blinds leave, or the hero would arrive
+ * be measured and laid out before the lanes leave, or the hero would arrive
  * mid-refresh and the camera's first frame would land on a page that had not
  * settled. Nothing is deferred to the gate either, so a reader who never sees
  * it (a repeat visit, or storage switched off) gets exactly the same page.
@@ -70,20 +62,11 @@ export function LandingGate({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
+      {/* `z-[100]` is the one deliberate departure from the component's default
+          `z-50`: the dock and the music player sit at or above 50 and would
+          otherwise be drawn over the poster for the length of the boot. */}
       {showGate ? (
-        <div className="fixed inset-0 z-[100]">
-          <SlatCountPreloader
-            sequence={BOOT_SEQUENCE}
-            preset="ink"
-            palette={BOOT_PALETTE}
-            label="RACK 01 / SESSION BOOT"
-            caption="Routing interface, systems and production notes."
-            exit="blinds"
-            hud
-            interactive={false}
-            onComplete={complete}
-          />
-        </div>
+        <SignalLockPreloader className="z-[100]" onComplete={complete} />
       ) : null}
     </>
   )

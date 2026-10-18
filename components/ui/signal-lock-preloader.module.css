@@ -1,0 +1,364 @@
+/* ── Signal Lock ─────────────────────────────────────────────
+   Every duration and delay here is a custom property set from `TIMELINE` in
+   the component, so there is one schedule and the stylesheet carries no timing
+   of its own. Everything animated is a transform, an opacity, a clip or a
+   dash offset: nothing animates layout, so nothing in this overlay can shift the
+   page under it.
+
+   Stage 1  the playhead sweeps; the lanes light behind it.
+   Stage 2  the reels roll the name into place; the rulers draw; the timecode
+            decodes; three lamps lock.
+   Stage 3  the poster thumps; the lanes shutter open onto the page.
+
+   Reduced motion is its own composition: the poster already resolved, held, and
+   faded. */
+
+.root {
+  --ease-sweep: cubic-bezier(0.45, 0, 0.55, 1);
+  --ease-roll: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  overflow: hidden;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--mono);
+}
+
+.poster {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  animation: thump var(--t-thump-dur) ease-out var(--t-thump-start) both;
+}
+@keyframes thump {
+  45% {
+    transform: scale(1.01);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ── The lanes ── */
+.lane {
+  position: absolute;
+  right: 0;
+  left: 0;
+  top: calc(var(--i) * 33.3334%);
+  height: 33.3334%;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  background: var(--paper);
+  transform-origin: var(--origin, 50% 50%);
+  will-change: transform;
+  animation: shutter var(--t-shutter-dur) cubic-bezier(0.7, 0, 0.84, 0)
+    calc(var(--t-shutter-start) + var(--i) * var(--t-shutter-stagger)) both;
+}
+/* The outer lanes fold away from the middle one, so the shutter opens outward. */
+.lane:nth-child(1) {
+  --origin: 50% 0%;
+}
+.lane:nth-child(2) {
+  --origin: 50% 50%;
+}
+.lane:nth-child(3) {
+  --origin: 50% 100%;
+}
+@keyframes shutter {
+  to {
+    transform: scaleY(0);
+  }
+}
+
+.laneBase,
+.laneLit {
+  position: absolute;
+  inset: 0;
+}
+/* The track line through the middle of the lane. */
+.laneBase::before,
+.laneLit::before {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--line) 0 6px,
+    transparent 6px 12px
+  );
+  content: '';
+}
+.laneBase {
+  --line: color-mix(in srgb, var(--ink) 22%, transparent);
+}
+.laneLit {
+  --line: var(--c);
+  clip-path: inset(0 100% 0 0);
+  animation: lit var(--t-sweep) var(--ease-sweep) both;
+}
+/* The lit copy is revealed at exactly the playhead's pace and on its easing, so
+   its edge is the playhead. */
+@keyframes lit {
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.clip {
+  position: absolute;
+  top: 24%;
+  height: 52%;
+  border-radius: 6px;
+}
+.laneBase .clip {
+  border: 1px solid color-mix(in srgb, var(--ink) 26%, transparent);
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.laneLit .clip {
+  border: 1px solid var(--c);
+  background: color-mix(in srgb, var(--c) 22%, transparent);
+}
+.label {
+  position: absolute;
+  top: 14px;
+  left: clamp(16px, 2.4vw, 32px);
+  color: var(--c);
+  font: 700 clamp(10px, 1vw, 12px) / 1 var(--mono);
+  letter-spacing: 0.2em;
+}
+
+/* ── The playhead ── */
+.playhead {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  will-change: transform;
+  animation: sweep var(--t-sweep) var(--ease-sweep) both;
+}
+.playhead i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  width: 2px;
+  background: var(--ink);
+}
+.playhead i::before {
+  position: absolute;
+  top: 0;
+  left: -5px;
+  border-top: 9px solid var(--ink);
+  border-right: 6px solid transparent;
+  border-left: 6px solid transparent;
+  content: '';
+}
+@keyframes sweep {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  96% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(100vw, 0, 0);
+  }
+}
+
+/* ── The stage: name, timecode, lamps ── */
+.stage {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: clamp(14px, 2.4vh, 26px);
+  animation: leave var(--t-leave-dur) ease-in var(--t-leave-start) both;
+}
+@keyframes leave {
+  to {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0);
+  }
+}
+.title {
+  width: min(72vw, 880px);
+  height: auto;
+  /* The name is about two thirds as tall as it is wide; on a short landscape
+     screen the width alone would outgrow the viewport, so the height caps it
+     and the glyphs scale down inside the box instead. */
+  max-height: 58vh;
+  overflow: visible;
+  color: var(--ink);
+}
+.title path {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+/* The reel: each letter's glyphs stacked above it, the whole strip dropped by
+   `--dist` so a decoy is in the window, then rolled up until the real letter
+   lands, with a small overshoot and snap. It is invisible until its own start,
+   so letters appear as the playhead reaches them and not before. */
+.reel {
+  will-change: transform;
+  animation:
+    reel var(--t-reel-dur) var(--ease-roll) var(--delay) both,
+    appear 80ms linear var(--delay) both;
+}
+@keyframes reel {
+  0% {
+    transform: translate3d(0, var(--dist), 0);
+  }
+  84% {
+    transform: translate3d(0, -1.4px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The registration bar: the three lanes' colours under the name. */
+.title .bar {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  stroke-linecap: butt;
+  stroke-width: 2.2;
+  animation: draw var(--t-bar-dur) var(--ease-sweep)
+    calc(var(--t-bar-start) + var(--i) * var(--t-bar-stagger)) both;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.timecode {
+  min-width: 32ch;
+  margin: 0;
+  color: var(--ink);
+  font: 700 clamp(11px, 1.15vw, 14px) / 1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.22em;
+  text-align: center;
+  white-space: pre;
+}
+.leds {
+  display: flex;
+  gap: 8px;
+}
+.leds i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ink) 16%, transparent);
+  animation: lock var(--t-lock-dur) ease-out
+    calc(var(--t-lock-start) + var(--i) * var(--t-lock-stagger)) both;
+}
+@keyframes lock {
+  50% {
+    background: var(--c);
+    transform: scale(1.7);
+  }
+  100% {
+    background: var(--c);
+    transform: scale(1);
+  }
+}
+
+/* ── The rulers ── */
+.rule {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  width: 100%;
+  height: 24px;
+  overflow: visible;
+  animation: leave var(--t-leave-dur) ease-in var(--t-leave-start) both;
+}
+.ruleTop {
+  top: clamp(10px, 2vh, 22px);
+}
+.ruleBottom {
+  bottom: clamp(10px, 2vh, 22px);
+}
+.ruleLine,
+.ruleTicks {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+.ruleLine {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw var(--t-rules-dur) var(--ease-sweep) var(--t-rules-start) both;
+}
+.ruleTicks {
+  vector-effect: non-scaling-stroke;
+}
+.ruleMask {
+  fill: none;
+  stroke: #fff;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  stroke-width: 40;
+  animation: draw var(--t-rules-dur) var(--ease-sweep) var(--t-rules-start) both;
+}
+
+/* ── Reduced motion: the resolved poster, held, then faded ── */
+@media (prefers-reduced-motion: reduce) {
+  .poster,
+  .lane,
+  .laneLit,
+  .playhead,
+  .stage,
+  .reel,
+  .rule,
+  .ruleLine,
+  .ruleMask,
+  .title .bar,
+  .leds i {
+    animation: none;
+  }
+  .laneLit {
+    clip-path: inset(0 0 0 0);
+  }
+  .playhead {
+    display: none;
+  }
+  .ruleLine,
+  .ruleMask,
+  .title .bar {
+    stroke-dashoffset: 0;
+  }
+  .leds i {
+    background: var(--c);
+  }
+  .root {
+    animation: hold var(--t-reduced) linear both;
+  }
+  @keyframes hold {
+    0%,
+    69% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}

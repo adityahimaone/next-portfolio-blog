@@ -1,71 +1,67 @@
-# Contact: the session desk
+# Contact: the scene launcher
 
 The 16-pad performance controller is unchanged (its GSAP coupling, its audio
-indices and its sweep order are untouched). Everything around it is rebuilt as
-the rest of one desk, in the About devices' materials (cream glass shell, dark
-rim, near-black LCD, dark pads that light orange).
+indices and its sweep order are untouched), and so is the section heading.
+Under it sits one new unit, the FAQ, built as a second piece of the same
+hardware.
 
-## What changed
+## Why it looks like this
 
-| Before | After |
+The FAQ used to be a full-bleed dark band with its own language. The section is
+a cream sheet carrying a graphite deck with orange and multicolour pads, so the
+FAQ is now a unit **on that deck's own materials**: the graphite chassis and its
+inset highlights, the green-phosphor LCD with scanlines, the pad colours
+(`CONTACT_PAD_COLORS`), the same mono silkscreen, and the same 780px width so the
+eye finds one column and not two.
+
+## What it does
+
+Each question is a **clip** on one of three tracks (Scope, Process, Practical),
+with its own waveform. **A clip does not start when you press it; it starts on
+the next beat** of a live 120 BPM clock, which is what makes a press feel
+performed.
+
+- Press a clip: it blinks (queued), the next beat launches it, and its answer
+  *plays*: a playhead crosses the clip, the answer types out on the LCD in step
+  with it, the waveform lights as the playhead passes, and the whole unit
+  pulses on the beat while it plays. Four LEDs count the beat.
+- Press the playing clip again, or Stop: it ends and shows the whole answer.
+- Auto: the next clip queues itself when one finishes.
+- The unit powers on as it arrives (the LCD flickers up, clips drop in along a
+  diagonal), and shortly after, the first clip queues itself, unless the visitor
+  has already acted or came in on a `#hash`.
+- A light on the chassis follows the pointer.
+
+## Structure
+
+| File | Role |
 | --- | --- |
-| Heading "Bring me the difficult part." | **"Got a hard one? / Let's roll tape."** in slit type, rising letter by letter as the section arrives |
-| FAQ accordion (4 questions) | **Slit-type FAQ band** (below): eight tracks, search, topic chips, deep links |
-| nothing | **Signal path**: how a project flows (brief, scope, build, hand off) as patched stages with animated cables |
-| nothing | **Brief builder**: pick the kind of work and timing, add a line, and it composes the email (`mailto:` link, plus copy) |
+| `scene-logic.ts` | Pure: the beat clock, clip length, progress, waveforms, transport readout, 2-D focus movement |
+| `scene-engine.ts` | The playback machine: one rAF loop, the queue, the playhead. Plain module, tested against a fake clock |
+| `scene-launch.tsx` | The unit: wiring only |
+| `scene-launch.module.css` | The look |
+| `contact-content.ts` | The nine questions and answers (edit copy here) |
+| `contact-status.tsx` | The status strip under the heading |
 
-## Decisions
+React is told only what happened (a press, a stop, the unit arriving) and
+commits only transitions (queued, playing, finished). A playing clip is a few
+custom-property and text writes per frame and no renders. The loop runs only
+while the unit is on screen or something is playing, so an idle page costs
+nothing.
 
-- **Accessible by construction.** The console is a real tabs pattern (tablist,
-  tabpanel, arrow keys, Home/End, roving tabindex). The full answer is real text
-  in the panel; the typed copy is `aria-hidden`, so a screen reader never hears
-  half a sentence. The path is an ordered list. Reduced motion prints the answer
-  whole and stills the meters and cables.
-- **Works without JavaScript.** Server markup is fully visible (`data-reveal="idle"`);
-  elements only hide once a script has armed them. The brief builder's link is a
-  working `mailto:` on first paint.
-- **Nothing is sent anywhere.** No form endpoint, no stored text.
-- **The mailto is capped by its encoded length** (1900), not the typed length:
-  a note of 480 non-ASCII characters encodes to ~4000 and Outlook-class clients
-  refuse past ~2000. The tests caught this.
-- **Copy** is deliberately modest and checkable: no rate, no dated availability,
-  no client list; the honest "no" on native mobile is kept. Edit
-  `contact-desk/contact-content.ts` to change any of it.
-- The desk sits between `.contactDeck` and the footer, because the rack's scroll
-  animation addresses children of `.contactDeck` by class.
+## Accessibility
 
-The old `.contactBrief*` rules in `rack-01.module.css` are no longer used and can
-be deleted.
+Real buttons in a labelled group per track, in a roving-tabindex grid: arrows
+move between tracks and clips, Enter or Space launches, Escape stops. The answer
+is announced once, whole, in a polite live region; the typed copy is
+`aria-hidden`. A `#hash` deep link per question (and Copy link on the LCD).
+Without JavaScript every question and answer is plain text.
 
-## The title and the FAQ: slit type
+Reduced motion is a complete alternative: no loop, no beat, no sweep; a press
+selects a clip and its whole answer appears.
 
-Both headlines use one treatment (`slit-title.tsx`): capitals in the display
-face, each line clipping its own overflow, each letter sitting a share of its
-height below the baseline until the section arrives, then rising through the
-slit a few milliseconds behind the letter before it. Hovering lifts the letters
-clear. Each is a single real `h2` with the whole text as its name and the
-letters `aria-hidden`.
+## Removed
 
-The FAQ closes the section as a full-bleed dark band in the hero's ground:
-
-- **Opening a row is a playhead sweep.** The row floods with signal orange from
-  the left, led by a bright playhead line; the question inverts exactly where
-  the line has passed (a dark copy of the row is clipped in step with the
-  flood); the answer is printed in the dark, so the flood is what reveals it,
-  and its words settle in behind the line. Closing wipes the orange out to the
-  right with the line trailing the edge. The three layers share one duration and
-  one curve, so the line is always exactly on the edge.
-- A DAW ruler under the headline, with the playhead's single sweep on arrival.
-- A per-track level meter that plays while its row is open; a scrub line that
-  follows the pointer over a closed row.
-- The band arrives mid-performance: once the headline lands, the first track
-  opens by itself, unless the visitor has already acted or came in on a `#hash`.
-- Real FAQ behaviour: `aria-expanded`/`aria-controls`, arrow keys, Home/End, a
-  `#hash` deep link and copy-link per question, search with highlights and an
-  excerpt under each closed match, topic chips with live counts, an empty state.
-  With no JavaScript every answer is shown open.
-- Reduced motion is a complete alternative: headline set whole, first row
-  simply open, no wipe, no sweep, a still moving line.
-
-The old recall console (`contact-console.tsx`, tabs + typewriter monitor) is
-removed.
+The signal-path and brief-builder panels (the `.desk` block), the slit-type
+title, and the first FAQ band. The section heading is back to
+"Bring me the difficult part."

@@ -11,9 +11,9 @@ import {
   MIXER_DATA,
 } from '../constants'
 import styles from './rack-01.module.css'
+import { SectionHeading } from './section-heading'
 import { Mail, Square } from 'lucide-react'
 import { ContactDesk } from './contact-desk/contact-desk'
-import { ContactTitle } from './contact-desk/contact-title'
 import { ContactStatus } from './contact-desk/contact-status'
 
 /** The top row of the footer's wordmark band. */
@@ -283,7 +283,9 @@ export function Contact() {
       data-rack-section
     >
       <div className={styles.contactFreshHeader}>
-        <ContactTitle />
+        <SectionHeading index="06" eyebrow="Open channel">
+          Bring me the difficult part.
+        </SectionHeading>
         <p>
           New frontend builds, complex product interfaces, and React
           applications that need clearer structure.

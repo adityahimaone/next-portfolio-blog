@@ -1,7 +1,13 @@
 'use client'
 
-import { useRef, type CSSProperties } from 'react'
-import { motion, useSpring, useTransform, type MotionValue } from 'motion/react'
+import { Fragment, useRef, type CSSProperties } from 'react'
+import {
+  AnimatePresence,
+  motion,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from 'motion/react'
 
 import type { FaqEntry } from '../contact-desk/contact-content'
 import { TRACK_META, nodeNumber } from './contact-orbit'
@@ -26,18 +32,16 @@ type Field = {
 const REST: Field = { x: 0, y: 0, rotateX: 0, rotateY: 0 }
 
 /**
- * One question, floating.
+ * One question, floating — and expanding in place.
  *
- * The node is deliberately three elements deep:
+ * `.cell` is the grid slot, `.magnetic` the spring response, `.levitate` the
+ * idle sine drift, and `.frame` the pill shell that opens into a card. The
+ * answer is a sibling of the trigger button, never nested inside it, so the
+ * question is a real disclosure button and the mail link inside the answer
+ * stays independently focusable.
  *
- *   `.cell`      the grid slot and the static organic offset;
- *   `.magnetic`  the spring-driven pointer response;
- *   `.levitate`  the slow sine drift, running as a CSS animation.
- *
- * Keeping them apart is what lets the idle drift keep its own timing while the
- * magnetic field retargets from wherever the drift left it. The pointer work
- * never touches React state: nine nodes read one pair of motion values and
- * write their own transforms.
+ * The pointer field never touches React state: nine nodes read one pair of
+ * motion values and write their own transforms.
  */
 export function ContactNode({
   item,
@@ -46,8 +50,11 @@ export function ContactNode({
   pointerY,
   active,
   muted,
-  controlId,
-  onOpen,
+  reduced,
+  triggerId,
+  panelId,
+  email,
+  onToggle,
 }: {
   item: FaqEntry
   index: number
@@ -55,11 +62,15 @@ export function ContactNode({
   pointerY: MotionValue<number>
   active: boolean
   muted: boolean
-  controlId: string
-  onOpen: (index: number, node: HTMLElement) => void
+  reduced: boolean
+  triggerId: string
+  panelId: string
+  email: string
+  onToggle: (index: number) => void
 }) {
   const button = useRef<HTMLButtonElement>(null)
   const meta = TRACK_META[item.track]
+  const labelId = `${triggerId}-label`
 
   // One measurement per pointer update, shared by the four springs below.
   const field = useTransform<number, Field>(
@@ -79,20 +90,17 @@ export function ContactNode({
 
       if (distance > REPEL_RADIUS) return REST
 
-      // Inside the inner ring the node leans toward the cursor. In the ring
-      // between the two radii its neighbours lean away, which is what turns a
-      // hover into a local disturbance rather than a single moving pill.
       const strength =
         distance < PULL_RADIUS
-          ? (1 - distance / PULL_RADIUS) * 0.16
+          ? (1 - distance / PULL_RADIUS) * 0.14
           : -(1 - (distance - PULL_RADIUS) / (REPEL_RADIUS - PULL_RADIUS)) *
-            0.05
+            0.045
 
       return {
         x: dx * strength,
         y: dy * strength,
-        rotateX: clamp((dy / window.innerHeight) * -9, -4.5, 4.5),
-        rotateY: clamp((dx / window.innerWidth) * 12, -6, 6),
+        rotateX: clamp((dy / window.innerHeight) * -7, -3.5, 3.5),
+        rotateY: clamp((dx / window.innerWidth) * 9, -4.5, 4.5),
       }
     },
   )
@@ -114,8 +122,6 @@ export function ContactNode({
     FIELD_SPRING,
   )
 
-  // The full string, rather than Motion's x/y shorthands: a composed transform
-  // stays on the compositor while the page is loading.
   const transform = useTransform<number, string>(
     [x, y, rotateX, rotateY],
     ([moveX, moveY, tiltX, tiltY]) =>
@@ -133,32 +139,124 @@ export function ContactNode({
           '--accent': meta.color,
           '--accent-ink': meta.ink,
           '--i': index,
-          '--dur': `${7.6 + (index % 5) * 1.35}s`,
+          '--dur': `${7.8 + (index % 5) * 1.3}s`,
         } as CSSProperties
       }
     >
       <motion.div className={styles.magnetic} style={{ transform }}>
         <span className={styles.levitate}>
-          <button
-            ref={button}
-            type="button"
-            className={styles.node}
-            aria-expanded={active}
-            aria-controls={controlId}
-            onClick={(event) => onOpen(index, event.currentTarget)}
-          >
-            <span className={styles.nodeCore}>
-              <span className={styles.nodeIndex} aria-hidden="true">
-                {nodeNumber(index)}
-              </span>
-              <span className={styles.nodeText}>{item.question}</span>
-              <span className={styles.nodeArrow} aria-hidden="true">
-                ↗
-              </span>
-            </span>
-          </button>
+          <div className={styles.frame} data-active={active}>
+            <div className={styles.card}>
+              <button
+                ref={button}
+                id={triggerId}
+                type="button"
+                className={styles.trigger}
+                aria-expanded={active}
+                aria-controls={panelId}
+                onClick={() => onToggle(index)}
+              >
+                <span className={styles.triggerMeta}>
+                  <span className={styles.nodeIndex} aria-hidden="true">
+                    {nodeNumber(index)}
+                  </span>
+                  <span className={styles.nodeTrack} aria-hidden="true">
+                    {meta.label}
+                  </span>
+                </span>
+
+                <span id={labelId} className={styles.nodeText}>
+                  {item.question}
+                </span>
+
+                <span className={styles.nodeToggle} aria-hidden="true">
+                  <span className={styles.arrowOpen}>↗</span>
+                  <span className={styles.arrowClose}>×</span>
+                </span>
+              </button>
+
+              <AnimatePresence initial={false}>
+                {active ? (
+                  <motion.div
+                    key="answer"
+                    id={panelId}
+                    className={styles.answerPanel}
+                    role="region"
+                    aria-labelledby={labelId}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={
+                      reduced
+                        ? { duration: 0.01 }
+                        : {
+                            height: {
+                              duration: 0.44,
+                              ease: [0.16, 1, 0.3, 1],
+                            },
+                            opacity: { duration: 0.24, ease: 'easeOut' },
+                          }
+                    }
+                  >
+                    <div className={styles.answerBody}>
+                      <p className={styles.answerLabel}>
+                        <span>Answer</span>
+                        <i aria-hidden="true" />
+                      </p>
+                      <p className={styles.answerText} aria-live="polite">
+                        <MaskedWords text={item.answer} reduced={reduced} />
+                      </p>
+                      <a className={styles.answerMail} href={`mailto:${email}`}>
+                        Ask about this one
+                        <span aria-hidden="true">↗</span>
+                      </a>
+                    </div>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+          </div>
         </span>
       </motion.div>
     </div>
+  )
+}
+
+/**
+ * The answer's masked word cascade. The panel only mounts when its pill opens,
+ * so the hidden start state is safe: the stagger runs on the interaction and
+ * never on page load.
+ */
+function MaskedWords({ text, reduced }: { text: string; reduced: boolean }) {
+  const words = text.split(/\s+/)
+
+  return (
+    <span className={styles.answerWords}>
+      {words.map((word, index) => (
+        <Fragment key={`${word}-${index}`}>
+          <span className={styles.wordMask}>
+            <motion.span
+              className={styles.word}
+              initial={
+                reduced
+                  ? { opacity: 0 }
+                  : { opacity: 0, y: '112%', rotateX: -74 }
+              }
+              animate={
+                reduced ? { opacity: 1 } : { opacity: 1, y: '0%', rotateX: 0 }
+              }
+              transition={{
+                duration: reduced ? 0.14 : 0.52,
+                delay: reduced ? 0 : index * 0.014,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+            >
+              {word}
+            </motion.span>
+          </span>
+          {index < words.length - 1 ? ' ' : null}
+        </Fragment>
+      ))}
+    </span>
   )
 }

@@ -8,14 +8,12 @@ import {
   type CSSProperties,
   type PointerEvent,
 } from 'react'
-import { createPortal } from 'react-dom'
-import { AnimatePresence, useMotionValue } from 'motion/react'
+import { useMotionValue } from 'motion/react'
 
 import { EMAIL } from '../../constants'
 import { FAQ_ITEMS } from '../contact-desk/contact-content'
 import { useReveal } from '../contact-desk/use-reveal'
 import { MagneticCta } from './contact-cta'
-import { ContactDetail, type StageOrigin } from './contact-detail'
 import { ContactNode } from './contact-node'
 import {
   FILTERS,
@@ -32,34 +30,20 @@ import { ContactWireframe } from './contact-wireframe'
 import { useMediaQuery } from './use-media'
 import styles from './contact-nodes.module.css'
 
-const DETAIL_ID = 'faq-detail'
-
-/** The colour of a closing expansion that did not start from a node. */
-function centreOrigin(): StageOrigin {
-  const cx = window.innerWidth / 2
-  const cy = window.innerHeight / 2
-  return {
-    top: cy - 34,
-    bottom: cy - 34,
-    left: cx - 120,
-    right: cx - 120,
-  }
-}
-
 /**
- * The Contact FAQ, rebuilt as a magnetic field.
+ * The Contact FAQ as a compact magnetic field of pills.
  *
- * Nine questions are nodes on the warm architectural grid. The category
- * filters are spotlights on three orbits rather than tabs: they change the
- * wireframe and pull the matching nodes forward while the rest recede. The
- * pointer is read into two motion values, never React state, so a sweep across
- * the cluster costs no renders.
+ * Nine questions float on the same warm grid as the rest of Contact. The
+ * category filters are spotlights on three orbits rather than tabs: they
+ * change the wireframe and pull the matching pills forward while the rest
+ * recede. Opening a pill expands it in place — the question grows, the card
+ * turns from a capsule into an editorial panel, and the answer cascades in
+ * word by word. No modal, no scroll lock, no portal: the question is the
+ * disclosure and the page never leaves the field.
  *
- * Clicking a node expands it from its own rectangle into a full-viewport
- * editorial stage; the other eight compress into the orbital dock at the
- * bottom. The page behind the stage is made inert, the question and answer
- * cascade in word by word, and the whole thing is reachable by keyboard and
- * by `#question-hash`.
+ * The pointer is read into two motion values, never React state, so a sweep
+ * across the cluster costs no renders. Deep links (#see-the-work) still open
+ * the matching pill and bring it into view.
  */
 export function ContactNodes({ email = EMAIL }: { email?: string }) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
@@ -67,7 +51,7 @@ export function ContactNodes({ email = EMAIL }: { email?: string }) {
   const [reveal, revealState] = useReveal<HTMLElement>(0.1)
   const [filter, setFilter] = useState<Filter>('All')
   const [active, setActive] = useState<number | null>(null)
-  const [origin, setOrigin] = useState<StageOrigin | null>(null)
+
   const still = useMediaQuery('(prefers-reduced-motion: reduce)')
   const finePointer =
     useMediaQuery('(hover: hover) and (pointer: fine)') && !still
@@ -75,66 +59,82 @@ export function ContactNodes({ email = EMAIL }: { email?: string }) {
   const pointerX = useMotionValue(Infinity)
   const pointerY = useMotionValue(Infinity)
 
-  const openNode = useCallback((index: number, node: HTMLElement) => {
-    const box = node.getBoundingClientRect()
-    setOrigin({
-      top: box.top,
-      right: window.innerWidth - box.right,
-      bottom: window.innerHeight - box.bottom,
-      left: box.left,
-    })
-    setActive(index)
-    const item = FAQ_ITEMS[index]
-    if (item) {
-      history.replaceState(
-        history.state,
-        '',
-        `${window.location.pathname}${window.location.search}#${item.id}`,
-      )
+  const updateHash = useCallback((index: number | null) => {
+    const base = `${window.location.pathname}${window.location.search}`
+    const item = index === null ? null : FAQ_ITEMS[index]
+    history.replaceState(history.state, '', item ? `${base}#${item.id}` : base)
+  }, [])
+
+  const closeActive = useCallback(
+    (restoreFocus = false) => {
+      if (active !== null && restoreFocus) {
+        const id = `${uid}-trigger-${active}`
+        window.setTimeout(
+          () => document.getElementById(id)?.focus({ preventScroll: true }),
+          0,
+        )
+      }
+      setActive(null)
+      updateHash(null)
+    },
+    [active, uid, updateHash],
+  )
+
+  const toggle = useCallback(
+    (index: number) => {
+      if (active === index) {
+        closeActive()
+        return
+      }
+      // Opening a pill outside the current spotlight resets the spotlight to
+      // All, so the field never reads as half-muted around an open answer.
+      if (filter !== 'All' && FAQ_ITEMS[index]?.track !== filter) {
+        setFilter('All')
+      }
+      setActive(index)
+      updateHash(index)
+    },
+    [active, closeActive, filter, updateHash],
+  )
+
+  // Escape collapses the open pill and puts focus back on its question.
+  useEffect(() => {
+    if (active === null) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      closeActive(true)
     }
-  }, [])
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [active, closeActive])
 
-  const close = useCallback(() => {
-    setActive(null)
-    history.replaceState(
-      history.state,
-      '',
-      `${window.location.pathname}${window.location.search}`,
-    )
-  }, [])
-
-  const select = useCallback((index: number) => {
-    setActive(index)
-    const item = FAQ_ITEMS[index]
-    if (item) {
-      history.replaceState(
-        history.state,
-        '',
-        `${window.location.pathname}${window.location.search}#${item.id}`,
-      )
-    }
-  }, [])
-
-  // Deep links and the browser's hash changes open the matching node. This is
-  // the same contract the old launcher had: every question has a stable URL.
+  // Deep links and browser hash changes open the matching pill. The trigger is
+  // centred rather than the whole card, so the answer expands into view below.
   useEffect(() => {
     const fromHash = () => {
       const id = decodeURIComponent(window.location.hash.replace(/^#/, ''))
       if (!id) return
       const index = indexOfId(id)
       if (index < 0) return
-      setOrigin(centreOrigin())
       setActive(index)
+      window.setTimeout(() => {
+        document.getElementById(`${uid}-trigger-${index}`)?.scrollIntoView({
+          block: 'center',
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)')
+            .matches
+            ? 'auto'
+            : 'smooth',
+        })
+      }, 120)
     }
-    // Defer the first read by a task: it lets the markup paint closed and
-    // keeps the state write out of the effect body.
     const first = window.setTimeout(fromHash, 0)
     window.addEventListener('hashchange', fromHash)
     return () => {
       window.clearTimeout(first)
       window.removeEventListener('hashchange', fromHash)
     }
-  }, [])
+  }, [uid])
 
   const onFieldMove = (event: PointerEvent<HTMLDivElement>) => {
     if (!finePointer) return
@@ -147,10 +147,20 @@ export function ContactNodes({ email = EMAIL }: { email?: string }) {
     pointerY.set(Infinity)
   }
 
+  const chooseFilter = (next: Filter) => {
+    setFilter(next)
+    if (
+      active !== null &&
+      next !== 'All' &&
+      FAQ_ITEMS[active]?.track !== next
+    ) {
+      closeActive()
+    }
+  }
+
   const accent = accentFor(filter, active)
   const accentInk = accentInkFor(filter, active)
   const shape = shapeFor(filter, active)
-  const activeItem = active === null ? null : FAQ_ITEMS[active]
   const activeFilter = metaFor(filter)
   const mutedCount =
     filter === 'All'
@@ -162,6 +172,7 @@ export function ContactNodes({ email = EMAIL }: { email?: string }) {
       ref={reveal}
       className={styles.faq}
       data-reveal={still ? 'in' : revealState}
+      data-open={active !== null}
       aria-labelledby={headingId}
       style={
         {
@@ -173,11 +184,7 @@ export function ContactNodes({ email = EMAIL }: { email?: string }) {
       <div className={styles.glow} aria-hidden="true" />
 
       <div className={styles.wireframeLayer}>
-        <ContactWireframe
-          shape={shape}
-          color={accent}
-          paused={active !== null}
-        />
+        <ContactWireframe shape={shape} color={accent} />
       </div>
 
       <header className={styles.head}>
@@ -191,8 +198,8 @@ export function ContactNodes({ email = EMAIL }: { email?: string }) {
           </h2>
         </div>
         <p className={styles.lede}>
-          Nine questions, three orbits. Hover to feel the field, then choose a
-          node to <strong>dock it</strong> and read the answer.
+          Nine questions, three orbits. Hover to feel the field, then open a
+          pill in place.
         </p>
       </header>
 
@@ -213,7 +220,7 @@ export function ContactNodes({ email = EMAIL }: { email?: string }) {
                   className={styles.filter}
                   data-active={selected}
                   aria-pressed={selected}
-                  onClick={() => setFilter(key)}
+                  onClick={() => chooseFilter(key)}
                   style={
                     {
                       '--filter-accent': meta?.color ?? 'var(--ink)',
@@ -250,7 +257,6 @@ export function ContactNodes({ email = EMAIL }: { email?: string }) {
         className={styles.cluster}
         onPointerMove={onFieldMove}
         onPointerLeave={onFieldLeave}
-        onBlur={onFieldLeave}
       >
         {FAQ_ITEMS.map((item, index) => (
           <ContactNode
@@ -260,9 +266,14 @@ export function ContactNodes({ email = EMAIL }: { email?: string }) {
             pointerX={pointerX}
             pointerY={pointerY}
             active={active === index}
-            muted={filter !== 'All' && item.track !== filter}
-            controlId={DETAIL_ID}
-            onOpen={openNode}
+            muted={
+              active !== index && filter !== 'All' && item.track !== filter
+            }
+            reduced={still}
+            triggerId={`${uid}-trigger-${index}`}
+            panelId={`${uid}-panel-${index}`}
+            email={email}
+            onToggle={toggle}
           />
         ))}
       </div>
@@ -282,23 +293,6 @@ export function ContactNodes({ email = EMAIL }: { email?: string }) {
           ))}
         </dl>
       </noscript>
-
-      {activeItem && origin
-        ? createPortal(
-            <AnimatePresence>
-              <ContactDetail
-                key="faq-detail"
-                item={activeItem}
-                index={active ?? 0}
-                origin={origin}
-                onClose={close}
-                onSelect={select}
-                email={email}
-              />
-            </AnimatePresence>,
-            document.body,
-          )
-        : null}
     </section>
   )
 }

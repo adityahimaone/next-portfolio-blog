@@ -24,11 +24,9 @@ const ContactWireframeCanvas = dynamic(
 export function ContactWireframe({
   shape,
   color,
-  paused,
 }: {
   shape: Shape
   color: string
-  paused: boolean
 }) {
   const root = useRef<HTMLDivElement>(null)
   const [near, setNear] = useState(false)
@@ -79,7 +77,7 @@ export function ContactWireframe({
       aria-hidden="true"
     >
       {live ? (
-        <ContactWireframeCanvas shape={shape} color={color} paused={paused} />
+        <ContactWireframeCanvas shape={shape} color={color} />
       ) : (
         <ShapeMark shape={shape} className={styles.glyph} />
       )}

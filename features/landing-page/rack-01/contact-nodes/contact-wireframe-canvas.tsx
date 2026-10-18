@@ -33,15 +33,13 @@ const REST_TILT: Record<Shape, number> = {
 export default function ContactWireframeCanvas({
   shape,
   color,
-  paused,
 }: {
   shape: Shape
   color: string
-  paused: boolean
 }) {
   return (
     <Canvas
-      frameloop={paused ? 'never' : 'always'}
+      frameloop="always"
       dpr={[1, 1.5]}
       gl={{
         antialias: true,

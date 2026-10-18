@@ -10,8 +10,8 @@ import {
 
 /**
  * What the server sends, which is also what a visitor without JavaScript and a
- * crawler see. These pin the properties that make the magnetic field a real
- * FAQ and not a picture of one: every question is a button, the filters are
+ * crawler see. These pin the properties that make the field a real FAQ and not
+ * a picture of one: every question is a disclosure button, the filters are
  * pressed-state buttons, the CTA is a working mail link, and without a script
  * every question and answer is plain text.
  */
@@ -26,15 +26,20 @@ describe('the magnetic FAQ, server-rendered', () => {
     expect(html).toContain('Pull a question out of the air.')
   })
 
-  it('renders a button per question, with the full question as its label', () => {
-    const nodes = html.match(/<button[^>]*aria-controls="faq-detail"[^>]*>/g)
-    expect(nodes).toHaveLength(FAQ_ITEMS.length)
+  it('renders a disclosure button per question, all collapsed', () => {
+    const triggers = html.match(/<button[^>]*aria-expanded="false"[^>]*>/g)
+    expect(triggers).toHaveLength(FAQ_ITEMS.length)
     for (const item of FAQ_ITEMS) {
       expect(html).toContain(item.question)
     }
-    // Nothing is expanded in the initial payload.
-    expect(html.match(/aria-expanded="false"/g)).toHaveLength(FAQ_ITEMS.length)
     expect(html).not.toContain('aria-expanded="true"')
+    // Each trigger points at a unique answer panel that mounts on open.
+    const controls = [...html.matchAll(/aria-controls="([^"]+)"/g)].map(
+      (match) => match[1],
+    )
+    expect(controls).toHaveLength(FAQ_ITEMS.length)
+    expect(new Set(controls).size).toBe(FAQ_ITEMS.length)
+    for (const control of controls) expect(control).toContain('-panel-')
   })
 
   it('has a pressed-state filter for All and each track', () => {
@@ -74,6 +79,12 @@ describe('the magnetic FAQ, server-rendered', () => {
     expect((html.match(/aria-hidden="true"/g) ?? []).length).toBeGreaterThan(
       FAQ_ITEMS.length * 2,
     )
+  })
+
+  it('expands inline instead of opening a modal', () => {
+    expect(html).not.toContain('role="dialog"')
+    expect(html).not.toContain('aria-modal')
+    expect(html).not.toContain('faq-detail')
   })
 
   it('has none of the old dark sampler left', () => {

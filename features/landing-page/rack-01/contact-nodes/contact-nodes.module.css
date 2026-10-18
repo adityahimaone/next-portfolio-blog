@@ -277,11 +277,11 @@
 .cluster {
   position: relative;
   z-index: 2;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: clamp(12px, 1.8vw, 24px);
-  row-gap: clamp(10px, 1.2vw, 16px);
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(9px, 1vw, 14px) clamp(12px, 1.3vw, 18px);
   max-width: 1180px;
   margin: 0 auto;
   padding-inline: clamp(20px, 4vw, 56px);
@@ -290,7 +290,9 @@
 
 .cell {
   position: relative;
-  min-width: 0;
+  width: max-content;
+  max-width: 100%;
+  flex: 0 0 auto;
   opacity: 1;
   filter: blur(0);
   translate: 0 0;
@@ -300,50 +302,65 @@
     translate 620ms var(--ease-out);
 }
 
+/* The open card gets a readable measure; every closed pill is only as wide as
+   its own question. */
+.cell[data-active='true'] {
+  width: min(620px, 100%);
+}
+
 /* Organic, but only by a few pixels: enough that the field does not read as
    a table, small enough that the two columns never collide. */
 .cell:nth-child(1) {
   --off: 0px;
+  --shift: -5px;
   --rot: -0.35deg;
 }
 
 .cell:nth-child(2) {
   --off: 6px;
+  --shift: 6px;
   --rot: 0.3deg;
 }
 
 .cell:nth-child(3) {
   --off: -3px;
+  --shift: -3px;
   --rot: 0.45deg;
 }
 
 .cell:nth-child(4) {
   --off: 5px;
+  --shift: 4px;
   --rot: -0.3deg;
 }
 
 .cell:nth-child(5) {
   --off: 0px;
+  --shift: 0px;
   --rot: 0.25deg;
 }
 
 .cell:nth-child(6) {
   --off: -5px;
+  --shift: -6px;
   --rot: -0.45deg;
 }
 
 .cell:nth-child(7) {
   --off: 6px;
+  --shift: 5px;
   --rot: 0.35deg;
 }
 
 .cell:nth-child(8) {
   --off: -2px;
+  --shift: -2px;
   --rot: -0.25deg;
 }
 
 .cell:nth-child(9) {
   --off: 3px;
+  --shift: 4px;
   --rot: 0.4deg;
 }
 
@@ -414,7 +431,7 @@
   background: color-mix(in srgb, var(--ink) 5%, transparent);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55);
   rotate: var(--rot, 0deg);
-  translate: 0 var(--off, 0px);
+  translate: var(--shift, 0px) var(--off, 0px);
   transition:
     border-radius 460ms var(--ease-out),
     rotate 460ms var(--ease-out),
@@ -485,9 +502,8 @@
 
 /* ── The question trigger ───────────────────────────────── */
 .trigger {
-  display: grid;
+  display: flex;
   width: 100%;
-  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: clamp(10px, 1.2vw, 16px);
   padding: clamp(11px, 1.2vw, 14px) clamp(15px, 1.5vw, 20px);
@@ -548,6 +564,7 @@
 
 .nodeText {
   min-width: 0;
+  flex: 1 1 auto;
   color: var(--ink);
   font-family: var(--deck-font-display), system-ui, sans-serif;
   font-size: clamp(15px, 1.3vw, 18px);
@@ -573,6 +590,7 @@
 .nodeToggle {
   position: relative;
   display: grid;
+  flex: 0 0 auto;
   width: clamp(30px, 2.5vw, 34px);
   aspect-ratio: 1;
   flex: 0 0 auto;
@@ -627,7 +645,7 @@
   color: var(--accent-ink);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 1000px) and (hover: hover) and (pointer: fine) {
   .trigger:hover .nodeText {
     font-variation-settings: 'wght' 720;
     letter-spacing: -0.04em;
@@ -909,14 +927,14 @@
 }
 
 @media (max-width: 900px) {
-  .cluster {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: 11px;
+  .cell {
+    --off: 0px;
+    --shift: 0px;
+    --rot: 0deg;
   }
 
-  .cluster .cell {
-    --off: 0px;
-    --rot: 0deg;
+  .cell[data-active='true'] {
+    width: 100%;
   }
 
   .trigger[aria-expanded='true'] .nodeText {
@@ -968,6 +986,7 @@
   }
 
   .cluster {
+    gap: 9px 10px;
     padding-inline: 16px;
   }
 

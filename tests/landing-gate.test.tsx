@@ -1,6 +1,7 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 
+import { STORM_TIMELINE } from '@/components/ui/signal-storm-preloader'
 import { LandingGate } from '@/features/landing-page/components/landing-gate'
 ;(
   globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
@@ -64,14 +65,14 @@ describe('<LandingGate />', () => {
 
   it('removes the poster when it ends and remembers it for the session', () => {
     mount()
-    // First the frame that puts the poster up, then its own 1.4s: a render
+    // First the frame that puts the poster up, then the preloader's own run: a render
     // scheduled by a timer lands when its `act` ends, so the poster's clock
     // starts with the second one.
     act(() => {
       jest.advanceTimersByTime(20)
     })
     act(() => {
-      jest.advanceTimersByTime(1400)
+      jest.advanceTimersByTime(STORM_TIMELINE.total)
     })
     expect(host.querySelector('[aria-hidden="true"].fixed')).toBeNull()
     expect(host.querySelector('#page')).not.toBeNull()

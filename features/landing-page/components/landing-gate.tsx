@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
-import SignalLockPreloader from '@/components/ui/signal-lock-preloader'
+import SignalStormPreloader from '@/components/ui/signal-storm-preloader'
 
 /**
  * The session's key. `sessionStorage`, not `localStorage`: the boot belongs to
@@ -12,9 +12,11 @@ import SignalLockPreloader from '@/components/ui/signal-lock-preloader'
 const SESSION_KEY = 'aditya-landing-session-boot'
 
 /**
- * Plays the Signal Lock preloader once per session, over the top of the landing
- * page: a playhead sweeps three track lanes, the name decodes out of vertical
- * reels, and the lanes shutter open (1.4s in all).
+ * Plays the Signal Storm preloader once per session, over the top of the landing
+ * page: a storm of studio words shutters away to reveal AD[I]TYA / H[I]MAONE
+ * rolling into place around a ticking metronome, then three track lanes open
+ * onto the page (2.8s in all). `SignalLockPreloader` (the 1.4s playhead version)
+ * is a drop-in alternative: swap the import and the element below.
  *
  * The page stays mounted underneath. That is the point: the arrangement has to
  * be measured and laid out before the lanes leave, or the hero would arrive
@@ -66,7 +68,7 @@ export function LandingGate({ children }: { children: React.ReactNode }) {
           `z-50`: the dock and the music player sit at or above 50 and would
           otherwise be drawn over the poster for the length of the boot. */}
       {showGate ? (
-        <SignalLockPreloader className="z-[100]" onComplete={complete} />
+        <SignalStormPreloader className="z-[100]" onComplete={complete} />
       ) : null}
     </>
   )

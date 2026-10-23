@@ -25,6 +25,30 @@ Anything quoting the dock's height also needs updating: `DOCK_CLEARANCE` in
 `use-hero-dock-visibility.ts`, and clearance comments in `booth`, `crate`, `releases`,
 `library`, `blog` and `projects` modules.
 
+## The boot's first frame comes from the server
+
+The landing preloader is a client component, so its overlay cannot exist until
+hydration — which means the hero paints first unless something else holds the
+frame. That something is `StormCover` (exported from
+`signal-storm-preloader.tsx`): the storm's bare ground, in the landing page's
+HTML, shown only when the `<head>` script in `app/layout.tsx` writes
+`data-boot="on"`. The gate's state is `cover | storm | done`; `cover` and
+`storm` never coexist, so the handoff is a single commit of identical pixels.
+
+Rules that keep it working:
+
+- The cover and the storm's ground must read **one** background declaration
+  (`.groundPaint`). Restating the gradients is how the two drift apart.
+- The cover is hidden by default and shown by the script. Never invert it — the
+  reverse puts a dark panel over the page for anyone whose script did not run.
+- `--boot-play: paused` is written by that same script, so the hero's letters
+  are held from their first frame rather than frozen mid-rise after hydration.
+  Skip it under reduced motion; the overlay's `restoreHero` returns early there
+  and would never release them.
+- **No top-level `return` in inline head scripts.** It is a SyntaxError in a
+  classic `<script>` and kills the whole block silently — which is what had
+  been happening to the dock's pre-hide script.
+
 ## Repo conventions
 
 - **`.patch` files and `.workbuddy-ai/memory/` are tracked on purpose.** Logs are committed

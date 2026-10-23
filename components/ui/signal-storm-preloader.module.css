@@ -1,319 +1,46 @@
 /* ── Signal Storm ────────────────────────────────────────────
-   Every duration and delay is a custom property set from `STORM_TIMELINE` in
-   the component, so there is one schedule and the stylesheet carries no timing
-   of its own except the marquee speeds, which have no place on a timeline (they
-   run for as long as the storm is up). Everything animated is a transform, an
-   opacity, a clip or a dash offset: nothing animates layout.
+   A boot that ends in the hero, so it is made of the hero's own materials: the
+   same dark ground and graph grid (`--deck-ground`, `--deck-grid-*`), the same
+   signal orange, the same cream, the same three lane colours. Where this ends
+   and the hero begins there is no change of palette to notice.
 
-   The order of events:
-     the storm slides in and runs; the letters roll into place beneath it; the
-     storm shutters away row by row; the giant letter lands and the poster
-     thumps; the rules draw, the labels decode, the pads slide in, the metronome
-     rises and begins to tick; the poster leaves and three track lanes shutter
-     open onto the page.
-
-   Reduced motion is its own composition: no storm, the resolved poster, held,
-   then faded. */
+   Everything animated is a transform, an opacity or a clip: nothing animates
+   layout. The merge into the name clip is not in this file at all: its numbers
+   come from measuring the hero, so it is driven from the component with the Web
+   Animations API. What is here is the rest: the ground, the running words, and
+   the band's resting look. */
 
 .root {
   --ease-out: cubic-bezier(0.2, 0.9, 0.2, 1);
-  --ease-snap: cubic-bezier(0.3, 1.5, 0.5, 1);
-  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
   container-type: size;
   overflow: hidden;
   background: transparent;
-  color: var(--ink);
-  font-family: var(--mono);
 }
 
-/* ── The three lanes the poster sits on, which are what shutters open ── */
-.panel {
+/* The hero's own ground, and its graph paper. */
+.ground {
   position: absolute;
-  right: 0;
-  left: 0;
-  top: calc(var(--i) * 33.3334%);
-  height: 33.3334%;
-  background: var(--paper);
-  transform-origin: var(--origin, 50% 50%);
-  will-change: transform;
-  animation: shutter var(--t-panel-dur) cubic-bezier(0.7, 0, 0.84, 0)
-    calc(var(--t-panel-start) + var(--i) * var(--t-panel-stagger)) both;
-}
-.panel:nth-child(1) {
-  --origin: 50% 0%;
-}
-.panel:nth-child(2) {
-  --origin: 50% 50%;
-}
-.panel:nth-child(3) {
-  --origin: 50% 100%;
-}
-@keyframes shutter {
-  to {
-    transform: scaleY(0);
-  }
-}
-
-.stage {
-  position: absolute;
-  z-index: 2;
   inset: 0;
-  animation: leave var(--t-leave-dur) ease-in var(--t-leave-start) both;
-}
-@keyframes leave {
-  to {
-    opacity: 0;
-    transform: translate3d(0, -8px, 0);
-  }
-}
-
-.poster {
-  position: absolute;
-  top: 10%;
-  left: 3%;
-  width: 94%;
-  height: 70%;
-  max-width: none;
-  overflow: visible;
-  transform-origin: 50% 60%;
-  animation: thump var(--t-thump-dur) var(--t-thump-start) both;
-}
-@container (max-aspect-ratio: 9/10) {
-  .poster {
-    top: 12%;
-    left: 2%;
-    width: 96%;
-    height: 66%;
-  }
-}
-@keyframes thump {
-  30% {
-    transform: translateY(7px) scale(1.012);
-  }
-  60% {
-    transform: translateY(-3px);
-  }
-  100% {
-    transform: none;
-  }
+  background:
+    linear-gradient(
+        90deg,
+        var(--deck-grid-line, rgb(238 233 223 / 0.05)) 1px,
+        transparent 1px
+      )
+      0 0 / var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px),
+    linear-gradient(
+        0deg,
+        var(--deck-grid-line, rgb(238 233 223 / 0.05)) 1px,
+        transparent 1px
+      )
+      0 0 / var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px),
+    var(--deck-ground, #14171a);
 }
 
-.label {
-  fill: var(--accent);
-  font-family: var(--mono);
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-/* The letters group: a hook for the whole word, and crisp edges for the stadiums. */
-.letters {
-  shape-rendering: geometricPrecision;
-}
-
-/* ── The reels ── */
-.reel {
-  will-change: transform;
-  animation:
-    roll var(--dur) var(--delay) both,
-    appear 80ms linear var(--delay) both;
-}
-@keyframes roll {
-  0% {
-    transform: translateY(var(--dist));
-    animation-timing-function: cubic-bezier(0.5, 0, 0.25, 1);
-  }
-  82% {
-    transform: translateY(-16px);
-    animation-timing-function: ease-in-out;
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-/* The giant letter lands last and harder: a deeper overshoot, a longer settle. */
-.giantReel {
-  animation-name: rollGiant, appear;
-}
-@keyframes rollGiant {
-  0% {
-    transform: translateY(var(--dist));
-    animation-timing-function: cubic-bezier(0.5, 0, 0.2, 1);
-  }
-  78% {
-    transform: translateY(-34px);
-    animation-timing-function: ease-in-out;
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-@keyframes appear {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* ── The rules ── */
-.draw {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: draw var(--t-rules-dur) cubic-bezier(0.6, 0, 0.2, 1) var(--delay)
-    both;
-}
-@keyframes draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-.dot {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: dot 360ms cubic-bezier(0.3, 1.8, 0.5, 1) var(--delay) both;
-}
-@keyframes dot {
-  from {
-    transform: scale(0);
-  }
-  to {
-    transform: scale(1);
-  }
-}
-
-/* ── The pads ── */
-.corner {
-  position: absolute;
-  top: 0;
-  width: clamp(64px, 15cqmin, 168px);
-  height: clamp(64px, 15cqmin, 168px);
-}
-.corner svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  overflow: visible;
-}
-.cornerL {
-  left: 0;
-  animation: cornerL var(--t-corner-dur) var(--ease-out) var(--t-corner-start)
-    both;
-}
-.cornerR {
-  right: 0;
-  animation: cornerR var(--t-corner-dur) var(--ease-out)
-    calc(var(--t-corner-start) + var(--t-corner-stagger)) both;
-}
-.cornerR svg {
-  transform: scaleX(-1);
-}
-@keyframes cornerL {
-  from {
-    transform: translate(-70%, -70%);
-  }
-}
-@keyframes cornerR {
-  from {
-    transform: translate(70%, -70%);
-  }
-}
-.rec {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: rec var(--t-tick-period) steps(1, end) var(--t-tick-start) infinite;
-}
-@keyframes rec {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.25;
-  }
-}
-
-/* ── The metronome ── */
-.rise {
-  animation: rise var(--t-metro-dur) cubic-bezier(0.2, 1.2, 0.35, 1)
-    var(--t-metro-start) both;
-}
-@keyframes rise {
-  from {
-    transform: translateY(640px);
-  }
-}
-.pend {
-  transform-box: view-box;
-  transform-origin: 230px 540px;
-  animation: tick var(--t-tick-period) ease-in-out var(--t-tick-start) infinite;
-}
-/* 0 → right extreme → 0 → left extreme → 0: a beat at each extreme, 500ms apart
-   at the default 1000ms period, which is 120 BPM. */
-@keyframes tick {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(21deg);
-  }
-  75% {
-    transform: rotate(-21deg);
-  }
-}
-.blip,
-.lamp {
-  opacity: 0.2;
-}
-.blipR {
-  animation: blipR var(--t-tick-period) linear var(--t-tick-start) infinite;
-}
-.blipL {
-  animation: blipL var(--t-tick-period) linear var(--t-tick-start) infinite;
-}
-.lamp {
-  animation: lamp calc(var(--t-tick-period) / 2) linear var(--t-tick-start)
-    infinite;
-}
-@keyframes blipR {
-  0%,
-  100% {
-    opacity: 0.2;
-  }
-  25% {
-    opacity: 1;
-  }
-  40% {
-    opacity: 0.2;
-  }
-}
-@keyframes blipL {
-  0%,
-  55%,
-  100% {
-    opacity: 0.2;
-  }
-  75% {
-    opacity: 1;
-  }
-}
-@keyframes lamp {
-  0% {
-    opacity: 1;
-  }
-  40%,
-  100% {
-    opacity: 0.2;
-  }
-}
-
-/* ── The storm ── */
+/* ── The storm: a column of rows, slightly tilted, running edge to edge ── */
 .storm {
   position: absolute;
-  z-index: 3;
+  z-index: 1;
   inset: -25% -15%;
   display: flex;
   flex-direction: column;
@@ -325,15 +52,11 @@
   height: 15cqh;
   flex: none;
   overflow: visible;
-  animation:
-    rowIn var(--t-enter) var(--ease-out)
-      calc(var(--row) * var(--t-enter-stagger)) both,
-    shutter var(--t-shutter-dur) cubic-bezier(0.7, 0, 0.3, 1)
-      calc(var(--t-shutter-start) + var(--row) * var(--t-shutter-stagger))
-      forwards;
+  animation: rowIn var(--t-enter) var(--ease-out)
+    calc(var(--row) * var(--t-enter-stagger)) both;
 }
 .srow[data-dir='r'] {
-  animation-name: rowInR, shutter;
+  animation-name: rowInR;
 }
 @keyframes rowIn {
   from {
@@ -372,36 +95,32 @@
   }
 }
 
-/* ── Reduced motion: the resolved poster, held, then faded ── */
+/* ── The band: the hero's name clip, grown out of the merged rows ──
+   Hidden (clipped to a line through its middle) until the component sizes it to
+   the clip it measured and animates it open; the colour is the clip's own. */
+.fuse {
+  position: absolute;
+  z-index: 2;
+  background: var(--deck-orange, #ff5a1f);
+  clip-path: inset(50% 0 50% 0);
+  will-change: clip-path, opacity;
+}
+
+/* ── Reduced motion: the hero's ground, held, then faded ── */
 @media (prefers-reduced-motion: reduce) {
-  .panel,
-  .stage,
-  .poster,
-  .reel,
-  .draw,
-  .dot,
-  .cornerL,
-  .cornerR,
-  .rec,
-  .rise,
-  .pend,
-  .blip,
-  .lamp {
+  .srow,
+  .strip {
     animation: none;
   }
-  .draw {
-    stroke-dashoffset: 0;
-  }
-  .blip,
-  .lamp {
-    opacity: 1;
-  }
-  .root {
+  .ground {
     animation: hold var(--t-reduced) linear both;
+  }
+  .fuse {
+    display: none;
   }
   @keyframes hold {
     0%,
-    72% {
+    58% {
       opacity: 1;
     }
     100% {

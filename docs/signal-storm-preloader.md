@@ -1,55 +1,75 @@
 # Signal Storm preloader
 
-A 2.8s studio-poster preloader, adapted from the Waving Portfolio Landing
-reference and now the one `LandingGate` plays. It runs once per session, over a
-page that is already rendered. `SignalLockPreloader` (the 1.4s playhead version,
-`signal-lock-preloader.md`) is a drop-in alternative: swap the import and the
-element in `landing-gate.tsx`.
+A 1.74s boot that **ends in the hero**: studio words run edge to edge, are pulled
+into the hero's name clip, and the hero's own letters rise onto it. It is what
+`LandingGate` plays once per session. `SignalLockPreloader` (the 1.4s playhead
+version, `signal-lock-preloader.md`) is a drop-in alternative: swap the import
+and the element in `landing-gate.tsx`.
 
-## What was changed from the reference
+There is no poster and no scene in the middle (the metronome, the corner pads,
+the labels and the paper are gone): the last thing on screen is the first thing
+in the hero.
 
-| Reference | Here |
-| --- | --- |
-| `P [O] RT / F [O] LIO`, one giant shared letter | **`AD [I] TYA / H [I] MAONE`**. Both names contain an I, so the giant letter is a tall bar, which is also a playhead |
-| Storm of random capitals | **Studio words** (PLAY, REC, LOOP, MIX, GAIN, SYNC...) in the three lane colours, solid and outlined |
-| Hand-inked waving character | **A metronome** that rises from the baseline and ticks at 120 BPM (one beat at each extreme of the swing) |
-| Dice corners | **Two pads**: a play pad and a record pad with a pulsing dot |
-| 7s intro, the poster is the page | **2.8s**, and an exit: the poster leaves and three track lanes shutter open onto the page |
-| Interactive (hover re-rolls, click throws letters) | **None.** It is an overlay with `pointer-events: none`; the page under it is usable immediately |
+## It is made of the hero's materials
+
+| | Hero | Preloader |
+| --- | --- | --- |
+| Ground | `--deck-ground` `#14171a` and its 30px graph grid | the same tokens |
+| Name clip | signal orange `#ff5a1f` | the same orange |
+| Ink | cream `#eee9df` | the same cream, for the outlined rows |
+| Accents | the three lane colours | green, blue and amber rows |
+
+A test reads `app/deck-theme.css` and fails if these ever drift apart.
 
 ## The sequence
 
 | When | What |
 | --- | --- |
-| 0–360ms | The storm slides in, seven rows alternating direction, and runs |
-| 380–1340ms | Letters roll into place beneath it, left to right, row by row; the giant I starts at 800ms |
-| 600–1210ms | The storm shutters away, row by row (`scaleY(0)`, 45ms apart) |
-| 1360ms | The giant letter has landed: the poster thumps |
-| 1360–2080ms | Rules draw in (`pathLength` 1); labels decode (1250–1950ms) |
-| 1400–1930ms | The pads slide in from the corners |
-| 1400–1850ms | The metronome rises; from 1850ms its pendulum ticks |
-| 2350ms | The poster leaves; 2400–2800ms three lanes shutter open |
+| 0–600ms | Seven rows of studio words (PLAY, REC, LOOP, MIX, GAIN, SYNC...) slide in and run, alternating direction, on the hero's ground |
+| 900ms | The merge starts. The column straightens from its tilt and every row is pulled onto the **name clip's centre line**, squashing to a thread, outer rows first |
+| 1000–1400ms | An orange band grows out of that line, to the clip's **measured** rectangle and corner radius |
+| 1300ms | The hero's letters are released and start to rise |
+| 1400–1620ms | The dark ground fades; the hero is under it |
+| 1580–1740ms | The band fades; the real clip is under it, unchanged |
+
+## How it lands on the title
+
+- **The target is measured, not drawn.** The hero marks its name clip with
+  `data-hero-name-clip`; at the start of the merge the preloader reads that
+  element's rectangle and corner radius. If the clip is missing, or the page was
+  restored scrolled past the hero, it lands on a centred band instead.
+- **The letters are the hero's own.** While the preloader plays it sets
+  `--boot-play: paused` on the document, which the hero's letter animation
+  (`.nameChar` in `arrangement.module.css`) reads. At the release beat it sets
+  `running` with a shorter delay (`--boot-delay: 0ms`) and stagger
+  (`--boot-stagger: 28ms`). So the title is set in the real face, at the real
+  size, by the real CSS, and nothing is cross-faded because nothing is
+  duplicated. With no preloader (a repeat visit) none of the three is set and the
+  hero's timing is exactly what it was: 450ms, 45ms, running.
+- **The variables outlive the overlay.** Changing a running animation's delay
+  moves it, so the preloader leaves them in place for 2.2s after it finishes
+  (the letters are mid-rise) and then removes them. If it is unmounted before the
+  release, the hero gets its own timing back at once.
 
 ## Guardrails
 
 - **CLS 0.** `fixed inset-0`, `contain: strict`; everything moves by transform,
-  opacity, clip or dash offset.
-- **No assets.** Every letter is a path in `poster-glyphs.ts`; the metronome,
-  rules and pads are paths and boxes. Only the labels are text, in the
-  platform's own monospace.
-- **Does not block hydration.** An overlay mounted by `LandingGate` a frame
-  after the page; it removes itself at the end.
-- **One schedule.** `STORM_TIMELINE` feeds the stylesheet as custom properties
-  and a test asserts it ends exactly at the total and that the beats are in the
-  right order (storm gone before the giant letter lands, nothing leaves before it
-  has finished, a full beat of ticking before the exit).
-- **The storm is unmounted** once its last row has shuttered away: a hidden
-  strip is still a running marquee.
-- **Reduced motion** is its own composition: no storm, the resolved poster,
-  held, then faded (900ms).
+  opacity or clip.
+- **No assets.** Every letter is a path in `poster-glyphs.ts`; the ground is two
+  gradients.
+- **Does not block hydration.** An overlay (`pointer-events: none`) mounted by
+  `LandingGate` a frame after the page; it removes itself at the end.
+- **One schedule.** `STORM_TIMELINE`, checked by tests for order (merge before
+  band, band before ground, ground before band fade) and total.
+- **Reduced motion** is its own composition: the hero's ground, held 600ms, then
+  faded. The hero's letters do not animate under reduced motion, so nothing is
+  held or released.
+- **No Web Animations?** The merge is skipped, the boot still ends on time.
 
 ## Files
 
-`poster-glyphs.ts` (the capital alphabet and layout, pure),
-`preloader-kit.ts` (the hash and the timecode decode, shared with Signal Lock),
-`signal-storm-preloader.tsx`, `signal-storm-preloader.module.css`.
+`signal-storm-preloader.tsx` (the component, the timeline and the merge
+geometry), `signal-storm-preloader.module.css` (ground, running words, band),
+`poster-glyphs.ts` (the condensed capital alphabet), `preloader-kit.ts` (the hash,
+shared with Signal Lock). In the hero: `data-hero-name-clip` on the name clip in
+`arrangement-clip.tsx`, and the three `--boot-*` variables in `.nameChar`.

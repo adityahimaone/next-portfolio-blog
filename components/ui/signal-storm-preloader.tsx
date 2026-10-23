@@ -1,143 +1,124 @@
 'use client'
 
-import {
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 
 import { cn } from '@/lib/utils'
 
-import { hash, useScramble } from './preloader-kit'
-import {
-  GW,
-  LW,
-  glyphPath,
-  glyphWidth,
-  layoutPoster,
-  type Cell,
-} from './poster-glyphs'
+import { hash } from './preloader-kit'
+import { glyphPath, glyphWidth } from './poster-glyphs'
 import styles from './signal-storm-preloader.module.css'
 
 const s = styles
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Signal Storm: a 2.8s studio-poster preloader.
+   Signal Storm: a boot that ends *in* the hero.
 
-   A tweak of the Waving Portfolio Landing poster, rewritten for this site:
+   Studio words (PLAY, REC, LOOP, MIX...) run edge to edge across the hero's own
+   dark ground, in its signal orange, its cream and the three lane colours. Then
+   the running words are pulled into one line at the hero's name clip, an orange
+   band grows out of that line to the clip's exact rectangle, the ground fades,
+   and the hero's own letters rise onto the band.
 
-   - **The poster reads  AD [I] TYA / H [I] MAONE.** Both names contain an I, so
-     the one giant shared letter is a tall bar, which is also a playhead. The
-     reference's P[O]RT / F[O]LIO trick, found in the name.
-   - **The storm is studio vocabulary** (PLAY, REC, LOOP, MIX...) in the three
-     lane colours, not random letters.
-   - **The waving character is a metronome.** It rises from the baseline, and
-     once the poster has landed its pendulum ticks at 120 BPM.
-   - **The dice corners are pads:** a play pad and a record pad.
-   - **Seven seconds became 2.8.** And it does not end on the poster: it exits
-     the way the site's other boot does, three track lanes shuttering open onto
-     the page.
+   There is no poster and nothing in the middle: the last thing on screen is the
+   first thing in the hero.
 
-   ## Why it is built like this
+   ## How it lands on the title
 
-   It is an overlay, never a gate: the page underneath is already rendered and
-   hydrated, this sits over it with `pointer-events: none` and removes itself, so
-   it cannot cost Time to Interactive. It is `fixed`, `inset-0`,
-   `contain: strict`, and everything inside moves by transform, opacity or clip,
-   so it cannot shift the layout. Every shape is a path in this file or a box:
-   there is no font, image or package to wait for (the labels use the platform's
-   own monospace). And every duration and delay comes from `STORM_TIMELINE`, is
-   handed to the stylesheet as a custom property, and is checked by a test to end
-   inside the total.
+   The target is not drawn, it is *measured*: the hero marks its name clip with
+   `data-hero-name-clip`, and this reads that element's rectangle and corner
+   radius at the moment the words begin to merge. The band it grows is the same
+   rectangle in the same orange, so when it fades the real clip is underneath it,
+   unchanged.
+
+   The letters are the hero's own. While this plays it holds the hero's letter
+   animation (`--boot-play: paused` on the document) and releases it once the
+   band has landed, with a shorter delay and stagger (`--boot-delay`,
+   `--boot-stagger`). So the title is set in the real face at the real size by the
+   real CSS, rising out of its masks onto a band that is already there. Nothing
+   is cross-faded, because nothing is duplicated.
+
+   ## Guardrails
+
+   - An overlay, never a gate: `pointer-events: none`, `fixed`, `inset-0`,
+     `contain: strict`. The page beneath is already rendered and hydrated; this
+     removes itself and cannot cost Time to Interactive or shift the layout.
+   - No assets: every letter is a path in `poster-glyphs.ts`; the ground is two
+     gradients.
+   - One schedule: `STORM_TIMELINE` is the whole of it, and a test checks the
+     beats are in order and end inside the total.
+   - Reduced motion is its own composition: the hero's ground, held, faded. The
+     hero's letters do not animate under reduced motion, so there is nothing to
+     hold and nothing to release.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Timeline (ms) ──────────────────────────────────────────────────────── */
 
 export const STORM_TIMELINE = {
-  total: 2800,
-  /** The storm: rows slide in, run, then shutter away, one after another. */
-  storm: {
-    enter: 360,
-    enterStagger: 40,
-    shutterStart: 600,
-    shutterStagger: 45,
-    shutterDuration: 340,
-  },
-  /** The letters roll into place (under the storm); the giant one lands last. */
-  reel: { start: 380, spread: 300, rowStagger: 40, duration: 620 },
-  giant: { start: 800, duration: 560 },
-  /** The poster thumps when the giant letter lands. */
-  thump: { start: 1360, duration: 240 },
-  /** The rules draw in; the labels decode while they do. */
-  rules: { start: 1360, stagger: 120, duration: 600 },
-  scramble: { start: 1250, end: 1950 },
-  corners: { start: 1400, stagger: 80, duration: 450 },
-  /** The metronome rises, then ticks. */
-  metronome: { start: 1400, duration: 450 },
-  tick: { start: 1850, period: 1000 },
-  /** The poster leaves, and the three lanes shutter open. */
-  leave: { start: 2350, duration: 150 },
-  panels: { start: 2400, stagger: 50, duration: 300 },
+  /** The whole sequence. The overlay reports completion here. */
+  total: 1740,
+  /** The words slide in, one row after another, and run. */
+  enter: { duration: 360, stagger: 40 },
+  /** The rows are pulled into one line at the name clip. Outer rows first. */
+  merge: { start: 900, duration: 440, stagger: 30 },
+  /** The orange band grows out of that line to the clip's rectangle. */
+  fuse: { start: 1000, duration: 400 },
+  /** The hero's own letters are released and start to rise. */
+  release: { start: 1300 },
+  /** The dark ground fades; the hero is under it. */
+  ground: { start: 1400, duration: 220 },
+  /** The band fades; the real clip is under it. */
+  band: { start: 1580, duration: 160 },
 } as const
 
-/** The reduced-motion beat: the resolved poster, held, then faded. */
-export const STORM_REDUCED_MS = 900
+/** The reduced-motion beat: the hero's ground, held, then faded. */
+export const STORM_REDUCED_MS = 600
 
 export const STORM_ROWS = 7
-export const PANELS = 3
+
+/** The custom properties the hero's letter animation reads. */
+export const BOOT = {
+  play: '--boot-play',
+  delay: '--boot-delay',
+  stagger: '--boot-stagger',
+} as const
+
+/** What they are released to: no wait, and a tighter stagger than the hero's own. */
+export const RELEASE = { delay: '0ms', stagger: '28ms' } as const
+
+/** How long the released letters take to finish, with a margin. The variables
+ *  must outlive it: changing a running animation's delay moves it. */
+export const SETTLE_MS = 2200
 
 /** When the last thing in the timeline finishes. */
 export function stormEnd(t: typeof STORM_TIMELINE = STORM_TIMELINE): number {
-  const lastStormShutter =
-    t.storm.shutterStart +
-    (STORM_ROWS - 1) * t.storm.shutterStagger +
-    t.storm.shutterDuration
-  const lastCell =
-    t.reel.start + t.reel.spread + t.reel.rowStagger + t.reel.duration
+  const lastRow =
+    t.merge.start +
+    Math.floor(STORM_ROWS / 2) * t.merge.stagger +
+    t.merge.duration
   return Math.max(
-    t.storm.enter + (STORM_ROWS - 1) * t.storm.enterStagger,
-    lastStormShutter,
-    lastCell,
-    t.giant.start + t.giant.duration,
-    t.thump.start + t.thump.duration,
-    t.rules.start + t.rules.stagger + t.rules.duration,
-    t.scramble.end,
-    t.corners.start + t.corners.stagger + t.corners.duration,
-    t.metronome.start + t.metronome.duration,
-    t.leave.start + t.leave.duration,
-    t.panels.start + (PANELS - 1) * t.panels.stagger + t.panels.duration,
+    t.enter.duration + (STORM_ROWS - 1) * t.enter.stagger,
+    lastRow,
+    t.fuse.start + t.fuse.duration,
+    t.release.start,
+    t.ground.start + t.ground.duration,
+    t.band.start + t.band.duration,
   )
 }
 
 /* ── Content ────────────────────────────────────────────────────────────── */
 
+/** The hero's own colours (`--deck-ground`, `--deck-ground-ink`, `--deck-orange`
+ *  and the three lane colours). A test reads the theme file and checks these are
+ *  still the same values. */
 export const PALETTE = {
-  paper: '#EAE6DF',
-  ink: '#141414',
-  accent: '#FF5A1F',
-  green: '#10B981',
-  blue: '#3B82F6',
-  amber: '#F59E0B',
+  ground: '#14171a',
+  cream: '#eee9df',
+  orange: '#ff5a1f',
+  green: '#10b981',
+  blue: '#3b82f6',
+  amber: '#f59e0b',
 } as const
 
-/** AD + I + TYA = ADITYA; H + I + MAONE = HIMAONE. One I, shared. */
-export const POSTER = {
-  left: ['AD', 'H'] as [string, string],
-  giant: 'I',
-  right: ['TYA', 'MAONE'] as [string, string],
-}
-
-export const LABELS = {
-  name: 'FRONTEND ENGINEER',
-  year: '2026',
-  roleLeft: 'JAKARTA // UTC+7',
-  roleRight: 'TAKE 01 // LOCKED',
-}
-
-/** The storm's vocabulary. */
 export const STORM_WORDS = [
   'PLAY',
   'REC',
@@ -161,16 +142,14 @@ export const STORM_WORDS = [
 
 /** Per row: the stroke colour and whether it is outlined (hollow) or solid. */
 export const STORM_TONES: { color: string; hollow: boolean }[] = [
-  { color: PALETTE.accent, hollow: false },
-  { color: PALETTE.ink, hollow: true },
+  { color: PALETTE.orange, hollow: false },
+  { color: PALETTE.cream, hollow: true },
   { color: PALETTE.green, hollow: false },
-  { color: PALETTE.accent, hollow: true },
+  { color: PALETTE.orange, hollow: true },
   { color: PALETTE.blue, hollow: false },
-  { color: PALETTE.ink, hollow: true },
+  { color: PALETTE.cream, hollow: true },
   { color: PALETTE.amber, hollow: false },
 ]
-
-export const AZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 export type StormGlyph = { ch: string; x: number; w: number }
 
@@ -197,51 +176,85 @@ export function stormRow(row: number, minSpan = 2600) {
   return { row, glyphs, span: x, tone: STORM_TONES[row % STORM_TONES.length] }
 }
 
-/** The glyphs a reel rolls through before it lands on the letter. */
-export function reelFor(cell: Cell, index: number, decoys: number) {
-  const base = cell.giant ? GW : LW
-  const out: { ch: string; w: number }[] = []
-  for (let k = 1; k < decoys; k += 1) {
-    const ch = AZ[hash(index * 131, k * 53) % 26]
-    out.push({ ch, w: Math.min(glyphWidth(ch, base, cell.s), cell.w * 1.25) })
-  }
-  return out
+/* ── The merge: geometry, no DOM ────────────────────────────────────────── */
+
+export type Band = {
+  x: number
+  y: number
+  w: number
+  h: number
+  radius: number
 }
 
-/** When a cell's reel starts, in ms from mount: left to right, row by row; the
- *  giant letter has its own, late, start. */
-export function cellDelay(
-  cell: Cell,
-  posterWidth: number,
-  t: typeof STORM_TIMELINE = STORM_TIMELINE,
-): number {
-  if (cell.giant) return t.giant.start
-  return Math.round(
-    t.reel.start +
-      (cell.x / posterWidth) * t.reel.spread +
-      cell.row * t.reel.rowStagger,
+/** A row is 15% of the overlay's height and the gap between rows 2.2%. */
+export const ROW_HEIGHT = 0.15
+export const ROW_PITCH = 0.15 + 0.022
+
+/** Where each row's centre sits, in px from the top, before it moves. The rows
+ *  are a column centred on the overlay, so this is arithmetic, not a measurement. */
+export function rowCenters(
+  viewportHeight: number,
+  rows: number = STORM_ROWS,
+): number[] {
+  return Array.from(
+    { length: rows },
+    (_, i) => viewportHeight * (0.5 + (i - (rows - 1) / 2) * ROW_PITCH),
   )
 }
 
-/* ── Pieces ─────────────────────────────────────────────────────────────── */
+/** How far each row must travel vertically to sit on the band's centre line. */
+export function mergeShifts(
+  viewportHeight: number,
+  band: Band,
+  rows: number = STORM_ROWS,
+): number[] {
+  const target = band.y + band.h / 2
+  return rowCenters(viewportHeight, rows).map((c) => target - c)
+}
 
-const LABEL = 30
-const labelWidth = (str: string) => str.length * LABEL * 0.72
+/** Outer rows start first and the middle one last, so the stack closes inward. */
+export function mergeDelay(row: number, rows: number, stagger: number): number {
+  const middle = (rows - 1) / 2
+  return Math.round((middle - Math.abs(row - middle)) * stagger)
+}
+
+/** Is the band on screen enough to land on? A page restored scrolled past the
+ *  hero has nothing to fuse into. */
+export function bandVisible(band: Band, vw: number, vh: number): boolean {
+  const x = Math.min(vw, band.x + band.w) - Math.max(0, band.x)
+  const y = Math.min(vh, band.y + band.h) - Math.max(0, band.y)
+  return x > band.w * 0.6 && y > band.h * 0.6
+}
+
+/** Where to land when there is no name clip to find: a centred band. */
+export function fallbackBand(vw: number, vh: number): Band {
+  const h = Math.round(vh * 0.26)
+  return {
+    x: Math.round(vw * 0.06),
+    y: Math.round((vh - h) / 2),
+    w: Math.round(vw * 0.88),
+    h,
+    radius: 6,
+  }
+}
+
+/** The hero's name clip as a `Band`, or `null` if it is missing or has no size. */
+export function readBand(el: Element | null): Band | null {
+  if (!el) return null
+  const r = el.getBoundingClientRect()
+  if (r.width < 2 || r.height < 2) return null
+  const radius = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0
+  return { x: r.left, y: r.top, w: r.width, h: r.height, radius }
+}
+
+/* ── Pieces ─────────────────────────────────────────────────────────────── */
 
 const reducedNow = () =>
   typeof window !== 'undefined' &&
   typeof window.matchMedia === 'function' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-function StormRow({
-  row,
-  minSpan,
-  paper,
-}: {
-  row: number
-  minSpan: number
-  paper: string
-}) {
+function StormRow({ row, minSpan }: { row: number; minSpan: number }) {
   const { glyphs, span, tone } = useMemo(
     () => stormRow(row, minSpan),
     [row, minSpan],
@@ -268,238 +281,12 @@ function StormRow({
             return (
               <g key={`${off}-${k}`} transform={`translate(${off + g.x} 0)`}>
                 <path d={d} stroke={tone.color} strokeWidth={12} />
-                {tone.hollow && <path d={d} stroke={paper} strokeWidth={5} />}
+                {tone.hollow && (
+                  <path d={d} stroke={PALETTE.ground} strokeWidth={5} />
+                )}
               </g>
             )
           }),
-        )}
-      </svg>
-    </div>
-  )
-}
-
-/** One reel: the letter, with decoy glyphs stacked above it, rolled up into the
- *  window. Invisible until its own start, so letters arrive rather than wait. */
-function LetterCell({
-  cell,
-  index,
-  delay,
-}: {
-  cell: Cell
-  index: number
-  delay: number
-}) {
-  const pad = cell.s
-  const pitch = cell.h + cell.s * 2 + 24
-  const n = cell.giant ? 14 : 10
-  const reel = reelFor(cell, index, n)
-  const style = {
-    '--dist': `${(n - 1) * pitch}px`,
-    '--delay': `${delay}ms`,
-    '--dur': `${cell.giant ? STORM_TIMELINE.giant.duration : STORM_TIMELINE.reel.duration}ms`,
-  } as CSSProperties
-  return (
-    <svg
-      x={cell.x - pad}
-      y={cell.y - pad}
-      width={cell.w + pad * 2}
-      height={cell.h + pad * 2}
-      viewBox={`${-pad} ${-pad} ${cell.w + pad * 2} ${cell.h + pad * 2}`}
-      overflow="hidden"
-    >
-      <g
-        className={cn(s.reel, cell.giant && s.giantReel)}
-        style={style}
-        fill="none"
-        stroke={PALETTE.accent}
-        strokeWidth={cell.s}
-        strokeLinecap="square"
-        strokeMiterlimit={4}
-      >
-        <path d={glyphPath(cell.ch, cell.w, cell.h, cell.s)} />
-        {reel.map((g, k) => (
-          <path
-            key={k}
-            transform={`translate(${(cell.w - g.w) / 2} ${-(k + 1) * pitch})`}
-            d={glyphPath(g.ch, g.w, cell.h, cell.s)}
-          />
-        ))}
-      </g>
-    </svg>
-  )
-}
-
-/** A rule with a dot at each end (and one in the middle on the top rule). */
-function Rule({
-  a,
-  b,
-  y,
-  mid,
-  delay,
-}: {
-  a: number
-  b: number
-  y: number
-  mid?: boolean
-  delay: number
-}) {
-  if (b - a < 40) return null
-  const dots = mid ? [a, (a + b) / 2, b] : [a, b]
-  return (
-    <g>
-      <path
-        className={s.draw}
-        pathLength={1}
-        d={`M ${a} ${y} L ${b} ${y}`}
-        stroke={PALETTE.accent}
-        strokeWidth={3}
-        style={{ '--delay': `${delay}ms` } as CSSProperties}
-      />
-      {dots.map((x, k) => (
-        <circle
-          key={k}
-          className={s.dot}
-          cx={x}
-          cy={y}
-          r={6.5}
-          fill={PALETTE.accent}
-          style={{ '--delay': `${delay + k * 120}ms` } as CSSProperties}
-        />
-      ))}
-    </g>
-  )
-}
-
-/**
- * The metronome. Local frame 0 0 460 600, the bottom edge is the baseline it
- * rises from; the pendulum pivots at (230, 540) and ticks at 120 BPM once the
- * poster has landed. Hand-inked in the reference's manner: paper fill, ink
- * outline, an ink speckle on the shaded side.
- */
-function Metronome({ clipId }: { clipId: string }) {
-  const body = 'M 105 600 L 170 130 L 290 130 L 355 600 Z'
-  const specks = useMemo(
-    () =>
-      Array.from({ length: 70 }, (_, k) => {
-        const y = 140 + (hash(k, 3) % 440)
-        const spread = 40 + ((y - 130) / 470) * 60
-        const x = 232 + ((hash(k, 7) % 1000) / 1000) * spread
-        return [x, y, 1 + (hash(k, 11) % 18) / 10] as const
-      }),
-    [],
-  )
-  const ticks = [0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => 200 + i * 38)
-  return (
-    <g className={s.rise}>
-      <clipPath id={clipId}>
-        <path d={body} />
-      </clipPath>
-      <path d="M 92 560 L 368 560 L 372 640 L 88 640 Z" fill={PALETTE.ink} />
-      <path
-        d={body}
-        fill={PALETTE.paper}
-        stroke={PALETTE.ink}
-        strokeWidth={8}
-        strokeLinejoin="round"
-      />
-      <g clipPath={`url(#${clipId})`} fill={PALETTE.ink}>
-        {specks.map(([x, y, r], k) => (
-          <circle key={k} cx={x} cy={y} r={r} />
-        ))}
-      </g>
-      <rect x={186} y={112} width={88} height={26} rx={7} fill={PALETTE.ink} />
-      <circle
-        className={s.lamp}
-        cx={230}
-        cy={98}
-        r={10}
-        fill={PALETTE.accent}
-        stroke={PALETTE.ink}
-        strokeWidth={4}
-      />
-      <rect
-        x={208}
-        y={168}
-        width={44}
-        height={382}
-        rx={22}
-        fill={PALETTE.ink}
-      />
-      {ticks.map((y) => (
-        <g key={y} stroke={PALETTE.ink} strokeWidth={3} strokeLinecap="round">
-          <path d={`M 190 ${y} h 10`} />
-          <path d={`M 260 ${y} h 10`} />
-        </g>
-      ))}
-      <circle
-        className={cn(s.blip, s.blipL)}
-        cx={186}
-        cy={150}
-        r={6}
-        fill={PALETTE.accent}
-      />
-      <circle
-        className={cn(s.blip, s.blipR)}
-        cx={274}
-        cy={150}
-        r={6}
-        fill={PALETTE.accent}
-      />
-      <g className={s.pend}>
-        <path
-          d="M 230 540 L 230 196"
-          stroke={PALETTE.accent}
-          strokeWidth={7}
-          strokeLinecap="round"
-        />
-        <path
-          d="M 207 262 L 253 262 L 247 300 L 213 300 Z"
-          fill={PALETTE.accent}
-          stroke={PALETTE.ink}
-          strokeWidth={4}
-          strokeLinejoin="round"
-        />
-        <circle
-          cx={230}
-          cy={540}
-          r={9}
-          fill={PALETTE.paper}
-          stroke={PALETTE.ink}
-          strokeWidth={4}
-        />
-      </g>
-    </g>
-  )
-}
-
-/** A corner pad: registration lines, an accent square, and a glyph on it. */
-function Corner({ side }: { side: 'l' | 'r' }) {
-  return (
-    <div
-      className={cn(s.corner, side === 'l' ? s.cornerL : s.cornerR)}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 170 170">
-        {[108, 124, 140].map((v) => (
-          <path
-            key={v}
-            d={`M 0 ${v} L ${v} ${v} L ${v} 0`}
-            fill="none"
-            stroke={PALETTE.accent}
-            strokeWidth={2}
-          />
-        ))}
-        <rect x={0} y={0} width={92} height={92} fill={PALETTE.accent} />
-        {side === 'l' ? (
-          <path d="M 34 26 L 34 66 L 68 46 Z" fill={PALETTE.paper} />
-        ) : (
-          <circle
-            className={s.rec}
-            cx={46}
-            cy={46}
-            r={18}
-            fill={PALETTE.paper}
-          />
         )}
       </svg>
     </div>
@@ -519,46 +306,20 @@ export default function SignalStormPreloader({
   onComplete,
   className,
 }: SignalStormPreloaderProps) {
-  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
   const [reduced] = useState(reducedNow)
   const [done, setDone] = useState(false)
-  const [stormGone, setStormGone] = useState(reduced)
   const [compact, setCompact] = useState(false)
   const rootRef = useRef<HTMLDivElement | null>(null)
+  const groundRef = useRef<HTMLDivElement | null>(null)
+  const stormRef = useRef<HTMLDivElement | null>(null)
+  const fuseRef = useRef<HTMLDivElement | null>(null)
   const complete = useRef(onComplete)
-  const name = useRef<SVGTextElement | null>(null)
-  const year = useRef<SVGTextElement | null>(null)
-  const roleL = useRef<SVGTextElement | null>(null)
-  const roleR = useRef<SVGTextElement | null>(null)
 
   useEffect(() => {
     complete.current = onComplete
   })
 
-  const t = STORM_TIMELINE
-  const animate = !reduced
-  useScramble(name, LABELS.name, {
-    start: t.scramble.start,
-    end: t.scramble.end,
-    enabled: animate,
-  })
-  useScramble(year, LABELS.year, {
-    start: t.scramble.start + 80,
-    end: t.scramble.end,
-    enabled: animate,
-  })
-  useScramble(roleL, LABELS.roleLeft, {
-    start: t.scramble.start + 40,
-    end: t.scramble.end,
-    enabled: animate,
-  })
-  useScramble(roleR, LABELS.roleRight, {
-    start: t.scramble.start + 120,
-    end: t.scramble.end,
-    enabled: animate,
-  })
-
-  // The poster fits its container: a tall container gets the compact layout.
+  // A tall container gets a shorter storm, so it is not wider than it needs to be.
   useEffect(() => {
     const el = rootRef.current
     if (!el || typeof ResizeObserver === 'undefined') return
@@ -571,68 +332,159 @@ export default function SignalStormPreloader({
   }, [])
 
   useEffect(() => {
-    const end = window.setTimeout(
-      () => {
-        setDone(true)
-        complete.current?.()
-      },
-      reduced ? STORM_REDUCED_MS : t.total,
-    )
-    // The storm is unmounted once its last row has shuttered away: a hidden
-    // strip is still a running marquee.
-    const storm = window.setTimeout(
-      () => setStormGone(true),
-      t.storm.shutterStart +
-        (STORM_ROWS - 1) * t.storm.shutterStagger +
-        t.storm.shutterDuration,
-    )
-    return () => {
-      window.clearTimeout(end)
-      window.clearTimeout(storm)
-    }
-  }, [reduced, t])
+    const t = STORM_TIMELINE
+    const html = document.documentElement
+    const timers: number[] = []
+    const animations: Animation[] = []
+    let released = false
+    let clearing = false
 
-  const poster = useMemo(
-    () => layoutPoster(POSTER.left, POSTER.giant, POSTER.right, compact),
-    [compact],
-  )
-  const minSpan = compact ? 2200 : 2600
+    // Give the hero its own timing back. Once released, its letters are
+    // mid-rise, and taking the variables away then would change their delay and
+    // snap them back, so this waits for the rise to finish. If the release never
+    // happened it is immediate. It is idempotent, and it runs when the sequence
+    // ends *and* on unmount, so a parent that keeps this mounted after it has
+    // finished (it renders nothing by then) does not leak the variables.
+    const restoreHero = () => {
+      if (clearing || reduced) return
+      clearing = true
+      const clear = () => {
+        html.style.removeProperty(BOOT.play)
+        html.style.removeProperty(BOOT.delay)
+        html.style.removeProperty(BOOT.stagger)
+      }
+      if (released) window.setTimeout(clear, SETTLE_MS)
+      else clear()
+    }
+
+    timers.push(
+      window.setTimeout(
+        () => {
+          setDone(true)
+          restoreHero()
+          complete.current?.()
+        },
+        reduced ? STORM_REDUCED_MS : t.total,
+      ),
+    )
+
+    if (!reduced) {
+      // Hold the hero's letters until the band has landed.
+      html.style.setProperty(BOOT.play, 'paused')
+
+      timers.push(
+        window.setTimeout(() => {
+          const vw = window.innerWidth
+          const vh = window.innerHeight
+          const found = readBand(
+            document.querySelector('[data-hero-name-clip]'),
+          )
+          const band =
+            found && bandVisible(found, vw, vh) ? found : fallbackBand(vw, vh)
+          const ground = groundRef.current
+          const storm = stormRef.current
+          const fuse = fuseRef.current
+          // No Web Animations (very old browsers, test DOMs): the boot still
+          // ends on time; only the merge itself is skipped.
+          if (!ground || !storm || !fuse || typeof fuse.animate !== 'function')
+            return
+
+          const run = (
+            el: Element,
+            keyframes: Keyframe[],
+            options: KeyframeAnimationOptions,
+          ) => {
+            animations.push(
+              el.animate(keyframes, { fill: 'forwards', ...options }),
+            )
+          }
+
+          // 1. The storm straightens and its rows are pulled onto the band's line.
+          run(
+            storm,
+            [{ transform: 'rotate(-7deg)' }, { transform: 'rotate(0deg)' }],
+            {
+              duration: t.merge.duration,
+              easing: 'cubic-bezier(0.7, 0, 0.2, 1)',
+            },
+          )
+          const shifts = mergeShifts(vh, band)
+          Array.from(storm.children).forEach((row, i) => {
+            const squash = `translate3d(0, ${shifts[i] ?? 0}px, 0) scaleY(0.06)`
+            run(
+              row,
+              [
+                { transform: 'translate3d(0, 0, 0) scaleY(1)', opacity: 1 },
+                { transform: squash, opacity: 1, offset: 0.62 },
+                { transform: squash, opacity: 0 },
+              ],
+              {
+                duration: t.merge.duration,
+                delay: mergeDelay(i, STORM_ROWS, t.merge.stagger),
+                easing: 'cubic-bezier(0.7, 0, 0.2, 1)',
+              },
+            )
+          })
+
+          // 2. The band grows out of that line, to the clip's exact rectangle.
+          Object.assign(fuse.style, {
+            left: `${band.x}px`,
+            top: `${band.y}px`,
+            width: `${band.w}px`,
+            height: `${band.h}px`,
+            borderRadius: `${band.radius}px`,
+          })
+          run(
+            fuse,
+            [
+              { clipPath: 'inset(50% 0px 50% 0px)', opacity: 1 },
+              { clipPath: 'inset(0px 0px 0px 0px)', opacity: 1 },
+            ],
+            {
+              duration: t.fuse.duration,
+              delay: t.fuse.start - t.merge.start,
+              easing: 'cubic-bezier(0.7, 0, 0.2, 1)',
+            },
+          )
+
+          // 3. The ground fades, then the band: the hero is under both.
+          run(ground, [{ opacity: 1 }, { opacity: 0 }], {
+            duration: t.ground.duration,
+            delay: t.ground.start - t.merge.start,
+            easing: 'ease-out',
+          })
+          run(fuse, [{ opacity: 1 }, { opacity: 0 }], {
+            duration: t.band.duration,
+            delay: t.band.start - t.merge.start,
+            easing: 'ease-out',
+          })
+        }, t.merge.start),
+      )
+
+      // Release the hero's letters onto the band.
+      timers.push(
+        window.setTimeout(() => {
+          released = true
+          html.style.setProperty(BOOT.delay, RELEASE.delay)
+          html.style.setProperty(BOOT.stagger, RELEASE.stagger)
+          html.style.setProperty(BOOT.play, 'running')
+        }, t.release.start),
+      )
+    }
+
+    return () => {
+      timers.forEach((id) => window.clearTimeout(id))
+      animations.forEach((a) => a.cancel())
+      restoreHero()
+    }
+  }, [reduced])
 
   if (done) return null
 
-  const k = poster.charScale
-  const charLeft = poster.charX - 205 * k
-  const nameEnd = poster.margin + labelWidth(LABELS.name) + 26
-  const yearStart = poster.width - poster.margin - labelWidth(LABELS.year) - 26
-  const roleLEnd = poster.margin + labelWidth(LABELS.roleLeft) + 26
-  const roleRStart =
-    poster.width - poster.margin - labelWidth(LABELS.roleRight) - 26
-
   const vars = {
     contain: 'strict',
-    '--paper': PALETTE.paper,
-    '--ink': PALETTE.ink,
-    '--accent': PALETTE.accent,
-    '--t-enter': `${t.storm.enter}ms`,
-    '--t-enter-stagger': `${t.storm.enterStagger}ms`,
-    '--t-shutter-start': `${t.storm.shutterStart}ms`,
-    '--t-shutter-stagger': `${t.storm.shutterStagger}ms`,
-    '--t-shutter-dur': `${t.storm.shutterDuration}ms`,
-    '--t-thump-start': `${t.thump.start}ms`,
-    '--t-thump-dur': `${t.thump.duration}ms`,
-    '--t-rules-dur': `${t.rules.duration}ms`,
-    '--t-corner-start': `${t.corners.start}ms`,
-    '--t-corner-stagger': `${t.corners.stagger}ms`,
-    '--t-corner-dur': `${t.corners.duration}ms`,
-    '--t-metro-start': `${t.metronome.start}ms`,
-    '--t-metro-dur': `${t.metronome.duration}ms`,
-    '--t-tick-start': `${t.tick.start}ms`,
-    '--t-tick-period': `${t.tick.period}ms`,
-    '--t-leave-start': `${t.leave.start}ms`,
-    '--t-leave-dur': `${t.leave.duration}ms`,
-    '--t-panel-start': `${t.panels.start}ms`,
-    '--t-panel-stagger': `${t.panels.stagger}ms`,
-    '--t-panel-dur': `${t.panels.duration}ms`,
+    '--t-enter': `${STORM_TIMELINE.enter.duration}ms`,
+    '--t-enter-stagger': `${STORM_TIMELINE.enter.stagger}ms`,
     '--t-reduced': `${STORM_REDUCED_MS}ms`,
   } as CSSProperties
 
@@ -648,94 +500,15 @@ export default function SignalStormPreloader({
       aria-hidden="true"
       data-reduced={reduced}
     >
-      {Array.from({ length: PANELS }, (_, i) => (
-        <div
-          key={i}
-          className={s.panel}
-          style={{ '--i': i } as CSSProperties}
-        />
-      ))}
-
-      <div className={s.stage}>
-        <svg
-          className={s.poster}
-          viewBox={`0 0 ${poster.width} ${poster.height}`}
-          preserveAspectRatio="xMidYMid meet"
-          focusable="false"
-        >
-          <g>
-            <text ref={name} className={s.label} x={poster.margin} y={73}>
-              {LABELS.name}
-            </text>
-            <text
-              ref={year}
-              className={s.label}
-              x={poster.width - poster.margin}
-              y={73}
-              textAnchor="end"
-            >
-              {LABELS.year}
-            </text>
-            <Rule a={nameEnd} b={yearStart} y={62} mid delay={t.rules.start} />
-            <text ref={roleL} className={s.label} x={poster.margin} y={663}>
-              {LABELS.roleLeft}
-            </text>
-            <text
-              ref={roleR}
-              className={s.label}
-              x={poster.width - poster.margin}
-              y={663}
-              textAnchor="end"
-            >
-              {LABELS.roleRight}
-            </text>
-            <Rule
-              a={roleLEnd}
-              b={roleRStart}
-              y={652}
-              delay={t.rules.start + t.rules.stagger}
-            />
-          </g>
-
-          <g className={s.letters}>
-            {poster.cells.map((cell, i) => (
-              <LetterCell
-                key={i}
-                cell={cell}
-                index={i}
-                delay={cellDelay(cell, poster.width)}
-              />
-            ))}
-          </g>
-
-          <svg
-            x={charLeft}
-            y={605 - 600 * k}
-            width={460 * k}
-            height={600 * k}
-            viewBox="0 0 460 600"
-            overflow="hidden"
-          >
-            <Metronome clipId={`ssp-${uid}-body`} />
-          </svg>
-        </svg>
-
-        <Corner side="l" />
-        <Corner side="r" />
-      </div>
-
-      {!stormGone ? (
-        <div className={s.storm}>
+      <div ref={groundRef} className={s.ground} />
+      {reduced ? null : (
+        <div ref={stormRef} className={s.storm}>
           {Array.from({ length: STORM_ROWS }, (_, row) => (
-            <StormRow
-              key={row}
-              row={row}
-              minSpan={minSpan}
-              paper={PALETTE.paper}
-            />
+            <StormRow key={row} row={row} minSpan={compact ? 2200 : 2600} />
           ))}
         </div>
-      ) : null}
+      )}
+      <div ref={fuseRef} className={s.fuse} />
     </div>
   )
 }

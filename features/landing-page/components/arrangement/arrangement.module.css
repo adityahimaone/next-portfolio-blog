@@ -754,8 +754,17 @@ button.clip {
   animation:
     name-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) both,
     name-swell 5200ms ease-in-out infinite;
-  animation-delay: calc(450ms + var(--c) * 45ms),
+  /* The boot preloader holds these and then releases them: while it plays it
+     sets `--boot-play: paused` on the document, and when its fusion has landed on
+     the name clip it sets `running` with a shorter delay and stagger, so the
+     letters rise onto an orange band that is already there. With no preloader
+     (a repeat visit) none of the three is set and these are the original
+     450ms / 45ms / running. */
+  animation-delay: calc(
+      var(--boot-delay, 450ms) + var(--c) * var(--boot-stagger, 45ms)
+    ),
     calc(1700ms + var(--c) * -230ms);
+  animation-play-state: var(--boot-play, running);
 }
 @keyframes name-rise {
   from {

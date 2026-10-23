@@ -13,10 +13,10 @@ const SESSION_KEY = 'aditya-landing-session-boot'
 
 /**
  * Plays the Signal Storm preloader once per session, over the top of the landing
- * page: a storm of studio words shutters away to reveal AD[I]TYA / H[I]MAONE
- * rolling into place around a ticking metronome, then three track lanes open
- * onto the page (2.8s in all). `SignalLockPreloader` (the 1.4s playhead version)
- * is a drop-in alternative: swap the import and the element below.
+ * page: studio words run edge to edge across the hero's own ground, are pulled
+ * into the hero's name clip, and the hero's own letters rise onto it (1.74s in
+ * all). `SignalLockPreloader` (the 1.4s playhead version) is a drop-in
+ * alternative: swap the import and the element below.
  *
  * The page stays mounted underneath. That is the point: the arrangement has to
  * be measured and laid out before the lanes leave, or the hero would arrive

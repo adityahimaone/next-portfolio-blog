@@ -139,6 +139,7 @@ export function ArrangementClip({
         className={className}
         style={style}
         data-matter-source={source ? '' : undefined}
+        data-hero-name-clip={clip.kind === 'name' ? '' : undefined}
       >
         {body}
       </div>
@@ -153,6 +154,7 @@ export function ArrangementClip({
       aria-pressed={selected}
       onClick={onSelect}
       data-matter-source={source ? '' : undefined}
+      data-hero-name-clip={clip.kind === 'name' ? '' : undefined}
     >
       {body}
     </button>

@@ -171,10 +171,52 @@ export default function RootLayout({
 
             The hero's hook still owns the flag from here on and restores it on
             the way out, so navigating away from the landing page brings the
-            dock back. */}
+            dock back.
+
+            No `return`: this is a classic script, not a function body, and a
+            top-level `return` is a SyntaxError that kills the whole block. It
+            used to be written that way, which is why the dock kept arriving on
+            the page it was supposed to be hidden from. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(location.pathname!=='/'||location.hash==='#about')return;document.documentElement.dataset.interface='hidden'}catch(e){}`,
+            __html: `try{if(location.pathname==='/'&&location.hash!=='#about')document.documentElement.dataset.interface='hidden'}catch(e){}`,
+          }}
+        />
+        {/* Put the boot's first frame up before the first paint.
+
+            The landing page's preloader is a client component, so the server
+            can only ship the hero: the overlay appears after hydration, which
+            means the visitor sees the hero, then sees a boot land on top of it
+            that was supposed to have been there all along. The gap is one frame
+            on a fast machine and most of a second on a phone.
+
+            Two things are written here, before the body is parsed:
+
+            - `data-boot="on"`, which shows the boot cover (`StormCover`, in the
+              landing page's HTML, hidden by default). The cover is the
+              preloader's own first frame — the storm's rows start at opacity 0,
+              so the first frame is the bare ground — which is why handing over
+              to the real overlay a moment later is invisible.
+            - `--boot-play: paused`, the variable the hero's letters read. They
+              are held from their very first frame instead of being frozen
+              mid-rise when the overlay's effect finally runs, so the release at
+              1300ms is deterministic. Not written under reduced motion: there
+              the letters do not animate at all, and the overlay's own restore
+              skips them in that mode, so nothing would ever release them.
+
+            The 8s failsafe is the price of painting something before knowing
+            whether the app will ever hydrate. If the storm never mounts, the
+            cover comes down and the letters run on their own, so the worst case
+            is a slow page rather than a dark page with no title on it. With no
+            JavaScript at all this block never runs, no attribute is written,
+            the cover stays hidden and the page is exactly the page.
+
+            The attribute goes on last. Everything above it can only fail by
+            throwing, and if it does, no cover is shown — rather than a cover
+            that is shown with no failsafe behind it. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(location.pathname==='/'&&sessionStorage.getItem('aditya-landing-session-boot')!=='1'){var d=document.documentElement,m=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(!m)d.style.setProperty('--boot-play','paused');setTimeout(function(){if(d.getAttribute('data-boot')==='on'){d.removeAttribute('data-boot');d.style.removeProperty('--boot-play')}},8000);d.setAttribute('data-boot','on')}}catch(e){}`,
           }}
         />
       </head>

@@ -1,6 +1,6 @@
 # Signal Storm preloader
 
-A 1.74s boot that **ends in the hero**: studio words run edge to edge, are pulled
+A 2.5s boot that **ends in the hero**: studio words run edge to edge, are pulled
 into the hero's name clip, and the hero's own letters rise onto it. It is what
 `LandingGate` plays once per session. `SignalLockPreloader` (the 1.4s playhead
 version, `signal-lock-preloader.md`) is a drop-in alternative: swap the import
@@ -25,12 +25,13 @@ A test reads `app/deck-theme.css` and fails if these ever drift apart.
 
 | When | What |
 | --- | --- |
-| 0–600ms | Seven rows of studio words (PLAY, REC, LOOP, MIX, GAIN, SYNC...) slide in and run, alternating direction, on the hero's ground |
-| 900ms | The merge starts. The column straightens from its tilt and every row is pulled onto the **name clip's centre line**, squashing to a thread, outer rows first |
-| 1000–1400ms | An orange band grows out of that line, to the clip's **measured** rectangle and corner radius |
-| 1300ms | The hero's letters are released and start to rise |
-| 1400–1620ms | The dark ground fades; the hero is under it |
-| 1580–1740ms | The band fades; the real clip is under it, unchanged |
+| 0–690ms | Seven rows of studio words (PLAY, REC, LOOP, MIX, GAIN, SYNC...) slide in and run, alternating direction, on the hero's ground |
+| 690–1500ms | They keep running. **This is the beat the sequence is for** — 810ms of nothing but words crossing the screen, and the reason the total is 2.5s rather than the original 1.74s |
+| 1500ms | The merge starts. The column straightens from its tilt and every row is pulled onto the **name clip's centre line**, squashing to a thread, outer rows first |
+| 1640–2100ms | An orange band grows out of that line, to the clip's **measured** rectangle and corner radius |
+| 2050ms | The hero's letters are released and start to rise |
+| 2100–2360ms | The dark ground fades; the hero is under it |
+| 2320–2520ms | The band fades; the real clip is under it, unchanged |
 
 ## How it lands on the title
 

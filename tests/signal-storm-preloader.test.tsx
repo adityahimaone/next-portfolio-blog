@@ -38,9 +38,13 @@ describe('STORM_TIMELINE', () => {
     expect(stormEnd()).toBe(T.total)
   })
 
-  it('lets the words run before they are pulled together', () => {
+  it('lets the words run, at length, before they are pulled together', () => {
     const entered = T.enter.duration + (STORM_ROWS - 1) * T.enter.stagger
     expect(T.merge.start).toBeGreaterThanOrEqual(entered)
+    // The beat that the whole sequence exists for. At 1.74s this gap was 300ms
+    // and the rows were still arriving when the merge took them, which is what
+    // made the boot read as a flash rather than as something to watch.
+    expect(T.merge.start - entered).toBeGreaterThanOrEqual(700)
   })
 
   it('grows the band out of the merge, not before it and not after it has ended', () => {
@@ -67,8 +71,12 @@ describe('STORM_TIMELINE', () => {
     expect(T.band.start + T.band.duration).toBeLessThanOrEqual(T.total)
   })
 
-  it('is a boot, not a show: well under two seconds, and a reduced beat shorter still', () => {
-    expect(T.total).toBeLessThan(2000)
+  it('is a boot, not a show: long enough to read, short enough not to be waited on', () => {
+    // It was under two seconds, and that was too fast to read seven rows of
+    // words. The ceiling matters as much as the floor: this plays on every
+    // fresh session, in front of a page the visitor has already decided to see.
+    expect(T.total).toBeGreaterThanOrEqual(2200)
+    expect(T.total).toBeLessThanOrEqual(3000)
     expect(STORM_REDUCED_MS).toBeLessThan(T.total)
   })
 })

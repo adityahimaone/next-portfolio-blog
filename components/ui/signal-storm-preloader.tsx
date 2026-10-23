@@ -53,21 +53,36 @@ const s = styles
 
 /* ── Timeline (ms) ──────────────────────────────────────────────────────── */
 
+/**
+ * Two and a half seconds, and most of it is the words running.
+ *
+ * The first cut was 1.74s and it read as a flash: the rows were still arriving
+ * when the merge took them, so the only part with any *content* in it — seven
+ * rows of studio words running edge to edge — never had time to be read. The
+ * pacing here is deliberately lopsided: the entrance is quick (690ms for the
+ * last row), then there is **810ms of nothing but running words** before the
+ * merge starts at 1500ms, and the merge and fuse are slower than they were
+ * (520ms and 460ms) so they can be followed rather than caught.
+ *
+ * The tail did not move much: the release, the ground fade and the band fade
+ * still overlap the way they always did, because that handoff is what makes the
+ * boot end *in* the hero and it was never the part that felt rushed.
+ */
 export const STORM_TIMELINE = {
   /** The whole sequence. The overlay reports completion here. */
-  total: 1740,
+  total: 2520,
   /** The words slide in, one row after another, and run. */
-  enter: { duration: 360, stagger: 40 },
+  enter: { duration: 420, stagger: 45 },
   /** The rows are pulled into one line at the name clip. Outer rows first. */
-  merge: { start: 900, duration: 440, stagger: 30 },
+  merge: { start: 1500, duration: 520, stagger: 34 },
   /** The orange band grows out of that line to the clip's rectangle. */
-  fuse: { start: 1000, duration: 400 },
+  fuse: { start: 1640, duration: 460 },
   /** The hero's own letters are released and start to rise. */
-  release: { start: 1300 },
+  release: { start: 2050 },
   /** The dark ground fades; the hero is under it. */
-  ground: { start: 1400, duration: 220 },
+  ground: { start: 2100, duration: 260 },
   /** The band fades; the real clip is under it. */
-  band: { start: 1580, duration: 160 },
+  band: { start: 2320, duration: 200 },
 } as const
 
 /** The reduced-motion beat: the hero's ground, held, then faded. */
@@ -295,6 +310,33 @@ function StormRow({ row, minSpan }: { row: number; minSpan: number }) {
 
 /* ── The component ──────────────────────────────────────────────────────── */
 
+/**
+ * The storm's first frame, alone, for the server to render.
+ *
+ * The overlay itself cannot be server-rendered: its rows are ~800 glyph paths
+ * generated per row, which would be a few hundred KB of HTML shipped to every
+ * visitor including the ones who never see it. But the first frame of the
+ * sequence is not the rows — they start at `opacity: 0` and slide in — it is
+ * the bare ground. So the ground, and only the ground, is what the server
+ * paints, and it is what the visitor sees before a single byte of JavaScript
+ * has been parsed.
+ *
+ * Whether it is visible is decided in `<head>` (`app/layout.tsx`), before the
+ * first paint: `html[data-boot='on']` shows it, and the absence of that
+ * attribute — no script, a booted session, a script that threw — leaves it at
+ * `visibility: hidden`. It is always in the DOM on the landing route; it is
+ * only ever *seen* when there is a boot to cover.
+ */
+export function StormCover({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(s.cover, s.groundPaint, className)}
+      aria-hidden="true"
+      data-boot-cover=""
+    />
+  )
+}
+
 export type SignalStormPreloaderProps = {
   /** Called once, when the sequence ends (the overlay then removes itself). */
   onComplete?: () => void
@@ -499,8 +541,9 @@ export default function SignalStormPreloader({
       style={vars}
       aria-hidden="true"
       data-reduced={reduced}
+      data-boot-storm=""
     >
-      <div ref={groundRef} className={s.ground} />
+      <div ref={groundRef} className={cn(s.ground, s.groundPaint)} />
       {reduced ? null : (
         <div ref={stormRef} className={s.storm}>
           {Array.from({ length: STORM_ROWS }, (_, row) => (

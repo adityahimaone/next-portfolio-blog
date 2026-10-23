@@ -17,10 +17,11 @@
   background: transparent;
 }
 
-/* The hero's own ground, and its graph paper. */
-.ground {
-  position: absolute;
-  inset: 0;
+/* The hero's own ground, and its graph paper. The paint is its own class
+   because the boot cover — the same ground, in the server's HTML, before React
+   has run — must be pixel-identical to it. Two declarations of the same
+   gradients would drift; one is read by both. */
+.groundPaint {
   background:
     linear-gradient(
         90deg,
@@ -35,6 +36,43 @@
       )
       0 0 / var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px),
     var(--deck-ground, #14171a);
+}
+
+.ground {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── The boot cover ───────────────────────────────────────────────────────
+   The storm's first frame, rendered by the server and painted before React
+   exists. At t=0 every row is still at `opacity: 0` (its `both` fill holds the
+   `from` state through the enter delay), so the storm's first frame *is* the
+   bare ground — which means this element and the storm's own `.ground` are the
+   same pixels, and swapping one for the other cannot be seen.
+
+   Hidden unless the head script says otherwise. That direction matters: with
+   no JavaScript the attribute is never written, so the cover never shows and
+   the page is the page. The reverse — visible by default, hidden by script —
+   would put a dark panel in front of the hero for every visitor whose script
+   did not run. */
+.cover {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  /* Only the failsafe path ever fades: the handoff to the storm is an unmount
+     in the same commit, so there is nothing to cross-fade. */
+  transition:
+    opacity 200ms ease-out,
+    visibility 0s linear 200ms;
+}
+
+:global(html[data-boot='on']) .cover {
+  opacity: 1;
+  visibility: visible;
+  transition: none;
 }
 
 /* ── The storm: a column of rows, slightly tilted, running edge to edge ── */

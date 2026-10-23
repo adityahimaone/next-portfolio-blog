@@ -1,4 +1,4 @@
-import { act } from 'react'
+import { StrictMode, act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 
 import { STORM_TIMELINE } from '@/components/ui/signal-storm-preloader'
@@ -138,6 +138,39 @@ describe('<LandingGate />', () => {
     expect(host.querySelector('[data-boot-cover]')).toBeNull()
   })
 
+  it('keeps the cover up through React’s double-invoked mount', () => {
+    // `reactStrictMode: true`. In development React mounts, unmounts and mounts
+    // again, so the effect's cleanup runs between two runs of the effect — and
+    // if the cleanup withdrew `data-boot` synchronously, the paint between them
+    // would be the hero. That was the flash: cover up, hero for 270ms, storm.
+    document.documentElement.setAttribute('data-boot', 'on')
+    const other = document.createElement('div')
+    document.body.appendChild(other)
+    const otherRoot = createRoot(other)
+    act(() =>
+      otherRoot.render(
+        <StrictMode>
+          <LandingGate>
+            <main>the page</main>
+          </LandingGate>
+        </StrictMode>,
+      ),
+    )
+    expect(document.documentElement.getAttribute('data-boot')).toBe('on')
+    expect(other.querySelector('[data-boot-cover]')).not.toBeNull()
+
+    // And the teardown the simulated unmount scheduled is cancelled, so it
+    // cannot take the attribute away a task later either.
+    act(() => {
+      jest.advanceTimersByTime(20)
+    })
+    expect(document.documentElement.getAttribute('data-boot')).toBe('on')
+    expect(other.querySelector('[data-boot-storm]')).not.toBeNull()
+
+    act(() => otherRoot.unmount())
+    other.remove()
+  })
+
   it('hands the hero’s letters back if it unmounts before the storm takes them', () => {
     // Only the head script has touched them at this point: the gate is torn
     // down inside the frame that would have mounted the storm.
@@ -153,6 +186,11 @@ describe('<LandingGate />', () => {
       ),
     )
     act(() => otherRoot.unmount())
+    // The teardown is deferred by a task, so a simulated unmount can cancel it.
+    // A real one lets it run.
+    act(() => {
+      jest.advanceTimersByTime(1)
+    })
     other.remove()
     expect(document.documentElement.style.getPropertyValue('--boot-play')).toBe(
       '',

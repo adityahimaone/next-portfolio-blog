@@ -41,6 +41,15 @@ Rules that keep it working:
   (`.groundPaint`). Restating the gradients is how the two drift apart.
 - The cover is hidden by default and shown by the script. Never invert it — the
   reverse puts a dark panel over the page for anyone whose script did not run.
+- **The cover must be the first element in the page's DOM.** It is `fixed` with
+  a z-index, so order does not affect stacking — but the document streams and
+  the parser paints, so anything before it is on screen before it lands. It was
+  once rendered after `{children}` and arrived 136KB after the hero.
+- **Re-assert `data-boot` from a layout effect, not a passive one.** Hydration
+  reconciles `<html>` and drops attributes that are not in its props, so the
+  attribute the head script set is gone by the time a `useEffect` runs — one
+  painted hero frame. `useBootLayoutEffect` in `landing-gate.tsx` is
+  `useLayoutEffect` in the browser and `useEffect` on the server.
 - `--boot-play: paused` is written by that same script, so the hero's letters
   are held from their first frame rather than frozen mid-rise after hydration.
   Skip it under reduced motion; the overlay's `restoreHero` returns early there
@@ -48,6 +57,9 @@ Rules that keep it working:
 - **No top-level `return` in inline head scripts.** It is a SyntaxError in a
   classic `<script>` and kills the whole block silently — which is what had
   been happening to the dock's pre-hide script.
+- **Verify boot ordering with a per-frame sampler, not screenshots.** Record
+  `cover || storm` every rAF and assert zero frames with neither; a screenshot
+  cannot show what happened between two paints.
 
 ## Repo conventions
 

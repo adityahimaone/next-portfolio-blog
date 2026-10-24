@@ -85,7 +85,6 @@ export function SkillsBridge() {
                   <span className={styles.fit}>
                     <GlassDevice
                       kind={spec.id}
-                      gate={BRIDGE_QUERY}
                       fallback={<Device kind={spec.id} />}
                     />
                   </span>

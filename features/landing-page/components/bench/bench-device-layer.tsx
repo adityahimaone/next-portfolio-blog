@@ -179,7 +179,6 @@ export function BenchDevices() {
             <span className={styles.rot} data-bench-device-rot={spec.id}>
               <GlassDevice
                 kind={spec.kind}
-                gate={BENCH_QUERY}
                 fallback={<Device kind={spec.kind} />}
               />
             </span>

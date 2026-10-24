@@ -10865,9 +10865,10 @@
 .skills {
   background:
     radial-gradient(
-      70% 46% at 50% 0%,
-      color-mix(in srgb, var(--deck-orange) 9%, transparent),
-      transparent 72%
+      75% 55% at 50% 0%,
+      color-mix(in srgb, var(--deck-orange) 22%, transparent) 0%,
+      color-mix(in srgb, var(--deck-orange) 8%, transparent) 50%,
+      transparent 75%
     ),
     linear-gradient(90deg, var(--deck-grid-line) 1px, transparent 1px) 0 0 /
       var(--deck-grid-cell) var(--deck-grid-cell),

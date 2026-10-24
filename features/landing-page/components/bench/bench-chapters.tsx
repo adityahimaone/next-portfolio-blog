@@ -1,7 +1,8 @@
-import { Fragment, type CSSProperties } from 'react'
+import { Fragment, useEffect, useRef, type CSSProperties } from 'react'
 
 import type { AboutTrack } from '../../rack-01/about-copy'
 import { GlassDevice } from '../glass/glass-device'
+import { chapterPose, setGlassPose } from '../glass/glass-registry'
 import { BENCH_QUERY } from '../motion-gate'
 import { Device } from './bench-device-layer'
 import type { BenchDeviceKind } from './bench-devices'
@@ -62,9 +63,51 @@ export function BenchChapter({
 }) {
   const kind = KIND[index % KIND.length]
   const number = String(index + 1).padStart(2, '0')
+  const articleRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const article = articleRef.current
+    if (!article) return
+    const mq = window.matchMedia(BENCH_QUERY)
+    const visual = article.querySelector<HTMLElement>('[data-bench-cvisual]')
+    if (!visual) return
+
+    const update = () => {
+      if (mq.matches) return
+      const rect = article.getBoundingClientRect()
+      const vh = window.innerHeight || 1
+      const total = vh + rect.height
+      const current = vh - rect.top
+      const p = Math.max(0, Math.min(1, current / total))
+      visual.style.setProperty('--p', p.toFixed(4))
+      setGlassPose(visual, chapterPose(kind, p))
+    }
+
+    let rafId: number | null = null
+    const onScroll = () => {
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        update()
+      })
+    }
+
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    mq.addEventListener?.('change', onScroll)
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      mq.removeEventListener?.('change', onScroll)
+    }
+  }, [kind])
 
   return (
     <article
+      ref={articleRef}
       className={styles.chapter}
       data-bench-chapter
       data-side={index % 2 === 0 ? 'left' : 'right'}
@@ -76,7 +119,6 @@ export function BenchChapter({
             <div className={styles.scale}>
               <GlassDevice
                 kind={kind}
-                gate={BENCH_QUERY}
                 fallback={<Device kind={kind} live />}
               />
             </div>
@@ -128,11 +170,57 @@ export function BenchChapter({
  * each other as the title leaves. Decoration; every word is already a chip.
  */
 export function BenchTicker({ words }: { words: readonly string[] }) {
+  const tickerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = tickerRef.current
+    if (!el) return
+    const mq = window.matchMedia(BENCH_QUERY)
+
+    // When BENCH_QUERY matches (desktop), useBenchMotion sets --m via ScrollTrigger.
+    // When not matching (mobile / narrow), compute --m from viewport scroll position.
+    const update = () => {
+      if (mq.matches) return
+      const rect = el.getBoundingClientRect()
+      const vh = window.innerHeight || 1
+      const total = vh + rect.height
+      const current = vh - rect.top
+      const progress = Math.max(0, Math.min(1, current / total))
+      el.style.setProperty('--m', progress.toFixed(4))
+    }
+
+    let rafId: number | null = null
+    const onScroll = () => {
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        update()
+      })
+    }
+
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    mq.addEventListener?.('change', onScroll)
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      mq.removeEventListener?.('change', onScroll)
+    }
+  }, [])
+
   const upper = words.map((word) => word.toUpperCase())
   const half = Math.ceil(upper.length / 2)
   const rows = [upper.slice(0, half), upper.slice(half)]
   return (
-    <div className={styles.ticker} data-bench-ticker aria-hidden="true">
+    <div
+      ref={tickerRef}
+      className={styles.ticker}
+      data-bench-ticker
+      aria-hidden="true"
+    >
       {rows.map((row, rowIndex) => (
         <p
           key={rowIndex}

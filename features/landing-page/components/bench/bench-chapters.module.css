@@ -193,7 +193,7 @@
    three.js rest orientation and the CSS tilt switched off underneath it. The
    glass device is gated on the same media query for the same reason; this
    second condition covers the import failing inside a matching viewport. */
-[data-motion='ready'] .stage:has([data-glass='on']) .tilt {
+.stage:has([data-glass='on']) .tilt {
   transform: none !important;
 }
 
@@ -496,12 +496,6 @@
     max-width: 100vw;
     margin: clamp(2rem, 5vw, 3rem) calc(50% - 50vw);
   }
-  .tickerRow {
-    animation: tickerMarqueeMobile 20s linear infinite;
-  }
-  .tickerBack {
-    animation: tickerMarqueeBackMobile 20s linear infinite;
-  }
 
   .chapter {
     grid-template-columns: minmax(0, 1fr);
@@ -578,23 +572,5 @@
   }
   .heading {
     font-size: clamp(1.75rem, 8vw, 2.5rem);
-  }
-}
-
-@keyframes tickerMarqueeMobile {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  100% {
-    transform: translate3d(-33.333%, 0, 0);
-  }
-}
-
-@keyframes tickerMarqueeBackMobile {
-  0% {
-    transform: translate3d(-33.333%, 0, 0);
-  }
-  100% {
-    transform: translate3d(0, 0, 0);
   }
 }

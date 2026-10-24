@@ -20,7 +20,7 @@
   --arr-rail-w: max(72px, 9vw);
   --arr-chrome-h: 46px;
   --arr-ruler-h: 44px;
-  --arr-lane-h: clamp(34px, 4.4svh, 44px);
+  --arr-lane-h: clamp(46px, 6.6svh, 60px);
   --arr-lane-tall: clamp(170px, 25svh, 230px);
   --arr-mixer-h: clamp(116px, 16svh, 152px);
   --arr-profile-centre: 0.625;

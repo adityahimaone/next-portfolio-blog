@@ -71,7 +71,9 @@ export function GlassDevice({
      */
     let generation = 0
 
-    const query = gate ? window.matchMedia(gate) : null
+    const query = gate
+      ? window.matchMedia(gate)
+      : window.matchMedia('(prefers-reduced-motion: no-preference)')
 
     const stop = () => {
       generation += 1

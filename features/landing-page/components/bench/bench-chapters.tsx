@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, type CSSProperties } from 'react'
 
 import type { AboutTrack } from '../../rack-01/about-copy'
 import { GlassDevice } from '../glass/glass-device'
+import { chapterPose, setGlassPose } from '../glass/glass-registry'
 import { BENCH_QUERY } from '../motion-gate'
 import { Device } from './bench-device-layer'
 import type { BenchDeviceKind } from './bench-devices'
@@ -62,9 +63,51 @@ export function BenchChapter({
 }) {
   const kind = KIND[index % KIND.length]
   const number = String(index + 1).padStart(2, '0')
+  const articleRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const article = articleRef.current
+    if (!article) return
+    const mq = window.matchMedia(BENCH_QUERY)
+    const visual = article.querySelector<HTMLElement>('[data-bench-cvisual]')
+    if (!visual) return
+
+    const update = () => {
+      if (mq.matches) return
+      const rect = article.getBoundingClientRect()
+      const vh = window.innerHeight || 1
+      const total = vh + rect.height
+      const current = vh - rect.top
+      const p = Math.max(0, Math.min(1, current / total))
+      visual.style.setProperty('--p', p.toFixed(4))
+      setGlassPose(visual, chapterPose(kind, p))
+    }
+
+    let rafId: number | null = null
+    const onScroll = () => {
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        update()
+      })
+    }
+
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    mq.addEventListener?.('change', onScroll)
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      mq.removeEventListener?.('change', onScroll)
+    }
+  }, [kind])
 
   return (
     <article
+      ref={articleRef}
       className={styles.chapter}
       data-bench-chapter
       data-side={index % 2 === 0 ? 'left' : 'right'}
@@ -76,7 +119,6 @@ export function BenchChapter({
             <div className={styles.scale}>
               <GlassDevice
                 kind={kind}
-                gate={BENCH_QUERY}
                 fallback={<Device kind={kind} live />}
               />
             </div>

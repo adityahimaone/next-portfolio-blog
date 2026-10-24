@@ -193,7 +193,7 @@
    three.js rest orientation and the CSS tilt switched off underneath it. The
    glass device is gated on the same media query for the same reason; this
    second condition covers the import failing inside a matching viewport. */
-[data-motion='ready'] .stage:has([data-glass='on']) .tilt {
+.stage:has([data-glass='on']) .tilt {
   transform: none !important;
 }
 

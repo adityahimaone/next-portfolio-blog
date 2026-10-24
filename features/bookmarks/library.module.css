@@ -1287,6 +1287,10 @@
   overscroll-behavior: contain;
   padding: 1.5rem;
   color: var(--booth-ink);
+  background: color-mix(in srgb, var(--surface) 94%, #080a0e);
+  border: 1px solid color-mix(in srgb, var(--hairline) 70%, rgba(255, 255, 255, 0.15));
+  border-radius: var(--booth-r-panel);
+  box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .modalHeader {

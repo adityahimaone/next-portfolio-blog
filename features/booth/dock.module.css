@@ -115,8 +115,12 @@
    dimmed by it and stayed tappable — a capsule over the dim that routes out of
    an open dialog. Dismissed outright while a sheet is up, restored by removing
    the attribute on close. */
-body[data-channel-sheet='open'] .dock {
-  display: none;
+body[data-channel-sheet='open'] .dock,
+body[data-bookmark-modal='open'] .dock,
+body[data-modal-open='true'] .dock {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .activePip {

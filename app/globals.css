@@ -24,6 +24,17 @@
     animation: none;
   }
 }
+
+body[data-channel-sheet='open'] nav[aria-label="Primary"],
+body[data-bookmark-modal='open'] nav[aria-label="Primary"],
+body[data-modal-open='true'] nav[aria-label="Primary"],
+body[data-channel-sheet='open'] .dock,
+body[data-bookmark-modal='open'] .dock,
+body[data-modal-open='true'] .dock {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still

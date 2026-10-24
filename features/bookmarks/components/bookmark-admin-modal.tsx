@@ -97,6 +97,18 @@ export function BookmarkAdminModal({
     setBulkMessage(null)
   }, [editingBookmark, isOpen])
 
+  // Dismiss bottom dock while modal is open
+  useEffect(() => {
+    if (!isOpen) return
+
+    document.body.dataset.bookmarkModal = 'open'
+    document.body.dataset.modalOpen = 'true'
+    return () => {
+      delete document.body.dataset.bookmarkModal
+      delete document.body.dataset.modalOpen
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   const handleLoginSubmit = async (event: React.FormEvent) => {

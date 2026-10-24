@@ -254,6 +254,17 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
     }
   }, [isChannelSheetOpen])
 
+  useEffect(() => {
+    if (!deleteTarget) return
+
+    document.body.dataset.bookmarkModal = 'open'
+    document.body.dataset.modalOpen = 'true'
+    return () => {
+      delete document.body.dataset.bookmarkModal
+      delete document.body.dataset.modalOpen
+    }
+  }, [deleteTarget])
+
   // The sidebar lists every channel that holds rows, each with the count it
   // holds in total. Those counts come from the server over the whole catalogue,
   // so they stay correct on page 7 instead of describing the visible slice.

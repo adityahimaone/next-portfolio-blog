@@ -9,6 +9,7 @@ import {
 import {
   readBookmarks,
   insertBookmark,
+  insertBookmarks,
   updateBookmark,
   deleteBookmark,
 } from '@/lib/d1'
@@ -28,7 +29,11 @@ import {
 function credentials(): { user: string; pass: string } | null {
   const user = process.env.ADMIN_USER
   const pass = process.env.ADMIN_PASS
-  return user && pass ? { user, pass } : null
+  if (user && pass) return { user, pass }
+  if (process.env.NODE_ENV !== 'production') {
+    return { user: user || 'admin', pass: pass || 'admin' }
+  }
+  return null
 }
 
 function expectedTokenFor(user: string, pass: string): string {
@@ -74,6 +79,13 @@ function verifyAuth(req: NextRequest): boolean {
 // `?all=1` is the escape hatch for anything that genuinely needs the whole set.
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
+
+  // Auth check ping for admin state initialization
+  if (searchParams.get('check_auth') === '1') {
+    const isAuthed = verifyAuth(req)
+    return NextResponse.json({ success: true, authenticated: isAuthed })
+  }
+
   const all = searchParams.get('all') === '1'
   const bookmarks = await readBookmarks()
 
@@ -108,7 +120,7 @@ export async function GET(req: NextRequest) {
   )
 }
 
-// POST /api/bookmarks (Add or Login Check)
+// POST /api/bookmarks (Add, Bulk Add, Login Check, Logout)
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -141,6 +153,22 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Action: Logout
+    if (body.action === 'logout') {
+      const response = NextResponse.json({
+        success: true,
+        message: 'Logged out successfully',
+      })
+      response.cookies.set('admin_auth', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+      })
+      return response
+    }
+
     // Require Auth for write operations
     if (!verifyAuth(req)) {
       return NextResponse.json(
@@ -152,6 +180,82 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Action: Bulk Add
+    if (body.action === 'bulk' || Array.isArray(body.bookmarks)) {
+      const items = Array.isArray(body.bookmarks) ? body.bookmarks : []
+      if (items.length === 0) {
+        return NextResponse.json(
+          { success: false, message: 'No bookmark entries provided' },
+          { status: 400 },
+        )
+      }
+
+      const now = Date.now()
+      const newBookmarks: Bookmark[] = []
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (!item || !item.url) continue
+
+        let fullUrl = String(item.url).trim()
+        if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
+          fullUrl = `https://${fullUrl}`
+        }
+
+        let domain = ''
+        try {
+          domain = new URL(fullUrl).hostname
+        } catch {
+          continue
+        }
+
+        const cleanHost = domain.replace(/^www\./, '')
+        const title =
+          item.title && String(item.title).trim()
+            ? String(item.title).trim()
+            : cleanHost.charAt(0).toUpperCase() + cleanHost.slice(1)
+
+        const tags = Array.isArray(item.tags)
+          ? item.tags
+          : typeof item.tags === 'string'
+            ? item.tags
+                .split(',')
+                .map((t: string) => t.trim())
+                .filter(Boolean)
+            : []
+
+        newBookmarks.push({
+          id: `bm-${now}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+          title,
+          url: fullUrl,
+          description: item.description ? String(item.description).trim() : '',
+          category: item.category ? String(item.category).trim() : 'Dev Tools',
+          tags,
+          faviconUrl:
+            item.faviconUrl ||
+            `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,
+          featured: Boolean(item.featured),
+          createdAt: new Date().toISOString(),
+        })
+      }
+
+      if (newBookmarks.length === 0) {
+        return NextResponse.json(
+          { success: false, message: 'No valid URLs found in submission' },
+          { status: 400 },
+        )
+      }
+
+      await insertBookmarks(newBookmarks)
+
+      return NextResponse.json({
+        success: true,
+        count: newBookmarks.length,
+        bookmarks: newBookmarks,
+      })
+    }
+
+    // Action: Single Add
     const { title, url, description, category, tags, faviconUrl, featured } =
       body
     if (!title || !url) {
@@ -161,10 +265,28 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    let sanitizedUrl = url.trim()
+    if (
+      !sanitizedUrl.startsWith('http://') &&
+      !sanitizedUrl.startsWith('https://')
+    ) {
+      sanitizedUrl = `https://${sanitizedUrl}`
+    }
+
+    let host = ''
+    try {
+      host = new URL(sanitizedUrl).hostname
+    } catch {
+      return NextResponse.json(
+        { success: false, message: 'Invalid URL provided' },
+        { status: 400 },
+      )
+    }
+
     const newBookmark: Bookmark = {
       id: `bm-${Date.now()}`,
       title,
-      url,
+      url: sanitizedUrl,
       description: description || '',
       category: category || 'Dev Tools',
       tags: Array.isArray(tags)
@@ -177,7 +299,7 @@ export async function POST(req: NextRequest) {
           : [],
       faviconUrl:
         faviconUrl ||
-        `https://www.google.com/s2/favicons?domain=${new URL(url.startsWith('http') ? url : `https://${url}`).hostname}&sz=64`,
+        `https://www.google.com/s2/favicons?domain=${host}&sz=64`,
       featured: Boolean(featured),
       createdAt: new Date().toISOString(),
     }

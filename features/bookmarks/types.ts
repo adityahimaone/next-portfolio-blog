@@ -48,3 +48,13 @@ export interface BookmarkFormData {
   featured: boolean
   customFaviconUrl?: string
 }
+
+export interface BulkBookmarkInput {
+  title?: string
+  url: string
+  description?: string
+  category?: string
+  tags?: string[] | string
+  featured?: boolean
+  faviconUrl?: string
+}

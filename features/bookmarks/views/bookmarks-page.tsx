@@ -13,6 +13,7 @@ import {
   ArrowUpRight,
   ChevronDown,
   FolderSearch,
+  Layers,
   Plus,
   RefreshCw,
   Shuffle,
@@ -22,7 +23,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'motion/react'
-import type { Bookmark, BookmarkFormData } from '../types'
+import type { Bookmark, BookmarkFormData, BulkBookmarkInput } from '../types'
 import type { BookmarkPage } from '../lib/bookmarks'
 import { PAGE_SIZE } from '../lib/bookmarks'
 import { channelColor } from '../constants/categories'
@@ -56,17 +57,36 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
 
   const [isAdmin, setIsAdmin] = useState(false)
   const [isAdminOpen, setIsAdminOpen] = useState(false)
+  const [modalTab, setModalTab] = useState<'single' | 'bulk'>('single')
   const [editing, setEditing] = useState<Bookmark | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Bookmark | null>(null)
   const [status, setStatus] = useState('')
 
-  // The admin login is reachable at /bookmarks?admin=1 rather than from a
-  // button in the hero. The button was hidden, which left no way to reach the
-  // panel at all: the modal is only mounted by this page, so the URL is the
-  // only entry point left. Credentials are still required -- this just opens
-  // the form.
+  // Check existing admin session on mount
   useEffect(() => {
-    if (searchParams.get('admin') === '1') setIsAdminOpen(true)
+    fetch('/api/bookmarks?check_auth=1')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.authenticated) {
+          setIsAdmin(true)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  // When /bookmarks?admin=1 is present, open admin modal and check auth
+  useEffect(() => {
+    if (searchParams.get('admin') === '1') {
+      setIsAdminOpen(true)
+      fetch('/api/bookmarks?check_auth=1')
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.authenticated) {
+            setIsAdmin(true)
+          }
+        })
+        .catch(() => {})
+    }
   }, [searchParams])
 
   // Below 1024px the vertical playlist panel gives way to a sheet behind a
@@ -459,11 +479,38 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
       if (data.success) {
         removeRow(deleteTarget.id)
         setDeleteTarget(null)
+        startTransition(() => {
+          router.refresh()
+        })
       } else {
         setStatus(data.message || 'Could not delete that bookmark')
       }
     } catch {
       setStatus('Could not reach the bookmarks API')
+    }
+  }
+
+  async function handleLockAdmin() {
+    try {
+      await fetch('/api/bookmarks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' }),
+      })
+    } catch {
+      // ignore
+    }
+    setIsAdmin(false)
+    setIsAdminOpen(false)
+    const params = new URLSearchParams(searchParams.toString())
+    if (params.has('admin')) {
+      params.delete('admin')
+      const search = params.toString()
+      startTransition(() => {
+        router.replace(search ? `${pathname}?${search}` : pathname, {
+          scroll: false,
+        })
+      })
     }
   }
 
@@ -482,17 +529,59 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
         if (id) {
           patchRow(id, () => data.bookmark)
         } else {
-          setAccumulated((prev) =>
-            prev.key === filterKey
-              ? { key: prev.key, pages: [data.bookmark, ...prev.pages[0]] }
-              : prev,
-          )
+          setAccumulated((prev) => ({
+            key: prev.key,
+            pages: [
+              [data.bookmark, ...(prev.pages[0] || [])],
+              ...prev.pages.slice(1),
+            ],
+          }))
         }
+        startTransition(() => {
+          router.refresh()
+        })
         return true
       }
       return false
     } catch {
       return false
+    }
+  }
+
+  async function saveBulkBookmarks(
+    bulkItems: BulkBookmarkInput[],
+  ): Promise<{ success: boolean; count: number; error?: string }> {
+    try {
+      const res = await fetch('/api/bookmarks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'bulk', bookmarks: bulkItems }),
+      })
+      const data = await res.json()
+      if (data.success && Array.isArray(data.bookmarks)) {
+        setAccumulated((prev) => ({
+          key: prev.key,
+          pages: [
+            [...data.bookmarks, ...(prev.pages[0] || [])],
+            ...prev.pages.slice(1),
+          ],
+        }))
+        startTransition(() => {
+          router.refresh()
+        })
+        return { success: true, count: data.count }
+      }
+      return {
+        success: false,
+        count: 0,
+        error: data.message || 'Failed to import bookmarks',
+      }
+    } catch {
+      return {
+        success: false,
+        count: 0,
+        error: 'Could not connect to bookmarks server',
+      }
     }
   }
 
@@ -503,6 +592,7 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
   // rebuilt when a page arrives.
   const handleEdit = useCallback((bookmark: Bookmark) => {
     setEditing(bookmark)
+    setModalTab('single')
     setIsAdminOpen(true)
   }, [])
 
@@ -583,6 +673,7 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
                   type="button"
                   onClick={() => {
                     setEditing(null)
+                    setModalTab('single')
                     setIsAdminOpen(true)
                   }}
                   className={`${styles.adminButton} ${styles.solidButton}`}
@@ -592,7 +683,20 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsAdmin(false)}
+                  onClick={() => {
+                    setEditing(null)
+                    setModalTab('bulk')
+                    setIsAdminOpen(true)
+                  }}
+                  className={styles.adminButton}
+                  title="Bulk import bookmarks"
+                >
+                  <Layers size={14} aria-hidden="true" />
+                  Bulk
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLockAdmin}
                   className={styles.adminButton}
                   title="Lock the panel"
                 >
@@ -604,6 +708,60 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
           </aside>
 
           <div>
+            {isAdmin && (
+              <div
+                className={styles.adminBar}
+                role="region"
+                aria-label="Bookmark management"
+              >
+                <div className={styles.adminBarStatus}>
+                  <span className={styles.adminLed} aria-hidden="true" />
+                  <span>Admin Mode Active</span>
+                </div>
+                <div className={styles.adminBarActions}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditing(null)
+                      setModalTab('single')
+                      setIsAdminOpen(true)
+                    }}
+                    className={`${styles.adminButton} ${styles.solidButton}`}
+                  >
+                    <Plus size={15} aria-hidden="true" />
+                    Add Bookmark
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditing(null)
+                      setModalTab('bulk')
+                      setIsAdminOpen(true)
+                    }}
+                    className={styles.adminButton}
+                    style={{
+                      background:
+                        'color-mix(in srgb, var(--primary) 18%, transparent)',
+                      border:
+                        '1px solid color-mix(in srgb, var(--primary) 35%, transparent)',
+                    }}
+                  >
+                    <Layers size={14} aria-hidden="true" />
+                    Bulk Import
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLockAdmin}
+                    className={styles.adminButton}
+                    title="Lock the panel"
+                  >
+                    <Unlock size={14} aria-hidden="true" />
+                    Lock
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className={styles.chipRow}>
               <FilterRow
                 label="Channels"
@@ -843,10 +1001,11 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
         isAdmin={isAdmin}
         onLoginSuccess={() => {
           setIsAdmin(true)
-          setIsAdminOpen(false)
         }}
         editingBookmark={editing}
         onSaveBookmark={saveBookmark}
+        onSaveBulkBookmarks={saveBulkBookmarks}
+        initialTab={modalTab}
       />
 
       {deleteTarget && (

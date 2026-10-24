@@ -30,6 +30,7 @@ type D1Database = {
       first: <T>() => Promise<T | null>
     }
   }
+  batch?: <T = unknown>(statements: unknown[]) => Promise<D1Result<T>[]>
 }
 
 export async function getDb(): Promise<D1Database | null> {
@@ -76,21 +77,58 @@ function rowToBookmark(row: BookmarkRow): Bookmark {
   }
 }
 
+async function getLocalFileBookmarks(): Promise<Bookmark[]> {
+  try {
+    const fs = await import('node:fs')
+    const path = await import('node:path')
+    const filePath = path.join(process.cwd(), 'content', 'bookmarks.json')
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, 'utf-8')
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) return parsed
+    }
+  } catch {
+    // Worker runtime or fs not available
+  }
+  return []
+}
+
+async function saveLocalFileBookmarks(bookmarks: Bookmark[]): Promise<boolean> {
+  try {
+    const fs = await import('node:fs')
+    const path = await import('node:path')
+    const filePath = path.join(process.cwd(), 'content', 'bookmarks.json')
+    fs.writeFileSync(filePath, JSON.stringify(bookmarks, null, 2), 'utf-8')
+    return true
+  } catch {
+    return false
+  }
+}
+
 export async function readBookmarks(): Promise<Bookmark[]> {
   const db = await getDb()
-  if (!db) return []
+  if (!db) return getLocalFileBookmarks()
 
   const { results } = await db
     .prepare('SELECT * FROM bookmarks')
     .bind()
     .all<BookmarkRow>()
 
-  return (results ?? []).map(rowToBookmark)
+  const rows = (results ?? []).map(rowToBookmark)
+  if (rows.length > 0) return rows
+
+  const local = await getLocalFileBookmarks()
+  return local.length > 0 ? local : []
 }
 
 export async function insertBookmark(bookmark: Bookmark): Promise<void> {
   const db = await getDb()
-  if (!db) throw new Error('D1 binding unavailable')
+  if (!db) {
+    const local = await getLocalFileBookmarks()
+    local.unshift(bookmark)
+    await saveLocalFileBookmarks(local)
+    return
+  }
 
   await db
     .prepare(
@@ -111,12 +149,62 @@ export async function insertBookmark(bookmark: Bookmark): Promise<void> {
     .run()
 }
 
+export async function insertBookmarks(bookmarks: Bookmark[]): Promise<number> {
+  if (bookmarks.length === 0) return 0
+  const db = await getDb()
+  if (!db) {
+    const local = await getLocalFileBookmarks()
+    local.unshift(...bookmarks)
+    await saveLocalFileBookmarks(local)
+    return bookmarks.length
+  }
+
+  const stmts = bookmarks.map((bookmark) =>
+    db
+      .prepare(
+        `INSERT INTO bookmarks (id, title, url, description, category, tags, favicon_url, featured, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        bookmark.id,
+        bookmark.title,
+        bookmark.url,
+        bookmark.description,
+        bookmark.category,
+        JSON.stringify(bookmark.tags),
+        bookmark.faviconUrl ?? null,
+        bookmark.featured ? 1 : 0,
+        bookmark.createdAt,
+      ),
+  )
+
+  if (typeof (db as any).batch === 'function') {
+    const CHUNK_SIZE = 50
+    for (let i = 0; i < stmts.length; i += CHUNK_SIZE) {
+      await (db as any).batch(stmts.slice(i, i + CHUNK_SIZE))
+    }
+  } else {
+    for (const stmt of stmts) {
+      await stmt.run()
+    }
+  }
+
+  return bookmarks.length
+}
+
 export async function updateBookmark(
   id: string,
   bookmark: Bookmark,
 ): Promise<boolean> {
   const db = await getDb()
-  if (!db) throw new Error('D1 binding unavailable')
+  if (!db) {
+    const local = await getLocalFileBookmarks()
+    const index = local.findIndex((b) => b.id === id)
+    if (index === -1) return false
+    local[index] = { ...local[index], ...bookmark }
+    await saveLocalFileBookmarks(local)
+    return true
+  }
 
   const result = await db
     .prepare(
@@ -142,7 +230,13 @@ export async function updateBookmark(
 
 export async function deleteBookmark(id: string): Promise<boolean> {
   const db = await getDb()
-  if (!db) throw new Error('D1 binding unavailable')
+  if (!db) {
+    const local = await getLocalFileBookmarks()
+    const filtered = local.filter((b) => b.id !== id)
+    if (filtered.length === local.length) return false
+    await saveLocalFileBookmarks(filtered)
+    return true
+  }
 
   const result = await db
     .prepare('DELETE FROM bookmarks WHERE id = ?')

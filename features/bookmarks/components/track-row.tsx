@@ -73,13 +73,23 @@ export const TrackRow = memo(function TrackRow({
   const rowRef = useRef<HTMLAnchorElement>(null)
   const [hovered, setHovered] = useState(false)
 
-  const handleEdit = useCallback(() => {
-    onEdit(bookmark)
-  }, [onEdit, bookmark])
+  const handleEdit = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault()
+      event.stopPropagation()
+      onEdit(bookmark)
+    },
+    [onEdit, bookmark],
+  )
 
-  const handleDelete = useCallback(() => {
-    onDelete(bookmark)
-  }, [onDelete, bookmark])
+  const handleDelete = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault()
+      event.stopPropagation()
+      onDelete(bookmark)
+    },
+    [onDelete, bookmark],
+  )
 
   /*
     The hover that the pill replaces is this handler's only real job now, so it
@@ -130,6 +140,7 @@ export const TrackRow = memo(function TrackRow({
         // arrow) is keyed off this attribute on the anchor. It is mirrored on
         // the <li> for the list-level hooks.
         data-active={active || undefined}
+        data-admin={isAdmin || undefined}
         // The <li> also carries --led, but the pill is a sibling of this
         // anchor and the rail is a pseudo-element of it — neither inherits from
         // the other, so both declare it.

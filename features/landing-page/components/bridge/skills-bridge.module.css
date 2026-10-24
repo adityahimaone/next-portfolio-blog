@@ -25,8 +25,26 @@
   --dev-lcd: color-mix(in srgb, var(--signal-orange, #ff5a1f) 32%, #e7e2d8);
   position: relative;
   color: var(--room-ink, #f1eee5);
-  background: var(--room-base, #14161a);
-  padding: clamp(4rem, 9vw, 8rem) clamp(1.25rem, 5vw, 5rem);
+  background:
+    radial-gradient(
+      70% 46% at 50% 0%,
+      color-mix(in srgb, var(--deck-orange, #ff5a1f) 9%, transparent),
+      transparent 72%
+    ),
+    linear-gradient(
+        90deg,
+        var(--deck-grid-line, rgb(255 255 255 / 0.05)) 1px,
+        transparent 1px
+      )
+      0 0 / var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px),
+    linear-gradient(
+        0deg,
+        var(--deck-grid-line, rgb(255 255 255 / 0.05)) 1px,
+        transparent 1px
+      )
+      0 0 / var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px),
+    var(--deck-ground, #14161a);
+  padding: clamp(3.5rem, 8vw, 6.5rem) clamp(1.25rem, 5vw, 4rem);
 }
 
 .stage {
@@ -124,12 +142,114 @@
   position: relative;
 }
 
+.mobileInstrument {
+  display: none;
+}
+
 @media (max-width: 768px) {
-  .anchor {
-    height: 6.5rem;
+  .bridge {
+    padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 4vw, 2rem);
   }
-  .fit {
-    transform: scale(0.8);
+  .stage {
+    gap: 1.5rem;
+  }
+  .devices {
+    display: none !important;
+  }
+  .statement {
+    font-size: clamp(2rem, 7vw, 3.2rem);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+  }
+  .mobileInstrument {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 1.5rem;
+    padding: 6px 14px;
+    border: 1px solid color-mix(in srgb, var(--deck-orange, #ff5a1f) 30%, transparent);
+    border-radius: 999px;
+    background: rgba(255, 90, 31, 0.06);
+    backdrop-filter: blur(8px);
+  }
+  .mobileLed {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--deck-orange, #ff5a1f);
+    box-shadow: 0 0 10px var(--deck-orange, #ff5a1f);
+    animation: bridgeLedPulse 1.6s ease-in-out infinite alternate;
+  }
+  .mobileWave {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 14px;
+  }
+  .mobileWave i {
+    display: inline-block;
+    width: 2px;
+    height: 100%;
+    background: var(--deck-orange, #ff5a1f);
+    border-radius: 1px;
+    animation: bridgeWaveBar 1.2s ease-in-out infinite alternate;
+  }
+  .mobileWave i:nth-child(2) {
+    animation-delay: 0.15s;
+    height: 60%;
+  }
+  .mobileWave i:nth-child(3) {
+    animation-delay: 0.3s;
+    height: 90%;
+  }
+  .mobileWave i:nth-child(4) {
+    animation-delay: 0.45s;
+    height: 40%;
+  }
+  .mobileWave i:nth-child(5) {
+    animation-delay: 0.2s;
+    height: 75%;
+  }
+  .mobileWave i:nth-child(6) {
+    animation-delay: 0.5s;
+    height: 50%;
+  }
+  .mobileWave i:nth-child(7) {
+    animation-delay: 0.35s;
+    height: 85%;
+  }
+  .mobileWave i:nth-child(8) {
+    animation-delay: 0.1s;
+    height: 45%;
+  }
+  .mobileTag {
+    font-family: var(--deck-font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--room-ink, #f1eee5) 85%, transparent);
+  }
+}
+
+@keyframes bridgeLedPulse {
+  from {
+    opacity: 0.5;
+    transform: scale(0.85);
+    box-shadow: 0 0 4px var(--deck-orange, #ff5a1f);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 0 12px var(--deck-orange, #ff5a1f);
+  }
+}
+
+@keyframes bridgeWaveBar {
+  0% {
+    transform: scaleY(0.3);
+  }
+  100% {
+    transform: scaleY(1);
   }
 }
 
@@ -144,20 +264,12 @@
   .bridge {
     height: 210svh;
     padding: 0;
-    /* The Skills section's own ground, not a darker colour of its own: the same
-       floor and the same rule grid that `.skills` paints, read from the deck
-       theme so the two cannot drift apart again. They did drift: this band kept
-       the legacy 32px `--room-fill` grid after the skills floor moved to the
-       deck's 30px `--deck-grid-cell`, so the rules jumped at the seam.
-       Both directions are painted, because `.skills` paints both. With only the
-       vertical rule this band was a set of stripes while the section was a
-       grid, and the seam read as two different materials meeting. The grid is
-       measured from each element's left edge and both elements are full width,
-       so the rules meet at the seam.
-       The room's warm/cool radials are deliberately left out: they are stage
-       lighting on the section's own box, so painting them here too would put a
-       glow in the band that the section then moves away from. */
     background:
+      radial-gradient(
+        70% 46% at 50% 0%,
+        color-mix(in srgb, var(--deck-orange, #ff5a1f) 9%, transparent),
+        transparent 72%
+      ),
       linear-gradient(
           90deg,
           var(--deck-grid-line, rgb(255 255 255 / 0.05)) 1px,
@@ -170,7 +282,7 @@
           transparent 1px
         )
         0 0 / var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px),
-      var(--room-base, #14161a);
+      var(--deck-ground, var(--room-base, #14161a));
   }
 
   .stage {

@@ -1365,24 +1365,24 @@ button.clip {
   .proof {
     flex-direction: column;
     height: auto;
-    gap: 14px;
+    gap: 12px;
     align-items: stretch;
-    padding: 16px 12px;
+    padding: 14px 12px;
   }
   .proofReadouts {
-    padding: 0 0 14px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 0 12px;
     border-right: 0;
     border-bottom: 1px solid var(--arr-hair);
   }
   .strips {
-    flex-wrap: wrap;
-    padding: 0;
-    overflow: visible;
+    display: none !important;
   }
   .strip {
-    flex: 0 0 calc(33.333% - 2px);
-    max-width: none;
-    height: 76px;
+    display: none !important;
   }
   .stripHead em {
     position: static;

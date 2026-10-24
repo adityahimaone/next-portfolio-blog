@@ -142,10 +142,6 @@
   position: relative;
 }
 
-.mobileInstrument {
-  display: none;
-}
-
 @media (max-width: 768px) {
   .bridge {
     padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 4vw, 2rem);
@@ -154,102 +150,26 @@
     gap: 1.5rem;
   }
   .devices {
-    display: none !important;
+    order: 2;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    height: 7.5rem;
+    perspective: 1100px;
+    pointer-events: none;
+    margin-top: 1rem;
+  }
+  .anchor {
+    position: relative;
+    height: 7.5rem;
+  }
+  .fit {
+    transform: scale(0.9);
   }
   .statement {
     font-size: clamp(2rem, 7vw, 3.2rem);
     line-height: 1.05;
     letter-spacing: -0.035em;
-  }
-  .mobileInstrument {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 1.5rem;
-    padding: 6px 14px;
-    border: 1px solid color-mix(in srgb, var(--deck-orange, #ff5a1f) 30%, transparent);
-    border-radius: 999px;
-    background: rgba(255, 90, 31, 0.06);
-    backdrop-filter: blur(8px);
-  }
-  .mobileLed {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--deck-orange, #ff5a1f);
-    box-shadow: 0 0 10px var(--deck-orange, #ff5a1f);
-    animation: bridgeLedPulse 1.6s ease-in-out infinite alternate;
-  }
-  .mobileWave {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    height: 14px;
-  }
-  .mobileWave i {
-    display: inline-block;
-    width: 2px;
-    height: 100%;
-    background: var(--deck-orange, #ff5a1f);
-    border-radius: 1px;
-    animation: bridgeWaveBar 1.2s ease-in-out infinite alternate;
-  }
-  .mobileWave i:nth-child(2) {
-    animation-delay: 0.15s;
-    height: 60%;
-  }
-  .mobileWave i:nth-child(3) {
-    animation-delay: 0.3s;
-    height: 90%;
-  }
-  .mobileWave i:nth-child(4) {
-    animation-delay: 0.45s;
-    height: 40%;
-  }
-  .mobileWave i:nth-child(5) {
-    animation-delay: 0.2s;
-    height: 75%;
-  }
-  .mobileWave i:nth-child(6) {
-    animation-delay: 0.5s;
-    height: 50%;
-  }
-  .mobileWave i:nth-child(7) {
-    animation-delay: 0.35s;
-    height: 85%;
-  }
-  .mobileWave i:nth-child(8) {
-    animation-delay: 0.1s;
-    height: 45%;
-  }
-  .mobileTag {
-    font-family: var(--deck-font-mono);
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--room-ink, #f1eee5) 85%, transparent);
-  }
-}
-
-@keyframes bridgeLedPulse {
-  from {
-    opacity: 0.5;
-    transform: scale(0.85);
-    box-shadow: 0 0 4px var(--deck-orange, #ff5a1f);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1.1);
-    box-shadow: 0 0 12px var(--deck-orange, #ff5a1f);
-  }
-}
-
-@keyframes bridgeWaveBar {
-  0% {
-    transform: scaleY(0.3);
-  }
-  100% {
-    transform: scaleY(1);
   }
 }
 

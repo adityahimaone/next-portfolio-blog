@@ -69,22 +69,6 @@ export function SkillsBridge() {
               </Fragment>
             ))}
           </p>
-          <div className={styles.mobileInstrument} aria-hidden="true">
-            <span className={styles.mobileLed} />
-            <span className={styles.mobileWave}>
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className={styles.mobileTag}>
-              INSTRUMENT 01-03 // AUDIO-RATE
-            </span>
-          </div>
         </div>
 
         <i className={styles.horizon} data-bridge-horizon aria-hidden="true" />

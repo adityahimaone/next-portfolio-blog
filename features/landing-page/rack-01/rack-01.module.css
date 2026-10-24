@@ -200,6 +200,7 @@
   line-height: 1.2;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: var(--panel-ink);
 }
 .segmentCounter {
   font-family: var(--deck-font-readout);
@@ -1079,8 +1080,8 @@
   width: fit-content;
   max-width: max-content;
   padding-top: 6px;
-  border-top: 1.5px solid rgba(244, 240, 232, 0.4);
-  color: #ffffff;
+  border-top: 1.5px solid color-mix(in srgb, var(--panel-ink) 35%, transparent);
+  color: var(--panel-ink);
   font: 750 10.5px var(--deck-font-mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -7648,6 +7649,8 @@
     justify-content: space-between;
     width: 100%;
     margin-top: 18px;
+    padding-inline: clamp(14px, 4vw, 24px);
+    box-sizing: border-box;
   }
 
   .contactPadRailBar .contactModeRail {

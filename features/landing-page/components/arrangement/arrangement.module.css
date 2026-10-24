@@ -20,8 +20,8 @@
   --arr-rail-w: max(72px, 9vw);
   --arr-chrome-h: 46px;
   --arr-ruler-h: 44px;
-  --arr-lane-h: clamp(46px, 6.6svh, 60px);
-  --arr-lane-tall: clamp(150px, 22svh, 204px);
+  --arr-lane-h: clamp(34px, 4.4svh, 44px);
+  --arr-lane-tall: clamp(170px, 25svh, 230px);
   --arr-mixer-h: clamp(116px, 16svh, 152px);
   --arr-profile-centre: 0.625;
 }
@@ -718,7 +718,7 @@ button.clip {
      off whatever the display face's width still will not fit. The name is the brand, so
      it is the biggest thing on the page. */
   font-size: calc(
-    clamp(40px, min(8.7vw, calc(var(--arr-lane-tall) - 40px)), 176px) *
+    clamp(48px, min(10.5vw, calc(var(--arr-lane-tall) - 24px)), 200px) *
       var(--name-fit, 1)
   );
   font-weight: 800;
@@ -1305,27 +1305,48 @@ button.clip {
   }
   .lane {
     height: auto;
-    min-height: 84px;
+    min-height: 48px;
     content-visibility: visible;
+  }
+  .laneTall {
+    min-height: 96px;
   }
   .laneGhost {
     display: none;
-  }
-  .laneTall {
-    height: auto;
   }
   .clip {
     position: static;
     width: auto;
     height: auto;
-    min-height: 76px;
-    margin: 4px 0;
+    min-height: 42px;
+    margin: 3px 0;
+  }
+  .clip:not(.clipName) {
+    min-height: 40px;
+    padding: 3px 6px;
+  }
+  .clip:not(.clipName) .clipHead {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+  .clip:not(.clipName) .clipBody {
+    min-height: 22px;
+    padding: 2px 6px;
+  }
+  .clip:not(.clipName) .clipDetail {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+  .clipName {
+    min-height: 88px;
+    margin: 6px 0;
   }
   .clipBody {
-    min-height: 44px;
+    min-height: 40px;
   }
   .clipNameTitle {
-    font-size: calc(clamp(30px, 9vw, 52px) * var(--name-fit, 1));
+    font-size: calc(clamp(38px, 11vw, 64px) * var(--name-fit, 1));
+    line-height: 0.92;
     white-space: normal;
   }
   .nameWord {
@@ -1369,6 +1390,16 @@ button.clip {
     align-items: stretch;
     padding: 14px 12px;
   }
+  .proofNav {
+    order: -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--arr-hair);
+    width: 100%;
+  }
   .proofReadouts {
     display: flex;
     flex-wrap: wrap;
@@ -1402,11 +1433,6 @@ button.clip {
     width: auto;
     padding: 0;
     border-left: 0;
-  }
-  .proofNav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
   }
   /* The stage is not pinned here, so the arrangement is simply the session
      view the doc asks for. */

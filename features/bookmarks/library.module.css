@@ -991,26 +991,61 @@
 
 .adminButton {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 40px;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
   padding: 0 0.95rem;
   border-radius: var(--booth-r-control);
+  background: var(--flat-fill);
+  border: 1px solid var(--hairline);
   color: var(--booth-ink);
-  font-size: 0.8125rem;
-  font-weight: 700;
+  font: var(--silkscreen);
+  font-size: 0.725rem;
+  letter-spacing: 0.05em;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.adminButton:hover {
+  background: var(--flat-fill-hover);
+  border-color: var(--glass-edge);
+  transform: translateY(-1px);
+}
+
+.adminButton:active {
+  transform: translateY(0);
+}
+
+.adminButton:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .solidButton {
-  border: 0;
   background: var(--primary);
   color: var(--primary-foreground);
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 35%, transparent);
 }
 
 .solidButton:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.08);
+  border-color: var(--primary);
+}
+
+.bulkButton {
+  background: color-mix(in srgb, var(--primary) 14%, var(--flat-fill));
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--hairline));
+  color: var(--primary);
+}
+
+.bulkButton:hover {
+  background: color-mix(in srgb, var(--primary) 22%, var(--flat-fill));
+  border-color: var(--primary);
 }
 
 /* ─── Load more ───────────────────────────────────────────────── */
@@ -1270,7 +1305,7 @@
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  background: rgba(3, 4, 7, 0.82);
+  background: rgba(10, 12, 16, 0.65);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
@@ -1288,10 +1323,12 @@
   overscroll-behavior: contain;
   padding: 1.75rem;
   color: var(--booth-ink);
-  background: linear-gradient(180deg, #161922 0%, #0d0f15 100%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 20px;
-  box-shadow: 0 32px 80px -12px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  background: var(--card);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--booth-r-panel);
+  box-shadow:
+    0 24px 60px -12px rgba(0, 0, 0, 0.45),
+    var(--glass-shadow);
 }
 
 .chassisScrew {
@@ -1299,9 +1336,9 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #1e222d;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  background: var(--flat-fill);
+  border: 1px solid var(--hairline);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
   pointer-events: none;
 }
 
@@ -1312,7 +1349,7 @@
   left: 2px;
   width: 4px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.4);
+  background: var(--hairline);
 }
 
 .chassisScrewTL {
@@ -1342,7 +1379,7 @@
   gap: 1rem;
   margin-bottom: 1.25rem;
   padding-bottom: 0.85rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--hairline);
 }
 
 .modalMeta {
@@ -1361,7 +1398,7 @@
   align-items: center;
   gap: 0.5rem;
   margin: 0;
-  color: #f8fafc;
+  color: var(--booth-ink);
   font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -1376,18 +1413,18 @@
   place-items: center;
   width: 32px;
   height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--hairline);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--flat-fill);
   color: var(--booth-ink-muted);
   cursor: pointer;
   transition: all var(--dur-fast) var(--ease-out);
 }
 
 .modalClose:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--booth-ink);
+  background: var(--flat-fill-hover);
+  border-color: var(--glass-edge);
 }
 
 .modalHint {
@@ -1447,18 +1484,18 @@
   width: 100%;
   min-height: 44px;
   padding: 0.65rem 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
   border-radius: 9px;
-  background: #08090d;
-  color: #f8fafc;
+  background: var(--flat-fill);
+  color: var(--booth-ink);
   font-family: inherit;
   font-size: 0.875rem;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
   transition: all var(--dur-fast) var(--ease-out);
 }
 
 .input::placeholder {
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--booth-ink-dim);
 }
 
 textarea.input {
@@ -1468,7 +1505,10 @@ textarea.input {
 
 .input:focus {
   border-color: var(--primary);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--primary), 0 0 14px color-mix(in srgb, var(--primary) 25%, transparent);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.08),
+    0 0 0 1px var(--primary),
+    0 0 12px color-mix(in srgb, var(--primary) 25%, transparent);
   outline: none;
 }
 
@@ -1532,9 +1572,9 @@ textarea.input {
   width: 18px;
   height: 18px;
   border-radius: 5px;
-  background: #080a0f;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+  background: var(--flat-fill);
+  border: 1px solid var(--hairline);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   position: relative;
   transition: all var(--dur-fast);
@@ -1552,7 +1592,7 @@ textarea.input {
   inset: 0;
   display: grid;
   place-items: center;
-  color: #000;
+  color: var(--primary-foreground);
   font-weight: 800;
   font-size: 11px;
 }
@@ -1576,9 +1616,9 @@ textarea.input {
   align-items: center;
   gap: 0.4rem;
   padding: 0 1.1rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--hairline);
   border-radius: 9px;
-  background: #12151c;
+  background: var(--flat-fill);
   color: var(--booth-ink-muted);
   font: var(--silkscreen);
   font-size: 0.75rem;
@@ -1588,9 +1628,9 @@ textarea.input {
 }
 
 .ghost:hover {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.25);
-  background: #181b24;
+  color: var(--booth-ink);
+  border-color: var(--glass-edge);
+  background: var(--flat-fill-hover);
 }
 
 .submit {
@@ -1599,11 +1639,13 @@ textarea.input {
   align-items: center;
   gap: 0.4rem;
   padding: 0 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--primary);
   border-radius: 9px;
-  background: linear-gradient(180deg, #ff661a 0%, #e64500 100%);
-  box-shadow: 0 4px 16px rgba(230, 69, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  color: #ffffff;
+  background: var(--primary);
+  box-shadow:
+    0 4px 14px color-mix(in srgb, var(--primary) 35%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  color: var(--primary-foreground);
   font: var(--silkscreen);
   font-size: 0.75rem;
   letter-spacing: 0.06em;
@@ -1615,7 +1657,9 @@ textarea.input {
 .submit:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(230, 69, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 6px 18px color-mix(in srgb, var(--primary) 45%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .submit:active:not(:disabled) {
@@ -1637,12 +1681,14 @@ textarea.input {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 1.4rem;
+  padding: 0.85rem 1.25rem;
   margin-bottom: 1.5rem;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #161922 0%, #0d0f15 100%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  border-radius: var(--booth-r-panel);
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .adminBarStatus {
@@ -1660,7 +1706,7 @@ textarea.input {
 .adminStatusTitle {
   font: var(--silkscreen);
   font-size: 0.75rem;
-  color: var(--primary);
+  color: var(--booth-ink);
   letter-spacing: 0.06em;
 }
 
@@ -1696,10 +1742,10 @@ textarea.input {
   display: flex;
   padding: 3px;
   margin-bottom: 1.25rem;
-  background: #080a0f;
+  background: var(--flat-fill);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--hairline);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
   gap: 3px;
 }
 
@@ -1722,15 +1768,17 @@ textarea.input {
 }
 
 .adminTab:hover {
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--booth-ink);
+  background: var(--flat-fill-hover);
 }
 
 .adminTabActive {
-  color: #ffffff;
-  background: linear-gradient(180deg, #252b37 0%, #171b23 100%);
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: var(--booth-ink);
+  background: var(--card);
+  border-color: var(--glass-edge);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .tabPip {
@@ -1772,7 +1820,7 @@ textarea.input {
   padding: 0.6rem;
   margin-bottom: 0.85rem;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--flat-fill);
   border: 1px solid var(--hairline);
 }
 

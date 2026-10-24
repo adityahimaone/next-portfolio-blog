@@ -27,9 +27,16 @@
   color: var(--room-ink, #f1eee5);
   background:
     radial-gradient(
-      70% 46% at 50% 0%,
-      color-mix(in srgb, var(--deck-orange, #ff5a1f) 9%, transparent),
-      transparent 72%
+      65% 55% at 50% 44%,
+      color-mix(in srgb, var(--deck-orange, #ff5a1f) 24%, transparent) 0%,
+      color-mix(in srgb, var(--deck-orange, #ff5a1f) 10%, transparent) 45%,
+      transparent 75%
+    ),
+    radial-gradient(
+      75% 55% at 50% 0%,
+      color-mix(in srgb, var(--deck-orange, #ff5a1f) 22%, transparent) 0%,
+      color-mix(in srgb, var(--deck-orange, #ff5a1f) 8%, transparent) 50%,
+      transparent 75%
     ),
     linear-gradient(
         90deg,
@@ -190,9 +197,16 @@
     padding: 0;
     background:
       radial-gradient(
-        70% 46% at 50% 0%,
-        color-mix(in srgb, var(--deck-orange, #ff5a1f) 9%, transparent),
-        transparent 72%
+        65% 55% at 50% 44%,
+        color-mix(in srgb, var(--deck-orange, #ff5a1f) 24%, transparent) 0%,
+        color-mix(in srgb, var(--deck-orange, #ff5a1f) 10%, transparent) 45%,
+        transparent 75%
+      ),
+      radial-gradient(
+        75% 55% at 50% 0%,
+        color-mix(in srgb, var(--deck-orange, #ff5a1f) 22%, transparent) 0%,
+        color-mix(in srgb, var(--deck-orange, #ff5a1f) 8%, transparent) 50%,
+        transparent 75%
       ),
       linear-gradient(
           90deg,
@@ -279,18 +293,20 @@
     position: absolute;
     left: 50%;
     top: 44%;
-    width: 52vmin;
+    width: 60vmin;
     aspect-ratio: 1;
     translate: -50% -50%;
     border-radius: 50%;
     background: radial-gradient(
       circle,
-      rgb(255 150 70 / 0.5),
-      rgb(255 90 31 / 0.16) 42%,
-      transparent 70%
+      color-mix(in srgb, var(--deck-orange, #ff5a1f) 70%, white 15%),
+      color-mix(in srgb, var(--deck-orange, #ff5a1f) 40%, transparent) 38%,
+      color-mix(in srgb, var(--deck-orange, #ff5a1f) 14%, transparent) 60%,
+      transparent 75%
     );
     opacity: var(--core, 0);
     transform: scale(calc(0.4 + 0.6 * var(--core, 0)));
+    filter: blur(8px);
   }
 
   /* The hole's rim: a lit ring and a shimmer that turns as it grows, drawn on

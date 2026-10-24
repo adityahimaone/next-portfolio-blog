@@ -1265,11 +1265,14 @@
 
 .dialogBackdrop {
   position: fixed;
-  z-index: 70;
+  inset: 0;
+  z-index: 100;
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .modal {

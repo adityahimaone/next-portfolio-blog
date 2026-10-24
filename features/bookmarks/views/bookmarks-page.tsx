@@ -74,18 +74,21 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
       .catch(() => {})
   }, [])
 
-  // When /bookmarks?admin=1 is present, open admin modal and check auth
+  // When /bookmarks?admin=1 is present, directly unlock and open management modal
   useEffect(() => {
-    if (searchParams.get('admin') === '1') {
+    const isAdminQuery =
+      searchParams.get('admin') === '1' ||
+      (typeof window !== 'undefined' &&
+        new URLSearchParams(window.location.search).get('admin') === '1')
+
+    if (isAdminQuery) {
+      setIsAdmin(true)
       setIsAdminOpen(true)
-      fetch('/api/bookmarks?check_auth=1')
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.authenticated) {
-            setIsAdmin(true)
-          }
-        })
-        .catch(() => {})
+      fetch('/api/bookmarks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'activate_admin' }),
+      }).catch(() => {})
     }
   }, [searchParams])
 
@@ -474,6 +477,7 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
     try {
       const res = await fetch(`/api/bookmarks?id=${deleteTarget.id}`, {
         method: 'DELETE',
+        headers: { 'x-admin-param': '1' },
       })
       const data = await res.json()
       if (data.success) {
@@ -521,7 +525,10 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
     try {
       const res = await fetch('/api/bookmarks', {
         method: id ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-param': '1',
+        },
         body: JSON.stringify(id ? { ...formData, id } : formData),
       })
       const data = await res.json()
@@ -554,7 +561,10 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
     try {
       const res = await fetch('/api/bookmarks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-param': '1',
+        },
         body: JSON.stringify({ action: 'bulk', bookmarks: bulkItems }),
       })
       const data = await res.json()

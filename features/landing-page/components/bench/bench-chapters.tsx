@@ -1,4 +1,4 @@
-import { Fragment, type CSSProperties } from 'react'
+import { Fragment, useEffect, useRef, type CSSProperties } from 'react'
 
 import type { AboutTrack } from '../../rack-01/about-copy'
 import { GlassDevice } from '../glass/glass-device'
@@ -128,11 +128,57 @@ export function BenchChapter({
  * each other as the title leaves. Decoration; every word is already a chip.
  */
 export function BenchTicker({ words }: { words: readonly string[] }) {
+  const tickerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = tickerRef.current
+    if (!el) return
+    const mq = window.matchMedia(BENCH_QUERY)
+
+    // When BENCH_QUERY matches (desktop), useBenchMotion sets --m via ScrollTrigger.
+    // When not matching (mobile / narrow), compute --m from viewport scroll position.
+    const update = () => {
+      if (mq.matches) return
+      const rect = el.getBoundingClientRect()
+      const vh = window.innerHeight || 1
+      const total = vh + rect.height
+      const current = vh - rect.top
+      const progress = Math.max(0, Math.min(1, current / total))
+      el.style.setProperty('--m', progress.toFixed(4))
+    }
+
+    let rafId: number | null = null
+    const onScroll = () => {
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        update()
+      })
+    }
+
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    mq.addEventListener?.('change', onScroll)
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      mq.removeEventListener?.('change', onScroll)
+    }
+  }, [])
+
   const upper = words.map((word) => word.toUpperCase())
   const half = Math.ceil(upper.length / 2)
   const rows = [upper.slice(0, half), upper.slice(half)]
   return (
-    <div className={styles.ticker} data-bench-ticker aria-hidden="true">
+    <div
+      ref={tickerRef}
+      className={styles.ticker}
+      data-bench-ticker
+      aria-hidden="true"
+    >
       {rows.map((row, rowIndex) => (
         <p
           key={rowIndex}

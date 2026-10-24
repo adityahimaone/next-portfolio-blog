@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { SkillsPage } from '@/features/skills'
-import { SKILL_GROUPS, skillUrl } from '@/features/skills'
+import { skillUrl } from '@/features/skills'
 import { breadcrumbList, itemList, JsonLd } from '@/lib/structured-data'
+import { readSkills } from '@/lib/skills'
 
 export const metadata: Metadata = {
   // The root layout appends " | Aditya Himawan", so the suffix is not repeated
@@ -12,7 +13,9 @@ export const metadata: Metadata = {
   alternates: { canonical: '/skills' },
 }
 
-export default function Page() {
+export default async function Page() {
+  const groups = await readSkills()
+
   // Only the linked rows, in list order. The descriptions are the same ones the
   // page prints, so the markup describes what is actually on it.
   const jsonLd = itemList({
@@ -20,7 +23,7 @@ export default function Page() {
     description:
       'Agent skills worth installing, curated from the skills.sh directory.',
     startAt: 1,
-    items: SKILL_GROUPS.flatMap((group) =>
+    items: groups.flatMap((group) =>
       group.skills.map((skill) => ({
         name: skill.name,
         url: skillUrl(skill),
@@ -39,7 +42,7 @@ export default function Page() {
     <>
       <JsonLd data={jsonLd} />
       <JsonLd data={breadcrumbs} />
-      <SkillsPage />
+      <SkillsPage initialGroups={groups} />
     </>
   )
 }

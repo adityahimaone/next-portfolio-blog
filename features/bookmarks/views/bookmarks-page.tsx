@@ -687,45 +687,6 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
                 ))}
               </SharedLayoutBg>
             </div>
-
-            {isAdmin && (
-              <div className={styles.adminRow} style={{ marginTop: '0.75rem' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditing(null)
-                    setModalTab('single')
-                    setIsAdminOpen(true)
-                  }}
-                  className={`${styles.adminButton} ${styles.solidButton}`}
-                >
-                  <Plus size={15} aria-hidden="true" />
-                  Add
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditing(null)
-                    setModalTab('bulk')
-                    setIsAdminOpen(true)
-                  }}
-                  className={styles.adminButton}
-                  title="Bulk import bookmarks"
-                >
-                  <Layers size={14} aria-hidden="true" />
-                  Bulk
-                </button>
-                <button
-                  type="button"
-                  onClick={handleLockAdmin}
-                  className={styles.adminButton}
-                  title="Lock the panel"
-                >
-                  <Unlock size={14} aria-hidden="true" />
-                  Lock
-                </button>
-              </div>
-            )}
           </aside>
 
           <div>
@@ -766,13 +727,7 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
                       setModalTab('bulk')
                       setIsAdminOpen(true)
                     }}
-                    className={styles.adminButton}
-                    style={{
-                      background:
-                        'color-mix(in srgb, var(--primary) 18%, transparent)',
-                      border:
-                        '1px solid color-mix(in srgb, var(--primary) 35%, transparent)',
-                    }}
+                    className={`${styles.adminButton} ${styles.bulkButton}`}
                   >
                     <Layers size={14} aria-hidden="true" />
                     Bulk Ingest

@@ -74,7 +74,8 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
       .catch(() => {})
   }, [])
 
-  // When /bookmarks?admin=1 is present, directly unlock and open management modal
+  // When /bookmarks?admin=1 is present, unlock admin controls.
+  // The management modal is opened explicitly from the Admin Mode Active bar or row edit.
   useEffect(() => {
     const isAdminQuery =
       searchParams.get('admin') === '1' ||
@@ -83,7 +84,6 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
 
     if (isAdminQuery) {
       setIsAdmin(true)
-      setIsAdminOpen(true)
       fetch('/api/bookmarks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -737,7 +737,14 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
               >
                 <div className={styles.adminBarStatus}>
                   <span className={styles.adminLed} aria-hidden="true" />
-                  <span>Admin Mode Active</span>
+                  <div className={styles.adminStatusGroup}>
+                    <span className={styles.adminStatusTitle}>
+                      ADMIN BUS // MODE ACTIVE
+                    </span>
+                    <span className={styles.adminStatusSub}>
+                      CATALOGUE RW UNLOCKED
+                    </span>
+                  </div>
                 </div>
                 <div className={styles.adminBarActions}>
                   <button
@@ -768,7 +775,7 @@ export function BookmarksPage({ page }: { page: BookmarkPage }) {
                     }}
                   >
                     <Layers size={14} aria-hidden="true" />
-                    Bulk Import
+                    Bulk Ingest
                   </button>
                   <button
                     type="button"

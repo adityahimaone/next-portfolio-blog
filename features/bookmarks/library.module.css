@@ -1270,12 +1270,13 @@
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(3, 4, 7, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .modal {
+  position: relative;
   width: min(34rem, 100%);
   /* dvh, not vh: on a phone the vh unit is the height with the browser chrome
      retracted, so a vh-based cap lets the bottom of the dialog sit under the
@@ -1285,22 +1286,74 @@
   /* A flick that runs past the end of a dialog should not scroll the page
      behind it. */
   overscroll-behavior: contain;
-  padding: 1.5rem;
+  padding: 1.75rem;
   color: var(--booth-ink);
-  background: color-mix(in srgb, var(--surface) 94%, #080a0e);
-  border: 1px solid color-mix(in srgb, var(--hairline) 70%, rgba(255, 255, 255, 0.15));
-  border-radius: var(--booth-r-panel);
-  box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  background: linear-gradient(180deg, #161922 0%, #0d0f15 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  box-shadow: 0 32px 80px -12px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.chassisScrew {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #1e222d;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.chassisScrew::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 2px;
+  width: 4px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.chassisScrewTL {
+  top: 10px;
+  left: 10px;
+}
+
+.chassisScrewTR {
+  top: 10px;
+  right: 10px;
+}
+
+.chassisScrewBL {
+  bottom: 10px;
+  left: 10px;
+}
+
+.chassisScrewBR {
+  bottom: 10px;
+  right: 10px;
 }
 
 .modalHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.25rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modalMeta {
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  color: var(--primary);
+  margin-bottom: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .modalTitle {
@@ -1308,9 +1361,10 @@
   align-items: center;
   gap: 0.5rem;
   margin: 0;
-  color: var(--booth-ink);
-  font-size: 1.0625rem;
-  font-weight: 650;
+  color: #f8fafc;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .modalTitle svg {
@@ -1320,17 +1374,20 @@
 .modalClose {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
   color: var(--booth-ink-muted);
   cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
 }
 
 .modalClose:hover {
-  color: var(--booth-ink);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .modalHint {
@@ -1371,25 +1428,37 @@
 
 .field {
   display: grid;
-  gap: 0.3rem;
+  gap: 0.35rem;
   margin-bottom: 0.85rem;
 }
 
 .fieldLabel {
-  color: var(--booth-ink-muted);
+  color: var(--primary);
   font: var(--silkscreen);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .input {
   width: 100%;
   min-height: 44px;
-  padding: 0.55rem 0.75rem;
-  border: 1px solid var(--hairline);
-  border-radius: 10px;
-  background: var(--flat-fill);
-  color: var(--booth-ink);
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  background: #08090d;
+  color: #f8fafc;
   font-family: inherit;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  transition: all var(--dur-fast) var(--ease-out);
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
 }
 
 textarea.input {
@@ -1397,9 +1466,14 @@ textarea.input {
   resize: none;
 }
 
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--primary), 0 0 14px color-mix(in srgb, var(--primary) 25%, transparent);
+  outline: none;
+}
+
 .input:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+  outline: none;
 }
 
 .error {
@@ -1442,22 +1516,52 @@ textarea.input {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
 }
 
-.check {
+.tactileCheck {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  color: var(--booth-ink);
-  font: var(--silkscreen);
+  gap: 0.6rem;
   cursor: pointer;
+  user-select: none;
 }
 
-.check input {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--primary);
+.tactileCheck input {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: #080a0f;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  position: relative;
+  transition: all var(--dur-fast);
+}
+
+.tactileCheck input:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.tactileCheck input:checked::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #000;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.tactileCheckLabel {
+  font: var(--silkscreen);
+  font-size: 0.725rem;
+  letter-spacing: 0.05em;
+  color: var(--booth-ink);
 }
 
 .modalActions {
@@ -1468,35 +1572,55 @@ textarea.input {
 
 .ghost {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 42px;
   align-items: center;
   gap: 0.4rem;
-  padding: 0 0.95rem;
-  border: 1px solid var(--glass-edge);
-  border-radius: var(--booth-r-control);
-  background: transparent;
+  padding: 0 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+  background: #12151c;
   color: var(--booth-ink-muted);
-  font-size: 0.8125rem;
-  font-weight: 700;
+  font: var(--silkscreen);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
   cursor: pointer;
+  transition: all var(--dur-fast);
 }
 
 .ghost:hover {
-  color: var(--booth-ink);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+  background: #181b24;
 }
 
 .submit {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 42px;
   align-items: center;
-  padding: 0 1.05rem;
-  border: 0;
-  border-radius: var(--booth-r-control);
-  background: var(--primary);
-  color: var(--primary-foreground);
-  font-size: 0.8125rem;
-  font-weight: 700;
+  gap: 0.4rem;
+  padding: 0 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9px;
+  background: linear-gradient(180deg, #ff661a 0%, #e64500 100%);
+  box-shadow: 0 4px 16px rgba(230, 69, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  font: var(--silkscreen);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
+  transition: all var(--dur-fast);
+}
+
+.submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(230, 69, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.submit:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.95);
 }
 
 .submit:disabled {
@@ -1507,36 +1631,52 @@ textarea.input {
 /* ─── Admin Bar & Tabs ────────────────────────────────────────── */
 
 .adminBar {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.85rem;
-  padding: 0.85rem 1.25rem;
+  gap: 1rem;
+  padding: 0.85rem 1.4rem;
   margin-bottom: 1.5rem;
-  border-radius: var(--booth-r-panel);
-  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--primary) 25%, var(--hairline));
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #161922 0%, #0d0f15 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .adminBarStatus {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.75rem;
+}
+
+.adminStatusGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.adminStatusTitle {
   font: var(--silkscreen);
   font-size: 0.75rem;
   color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+}
+
+.adminStatusSub {
+  font: var(--silkscreen);
+  font-size: 0.625rem;
+  color: var(--booth-ink-muted);
+  letter-spacing: 0.04em;
 }
 
 .adminLed {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: var(--primary);
-  box-shadow: 0 0 10px var(--primary);
+  box-shadow: 0 0 12px var(--primary);
   animation: adminPulse 2s ease-in-out infinite;
 }
 
@@ -1554,36 +1694,51 @@ textarea.input {
 
 .adminTabs {
   display: flex;
-  gap: 0.5rem;
+  padding: 3px;
   margin-bottom: 1.25rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--hairline);
+  background: #080a0f;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
+  gap: 3px;
 }
 
 .adminTab {
+  flex: 1;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.45rem 0.95rem;
-  border-radius: var(--booth-r-control);
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border-radius: 9px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--booth-ink-muted);
   font: var(--silkscreen);
-  font-size: 0.75rem;
+  font-size: 0.725rem;
+  letter-spacing: 0.06em;
   cursor: pointer;
   transition: all var(--dur-fast) var(--ease-out);
 }
 
 .adminTab:hover {
-  color: var(--booth-ink);
-  background: color-mix(in srgb, var(--booth-ink) 6%, transparent);
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .adminTabActive {
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 12%, transparent);
-  border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+  color: #ffffff;
+  background: linear-gradient(180deg, #252b37 0%, #171b23 100%);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.tabPip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
 }
 
 .bulkSummary {

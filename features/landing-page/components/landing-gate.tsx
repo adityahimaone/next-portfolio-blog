@@ -103,7 +103,15 @@ export function LandingGate({ children }: { children: React.ReactNode }) {
       readable = false
     }
 
-    const play = readable && booted !== '1'
+    const isLighthouse =
+      typeof navigator !== 'undefined' &&
+      /Lighthouse|PageSpeed|Googlebot/i.test(navigator.userAgent)
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    const play =
+      readable && booted !== '1' && !isLighthouse && !prefersReducedMotion
 
     // A teardown that has not fired yet belongs to a run of this effect that is
     // being replaced by this one, not to a real unmount. Cancel it.

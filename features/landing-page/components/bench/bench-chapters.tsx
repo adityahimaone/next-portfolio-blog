@@ -71,6 +71,17 @@ export function BenchChapter({
     >
       <div className={styles.visual} data-bench-cvisual aria-hidden="true">
         <span className={styles.numeral}>{number}</span>
+        <div className={styles.mobileHud}>
+          <span className={styles.mobileLed} data-kind={kind} />
+          <span className={styles.mobileWave}>
+            <i />
+            <i />
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className={styles.mobileKind}>{kind.toUpperCase()}</span>
+        </div>
         <div className={styles.stage} data-kind={kind}>
           <div className={styles.tilt}>
             <div className={styles.scale}>

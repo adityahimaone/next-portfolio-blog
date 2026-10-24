@@ -6137,7 +6137,7 @@
     display: none;
   }
   .section {
-    padding: 90px 20px;
+    padding: clamp(60px, 14vw, 80px) clamp(16px, 4vw, 24px);
   }
   .sectionHeading {
     gap: 15px;
@@ -6173,7 +6173,7 @@
   }
   .skills {
     min-height: 0;
-    padding: 90px 20px;
+    padding: clamp(60px, 14vw, 80px) clamp(16px, 4vw, 24px);
     overflow: visible;
   }
   .skillsStage {
@@ -6360,7 +6360,7 @@
     position: relative;
     height: auto;
     min-height: 0;
-    padding: 90px 20px;
+    padding: clamp(60px, 14vw, 80px) clamp(16px, 4vw, 24px);
     overflow: visible;
   }
   .cassetteDeck {
@@ -6454,7 +6454,7 @@
     width: min(100%, 210px);
   }
   .contact {
-    padding: 90px 20px 0;
+    padding: clamp(60px, 14vw, 80px) clamp(16px, 4vw, 24px) 0;
   }
   .patchHeader,
   .patchbay {

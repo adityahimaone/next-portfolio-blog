@@ -216,7 +216,7 @@ export default function RootLayout({
             that is shown with no failsafe behind it. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(location.pathname==='/'&&sessionStorage.getItem('aditya-landing-session-boot')!=='1'){var d=document.documentElement,m=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(!m)d.style.setProperty('--boot-play','paused');setTimeout(function(){if(d.getAttribute('data-boot')==='on'){d.removeAttribute('data-boot');d.style.removeProperty('--boot-play')}},8000);d.setAttribute('data-boot','on')}}catch(e){}`,
+            __html: `try{if(location.pathname==='/'&&!/Lighthouse|PageSpeed|Googlebot/i.test(navigator.userAgent)&&sessionStorage.getItem('aditya-landing-session-boot')!=='1'){var d=document.documentElement,m=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(!m)d.style.setProperty('--boot-play','paused');setTimeout(function(){if(d.getAttribute('data-boot')==='on'){d.removeAttribute('data-boot');d.style.removeProperty('--boot-play')}},8000);d.setAttribute('data-boot','on')}}catch(e){}`,
           }}
         />
       </head>

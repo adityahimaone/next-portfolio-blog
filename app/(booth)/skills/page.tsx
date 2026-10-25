@@ -9,27 +9,25 @@ export const metadata: Metadata = {
   // here.
   title: 'Recommended Agent Skills',
   description:
-    'Agent skills worth installing — design and motion, engineering workflow, tooling, video and mobile — curated from the skills.sh directory.',
+    'The ui-skills.com directory in one place — 439 agent skills for design engineering, tagged and filterable by what each one is for.',
   alternates: { canonical: '/skills' },
 }
 
 export default async function Page() {
-  const groups = await readSkills()
+  const catalog = await readSkills()
 
   // Only the linked rows, in list order. The descriptions are the same ones the
   // page prints, so the markup describes what is actually on it.
   const jsonLd = itemList({
     name: 'Recommended Agent Skills',
     description:
-      'Agent skills worth installing, curated from the skills.sh directory.',
+      'Agent skills worth installing, tagged from the ui-skills.com directory.',
     startAt: 1,
-    items: groups.flatMap((group) =>
-      group.skills.map((skill) => ({
-        name: skill.name,
-        url: skillUrl(skill),
-        description: skill.description,
-      })),
-    ),
+    items: catalog.skills.map((skill) => ({
+      name: skill.name,
+      url: skillUrl(skill),
+      description: skill.description,
+    })),
   })
 
   const breadcrumbs = breadcrumbList([
@@ -42,7 +40,7 @@ export default async function Page() {
     <>
       <JsonLd data={jsonLd} />
       <JsonLd data={breadcrumbs} />
-      <SkillsPage initialGroups={groups} />
+      <SkillsPage initialCatalog={catalog} />
     </>
   )
 }

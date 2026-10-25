@@ -10,67 +10,82 @@ import {
   Edit2,
   Trash2,
   AlertTriangle,
+  Search,
+  X,
 } from 'lucide-react'
 import { PageHeader } from '@/features/booth/page-header'
 import {
-  SKILL_GROUPS as DEFAULT_SKILL_GROUPS,
   SKILLS_SOURCE,
   installCommand,
   skillUrl,
   type RecommendedSkill,
-  type SkillGroup,
+  type SkillTag,
+  type SkillsCatalog,
 } from '../constants/catalogue'
 import { SkillAdminModal } from '../components/skill-admin-modal'
 import type { BulkSkillInput } from '../utils/bulk-parser'
 import styles from '../skills.module.css'
 
+const MAX_ROW_TAGS = 4
+
 interface SkillsPageProps {
-  initialGroups?: SkillGroup[]
+  initialCatalog: SkillsCatalog
 }
 
-function SkillsPageContent({ initialGroups }: SkillsPageProps) {
+function SkillsPageContent({ initialCatalog }: SkillsPageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [groups, setGroups] = useState<SkillGroup[]>(
-    initialGroups && initialGroups.length > 0
-      ? initialGroups
-      : DEFAULT_SKILL_GROUPS,
-  )
+  const [catalog, setCatalog] = useState<SkillsCatalog>(initialCatalog)
+  const [query, setQuery] = useState('')
+  const [activeTags, setActiveTags] = useState<string[]>([])
 
   const [isAdmin, setIsAdmin] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalTab, setModalTab] = useState<'single' | 'bulk'>('single')
-  const [editingSkill, setEditingSkill] = useState<
-    (RecommendedSkill & { category?: string }) | null
-  >(null)
-  const [deleteTarget, setDeleteTarget] = useState<
-    (RecommendedSkill & { category?: string }) | null
-  >(null)
+  const [editingSkill, setEditingSkill] = useState<RecommendedSkill | null>(
+    null,
+  )
+  const [deleteTarget, setDeleteTarget] = useState<RecommendedSkill | null>(
+    null,
+  )
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // Derive counts from actual current groups
-  const totalSkills = useMemo(
-    () => groups.reduce((acc, g) => acc + g.skills.length, 0),
-    [groups],
-  )
-  const totalInstalled = useMemo(
-    () =>
-      groups.reduce(
-        (acc, g) => acc + g.skills.filter((s) => s.installed).length,
-        0,
-      ),
-    [groups],
-  )
+  const tagsBySlug = useMemo(() => {
+    const map = new Map<string, SkillTag>()
+    for (const tag of catalog.tags) map.set(tag.slug, tag)
+    return map
+  }, [catalog.tags])
 
-  const categories = useMemo(() => groups.map((g) => g.title), [groups])
-
-  // Sync groups if initialGroups change
-  useEffect(() => {
-    if (initialGroups && initialGroups.length > 0) {
-      setGroups(initialGroups)
+  const tagCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const skill of catalog.skills) {
+      for (const tag of skill.tags) {
+        counts.set(tag, (counts.get(tag) ?? 0) + 1)
+      }
     }
-  }, [initialGroups])
+    return counts
+  }, [catalog.skills])
+
+  const totalSkills = catalog.skills.length
+  const totalInstalled = useMemo(
+    () => catalog.skills.filter((skill) => skill.installed).length,
+    [catalog.skills],
+  )
+
+  const visibleSkills = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    return catalog.skills.filter((skill) => {
+      // Every selected tag has to be on the skill, so adding one narrows.
+      if (activeTags.some((tag) => !skill.tags.includes(tag))) return false
+      if (!needle) return true
+      return (
+        skill.name.toLowerCase().includes(needle) ||
+        skill.repo.toLowerCase().includes(needle) ||
+        skill.description.toLowerCase().includes(needle)
+      )
+    })
+  }, [catalog.skills, activeTags, query])
 
   // Check admin access via URL parameter or cookie session
   useEffect(() => {
@@ -114,6 +129,24 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
     }
   }, [deleteTarget])
 
+  const toggleTag = (slug: string) => {
+    setActiveTags((current) =>
+      current.includes(slug)
+        ? current.filter((tag) => tag !== slug)
+        : [...current, slug],
+    )
+  }
+
+  const clearFilters = () => {
+    setActiveTags([])
+    setQuery('')
+  }
+
+  const refreshCatalog = async () => {
+    const refreshed = await fetch('/api/skills').then((r) => r.json())
+    if (refreshed.catalog) setCatalog(refreshed.catalog)
+  }
+
   const handleLockAdmin = async () => {
     try {
       await fetch('/api/skills', {
@@ -130,7 +163,7 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
   }
 
   const handleSaveSkill = async (
-    skillData: RecommendedSkill & { category: string },
+    skillData: RecommendedSkill & { owner?: string },
     oldKey?: { name: string; repo: string },
   ) => {
     try {
@@ -150,10 +183,7 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
       })
       const data = await res.json()
       if (data.success) {
-        const refreshed = await fetch('/api/skills').then((r) => r.json())
-        if (refreshed.groups) {
-          setGroups(refreshed.groups)
-        }
+        await refreshCatalog()
         return true
       }
       return false
@@ -174,10 +204,7 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
       })
       const data = await res.json()
       if (data.success) {
-        const refreshed = await fetch('/api/skills').then((r) => r.json())
-        if (refreshed.groups) {
-          setGroups(refreshed.groups)
-        }
+        await refreshCatalog()
         return { success: true, count: data.count || skillsToIngest.length }
       }
       return { success: false, count: 0, error: data.message }
@@ -201,15 +228,14 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
       })
       const data = await res.json()
       if (data.success) {
-        const refreshed = await fetch('/api/skills').then((r) => r.json())
-        if (refreshed.groups) {
-          setGroups(refreshed.groups)
-        }
+        await refreshCatalog()
         setDeleteTarget(null)
       }
     } catch {}
     setIsDeleting(false)
   }
+
+  const filtersActive = activeTags.length > 0 || query.trim().length > 0
 
   return (
     <main className={styles.page} id="main-content">
@@ -217,7 +243,7 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
         index="04"
         eyebrow="Skills"
         title="Skills worth installing."
-        description="Agent skills I have actually run, plus the ones from the directory that are worth the install. Grouped by what they are for."
+        description="The whole ui-skills.com directory in one place, tagged the way that site tags it: filter by what a skill is for, then read the ones that earn their place."
         hint={
           <>
             <ArrowUpRight size={14} aria-hidden="true" />
@@ -285,33 +311,104 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
         )}
 
         <p className={styles.source}>
-          <span>Sourced from the agent skills directory.</span>
+          <span>
+            Every entry is tagged with its own topics from the directory.
+          </span>
           <a
             href={SKILLS_SOURCE}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.sourceLink}
           >
-            skills.sh
+            ui-skills.com
             <ArrowUpRight size={13} aria-hidden="true" />
           </a>
         </p>
 
-        {groups.map((group) => (
-          <section
-            key={group.title}
-            className={styles.group}
-            style={{ ['--led' as string]: group.hue }}
-          >
-            <div className={styles.groupHead}>
-              <h2 className={styles.groupTitle}>{group.title}</h2>
-              <span className={styles.groupCount}>
-                {group.skills.length} skills
-              </span>
-            </div>
+        {/* Filter bench */}
+        <div className={styles.filters}>
+          <div className={styles.searchRow}>
+            <Search
+              size={15}
+              aria-hidden="true"
+              className={styles.searchIcon}
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className={styles.search}
+              placeholder="Search by name, repo, or what it does…"
+              aria-label="Search skills"
+            />
+            {filtersActive && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className={styles.clearButton}
+              >
+                <X size={13} aria-hidden="true" />
+                Clear
+              </button>
+            )}
+          </div>
 
-            <ul className={styles.rowList}>
-              {group.skills.map((skill, index) => (
+          <div
+            className={styles.chipRail}
+            role="group"
+            aria-label="Filter by tag"
+          >
+            <button
+              type="button"
+              onClick={clearFilters}
+              aria-pressed={activeTags.length === 0}
+              className={`${styles.chip} ${styles.chipAll} ${
+                activeTags.length === 0 ? styles.chipActive : ''
+              }`}
+            >
+              All
+              <span className={styles.chipCount}>{totalSkills}</span>
+            </button>
+            {catalog.tags.map((tag) => {
+              const active = activeTags.includes(tag.slug)
+              return (
+                <button
+                  key={tag.slug}
+                  type="button"
+                  onClick={() => toggleTag(tag.slug)}
+                  aria-pressed={active}
+                  className={`${styles.chip} ${active ? styles.chipActive : ''}`}
+                  style={{ ['--tag' as string]: tag.hue }}
+                >
+                  {tag.label}
+                  <span className={styles.chipCount}>
+                    {tagCounts.get(tag.slug) ?? 0}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          <p className={styles.filterStatus} aria-live="polite">
+            Showing <strong>{visibleSkills.length}</strong> of {totalSkills}
+            {activeTags.length > 1 && ' · matching every selected tag'}
+            {activeTags.length === 1 &&
+              ` · tagged ${tagsBySlug.get(activeTags[0])?.label}`}
+          </p>
+        </div>
+
+        {visibleSkills.length === 0 ? (
+          <p className={styles.empty}>
+            No skill in the directory matches that. Remove a tag or clear the
+            search.
+          </p>
+        ) : (
+          <ul className={styles.rowList}>
+            {visibleSkills.map((skill, index) => {
+              const lead = tagsBySlug.get(skill.tags[0])
+              const shown = skill.tags.slice(0, MAX_ROW_TAGS)
+              const overflow = skill.tags.length - shown.length
+              return (
                 <li key={`${skill.repo}/${skill.name}`}>
                   <a
                     href={skillUrl(skill)}
@@ -320,6 +417,7 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
                     title={installCommand(skill)}
                     className={styles.row}
                     data-admin={isAdmin ? 'true' : undefined}
+                    style={{ ['--led' as string]: lead?.hue }}
                   >
                     <span className={styles.num}>{index + 1}</span>
 
@@ -332,11 +430,25 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
                       </span>
                       <span className={styles.repo}>{skill.repo}</span>
                       <span className={styles.desc}>{skill.description}</span>
-                    </span>
-
-                    <span className={styles.meta}>
-                      <span className={styles.installs}>
-                        {skill.installs} installs
+                      <span className={styles.tagRow}>
+                        {shown.map((slug) => {
+                          const tag = tagsBySlug.get(slug)
+                          if (!tag) return null
+                          return (
+                            <span
+                              key={slug}
+                              className={styles.tag}
+                              style={{ ['--tag' as string]: tag.hue }}
+                            >
+                              {tag.label}
+                            </span>
+                          )
+                        })}
+                        {overflow > 0 && (
+                          <span className={styles.tagOverflow}>
+                            +{overflow}
+                          </span>
+                        )}
                       </span>
                     </span>
 
@@ -347,7 +459,7 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
                           onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
-                            setEditingSkill({ ...skill, category: group.title })
+                            setEditingSkill(skill)
                             setModalTab('single')
                             setIsModalOpen(true)
                           }}
@@ -362,7 +474,7 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
                           onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
-                            setDeleteTarget({ ...skill, category: group.title })
+                            setDeleteTarget(skill)
                           }}
                           className={`${styles.rowAction} ${styles.rowActionDelete}`}
                           title={`Delete ${skill.name}`}
@@ -380,10 +492,10 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
                     />
                   </a>
                 </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+              )
+            })}
+          </ul>
+        )}
 
         <p className={styles.footNote}>
           Install any of them with{' '}
@@ -405,7 +517,7 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
         isAdmin={isAdmin}
         onLoginSuccess={() => setIsAdmin(true)}
         editingSkill={editingSkill}
-        categories={categories}
+        tags={catalog.tags}
         onSaveSkill={handleSaveSkill}
         onSaveBulkSkills={handleSaveBulkSkills}
         initialTab={modalTab}
@@ -435,15 +547,17 @@ function SkillsPageContent({ initialGroups }: SkillsPageProps) {
               }}
             >
               <AlertTriangle size={18} aria-hidden="true" />
-              <h3 id="confirm-delete-skill-title" className={styles.confirmTitle}>
+              <h3
+                id="confirm-delete-skill-title"
+                className={styles.confirmTitle}
+              >
                 Remove Skill
               </h3>
             </div>
             <p className={styles.confirmText}>
               Are you sure you want to remove{' '}
-              <strong>{deleteTarget.name}</strong> ({deleteTarget.repo}) from the{' '}
-              <em>{deleteTarget.category}</em> catalogue? This will immediately
-              update the published skills.
+              <strong>{deleteTarget.name}</strong> ({deleteTarget.repo}) from
+              the catalogue? This will immediately update the published skills.
             </p>
             <div className={styles.modalActions}>
               <button

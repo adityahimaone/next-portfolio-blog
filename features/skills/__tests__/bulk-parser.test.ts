@@ -12,8 +12,7 @@ describe('parseBulkSkills', () => {
         name: 'test-skill',
         repo: 'owner/repo',
         description: 'Test description',
-        installs: '50K',
-        category: 'Design & motion',
+        tags: ['motion', 'interaction'],
         installed: true,
       },
     ])
@@ -23,60 +22,63 @@ describe('parseBulkSkills', () => {
       name: 'test-skill',
       repo: 'owner/repo',
       description: 'Test description',
-      installs: '50K',
-      category: 'Design & motion',
+      tags: ['motion', 'interaction'],
       installed: true,
     })
   })
 
-  it('parses pipe-delimited 3-part lines', () => {
+  it('treats a three-column line as name, repo, description', () => {
     const input = 'my-skill | user/repo | A useful skill'
-    const res = parseBulkSkills(input, 'Engineering workflow')
+    const res = parseBulkSkills(input)
     expect(res).toHaveLength(1)
     expect(res[0]).toEqual({
       name: 'my-skill',
       repo: 'user/repo',
-      category: 'Engineering workflow',
       description: 'A useful skill',
-      installs: '1.0K',
+      tags: [],
       installed: false,
     })
   })
 
-  it('parses pipe-delimited 4-part lines with custom category', () => {
-    const input = 'my-skill | user/repo | Mobile | A useful mobile skill'
+  it('reads tags from the third column when a description follows', () => {
+    const input = 'my-skill | user/repo | motion,interaction | A useful skill'
     const res = parseBulkSkills(input)
     expect(res).toHaveLength(1)
     expect(res[0]).toEqual({
       name: 'my-skill',
       repo: 'user/repo',
-      category: 'Mobile',
-      description: 'A useful mobile skill',
-      installs: '1.0K',
+      description: 'A useful skill',
+      tags: ['motion', 'interaction'],
       installed: false,
     })
   })
 
-  it('parses pipe-delimited 5-part lines with installs count', () => {
-    const input = 'my-skill | user/repo | Mobile | A useful mobile skill | 120.5K'
-    const res = parseBulkSkills(input)
+  it('falls back to the supplied tags when a line declares none', () => {
+    const res = parseBulkSkills('my-skill | user/repo | A useful skill', [
+      'tooling',
+    ])
+    expect(res[0].tags).toEqual(['tooling'])
+  })
+
+  it('resolves a ui-skills URL to its owner and skill name', () => {
+    const res = parseBulkSkills(
+      'https://www.ui-skills.com/skills/emilkowalski/animate',
+      ['motion'],
+    )
     expect(res).toHaveLength(1)
-    expect(res[0]).toEqual({
-      name: 'my-skill',
-      repo: 'user/repo',
-      category: 'Mobile',
-      description: 'A useful mobile skill',
-      installs: '120.5K',
-      installed: false,
-    })
+    expect(res[0].name).toBe('animate')
+    expect(res[0].repo).toBe('emilkowalski/skills')
+    expect(res[0].tags).toEqual(['motion'])
   })
 
-  it('parses skills.sh URL lines', () => {
-    const input = 'https://www.skills.sh/vercel-labs/skills/next-cache'
-    const res = parseBulkSkills(input, 'Agents & tooling')
+  it('resolves a skills.sh URL to its owner, repo, and skill name', () => {
+    const res = parseBulkSkills(
+      'https://www.skills.sh/vercel-labs/skills/next-cache',
+      ['tooling'],
+    )
     expect(res).toHaveLength(1)
     expect(res[0].name).toBe('next-cache')
     expect(res[0].repo).toBe('vercel-labs/skills')
-    expect(res[0].category).toBe('Agents & tooling')
+    expect(res[0].tags).toEqual(['tooling'])
   })
 })

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import type { RecommendedSkill } from '../constants/catalogue'
+import type { RecommendedSkill, SkillTag } from '../constants/catalogue'
 import { parseBulkSkills, type BulkSkillInput } from '../utils/bulk-parser'
 import {
   X,
@@ -20,10 +20,10 @@ interface SkillAdminModalProps {
   onClose: () => void
   isAdmin: boolean
   onLoginSuccess: () => void
-  editingSkill?: (RecommendedSkill & { category?: string }) | null
-  categories: string[]
+  editingSkill?: (RecommendedSkill & { owner?: string }) | null
+  tags: SkillTag[]
   onSaveSkill: (
-    skill: RecommendedSkill & { category: string },
+    skill: RecommendedSkill & { owner?: string },
     oldKey?: { name: string; repo: string },
   ) => Promise<boolean>
   onSaveBulkSkills?: (
@@ -38,7 +38,7 @@ export function SkillAdminModal({
   isAdmin,
   onLoginSuccess,
   editingSkill,
-  categories,
+  tags,
   onSaveSkill,
   onSaveBulkSkills,
   initialTab = 'single',
@@ -55,29 +55,23 @@ export function SkillAdminModal({
   const [name, setName] = useState('')
   const [repo, setRepo] = useState('')
   const [description, setDescription] = useState('')
-  const [category, setCategory] = useState<string>(
-    categories[0] || 'Engineering workflow',
-  )
-  const [installs, setInstalls] = useState('1.0K')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [installed, setInstalled] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
 
   // Bulk skill states
   const [bulkInput, setBulkInput] = useState('')
-  const [bulkCategory, setBulkCategory] = useState<string>(
-    categories[0] || 'Engineering workflow',
-  )
+  const [bulkTags, setBulkTags] = useState<string[]>([])
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false)
   const [bulkMessage, setBulkMessage] = useState<{
     type: 'success' | 'error'
     text: string
   } | null>(null)
 
-  // Real-time parsed bulk skills
   const parsedBulkItems = useMemo(() => {
-    return parseBulkSkills(bulkInput, bulkCategory)
-  }, [bulkInput, bulkCategory])
+    return parseBulkSkills(bulkInput, bulkTags)
+  }, [bulkInput, bulkTags])
 
   useEffect(() => {
     if (editingSkill) {
@@ -85,21 +79,19 @@ export function SkillAdminModal({
       setName(editingSkill.name)
       setRepo(editingSkill.repo)
       setDescription(editingSkill.description || '')
-      setCategory(editingSkill.category || categories[0] || 'Engineering workflow')
-      setInstalls(editingSkill.installs || '1.0K')
+      setSelectedTags(editingSkill.tags || [])
       setInstalled(Boolean(editingSkill.installed))
     } else {
       setName('')
       setRepo('')
       setDescription('')
-      setCategory(categories[0] || 'Engineering workflow')
-      setInstalls('1.0K')
+      setSelectedTags([])
       setInstalled(false)
     }
     setFormError('')
     setLoginError('')
     setBulkMessage(null)
-  }, [editingSkill, isOpen, categories])
+  }, [editingSkill, isOpen])
 
   // Dismiss bottom dock while modal is open
   useEffect(() => {
@@ -114,6 +106,18 @@ export function SkillAdminModal({
   }, [isOpen])
 
   if (!isOpen) return null
+
+  const toggleTag = (
+    slug: string,
+    current: string[],
+    setter: (next: string[]) => void,
+  ) => {
+    setter(
+      current.includes(slug)
+        ? current.filter((tag) => tag !== slug)
+        : [...current, slug],
+    )
+  }
 
   const handleLoginSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -155,8 +159,7 @@ export function SkillAdminModal({
         name: name.trim(),
         repo: repo.trim(),
         description: description.trim(),
-        category,
-        installs: installs.trim() || '1.0K',
+        tags: selectedTags,
         installed,
       },
       editingSkill
@@ -422,41 +425,6 @@ export function SkillAdminModal({
                   </div>
                 </div>
 
-                <div className={styles.grid2}>
-                  <div className={styles.field}>
-                    <label htmlFor="skill-category" className={styles.fieldLabel}>
-                      Category *
-                    </label>
-                    <select
-                      id="skill-category"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className={styles.input}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className={styles.field}>
-                    <label htmlFor="skill-installs" className={styles.fieldLabel}>
-                      Installs Count
-                    </label>
-                    <input
-                      id="skill-installs"
-                      type="text"
-                      value={installs}
-                      onChange={(e) => setInstalls(e.target.value)}
-                      className={styles.input}
-                      placeholder="e.g. 350.4K or 12.5K"
-                    />
-                  </div>
-                </div>
-
                 <div className={styles.field}>
                   <label htmlFor="skill-desc" className={styles.fieldLabel}>
                     Description
@@ -469,6 +437,33 @@ export function SkillAdminModal({
                     placeholder="Brief description of the skill and what it does..."
                     rows={2}
                   />
+                </div>
+
+                <div className={styles.field}>
+                  <span className={styles.fieldLabel}>
+                    Tags ({selectedTags.length} selected)
+                  </span>
+                  <div className={styles.tagPicker}>
+                    {tags.map((tag) => {
+                      const active = selectedTags.includes(tag.slug)
+                      return (
+                        <label
+                          key={tag.slug}
+                          className={`${styles.tagOption} ${active ? styles.tagOptionActive : ''}`}
+                          style={{ ['--tag' as string]: tag.hue }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={active}
+                            onChange={() =>
+                              toggleTag(tag.slug, selectedTags, setSelectedTags)
+                            }
+                          />
+                          <span>{tag.label}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 <div className={styles.checkRow}>
@@ -484,7 +479,10 @@ export function SkillAdminModal({
                   </label>
                 </div>
 
-                <div className={styles.modalActions} style={{ marginTop: '1.25rem' }}>
+                <div
+                  className={styles.modalActions}
+                  style={{ marginTop: '1.25rem' }}
+                >
                   <button
                     type="button"
                     onClick={onClose}
@@ -508,11 +506,9 @@ export function SkillAdminModal({
                 <p className={styles.bulkHint}>
                   Paste skills line-by-line using{' '}
                   <span className={styles.codeExample}>
-                    name | repo | category | description
+                    name | repo | tag1,tag2 | description
                   </span>
-                  , or paste a{' '}
-                  <span className={styles.codeExample}>skills.sh</span> URL, or
-                  raw JSON array.
+                  , or paste a ui-skills.com URL, or a raw JSON array.
                 </p>
 
                 {bulkMessage && (
@@ -534,25 +530,30 @@ export function SkillAdminModal({
                 )}
 
                 <div className={styles.field}>
-                  <label
-                    htmlFor="bulk-default-category"
-                    className={styles.fieldLabel}
-                  >
-                    Fallback Category
-                  </label>
-                  <select
-                    id="bulk-default-category"
-                    value={bulkCategory}
-                    onChange={(e) => setBulkCategory(e.target.value)}
-                    className={styles.input}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                  <span className={styles.fieldLabel}>
+                    Fallback Tags ({bulkTags.length} selected)
+                  </span>
+                  <div className={styles.tagPicker}>
+                    {tags.map((tag) => {
+                      const active = bulkTags.includes(tag.slug)
+                      return (
+                        <label
+                          key={tag.slug}
+                          className={`${styles.tagOption} ${active ? styles.tagOptionActive : ''}`}
+                          style={{ ['--tag' as string]: tag.hue }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={active}
+                            onChange={() =>
+                              toggleTag(tag.slug, bulkTags, setBulkTags)
+                            }
+                          />
+                          <span>{tag.label}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 <div className={styles.field}>
@@ -564,7 +565,7 @@ export function SkillAdminModal({
                     value={bulkInput}
                     onChange={(e) => setBulkInput(e.target.value)}
                     className={styles.input}
-                    placeholder={`emil-design-eng | emilkowalski/skills | Design & motion | Emil's UI polish\nhttps://www.skills.sh/vercel-labs/skills/next-cache`}
+                    placeholder={`my-skill | owner/skills | motion,interaction | What it does\nhttps://www.ui-skills.com/skills/emilkowalski/animate`}
                     rows={6}
                     style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}
                   />
@@ -587,7 +588,7 @@ export function SkillAdminModal({
                             {item.name} ({item.repo})
                           </span>
                           <span className={styles.bulkPreviewCategory}>
-                            {item.category}
+                            {item.tags.join(', ') || 'no tags'}
                           </span>
                         </div>
                       ))}
@@ -595,7 +596,10 @@ export function SkillAdminModal({
                   </div>
                 )}
 
-                <div className={styles.modalActions} style={{ marginTop: '1.25rem' }}>
+                <div
+                  className={styles.modalActions}
+                  style={{ marginTop: '1.25rem' }}
+                >
                   <button
                     type="button"
                     onClick={onClose}

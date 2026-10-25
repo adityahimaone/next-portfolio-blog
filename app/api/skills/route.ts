@@ -9,6 +9,8 @@ import {
 } from '@/lib/skills'
 import type { RecommendedSkill } from '@/features/skills/constants/catalogue'
 
+type SkillPayload = RecommendedSkill & { tags?: string[] }
+
 function credentials(): { user: string; pass: string } | null {
   const user = process.env.ADMIN_USER
   const pass = process.env.ADMIN_PASS
@@ -61,6 +63,28 @@ function verifyAuth(req: NextRequest): boolean {
   return false
 }
 
+/** Accepts the shape the admin form and the bulk parser both produce. */
+function toPayload(item: unknown): SkillPayload | null {
+  if (!item || typeof item !== 'object') return null
+  const raw = item as Record<string, unknown>
+  const name = raw.name ? String(raw.name).trim() : ''
+  const repo = raw.repo ? String(raw.repo).trim() : ''
+  if (!name || !repo) return null
+
+  const tags = Array.isArray(raw.tags)
+    ? raw.tags.map((tag) => String(tag).trim()).filter(Boolean)
+    : []
+
+  return {
+    name,
+    repo,
+    owner: raw.owner ? String(raw.owner).trim() : '',
+    description: raw.description ? String(raw.description).trim() : '',
+    tags,
+    installed: Boolean(raw.installed),
+  }
+}
+
 // GET /api/skills
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -70,8 +94,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, authenticated: isAuthed })
   }
 
-  const groups = await readSkills()
-  return NextResponse.json({ success: true, groups })
+  const catalog = await readSkills()
+  return NextResponse.json({ success: true, catalog })
 }
 
 // POST /api/skills (Add, Bulk Add, Activate Admin, Logout)
@@ -117,33 +141,20 @@ export async function POST(req: NextRequest) {
 
     if (!verifyAuth(req)) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized. Admin credentials required.' },
+        {
+          success: false,
+          message: 'Unauthorized. Admin credentials required.',
+        },
         { status: 401 },
       )
     }
 
     // Action: Bulk Add
     if (body.action === 'bulk' || Array.isArray(body.skills)) {
-      const rawSkills = Array.isArray(body.skills) ? body.skills : []
-      if (rawSkills.length === 0) {
-        return NextResponse.json(
-          { success: false, message: 'No skill entries provided' },
-          { status: 400 },
-        )
-      }
-
-      const validSkills: (RecommendedSkill & { category?: string })[] = []
-      for (const item of rawSkills) {
-        if (!item || !item.name || !item.repo) continue
-        validSkills.push({
-          name: String(item.name).trim(),
-          repo: String(item.repo).trim(),
-          description: item.description ? String(item.description).trim() : '',
-          installs: item.installs ? String(item.installs).trim() : '1.0K',
-          installed: Boolean(item.installed),
-          category: item.category ? String(item.category).trim() : undefined,
-        })
-      }
+      const rawSkills: unknown[] = Array.isArray(body.skills) ? body.skills : []
+      const validSkills = rawSkills
+        .map(toPayload)
+        .filter((skill): skill is SkillPayload => skill !== null)
 
       if (validSkills.length === 0) {
         return NextResponse.json(
@@ -153,30 +164,22 @@ export async function POST(req: NextRequest) {
       }
 
       const count = await insertSkills(validSkills)
-      const groups = await readSkills()
-      return NextResponse.json({ success: true, count, groups })
+      const catalog = await readSkills()
+      return NextResponse.json({ success: true, count, catalog })
     }
 
     // Action: Single Add
-    const { name, repo, description, installs, installed, category } = body
-    if (!name || !repo) {
+    const payload = toPayload(body)
+    if (!payload) {
       return NextResponse.json(
         { success: false, message: 'Name and repo are required' },
         { status: 400 },
       )
     }
 
-    await insertSkill({
-      name: String(name).trim(),
-      repo: String(repo).trim(),
-      description: description ? String(description).trim() : '',
-      installs: installs ? String(installs).trim() : '1.0K',
-      installed: Boolean(installed),
-      category: category ? String(category).trim() : undefined,
-    })
-
-    const groups = await readSkills()
-    return NextResponse.json({ success: true, groups })
+    await insertSkill(payload)
+    const catalog = await readSkills()
+    return NextResponse.json({ success: true, catalog })
   } catch (error) {
     console.error('Error in skills POST API:', error)
     return NextResponse.json(
@@ -191,31 +194,31 @@ export async function PUT(req: NextRequest) {
   try {
     if (!verifyAuth(req)) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized. Admin credentials required.' },
+        {
+          success: false,
+          message: 'Unauthorized. Admin credentials required.',
+        },
         { status: 401 },
       )
     }
 
     const body = await req.json()
-    const { oldName, oldRepo, name, repo, description, installs, installed, category } = body
+    const { oldName, oldRepo } = body
+    const payload = toPayload(body)
 
-    if (!oldName || !oldRepo || !name || !repo) {
+    if (!oldName || !oldRepo || !payload) {
       return NextResponse.json(
-        { success: false, message: 'Existing and updated name and repo are required' },
+        {
+          success: false,
+          message: 'Existing and updated name and repo are required',
+        },
         { status: 400 },
       )
     }
 
     const updated = await updateSkill(
-      { name: oldName, repo: oldRepo },
-      {
-        name: String(name).trim(),
-        repo: String(repo).trim(),
-        description: description ? String(description).trim() : '',
-        installs: installs ? String(installs).trim() : '1.0K',
-        installed: Boolean(installed),
-        category: category ? String(category).trim() : undefined,
-      },
+      { name: String(oldName), repo: String(oldRepo) },
+      payload,
     )
 
     if (!updated) {
@@ -225,8 +228,8 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    const groups = await readSkills()
-    return NextResponse.json({ success: true, groups })
+    const catalog = await readSkills()
+    return NextResponse.json({ success: true, catalog })
   } catch (error) {
     console.error('Error in skills PUT API:', error)
     return NextResponse.json(
@@ -241,7 +244,10 @@ export async function DELETE(req: NextRequest) {
   try {
     if (!verifyAuth(req)) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized. Admin credentials required.' },
+        {
+          success: false,
+          message: 'Unauthorized. Admin credentials required.',
+        },
         { status: 401 },
       )
     }
@@ -265,8 +271,8 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    const groups = await readSkills()
-    return NextResponse.json({ success: true, groups })
+    const catalog = await readSkills()
+    return NextResponse.json({ success: true, catalog })
   } catch (error) {
     console.error('Error in skills DELETE API:', error)
     return NextResponse.json(

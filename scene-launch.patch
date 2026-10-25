@@ -1,0 +1,5545 @@
+From 0c1c15cb3dd0bbdebd091ef74d196a904235f806 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 18 Oct 2026 03:24:02 +0000
+Subject: [PATCH] feat(contact): FAQ as a scene launcher; restore the title;
+ remove the desk block
+
+- Restore the original heading ('Bring me the difficult part.').
+- Delete the .desk block (signal path + brief builder), the slit-type title and
+  the full-bleed FAQ band.
+- Rebuild the FAQ as a second unit on the performance controller's own
+  materials: nine clips on three tracks that queue and launch on the next beat
+  of a live 120 BPM clock, play their answers with a playhead, a typed LCD and
+  a lit waveform, and pulse on the beat. Playback is a plain engine module
+  tested against a fake clock.
+---
+ docs/contact-desk.md                          |  114 +-
+ .../contact-desk/contact-brief-builder.tsx    |  164 --
+ .../rack-01/contact-desk/contact-content.ts   |  187 +--
+ .../contact-desk/contact-desk.module.css      | 1405 +----------------
+ .../rack-01/contact-desk/contact-desk.tsx     |   27 +-
+ .../contact-desk/contact-signal-path.tsx      |   49 -
+ .../rack-01/contact-desk/contact-title.tsx    |   30 -
+ .../rack-01/contact-desk/faq-logic.ts         |  138 --
+ .../rack-01/contact-desk/scene-engine.ts      |  219 +++
+ .../contact-desk/scene-launch.module.css      |  749 +++++++++
+ .../rack-01/contact-desk/scene-launch.tsx     |  436 +++++
+ .../rack-01/contact-desk/scene-logic.ts       |  161 ++
+ .../rack-01/contact-desk/slit-title.tsx       |   68 -
+ .../rack-01/contact-desk/studio-faq.tsx       |  590 -------
+ .../rack-01/contact-desk/use-intro.ts         |   46 -
+ .../landing-page/rack-01/section-contact.tsx  |    6 +-
+ tests/contact-content.test.ts                 |  119 --
+ tests/contact-desk-markup.test.tsx            |  162 +-
+ tests/faq-logic.test.ts                       |  123 --
+ tests/scene-engine.test.ts                    |  240 +++
+ tests/scene-logic.test.ts                     |  199 +++
+ 21 files changed, 2169 insertions(+), 3063 deletions(-)
+ delete mode 100644 features/landing-page/rack-01/contact-desk/contact-brief-builder.tsx
+ delete mode 100644 features/landing-page/rack-01/contact-desk/contact-signal-path.tsx
+ delete mode 100644 features/landing-page/rack-01/contact-desk/contact-title.tsx
+ delete mode 100644 features/landing-page/rack-01/contact-desk/faq-logic.ts
+ create mode 100644 features/landing-page/rack-01/contact-desk/scene-engine.ts
+ create mode 100644 features/landing-page/rack-01/contact-desk/scene-launch.module.css
+ create mode 100644 features/landing-page/rack-01/contact-desk/scene-launch.tsx
+ create mode 100644 features/landing-page/rack-01/contact-desk/scene-logic.ts
+ delete mode 100644 features/landing-page/rack-01/contact-desk/slit-title.tsx
+ delete mode 100644 features/landing-page/rack-01/contact-desk/studio-faq.tsx
+ delete mode 100644 features/landing-page/rack-01/contact-desk/use-intro.ts
+ delete mode 100644 tests/contact-content.test.ts
+ delete mode 100644 tests/faq-logic.test.ts
+ create mode 100644 tests/scene-engine.test.ts
+ create mode 100644 tests/scene-logic.test.ts
+
+diff --git a/docs/contact-desk.md b/docs/contact-desk.md
+index 492c26d..be8b739 100644
+--- a/docs/contact-desk.md
++++ b/docs/contact-desk.md
+@@ -1,71 +1,67 @@
+-# Contact: the session desk
++# Contact: the scene launcher
+ 
+ The 16-pad performance controller is unchanged (its GSAP coupling, its audio
+-indices and its sweep order are untouched). Everything around it is rebuilt as
+-the rest of one desk, in the About devices' materials (cream glass shell, dark
+-rim, near-black LCD, dark pads that light orange).
++indices and its sweep order are untouched), and so is the section heading.
++Under it sits one new unit, the FAQ, built as a second piece of the same
++hardware.
+ 
+-## What changed
++## Why it looks like this
+ 
+-| Before | After |
+-| --- | --- |
+-| Heading "Bring me the difficult part." | **"Got a hard one? / Let's roll tape."** in slit type, rising letter by letter as the section arrives |
+-| FAQ accordion (4 questions) | **Slit-type FAQ band** (below): eight tracks, search, topic chips, deep links |
+-| nothing | **Signal path**: how a project flows (brief, scope, build, hand off) as patched stages with animated cables |
+-| nothing | **Brief builder**: pick the kind of work and timing, add a line, and it composes the email (`mailto:` link, plus copy) |
++The FAQ used to be a full-bleed dark band with its own language. The section is
++a cream sheet carrying a graphite deck with orange and multicolour pads, so the
++FAQ is now a unit **on that deck's own materials**: the graphite chassis and its
++inset highlights, the green-phosphor LCD with scanlines, the pad colours
++(`CONTACT_PAD_COLORS`), the same mono silkscreen, and the same 780px width so the
++eye finds one column and not two.
++
++## What it does
++
++Each question is a **clip** on one of three tracks (Scope, Process, Practical),
++with its own waveform. **A clip does not start when you press it; it starts on
++the next beat** of a live 120 BPM clock, which is what makes a press feel
++performed.
+ 
+-## Decisions
++- Press a clip: it blinks (queued), the next beat launches it, and its answer
++  *plays*: a playhead crosses the clip, the answer types out on the LCD in step
++  with it, the waveform lights as the playhead passes, and the whole unit
++  pulses on the beat while it plays. Four LEDs count the beat.
++- Press the playing clip again, or Stop: it ends and shows the whole answer.
++- Auto: the next clip queues itself when one finishes.
++- The unit powers on as it arrives (the LCD flickers up, clips drop in along a
++  diagonal), and shortly after, the first clip queues itself, unless the visitor
++  has already acted or came in on a `#hash`.
++- A light on the chassis follows the pointer.
+ 
+-- **Accessible by construction.** The console is a real tabs pattern (tablist,
+-  tabpanel, arrow keys, Home/End, roving tabindex). The full answer is real text
+-  in the panel; the typed copy is `aria-hidden`, so a screen reader never hears
+-  half a sentence. The path is an ordered list. Reduced motion prints the answer
+-  whole and stills the meters and cables.
+-- **Works without JavaScript.** Server markup is fully visible (`data-reveal="idle"`);
+-  elements only hide once a script has armed them. The brief builder's link is a
+-  working `mailto:` on first paint.
+-- **Nothing is sent anywhere.** No form endpoint, no stored text.
+-- **The mailto is capped by its encoded length** (1900), not the typed length:
+-  a note of 480 non-ASCII characters encodes to ~4000 and Outlook-class clients
+-  refuse past ~2000. The tests caught this.
+-- **Copy** is deliberately modest and checkable: no rate, no dated availability,
+-  no client list; the honest "no" on native mobile is kept. Edit
+-  `contact-desk/contact-content.ts` to change any of it.
+-- The desk sits between `.contactDeck` and the footer, because the rack's scroll
+-  animation addresses children of `.contactDeck` by class.
++## Structure
++
++| File | Role |
++| --- | --- |
++| `scene-logic.ts` | Pure: the beat clock, clip length, progress, waveforms, transport readout, 2-D focus movement |
++| `scene-engine.ts` | The playback machine: one rAF loop, the queue, the playhead. Plain module, tested against a fake clock |
++| `scene-launch.tsx` | The unit: wiring only |
++| `scene-launch.module.css` | The look |
++| `contact-content.ts` | The nine questions and answers (edit copy here) |
++| `contact-status.tsx` | The status strip under the heading |
+ 
+-The old `.contactBrief*` rules in `rack-01.module.css` are no longer used and can
+-be deleted.
++React is told only what happened (a press, a stop, the unit arriving) and
++commits only transitions (queued, playing, finished). A playing clip is a few
++custom-property and text writes per frame and no renders. The loop runs only
++while the unit is on screen or something is playing, so an idle page costs
++nothing.
+ 
+-## The title and the FAQ: slit type
++## Accessibility
+ 
+-Both headlines use one treatment (`slit-title.tsx`): capitals in the display
+-face, each line clipping its own overflow, each letter sitting a share of its
+-height below the baseline until the section arrives, then rising through the
+-slit a few milliseconds behind the letter before it. Hovering lifts the letters
+-clear. Each is a single real `h2` with the whole text as its name and the
+-letters `aria-hidden`.
++Real buttons in a labelled group per track, in a roving-tabindex grid: arrows
++move between tracks and clips, Enter or Space launches, Escape stops. The answer
++is announced once, whole, in a polite live region; the typed copy is
++`aria-hidden`. A `#hash` deep link per question (and Copy link on the LCD).
++Without JavaScript every question and answer is plain text.
+ 
+-The FAQ closes the section as a full-bleed dark band in the hero's ground:
++Reduced motion is a complete alternative: no loop, no beat, no sweep; a press
++selects a clip and its whole answer appears.
+ 
+-- **Opening a row is a playhead sweep.** The row floods with signal orange from
+-  the left, led by a bright playhead line; the question inverts exactly where
+-  the line has passed (a dark copy of the row is clipped in step with the
+-  flood); the answer is printed in the dark, so the flood is what reveals it,
+-  and its words settle in behind the line. Closing wipes the orange out to the
+-  right with the line trailing the edge. The three layers share one duration and
+-  one curve, so the line is always exactly on the edge.
+-- A DAW ruler under the headline, with the playhead's single sweep on arrival.
+-- A per-track level meter that plays while its row is open; a scrub line that
+-  follows the pointer over a closed row.
+-- The band arrives mid-performance: once the headline lands, the first track
+-  opens by itself, unless the visitor has already acted or came in on a `#hash`.
+-- Real FAQ behaviour: `aria-expanded`/`aria-controls`, arrow keys, Home/End, a
+-  `#hash` deep link and copy-link per question, search with highlights and an
+-  excerpt under each closed match, topic chips with live counts, an empty state.
+-  With no JavaScript every answer is shown open.
+-- Reduced motion is a complete alternative: headline set whole, first row
+-  simply open, no wipe, no sweep, a still moving line.
++## Removed
+ 
+-The old recall console (`contact-console.tsx`, tabs + typewriter monitor) is
+-removed.
++The signal-path and brief-builder panels (the `.desk` block), the slit-type
++title, and the first FAQ band. The section heading is back to
++"Bring me the difficult part."
+diff --git a/features/landing-page/rack-01/contact-desk/contact-brief-builder.tsx b/features/landing-page/rack-01/contact-desk/contact-brief-builder.tsx
+deleted file mode 100644
+index da33b88..0000000
+--- a/features/landing-page/rack-01/contact-desk/contact-brief-builder.tsx
++++ /dev/null
+@@ -1,164 +0,0 @@
+-'use client'
+-
+-import { useId, useMemo, useState } from 'react'
+-import {
+-  NOTE_LIMIT,
+-  PROJECT_TYPES,
+-  TIMELINES,
+-  composeBrief,
+-} from './contact-content'
+-import styles from './contact-desk.module.css'
+-import { useReveal } from './use-reveal'
+-
+-type Copy = 'idle' | 'copied' | 'failed'
+-
+-/**
+- * The brief builder: a few controls that compose the first email.
+- *
+- * The controller above is the way in; this is what people usually need once
+- * they are in, which is something to say. Pick the kind of work and the timing,
+- * add a line, and the LCD shows the message exactly as it will arrive. "Open in
+- * mail" is a plain `mailto:` link, so it works without a script and in any mail
+- * client; "Copy" is there for the people who live in a web mail tab.
+- *
+- * Nothing is sent anywhere by this page. There is no form endpoint and no
+- * stored note: the text exists in this component and in the link.
+- */
+-export function ContactBriefBuilder({ email }: { email: string }) {
+-  const [type, setType] = useState<string | null>(null)
+-  const [timeline, setTimeline] = useState<string | null>(null)
+-  const [note, setNote] = useState('')
+-  const [copy, setCopy] = useState<Copy>('idle')
+-  const [reveal, revealState] = useReveal<HTMLElement>()
+-  const id = useId()
+-
+-  const brief = useMemo(
+-    () => composeBrief({ type, timeline, note }, email),
+-    [type, timeline, note, email],
+-  )
+-  const timelinePos = TIMELINES.findIndex((t) => t.id === timeline)
+-
+-  const copyBrief = async () => {
+-    try {
+-      await navigator.clipboard.writeText(
+-        `To: ${email}\nSubject: ${brief.subject}\n\n${brief.body}`,
+-      )
+-      setCopy('copied')
+-    } catch {
+-      setCopy('failed')
+-    }
+-    window.setTimeout(() => setCopy('idle'), 2200)
+-  }
+-
+-  return (
+-    <section
+-      ref={reveal}
+-      data-reveal={revealState}
+-      className={`${styles.panel} ${styles.builder}`}
+-      aria-labelledby={`${id}-title`}
+-    >
+-      <header className={styles.panelHead}>
+-        <div>
+-          <strong>AH / BRIEF</strong>
+-          <span>Compose the first message</span>
+-        </div>
+-        <h3 id={`${id}-title`}>Brief builder</h3>
+-        <small>mailto</small>
+-      </header>
+-
+-      <div className={styles.builderBody}>
+-        <div className={styles.controls}>
+-          <fieldset className={styles.field}>
+-            <legend>Kind of work</legend>
+-            <div className={styles.typePads}>
+-              {PROJECT_TYPES.map((choice) => (
+-                <button
+-                  key={choice.id}
+-                  type="button"
+-                  className={styles.typePad}
+-                  aria-pressed={type === choice.id}
+-                  onClick={() => setType(type === choice.id ? null : choice.id)}
+-                >
+-                  {choice.label}
+-                </button>
+-              ))}
+-            </div>
+-          </fieldset>
+-
+-          <fieldset className={styles.field}>
+-            <legend>Timing</legend>
+-            <div
+-              className={styles.switch}
+-              data-has={timelinePos >= 0}
+-              style={
+-                { '--pos': Math.max(0, timelinePos) } as React.CSSProperties
+-              }
+-            >
+-              <span className={styles.switchThumb} aria-hidden="true" />
+-              {TIMELINES.map((choice) => (
+-                <button
+-                  key={choice.id}
+-                  type="button"
+-                  aria-pressed={timeline === choice.id}
+-                  onClick={() =>
+-                    setTimeline(timeline === choice.id ? null : choice.id)
+-                  }
+-                >
+-                  {choice.label}
+-                </button>
+-              ))}
+-            </div>
+-          </fieldset>
+-
+-          <div className={styles.field}>
+-            <label htmlFor={`${id}-note`} className={styles.fieldLabel}>
+-              One line about it
+-            </label>
+-            <textarea
+-              id={`${id}-note`}
+-              className={styles.note}
+-              rows={3}
+-              maxLength={NOTE_LIMIT}
+-              value={note}
+-              placeholder="What is it, and what is the hard part?"
+-              onChange={(event) => setNote(event.target.value)}
+-            />
+-            <small className={styles.count}>
+-              {note.length}/{NOTE_LIMIT}
+-            </small>
+-          </div>
+-        </div>
+-
+-        <div className={styles.output}>
+-          <pre
+-            className={styles.lcd}
+-            aria-live="polite"
+-            aria-label="Message preview"
+-          >
+-            <span>TO&nbsp;&nbsp;&nbsp;&nbsp;{email}</span>
+-            {'\n'}
+-            <span>SUBJ&nbsp;&nbsp;{brief.subject}</span>
+-            {'\n\n'}
+-            {brief.body}
+-          </pre>
+-          <div className={styles.actions}>
+-            <a className={styles.send} href={brief.href}>
+-              Open in mail
+-            </a>
+-            <button
+-              type="button"
+-              className={styles.copyKey}
+-              onClick={copyBrief}
+-            >
+-              {copy === 'copied'
+-                ? 'Copied'
+-                : copy === 'failed'
+-                  ? 'Select the text'
+-                  : 'Copy brief'}
+-            </button>
+-          </div>
+-        </div>
+-      </div>
+-    </section>
+-  )
+-}
+diff --git a/features/landing-page/rack-01/contact-desk/contact-content.ts b/features/landing-page/rack-01/contact-desk/contact-content.ts
+index ce0b6f0..6304ec6 100644
+--- a/features/landing-page/rack-01/contact-desk/contact-content.ts
++++ b/features/landing-page/rack-01/contact-desk/contact-content.ts
+@@ -1,204 +1,89 @@
+ /**
+- * What the Contact section says, and the small pieces of logic behind how it
+- * says it. No React, no DOM, so all of it is testable.
++ * What the Contact section's FAQ says.
+  *
+- * The performance controller (the 16-pad deck) is untouched and is still the
+- * way in. Everything *around* it is rebuilt as the rest of one session desk:
++ * Nine clips on three tracks, written as answers and not as a pitch: the React
++ * Native line is a no, because a page that hedges on what it cannot do wastes
++ * the reader's time and the writer's. Nothing here promises a date, a rate or a
++ * client. The one promise is the one the page always made: replies usually land
++ * within a couple of days.
+  *
+- * - a **recall console** (the old FAQ): five channels, each a question, and an
+- *   LCD monitor that plays the answer;
+- * - a **signal path**: how a project actually flows, as four patched stages;
+- * - a **brief builder**: pick the kind of work and the timing, add a line, and
+- *   it composes the email for you.
+- *
+- * Copy is written to be useful and checkable. There is no availability claim
+- * with a date on it, no rate, no client list: the only promise is the one the
+- * old page already made (replies usually land within a couple of days), and the
+- * "no" on native mobile is kept, because a no saves both people a week.
++ * Nine is deliberate. The launcher is a 3 × 3 grid, and a track with a hole in
++ * it reads as a missing clip, not as a short track.
+  */
+ 
++export const TRACKS = ['Scope', 'Process', 'Practical'] as const
++export type Track = (typeof TRACKS)[number]
++
+ export type FaqEntry = {
++  /** Stable id, used for the #hash deep link. */
++  id: string
++  track: Track
+   question: string
+   answer: string
+-  category: (typeof FAQ_CATEGORIES)[number]
+ }
+ 
+-export const FAQ_CATEGORIES = ['Scope', 'Process', 'Practical'] as const
+-
+-/**
+- * The questions people ask before they write, answered straight.
+- *
+- * Written as answers, not a pitch: the React Native line is a no, because a
+- * page that hedges on what it cannot do wastes the reader's time and the
+- * writer's. Nothing here promises a date, a rate or a client; the only promise
+- * is the one the old page already made, that replies usually land within a
+- * couple of days.
+- */
+ export const FAQ_ITEMS: readonly FaqEntry[] = [
+   {
+-    category: 'Scope',
++    id: 'what-kind-of-work',
++    track: 'Scope',
+     question: 'What kind of work do you take on?',
+     answer:
+       'Frontend work where the hard part is the state or the edge cases rather than the styling: internal tools, content-heavy public sites, and products that have to work on a phone or on a bad connection.',
+   },
+   {
+-    category: 'Scope',
++    id: 'existing-backends',
++    track: 'Scope',
+     question: 'Do you work with existing backends?',
+     answer:
+       'Mostly. Most of the shipped work is a frontend over a service that already exists. Running the infrastructure too is something I do when the product genuinely needs it.',
+   },
+   {
+-    category: 'Scope',
++    id: 'native-mobile',
++    track: 'Scope',
+     question: 'Do you do React Native or native mobile?',
+     answer:
+       'No. The mobile work here is responsive web. The habits transfer, the stack does not, and I would rather say so now than take it and hand it back.',
+   },
+   {
+-    category: 'Process',
++    id: 'how-we-start',
++    track: 'Process',
+     question: 'How do we start?',
+     answer:
+-      'Send a brief; the builder above writes the email for you. I reply with the questions that change the plan, then a plan small enough to disagree with.',
++      'Send a short brief. I reply with the questions that change the plan, then a plan small enough to disagree with.',
+   },
+   {
+-    category: 'Process',
++    id: 'first-message',
++    track: 'Process',
+     question: 'What should the first message say?',
+     answer:
+       'The problem, who it is for, and the constraint that hurts: a date, a budget, a stack you cannot change. A link helps if there is one. Two paragraphs beat a deck.',
+   },
+   {
+-    category: 'Process',
++    id: 'how-it-runs',
++    track: 'Process',
+     question: 'How do you work once it starts?',
+     answer:
+       'In small increments, with a working build you can click at every step instead of a deck about one. It ends with code someone else can run and notes that outlive the project.',
+   },
+   {
+-    category: 'Practical',
++    id: 'reply-time',
++    track: 'Practical',
+     question: 'How fast do you reply?',
+     answer:
+       'Usually within a couple of days. If there is a date that matters, put it in the first line so it is the first thing I read.',
+   },
+   {
+-    category: 'Practical',
++    id: 'time-zone',
++    track: 'Practical',
+     question: 'Which time zone do you work in?',
+     answer:
+       'Jakarta, UTC+7. The European morning and the whole Asia-Pacific day fall inside ordinary hours; the Americas mean an early or a late call.',
+   },
+-]
+-
+-/** The short phrases that run on the FAQ's moving line. */
+-export const FAQ_TICKER: readonly string[] = [
+-  'Frontend',
+-  'Design engineering',
+-  'Replies in ~2 days',
+-  'Channel open',
+-  'Jakarta · UTC+7',
+-]
+-
+-export type Stage = { step: string; title: string; copy: string }
+-
+-/** The signal path: input to output, left to right. */
+-export const PATH: readonly Stage[] = [
+-  {
+-    step: 'IN',
+-    title: 'Brief',
+-    copy: 'You send the problem, the constraint and the date. I read it properly, not in a queue.',
+-  },
+-  {
+-    step: '01',
+-    title: 'Scope',
+-    copy: 'I reply with the questions that change the plan, and a plan small enough to disagree with.',
+-  },
+   {
+-    step: '02',
+-    title: 'Build',
+-    copy: 'Small increments, a working build you can click at every step instead of a deck about one.',
+-  },
+-  {
+-    step: 'OUT',
+-    title: 'Hand off',
+-    copy: 'Code someone else can run, tests where they earn their keep, and notes that outlive the project.',
++    id: 'see-the-work',
++    track: 'Practical',
++    question: 'Where can I see the work?',
++    answer:
++      'On this page, and in the repositories behind the GitHub pad on the deck above. Anything under NDA I describe rather than show.',
+   },
+ ]
+-
+-export type Choice = { id: string; label: string; line: string }
+-
+-export const PROJECT_TYPES: readonly Choice[] = [
+-  { id: 'build', label: 'New build', line: 'a new frontend build' },
+-  { id: 'rescue', label: 'Fix a UI', line: 'a frontend that needs untangling' },
+-  { id: 'design', label: 'Design eng.', line: 'design engineering work' },
+-  { id: 'talk', label: 'Just talk', line: 'a conversation about a problem' },
+-]
+-
+-export const TIMELINES: readonly Choice[] = [
+-  { id: 'soon', label: 'Soon', line: 'as soon as possible' },
+-  { id: 'month', label: 'This quarter', line: 'within the next few months' },
+-  { id: 'open', label: 'No rush', line: 'with no fixed date' },
+-]
+-
+-export const NOTE_LIMIT = 480
+-
+-/** The longest `mailto:` link composed. Outlook-class clients refuse past ~2000. */
+-export const MAX_HREF = 1900
+-
+-export type BriefInput = {
+-  type: string | null
+-  timeline: string | null
+-  note: string
+-}
+-
+-export type Brief = { subject: string; body: string; href: string }
+-
+-const find = (list: readonly Choice[], id: string | null) =>
+-  list.find((choice) => choice.id === id) ?? null
+-
+-/** Collapse whitespace runs and cap the length, so a pasted wall of text cannot
+- * produce a `mailto:` link too long for a mail client to open. */
+-export function cleanNote(note: string, limit = NOTE_LIMIT): string {
+-  const flat = note
+-    .replace(/\r\n?/g, '\n')
+-    .replace(/[ \t]+/g, ' ')
+-    .trim()
+-  return flat.length > limit ? `${flat.slice(0, limit - 1).trimEnd()}…` : flat
+-}
+-
+-/**
+- * The email the builder composes. Pure: the same input is the same brief.
+- *
+- * Nothing selected is still a valid brief ("a frontend project"), so the
+- * Compose button is never dead; picking things only makes it more specific.
+- */
+-export function composeBrief(input: BriefInput, to: string): Brief {
+-  const type = find(PROJECT_TYPES, input.type)
+-  const timeline = find(TIMELINES, input.timeline)
+-
+-  const subject = type
+-    ? `Brief: ${type.label.toLowerCase()}`
+-    : 'Brief: a frontend project'
+-
+-  const build = (note: string) => {
+-    const lines = [
+-      'Hi Aditya,',
+-      '',
+-      `I am looking for ${type ? type.line : 'help with a frontend project'}${
+-        timeline ? `, ${timeline.line}` : ''
+-      }.`,
+-    ]
+-    if (note) lines.push('', 'About it:', note)
+-    lines.push('', 'Thanks,')
+-    const body = lines.join('\n')
+-    const href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+-    return { subject, body, href }
+-  }
+-
+-  // The cap that matters is on the *encoded* link, not the typed note: a
+-  // character outside ASCII becomes up to nine characters of percent-escapes,
+-  // so a note well under `NOTE_LIMIT` can still make a link some mail clients
+-  // refuse to open. Shrink the note, not the browser's patience.
+-  let note = cleanNote(input.note)
+-  let brief = build(note)
+-  while (brief.href.length > MAX_HREF && note.length > 0) {
+-    note = cleanNote(note, Math.floor(note.length * 0.85))
+-    brief = build(note)
+-  }
+-  return brief
+-}
+diff --git a/features/landing-page/rack-01/contact-desk/contact-desk.module.css b/features/landing-page/rack-01/contact-desk/contact-desk.module.css
+index d470cbb..6d7e528 100644
+--- a/features/landing-page/rack-01/contact-desk/contact-desk.module.css
++++ b/features/landing-page/rack-01/contact-desk/contact-desk.module.css
+@@ -1,28 +1,7 @@
+-/* ── The contact desk ────────────────────────────────────────
+-   The status strip, the recall console, the signal path and the brief
+-   builder: everything in the Contact section except the performance
+-   controller, which is untouched.
+-
+-   Material is the About devices' own, by token: the cream devices use the
+-   non-flipping glass shell (`--deck-shell-*`, `--deck-chassis-fill`), the
+-   screens the LCD glass (`--deck-lcd-*`), the caps the pad recipe
+-   (`--deck-pad-*`). The cream hardware is the same object on the light page
+-   and the dark one, so none of it reads `--panel-ink` or any other token that
+-   flips with the theme. The signal path is the one dark panel, the hero's
+-   ground, so the section has a rhythm of cream, dark, cream.
+-
+-   Every moving thing is behind `prefers-reduced-motion: no-preference`. With
+-   motion off the answer prints whole, the meters hold, the cables are still,
+-   and nothing waits to be revealed. */
+-
+-.srOnly {
+-  position: absolute;
+-  overflow: hidden;
+-  width: 1px;
+-  height: 1px;
+-  clip-path: inset(50%);
+-  white-space: nowrap;
+-}
++/* ── The Contact section's status strip ───────────────────────
++   Three LCD lamps under the heading: the channel is open, replies are measured
++   in days, and what time it is where the replies come from. The unit below it
++   (the FAQ) has its own stylesheet, `scene-launch.module.css`. */
+ 
+ /* ── Status strip ── */
+ .status {
+@@ -63,1379 +42,3 @@
+   background: var(--deck-lcd-green, #5cd6a3);
+   box-shadow: 0 0 10px var(--deck-lcd-green, #5cd6a3);
+ }
+-
+-/* ── Layout ── */
+-.desk {
+-  position: relative;
+-  z-index: 2;
+-  display: grid;
+-  gap: clamp(16px, 2vw, 24px);
+-  width: min(1180px, 100%);
+-  margin: clamp(28px, 4vw, 56px) auto 0;
+-}
+-.pair {
+-  display: grid;
+-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+-  gap: clamp(16px, 2vw, 24px);
+-}
+-
+-/* ── Panel: the cream glass shell every device on the page wears ── */
+-.panel {
+-  position: relative;
+-  border: 1px solid var(--deck-shell-edge, rgb(27 28 26 / 0.5));
+-  border-radius: var(--deck-r-shell, 14px);
+-  background: var(--deck-shell-fill, #d9d3c6);
+-  background-color: var(--deck-paper-lo, #cfc9bc);
+-  box-shadow:
+-    var(--deck-shell-hi, inset 0 1px 0 rgb(255 255 255 / 0.7)),
+-    var(--deck-shell-lo, inset 0 -1px 0 rgb(0 0 0 / 0.1)),
+-    0 18px 40px -22px rgb(0 0 0 / 0.5),
+-    0 2px 4px rgb(0 0 0 / 0.16);
+-  color: var(--deck-cream-ink, #1d1e1c);
+-}
+-.panelHead {
+-  display: grid;
+-  grid-template-columns: minmax(0, 1fr) auto auto;
+-  align-items: center;
+-  gap: 18px;
+-  padding: 16px 20px 14px;
+-  border-bottom: 1px solid rgb(27 28 26 / 0.18);
+-}
+-.panelHead > div {
+-  display: grid;
+-  gap: 2px;
+-}
+-.panelHead strong {
+-  font: 800 13px var(--deck-font-display, sans-serif);
+-  letter-spacing: 0.04em;
+-  text-transform: uppercase;
+-}
+-.panelHead span,
+-.panelHead small {
+-  color: rgb(29 30 28 / 0.58);
+-  font: 650 9.5px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.18em;
+-  text-transform: uppercase;
+-}
+-.panelHead h3 {
+-  margin: 0;
+-  font: 800 clamp(18px, 2vw, 26px) var(--deck-font-display, sans-serif);
+-  letter-spacing: -0.01em;
+-  text-align: right;
+-}
+-
+-/* Reveal. `idle` (server render, no script) is plain visible. */
+-.panel[data-reveal='armed'] {
+-  opacity: 0;
+-  transform: translate3d(0, 22px, 0);
+-}
+-.panel[data-reveal='in'] {
+-  opacity: 1;
+-  transform: none;
+-}
+-@media (prefers-reduced-motion: no-preference) {
+-  .panel[data-reveal='in'] {
+-    transition:
+-      opacity 0.7s cubic-bezier(0.2, 0.7, 0.1, 1),
+-      transform 0.7s cubic-bezier(0.2, 0.7, 0.1, 1);
+-  }
+-}
+-@media (prefers-reduced-motion: reduce) {
+-  .panel[data-reveal='armed'] {
+-    opacity: 1;
+-    transform: none;
+-  }
+-}
+-
+-/* ── Signal path: the one dark panel ── */
+-.path {
+-  border-color: var(--deck-hair, rgb(238 233 223 / 0.13));
+-  background: var(--deck-ground-2, #1b1f23);
+-  background-image: linear-gradient(
+-      90deg,
+-      var(--deck-grid-line, rgb(238 233 223 / 0.05)) 1px,
+-      transparent 1px
+-    ),
+-    linear-gradient(
+-      0deg,
+-      var(--deck-grid-line, rgb(238 233 223 / 0.05)) 1px,
+-      transparent 1px
+-    );
+-  background-size: var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px);
+-  box-shadow:
+-    inset 0 1px 0 rgb(255 255 255 / 0.06),
+-    0 18px 40px -22px rgb(0 0 0 / 0.6);
+-  color: var(--deck-ground-ink, #eee9df);
+-}
+-.path .panelHead {
+-  border-bottom-color: var(--deck-hair, rgb(238 233 223 / 0.13));
+-}
+-.path .panelHead span,
+-.path .panelHead small {
+-  color: var(--deck-ground-muted, #8e928e);
+-}
+-.stages {
+-  display: grid;
+-  gap: 26px;
+-  margin: 0;
+-  padding: 26px 22px 24px;
+-  list-style: none;
+-}
+-.stage {
+-  position: relative;
+-  display: grid;
+-  grid-template-columns: 44px minmax(0, 1fr);
+-  grid-template-areas:
+-    'jack step'
+-    'jack title'
+-    'jack copy';
+-  column-gap: 14px;
+-  row-gap: 2px;
+-}
+-.stage h4 {
+-  grid-area: title;
+-  margin: 0;
+-  font: 800 19px var(--deck-font-display, sans-serif);
+-  letter-spacing: -0.01em;
+-}
+-.stage p {
+-  grid-area: copy;
+-  max-width: 44ch;
+-  margin: 4px 0 0;
+-  color: var(--deck-ground-muted, #8e928e);
+-  font: 400 13.5px / 1.55 var(--deck-font-ui, sans-serif);
+-}
+-.stageStep {
+-  grid-area: step;
+-  color: var(--deck-orange, #ff5a1f);
+-  font: 700 10px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.22em;
+-}
+-.jack {
+-  position: relative;
+-  z-index: 1;
+-  grid-area: jack;
+-  align-self: start;
+-  width: 28px;
+-  height: 28px;
+-  margin: 2px 8px 0;
+-  border: 2px solid #e7e2d8;
+-  border-radius: 50%;
+-  background: radial-gradient(circle at 50% 50%, #0b0d0c 38%, #2a2e2b 40%);
+-  box-shadow:
+-    0 0 0 3px var(--deck-ground-2, #1b1f23),
+-    0 2px 5px rgb(0 0 0 / 0.5);
+-  transition: background 0.25s ease;
+-}
+-.stage:hover .jack {
+-  background: radial-gradient(
+-    circle at 50% 50%,
+-    var(--deck-orange, #ff5a1f) 38%,
+-    #2a2e2b 40%
+-  );
+-}
+-/* The patch cable down to the next stage. */
+-.stage:not(:last-child)::after {
+-  position: absolute;
+-  top: 34px;
+-  bottom: -30px;
+-  left: 21px;
+-  width: 2px;
+-  background: repeating-linear-gradient(
+-    180deg,
+-    var(--deck-orange, #ff5a1f) 0 6px,
+-    transparent 6px 12px
+-  );
+-  background-size: 2px 12px;
+-  content: '';
+-  opacity: 0.6;
+-}
+-@media (prefers-reduced-motion: no-preference) {
+-  .stage:not(:last-child)::after {
+-    animation: cable 0.9s linear infinite;
+-    animation-delay: calc(var(--i) * -0.2s);
+-  }
+-}
+-@keyframes cable {
+-  to {
+-    background-position: 0 12px;
+-  }
+-}
+-
+-/* ── Brief builder ── */
+-.builderBody {
+-  display: grid;
+-  gap: 14px;
+-  padding: 14px;
+-}
+-.controls {
+-  display: grid;
+-  gap: 18px;
+-  padding: 16px;
+-  border: 1px solid rgb(27 28 26 / 0.26);
+-  border-radius: var(--deck-r-inner, 9px);
+-  background: var(--deck-chassis-fill, #cfc9bc);
+-  box-shadow: var(--deck-shell-hi, inset 0 1px 0 rgb(255 255 255 / 0.7)),
+-    var(--deck-shell-lo, inset 0 -1px 0 rgb(0 0 0 / 0.1));
+-}
+-.field {
+-  display: grid;
+-  gap: 8px;
+-  min-width: 0;
+-  margin: 0;
+-  padding: 0;
+-  border: 0;
+-}
+-.field legend,
+-.fieldLabel {
+-  padding: 0;
+-  color: rgb(29 30 28 / 0.62);
+-  font: 700 10px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.2em;
+-  text-transform: uppercase;
+-}
+-.typePads {
+-  display: grid;
+-  grid-template-columns: repeat(4, minmax(0, 1fr));
+-  gap: 8px;
+-}
+-.typePad {
+-  min-height: 56px;
+-  padding: 6px;
+-  border: 1px solid var(--deck-pad-edge, #141613);
+-  border-radius: var(--deck-r-key, 5px);
+-  background: var(--deck-pad-fill, linear-gradient(145deg, #373935, #222421));
+-  box-shadow:
+-    0 3px 0 #0c0d0b,
+-    inset 0 1px 0 rgb(255 255 255 / 0.12);
+-  color: #e7e2d8;
+-  cursor: pointer;
+-  font: 700 11px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.1em;
+-  text-transform: uppercase;
+-}
+-.typePad:hover {
+-  border-color: var(--deck-orange, #ff5a1f);
+-}
+-.typePad:focus-visible,
+-.switch button:focus-visible,
+-.send:focus-visible,
+-.copyKey:focus-visible,
+-.note:focus-visible {
+-  outline: 2px solid var(--deck-orange, #ff5a1f);
+-  outline-offset: 2px;
+-}
+-.typePad[aria-pressed='true'] {
+-  transform: translateY(2px);
+-  border-color: var(--deck-orange, #ff5a1f);
+-  background: var(--deck-pad-lit, linear-gradient(145deg, #ff6a35, #e04810));
+-  box-shadow:
+-    0 1px 0 #0c0d0b,
+-    0 0 16px color-mix(in srgb, var(--deck-orange, #ff5a1f) 55%, transparent);
+-  color: #1b0d06;
+-}
+-
+-/* A three-position switch: the thumb slides to the chosen detent. */
+-.switch {
+-  position: relative;
+-  display: grid;
+-  grid-template-columns: repeat(3, 1fr);
+-  padding: 4px;
+-  border: 1px solid rgb(27 28 26 / 0.34);
+-  border-radius: var(--deck-r-inner, 9px);
+-  background: #1d1f1e;
+-  box-shadow: inset 0 2px 6px rgb(0 0 0 / 0.6);
+-}
+-.switch button {
+-  position: relative;
+-  z-index: 1;
+-  min-height: 44px;
+-  border: 0;
+-  background: transparent;
+-  color: #b9b5aa;
+-  cursor: pointer;
+-  font: 700 11px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.1em;
+-  text-transform: uppercase;
+-}
+-.switch button[aria-pressed='true'] {
+-  color: #1b0d06;
+-}
+-.switchThumb {
+-  position: absolute;
+-  top: 4px;
+-  bottom: 4px;
+-  left: 4px;
+-  width: calc((100% - 8px) / 3);
+-  border-radius: var(--deck-r-key, 5px);
+-  background: var(--deck-pad-lit, linear-gradient(145deg, #ff6a35, #e04810));
+-  box-shadow: 0 0 14px
+-    color-mix(in srgb, var(--deck-orange, #ff5a1f) 50%, transparent);
+-  opacity: 0;
+-  transform: translateX(calc(var(--pos, 0) * 100%));
+-}
+-.switch[data-has='true'] .switchThumb {
+-  opacity: 1;
+-}
+-@media (prefers-reduced-motion: no-preference) {
+-  .switchThumb {
+-    transition:
+-      transform 0.28s cubic-bezier(0.3, 1.4, 0.5, 1),
+-      opacity 0.2s ease;
+-  }
+-}
+-
+-.note {
+-  width: 100%;
+-  min-height: 92px;
+-  padding: 12px 14px;
+-  border: 1px solid rgb(27 28 26 / 0.34);
+-  border-radius: var(--deck-r-inner, 9px);
+-  background: #ece7dc;
+-  box-shadow: inset 0 2px 5px rgb(0 0 0 / 0.14);
+-  color: var(--deck-cream-ink, #1d1e1c);
+-  font: 500 14px / 1.55 var(--deck-font-ui, sans-serif);
+-  resize: vertical;
+-}
+-.note::placeholder {
+-  color: rgb(29 30 28 / 0.45);
+-}
+-.count {
+-  justify-self: end;
+-  color: rgb(29 30 28 / 0.5);
+-  font: 650 10px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.12em;
+-}
+-
+-.output {
+-  display: grid;
+-  gap: 12px;
+-}
+-.lcd {
+-  min-height: 190px;
+-  max-height: 260px;
+-  margin: 0;
+-  padding: 16px 18px;
+-  overflow: auto;
+-  border: 2px solid var(--deck-lcd-edge, #282a27);
+-  border-radius: var(--deck-r-lcd, 5px);
+-  background: var(--deck-lcd-fill, #0b0d0c);
+-  box-shadow: var(--deck-lcd-glow, inset 0 4px 18px #000);
+-  color: var(--deck-lcd-peach, #f0c7ae);
+-  font: 500 12.5px / 1.65 var(--deck-font-mono, monospace);
+-  white-space: pre-wrap;
+-  overflow-wrap: anywhere;
+-}
+-.lcd span:first-child,
+-.lcd span:nth-child(2) {
+-  color: var(--deck-lcd-green, #5cd6a3);
+-}
+-.actions {
+-  display: grid;
+-  grid-template-columns: 1.3fr 1fr;
+-  gap: 10px;
+-}
+-.send,
+-.copyKey {
+-  display: grid;
+-  place-items: center;
+-  min-height: 52px;
+-  border: 1px solid rgb(27 28 26 / 0.4);
+-  border-radius: var(--deck-r-inner, 9px);
+-  cursor: pointer;
+-  font: 800 12px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.14em;
+-  text-decoration: none;
+-  text-transform: uppercase;
+-}
+-.send {
+-  background: var(--deck-pad-lit, linear-gradient(145deg, #ff6a35, #e04810));
+-  box-shadow:
+-    0 3px 0 #7a2808,
+-    inset 0 1px 0 rgb(255 255 255 / 0.35);
+-  color: #1b0d06;
+-}
+-.copyKey {
+-  background: linear-gradient(180deg, #f3efe6, #d8d2c5);
+-  box-shadow:
+-    0 3px 0 rgb(27 28 26 / 0.3),
+-    inset 0 1px 0 rgb(255 255 255 / 0.85);
+-  color: var(--deck-cream-ink, #1d1e1c);
+-}
+-.send:active,
+-.copyKey:active {
+-  transform: translateY(2px);
+-  box-shadow: 0 1px 0 rgb(27 28 26 / 0.3);
+-}
+-
+-/* ── Narrow screens ── */
+-@media (max-width: 900px) {
+-  .pair {
+-    grid-template-columns: minmax(0, 1fr);
+-  }
+-}
+-@media (max-width: 760px) {
+-  .panelHead {
+-    grid-template-columns: minmax(0, 1fr) auto;
+-  }
+-  .panelHead small {
+-    display: none;
+-  }
+-  .typePads {
+-    grid-template-columns: repeat(2, minmax(0, 1fr));
+-  }
+-}
+-@media (max-width: 460px) {
+-  .actions {
+-    grid-template-columns: minmax(0, 1fr);
+-  }
+-}
+-
+-/* Grid items must be allowed to shrink below their content's width. */
+-.builder,
+-.path {
+-  min-width: 0;
+-}
+-
+-/* ═══ Slit type ═════════════════════════════════════════════
+-   One headline treatment for the section's two titles. Each line clips its own
+-   overflow; each capital sits below the baseline by `--cut` (set per title)
+-   until the section arrives, and rises through the slit, a few milliseconds
+-   behind the letter before it. Hovering lifts the letters clear, on pointer
+-   devices only. Reduced motion sets the type whole. */
+-
+-.title {
+-  margin: 0;
+-  color: var(--panel-ink, #101211);
+-  font-family: var(--deck-font-display, sans-serif);
+-  font-size: clamp(30px, 7.6cqi, 104px);
+-  font-weight: 800;
+-  letter-spacing: -0.04em;
+-  line-height: 0.88;
+-  text-transform: uppercase;
+-}
+-.line {
+-  display: block;
+-  overflow: hidden;
+-  padding-top: 0.06em;
+-  margin-top: -0.06em;
+-}
+-.word {
+-  display: inline-block;
+-  white-space: nowrap;
+-}
+-.ch {
+-  display: inline-block;
+-  transform: translateY(var(--cut, 0px));
+-  transition: transform 820ms cubic-bezier(0.22, 1, 0.36, 1);
+-  transition-delay: min(calc(var(--i) * 26ms), 420ms);
+-}
+-.contactHead[data-intro='pending'] .ch,
+-.faq[data-intro='pending'] .ch {
+-  transform: translateY(104%);
+-  transition: none;
+-}
+-@media (hover: hover) and (pointer: fine) {
+-  .title[data-slit='true']:hover .ch {
+-    transform: translateY(0);
+-    transition-duration: 420ms;
+-    transition-delay: min(calc(var(--i) * 14ms), 220ms);
+-  }
+-}
+-@media (prefers-reduced-motion: reduce) {
+-  .ch,
+-  .contactHead[data-intro='pending'] .ch {
+-    transform: translateY(var(--cut, 0px));
+-    transition: none;
+-  }
+-}
+-
+-/* ── The Contact section's own title ── */
+-.contactHead {
+-  container-type: inline-size;
+-  display: grid;
+-  gap: clamp(14px, 2cqi, 24px);
+-  width: 100%;
+-  min-width: 0;
+-}
+-.eyebrow {
+-  display: inline-flex;
+-  align-items: center;
+-  gap: 12px;
+-  color: var(--panel-ink-muted, rgb(29 30 28 / 0.66));
+-  font: 700 11px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.22em;
+-  text-transform: uppercase;
+-}
+-.eyebrow b {
+-  color: var(--deck-orange, #ff5a1f);
+-  font-weight: 700;
+-}
+-.eyebrow i {
+-  width: 28px;
+-  height: 0;
+-  border-top: 1px solid currentColor;
+-  opacity: 0.5;
+-}
+-
+-/* ═══ The FAQ band ═════════════════════════════════════════
+-   Full bleed, the hero's ground, and the one place in the section the page
+-   goes dark. Type and rules are cream; the flood is the signal orange; text on
+-   the flood is the ground colour, so an open row is a dark-on-orange inversion
+-   of itself. The playhead is what makes the flood a sweep and not a wipe. */
+-
+-.faq {
+-  --p: var(--deck-ground, #14171a);
+-  --k: var(--deck-ground-ink, #eee9df);
+-  --f: var(--deck-orange, #ff5a1f);
+-  --o: #14171a;
+-  --in: 460ms;
+-  --out: 300ms;
+-  --ease-flood: cubic-bezier(0.76, 0, 0.24, 1);
+-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+-  position: relative;
+-  z-index: 2;
+-  width: 100vw;
+-  margin: clamp(56px, 8vw, 120px) 0 0 calc(50% - 50vw);
+-  overflow: hidden;
+-  isolation: isolate;
+-  background:
+-    linear-gradient(180deg, transparent 70%, #0b0d0c),
+-    linear-gradient(
+-        90deg,
+-        var(--deck-grid-line, rgb(238 233 223 / 0.05)) 1px,
+-        transparent 1px
+-      )
+-      0 0 / var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px),
+-    var(--p);
+-  color: var(--k);
+-  border-top: 1px solid var(--deck-hair, rgb(238 233 223 / 0.13));
+-}
+-.faq ::selection {
+-  background: var(--f);
+-  color: var(--o);
+-}
+-.faqInner {
+-  /* The gutter is the distance from the band's edge to the content. It is in
+-     viewport units on purpose: the flood, its playhead and the dark copy of a
+-     row all reach out by exactly this much, so on a wide screen (where the
+-     content is capped and centred) the orange still runs edge to edge. */
+-  --gutter: max(clamp(16px, 4vw, 64px), calc((100vw - 1320px) / 2));
+-  container-type: inline-size;
+-  width: 100%;
+-  padding: clamp(56px, 8vw, 112px) var(--gutter) clamp(48px, 6vw, 88px);
+-}
+-.faq .title {
+-  color: var(--k);
+-}
+-.faq .title {
+-  font-size: clamp(30px, 8.6cqi, 140px);
+-}
+-
+-.kicker {
+-  display: flex;
+-  align-items: center;
+-  justify-content: space-between;
+-  margin-bottom: clamp(18px, 2.4cqi, 32px);
+-  color: var(--deck-ground-muted, #8e928e);
+-  font: 700 11px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.22em;
+-  text-transform: uppercase;
+-}
+-.kicker span:first-child {
+-  display: inline-flex;
+-  align-items: center;
+-  gap: 10px;
+-  color: var(--k);
+-}
+-.kicker i {
+-  width: 8px;
+-  height: 8px;
+-  border-radius: 50%;
+-  background: var(--f);
+-  box-shadow: 0 0 10px var(--f);
+-}
+-
+-/* The ruler under the headline: bars, ticks, and the playhead's one sweep. */
+-.ruler {
+-  position: relative;
+-  height: 46px;
+-  margin-top: clamp(22px, 3cqi, 44px);
+-  border-top: 1px solid var(--k);
+-  background:
+-    linear-gradient(90deg, var(--k) 1px, transparent 1px) 0 0 / calc(100% / 16)
+-      14px repeat-x,
+-    linear-gradient(90deg, var(--k) 1px, transparent 1px) 0 0 / calc(100% / 64)
+-      6px repeat-x;
+-  opacity: 0.9;
+-}
+-.ruler > span {
+-  position: absolute;
+-  top: 18px;
+-  padding-left: 8px;
+-  color: var(--k);
+-  font: 700 10px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.2em;
+-}
+-.sweep {
+-  position: absolute;
+-  inset: -1px 0 0;
+-  overflow: hidden;
+-  pointer-events: none;
+-}
+-.sweep i {
+-  position: absolute;
+-  inset: 0;
+-  transform: translateX(-100%);
+-  opacity: 0;
+-}
+-.sweep i::after {
+-  position: absolute;
+-  top: 0;
+-  right: 0;
+-  bottom: 0;
+-  width: 2px;
+-  background: var(--f);
+-  box-shadow: 0 0 14px var(--f);
+-  content: '';
+-}
+-.sweep i::before {
+-  position: absolute;
+-  top: 0;
+-  right: -5px;
+-  border-top: 8px solid var(--f);
+-  border-right: 6px solid transparent;
+-  border-left: 6px solid transparent;
+-  content: '';
+-}
+-@media (prefers-reduced-motion: no-preference) {
+-  .faq[data-intro='done'] .sweep i {
+-    animation: playhead 2.4s cubic-bezier(0.6, 0, 0.2, 1) 0.5s 1 both;
+-  }
+-}
+-@keyframes playhead {
+-  0% {
+-    opacity: 1;
+-    transform: translateX(-100%);
+-  }
+-  92% {
+-    opacity: 1;
+-  }
+-  100% {
+-    opacity: 0;
+-    transform: translateX(0);
+-  }
+-}
+-
+-/* The moving line. */
+-.ticker {
+-  display: flex;
+-  align-items: center;
+-  gap: 12px;
+-  padding: 0.55em 0;
+-  overflow: hidden;
+-  border-bottom: 1px solid var(--k);
+-  font-size: clamp(14px, 1.6cqi, 22px);
+-  font-weight: 600;
+-  letter-spacing: 0.04em;
+-  text-transform: uppercase;
+-  white-space: nowrap;
+-}
+-.tickerMask {
+-  flex: 1;
+-  min-width: 0;
+-  overflow: hidden;
+-  mask-image: linear-gradient(
+-    90deg,
+-    transparent,
+-    #000 8%,
+-    #000 92%,
+-    transparent
+-  );
+-}
+-.tickerTrack {
+-  display: inline-flex;
+-}
+-.tickerRun {
+-  display: inline-flex;
+-  flex: none;
+-}
+-.tickerRun span {
+-  padding: 0 0.9em;
+-}
+-.tickerRun span::after {
+-  display: inline-block;
+-  width: 0.38em;
+-  height: 0.38em;
+-  margin-left: 1.8em;
+-  border-radius: 50%;
+-  background: var(--f);
+-  content: '';
+-  vertical-align: 0.14em;
+-}
+-@media (prefers-reduced-motion: no-preference) {
+-  .tickerTrack {
+-    animation: ticker 38s linear infinite;
+-  }
+-  .ticker:hover .tickerTrack,
+-  .ticker:focus-within .tickerTrack,
+-  .ticker[data-paused='true'] .tickerTrack {
+-    animation-play-state: paused;
+-  }
+-}
+-@keyframes ticker {
+-  to {
+-    transform: translateX(-50%);
+-  }
+-}
+-.tickerToggle {
+-  display: grid;
+-  flex: none;
+-  place-items: center;
+-  width: 36px;
+-  height: 36px;
+-  border: 0;
+-  border-radius: 999px;
+-  background: transparent;
+-  color: var(--k);
+-  cursor: pointer;
+-  transition:
+-    background-color 160ms ease,
+-    color 160ms ease;
+-}
+-.tickerToggle svg {
+-  width: 14px;
+-  height: 14px;
+-}
+-.tickerToggle:hover {
+-  background: var(--f);
+-  color: var(--o);
+-}
+-@media (prefers-reduced-motion: reduce) {
+-  .tickerToggle {
+-    display: none;
+-  }
+-}
+-
+-/* Search and chips. */
+-.meta {
+-  display: grid;
+-  grid-template-columns: minmax(0, 1fr);
+-  gap: 28px;
+-  align-items: end;
+-  margin: clamp(32px, 4.2cqi, 64px) 0 clamp(22px, 3cqi, 40px);
+-}
+-@container (min-width: 760px) {
+-  .meta {
+-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+-    gap: 48px;
+-  }
+-}
+-.intro {
+-  max-width: 34ch;
+-  margin: 0;
+-  font: 500 clamp(17px, 1.45cqi, 21px) / 1.45 var(--deck-font-ui, sans-serif);
+-  letter-spacing: -0.01em;
+-}
+-.search label {
+-  display: block;
+-  margin-bottom: 6px;
+-  font: 700 11px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.2em;
+-  text-transform: uppercase;
+-}
+-.field {
+-  display: flex;
+-  align-items: center;
+-  border-bottom: 1px solid var(--k);
+-}
+-.field:focus-within {
+-  border-bottom-color: var(--f);
+-  box-shadow: 0 1px 0 var(--f);
+-}
+-.field svg {
+-  flex: none;
+-  width: 20px;
+-  height: 20px;
+-  margin-right: 10px;
+-}
+-.field input {
+-  flex: 1;
+-  min-width: 0;
+-  padding: 10px 0 12px;
+-  border: 0;
+-  background: transparent;
+-  color: var(--k);
+-  font: 500 clamp(18px, 1.6cqi, 22px) var(--deck-font-ui, sans-serif);
+-  outline: none;
+-}
+-.field input::placeholder {
+-  color: var(--k);
+-  opacity: 0.5;
+-}
+-.field input::-webkit-search-cancel-button {
+-  display: none;
+-}
+-.clear {
+-  padding: 10px 0 10px 12px;
+-  border: 0;
+-  background: none;
+-  color: var(--k);
+-  cursor: pointer;
+-  font: 700 12px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.14em;
+-  text-decoration: underline;
+-  text-underline-offset: 3px;
+-  text-transform: uppercase;
+-}
+-.count {
+-  min-height: 1.4em;
+-  margin-top: 8px;
+-  font: 600 12px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.12em;
+-  font-variant-numeric: tabular-nums;
+-}
+-.chips {
+-  display: flex;
+-  flex-wrap: wrap;
+-  gap: 8px;
+-  margin: 0 0 clamp(20px, 2.4cqi, 32px);
+-  padding: 0;
+-  list-style: none;
+-}
+-.chip {
+-  display: inline-flex;
+-  align-items: center;
+-  gap: 8px;
+-  min-height: 44px;
+-  padding: 0 18px;
+-  border: 1.5px solid var(--k);
+-  border-radius: 999px;
+-  background: transparent;
+-  color: var(--k);
+-  cursor: pointer;
+-  font: 700 12px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.14em;
+-  text-transform: uppercase;
+-  transition:
+-    background-color 160ms ease,
+-    color 160ms ease,
+-    transform 120ms ease;
+-}
+-.chip small {
+-  font-size: 11px;
+-  opacity: 0.75;
+-  font-variant-numeric: tabular-nums;
+-}
+-.chip[aria-pressed='true'] {
+-  border-color: var(--f);
+-  background: var(--f);
+-  color: var(--o);
+-}
+-.chip:active {
+-  transform: scale(0.97);
+-}
+-.chip:focus-visible,
+-.tickerToggle:focus-visible,
+-.clear:focus-visible,
+-.copy:focus-visible,
+-.cta:focus-visible {
+-  outline: 2px solid var(--f);
+-  outline-offset: 3px;
+-}
+-
+-/* The tracks. */
+-.list {
+-  margin: 0;
+-  padding: 0;
+-  border-bottom: 1px solid var(--k);
+-  list-style: none;
+-}
+-.item {
+-  position: relative;
+-  border-top: 1px solid var(--k);
+-}
+-
+-/* The flood, the dark copy of the row, and the playhead that leads both. All
+-   three share one duration and one curve, so the line is exactly on the edge. */
+-.fill,
+-.scan {
+-  position: absolute;
+-  top: -1px;
+-  right: calc(var(--gutter) * -1);
+-  bottom: 0;
+-  left: calc(var(--gutter) * -1);
+-  pointer-events: none;
+-}
+-.fill {
+-  background: var(--f);
+-  clip-path: inset(0 100% 0 0);
+-}
+-.item[data-state='open'] .fill {
+-  clip-path: inset(0 0 0 0);
+-  transition: clip-path var(--in) var(--ease-flood);
+-}
+-.item[data-state='closing'] .fill {
+-  clip-path: inset(0 0 0 100%);
+-  transition: clip-path var(--out) var(--ease-flood);
+-}
+-.scan {
+-  z-index: 3;
+-  opacity: 0;
+-  transform: translateX(-100%);
+-}
+-.scan::before,
+-.scan::after {
+-  position: absolute;
+-  top: 0;
+-  bottom: 0;
+-  width: 2px;
+-  background: var(--k);
+-  box-shadow: 0 0 16px 1px var(--f);
+-  content: '';
+-}
+-.scan::after {
+-  right: 0;
+-}
+-.scan::before {
+-  left: 0;
+-  opacity: 0;
+-}
+-.item[data-state='open'] .scan {
+-  transform: translateX(0);
+-  transition: transform var(--in) var(--ease-flood);
+-}
+-.item[data-state='closing'] .scan {
+-  opacity: 1;
+-  transform: translateX(100%);
+-  transition: transform var(--out) var(--ease-flood);
+-}
+-.item[data-state='closing'] .scan::after {
+-  opacity: 0;
+-}
+-.item[data-state='closing'] .scan::before {
+-  opacity: 1;
+-}
+-/* While opening the line is visible; it fades once the flood has landed. */
+-.item[data-state='open'] .scan {
+-  animation: scanLife var(--in) linear both;
+-}
+-@keyframes scanLife {
+-  0% {
+-    opacity: 1;
+-  }
+-  96% {
+-    opacity: 1;
+-  }
+-  100% {
+-    opacity: 0;
+-  }
+-}
+-
+-/* The scrub line: where the pointer is along a closed row. */
+-.item::after {
+-  position: absolute;
+-  top: 0;
+-  bottom: 0;
+-  left: var(--mx, -10px);
+-  width: 1px;
+-  background: var(--f);
+-  content: '';
+-  opacity: 0;
+-  pointer-events: none;
+-  transition: opacity 180ms ease;
+-}
+-@media (hover: hover) and (pointer: fine) {
+-  .item[data-state='closed']:hover::after {
+-    opacity: 0.8;
+-  }
+-}
+-
+-.h {
+-  margin: 0;
+-  font: inherit;
+-}
+-.btn {
+-  position: relative;
+-  display: block;
+-  width: 100%;
+-  margin: 0;
+-  padding: 0;
+-  border: 0;
+-  background: none;
+-  color: var(--k);
+-  cursor: pointer;
+-  font: inherit;
+-  text-align: left;
+-  -webkit-tap-highlight-color: transparent;
+-}
+-.btn:focus-visible {
+-  outline: none;
+-}
+-.btn::after {
+-  position: absolute;
+-  top: 5px;
+-  right: calc(var(--gutter) * -0.5);
+-  bottom: 5px;
+-  left: calc(var(--gutter) * -0.5);
+-  box-shadow: inset 0 0 0 2px var(--f);
+-  content: '';
+-  opacity: 0;
+-  pointer-events: none;
+-}
+-.item[data-state='open'] .btn::after {
+-  box-shadow: inset 0 0 0 2px var(--o);
+-}
+-.btn:focus-visible::after {
+-  opacity: 1;
+-}
+-.row {
+-  display: grid;
+-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+-  align-items: center;
+-  gap: clamp(12px, 2cqi, 28px);
+-  min-height: 64px;
+-  padding: clamp(16px, 1.9cqi, 26px) 0;
+-  font: 800 clamp(19px, 2.1cqi, 32px) / 1.12
+-    var(--deck-font-display, sans-serif);
+-  letter-spacing: -0.02em;
+-  text-wrap: balance;
+-}
+-.rowInv {
+-  position: absolute;
+-  top: 0;
+-  right: calc(var(--gutter) * -1);
+-  bottom: 0;
+-  left: calc(var(--gutter) * -1);
+-  padding-right: var(--gutter);
+-  padding-left: var(--gutter);
+-  color: var(--o);
+-  clip-path: inset(0 100% 0 0);
+-  pointer-events: none;
+-}
+-.item[data-state='open'] .rowInv {
+-  clip-path: inset(0 0 0 0);
+-  transition: clip-path var(--in) var(--ease-flood);
+-}
+-.item[data-state='closing'] .rowInv {
+-  clip-path: inset(0 0 0 100%);
+-  transition: clip-path var(--out) var(--ease-flood);
+-}
+-.trk {
+-  min-width: 4.6em;
+-  font: 700 11px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.18em;
+-  opacity: 0.7;
+-}
+-.label {
+-  display: block;
+-  transition: transform 240ms var(--ease-out);
+-}
+-.snippet {
+-  display: block;
+-  margin-top: 8px;
+-  font: 500 clamp(14px, 1.15cqi, 16px) / 1.4 var(--deck-font-ui, sans-serif);
+-  letter-spacing: 0;
+-  opacity: 0.9;
+-}
+-.mark {
+-  border-radius: 0;
+-  background: var(--f);
+-  color: var(--o);
+-}
+-.rowInv .mark {
+-  background: var(--o);
+-  color: var(--f);
+-}
+-
+-/* A level meter per track: flat when closed, playing when open. */
+-.wave {
+-  display: flex;
+-  align-items: center;
+-  gap: 3px;
+-  height: 26px;
+-}
+-.wave i {
+-  width: 3px;
+-  height: 100%;
+-  border-radius: 1px;
+-  background: currentColor;
+-  opacity: 0.4;
+-  transform: scaleY(0.12);
+-  transform-origin: center;
+-}
+-.item[data-state='open'] .wave i {
+-  opacity: 1;
+-  transform: scaleY(var(--s, 0.6));
+-}
+-.wave i:nth-child(odd) {
+-  --s: 0.9;
+-}
+-.wave i:nth-child(3n) {
+-  --s: 0.5;
+-}
+-@media (prefers-reduced-motion: no-preference) {
+-  .wave i {
+-    transition:
+-      transform 300ms var(--ease-out),
+-      opacity 200ms ease;
+-  }
+-  .item[data-state='open'] .wave i {
+-    animation: level 0.8s ease-in-out infinite alternate;
+-    animation-delay: calc(var(--b) * -0.11s);
+-  }
+-}
+-@keyframes level {
+-  from {
+-    transform: scaleY(0.2);
+-  }
+-  to {
+-    transform: scaleY(1);
+-  }
+-}
+-@media (max-width: 640px) {
+-  .wave {
+-    display: none;
+-  }
+-  .row {
+-    grid-template-columns: minmax(0, 1fr) auto;
+-  }
+-  .trk {
+-    display: none;
+-  }
+-}
+-
+-.cell {
+-  position: relative;
+-  display: grid;
+-  place-items: center;
+-  width: clamp(44px, 3.9cqi, 56px);
+-  height: clamp(44px, 3.9cqi, 56px);
+-}
+-.cell::before {
+-  position: absolute;
+-  inset: 0;
+-  background: var(--f);
+-  clip-path: inset(0 100% 0 0);
+-  content: '';
+-  transition: clip-path 220ms var(--ease-out);
+-}
+-.rowInv .cell::before {
+-  display: none;
+-}
+-.plus {
+-  position: relative;
+-  display: block;
+-  overflow: visible;
+-  width: clamp(22px, 2.2cqi, 32px);
+-  height: clamp(22px, 2.2cqi, 32px);
+-  transition:
+-    transform 280ms var(--ease-out),
+-    color 160ms ease;
+-}
+-.item[data-state='open'] .plus {
+-  transform: rotate(135deg);
+-  transition-duration: var(--in);
+-}
+-@media (hover: hover) and (pointer: fine) {
+-  .btn:hover .label {
+-    transform: translateX(0.3em);
+-  }
+-  .item[data-state='closed'] .btn:hover .cell::before {
+-    clip-path: inset(0 0 0 0);
+-  }
+-  .item[data-state='closed'] .btn:hover .plus {
+-    color: var(--o);
+-  }
+-}
+-
+-.panel {
+-  position: relative;
+-  display: grid;
+-  grid-template-rows: 0fr;
+-  transition: grid-template-rows 240ms var(--ease-out);
+-}
+-.item[data-state='open'] .panel {
+-  grid-template-rows: 1fr;
+-  transition: grid-template-rows 360ms var(--ease-out);
+-}
+-.panelIn {
+-  min-height: 0;
+-  overflow: hidden;
+-}
+-.item[data-state='closed'] .panelIn {
+-  visibility: hidden;
+-}
+-.answer {
+-  display: grid;
+-  grid-template-columns: minmax(0, 1fr);
+-  gap: 18px;
+-  padding: 0 0 clamp(24px, 2.8cqi, 40px);
+-  color: var(--o);
+-}
+-.text {
+-  max-width: 58ch;
+-  margin: 0;
+-  font: 500 clamp(17px, 1.45cqi, 21px) / 1.5 var(--deck-font-ui, sans-serif);
+-  letter-spacing: -0.005em;
+-  text-wrap: pretty;
+-}
+-.text .mark {
+-  background: var(--o);
+-  color: var(--f);
+-}
+-/* The answer's words settle in behind the playhead, a few milliseconds apart. */
+-.w {
+-  display: inline-block;
+-}
+-@media (prefers-reduced-motion: no-preference) {
+-  .w {
+-    opacity: 0;
+-    transform: translateY(0.5em);
+-  }
+-  .item[data-state='open'] .w {
+-    opacity: 1;
+-    transform: none;
+-    transition:
+-      opacity 360ms ease,
+-      transform 460ms var(--ease-out);
+-    transition-delay: calc(var(--in) * 0.5 + var(--w) * 16ms);
+-  }
+-}
+-.tools {
+-  display: flex;
+-  align-items: flex-start;
+-  gap: 16px;
+-  order: 1;
+-  font: 700 12px var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.12em;
+-  text-transform: uppercase;
+-}
+-.tag {
+-  padding: 3px 10px;
+-  border: 1.5px solid var(--o);
+-  border-radius: 999px;
+-  font-size: 11px;
+-}
+-.copy {
+-  margin-top: -5px;
+-  padding: 9px 0;
+-  border: 0;
+-  background: none;
+-  color: var(--o);
+-  cursor: pointer;
+-  font: inherit;
+-  text-decoration: underline;
+-  text-underline-offset: 3px;
+-}
+-.empty .copy {
+-  margin: 0;
+-  color: var(--k);
+-}
+-@container (min-width: 760px) {
+-  .answer {
+-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+-    column-gap: 48px;
+-    row-gap: 20px;
+-    /* The answer sits in the right column, under the row's own label. */
+-    padding-left: calc(4.6em + clamp(12px, 2cqi, 28px));
+-  }
+-  .text,
+-  .tools {
+-    grid-column: 2;
+-  }
+-}
+-.empty {
+-  padding: clamp(28px, 4cqi, 56px) 0;
+-  border-top: 1px solid var(--k);
+-}
+-.empty p {
+-  margin: 0 0 14px;
+-  font: 800 clamp(20px, 2.1cqi, 32px) / 1.15
+-    var(--deck-font-display, sans-serif);
+-  letter-spacing: -0.02em;
+-}
+-
+-.contact {
+-  display: flex;
+-  flex-wrap: wrap;
+-  align-items: center;
+-  justify-content: space-between;
+-  gap: 20px 32px;
+-  margin-top: clamp(36px, 5cqi, 72px);
+-}
+-.contact p {
+-  margin: 0;
+-  font: 800 clamp(22px, 2.6cqi, 40px) / 1.05
+-    var(--deck-font-display, sans-serif);
+-  letter-spacing: -0.03em;
+-}
+-.cta {
+-  position: relative;
+-  display: inline-flex;
+-  min-height: 52px;
+-  overflow: hidden;
+-  border: 1.5px solid var(--k);
+-  border-radius: 999px;
+-  color: var(--k);
+-  font: 800 clamp(13px, 1.2cqi, 16px)
+-    var(--deck-font-mono, ui-monospace, monospace);
+-  letter-spacing: 0.14em;
+-  text-decoration: none;
+-  text-transform: uppercase;
+-  white-space: nowrap;
+-  transition: transform 140ms ease;
+-}
+-.cta > span {
+-  display: inline-flex;
+-  align-items: center;
+-  gap: 12px;
+-  padding: 0 26px;
+-}
+-.cta > span + span {
+-  position: absolute;
+-  inset: 0;
+-  background: var(--f);
+-  color: var(--o);
+-  clip-path: inset(0 100% 0 0);
+-  transition: clip-path 360ms var(--ease-flood);
+-}
+-.cta svg {
+-  width: 18px;
+-  height: 18px;
+-  transition: transform 360ms var(--ease-out);
+-}
+-.cta:hover > span + span,
+-.cta:focus-visible > span + span {
+-  clip-path: inset(0 0 0 0);
+-}
+-.cta:hover svg,
+-.cta:focus-visible svg {
+-  transform: translateX(4px);
+-}
+-.cta:active {
+-  transform: scale(0.98);
+-}
+-
+-/* Reduced motion is the complete alternative: states change, nothing sweeps. */
+-@media (prefers-reduced-motion: reduce) {
+-  .fill,
+-  .rowInv,
+-  .panel,
+-  .plus,
+-  .label,
+-  .cell::before,
+-  .cta > span + span,
+-  .cta svg,
+-  .item[data-state] .fill,
+-  .item[data-state] .rowInv,
+-  .item[data-state] .panel {
+-    transition: none !important;
+-  }
+-  .scan {
+-    display: none;
+-  }
+-  .btn:hover .label {
+-    transform: none !important;
+-  }
+-}
+diff --git a/features/landing-page/rack-01/contact-desk/contact-desk.tsx b/features/landing-page/rack-01/contact-desk/contact-desk.tsx
+index 5364e00..702fde2 100644
+--- a/features/landing-page/rack-01/contact-desk/contact-desk.tsx
++++ b/features/landing-page/rack-01/contact-desk/contact-desk.tsx
+@@ -1,29 +1,12 @@
+ import { EMAIL } from '../../constants'
+-import { ContactBriefBuilder } from './contact-brief-builder'
+-import { ContactSignalPath } from './contact-signal-path'
+-import styles from './contact-desk.module.css'
+-import { StudioFaq } from './studio-faq'
++import { SceneLaunch } from './scene-launch'
+ 
+ /**
+- * Everything under the performance controller: the rest of the session desk.
+- *
+- * The controller is the hardware you play. This is the desk around it: the
+- * routing diagram that says where a message goes next, the pad that writes the
+- * message for you, and, as the last act of the section, the FAQ as a full-bleed
+- * dark band. It sits between `.contactDeck` and the footer on purpose: the
+- * rack's scroll animations address specific children of `.contactDeck` by
++ * What sits under the performance controller: the FAQ, as a second unit on the
++ * same desk. It is rendered between `.contactDeck` and the footer on purpose:
++ * the rack's scroll animations address specific children of `.contactDeck` by
+  * class, so a block added inside it would sit unanimated in a moving box.
+  */
+ export function ContactDesk() {
+-  return (
+-    <>
+-      <div className={styles.desk}>
+-        <div className={styles.pair}>
+-          <ContactSignalPath />
+-          <ContactBriefBuilder email={EMAIL} />
+-        </div>
+-      </div>
+-      <StudioFaq email={EMAIL} />
+-    </>
+-  )
++  return <SceneLaunch email={EMAIL} />
+ }
+diff --git a/features/landing-page/rack-01/contact-desk/contact-signal-path.tsx b/features/landing-page/rack-01/contact-desk/contact-signal-path.tsx
+deleted file mode 100644
+index f34a45b..0000000
+--- a/features/landing-page/rack-01/contact-desk/contact-signal-path.tsx
++++ /dev/null
+@@ -1,49 +0,0 @@
+-'use client'
+-
+-import { useId } from 'react'
+-import { PATH } from './contact-content'
+-import styles from './contact-desk.module.css'
+-import { useReveal } from './use-reveal'
+-
+-/**
+- * The signal path: how a project moves, as four stages patched together.
+- *
+- * It is an ordered list, because it is one, with the cables drawn between the
+- * items as decoration. The jacks and cables are `aria-hidden`; what a screen
+- * reader gets is four numbered steps in order.
+- */
+-export function ContactSignalPath() {
+-  const [reveal, revealState] = useReveal<HTMLElement>()
+-  const id = useId()
+-  return (
+-    <section
+-      ref={reveal}
+-      data-reveal={revealState}
+-      className={`${styles.panel} ${styles.path}`}
+-      aria-labelledby={`${id}-title`}
+-    >
+-      <header className={styles.panelHead}>
+-        <div>
+-          <strong>AH / ROUTING</strong>
+-          <span>Input to output</span>
+-        </div>
+-        <h3 id={`${id}-title`}>Signal path</h3>
+-        <small>04 stages</small>
+-      </header>
+-      <ol className={styles.stages}>
+-        {PATH.map((stage, index) => (
+-          <li
+-            key={stage.title}
+-            className={styles.stage}
+-            style={{ '--i': index } as React.CSSProperties}
+-          >
+-            <span className={styles.jack} aria-hidden="true" />
+-            <span className={styles.stageStep}>{stage.step}</span>
+-            <h4>{stage.title}</h4>
+-            <p>{stage.copy}</p>
+-          </li>
+-        ))}
+-      </ol>
+-    </section>
+-  )
+-}
+diff --git a/features/landing-page/rack-01/contact-desk/contact-title.tsx b/features/landing-page/rack-01/contact-desk/contact-title.tsx
+deleted file mode 100644
+index 116a037..0000000
+--- a/features/landing-page/rack-01/contact-desk/contact-title.tsx
++++ /dev/null
+@@ -1,30 +0,0 @@
+-'use client'
+-
+-import styles from './contact-desk.module.css'
+-import { SlitTitle } from './slit-title'
+-import { useIntro } from './use-intro'
+-
+-/**
+- * The Contact section's title: the same slit type as the FAQ that closes the
+- * section, so the two bookend it. It replaces the standalone heading
+- * ("Bring me the difficult part.") with a line that says the same thing in the
+- * studio's own voice: this is where you bring something hard, and it gets
+- * recorded properly.
+- *
+- * The eyebrow keeps the numbered-section convention (06 / Open channel) the
+- * other sections use. The title is a real `h2`; see `SlitTitle` for how the
+- * letters are kept out of the accessibility tree.
+- */
+-export function ContactTitle() {
+-  const [ref, intro] = useIntro<HTMLDivElement>(0.3)
+-  return (
+-    <div ref={ref} className={styles.contactHead} data-intro={intro}>
+-      <div className={styles.eyebrow}>
+-        <b>06</b>
+-        <i aria-hidden="true" />
+-        <span>Open channel</span>
+-      </div>
+-      <SlitTitle text={"Got a hard one?\nLet's roll tape."} slit={0.38} />
+-    </div>
+-  )
+-}
+diff --git a/features/landing-page/rack-01/contact-desk/faq-logic.ts b/features/landing-page/rack-01/contact-desk/faq-logic.ts
+deleted file mode 100644
+index 540ca66..0000000
+--- a/features/landing-page/rack-01/contact-desk/faq-logic.ts
++++ /dev/null
+@@ -1,138 +0,0 @@
+-/**
+- * The FAQ's pure logic: ids, search, highlighting, the open set, keyboard
+- * movement. No React, no DOM, so every rule is testable.
+- *
+- * It is the logic half of the slit-type FAQ pattern (ink floods a row, the
+- * question inverts where the edge has passed, the answer is printed in the
+- * flood's counter-colour), with the pieces re-checked rather than trusted:
+- * the whole-word search, the overlapping-highlight merge, the excerpt window
+- * and the id de-duplication each have a test below them.
+- */
+-
+-/** A URL-safe id from a question. Never empty, so a hash always has a target. */
+-export function slugify(text: string): string {
+-  return (
+-    text
+-      .toLowerCase()
+-      .normalize('NFKD')
+-      .replace(/[\u0300-\u036f]/g, '')
+-      .replace(/[^a-z0-9]+/g, '-')
+-      .replace(/^-+|-+$/g, '')
+-      .slice(0, 64) || 'question'
+-  )
+-}
+-
+-/** An id per item: its own, or a slug of its question, made unique. */
+-export function itemIds(
+-  questions: string[],
+-  explicit: (string | undefined)[] = [],
+-): string[] {
+-  const seen: Record<string, number> = {}
+-  return questions.map((question, index) => {
+-    const base = explicit[index] || slugify(question)
+-    seen[base] = (seen[base] || 0) + 1
+-    return seen[base] > 1 ? `${base}-${seen[base]}` : base
+-  })
+-}
+-
+-export const queryWords = (query: string) =>
+-  query.toLowerCase().split(/\s+/).filter(Boolean)
+-
+-/** Every word of the query must appear somewhere in the text. */
+-export function matches(text: string, query: string): boolean {
+-  const words = queryWords(query)
+-  if (!words.length) return true
+-  const haystack = text.toLowerCase()
+-  return words.every((word) => haystack.includes(word))
+-}
+-
+-export type Run = { text: string; hit: boolean }
+-
+-/** Split text into plain and matched runs. Overlapping matches merge. */
+-export function highlightRuns(text: string, query: string): Run[] {
+-  const words = queryWords(query)
+-  if (!words.length || !text) return [{ text, hit: false }]
+-  const haystack = text.toLowerCase()
+-  const marks = new Array<boolean>(text.length).fill(false)
+-  for (const word of words) {
+-    let at = haystack.indexOf(word)
+-    while (at > -1) {
+-      for (let k = at; k < at + word.length; k += 1) marks[k] = true
+-      at = haystack.indexOf(word, at + 1)
+-    }
+-  }
+-  const runs: Run[] = []
+-  for (let k = 0; k < text.length; k += 1) {
+-    const last = runs[runs.length - 1]
+-    if (last && last.hit === marks[k]) last.text += text[k]
+-    else runs.push({ text: text[k], hit: marks[k] })
+-  }
+-  return runs
+-}
+-
+-/** A short excerpt around the first matched word, or "" when nothing matches. */
+-export function snippet(text: string, query: string, radius = 44): string {
+-  const words = queryWords(query)
+-  if (!words.length || !text) return ''
+-  const haystack = text.toLowerCase()
+-  let at = -1
+-  for (const word of words) {
+-    const found = haystack.indexOf(word)
+-    if (found > -1 && (at < 0 || found < at)) at = found
+-  }
+-  if (at < 0) return ''
+-  let from = Math.max(0, at - radius)
+-  let to = Math.min(text.length, at + radius * 2)
+-  if (from > 0) from = text.indexOf(' ', from) + 1 || from
+-  if (to < text.length) {
+-    const space = text.lastIndexOf(' ', to)
+-    to = space > at ? space : to
+-  }
+-  return (
+-    (from > 0 ? '…' : '') +
+-    text.slice(from, to).trim() +
+-    (to < text.length ? '…' : '')
+-  )
+-}
+-
+-/** Which ids start open, from an index, an id, or a list of either. */
+-export function resolveOpen(
+-  spec: number | string | (number | string)[] | undefined,
+-  ids: string[],
+-  single: boolean,
+-): string[] {
+-  if (spec === undefined) return []
+-  const out: string[] = []
+-  for (const entry of Array.isArray(spec) ? spec : [spec]) {
+-    const id =
+-      typeof entry === 'number' ? ids[entry] : ids.find((i) => i === entry)
+-    if (id && !out.includes(id)) out.push(id)
+-  }
+-  return single ? out.slice(0, 1) : out
+-}
+-
+-/** Roving focus between question buttons. -1 for a key it does not handle. */
+-export function nextFocus(key: string, index: number, count: number): number {
+-  if (!count) return -1
+-  if (key === 'ArrowDown') return (index + 1) % count
+-  if (key === 'ArrowUp') return (index - 1 + count) % count
+-  if (key === 'Home') return 0
+-  if (key === 'End') return count - 1
+-  return -1
+-}
+-
+-/** The open set after toggling `id`. */
+-export function toggled(open: string[], id: string, single: boolean): string[] {
+-  if (open.includes(id)) return open.filter((o) => o !== id)
+-  return single ? [id] : [...open, id]
+-}
+-
+-/**
+- * The words of an answer with their stagger index, or `null` when the answer
+- * is too long to stagger. A word-by-word reveal of a paragraph is a pleasure;
+- * of a page it is a wait, so past `limit` words the answer simply appears.
+- */
+-export function wordsOf(text: string, limit = 70): string[] | null {
+-  const words = text.split(/\s+/).filter(Boolean)
+-  return words.length <= limit ? words : null
+-}
+diff --git a/features/landing-page/rack-01/contact-desk/scene-engine.ts b/features/landing-page/rack-01/contact-desk/scene-engine.ts
+new file mode 100644
+index 0000000..f4df1e7
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/scene-engine.ts
+@@ -0,0 +1,219 @@
++import type { FaqEntry } from './contact-content'
++import {
++  beatIndex,
++  clipDuration,
++  clock,
++  progressAt,
++  transportAt,
++  typedAt,
++} from './scene-logic'
++
++/**
++ * The scene launcher's playback machine: the clock, the queue, the playhead.
++ *
++ * It is a plain module and not part of the component for two reasons. It owns a
++ * `requestAnimationFrame` loop, a timer's worth of mutable state and a set of
++ * DOM writes, and none of that belongs in a render function, where it would
++ * have to be fenced off from React's rules one line at a time. And it makes the
++ * contract plain: React says *what happened* (a press, a stop, the unit
++ * arriving on screen); the engine says *what changed* (a view to render); the
++ * per-frame work, which is most of the work, never touches React at all.
++ *
++ * ## What a frame does
++ *
++ * Three things and nothing else. It advances the beat (a `data-beat` on the
++ * unit, which the stylesheet turns into LED and pulse animation); it launches a
++ * queued clip if a beat boundary has just passed, which is the whole of "a clip
++ * starts on the next beat"; and it advances a playing clip (a `--p` custom
++ * property on the clip and the master, the typed text, the clock). The first
++ * two are single attribute writes. The last is a few property writes on small
++ * subtrees. State is committed to React only on a transition.
++ *
++ * The loop runs while the unit is on screen or something is playing or queued,
++ * and stops otherwise, so an idle page costs nothing.
++ */
++
++export type EngineView = {
++  /** The clip whose answer is on the screen. */
++  selected: number | null
++  playing: number | null
++  queued: number | null
++  played: number[]
++}
++
++export type EngineDeps = {
++  items: readonly FaqEntry[]
++  /** Commit a transition to React. */
++  setView: (update: (view: EngineView) => EngineView) => void
++  /** Read live, so a change to the user's preference applies at once. */
++  reduced: () => boolean
++  els: {
++    unit: () => HTMLElement | null
++    master: () => HTMLElement | null
++    typed: () => HTMLElement | null
++    time: () => HTMLElement | null
++    bar: () => HTMLElement | null
++    clip: (index: number) => HTMLElement | null
++  }
++}
++
++export type Engine = {
++  launch: (index: number, immediate?: boolean) => void
++  stop: () => void
++  setAuto: (on: boolean) => void
++  setVisible: (on: boolean) => void
++  touched: () => boolean
++  destroy: () => void
++}
++
++export function createEngine(deps: EngineDeps): Engine {
++  const { items, els } = deps
++  let playing: number | null = null
++  let queued: number | null = null
++  let startAt = 0
++  let duration = 0
++  let lastBeat = -1
++  let visible = false
++  let running = false
++  let raf = 0
++  let touched = false
++  let auto = false
++  let destroyed = false
++
++  const writeProgress = (index: number | null, p: number) => {
++    els.master()?.style.setProperty('--p', String(p))
++    if (index !== null) els.clip(index)?.style.setProperty('--p', String(p))
++  }
++
++  const showWhole = (index: number) => {
++    const typed = els.typed()
++    if (typed) typed.textContent = items[index].answer
++    writeProgress(index, 1)
++  }
++
++  const finish = (index: number, advance: boolean) => {
++    playing = null
++    showWhole(index)
++    els.clip(index)?.style.setProperty('--p', '0')
++    const time = els.time()
++    if (time) time.textContent = '00:00 / 00:00'
++    deps.setView((view) => ({
++      ...view,
++      playing: null,
++      played: view.played.includes(index)
++        ? view.played
++        : [...view.played, index],
++    }))
++    if (advance && auto) {
++      const following = (index + 1) % items.length
++      queued = following
++      lastBeat = beatIndex(performance.now())
++      deps.setView((view) => ({ ...view, queued: following }))
++    }
++  }
++
++  const start = (index: number, now: number) => {
++    if (playing !== null && playing !== index) {
++      els.clip(playing)?.style.setProperty('--p', '0')
++    }
++    queued = null
++    playing = index
++    startAt = now
++    duration = clipDuration(items[index].answer)
++    const typed = els.typed()
++    if (typed) typed.textContent = ''
++    writeProgress(index, 0)
++    const time = els.time()
++    if (time) time.textContent = `00:00 / ${clock(duration)}`
++    deps.setView((view) => ({
++      ...view,
++      selected: index,
++      playing: index,
++      queued: null,
++    }))
++  }
++
++  const tick = (now: number) => {
++    raf = 0
++    running = false
++    if (destroyed) return
++
++    const beat = beatIndex(now)
++    if (beat !== lastBeat) {
++      lastBeat = beat
++      els.unit()?.setAttribute('data-beat', String(beat % 4))
++      // A queued clip launches on the beat, not on the press.
++      if (queued !== null) start(queued, now)
++      const bar = els.bar()
++      if (playing !== null && bar) bar.textContent = transportAt(now - startAt)
++    }
++
++    if (playing !== null) {
++      const elapsed = now - startAt
++      const p = progressAt(elapsed, duration)
++      writeProgress(playing, p)
++      const typed = els.typed()
++      if (typed) typed.textContent = typedAt(items[playing].answer, p)
++      const time = els.time()
++      if (time) time.textContent = `${clock(elapsed)} / ${clock(duration)}`
++      if (p >= 1) finish(playing, true)
++    }
++
++    if (visible || playing !== null || queued !== null) ensureLoop()
++  }
++
++  const ensureLoop = () => {
++    if (running || destroyed || deps.reduced()) return
++    running = true
++    raf = requestAnimationFrame(tick)
++  }
++
++  return {
++    launch(index, immediate = false) {
++      touched = true
++      if (deps.reduced()) {
++        // No loop with reduced motion: a press selects the clip and the whole
++        // answer appears at once.
++        playing = null
++        queued = null
++        deps.setView((view) => ({
++          ...view,
++          selected: index,
++          playing: null,
++          queued: null,
++        }))
++        showWhole(index)
++        return
++      }
++      if (immediate) {
++        start(index, performance.now())
++      } else {
++        queued = index
++        lastBeat = beatIndex(performance.now())
++        deps.setView((view) => ({ ...view, selected: index, queued: index }))
++      }
++      ensureLoop()
++    },
++    stop() {
++      touched = true
++      if (queued !== null) {
++        queued = null
++        deps.setView((view) => ({ ...view, queued: null }))
++      }
++      if (playing !== null) finish(playing, false)
++    },
++    setAuto(on) {
++      auto = on
++    },
++    setVisible(on) {
++      visible = on
++      if (on) ensureLoop()
++    },
++    touched: () => touched,
++    destroy() {
++      destroyed = true
++      cancelAnimationFrame(raf)
++      running = false
++    },
++  }
++}
+diff --git a/features/landing-page/rack-01/contact-desk/scene-launch.module.css b/features/landing-page/rack-01/contact-desk/scene-launch.module.css
+new file mode 100644
+index 0000000..202d972
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/scene-launch.module.css
+@@ -0,0 +1,749 @@
++/* ── The scene launcher ──────────────────────────────────────
++   The FAQ, as a second unit on the same desk as the performance controller. It
++   wears the controller's own materials so the two read as one family of
++   hardware: the graphite chassis and its inset highlights, the green-phosphor
++   LCD with its scanlines, the pad colours, the same mono silkscreen, and the
++   same 780px width, so the eye finds one column down the page and not two.
++
++   Everything that moves is a transform, an opacity, a filter or a custom
++   property on a small subtree; nothing animates layout. The beat is a
++   `data-beat` on the unit, set by one rAF loop, and every pulse below is CSS
++   keyed off it, in pairs (A on even beats, B on odd) because an animation does
++   not restart when only a selector changes unless its name does.
++
++   Motion is behind `prefers-reduced-motion: no-preference`. With it off a press
++   selects a clip and its whole answer appears; nothing pulses, sweeps or types. */
++
++.srOnly {
++  position: absolute;
++  overflow: hidden;
++  width: 1px;
++  height: 1px;
++  clip-path: inset(50%);
++  white-space: nowrap;
++}
++
++.unit {
++  --lcd: var(--lcd-green, #5cd6a3);
++  --mono: var(--deck-font-mono, ui-monospace, monospace);
++  --ui: var(--deck-font-ui, sans-serif);
++  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
++  position: relative;
++  isolation: isolate;
++  width: min(780px, 100%);
++  margin: clamp(48px, 7vw, 96px) auto 0;
++  padding: clamp(18px, 3vw, 34px);
++  overflow: hidden;
++  border: 1px solid #090a09;
++  border-radius: 18px;
++  background: radial-gradient(
++      90% 70% at 8% 0,
++      rgb(255 255 255 / 0.12),
++      transparent 48%
++    ),
++    linear-gradient(145deg, #2b2d2b, #181a18);
++  box-shadow:
++    0 42px 70px rgb(29 30 28 / 0.28),
++    inset 0 1px rgb(255 255 255 / 0.13),
++    inset 0 -2px rgb(0 0 0 / 0.5);
++  color: #e9e6de;
++}
++.unit::before {
++  position: absolute;
++  z-index: -1;
++  inset: 10px;
++  border: 1px solid rgb(255 255 255 / 0.1);
++  border-radius: 11px;
++  content: '';
++  pointer-events: none;
++}
++/* The light on the chassis, following the pointer. */
++.sheen {
++  position: absolute;
++  z-index: -1;
++  inset: 0;
++  background: radial-gradient(
++    380px circle at var(--mx, 20%) var(--my, 0%),
++    rgb(255 255 255 / 0.07),
++    transparent 70%
++  );
++  pointer-events: none;
++}
++
++/* Arrival: the unit powers on, then its clips drop in along a diagonal. */
++.unit[data-reveal='armed'] {
++  opacity: 0;
++  transform: translate3d(0, 30px, 0) scale(0.985);
++}
++.unit[data-reveal='armed'] .clip {
++  opacity: 0;
++}
++.unit[data-reveal='in'] {
++  opacity: 1;
++  transform: none;
++}
++@media (prefers-reduced-motion: no-preference) {
++  .unit[data-reveal='in'] {
++    transition:
++      opacity 0.8s var(--ease),
++      transform 0.8s var(--ease);
++  }
++  .unit[data-reveal='in'] .clip {
++    animation: clipIn 0.6s var(--ease) backwards;
++    animation-delay: calc(var(--n) * 55ms + 300ms);
++  }
++  .unit[data-reveal='in'] .master {
++    animation: power 0.9s steps(1, end) 0.15s backwards;
++  }
++}
++@media (prefers-reduced-motion: reduce) {
++  .unit[data-reveal='armed'],
++  .unit[data-reveal='armed'] .clip {
++    opacity: 1;
++    transform: none;
++  }
++}
++@keyframes clipIn {
++  from {
++    opacity: 0;
++    transform: translateY(16px) scale(0.96);
++  }
++}
++@keyframes power {
++  0% {
++    filter: brightness(0.2);
++  }
++  18% {
++    filter: brightness(1.7);
++  }
++  30% {
++    filter: brightness(0.5);
++  }
++  46% {
++    filter: brightness(1.4);
++  }
++  100% {
++    filter: none;
++  }
++}
++
++/* ── Brand bar and transport ── */
++.brand {
++  display: flex;
++  flex-wrap: wrap;
++  align-items: flex-start;
++  justify-content: space-between;
++  gap: 14px 20px;
++  margin-bottom: 20px;
++  padding-bottom: 14px;
++  border-bottom: 1px solid rgb(255 255 255 / 0.28);
++  color: #e9e6de;
++  font-family: var(--mono);
++  text-transform: uppercase;
++}
++.brand > div:first-child {
++  display: flex;
++  flex-direction: column;
++  gap: 3px;
++}
++.brand strong {
++  font-size: 14px;
++  letter-spacing: 0.08em;
++}
++.brand span {
++  color: rgb(219 224 216 / 0.58);
++  font-size: 8px;
++  letter-spacing: 0.12em;
++}
++.transport {
++  display: flex;
++  flex-wrap: wrap;
++  align-items: center;
++  gap: 8px;
++}
++.readout {
++  padding: 8px 10px;
++  border: 1px solid #060806;
++  border-radius: 4px;
++  background: #09130e;
++  box-shadow: inset 0 0 12px rgb(0 0 0 / 0.8);
++  color: var(--lcd);
++  font: 700 10px var(--mono);
++  letter-spacing: 0.1em;
++  font-variant-numeric: tabular-nums;
++}
++.readout b {
++  font-weight: 700;
++}
++.key {
++  display: inline-flex;
++  align-items: center;
++  gap: 8px;
++  min-height: 44px;
++  padding: 0 16px;
++  border: 1px solid #060806;
++  border-radius: 6px;
++  background: linear-gradient(180deg, #3b3e3a, #262825);
++  box-shadow:
++    0 3px 0 #0b0c0b,
++    inset 0 1px rgb(255 255 255 / 0.14);
++  color: #e9e6de;
++  cursor: pointer;
++  font: 700 10px var(--mono);
++  letter-spacing: 0.16em;
++  text-transform: uppercase;
++}
++.key:active {
++  transform: translateY(2px);
++  box-shadow: 0 1px 0 #0b0c0b;
++}
++.key[aria-pressed='true'] {
++  border-color: var(--lcd);
++  color: var(--lcd);
++  box-shadow:
++    0 3px 0 #0b0c0b,
++    0 0 14px rgb(92 214 163 / 0.3);
++}
++.stopIcon {
++  width: 9px;
++  height: 9px;
++  background: currentColor;
++}
++.key:focus-visible,
++.tools button:focus-visible,
++.clip:focus-visible,
++.cta:focus-visible {
++  outline: 2px solid var(--c, var(--lcd));
++  outline-offset: 2px;
++}
++
++/* ── The master: green-phosphor glass ── */
++.master {
++  --c: var(--lcd);
++  position: relative;
++  display: grid;
++  gap: 12px;
++  min-height: 268px;
++  padding: 16px 20px 14px;
++  overflow: hidden;
++  border: 1px solid rgb(255 255 255 / 0.28);
++  border-radius: 8px;
++  background:
++    linear-gradient(rgb(92 214 163 / 0.035) 1px, transparent 1px) 0 0 / 100% 5px,
++    #09130e;
++  box-shadow:
++    inset 0 0 22px rgb(0 0 0 / 0.9),
++    0 1px rgb(255 255 255 / 0.08);
++  color: var(--lcd);
++}
++/* A glow behind the glass that breathes on the beat while a clip plays. */
++.master::before {
++  position: absolute;
++  inset: 0;
++  background: radial-gradient(
++    70% 80% at 50% 100%,
++    color-mix(in srgb, var(--c) 22%, transparent),
++    transparent 70%
++  );
++  content: '';
++  opacity: 0;
++  pointer-events: none;
++  transition: opacity 0.4s ease;
++}
++.master[data-state='playing']::before {
++  opacity: 1;
++}
++.masterTop {
++  display: flex;
++  justify-content: space-between;
++  gap: 12px;
++  color: color-mix(in srgb, var(--c) 82%, transparent);
++  font: 700 9px var(--mono);
++  letter-spacing: 0.12em;
++  text-transform: uppercase;
++  font-variant-numeric: tabular-nums;
++}
++.live {
++  display: grid;
++}
++.question {
++  margin: 0;
++  color: var(--c);
++  font: 650 clamp(20px, 3.2vw, 30px) / 1.05 var(--ui);
++  letter-spacing: -0.035em;
++  text-transform: uppercase;
++  text-wrap: balance;
++}
++.master[data-state='queued'] .question {
++  animation: cue 0.5s steps(1, end) infinite;
++}
++.answer {
++  align-self: start;
++  min-height: 5.1em;
++  max-width: 62ch;
++  margin: 0;
++  color: color-mix(in srgb, var(--c) 78%, #e9e6de);
++  font: 500 12.5px / 1.7 var(--mono);
++}
++.caret {
++  display: inline-block;
++  width: 0.55em;
++  height: 1em;
++  margin-left: 2px;
++  background: var(--c);
++  vertical-align: text-bottom;
++  opacity: 0;
++}
++.master[data-state='playing'] .caret,
++.master[data-state='idle'] .caret {
++  opacity: 1;
++}
++@media (prefers-reduced-motion: no-preference) {
++  .master[data-state='playing'] .caret,
++  .master[data-state='idle'] .caret {
++    animation: blink 1s steps(1) infinite;
++  }
++}
++@keyframes blink {
++  50% {
++    opacity: 0;
++  }
++}
++@keyframes cue {
++  50% {
++    opacity: 0.35;
++  }
++}
++
++/* The master's waveform: the whole clip, lit up to the playhead. */
++.masterWave {
++  position: relative;
++  height: 64px;
++  --p: 0;
++}
++.playhead {
++  position: absolute;
++  top: -4px;
++  bottom: -4px;
++  left: calc(var(--p, 0) * 100%);
++  width: 2px;
++  background: #e9e6de;
++  box-shadow: 0 0 12px var(--c);
++  opacity: 0;
++}
++.master[data-state='playing'] .playhead {
++  opacity: 1;
++}
++.wave {
++  position: relative;
++  display: block;
++  width: 100%;
++  height: 100%;
++}
++.waveBase,
++.waveLit {
++  position: absolute;
++  inset: 0;
++  display: flex;
++  align-items: center;
++  gap: 2px;
++}
++.waveLit {
++  clip-path: inset(0 calc(100% - var(--p, 0) * 100%) 0 0);
++}
++.wave i {
++  flex: 1;
++  height: calc(var(--h) * 100%);
++  min-width: 1px;
++  border-radius: 1px;
++  background: rgb(233 230 222 / 0.2);
++  transform-origin: center;
++}
++.waveLit i {
++  background: var(--c);
++}
++@media (prefers-reduced-motion: no-preference) {
++  .master[data-state='playing'] .waveLit i {
++    animation: bob 0.62s ease-in-out infinite alternate;
++    animation-delay: calc(var(--b) * -0.045s);
++  }
++  .master[data-state='idle'] .waveBase i {
++    animation: idle 2.6s ease-in-out infinite alternate;
++    animation-delay: calc(var(--b) * -0.07s);
++  }
++}
++@keyframes bob {
++  from {
++    transform: scaleY(0.55);
++  }
++  to {
++    transform: scaleY(1.08);
++  }
++}
++@keyframes idle {
++  from {
++    transform: scaleY(0.4);
++  }
++  to {
++    transform: scaleY(0.85);
++  }
++}
++.tools {
++  display: flex;
++  justify-content: flex-end;
++  gap: 18px;
++}
++.tools button {
++  min-height: 32px;
++  padding: 0;
++  border: 0;
++  background: none;
++  color: var(--c);
++  cursor: pointer;
++  font: 700 9px var(--mono);
++  letter-spacing: 0.14em;
++  text-decoration: underline;
++  text-underline-offset: 3px;
++  text-transform: uppercase;
++}
++.tools button:disabled {
++  cursor: default;
++  opacity: 0.4;
++  text-decoration: none;
++}
++
++/* ── Tracks and clips ── */
++.tracks {
++  display: grid;
++  grid-template-columns: repeat(3, minmax(0, 1fr));
++  gap: 12px;
++  margin-top: 16px;
++}
++.track {
++  display: grid;
++  align-content: start;
++  gap: 8px;
++  min-width: 0;
++}
++.trackHead {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++  padding: 0 2px 2px;
++  color: #8f938d;
++  font: 700 9px var(--mono);
++  letter-spacing: 0.14em;
++  text-transform: uppercase;
++}
++.trackHead i {
++  width: 8px;
++  height: 8px;
++  border-radius: 50%;
++  background: var(--c);
++  box-shadow: 0 0 8px var(--c);
++}
++.trackHead span {
++  flex: 1;
++  color: #e9e6de;
++}
++
++.clip {
++  position: relative;
++  display: grid;
++  align-content: space-between;
++  gap: 8px;
++  min-height: 112px;
++  padding: 10px 12px 11px;
++  overflow: hidden;
++  border: 1px solid #060806;
++  border-radius: 8px;
++  background: linear-gradient(180deg, #343731, #232522);
++  box-shadow:
++    0 3px 0 #0b0c0b,
++    inset 0 1px rgb(255 255 255 / 0.12);
++  color: #e9e6de;
++  cursor: pointer;
++  text-align: left;
++  transition:
++    transform 0.14s ease,
++    box-shadow 0.14s ease,
++    border-color 0.2s ease;
++}
++.clip::before {
++  position: absolute;
++  top: 0;
++  right: 0;
++  left: 0;
++  height: 3px;
++  background: var(--c);
++  content: '';
++  opacity: 0.85;
++}
++.clip:hover {
++  transform: translateY(-1px);
++  border-color: color-mix(in srgb, var(--c) 60%, #060806);
++}
++.clip:active {
++  transform: translateY(2px);
++  box-shadow: 0 1px 0 #0b0c0b;
++}
++.clip[data-selected='true'] {
++  border-color: var(--c);
++}
++/* The playhead's trail: a translucent wash, not an opaque fill, so the title
++   stays readable on both sides of the line. */
++.clipFill {
++  position: absolute;
++  inset: 0;
++  background: color-mix(in srgb, var(--c) 34%, transparent);
++  box-shadow: inset -2px 0 0 var(--c);
++  opacity: 0;
++  transform: scaleX(var(--p, 0));
++  transform-origin: left;
++  pointer-events: none;
++}
++.clip[data-state='playing'] .clipFill {
++  opacity: 1;
++}
++.clipHead {
++  position: relative;
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  color: #8f938d;
++  font: 700 9px var(--mono);
++  letter-spacing: 0.14em;
++}
++.clipHead b {
++  font-weight: 700;
++}
++.clipTitle {
++  position: relative;
++  font: 600 13.5px / 1.25 var(--ui);
++  letter-spacing: -0.01em;
++  text-wrap: balance;
++}
++.clip .wave {
++  position: relative;
++  height: 22px;
++}
++.clip .waveLit i {
++  background: var(--c);
++}
++
++/* The clip's icon: a play triangle, blinking when queued, bars when playing,
++   a dot once it has been played. */
++.clipIcon {
++  position: relative;
++  display: block;
++  width: 12px;
++  height: 12px;
++}
++.clipIcon::before {
++  position: absolute;
++  inset: 0;
++  background: currentColor;
++  clip-path: polygon(14% 6%, 14% 94%, 94% 50%);
++  content: '';
++}
++.clip[data-state='queued'] .clipIcon {
++  color: var(--c);
++}
++.clip[data-state='playing'] .clipIcon {
++  color: var(--c);
++}
++.clip[data-state='playing'] .clipIcon::before {
++  clip-path: polygon(
++    0 100%,
++    0 30%,
++    28% 30%,
++    28% 100%,
++    36% 100%,
++    36% 0,
++    64% 0,
++    64% 100%,
++    72% 100%,
++    72% 55%,
++    100% 55%,
++    100% 100%
++  );
++}
++.clip[data-state='played'] .clipIcon {
++  color: var(--c);
++  opacity: 0.7;
++}
++.clip[data-state='played'] .clipIcon::before {
++  clip-path: circle(28% at 50% 50%);
++}
++.clip[data-state='queued'] {
++  border-color: var(--c);
++}
++@media (prefers-reduced-motion: no-preference) {
++  .clip[data-state='queued'] {
++    animation: queued 0.5s steps(1, end) infinite;
++  }
++  .clip[data-state='queued'] .clipIcon {
++    animation: cue 0.5s steps(1, end) infinite;
++  }
++  /* On the beat: the playing clip kicks. Pairs, because a changing selector
++     alone does not restart an animation; a changing name does. */
++  .unit[data-beat='0'] .clip[data-state='playing'],
++  .unit[data-beat='2'] .clip[data-state='playing'] {
++    animation: kickA 0.48s ease-out;
++  }
++  .unit[data-beat='1'] .clip[data-state='playing'],
++  .unit[data-beat='3'] .clip[data-state='playing'] {
++    animation: kickB 0.48s ease-out;
++  }
++  .unit[data-beat='0'] .master[data-state='playing']::before,
++  .unit[data-beat='2'] .master[data-state='playing']::before {
++    animation: glowA 0.48s ease-out;
++  }
++  .unit[data-beat='1'] .master[data-state='playing']::before,
++  .unit[data-beat='3'] .master[data-state='playing']::before {
++    animation: glowB 0.48s ease-out;
++  }
++  .clip .waveLit i {
++    transform-origin: center;
++  }
++}
++@keyframes queued {
++  50% {
++    background: linear-gradient(180deg, #4b4e48, #34362f);
++  }
++}
++@keyframes kickA {
++  from {
++    filter: brightness(1.45);
++    transform: scale(1.025);
++  }
++}
++@keyframes kickB {
++  from {
++    filter: brightness(1.45);
++    transform: scale(1.025);
++  }
++}
++@keyframes glowA {
++  from {
++    opacity: 1;
++    filter: brightness(1.8);
++  }
++}
++@keyframes glowB {
++  from {
++    opacity: 1;
++    filter: brightness(1.8);
++  }
++}
++
++/* ── Footer ── */
++.foot {
++  display: flex;
++  flex-wrap: wrap;
++  align-items: center;
++  gap: 12px 18px;
++  margin-top: 18px;
++  padding-top: 14px;
++  border-top: 1px solid rgb(255 255 255 / 0.18);
++}
++.leds {
++  display: flex;
++  gap: 6px;
++}
++.leds i {
++  width: 8px;
++  height: 8px;
++  border-radius: 50%;
++  background: #1a1c1a;
++  box-shadow: inset 0 1px 2px #000;
++  transition: background 0.1s ease;
++}
++.unit[data-beat='0'] .leds i:nth-child(1),
++.unit[data-beat='1'] .leds i:nth-child(2),
++.unit[data-beat='2'] .leds i:nth-child(3),
++.unit[data-beat='3'] .leds i:nth-child(4) {
++  background: var(--lcd);
++  box-shadow:
++    0 0 10px var(--lcd),
++    inset 0 1px 2px rgb(255 255 255 / 0.5);
++}
++.foot p {
++  flex: 1;
++  min-width: 180px;
++  margin: 0;
++  color: #8f938d;
++  font: 700 9px var(--mono);
++  letter-spacing: 0.12em;
++  text-transform: uppercase;
++}
++.cta {
++  display: inline-flex;
++  align-items: center;
++  min-height: 44px;
++  padding: 0 18px;
++  border: 1px solid rgb(233 230 222 / 0.5);
++  border-radius: 999px;
++  color: #e9e6de;
++  font: 700 10px var(--mono);
++  letter-spacing: 0.14em;
++  text-decoration: none;
++  text-transform: uppercase;
++  transition:
++    background 0.2s ease,
++    color 0.2s ease,
++    border-color 0.2s ease;
++}
++.cta:hover {
++  border-color: var(--lcd);
++  background: var(--lcd);
++  color: #07140d;
++}
++
++/* Without a script the whole FAQ is plain text on the chassis. */
++.plain {
++  display: grid;
++  gap: 18px;
++  margin: 0;
++}
++.plain dt {
++  font: 650 18px / 1.2 var(--ui);
++  text-transform: uppercase;
++}
++.plain dd {
++  margin: 6px 0 0;
++  color: rgb(233 230 222 / 0.8);
++  font: 500 14px / 1.6 var(--ui);
++}
++
++/* ── Narrow screens: tracks stack, the master stays on top ── */
++@media (max-width: 700px) {
++  .tracks {
++    grid-template-columns: minmax(0, 1fr);
++    gap: 18px;
++  }
++  .clip {
++    min-height: 92px;
++  }
++  .master {
++    min-height: 300px;
++  }
++}
++@media (max-width: 460px) {
++  .transport {
++    width: 100%;
++  }
++  .key {
++    flex: 1;
++    justify-content: center;
++  }
++}
++
++@media (prefers-reduced-motion: reduce) {
++  .clip,
++  .master::before,
++  .leds i,
++  .cta {
++    transition: none;
++  }
++}
+diff --git a/features/landing-page/rack-01/contact-desk/scene-launch.tsx b/features/landing-page/rack-01/contact-desk/scene-launch.tsx
+new file mode 100644
+index 0000000..c5e5345
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/scene-launch.tsx
+@@ -0,0 +1,436 @@
++'use client'
++
++import {
++  useEffect,
++  useId,
++  useMemo,
++  useRef,
++  useState,
++  type CSSProperties,
++  type KeyboardEvent,
++  type PointerEvent,
++} from 'react'
++import { CONTACT_PAD_COLORS } from '../../constants'
++import { FAQ_ITEMS, TRACKS, type FaqEntry } from './contact-content'
++import styles from './scene-launch.module.css'
++import { createEngine, type Engine, type EngineView } from './scene-engine'
++import { BPM, moveFocus, tracksOf, waveformBars } from './scene-logic'
++import { useReveal } from './use-reveal'
++
++/** One accent per track, taken from the controller's own pad colours. */
++const TRACK_COLORS = [
++  CONTACT_PAD_COLORS[0],
++  CONTACT_PAD_COLORS[1],
++  CONTACT_PAD_COLORS[3],
++]
++
++const INITIAL: EngineView = {
++  selected: null,
++  playing: null,
++  queued: null,
++  played: [],
++}
++
++function Wave({
++  seed,
++  count,
++  lit,
++}: {
++  seed: string
++  count: number
++  lit?: boolean
++}) {
++  const bars = useMemo(() => waveformBars(seed, count), [seed, count])
++  const row = bars.map((h, i) => (
++    <i key={i} style={{ '--h': h, '--b': i } as CSSProperties} />
++  ))
++  return (
++    <span className={styles.wave} aria-hidden="true" data-lit={lit}>
++      <span className={styles.waveBase}>{row}</span>
++      <span className={styles.waveLit}>{row}</span>
++    </span>
++  )
++}
++
++/**
++ * The FAQ, as a second unit on the same desk as the performance controller.
++ *
++ * It is built from the controller's own materials (the graphite chassis, the
++ * green-phosphor LCD, the pad colours) and borrows one idea from clip-launching
++ * instruments: **a clip does not start when you press it, it starts on the next
++ * beat.** Each question is a clip with its own waveform. Pressing one queues it
++ * (it blinks), the next beat of a live 120 BPM clock launches it, and its
++ * answer then *plays*: a playhead crosses the clip, the answer types out in
++ * step with it on the LCD, and the waveform lights as the playhead passes.
++ *
++ * ## How it is wired
++ *
++ * A single `requestAnimationFrame` loop owns the clock. It does three things
++ * per frame and nothing else: advance the beat (a `data-beat` on the unit,
++ * which CSS turns into LED and pulse animation), launch a queued clip on a beat
++ * boundary, and advance a playing clip (a `--p` custom property on the clip and
++ * on the master, the typed text, the time). None of that is React state, so a
++ * playing clip is sixty DOM writes a second and no renders. React state changes
++ * only on a transition: queued, playing, finished.
++ *
++ * The loop runs while the unit is on screen or a clip is playing, and stops
++ * otherwise. With reduced motion there is no loop: a press selects the clip and
++ * its whole answer appears at once.
++ *
++ * ## What it keeps from a real FAQ
++ *
++ * Real buttons in a roving-tabindex grid (arrows move between tracks and
++ * clips, Enter or Space launches, Escape stops); the answer in an `aria-live`
++ * region, once and whole, while the typed copy is `aria-hidden`; a `#hash` deep
++ * link per question; and, without a script, every question and answer as plain
++ * text.
++ */
++export function SceneLaunch({ email }: { email: string }) {
++  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
++  const [reveal, revealState] = useReveal<HTMLElement>(0.2)
++  const tracks = useMemo(() => tracksOf(FAQ_ITEMS), [])
++  const counts = useMemo(() => tracks.map((t) => t.clips.length), [tracks])
++
++  const [view, setView] = useState<EngineView>(INITIAL)
++  const [auto, setAuto] = useState(false)
++  const [copied, setCopied] = useState(false)
++  const [focus, setFocus] = useState<[number, number]>([0, 0])
++
++  const sheen = useRef<HTMLDivElement | null>(null)
++  const master = useRef<HTMLDivElement | null>(null)
++  const typed = useRef<HTMLSpanElement | null>(null)
++  const timeEl = useRef<HTMLElement | null>(null)
++  const barEl = useRef<HTMLElement | null>(null)
++  const clips = useRef<(HTMLButtonElement | null)[]>([])
++  const engine = useRef<Engine | null>(null)
++
++  // The playback machine lives outside React; see `scene-engine.ts`.
++  useEffect(() => {
++    const instance = createEngine({
++      items: FAQ_ITEMS,
++      setView,
++      reduced: () =>
++        typeof window.matchMedia === 'function' &&
++        window.matchMedia('(prefers-reduced-motion: reduce)').matches,
++      els: {
++        unit: () => reveal.current,
++        master: () => master.current,
++        typed: () => typed.current,
++        time: () => timeEl.current,
++        bar: () => barEl.current,
++        clip: (index) => clips.current[index],
++      },
++    })
++    engine.current = instance
++    return () => {
++      instance.destroy()
++      engine.current = null
++    }
++  }, [reveal])
++
++  useEffect(() => {
++    engine.current?.setAuto(auto)
++  }, [auto])
++
++  // The loop runs while the unit is on screen.
++  useEffect(() => {
++    const node = reveal.current
++    if (!node || typeof IntersectionObserver === 'undefined') return
++    const observer = new IntersectionObserver((entries) => {
++      engine.current?.setVisible(entries.some((e) => e.isIntersecting))
++    })
++    observer.observe(node)
++    return () => observer.disconnect()
++  }, [reveal])
++
++  // A #hash that names a question launches it at once and brings it into view.
++  useEffect(() => {
++    const fromHash = () => {
++      const id = decodeURIComponent(window.location.hash.replace(/^#/, ''))
++      const index = FAQ_ITEMS.findIndex((item) => item.id === id)
++      if (index < 0) return
++      engine.current?.launch(index, true)
++      const track = tracks.findIndex((t) =>
++        t.clips.some((c) => c.index === index),
++      )
++      const row = tracks[track]?.clips.findIndex((c) => c.index === index) ?? 0
++      setFocus([track, row])
++      const still = window.matchMedia(
++        '(prefers-reduced-motion: reduce)',
++      ).matches
++      window.setTimeout(
++        () =>
++          reveal.current?.scrollIntoView({
++            block: 'center',
++            behavior: still ? 'auto' : 'smooth',
++          }),
++        80,
++      )
++    }
++    fromHash()
++    window.addEventListener('hashchange', fromHash)
++    return () => window.removeEventListener('hashchange', fromHash)
++  }, [tracks, reveal])
++
++  // The unit arrives mid-performance: shortly after it powers on, the first
++  // clip queues itself, unless the visitor has already done something.
++  useEffect(() => {
++    if (revealState !== 'in') return
++    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
++    const id = window.setTimeout(
++      () => {
++        if (!engine.current?.touched()) engine.current?.launch(0)
++      },
++      still ? 0 : 1400,
++    )
++    return () => window.clearTimeout(id)
++  }, [revealState])
++
++  const press = (index: number) => {
++    // Pressing the clip that is playing or queued stops it and shows the whole
++    // answer; pressing any other launches that one.
++    if (view.playing === index || view.queued === index) {
++      engine.current?.stop()
++      return
++    }
++    engine.current?.launch(index)
++    history.replaceState(
++      history.state,
++      '',
++      `${window.location.pathname}${window.location.search}#${FAQ_ITEMS[index].id}`,
++    )
++  }
++
++  const onKeyDown = (event: KeyboardEvent, track: number, row: number) => {
++    if (event.key === 'Escape') {
++      engine.current?.stop()
++      return
++    }
++    const to = moveFocus(event.key, track, row, counts)
++    if (!to) return
++    event.preventDefault()
++    setFocus(to)
++    clips.current[tracks[to[0]].clips[to[1]].index]?.focus()
++  }
++
++  const copyLink = async () => {
++    if (view.selected === null) return
++    const url = `${window.location.origin}${window.location.pathname}${window.location.search}#${FAQ_ITEMS[view.selected].id}`
++    try {
++      await navigator.clipboard.writeText(url)
++    } catch {
++      /* The hash is already in the address bar. */
++    }
++    setCopied(true)
++    window.setTimeout(() => setCopied(false), 1800)
++  }
++
++  const next = () => {
++    engine.current?.launch(((view.selected ?? -1) + 1) % FAQ_ITEMS.length)
++  }
++
++  // The light on the chassis follows the pointer. The custom properties live on
++  // one childless element, so moving the pointer restyles that and nothing else.
++  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
++    const box = event.currentTarget.getBoundingClientRect()
++    sheen.current?.style.setProperty('--mx', `${event.clientX - box.left}px`)
++    sheen.current?.style.setProperty('--my', `${event.clientY - box.top}px`)
++  }
++
++  const current: FaqEntry | null =
++    view.selected === null ? null : FAQ_ITEMS[view.selected]
++  const trackIndex = current ? TRACKS.indexOf(current.track) : -1
++  const stateOf = (index: number) =>
++    view.playing === index
++      ? 'playing'
++      : view.queued === index
++        ? 'queued'
++        : view.played.includes(index)
++          ? 'played'
++          : 'idle'
++
++  return (
++    <section
++      ref={reveal}
++      className={styles.unit}
++      data-reveal={revealState}
++      data-beat="0"
++      aria-labelledby={`${uid}-title`}
++      onPointerMove={onPointerMove}
++    >
++      <div className={styles.sheen} ref={sheen} aria-hidden="true" />
++
++      <header className={styles.brand}>
++        <div>
++          <strong id={`${uid}-title`}>AH / SCENE LAUNCH</strong>
++          <span>
++            FAQ · {FAQ_ITEMS.length} CLIPS · {TRACKS.length} TRACKS
++          </span>
++        </div>
++        <div className={styles.transport}>
++          <span className={styles.readout} aria-hidden="true">
++            {BPM} BPM
++          </span>
++          <span className={styles.readout} aria-hidden="true">
++            <b ref={barEl}>BAR 01.1</b>
++          </span>
++          <button
++            type="button"
++            className={styles.key}
++            onClick={() => engine.current?.stop()}
++          >
++            <i aria-hidden="true" className={styles.stopIcon} />
++            Stop
++          </button>
++          <button
++            type="button"
++            className={styles.key}
++            aria-pressed={auto}
++            onClick={() => setAuto((v) => !v)}
++          >
++            Auto
++          </button>
++        </div>
++      </header>
++
++      <div
++        ref={master}
++        className={styles.master}
++        data-state={
++          view.playing !== null
++            ? 'playing'
++            : view.queued !== null
++              ? 'queued'
++              : 'idle'
++        }
++        style={
++          {
++            '--c':
++              trackIndex >= 0
++                ? TRACK_COLORS[trackIndex]
++                : 'var(--lcd-green, #5cd6a3)',
++          } as CSSProperties
++        }
++      >
++        <div className={styles.masterTop} aria-hidden="true">
++          <span>
++            {current
++              ? `NOW ${view.playing !== null ? 'PLAYING' : view.queued !== null ? 'CUEING' : 'LOADED'} · ${current.track.toUpperCase()} · CLIP ${String(view.selected! + 1).padStart(2, '0')}`
++              : 'MASTER OUT · STANDBY'}
++          </span>
++          <span ref={timeEl}>00:00 / 00:00</span>
++        </div>
++
++        <div
++          role="region"
++          aria-live="polite"
++          aria-label="Answer"
++          className={styles.live}
++        >
++          <h3 className={styles.question}>
++            {current
++              ? current.question
++              : 'Pick a clip. It starts on the next beat.'}
++          </h3>
++          {current ? <p className={styles.srOnly}>{current.answer}</p> : null}
++        </div>
++        <p className={styles.answer} aria-hidden="true">
++          <span ref={typed} />
++          <i className={styles.caret} />
++        </p>
++
++        <div className={styles.masterWave}>
++          <Wave seed={current ? current.id : 'standby'} count={72} lit />
++          <i className={styles.playhead} />
++        </div>
++
++        <div className={styles.tools}>
++          <button type="button" onClick={next}>
++            Next clip
++          </button>
++          <button type="button" onClick={copyLink} disabled={!current}>
++            {copied ? 'Link copied' : 'Copy link'}
++          </button>
++        </div>
++      </div>
++
++      <div className={styles.tracks}>
++        {tracks.map((track, t) => (
++          <div
++            key={track.name}
++            role="group"
++            aria-label={`${track.name} track`}
++            className={styles.track}
++            style={{ '--c': TRACK_COLORS[t] } as CSSProperties}
++          >
++            <div className={styles.trackHead}>
++              <i aria-hidden="true" />
++              <span>{track.name}</span>
++              <small>{String(track.clips.length).padStart(2, '0')}</small>
++            </div>
++            {track.clips.map(({ item, index }, row) => {
++              const state = stateOf(index)
++              const selected = view.selected === index
++              return (
++                <button
++                  key={item.id}
++                  ref={(node) => {
++                    clips.current[index] = node
++                  }}
++                  type="button"
++                  className={styles.clip}
++                  style={{ '--n': index } as CSSProperties}
++                  data-state={state}
++                  data-selected={selected}
++                  aria-pressed={state === 'playing'}
++                  tabIndex={focus[0] === t && focus[1] === row ? 0 : -1}
++                  onClick={() => press(index)}
++                  onFocus={() => setFocus([t, row])}
++                  onKeyDown={(event) => onKeyDown(event, t, row)}
++                >
++                  <span className={styles.clipFill} aria-hidden="true" />
++                  <span className={styles.clipHead} aria-hidden="true">
++                    <b>{String(index + 1).padStart(2, '0')}</b>
++                    <i className={styles.clipIcon} />
++                  </span>
++                  <span className={styles.clipTitle}>{item.question}</span>
++                  <Wave seed={item.id} count={26} />
++                  {state === 'queued' || state === 'playing' ? (
++                    <span className={styles.srOnly}>
++                      {state === 'queued' ? ' (queued)' : ' (playing)'}
++                    </span>
++                  ) : null}
++                </button>
++              )
++            })}
++          </div>
++        ))}
++      </div>
++
++      <footer className={styles.foot}>
++        <span className={styles.leds} aria-hidden="true">
++          {[0, 1, 2, 3].map((i) => (
++            <i key={i} />
++          ))}
++        </span>
++        <p>Press a clip. It launches on the next beat.</p>
++        <a className={styles.cta} href={`mailto:${email}`}>
++          Still unsure? Email me
++        </a>
++      </footer>
++
++      {/* Without a script nothing can launch, so the whole FAQ is plain text. */}
++      <noscript>
++        <style>{`.${styles.tracks},.${styles.master},.${styles.transport},.${styles.foot}{display:none}`}</style>
++        <dl className={styles.plain}>
++          {FAQ_ITEMS.map((item) => (
++            <div key={item.id}>
++              <dt>{item.question}</dt>
++              <dd>{item.answer}</dd>
++            </div>
++          ))}
++        </dl>
++      </noscript>
++    </section>
++  )
++}
+diff --git a/features/landing-page/rack-01/contact-desk/scene-logic.ts b/features/landing-page/rack-01/contact-desk/scene-logic.ts
+new file mode 100644
+index 0000000..1e37f6b
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/scene-logic.ts
+@@ -0,0 +1,161 @@
++/**
++ * The scene launcher's pure logic: the beat clock, a clip's length and
++ * progress, the waveform each clip carries, the transport readout, and the
++ * movement of focus across the grid. No React, no DOM, no timers, so every rule
++ * is testable and the component is only wiring.
++ *
++ * The launcher borrows one idea from clip-launching instruments: **a clip does
++ * not start when you press it, it starts on the next beat.** That is what makes
++ * a press feel like it is being performed rather than executed, and it costs
++ * at most one beat (500ms at the default tempo). `nextBeatDelay` is that rule.
++ */
++
++import { FAQ_ITEMS, TRACKS, type FaqEntry } from './contact-content'
++
++export const BPM = 120
++
++export const beatMs = (bpm: number = BPM) => 60000 / Math.max(1, bpm)
++
++/** Which beat of the (endless) clock `now` falls on. */
++export const beatIndex = (now: number, bpm: number = BPM) =>
++  Math.floor(now / beatMs(bpm))
++
++/** Milliseconds from `now` to the next beat boundary. Never 0, never past a beat. */
++export function nextBeatDelay(now: number, bpm: number = BPM): number {
++  const beat = beatMs(bpm)
++  const into = ((now % beat) + beat) % beat
++  return into === 0 ? beat : beat - into
++}
++
++export const CLIP_MIN_MS = 5000
++export const CLIP_MAX_MS = 13000
++export const MS_PER_CHAR = 44
++
++/**
++ * How long a clip plays: long enough to read as it types, short enough that
++ * nobody waits. The typed text reaches the end exactly when the clip does, so
++ * the length is the reading speed (about 27 characters a second).
++ */
++export function clipDuration(answer: string): number {
++  return Math.min(
++    CLIP_MAX_MS,
++    Math.max(CLIP_MIN_MS, Math.round(answer.length * MS_PER_CHAR)),
++  )
++}
++
++export function progressAt(elapsed: number, duration: number): number {
++  if (!(duration > 0) || !Number.isFinite(elapsed)) return 0
++  return Math.min(1, Math.max(0, elapsed / duration))
++}
++
++/** The first `progress` (0–1) of `text`. */
++export function typedAt(text: string, progress: number): string {
++  const p = Number.isFinite(progress) ? Math.min(1, Math.max(0, progress)) : 0
++  return text.slice(0, Math.round(text.length * p))
++}
++
++/** `mm:ss`, from milliseconds, clamped at zero. */
++export function clock(ms: number): string {
++  const total = Math.max(0, Math.floor((Number.isFinite(ms) ? ms : 0) / 1000))
++  const m = Math.floor(total / 60)
++  const s = total % 60
++  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
++}
++
++/** `BAR 02.3`: bar and beat since a clip started, four beats to a bar. */
++export function transportAt(elapsed: number, bpm: number = BPM): string {
++  const beats = Math.max(0, Math.floor(elapsed / beatMs(bpm)))
++  const bar = Math.floor(beats / 4) + 1
++  return `BAR ${String(bar).padStart(2, '0')}.${(beats % 4) + 1}`
++}
++
++/** A 32-bit string hash (FNV-1a), for seeding. */
++export function hash(text: string): number {
++  let h = 0x811c9dc5
++  for (let i = 0; i < text.length; i += 1) {
++    h ^= text.charCodeAt(i)
++    h = Math.imul(h, 0x01000193)
++  }
++  return h >>> 0
++}
++
++/**
++ * A waveform for a clip: `count` bar heights in 0.14–1, the same every time for
++ * the same seed. Each clip's thumbnail is its own shape, so nine clips do not
++ * look like one clip nine times.
++ *
++ * Built from a seeded generator and then smoothed with a short moving average
++ * and an envelope that swells in the middle, because raw noise reads as static
++ * and a clip reads as audio when it has a body.
++ */
++export function waveformBars(seed: string, count: number): number[] {
++  let state = hash(seed) || 1
++  const next = () => {
++    // xorshift32
++    state ^= state << 13
++    state >>>= 0
++    state ^= state >>> 17
++    state ^= state << 5
++    state >>>= 0
++    return state / 0xffffffff
++  }
++  const raw = Array.from({ length: count }, () => next())
++  return raw.map((_, i) => {
++    const a = raw[Math.max(0, i - 1)]
++    const b = raw[i]
++    const c = raw[Math.min(count - 1, i + 1)]
++    const smooth = (a + b * 2 + c) / 4
++    const envelope = 0.55 + 0.45 * Math.sin((Math.PI * (i + 0.5)) / count)
++    return Math.min(1, Math.max(0.14, 0.14 + smooth * envelope * 0.9))
++  })
++}
++
++/** The clips grouped by track, each with its index in the flat list. */
++export function tracksOf(items: readonly FaqEntry[] = FAQ_ITEMS) {
++  return TRACKS.map((name) => ({
++    name,
++    clips: items
++      .map((item, index) => ({ item, index }))
++      .filter(({ item }) => item.track === name),
++  }))
++}
++
++/**
++ * Where focus goes from clip (`track`, `row`) on a key press, across a grid of
++ * tracks with `counts[t]` clips each; `null` for a key it does not own.
++ *
++ * Left and right change track and keep the row, clamped to the shorter track;
++ * up and down walk the track and wrap; Home and End are the ends of the track.
++ */
++export function moveFocus(
++  key: string,
++  track: number,
++  row: number,
++  counts: readonly number[],
++): [number, number] | null {
++  const tracks = counts.length
++  if (!tracks) return null
++  const clamp = (t: number, r: number): [number, number] => [
++    t,
++    Math.max(0, Math.min(r, Math.max(0, counts[t] - 1))),
++  ]
++  switch (key) {
++    case 'ArrowRight':
++      return clamp(Math.min(tracks - 1, track + 1), row)
++    case 'ArrowLeft':
++      return clamp(Math.max(0, track - 1), row)
++    case 'ArrowDown':
++      return [track, counts[track] ? (row + 1) % counts[track] : 0]
++    case 'ArrowUp':
++      return [
++        track,
++        counts[track] ? (row - 1 + counts[track]) % counts[track] : 0,
++      ]
++    case 'Home':
++      return [track, 0]
++    case 'End':
++      return [track, Math.max(0, counts[track] - 1)]
++    default:
++      return null
++  }
++}
+diff --git a/features/landing-page/rack-01/contact-desk/slit-title.tsx b/features/landing-page/rack-01/contact-desk/slit-title.tsx
+deleted file mode 100644
+index 060ec7f..0000000
+--- a/features/landing-page/rack-01/contact-desk/slit-title.tsx
++++ /dev/null
+@@ -1,68 +0,0 @@
+-import { Fragment, type CSSProperties } from 'react'
+-import styles from './contact-desk.module.css'
+-
+-/**
+- * A headline set in capitals that rises, letter by letter, through a hard
+- * horizontal slit: each line clips its own overflow, and each capital sits a
+- * share of its height below the baseline until the section arrives.
+- *
+- * It is a single `h2` with an `aria-label` of the whole text and every visible
+- * letter `aria-hidden`, so a screen reader hears a heading and not a spelling
+- * lesson. `\n` in `text` breaks the line.
+- *
+- * Hovering lifts the letters clear of the slit (pointer devices only); the
+- * resting state is the slit, which is the design. `slit` is how much of each
+- * capital it hides, 0 to 0.5; 0 sets the word whole.
+- */
+-export function SlitTitle({
+-  text,
+-  id,
+-  slit = 0.4,
+-  className = '',
+-}: {
+-  text: string
+-  id?: string
+-  slit?: number
+-  className?: string
+-}) {
+-  const lines = text.split('\n')
+-  const cut = Math.min(0.5, Math.max(0, slit))
+-  let index = 0
+-  return (
+-    <h2
+-      id={id}
+-      className={`${styles.title} ${className}`.trim()}
+-      aria-label={lines.join(' ')}
+-      data-slit={cut > 0}
+-      style={
+-        {
+-          // Capitals are about 0.72em tall; the drop is a share of that, plus a
+-          // hair so the baseline never shows a sliver.
+-          '--cut':
+-            cut > 0 ? `calc(${(cut * 0.72).toFixed(3)}em + 0.05em)` : '0px',
+-        } as CSSProperties
+-      }
+-    >
+-      {lines.map((line, lineIndex) => (
+-        <span className={styles.line} key={lineIndex} aria-hidden="true">
+-          {line.split(' ').map((word, wordIndex, words) => (
+-            <Fragment key={wordIndex}>
+-              <span className={styles.word}>
+-                {Array.from(word).map((letter, letterIndex) => (
+-                  <span
+-                    className={styles.ch}
+-                    key={letterIndex}
+-                    style={{ '--i': index++ } as CSSProperties}
+-                  >
+-                    {letter}
+-                  </span>
+-                ))}
+-              </span>
+-              {wordIndex < words.length - 1 ? ' ' : null}
+-            </Fragment>
+-          ))}
+-        </span>
+-      ))}
+-    </h2>
+-  )
+-}
+diff --git a/features/landing-page/rack-01/contact-desk/studio-faq.tsx b/features/landing-page/rack-01/contact-desk/studio-faq.tsx
+deleted file mode 100644
+index 2fbb532..0000000
+--- a/features/landing-page/rack-01/contact-desk/studio-faq.tsx
++++ /dev/null
+@@ -1,590 +0,0 @@
+-'use client'
+-
+-import {
+-  Fragment,
+-  useCallback,
+-  useEffect,
+-  useId,
+-  useLayoutEffect,
+-  useMemo,
+-  useRef,
+-  useState,
+-  type CSSProperties,
+-  type KeyboardEvent,
+-  type PointerEvent,
+-} from 'react'
+-import {
+-  FAQ_CATEGORIES,
+-  FAQ_ITEMS,
+-  FAQ_TICKER,
+-  type FaqEntry,
+-} from './contact-content'
+-import styles from './contact-desk.module.css'
+-import {
+-  highlightRuns,
+-  itemIds,
+-  matches,
+-  nextFocus,
+-  snippet,
+-  toggled,
+-  wordsOf,
+-} from './faq-logic'
+-import { SlitTitle } from './slit-title'
+-import { useIntro } from './use-intro'
+-
+-const useIsoLayoutEffect =
+-  typeof window !== 'undefined' ? useLayoutEffect : useEffect
+-
+-/** How long the closing wipe takes before a row is put away. Matches the CSS. */
+-const WIPE_OUT_MS = 320
+-
+-function Marked({ text, query }: { text: string; query: string }) {
+-  return (
+-    <>
+-      {highlightRuns(text, query).map((run, index) =>
+-        run.hit ? (
+-          <mark key={index} className={styles.mark}>
+-            {run.text}
+-          </mark>
+-        ) : (
+-          <Fragment key={index}>{run.text}</Fragment>
+-        ),
+-      )}
+-    </>
+-  )
+-}
+-
+-/** Nine bars that play while a row is open, a level meter for the track. */
+-function Wave() {
+-  return (
+-    <span className={styles.wave} aria-hidden="true">
+-      {Array.from({ length: 9 }, (_, i) => (
+-        <i key={i} style={{ '--b': i } as CSSProperties} />
+-      ))}
+-    </span>
+-  )
+-}
+-
+-function Plus() {
+-  return (
+-    <span className={styles.cell} aria-hidden="true">
+-      <svg className={styles.plus} viewBox="0 0 32 32" fill="none">
+-        <path d="M16 1v30M1 16h30" stroke="currentColor" strokeWidth="2" />
+-      </svg>
+-    </span>
+-  )
+-}
+-
+-function Arrow() {
+-  return (
+-    <svg viewBox="0 0 18 18" fill="none" aria-hidden="true">
+-      <path
+-        d="M3 9h11M10 4.5 14.5 9 10 13.5"
+-        stroke="currentColor"
+-        strokeWidth="1.7"
+-        strokeLinecap="round"
+-        strokeLinejoin="round"
+-      />
+-    </svg>
+-  )
+-}
+-
+-/**
+- * The FAQ, as the last act of the Contact section: the studio's slit-type FAQ.
+- *
+- * ## What it does
+- *
+- * - The headline rises letter by letter through a hard slit as the band arrives,
+- *   and a **playhead** sweeps the ruler beneath it once.
+- * - A question is a ruled row, a *track*. Opening one **floods it with signal
+- *   orange from the left, led by a bright playhead line**, and the question
+- *   inverts exactly where the line has passed, because a dark copy of the row
+- *   is clipped in step with the flood. The answer is printed in the dark, so the
+- *   flood is what reveals it; its words settle in after the line. Closing wipes
+- *   the orange out to the right, the line trailing the edge. The + becomes an ×.
+- * - Moving over a closed row draws a scrub line that follows the pointer.
+- * - Once the headline has landed, the first question opens by itself, so the
+- *   band arrives mid-performance rather than as a bare list. If the visitor has
+- *   touched anything by then, or came in on a `#hash`, it does not.
+- *
+- * ## What it keeps from a real FAQ
+- *
+- * Question buttons with `aria-expanded` and `aria-controls`; up, down, Home and
+- * End between them; a `#hash` deep link per question and a copy-link button;
+- * search with highlighted matches and an excerpt under each closed match;
+- * topic chips with live counts; an empty state that offers the way out. The
+- * moving line pauses on hover, on focus and on a button.
+- *
+- * ## Motion
+- *
+- * Reduced motion is a complete alternative, not a subtraction: the headline is
+- * set whole, the first question is simply open, a row's state changes without a
+- * wipe, and the moving line does not move.
+- */
+-export function StudioFaq({
+-  items = FAQ_ITEMS,
+-  headline = 'Before you\npress record',
+-  ticker = FAQ_TICKER,
+-  email,
+-}: {
+-  items?: readonly FaqEntry[]
+-  headline?: string
+-  ticker?: readonly string[]
+-  email: string
+-}) {
+-  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
+-  const [band, intro] = useIntro<HTMLElement>(0.18)
+-  const buttons = useRef<(HTMLButtonElement | null)[]>([])
+-  const timers = useRef<Record<string, number>>({})
+-  const touched = useRef(false)
+-
+-  const ids = useMemo(
+-    () =>
+-      itemIds(
+-        items.map((item) => item.question),
+-        [],
+-      ),
+-    [items],
+-  )
+-  const texts = useMemo(
+-    () => items.map((item) => `${item.question} ${item.answer}`),
+-    [items],
+-  )
+-
+-  const [open, setOpen] = useState<string[]>([])
+-  const [closing, setClosing] = useState<string[]>([])
+-  const [query, setQuery] = useState('')
+-  const [category, setCategory] = useState<string | null>(null)
+-  const [copied, setCopied] = useState<string | null>(null)
+-  const [paused, setPaused] = useState(false)
+-
+-  const reduced = useCallback(
+-    () =>
+-      typeof window !== 'undefined' &&
+-      typeof window.matchMedia === 'function' &&
+-      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+-    [],
+-  )
+-
+-  // A row that closes wipes its orange out before it is put away. The layout
+-  // effect lands the `closing` state before paint, so the flood never blinks.
+-  const previous = useRef<string[]>(open)
+-  const openKey = open.join('|')
+-  useIsoLayoutEffect(() => {
+-    const before = previous.current
+-    previous.current = open
+-    const added = open.filter((id) => !before.includes(id))
+-    const removed = before.filter((id) => !open.includes(id))
+-    if (added.length) {
+-      added.forEach((id) => window.clearTimeout(timers.current[id]))
+-      setClosing((current) => current.filter((id) => !added.includes(id)))
+-    }
+-    if (removed.length && !reduced()) {
+-      setClosing((current) => [
+-        ...current.filter((id) => !removed.includes(id)),
+-        ...removed,
+-      ])
+-      removed.forEach((id) => {
+-        window.clearTimeout(timers.current[id])
+-        timers.current[id] = window.setTimeout(
+-          () => setClosing((current) => current.filter((c) => c !== id)),
+-          WIPE_OUT_MS,
+-        )
+-      })
+-    }
+-  }, [openKey, reduced])
+-
+-  useEffect(() => {
+-    const pending = timers.current
+-    return () => Object.values(pending).forEach((t) => window.clearTimeout(t))
+-  }, [])
+-
+-  // A #hash that names a question opens it and brings it into view.
+-  useEffect(() => {
+-    const fromHash = () => {
+-      const hash = decodeURIComponent(window.location.hash.replace(/^#/, ''))
+-      const at = ids.indexOf(hash)
+-      if (at < 0) return
+-      touched.current = true
+-      setOpen([hash])
+-      window.setTimeout(
+-        () =>
+-          buttons.current[at]?.scrollIntoView({
+-            block: 'center',
+-            behavior: reduced() ? 'auto' : 'smooth',
+-          }),
+-        80,
+-      )
+-    }
+-    fromHash()
+-    window.addEventListener('hashchange', fromHash)
+-    return () => window.removeEventListener('hashchange', fromHash)
+-  }, [ids, reduced])
+-
+-  // The band arrives mid-performance: once the headline has landed, open the
+-  // first question, unless the visitor has already done something.
+-  useEffect(() => {
+-    if (intro !== 'done') return
+-    const id = window.setTimeout(
+-      () => {
+-        if (touched.current) return
+-        setOpen((current) => (current.length ? current : [ids[0]]))
+-      },
+-      reduced() ? 0 : 900,
+-    )
+-    return () => window.clearTimeout(id)
+-  }, [intro, ids, reduced])
+-
+-  const toggle = (id: string) => {
+-    touched.current = true
+-    setOpen((current) => toggled(current, id, true))
+-    if (typeof history !== 'undefined') {
+-      const own =
+-        decodeURIComponent(window.location.hash.replace(/^#/, '')) === id
+-      const isOpen = open.includes(id)
+-      if (!isOpen || own) {
+-        history.replaceState(
+-          history.state,
+-          '',
+-          `${window.location.pathname}${window.location.search}${isOpen ? '' : `#${id}`}`,
+-        )
+-      }
+-    }
+-  }
+-
+-  const copyLink = async (id: string) => {
+-    const url = `${window.location.origin}${window.location.pathname}${window.location.search}#${id}`
+-    try {
+-      await navigator.clipboard.writeText(url)
+-    } catch {
+-      /* A browser that refuses the clipboard still has the hash in the address bar. */
+-    }
+-    setCopied(id)
+-    window.clearTimeout(timers.current.__copy)
+-    timers.current.__copy = window.setTimeout(() => setCopied(null), 1800)
+-  }
+-
+-  const counts = useMemo(() => {
+-    const out: Record<string, number> = {}
+-    items.forEach((item, i) => {
+-      if (matches(texts[i], query))
+-        out[item.category] = (out[item.category] || 0) + 1
+-    })
+-    return out
+-  }, [items, texts, query])
+-
+-  const total = texts.filter((text) => matches(text, query)).length
+-  const visible = items
+-    .map((item, i) => ({ item, i, id: ids[i] }))
+-    .filter(
+-      ({ item, i }) =>
+-        (!category || item.category === category) && matches(texts[i], query),
+-    )
+-  const filtering = query.trim() !== '' || category !== null
+-
+-  const onKey = (event: KeyboardEvent, position: number) => {
+-    const to = nextFocus(event.key, position, visible.length)
+-    if (to < 0) return
+-    event.preventDefault()
+-    buttons.current[visible[to].i]?.focus()
+-  }
+-
+-  // The scrub line: where the pointer is along a row, as a custom property on
+-  // that row only, so moving the pointer restyles one element.
+-  const scrub = (event: PointerEvent<HTMLLIElement>) => {
+-    const box = event.currentTarget.getBoundingClientRect()
+-    event.currentTarget.style.setProperty(
+-      '--mx',
+-      `${event.clientX - box.left}px`,
+-    )
+-  }
+-
+-  return (
+-    <section
+-      ref={band}
+-      className={styles.faq}
+-      data-intro={intro}
+-      aria-labelledby={`${uid}-h`}
+-    >
+-      {/* Without a script nothing can open a row, so the answers would stay
+-          folded. This puts them all open, in the ink colour, and nowhere else. */}
+-      <noscript>
+-        <style>{`.${styles.panel}{grid-template-rows:1fr}.${styles.panelIn}{visibility:visible!important}.${styles.answer}{color:var(--k)}.${styles.tools}{display:none}`}</style>
+-      </noscript>
+-      <div className={styles.faqInner}>
+-        <div className={styles.kicker}>
+-          <span>
+-            <i aria-hidden="true" />
+-            FAQ
+-          </span>
+-          <span>{String(items.length).padStart(2, '0')} tracks</span>
+-        </div>
+-
+-        <SlitTitle id={`${uid}-h`} text={headline} slit={0.42} />
+-
+-        <div className={styles.ruler} aria-hidden="true">
+-          {['01', '02', '03', '04'].map((bar, i) => (
+-            <span key={bar} style={{ left: `${i * 25}%` }}>
+-              {bar}
+-            </span>
+-          ))}
+-          <div className={styles.sweep}>
+-            <i />
+-          </div>
+-        </div>
+-
+-        {ticker.length ? (
+-          <div className={styles.ticker} data-paused={paused}>
+-            <p className={styles.srOnly}>{ticker.join('. ')}</p>
+-            <div className={styles.tickerMask} aria-hidden="true">
+-              <div className={styles.tickerTrack}>
+-                {[0, 1].map((copy) => (
+-                  <div className={styles.tickerRun} key={copy}>
+-                    {[...ticker, ...ticker].map((phrase, k) => (
+-                      <span key={k}>{phrase}</span>
+-                    ))}
+-                  </div>
+-                ))}
+-              </div>
+-            </div>
+-            <button
+-              type="button"
+-              className={styles.tickerToggle}
+-              aria-label={
+-                paused ? 'Play the moving line' : 'Pause the moving line'
+-              }
+-              aria-pressed={paused}
+-              onClick={() => setPaused((v) => !v)}
+-            >
+-              {paused ? (
+-                <svg viewBox="0 0 14 14" aria-hidden="true">
+-                  <path d="M3.5 2v10l8.5-5z" fill="currentColor" />
+-                </svg>
+-              ) : (
+-                <svg viewBox="0 0 14 14" aria-hidden="true">
+-                  <path d="M3 2h3v10H3zM8 2h3v10H8z" fill="currentColor" />
+-                </svg>
+-              )}
+-            </button>
+-          </div>
+-        ) : null}
+-
+-        <div className={styles.meta}>
+-          <p className={styles.intro}>
+-            What people ask before they write, answered straight. Pick a track
+-            to play it.
+-          </p>
+-          <div className={styles.search} role="search">
+-            <label htmlFor={`${uid}-q`}>Search the answers</label>
+-            <div className={styles.field}>
+-              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+-                <circle
+-                  cx="8.5"
+-                  cy="8.5"
+-                  r="6"
+-                  stroke="currentColor"
+-                  strokeWidth="1.6"
+-                />
+-                <path
+-                  d="m13 13 5 5"
+-                  stroke="currentColor"
+-                  strokeWidth="1.6"
+-                  strokeLinecap="round"
+-                />
+-              </svg>
+-              <input
+-                id={`${uid}-q`}
+-                type="search"
+-                autoComplete="off"
+-                spellCheck={false}
+-                value={query}
+-                placeholder="Try “backend”"
+-                onChange={(event) => setQuery(event.target.value)}
+-                onKeyDown={(event) => {
+-                  if (event.key === 'Escape' && query) {
+-                    event.preventDefault()
+-                    setQuery('')
+-                  }
+-                  if (event.key === 'ArrowDown' && visible.length) {
+-                    event.preventDefault()
+-                    buttons.current[visible[0].i]?.focus()
+-                  }
+-                }}
+-              />
+-              {query ? (
+-                <button
+-                  type="button"
+-                  className={styles.clear}
+-                  onClick={() => setQuery('')}
+-                >
+-                  Clear
+-                </button>
+-              ) : null}
+-            </div>
+-            <div className={styles.count} aria-live="polite">
+-              {filtering ? `${visible.length} of ${items.length} tracks` : ''}
+-            </div>
+-          </div>
+-        </div>
+-
+-        <ul className={styles.chips} aria-label="Filter by topic">
+-          <li>
+-            <button
+-              type="button"
+-              className={styles.chip}
+-              aria-pressed={category === null}
+-              onClick={() => setCategory(null)}
+-            >
+-              All <small>{total}</small>
+-            </button>
+-          </li>
+-          {FAQ_CATEGORIES.map((name) => (
+-            <li key={name}>
+-              <button
+-                type="button"
+-                className={styles.chip}
+-                aria-pressed={category === name}
+-                onClick={() => setCategory(category === name ? null : name)}
+-              >
+-                {name} <small>{counts[name] || 0}</small>
+-              </button>
+-            </li>
+-          ))}
+-        </ul>
+-
+-        {visible.length ? (
+-          <ul className={styles.list}>
+-            {visible.map(({ item, i, id }, position) => {
+-              const isOpen = open.includes(id)
+-              const state = isOpen
+-                ? 'open'
+-                : closing.includes(id)
+-                  ? 'closing'
+-                  : 'closed'
+-              const buttonId = `${uid}-b-${i}`
+-              const panelId = `${uid}-p-${i}`
+-              const excerpt =
+-                query.trim() && !isOpen ? snippet(item.answer, query) : ''
+-              const words = !query.trim() ? wordsOf(item.answer) : null
+-              const row = (inverted: boolean) => (
+-                <span
+-                  className={`${styles.row} ${inverted ? styles.rowInv : ''}`.trim()}
+-                  aria-hidden={inverted ? 'true' : undefined}
+-                >
+-                  <span className={styles.trk}>
+-                    TRK {String(i + 1).padStart(2, '0')}
+-                  </span>
+-                  <span className={styles.label}>
+-                    <Marked text={item.question} query={query} />
+-                    {excerpt ? (
+-                      <span className={styles.snippet}>
+-                        <Marked text={excerpt} query={query} />
+-                      </span>
+-                    ) : null}
+-                  </span>
+-                  <Wave />
+-                  <Plus />
+-                </span>
+-              )
+-              return (
+-                <li
+-                  key={id}
+-                  id={id}
+-                  className={styles.item}
+-                  data-state={state}
+-                  onPointerMove={scrub}
+-                >
+-                  <span className={styles.fill} aria-hidden="true" />
+-                  <span className={styles.scan} aria-hidden="true" />
+-                  <h3 className={styles.h}>
+-                    <button
+-                      ref={(node) => {
+-                        buttons.current[i] = node
+-                      }}
+-                      id={buttonId}
+-                      type="button"
+-                      className={styles.btn}
+-                      aria-expanded={isOpen}
+-                      aria-controls={panelId}
+-                      onClick={() => toggle(id)}
+-                      onKeyDown={(event) => onKey(event, position)}
+-                    >
+-                      {row(false)}
+-                      {row(true)}
+-                    </button>
+-                  </h3>
+-                  <div
+-                    className={styles.panel}
+-                    id={panelId}
+-                    role="region"
+-                    aria-labelledby={buttonId}
+-                  >
+-                    <div className={styles.panelIn}>
+-                      <div className={styles.answer}>
+-                        <p className={styles.text}>
+-                          {words ? (
+-                            words.map((word, w) => (
+-                              <Fragment key={w}>
+-                                <span
+-                                  className={styles.w}
+-                                  style={{ '--w': w } as CSSProperties}
+-                                >
+-                                  {word}
+-                                </span>{' '}
+-                              </Fragment>
+-                            ))
+-                          ) : (
+-                            <Marked text={item.answer} query={query} />
+-                          )}
+-                        </p>
+-                        <div className={styles.tools}>
+-                          <span className={styles.tag}>{item.category}</span>
+-                          <button
+-                            type="button"
+-                            className={styles.copy}
+-                            onClick={() => copyLink(id)}
+-                          >
+-                            {copied === id ? 'Link copied' : 'Copy link'}
+-                          </button>
+-                        </div>
+-                      </div>
+-                    </div>
+-                  </div>
+-                </li>
+-              )
+-            })}
+-          </ul>
+-        ) : (
+-          <div className={styles.empty} role="status">
+-            <p>Nothing here matches “{query.trim() || category}”.</p>
+-            <button
+-              type="button"
+-              className={styles.copy}
+-              onClick={() => {
+-                setQuery('')
+-                setCategory(null)
+-              }}
+-            >
+-              Show every track
+-            </button>
+-          </div>
+-        )}
+-
+-        <div className={styles.contact}>
+-          <p>Still have a question?</p>
+-          <a className={styles.cta} href={`mailto:${email}`}>
+-            <span>
+-              Email me <Arrow />
+-            </span>
+-            <span aria-hidden="true">
+-              Email me <Arrow />
+-            </span>
+-          </a>
+-        </div>
+-        <span className={styles.srOnly} aria-live="polite">
+-          {copied ? 'Link copied' : ''}
+-        </span>
+-      </div>
+-    </section>
+-  )
+-}
+diff --git a/features/landing-page/rack-01/contact-desk/use-intro.ts b/features/landing-page/rack-01/contact-desk/use-intro.ts
+deleted file mode 100644
+index 7d10711..0000000
+--- a/features/landing-page/rack-01/contact-desk/use-intro.ts
++++ /dev/null
+@@ -1,46 +0,0 @@
+-'use client'
+-
+-import { useEffect, useRef, useState } from 'react'
+-
+-export type IntroState = 'pending' | 'done'
+-
+-/**
+- * `pending` until the element first scrolls into view, then `done`, once.
+- *
+- * It exists for the two slit headlines (the section title and the FAQ's), which
+- * rise letter by letter through a slit when their section arrives. `pending` is
+- * what the server renders and what a visitor with reduced motion, no
+- * IntersectionObserver or a stalled observer all converge on `done` from: the
+- * safety timeout is what guarantees a headline can never be left below its slit.
+- */
+-export function useIntro<T extends HTMLElement>(threshold = 0.2) {
+-  const ref = useRef<T | null>(null)
+-  const [state, setState] = useState<IntroState>('pending')
+-
+-  useEffect(() => {
+-    const node = ref.current
+-    const still =
+-      typeof window.matchMedia === 'function' &&
+-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+-    if (!node || still || typeof IntersectionObserver === 'undefined') {
+-      setState('done')
+-      return
+-    }
+-    const observer = new IntersectionObserver(
+-      (entries) => {
+-        if (!entries.some((entry) => entry.isIntersecting)) return
+-        requestAnimationFrame(() => setState('done'))
+-        observer.disconnect()
+-      },
+-      { threshold },
+-    )
+-    observer.observe(node)
+-    const safety = window.setTimeout(() => setState('done'), 3000)
+-    return () => {
+-      observer.disconnect()
+-      window.clearTimeout(safety)
+-    }
+-  }, [threshold])
+-
+-  return [ref, state] as const
+-}
+diff --git a/features/landing-page/rack-01/section-contact.tsx b/features/landing-page/rack-01/section-contact.tsx
+index d6e95f2..be9c0d7 100644
+--- a/features/landing-page/rack-01/section-contact.tsx
++++ b/features/landing-page/rack-01/section-contact.tsx
+@@ -11,9 +11,9 @@ import {
+   MIXER_DATA,
+ } from '../constants'
+ import styles from './rack-01.module.css'
++import { SectionHeading } from './section-heading'
+ import { Mail, Square } from 'lucide-react'
+ import { ContactDesk } from './contact-desk/contact-desk'
+-import { ContactTitle } from './contact-desk/contact-title'
+ import { ContactStatus } from './contact-desk/contact-status'
+ 
+ /** The top row of the footer's wordmark band. */
+@@ -283,7 +283,9 @@ export function Contact() {
+       data-rack-section
+     >
+       <div className={styles.contactFreshHeader}>
+-        <ContactTitle />
++        <SectionHeading index="06" eyebrow="Open channel">
++          Bring me the difficult part.
++        </SectionHeading>
+         <p>
+           New frontend builds, complex product interfaces, and React
+           applications that need clearer structure.
+diff --git a/tests/contact-content.test.ts b/tests/contact-content.test.ts
+deleted file mode 100644
+index 540c151..0000000
+--- a/tests/contact-content.test.ts
++++ /dev/null
+@@ -1,119 +0,0 @@
+-import {
+-  FAQ_CATEGORIES,
+-  FAQ_ITEMS,
+-  MAX_HREF,
+-  NOTE_LIMIT,
+-  PATH,
+-  PROJECT_TYPES,
+-  TIMELINES,
+-  cleanNote,
+-  composeBrief,
+-} from '@/features/landing-page/rack-01/contact-desk/contact-content'
+-
+-const TO = 'hello@example.com'
+-
+-describe('content', () => {
+-  it('has distinct, non-empty channels and stages', () => {
+-    expect(FAQ_ITEMS.length).toBeGreaterThanOrEqual(6)
+-    expect(new Set(FAQ_ITEMS.map((c) => c.question)).size).toBe(
+-      FAQ_ITEMS.length,
+-    )
+-    for (const c of FAQ_ITEMS) {
+-      expect(c.question.endsWith('?')).toBe(true)
+-      expect(c.answer.length).toBeGreaterThan(40)
+-      expect(FAQ_CATEGORIES).toContain(c.category)
+-    }
+-    // Every category has at least two questions, or its chip is a dead end.
+-    for (const category of FAQ_CATEGORIES) {
+-      expect(
+-        FAQ_ITEMS.filter((i) => i.category === category).length,
+-      ).toBeGreaterThanOrEqual(2)
+-    }
+-    expect(PATH).toHaveLength(4)
+-    expect(new Set(PROJECT_TYPES.map((t) => t.id)).size).toBe(
+-      PROJECT_TYPES.length,
+-    )
+-    expect(new Set(TIMELINES.map((t) => t.id)).size).toBe(TIMELINES.length)
+-  })
+-
+-  it('keeps the honest no on native mobile', () => {
+-    const mobile = FAQ_ITEMS.find((c) => c.question.includes('React Native'))
+-    expect(mobile?.answer.startsWith('No.')).toBe(true)
+-  })
+-
+-  it('makes no promise beyond the one the page always made', () => {
+-    const text = FAQ_ITEMS.map((c) => c.answer)
+-      .join(' ')
+-      .toLowerCase()
+-    expect(text).not.toMatch(/\$|per hour|\brates?\b|booked|available (from|until)/)
+-  })
+-})
+-
+-describe('composeBrief', () => {
+-  it('is a valid brief with nothing selected', () => {
+-    const brief = composeBrief({ type: null, timeline: null, note: '' }, TO)
+-    expect(brief.subject).toBe('Brief: a frontend project')
+-    expect(brief.body).toContain('help with a frontend project.')
+-    expect(brief.body).not.toContain('About it:')
+-    expect(brief.href.startsWith(`mailto:${TO}?subject=`)).toBe(true)
+-  })
+-
+-  it('folds the type, the timeline and the note into the body', () => {
+-    const brief = composeBrief(
+-      { type: 'build', timeline: 'soon', note: 'A dashboard for ops.' },
+-      TO,
+-    )
+-    expect(brief.subject).toBe('Brief: new build')
+-    expect(brief.body).toContain('a new frontend build, as soon as possible.')
+-    expect(brief.body).toContain('About it:\nA dashboard for ops.')
+-  })
+-
+-  it('ignores an id it does not know rather than printing it', () => {
+-    const brief = composeBrief({ type: 'nope', timeline: 'nope', note: '' }, TO)
+-    expect(brief.body).not.toContain('nope')
+-    expect(brief.subject).toBe('Brief: a frontend project')
+-  })
+-
+-  it('encodes the link so a newline or an ampersand cannot break it', () => {
+-    const brief = composeBrief(
+-      { type: 'talk', timeline: null, note: 'R&D, then "ship"\nsecond line' },
+-      TO,
+-    )
+-    expect(brief.href).not.toMatch(/[\n\r ]/)
+-    expect(brief.href).toContain('%0A')
+-    expect(brief.href).toContain('R%26D')
+-    const body = new URL(brief.href).searchParams.get('body')
+-    expect(body).toBe(brief.body)
+-  })
+-
+-  it('is deterministic', () => {
+-    const input = { type: 'design', timeline: 'open', note: 'x' }
+-    expect(composeBrief(input, TO)).toEqual(composeBrief(input, TO))
+-  })
+-})
+-
+-describe('cleanNote', () => {
+-  it('collapses runs of spaces and trims', () => {
+-    expect(cleanNote('  a   b \t c  ')).toBe('a b c')
+-  })
+-
+-  it('caps the length and marks the cut', () => {
+-    const out = cleanNote('x'.repeat(NOTE_LIMIT * 3))
+-    expect(out.length).toBeLessThanOrEqual(NOTE_LIMIT)
+-    expect(out.endsWith('…')).toBe(true)
+-  })
+-
+-  it('keeps a short note as it was', () => {
+-    expect(cleanNote('short')).toBe('short')
+-  })
+-
+-  it('keeps a mailto under a size every mail client accepts', () => {
+-    const brief = composeBrief(
+-      { type: 'build', timeline: 'soon', note: '“é”\n'.repeat(500) },
+-      TO,
+-    )
+-    expect(brief.href.length).toBeLessThanOrEqual(MAX_HREF)
+-    // And it is still a brief with a note, not an empty one.
+-    expect(brief.body).toContain('About it:')
+-  })
+-})
+diff --git a/tests/contact-desk-markup.test.tsx b/tests/contact-desk-markup.test.tsx
+index dc18864..bf551ca 100644
+--- a/tests/contact-desk-markup.test.tsx
++++ b/tests/contact-desk-markup.test.tsx
+@@ -3,98 +3,71 @@ import { renderToStaticMarkup } from 'react-dom/server'
+ 
+ import { ContactDesk } from '@/features/landing-page/rack-01/contact-desk/contact-desk'
+ import { ContactStatus } from '@/features/landing-page/rack-01/contact-desk/contact-status'
+-import { ContactTitle } from '@/features/landing-page/rack-01/contact-desk/contact-title'
+ import {
+-  FAQ_CATEGORIES,
+   FAQ_ITEMS,
+-  PATH,
+-  PROJECT_TYPES,
+-  TIMELINES,
++  TRACKS,
+ } from '@/features/landing-page/rack-01/contact-desk/contact-content'
+ 
+ /**
+  * What the server sends, which is also what a visitor without JavaScript and a
+- * crawler see. These pin the properties that make the desk a real page and not
+- * a picture of one: every answer is in the markup, the questions are real
+- * disclosure buttons, the headlines are real headings, nothing is hidden before
+- * a script runs, and the brief builder's link is a working `mailto:`.
++ * crawler see. These pin the properties that make the launcher a real FAQ and
++ * not a picture of one: every question is a button in a labelled track, the
++ * answer region is live, nothing is hidden before a script runs, and without a
++ * script every question and answer is plain text.
+  */
+-describe('the contact desk, server-rendered', () => {
++describe('the scene launcher, server-rendered', () => {
+   const html = renderToStaticMarkup(<ContactDesk />)
+ 
+-  it('prints every question and every answer as real text', () => {
++  it('is one labelled section, named by its brand line', () => {
++    expect(html.match(/<section/g)).toHaveLength(1)
++    const id = /aria-labelledby="([^"]+)"/.exec(html)?.[1]
++    expect(id).toBeTruthy()
++    expect(html).toContain(`id="${id}"`)
++    expect(html).toContain('AH / SCENE LAUNCH')
++  })
++
++  it('has a labelled group per track and a button per question', () => {
++    for (const track of TRACKS) {
++      expect(html).toContain(`aria-label="${track} track"`)
++    }
++    expect(html.match(/role="group"/g)).toHaveLength(TRACKS.length)
+     for (const item of FAQ_ITEMS) {
+       expect(html).toContain(item.question)
+-      expect(html).toContain(item.answer.split(' ')[0])
+     }
+-  })
+-
+-  it('makes each question a disclosure button wired to its own region', () => {
+-    const buttons = html.match(/aria-expanded="(true|false)"/g) ?? []
+-    expect(buttons).toHaveLength(FAQ_ITEMS.length)
+-    // Nothing is open on the server: opening is the visitor's, or the intro's.
+-    expect(html).not.toContain('aria-expanded="true"')
+-    expect(html.match(/role="region"/g)).toHaveLength(FAQ_ITEMS.length)
+-    const controls = [...html.matchAll(/aria-controls="([^"]+)"/g)].map(
+-      (m) => m[1],
++    // A clip is a toggle: it says whether it is playing, and none is yet.
++    expect(html.match(/aria-pressed="false"/g)?.length).toBeGreaterThanOrEqual(
++      FAQ_ITEMS.length,
+     )
+-    expect(new Set(controls).size).toBe(FAQ_ITEMS.length)
+-    for (const id of controls) expect(html).toContain(`id="${id}"`)
++    expect(html).not.toContain('aria-pressed="true"')
+   })
+ 
+-  it('gives every row a heading, so the page outline lists the questions', () => {
+-    expect(html.match(/<h3/g)?.length).toBeGreaterThanOrEqual(FAQ_ITEMS.length)
+-  })
+-
+-  it('keeps the inverted copy of each row out of the accessibility tree', () => {
+-    // Each row is printed twice (the cream one and the dark one the flood
+-    // reveals); the second must be aria-hidden or every question is read twice.
+-    const hidden = html.match(
+-      /class="[^"]*rowInv[^"]*"[^>]*aria-hidden="true"/g,
++  it('is a roving tabindex: exactly one clip is a tab stop', () => {
++    const clips = html.match(/<button[^>]*data-state="idle"[^>]*>/g) ?? []
++    expect(clips).toHaveLength(FAQ_ITEMS.length)
++    expect(clips.filter((c) => c.includes('tabindex="0"'))).toHaveLength(1)
++    expect(clips.filter((c) => c.includes('tabindex="-1"'))).toHaveLength(
++      FAQ_ITEMS.length - 1,
+     )
+-    expect(hidden).toHaveLength(FAQ_ITEMS.length)
+-  })
+-
+-  it('offers a topic chip per category plus All, with counts', () => {
+-    for (const category of FAQ_CATEGORIES) {
+-      expect(html).toContain(`${category} <small>`)
+-    }
+-    expect(html).toContain('All <small>')
+-    expect(html.match(/aria-pressed="true"/g)).toHaveLength(1) // "All"
+-  })
+-
+-  it('has a search field with a real label', () => {
+-    const id = /<label for="([^"]+)">Search the answers/.exec(html)?.[1]
+-    expect(id).toBeTruthy()
+-    expect(html).toContain(`id="${id}"`)
+-    expect(html).toContain('role="search"')
+-  })
+-
+-  it('still works with no script: the answers are forced open', () => {
+-    expect(html).toMatch(/<noscript><style>[^<]*grid-template-rows:1fr/)
+   })
+ 
+-  it('renders the signal path as an ordered list of its stages, in order', () => {
+-    expect(html).toContain('<ol')
+-    let at = -1
+-    for (const stage of PATH) {
+-      const next = html.indexOf(`>${stage.title}<`)
+-      expect(next).toBeGreaterThan(at)
+-      at = next
+-    }
++  it('announces the answer once, in a polite live region, and hides the typed copy', () => {
++    expect(html).toMatch(
++      /role="region"[^>]*aria-live="polite"|aria-live="polite"[^>]*role="region"/,
++    )
++    expect(html).toMatch(/class="[^"]*answer[^"]*"[^>]*aria-hidden="true"/)
+   })
+ 
+-  it('offers every kind of work and timing, none pre-selected', () => {
+-    for (const choice of [...PROJECT_TYPES, ...TIMELINES]) {
+-      expect(html).toContain(`>${choice.label}<`)
+-    }
+-    expect(html.match(/aria-pressed="true"/g)).toHaveLength(1) // only the FAQ's "All"
++  it('keeps the decorative parts out of the accessibility tree', () => {
++    // Waveforms, playheads, the beat LEDs and the readouts are all decoration.
++    expect((html.match(/aria-hidden="true"/g) ?? []).length).toBeGreaterThan(
++      FAQ_ITEMS.length * 3,
++    )
+   })
+ 
+-  it('has a working mailto on first paint, before any script', () => {
+-    const links = [...html.matchAll(/href="(mailto:[^"]+)"/g)].map((m) => m[1])
+-    expect(links.length).toBeGreaterThanOrEqual(2) // the builder and the FAQ's CTA
+-    expect(links.some((l) => l.includes('subject='))).toBe(true)
++  it('starts on beat 0, standing by, with nothing chosen', () => {
++    expect(html).toContain('data-beat="0"')
++    expect(html).toContain('MASTER OUT · STANDBY')
++    expect(html).toContain('Pick a clip. It starts on the next beat.')
+   })
+ 
+   it('does not hide anything before a script runs', () => {
+@@ -102,45 +75,32 @@ describe('the contact desk, server-rendered', () => {
+     expect(html).not.toContain('data-reveal="armed"')
+   })
+ 
+-  it('labels the builder controls', () => {
+-    expect(html).toMatch(/<label[^>]*for="([^"]+)"[^>]*>One line about it/)
+-    expect(html.match(/<legend>/g)).toHaveLength(2)
+-  })
+-})
+-
+-describe('the slit headlines, server-rendered', () => {
+-  it('the section title is one real h2 with the whole line as its name', () => {
+-    const html = renderToStaticMarkup(<ContactTitle />)
+-    expect(html.match(/<h2/g)).toHaveLength(1)
+-    expect(html).toContain('aria-label="Got a hard one? Let&#x27;s roll tape."')
+-    // The old title is gone.
+-    expect(html).not.toContain('Bring me the difficult part')
+-  })
+-
+-  it('keeps every visible letter out of the accessibility tree', () => {
+-    const html = renderToStaticMarkup(<ContactTitle />)
+-    expect(
+-      html.match(/<span class="[^"]*line[^"]*" aria-hidden="true">/g),
+-    ).toHaveLength(2)
++  it('works with no script: every question and every answer is plain text', () => {
++    const plain = /<noscript>(.*?)<\/noscript>/s.exec(html)?.[1] ?? ''
++    expect(plain).toContain('<dl')
++    for (const item of FAQ_ITEMS) {
++      expect(plain).toContain(item.question)
++      expect(plain).toContain(item.answer)
++    }
++    // And the controls that cannot work without a script are hidden there.
++    expect(plain).toMatch(/<style>[^<]*display:none/)
+   })
+ 
+-  it('starts below the slit until the section arrives, and says so', () => {
+-    expect(renderToStaticMarkup(<ContactTitle />)).toContain(
+-      'data-intro="pending"',
+-    )
++  it('ends on a working mailto', () => {
++    expect(html).toMatch(/href="mailto:[^"]+"/)
+   })
+ 
+-  it('the FAQ headline is a real h2 too, named by its text', () => {
+-    const html = renderToStaticMarkup(<ContactDesk />)
+-    expect(html).toContain('aria-label="Before you press record"')
+-    expect(html).toMatch(/<section[^>]*aria-labelledby="([^"]+)"/)
++  it('has no leftover pieces of the old desk', () => {
++    expect(html).not.toContain('Signal path')
++    expect(html).not.toContain('Brief builder')
++    expect(html).not.toContain('Before you')
+   })
+ })
+ 
+ describe('the status strip, server-rendered', () => {
+   it('renders a placeholder clock so hydration has nothing to disagree about', () => {
+-    const html = renderToStaticMarkup(<ContactStatus />)
+-    expect(html).toContain('--:--:--')
+-    expect(html).toContain('aria-label="Channel status"')
++    const strip = renderToStaticMarkup(<ContactStatus />)
++    expect(strip).toContain('--:--:--')
++    expect(strip).toContain('aria-label="Channel status"')
+   })
+ })
+diff --git a/tests/faq-logic.test.ts b/tests/faq-logic.test.ts
+deleted file mode 100644
+index 675150f..0000000
+--- a/tests/faq-logic.test.ts
++++ /dev/null
+@@ -1,123 +0,0 @@
+-import {
+-  highlightRuns,
+-  itemIds,
+-  matches,
+-  nextFocus,
+-  resolveOpen,
+-  slugify,
+-  snippet,
+-  toggled,
+-  wordsOf,
+-} from '@/features/landing-page/rack-01/contact-desk/faq-logic'
+-
+-describe('slugify / itemIds', () => {
+-  it('makes URL-safe, accent-free, bounded slugs and never an empty one', () => {
+-    expect(slugify('What kind of work do you take on?')).toBe(
+-      'what-kind-of-work-do-you-take-on',
+-    )
+-    expect(slugify('Café déjà vu')).toBe('cafe-deja-vu')
+-    expect(slugify('???')).toBe('question')
+-    expect(slugify('a'.repeat(200)).length).toBeLessThanOrEqual(64)
+-  })
+-
+-  it('keeps ids unique, preferring an explicit one', () => {
+-    expect(
+-      itemIds(['Same?', 'Same?', 'Other'], [undefined, undefined, 'x']),
+-    ).toEqual(['same', 'same-2', 'x'])
+-  })
+-})
+-
+-describe('matches', () => {
+-  it('requires every word, in any order, case-insensitively', () => {
+-    expect(
+-      matches('Frontend over an existing backend', 'BACKEND frontend'),
+-    ).toBe(true)
+-    expect(matches('Frontend over an existing backend', 'backend mobile')).toBe(
+-      false,
+-    )
+-  })
+-
+-  it('treats an empty or blank query as everything', () => {
+-    expect(matches('anything', '')).toBe(true)
+-    expect(matches('anything', '   ')).toBe(true)
+-  })
+-})
+-
+-describe('highlightRuns', () => {
+-  it('splits into plain and matched runs that rejoin to the original', () => {
+-    const runs = highlightRuns('React and Next.js work', 'react next')
+-    expect(runs.map((r) => r.text).join('')).toBe('React and Next.js work')
+-    expect(runs.filter((r) => r.hit).map((r) => r.text)).toEqual([
+-      'React',
+-      'Next',
+-    ])
+-  })
+-
+-  it('merges overlapping matches into one run', () => {
+-    const runs = highlightRuns('backend', 'back end backend')
+-    expect(runs).toEqual([{ text: 'backend', hit: true }])
+-  })
+-
+-  it('returns the text whole when there is nothing to mark', () => {
+-    expect(highlightRuns('hello', '')).toEqual([{ text: 'hello', hit: false }])
+-    expect(highlightRuns('', 'x')).toEqual([{ text: '', hit: false }])
+-  })
+-})
+-
+-describe('snippet', () => {
+-  const text = 'word '.repeat(30) + 'needle ' + 'word '.repeat(30)
+-
+-  it('windows around the first match with ellipses where it was cut', () => {
+-    const s = snippet(text, 'needle')
+-    expect(s).toContain('needle')
+-    expect(s.startsWith('…')).toBe(true)
+-    expect(s.endsWith('…')).toBe(true)
+-    expect(s.length).toBeLessThan(text.length)
+-  })
+-
+-  it('is empty when nothing matches or there is no query', () => {
+-    expect(snippet(text, 'absent')).toBe('')
+-    expect(snippet(text, '')).toBe('')
+-  })
+-
+-  it('is the whole text, unadorned, when the text is short', () => {
+-    expect(snippet('a short answer', 'short')).toBe('a short answer')
+-  })
+-})
+-
+-describe('resolveOpen / toggled', () => {
+-  const ids = ['a', 'b', 'c']
+-
+-  it('resolves an index, an id and a list, and honours single', () => {
+-    expect(resolveOpen(1, ids, true)).toEqual(['b'])
+-    expect(resolveOpen('c', ids, true)).toEqual(['c'])
+-    expect(resolveOpen([0, 'c', 'zzz', 99], ids, false)).toEqual(['a', 'c'])
+-    expect(resolveOpen([0, 1], ids, true)).toEqual(['a'])
+-    expect(resolveOpen(undefined, ids, false)).toEqual([])
+-  })
+-
+-  it('toggles within single and multiple modes', () => {
+-    expect(toggled(['a'], 'b', true)).toEqual(['b'])
+-    expect(toggled(['a'], 'b', false)).toEqual(['a', 'b'])
+-    expect(toggled(['a', 'b'], 'a', false)).toEqual(['b'])
+-    expect(toggled(['a'], 'a', true)).toEqual([])
+-  })
+-})
+-
+-describe('nextFocus', () => {
+-  it('moves and wraps, and ignores other keys', () => {
+-    expect(nextFocus('ArrowDown', 2, 3)).toBe(0)
+-    expect(nextFocus('ArrowUp', 0, 3)).toBe(2)
+-    expect(nextFocus('Home', 2, 3)).toBe(0)
+-    expect(nextFocus('End', 0, 3)).toBe(2)
+-    expect(nextFocus('Enter', 0, 3)).toBe(-1)
+-    expect(nextFocus('ArrowDown', 0, 0)).toBe(-1)
+-  })
+-})
+-
+-describe('wordsOf', () => {
+-  it('splits a short answer and declines a long one', () => {
+-    expect(wordsOf('one  two\nthree')).toEqual(['one', 'two', 'three'])
+-    expect(wordsOf('w '.repeat(200))).toBeNull()
+-  })
+-})
+diff --git a/tests/scene-engine.test.ts b/tests/scene-engine.test.ts
+new file mode 100644
+index 0000000..decb674
+--- /dev/null
++++ b/tests/scene-engine.test.ts
+@@ -0,0 +1,240 @@
++/** @jest-environment node */
++import { FAQ_ITEMS } from '@/features/landing-page/rack-01/contact-desk/contact-content'
++import {
++  createEngine,
++  type EngineView,
++} from '@/features/landing-page/rack-01/contact-desk/scene-engine'
++import { clipDuration } from '@/features/landing-page/rack-01/contact-desk/scene-logic'
++
++/** A DOM node reduced to what the engine writes: custom properties, attributes, text. */
++const node = () => {
++  const props: Record<string, string> = {}
++  const attrs: Record<string, string> = {}
++  return {
++    props,
++    attrs,
++    textContent: '',
++    style: { setProperty: (k: string, v: string) => void (props[k] = v) },
++    setAttribute: (k: string, v: string) => void (attrs[k] = v),
++  }
++}
++
++type Harness = ReturnType<typeof setup>
++
++function setup(reducedMotion = false) {
++  let clockNow = 10_000 // a clock that starts mid-beat is the realistic case
++  let frames: ((t: number) => void)[] = []
++  const g = globalThis as unknown as Record<string, unknown>
++  g.requestAnimationFrame = (cb: (t: number) => void) => {
++    frames.push(cb)
++    return frames.length
++  }
++  g.cancelAnimationFrame = () => {
++    frames = []
++  }
++  jest.spyOn(performance, 'now').mockImplementation(() => clockNow)
++
++  const unit = node()
++  const master = node()
++  const typed = node()
++  const time = node()
++  const bar = node()
++  const clips = FAQ_ITEMS.map(() => node())
++  let view: EngineView = {
++    selected: null,
++    playing: null,
++    queued: null,
++    played: [],
++  }
++
++  const engine = createEngine({
++    items: FAQ_ITEMS,
++    setView: (update) => void (view = update(view)),
++    reduced: () => reducedMotion,
++    els: {
++      unit: () => unit as unknown as HTMLElement,
++      master: () => master as unknown as HTMLElement,
++      typed: () => typed as unknown as HTMLElement,
++      time: () => time as unknown as HTMLElement,
++      bar: () => bar as unknown as HTMLElement,
++      clip: (i) => clips[i] as unknown as HTMLElement,
++    },
++  })
++
++  /** Run every frame callback that is waiting, at the current clock. */
++  const flush = () => {
++    const pending = frames
++    frames = []
++    pending.forEach((cb) => cb(clockNow))
++  }
++  const advance = (ms: number, step = 16) => {
++    for (let t = 0; t < ms; t += step) {
++      clockNow += step
++      flush()
++    }
++  }
++  return {
++    engine,
++    unit,
++    master,
++    typed,
++    time,
++    bar,
++    clips,
++    advance,
++    flush,
++    now: () => clockNow,
++    set: (t: number) => void (clockNow = t),
++    view: () => view,
++    pending: () => frames.length,
++  }
++}
++
++afterEach(() => jest.restoreAllMocks())
++
++describe('the scene engine', () => {
++  let h: Harness
++  beforeEach(() => {
++    h = setup()
++  })
++
++  it('queues a press and does not start until the next beat', () => {
++    h.set(10_100) // 100ms into a 500ms beat
++    h.engine.launch(2)
++    expect(h.view().queued).toBe(2)
++    expect(h.view().playing).toBeNull()
++    h.advance(300) // 400ms in: still inside the beat
++    expect(h.view().playing).toBeNull()
++    h.advance(200) // past the boundary at 10_500
++    expect(h.view().playing).toBe(2)
++    expect(h.view().queued).toBeNull()
++    expect(h.view().selected).toBe(2)
++  })
++
++  it('waits at most one beat', () => {
++    h.set(10_001)
++    h.engine.launch(0)
++    h.advance(520)
++    expect(h.view().playing).toBe(0)
++  })
++
++  it('launches immediately when asked to, as a deep link does', () => {
++    h.engine.launch(4, true)
++    expect(h.view().playing).toBe(4)
++  })
++
++  it('advances the playhead, the typed text and the clock together', () => {
++    h.engine.launch(1, true)
++    const duration = clipDuration(FAQ_ITEMS[1].answer)
++    h.advance(duration / 2)
++    const p = Number(h.clips[1].props['--p'])
++    expect(p).toBeGreaterThan(0.4)
++    expect(p).toBeLessThan(0.6)
++    expect(h.master.props['--p']).toBe(h.clips[1].props['--p'])
++    const answer = FAQ_ITEMS[1].answer
++    expect(h.typed.textContent.length).toBeGreaterThan(answer.length * 0.4)
++    expect(h.typed.textContent.length).toBeLessThan(answer.length * 0.6)
++    expect(answer.startsWith(h.typed.textContent)).toBe(true)
++    expect(h.time.textContent).toMatch(/^00:0\d \/ 00:\d\d$/)
++  })
++
++  it('finishes with the whole answer, the playhead reset, and the clip marked played', () => {
++    h.engine.launch(3, true)
++    h.advance(clipDuration(FAQ_ITEMS[3].answer) + 200)
++    expect(h.view().playing).toBeNull()
++    expect(h.view().played).toEqual([3])
++    expect(h.typed.textContent).toBe(FAQ_ITEMS[3].answer)
++    expect(h.clips[3].props['--p']).toBe('0')
++    expect(h.master.props['--p']).toBe('1')
++    expect(h.time.textContent).toBe('00:00 / 00:00')
++  })
++
++  it('keeps the beat on the unit, one value per beat, wrapping at four', () => {
++    h.set(10_000)
++    h.engine.setVisible(true)
++    const seen = new Set<string>()
++    for (let i = 0; i < 160; i += 1) {
++      h.advance(16)
++      const beat = h.unit.attrs['data-beat']
++      if (beat !== undefined) seen.add(beat)
++    }
++    expect([...seen].sort()).toEqual(['0', '1', '2', '3'])
++  })
++
++  it('stop shows the whole answer, and cancels a queued clip', () => {
++    h.engine.launch(5, true)
++    h.advance(1000)
++    h.engine.stop()
++    expect(h.view().playing).toBeNull()
++    expect(h.typed.textContent).toBe(FAQ_ITEMS[5].answer)
++
++    h.set(h.now() + 10)
++    h.engine.launch(6)
++    h.engine.stop()
++    expect(h.view().queued).toBeNull()
++    h.advance(1200)
++    expect(h.view().playing).toBeNull()
++  })
++
++  it('replaces a playing clip with the next one and resets the old playhead', () => {
++    h.engine.launch(0, true)
++    h.advance(800)
++    h.engine.launch(1, true)
++    expect(h.view().playing).toBe(1)
++    expect(h.clips[0].props['--p']).toBe('0')
++  })
++
++  it('moves on by itself when auto is on, and wraps from the last clip', () => {
++    h.engine.setAuto(true)
++    h.engine.launch(FAQ_ITEMS.length - 1, true)
++    h.advance(clipDuration(FAQ_ITEMS[FAQ_ITEMS.length - 1].answer) + 800)
++    expect(h.view().playing).toBe(0)
++  })
++
++  it('does not move on when auto is off', () => {
++    h.engine.launch(0, true)
++    h.advance(clipDuration(FAQ_ITEMS[0].answer) + 1500)
++    expect(h.view().playing).toBeNull()
++    expect(h.view().queued).toBeNull()
++  })
++
++  it('only keeps a loop going while something needs one', () => {
++    expect(h.pending()).toBe(0) // nothing yet: an idle page runs nothing
++    h.engine.launch(0, true)
++    expect(h.pending()).toBe(1)
++    h.advance(clipDuration(FAQ_ITEMS[0].answer) + 200)
++    h.flush()
++    expect(h.pending()).toBe(0) // finished and off screen: the loop has stopped
++    h.engine.setVisible(true)
++    expect(h.pending()).toBe(1) // on screen: the beat runs
++    h.engine.setVisible(false)
++    h.flush()
++    expect(h.pending()).toBe(0)
++  })
++
++  it('reports whether the visitor has done anything', () => {
++    expect(h.engine.touched()).toBe(false)
++    h.engine.launch(0)
++    expect(h.engine.touched()).toBe(true)
++  })
++
++  it('stops for good when destroyed', () => {
++    h.engine.launch(0, true)
++    h.engine.destroy()
++    h.advance(500)
++    expect(h.pending()).toBe(0)
++  })
++})
++
++describe('with reduced motion', () => {
++  it('selects the clip and prints the whole answer at once, with no loop', () => {
++    const h = setup(true)
++    h.engine.launch(7)
++    expect(h.view().selected).toBe(7)
++    expect(h.view().playing).toBeNull()
++    expect(h.view().queued).toBeNull()
++    expect(h.typed.textContent).toBe(FAQ_ITEMS[7].answer)
++    expect(h.master.props['--p']).toBe('1')
++    expect(h.pending()).toBe(0)
++  })
++})
+diff --git a/tests/scene-logic.test.ts b/tests/scene-logic.test.ts
+new file mode 100644
+index 0000000..f3903e6
+--- /dev/null
++++ b/tests/scene-logic.test.ts
+@@ -0,0 +1,199 @@
++import {
++  FAQ_ITEMS,
++  TRACKS,
++} from '@/features/landing-page/rack-01/contact-desk/contact-content'
++import {
++  BPM,
++  CLIP_MAX_MS,
++  CLIP_MIN_MS,
++  beatIndex,
++  beatMs,
++  clipDuration,
++  clock,
++  hash,
++  moveFocus,
++  nextBeatDelay,
++  progressAt,
++  tracksOf,
++  transportAt,
++  typedAt,
++  waveformBars,
++} from '@/features/landing-page/rack-01/contact-desk/scene-logic'
++
++describe('the content', () => {
++  it('is a full 3 x 3 grid with unique ids, so no track has a hole', () => {
++    expect(FAQ_ITEMS).toHaveLength(9)
++    expect(new Set(FAQ_ITEMS.map((i) => i.id)).size).toBe(9)
++    for (const track of TRACKS) {
++      expect(FAQ_ITEMS.filter((i) => i.track === track)).toHaveLength(3)
++    }
++    for (const item of FAQ_ITEMS) {
++      expect(item.question.endsWith('?')).toBe(true)
++      expect(item.id).toMatch(/^[a-z0-9-]+$/)
++    }
++  })
++
++  it('keeps the honest no on native mobile, and promises no rate or date', () => {
++    expect(
++      FAQ_ITEMS.find((i) => i.id === 'native-mobile')?.answer.startsWith('No.'),
++    ).toBe(true)
++    const text = FAQ_ITEMS.map((i) => i.answer)
++      .join(' ')
++      .toLowerCase()
++    expect(text).not.toMatch(
++      /\$|per hour|\brates?\b|booked|available (from|until)/,
++    )
++  })
++})
++
++describe('the beat clock', () => {
++  it('is 500ms a beat at 120 BPM', () => {
++    expect(BPM).toBe(120)
++    expect(beatMs()).toBe(500)
++    expect(beatMs(60)).toBe(1000)
++  })
++
++  it('numbers beats from the clock', () => {
++    expect(beatIndex(0)).toBe(0)
++    expect(beatIndex(499)).toBe(0)
++    expect(beatIndex(500)).toBe(1)
++    expect(beatIndex(2300)).toBe(4)
++  })
++
++  it('waits for the next boundary, never longer than a beat and never zero', () => {
++    expect(nextBeatDelay(0)).toBe(500)
++    expect(nextBeatDelay(1)).toBe(499)
++    expect(nextBeatDelay(499)).toBe(1)
++    expect(nextBeatDelay(500)).toBe(500)
++    for (let t = 0; t < 5000; t += 37) {
++      const d = nextBeatDelay(t)
++      expect(d).toBeGreaterThan(0)
++      expect(d).toBeLessThanOrEqual(500)
++      // And it lands exactly on a boundary.
++      expect((t + d) % 500).toBe(0)
++    }
++  })
++
++  it('survives a negative clock', () => {
++    expect(nextBeatDelay(-1)).toBe(1)
++  })
++})
++
++describe('a clip', () => {
++  it('lasts long enough to read and no longer than a reader will wait', () => {
++    for (const item of FAQ_ITEMS) {
++      const d = clipDuration(item.answer)
++      expect(d).toBeGreaterThanOrEqual(CLIP_MIN_MS)
++      expect(d).toBeLessThanOrEqual(CLIP_MAX_MS)
++    }
++    expect(clipDuration('')).toBe(CLIP_MIN_MS)
++    expect(clipDuration('x'.repeat(5000))).toBe(CLIP_MAX_MS)
++  })
++
++  it('has progress clamped to 0–1', () => {
++    expect(progressAt(0, 1000)).toBe(0)
++    expect(progressAt(500, 1000)).toBe(0.5)
++    expect(progressAt(9999, 1000)).toBe(1)
++    expect(progressAt(-5, 1000)).toBe(0)
++    expect(progressAt(5, 0)).toBe(0)
++    expect(progressAt(Number.NaN, 1000)).toBe(0)
++  })
++
++  it('types in step with its progress and ends whole', () => {
++    expect(typedAt('abcdefghij', 0)).toBe('')
++    expect(typedAt('abcdefghij', 0.5)).toBe('abcde')
++    expect(typedAt('abcdefghij', 1)).toBe('abcdefghij')
++    expect(typedAt('abcdefghij', 7)).toBe('abcdefghij')
++    expect(typedAt('abcdefghij', Number.NaN)).toBe('')
++  })
++})
++
++describe('the transport readout', () => {
++  it('formats the clock and the bar', () => {
++    expect(clock(0)).toBe('00:00')
++    expect(clock(7400)).toBe('00:07')
++    expect(clock(65000)).toBe('01:05')
++    expect(clock(-3)).toBe('00:00')
++    expect(transportAt(0)).toBe('BAR 01.1')
++    expect(transportAt(1500)).toBe('BAR 01.4')
++    expect(transportAt(2000)).toBe('BAR 02.1')
++    expect(transportAt(-10)).toBe('BAR 01.1')
++  })
++})
++
++describe('waveformBars', () => {
++  it('is deterministic and the right length', () => {
++    expect(waveformBars('scope', 24)).toEqual(waveformBars('scope', 24))
++    expect(waveformBars('scope', 24)).toHaveLength(24)
++    expect(waveformBars('x', 0)).toEqual([])
++  })
++
++  it('differs between clips, so nine thumbnails are nine shapes', () => {
++    const shapes = new Set(
++      FAQ_ITEMS.map((i) => waveformBars(i.id, 24).join(',')),
++    )
++    expect(shapes.size).toBe(FAQ_ITEMS.length)
++  })
++
++  it('stays inside 0.14–1 and has a body, not a flat line', () => {
++    for (const item of FAQ_ITEMS) {
++      const bars = waveformBars(item.id, 64)
++      for (const v of bars) {
++        expect(v).toBeGreaterThanOrEqual(0.14)
++        expect(v).toBeLessThanOrEqual(1)
++      }
++      expect(Math.max(...bars) - Math.min(...bars)).toBeGreaterThan(0.25)
++    }
++  })
++
++  it('swells toward the middle', () => {
++    const bars = waveformBars('envelope', 64)
++    const edge =
++      (bars.slice(0, 6).reduce((a, b) => a + b) +
++        bars.slice(-6).reduce((a, b) => a + b)) /
++      12
++    const mid = bars.slice(26, 38).reduce((a, b) => a + b) / 12
++    expect(mid).toBeGreaterThan(edge)
++  })
++
++  it('hashes stably', () => {
++    expect(hash('a')).toBe(hash('a'))
++    expect(hash('a')).not.toBe(hash('b'))
++  })
++})
++
++describe('tracksOf', () => {
++  it('groups clips by track and keeps each one’s flat index', () => {
++    const tracks = tracksOf()
++    expect(tracks.map((t) => t.name)).toEqual([...TRACKS])
++    const flat = tracks
++      .flatMap((t) => t.clips.map((c) => c.index))
++      .sort((a, b) => a - b)
++    expect(flat).toEqual(Array.from({ length: 9 }, (_, i) => i))
++  })
++})
++
++describe('moveFocus', () => {
++  const counts = [3, 3, 2]
++
++  it('moves between tracks keeping the row, clamped to a shorter track', () => {
++    expect(moveFocus('ArrowRight', 0, 1, counts)).toEqual([1, 1])
++    expect(moveFocus('ArrowRight', 1, 2, counts)).toEqual([2, 1])
++    expect(moveFocus('ArrowRight', 2, 1, counts)).toEqual([2, 1])
++    expect(moveFocus('ArrowLeft', 0, 2, counts)).toEqual([0, 2])
++    expect(moveFocus('ArrowLeft', 2, 1, counts)).toEqual([1, 1])
++  })
++
++  it('walks a track and wraps', () => {
++    expect(moveFocus('ArrowDown', 0, 2, counts)).toEqual([0, 0])
++    expect(moveFocus('ArrowUp', 0, 0, counts)).toEqual([0, 2])
++    expect(moveFocus('ArrowDown', 2, 1, counts)).toEqual([2, 0])
++  })
++
++  it('jumps to the ends of the track and ignores other keys', () => {
++    expect(moveFocus('Home', 2, 1, counts)).toEqual([2, 0])
++    expect(moveFocus('End', 2, 0, counts)).toEqual([2, 1])
++    expect(moveFocus('Enter', 0, 0, counts)).toBeNull()
++    expect(moveFocus('ArrowDown', 0, 0, [])).toBeNull()
++  })
++})
+-- 
+2.43.0
+

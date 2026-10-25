@@ -1,0 +1,313 @@
+diff --git a/features/landing-page/chapters/experience-work/radio-flip.ts b/features/landing-page/chapters/experience-work/radio-flip.ts
+index d14ba3c..8770f52 100644
+--- a/features/landing-page/chapters/experience-work/radio-flip.ts
++++ b/features/landing-page/chapters/experience-work/radio-flip.ts
+@@ -54,2 +54 @@ const PLAYER_BACK_Z = -320
+-const RADIO_BEHIND_Z = -380
+-const RADIO_ZOOM = 1.35
++const RADIO_PORTAL_ZOOM = 2.15
+@@ -102 +100,0 @@ export function radioFlip(ctx: ChapterContext): ChapterCleanup {
+-    rotationY: 0,
+@@ -105 +103,2 @@ export function radioFlip(ctx: ChapterContext): ChapterCleanup {
+-    transformOrigin: '50% 50%',
++    opacity: 1,
++    transformOrigin: '58% 46%',
+@@ -107 +106 @@ export function radioFlip(ctx: ChapterContext): ChapterCleanup {
+-  gsap.set(back, { z: PLAYER_BACK_Z })
++  gsap.set(back, { z: PLAYER_BACK_Z, scale: 0.94 })
+@@ -220 +219,2 @@ export function radioFlip(ctx: ChapterContext): ChapterCleanup {
+-        rotationY: 360,
++        scale: RADIO_PORTAL_ZOOM,
++        z: RADIO_FRONT_Z + 220,
+@@ -223,8 +223,4 @@ export function radioFlip(ctx: ChapterContext): ChapterCleanup {
+-        onUpdate: () => {
+-          const deg = gsap.getProperty(front, 'rotationY') as number
+-          /* The specular sheen follows the angle. */
+-          scene.style.setProperty('--angle', String(deg))
+-          /* The ground shadow: tightest and faintest
+-             edge-on, widest and darkest face-on. */
+-          const c = Math.abs(Math.cos((deg * Math.PI) / 180))
+-          gsap.set(shadow, { scaleX: 0.35 + 0.65 * c })
++        onUpdate: function () {
++          const p = this.progress()
++          scene.style.setProperty('--angle', String(p * 180))
++          gsap.set(shadow, { scaleX: 1 + p * 0.35 })
+@@ -235,11 +230,0 @@ export function radioFlip(ctx: ChapterContext): ChapterCleanup {
+-    /* The zoom to full field, peaking just before the
+-       turn completes — the radio fills the screen at the
+-       top of the swing, then dives away. */
+-    .to(
+-      front,
+-      { scale: RADIO_ZOOM, duration: 0.42, ease: 'power2.inOut' },
+-      SWING_START,
+-    )
+-    /* The dive: the radio passes behind the player's layer
+-       late in the swing. */
+-    .to(
+@@ -247 +232 @@ export function radioFlip(ctx: ChapterContext): ChapterCleanup {
+-      { z: RADIO_BEHIND_Z, duration: SWING_END - ZDIVE_START, ease: ease.mech },
++      { opacity: 0, duration: SWING_END - ZDIVE_START, ease: 'power2.inOut' },
+@@ -261 +246 @@ export function radioFlip(ctx: ChapterContext): ChapterCleanup {
+-  flip.to(back, { z: 0, duration: 0.3, ease: ease.mech }, PLAYER_FORWARD_AT)
++  flip.to(back, { z: 0, scale: 1, duration: 0.3, ease: ease.mech }, PLAYER_FORWARD_AT)
+diff --git a/features/landing-page/components/arrangement/arrangement.module.css b/features/landing-page/components/arrangement/arrangement.module.css
+index e922f89..075cb29 100644
+--- a/features/landing-page/components/arrangement/arrangement.module.css
++++ b/features/landing-page/components/arrangement/arrangement.module.css
+@@ -80,0 +81 @@
++  --arr-zoom-t: 0;
+@@ -98,0 +100,3 @@
++  transform-origin: 50% 0%;
++  transform: translate3d(0, calc(var(--arr-zoom-t, 0) * -6px), 0)
++    scale(calc(1 - var(--arr-zoom-t, 0) * 0.015));
+@@ -262,0 +267,2 @@
++  transform-origin: 50% 0%;
++  transform: translate3d(0, calc(var(--arr-zoom-t, 0) * -4px), 0);
+@@ -582 +588,4 @@ button.clip {
+-  transition: opacity 260ms linear;
++  transform-origin: 0% 50%;
++  transform: translate3d(calc(var(--arr-rail-hide, 0) * -100%), 0, 0)
++    scaleX(calc(1 - var(--arr-rail-hide, 0) * 0.12));
++  opacity: calc(1 - var(--arr-rail-hide, 0) * 0.85);
+@@ -586,4 +594,0 @@ button.clip {
+-.hero[data-phase='zoom'] .rail {
+-  opacity: 0;
+-  transform: translate3d(-100%, 0, 0);
+-}
+@@ -590,0 +596 @@ button.clip {
++  opacity: var(--arr-rail, 1);
+@@ -655,0 +662,4 @@ button.clip {
++  transform-origin: 50% 100%;
++  transform: translate3d(0, calc(var(--arr-zoom-t, 0) * 10px), 0)
++    scale(calc(1 - var(--arr-zoom-t, 0) * 0.022));
++  opacity: calc(1 - var(--arr-zoom-t, 0) * 0.68);
+@@ -658,4 +667,0 @@ button.clip {
+-.hero[data-phase='zoom'] .proof,
+-.hero[data-phase='rail'] .proof {
+-  opacity: 0.25;
+-}
+diff --git a/features/landing-page/components/arrangement/use-arrangement-hero.ts b/features/landing-page/components/arrangement/use-arrangement-hero.ts
+index e58b76a..2f7e49e 100644
+--- a/features/landing-page/components/arrangement/use-arrangement-hero.ts
++++ b/features/landing-page/components/arrangement/use-arrangement-hero.ts
+@@ -117,0 +118 @@ export function useArrangementHero({
++      const stageWrapEl = section.querySelector<HTMLElement>('[data-arr-stage]')
+@@ -213,0 +215,15 @@ export function useArrangementHero({
++        const zoomProgress = Math.min(
++          1,
++          Math.max(
++            0,
++            (progress - ARRANGEMENT_PHASES.zoom) /
++              (ARRANGEMENT_PHASES.rail - ARRANGEMENT_PHASES.zoom),
++          ),
++        )
++        const railHide =
++          progress < ARRANGEMENT_PHASES.rail
++            ? zoomProgress * (3 - 2 * zoomProgress) * zoomProgress
++            : 1 - frame.railReveal
++        host.style.setProperty('--arr-rail-hide', railHide.toFixed(4))
++        stageWrapEl?.style.setProperty('--arr-zoom-t', zoomProgress.toFixed(4))
+@@ -325,0 +342 @@ export function useArrangementHero({
++          '--arr-rail-hide',
+@@ -340,0 +358 @@ export function useArrangementHero({
++        stageWrapEl?.style.removeProperty('--arr-zoom-t')
+diff --git a/features/landing-page/components/bench/use-bench-motion.ts b/features/landing-page/components/bench/use-bench-motion.ts
+index a0d8fd7..e1051f8 100644
+--- a/features/landing-page/components/bench/use-bench-motion.ts
++++ b/features/landing-page/components/bench/use-bench-motion.ts
+@@ -318,0 +319,2 @@ function startBenchMotion({
++        const slideFraction = Math.min(1, Math.hypot(exit.x, exit.y) / 135)
++        const pieceScale = 1 - slideFraction * 0.065
+@@ -319,0 +322 @@ function startBenchMotion({
++        node.style.scale = pieceScale.toFixed(4)
+@@ -346 +349,7 @@ function startBenchMotion({
+-    paper.style.transform = `translate3d(0, ${frame.farY}px, 0) perspective(1600px) rotateX(${tilt}deg)`
++    const takeoverProgress = Math.min(
++      1,
++      frame.progress / Math.max(0.01, BENCH_HOLD),
++    )
++    const takeoverEased = 1 - Math.pow(1 - takeoverProgress, 3)
++    const sheetZoom = 0.94 + 0.06 * takeoverEased
++    paper.style.transform = `translate3d(0, ${frame.farY}px, 0) perspective(1600px) rotateX(${tilt}deg) scale(${sheetZoom.toFixed(4)})`
+diff --git a/features/landing-page/rack-01/rack-01.module.css b/features/landing-page/rack-01/rack-01.module.css
+index 13972c0..a7be35e 100644
+--- a/features/landing-page/rack-01/rack-01.module.css
++++ b/features/landing-page/rack-01/rack-01.module.css
+@@ -10460,2 +10459,0 @@
+-  perspective: 2200px;
+-  perspective-origin: 50% 50%;
+@@ -10464,0 +10463,2 @@
++  --seam-p: 0;
++  --seam-beam: 0;
+@@ -10468 +10467,0 @@
+-  transform-style: preserve-3d;
+@@ -10470,0 +10470,25 @@
++.deckFlipInner::after {
++  content: '';
++  position: absolute;
++  z-index: 12;
++  left: -4%;
++  right: -4%;
++  top: 50%;
++  height: 2px;
++  pointer-events: none;
++  background: linear-gradient(
++    90deg,
++    transparent 0%,
++    color-mix(in srgb, var(--deck-orange, #ff5a1f) 45%, transparent) 18%,
++    rgba(255, 214, 153, 0.96) 50%,
++    color-mix(in srgb, var(--deck-orange, #ff5a1f) 45%, transparent) 82%,
++    transparent 100%
++  );
++  box-shadow:
++    0 0 18px color-mix(in srgb, var(--deck-orange, #ff5a1f) 80%, transparent),
++    0 0 44px color-mix(in srgb, var(--deck-orange, #ff5a1f) 42%, transparent);
++  transform: translateY(-50%) scaleX(var(--seam-beam, 0));
++  opacity: var(--seam-beam, 0);
++  will-change: transform, opacity;
++}
++
+@@ -10474,2 +10497,0 @@
+-  -webkit-backface-visibility: hidden;
+-  backface-visibility: hidden;
+@@ -10476,0 +10499,18 @@
++.deckFlip .radioSpeaker,
++.deckFlip .radioTuner,
++.deckFlip .experienceBody,
++.deckFlip .cassetteHeader,
++.deckFlip .radioHandle {
++  opacity: calc(1 - var(--seam-peripheral-dim, 0) * 0.88);
++  filter: blur(calc(var(--seam-peripheral-dim, 0) * 5px));
++  transform: scale(calc(1 - var(--seam-peripheral-dim, 0) * 0.04));
++  will-change: opacity, filter, transform;
++}
++
++.deckFlip .tapeCarousel {
++  box-shadow:
++    inset 0 2px 12px rgba(0, 0, 0, 0.78),
++    0 0 calc(var(--seam-beam, 0) * 48px)
++      color-mix(in srgb, var(--deck-orange, #ff5a1f) 52%, transparent);
++}
++
+diff --git a/features/landing-page/rack-01/use-rack-animations.ts b/features/landing-page/rack-01/use-rack-animations.ts
+index 08f0fb5..14cb736 100644
+--- a/features/landing-page/rack-01/use-rack-animations.ts
++++ b/features/landing-page/rack-01/use-rack-animations.ts
+@@ -9 +9 @@ import { EXPERIENCES } from '../constants'
+-import { FLIP_DEGREES, SEAM_SVH } from '../constants/seam'
++import { SEAM_SVH } from '../constants/seam'
+@@ -315 +315 @@ export function useRackAnimations({
+-          // ── Experience → Work: the radio flips into the player ──
++          // ── Experience → Work: Tape-Well Signal Portal & Acoustic Iris (No Rotation) ──
+@@ -329,0 +330,6 @@ export function useRackAnimations({
++          const tapeWell = experienceSection?.querySelector<HTMLElement>(
++            `.${styles.tapeCarousel}`,
++          )
++          const activeCassette = experienceSection?.querySelector<HTMLElement>(
++            `.${styles.cassetteActive}`,
++          )
+@@ -350 +356 @@ export function useRackAnimations({
+-            const geometry = { scale: 1, dy: 0 }
++            const geometry = { scale: 2.35, dx: 0, dy: 0 }
+@@ -357 +362,0 @@ export function useRackAnimations({
+-              const stageRect = experienceStage.getBoundingClientRect()
+@@ -359 +364 @@ export function useRackAnimations({
+-              const workStageRect = workStage.getBoundingClientRect()
++              const wellRect = (tapeWell ?? flipHost).getBoundingClientRect()
+@@ -365,6 +370,21 @@ export function useRackAnimations({
+-              const scale = shellW / deckW
+-              const deckCenter =
+-                hostRect.top - stageRect.top + flipHost.offsetHeight / 2
+-              const shellCenter = shellRect.top - workStageRect.top + shellH / 2
+-              geometry.scale = scale
+-              geometry.dy = shellCenter - deckCenter
++              const wellW = Math.max(240, wellRect.width)
++              const targetScale = Math.min(2.85, Math.max(1.85, shellW / wellW))
++              const hostCenterX = hostRect.left + hostRect.width / 2
++              const hostCenterY = hostRect.top + hostRect.height / 2
++              const wellCenterX = wellRect.left + wellRect.width / 2
++              const wellCenterY = wellRect.top + wellRect.height / 2
++              const shellCenterX = shellRect.left + shellRect.width / 2
++              const shellCenterY = shellRect.top + shellRect.height / 2
++              geometry.scale = targetScale
++              geometry.dx =
++                shellCenterX -
++                hostCenterX -
++                (wellCenterX - hostCenterX) * targetScale
++              geometry.dy =
++                shellCenterY -
++                hostCenterY -
++                (wellCenterY - hostCenterY) * targetScale
+@@ -373 +393 @@ export function useRackAnimations({
+-              flipInner.style.setProperty('--back-h', `${shellH / scale}px`)
++              flipInner.style.setProperty('--back-h', `${shellH / targetScale}px`)
+@@ -377,6 +397,15 @@ export function useRackAnimations({
+-              const swing = clamp01((progress - 0.06) / 0.78)
+-              const turn = easeInOut(swing)
+-              const grow = easeInOut(clamp01((progress - 0.02) / 0.84))
+-              const arc = Math.sin(swing * Math.PI)
+-              const settle = Math.sin(
+-                clamp01((progress - 0.74) / 0.2) * Math.PI,
++              const p = clamp01(progress)
++              const peripheralDim = smooth(clamp01((p - 0.02) / 0.44))
++              flipInner.style.setProperty(
++                '--seam-peripheral-dim',
++                peripheralDim.toFixed(4),
++              )
++              const beamIn = smooth(clamp01((p - 0.04) / 0.24))
++              const beamOut = 1 - smooth(clamp01((p - 0.56) / 0.3))
++              flipInner.style.setProperty(
++                '--seam-beam',
++                (beamIn * beamOut).toFixed(4),
+@@ -385,0 +415,2 @@ export function useRackAnimations({
++              const diveT = easeInOut(clamp01((p - 0.06) / 0.74))
++              const currentScale = Math.pow(geometry.scale, diveT)
+@@ -387,6 +418,7 @@ export function useRackAnimations({
+-                rotationY: FLIP_DEGREES * turn + settle * 5,
+-                rotationX: -6 * arc,
+-                rotationZ: 1.6 * arc,
+-                z: 120 * arc,
+-                scale: 1 + (geometry.scale - 1) * grow,
+-                y: geometry.dy * grow,
++                rotationX: 0,
++                rotationY: 0,
++                rotationZ: 0,
++                z: 0,
++                scale: currentScale,
++                x: geometry.dx * diveT,
++                y: geometry.dy * diveT,
+@@ -394,8 +426,20 @@ export function useRackAnimations({
+-              experienceHeading.style.opacity = String(
+-                1 - clamp01(progress / 0.28),
+-              )
++              if (activeCassette) {
++                const tapeRecede = smooth(clamp01((p - 0.14) / 0.42))
++                activeCassette.style.opacity = (1 - tapeRecede * 0.92).toFixed(3)
++              }
++              const headFade = smooth(clamp01(p / 0.28))
++              experienceHeading.style.opacity = String(1 - headFade)
++              experienceHeading.style.transform = `translate3d(0, ${(-headFade * 18).toFixed(1)}px, 0)`
+@@ -403 +447 @@ export function useRackAnimations({
+-                smooth(clamp01((progress - 0.04) / 0.52)),
++                smooth(clamp01((p - 0.04) / 0.48)),
+@@ -405,2 +449,8 @@ export function useRackAnimations({
+-              workShell.style.opacity = String(clamp01((progress - 0.6) / 0.22))
+-              const cover = 1 - clamp01((progress - 0.86) / 0.12)
++              const irisT = easeInOut(clamp01((p - 0.34) / 0.54))
++              const vInset = (1 - irisT) * 38
++              const hInset = (1 - irisT) * 18
++              const shellScale = 0.94 + 0.06 * irisT
++              workShell.style.opacity = String(smooth(clamp01((p - 0.32) / 0.34)))
++              workShell.style.clipPath = `inset(${vInset.toFixed(2)}% ${hInset.toFixed(2)}% round 20px)`
++              workShell.style.transform = `translate3d(0, ${((1 - irisT) * 22).toFixed(1)}px, 0) scale(${shellScale.toFixed(4)})`
++              const cover = 1 - smooth(clamp01((p - 0.68) / 0.24))
+@@ -431,0 +482 @@ export function useRackAnimations({
++              experienceHeading.style.transform = ''
+@@ -433,0 +485,7 @@ export function useRackAnimations({
++              workShell.style.clipPath = ''
++              workShell.style.transform = ''
++              if (activeCassette) {
++                activeCassette.style.opacity = ''
++              }
++              flipInner.style.removeProperty('--seam-peripheral-dim')
++              flipInner.style.removeProperty('--seam-beam')

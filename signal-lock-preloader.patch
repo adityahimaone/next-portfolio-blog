@@ -1,0 +1,1723 @@
+From cccbe9694a1a796a51279b4bcac7aae874f5a5de Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 18 Oct 2026 22:11:25 +0000
+Subject: [PATCH] feat(preloader): Signal Lock, a 1.4s studio-playhead boot
+
+A playhead sweeps three track lanes; the name decodes out of vertical reels of
+procedural monoline glyphs while two pathLength rulers draw and a timecode
+scrambles to LOCKED; the poster thumps and the lanes shutter open onto the live
+page. Overlay only (fixed, inset-0, contain: strict, pointer-events-none),
+zero assets, one TIMELINE feeding the CSS as custom properties, and a separate
+reduced-motion composition. Swapped into LandingGate in place of the slat-count
+boot.
+---
+ .../ui/signal-lock-preloader.module.css       | 364 +++++++++++
+ components/ui/signal-lock-preloader.tsx       | 569 ++++++++++++++++++
+ docs/signal-lock-preloader.md                 |  55 ++
+ .../landing-page/components/landing-gate.tsx  |  35 +-
+ tests/landing-gate.test.tsx                   | 104 ++++
+ tests/signal-lock-preloader.test.tsx          | 508 ++++++++++++++++
+ 6 files changed, 1609 insertions(+), 26 deletions(-)
+ create mode 100644 components/ui/signal-lock-preloader.module.css
+ create mode 100644 components/ui/signal-lock-preloader.tsx
+ create mode 100644 docs/signal-lock-preloader.md
+ create mode 100644 tests/landing-gate.test.tsx
+ create mode 100644 tests/signal-lock-preloader.test.tsx
+
+diff --git a/components/ui/signal-lock-preloader.module.css b/components/ui/signal-lock-preloader.module.css
+new file mode 100644
+index 0000000..0901104
+--- /dev/null
++++ b/components/ui/signal-lock-preloader.module.css
+@@ -0,0 +1,364 @@
++/* ── Signal Lock ─────────────────────────────────────────────
++   Every duration and delay here is a custom property set from `TIMELINE` in
++   the component, so there is one schedule and the stylesheet carries no timing
++   of its own. Everything animated is a transform, an opacity, a clip or a
++   dash offset: nothing animates layout, so nothing in this overlay can shift the
++   page under it.
++
++   Stage 1  the playhead sweeps; the lanes light behind it.
++   Stage 2  the reels roll the name into place; the rulers draw; the timecode
++            decodes; three lamps lock.
++   Stage 3  the poster thumps; the lanes shutter open onto the page.
++
++   Reduced motion is its own composition: the poster already resolved, held, and
++   faded. */
++
++.root {
++  --ease-sweep: cubic-bezier(0.45, 0, 0.55, 1);
++  --ease-roll: cubic-bezier(0.25, 0.8, 0.25, 1);
++  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
++  overflow: hidden;
++  background: transparent;
++  color: var(--ink);
++  font-family: var(--mono);
++}
++
++.poster {
++  position: absolute;
++  inset: 0;
++  transform-origin: 50% 50%;
++  animation: thump var(--t-thump-dur) ease-out var(--t-thump-start) both;
++}
++@keyframes thump {
++  45% {
++    transform: scale(1.01);
++  }
++  100% {
++    transform: scale(1);
++  }
++}
++
++/* ── The lanes ── */
++.lane {
++  position: absolute;
++  right: 0;
++  left: 0;
++  top: calc(var(--i) * 33.3334%);
++  height: 33.3334%;
++  border-bottom: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
++  background: var(--paper);
++  transform-origin: var(--origin, 50% 50%);
++  will-change: transform;
++  animation: shutter var(--t-shutter-dur) cubic-bezier(0.7, 0, 0.84, 0)
++    calc(var(--t-shutter-start) + var(--i) * var(--t-shutter-stagger)) both;
++}
++/* The outer lanes fold away from the middle one, so the shutter opens outward. */
++.lane:nth-child(1) {
++  --origin: 50% 0%;
++}
++.lane:nth-child(2) {
++  --origin: 50% 50%;
++}
++.lane:nth-child(3) {
++  --origin: 50% 100%;
++}
++@keyframes shutter {
++  to {
++    transform: scaleY(0);
++  }
++}
++
++.laneBase,
++.laneLit {
++  position: absolute;
++  inset: 0;
++}
++/* The track line through the middle of the lane. */
++.laneBase::before,
++.laneLit::before {
++  position: absolute;
++  top: 50%;
++  right: 0;
++  left: 0;
++  height: 1px;
++  background: repeating-linear-gradient(
++    90deg,
++    var(--line) 0 6px,
++    transparent 6px 12px
++  );
++  content: '';
++}
++.laneBase {
++  --line: color-mix(in srgb, var(--ink) 22%, transparent);
++}
++.laneLit {
++  --line: var(--c);
++  clip-path: inset(0 100% 0 0);
++  animation: lit var(--t-sweep) var(--ease-sweep) both;
++}
++/* The lit copy is revealed at exactly the playhead's pace and on its easing, so
++   its edge is the playhead. */
++@keyframes lit {
++  to {
++    clip-path: inset(0 0 0 0);
++  }
++}
++.clip {
++  position: absolute;
++  top: 24%;
++  height: 52%;
++  border-radius: 6px;
++}
++.laneBase .clip {
++  border: 1px solid color-mix(in srgb, var(--ink) 26%, transparent);
++  background: color-mix(in srgb, var(--ink) 4%, transparent);
++}
++.laneLit .clip {
++  border: 1px solid var(--c);
++  background: color-mix(in srgb, var(--c) 22%, transparent);
++}
++.label {
++  position: absolute;
++  top: 14px;
++  left: clamp(16px, 2.4vw, 32px);
++  color: var(--c);
++  font: 700 clamp(10px, 1vw, 12px) / 1 var(--mono);
++  letter-spacing: 0.2em;
++}
++
++/* ── The playhead ── */
++.playhead {
++  position: absolute;
++  z-index: 5;
++  top: 0;
++  bottom: 0;
++  left: 0;
++  width: 0;
++  will-change: transform;
++  animation: sweep var(--t-sweep) var(--ease-sweep) both;
++}
++.playhead i {
++  position: absolute;
++  top: 0;
++  bottom: 0;
++  left: -1px;
++  width: 2px;
++  background: var(--ink);
++}
++.playhead i::before {
++  position: absolute;
++  top: 0;
++  left: -5px;
++  border-top: 9px solid var(--ink);
++  border-right: 6px solid transparent;
++  border-left: 6px solid transparent;
++  content: '';
++}
++@keyframes sweep {
++  0% {
++    opacity: 1;
++    transform: translate3d(0, 0, 0);
++  }
++  96% {
++    opacity: 1;
++  }
++  100% {
++    opacity: 0;
++    transform: translate3d(100vw, 0, 0);
++  }
++}
++
++/* ── The stage: name, timecode, lamps ── */
++.stage {
++  position: absolute;
++  z-index: 3;
++  inset: 0;
++  display: grid;
++  align-content: center;
++  justify-items: center;
++  gap: clamp(14px, 2.4vh, 26px);
++  animation: leave var(--t-leave-dur) ease-in var(--t-leave-start) both;
++}
++@keyframes leave {
++  to {
++    opacity: 0;
++    transform: translate3d(0, -8px, 0);
++  }
++}
++.title {
++  width: min(72vw, 880px);
++  height: auto;
++  /* The name is about two thirds as tall as it is wide; on a short landscape
++     screen the width alone would outgrow the viewport, so the height caps it
++     and the glyphs scale down inside the box instead. */
++  max-height: 58vh;
++  overflow: visible;
++  color: var(--ink);
++}
++.title path {
++  fill: none;
++  stroke: currentColor;
++  stroke-linecap: round;
++  stroke-linejoin: round;
++  stroke-width: 1.7;
++}
++
++/* The reel: each letter's glyphs stacked above it, the whole strip dropped by
++   `--dist` so a decoy is in the window, then rolled up until the real letter
++   lands, with a small overshoot and snap. It is invisible until its own start,
++   so letters appear as the playhead reaches them and not before. */
++.reel {
++  will-change: transform;
++  animation:
++    reel var(--t-reel-dur) var(--ease-roll) var(--delay) both,
++    appear 80ms linear var(--delay) both;
++}
++@keyframes reel {
++  0% {
++    transform: translate3d(0, var(--dist), 0);
++  }
++  84% {
++    transform: translate3d(0, -1.4px, 0);
++  }
++  100% {
++    transform: translate3d(0, 0, 0);
++  }
++}
++@keyframes appear {
++  from {
++    opacity: 0;
++  }
++  to {
++    opacity: 1;
++  }
++}
++
++/* The registration bar: the three lanes' colours under the name. */
++.title .bar {
++  stroke-dasharray: 1;
++  stroke-dashoffset: 1;
++  stroke-linecap: butt;
++  stroke-width: 2.2;
++  animation: draw var(--t-bar-dur) var(--ease-sweep)
++    calc(var(--t-bar-start) + var(--i) * var(--t-bar-stagger)) both;
++}
++@keyframes draw {
++  to {
++    stroke-dashoffset: 0;
++  }
++}
++
++.timecode {
++  min-width: 32ch;
++  margin: 0;
++  color: var(--ink);
++  font: 700 clamp(11px, 1.15vw, 14px) / 1 var(--mono);
++  font-variant-numeric: tabular-nums;
++  letter-spacing: 0.22em;
++  text-align: center;
++  white-space: pre;
++}
++.leds {
++  display: flex;
++  gap: 8px;
++}
++.leds i {
++  width: 8px;
++  height: 8px;
++  border-radius: 2px;
++  background: color-mix(in srgb, var(--ink) 16%, transparent);
++  animation: lock var(--t-lock-dur) ease-out
++    calc(var(--t-lock-start) + var(--i) * var(--t-lock-stagger)) both;
++}
++@keyframes lock {
++  50% {
++    background: var(--c);
++    transform: scale(1.7);
++  }
++  100% {
++    background: var(--c);
++    transform: scale(1);
++  }
++}
++
++/* ── The rulers ── */
++.rule {
++  position: absolute;
++  z-index: 4;
++  left: 0;
++  width: 100%;
++  height: 24px;
++  overflow: visible;
++  animation: leave var(--t-leave-dur) ease-in var(--t-leave-start) both;
++}
++.ruleTop {
++  top: clamp(10px, 2vh, 22px);
++}
++.ruleBottom {
++  bottom: clamp(10px, 2vh, 22px);
++}
++.ruleLine,
++.ruleTicks {
++  fill: none;
++  stroke: var(--ink);
++  stroke-width: 1;
++}
++.ruleLine {
++  stroke-dasharray: 1;
++  stroke-dashoffset: 1;
++  animation: draw var(--t-rules-dur) var(--ease-sweep) var(--t-rules-start) both;
++}
++.ruleTicks {
++  vector-effect: non-scaling-stroke;
++}
++.ruleMask {
++  fill: none;
++  stroke: #fff;
++  stroke-dasharray: 1;
++  stroke-dashoffset: 1;
++  stroke-width: 40;
++  animation: draw var(--t-rules-dur) var(--ease-sweep) var(--t-rules-start) both;
++}
++
++/* ── Reduced motion: the resolved poster, held, then faded ── */
++@media (prefers-reduced-motion: reduce) {
++  .poster,
++  .lane,
++  .laneLit,
++  .playhead,
++  .stage,
++  .reel,
++  .rule,
++  .ruleLine,
++  .ruleMask,
++  .title .bar,
++  .leds i {
++    animation: none;
++  }
++  .laneLit {
++    clip-path: inset(0 0 0 0);
++  }
++  .playhead {
++    display: none;
++  }
++  .ruleLine,
++  .ruleMask,
++  .title .bar {
++    stroke-dashoffset: 0;
++  }
++  .leds i {
++    background: var(--c);
++  }
++  .root {
++    animation: hold var(--t-reduced) linear both;
++  }
++  @keyframes hold {
++    0%,
++    69% {
++      opacity: 1;
++    }
++    100% {
++      opacity: 0;
++    }
++  }
++}
+diff --git a/components/ui/signal-lock-preloader.tsx b/components/ui/signal-lock-preloader.tsx
+new file mode 100644
+index 0000000..2e5c402
+--- /dev/null
++++ b/components/ui/signal-lock-preloader.tsx
+@@ -0,0 +1,569 @@
++'use client'
++
++import {
++  useEffect,
++  useId,
++  useRef,
++  useState,
++  type CSSProperties,
++  type RefObject,
++} from 'react'
++
++import { cn } from '@/lib/utils'
++
++import styles from './signal-lock-preloader.module.css'
++
++const s = styles
++
++/* ═══════════════════════════════════════════════════════════════════════════
++   Signal Lock: a 1.4s studio preloader.
++
++   A playhead sweeps three track lanes; as it crosses the middle the name is
++   decoded out of vertical reels of monoline glyphs while two rulers draw in and
++   a timecode decodes to LOCKED; then the lanes shutter open onto the live page.
++
++   ## Why it is built like this
++
++   - **An overlay, never a gate.** The page underneath is already rendered,
++     hydrated and measured; this sits over it, `pointer-events: none`, and goes
++     away. Nothing waits on it, so it cannot cost Time to Interactive, and the
++     page it reveals is the same page a repeat visitor gets.
++   - **No layout, so no layout shift.** The container is `fixed`, `inset-0`,
++     `contain: strict`; everything inside moves by transform, opacity or clip.
++   - **No assets.** The name is drawn from path data in this file (a ten-letter
++     monoline alphabet), the lanes and clips are boxes, the rulers are paths. The
++     only text is a timecode and three lane labels, set in the platform's own
++     monospace, so there is no font to wait for.
++   - **Timing has one source.** Every duration and delay below is in `TIMELINE`,
++     is handed to the stylesheet as a custom property, and is checked by a test
++     to end inside the total. Nothing in the CSS carries a number of its own.
++   - **Reduced motion is its own composition**, not a faster one: the poster is
++     shown already resolved, held for a beat, and faded.
++   ═══════════════════════════════════════════════════════════════════════════ */
++
++/* ── Timeline (ms) ──────────────────────────────────────────────────────── */
++
++export const TIMELINE = {
++  /** The whole sequence. The overlay reports completion here. */
++  total: 1400,
++  /** Stage 1: the playhead crosses the screen, lighting the lanes behind it. */
++  sweep: { start: 0, duration: 600 },
++  /** Stage 2: the reels. A letter starts as the playhead passes it. */
++  reel: { start: 150, spread: 400, duration: 400 },
++  /** The rulers draw in, in step with the reels. */
++  rules: { start: 150, duration: 600 },
++  /** The timecode decodes while the name does. */
++  scramble: { start: 150, end: 950 },
++  /** The registration bar under the name: three lane-coloured strokes. */
++  bar: { start: 480, stagger: 90, duration: 300 },
++  /** The three LOCKED lamps, one after another, as the decode lands. */
++  lock: { start: 920, stagger: 40, duration: 160 },
++  /** Stage 3: the poster thumps, then the lanes open. */
++  thump: { start: 1000, duration: 140 },
++  leave: { start: 1000, duration: 160 },
++  shutter: { start: 1000, stagger: 50, duration: 300 },
++} as const
++
++/** The reduced-motion beat: the resolved poster, held, then faded. */
++export const REDUCED_MS = 650
++
++/** When the last thing in the timeline finishes. */
++export function timelineEnd(t: typeof TIMELINE = TIMELINE): number {
++  const lanes = LANES.length
++  const lastReel = t.reel.start + t.reel.spread + t.reel.duration
++  return Math.max(
++    t.sweep.start + t.sweep.duration,
++    lastReel,
++    t.rules.start + t.rules.duration,
++    t.bar.start + (lanes - 1) * t.bar.stagger + t.bar.duration,
++    t.scramble.end,
++    t.lock.start + (lanes - 1) * t.lock.stagger + t.lock.duration,
++    t.thump.start + t.thump.duration,
++    t.leave.start + t.leave.duration,
++    t.shutter.start + (lanes - 1) * t.shutter.stagger + t.shutter.duration,
++  )
++}
++
++/* ── Content ────────────────────────────────────────────────────────────── */
++
++export const PALETTE = {
++  paper: '#EAE6DF',
++  ink: '#141414',
++} as const
++
++export const LANES = [
++  {
++    label: '01 // SCOPE',
++    color: '#10B981',
++    clips: [
++      [4, 38],
++      [44, 71],
++      [76, 96],
++    ],
++  },
++  {
++    label: '02 // PROCESS',
++    color: '#3B82F6',
++    clips: [
++      [10, 29],
++      [33, 66],
++      [72, 93],
++    ],
++  },
++  {
++    label: '03 // PRACTICAL',
++    color: '#F59E0B',
++    clips: [
++      [2, 23],
++      [28, 52],
++      [58, 88],
++    ],
++  },
++] as const
++
++export const NAME_LINES = ['ADITYA', 'HIMAONE'] as const
++
++/** What the timecode decodes to. */
++export const TIMECODE = '00:00:00 -> 00:01:20 // LOCKED'
++
++/* ── The glyphs ─────────────────────────────────────────────────────────────
++   A monoline alphabet for exactly the letters in the name, in a 10 x 14 cell.
++   Strokes only (no fills), so one path per letter and one stroke width for the
++   whole word; round caps and joins do the rest. */
++
++export const CELL_W = 10
++export const CELL_H = 14
++const GAP = 4
++export const ADVANCE = CELL_W + GAP
++export const LINE_PITCH = CELL_H + 10
++/** The vertical spacing of glyphs on a reel. A little more than a cell, so a
++ *  rolling reel shows daylight between letters rather than a stack. */
++export const REEL_PITCH = CELL_H + 4
++export const REEL_DECOYS = 5
++
++export const GLYPHS: Record<string, string> = {
++  A: 'M0 14 L5 0 L10 14 M2 9.5 H8',
++  D: 'M0 0 V14 H3.5 C8.5 14 10 10.5 10 7 C10 3.5 8.5 0 3.5 0 Z',
++  E: 'M10 0 H0 V14 H10 M0 7 H8',
++  H: 'M0 0 V14 M10 0 V14 M0 7 H10',
++  I: 'M2 0 H8 M5 0 V14 M2 14 H8',
++  M: 'M0 14 V0 L5 8 L10 0 V14',
++  N: 'M0 14 V0 L10 14 V0',
++  O: 'M5 0 C1.5 0 0 3.5 0 7 C0 10.5 1.5 14 5 14 C8.5 14 10 10.5 10 7 C10 3.5 8.5 0 5 0 Z',
++  T: 'M0 0 H10 M5 0 V14',
++  Y: 'M0 0 L5 7 L10 0 M5 7 V14',
++}
++
++const ALPHABET = Object.keys(GLYPHS)
++
++/** A small stable integer hash. Everything "random" here is this, so the same
++ *  poster is drawn every time. */
++export function hash(...n: number[]): number {
++  let h = 2166136261
++  for (const v of n) {
++    h ^= v | 0
++    h = Math.imul(h, 16777619)
++  }
++  return h >>> 0
++}
++
++export type Cell = {
++  ch: string
++  line: number
++  col: number
++  x: number
++  y: number
++  /** When this letter's reel starts, in ms from mount. */
++  delay: number
++}
++
++/**
++ * Where every letter sits and when its reel starts.
++ *
++ * Lines are centred on each other, and a letter's delay is its horizontal
++ * position along the name, so the reels fire left to right at the pace of the
++ * playhead: the letters snap as it passes over them rather than on a metronome.
++ */
++export function layoutName(
++  lines: readonly string[] = NAME_LINES,
++  t: typeof TIMELINE = TIMELINE,
++) {
++  const widths = lines.map((l) => l.length * ADVANCE - GAP)
++  const width = Math.max(...widths)
++  const cells: Cell[] = []
++  lines.forEach((text, line) => {
++    const offset = (width - widths[line]) / 2
++    Array.from(text).forEach((ch, col) => {
++      const x = offset + col * ADVANCE
++      const along = (x + CELL_W / 2) / width
++      cells.push({
++        ch,
++        line,
++        col,
++        x,
++        y: line * LINE_PITCH,
++        delay: Math.round(t.reel.start + along * t.reel.spread),
++      })
++    })
++  })
++  const height = (lines.length - 1) * LINE_PITCH + CELL_H
++  return { cells, width, height }
++}
++
++/** The glyphs a reel rolls through before it lands: decoys, never the final
++ *  letter and never the same one twice running, then the final letter. */
++export function reelStrip(
++  ch: string,
++  index: number,
++  decoys: number = REEL_DECOYS,
++): string[] {
++  const out: string[] = []
++  let previous = ch
++  for (let j = 0; j < decoys; j += 1) {
++    let pick = ALPHABET[hash(index, j, ch.charCodeAt(0)) % ALPHABET.length]
++    for (
++      let guard = 0;
++      pick === previous && guard < ALPHABET.length;
++      guard += 1
++    ) {
++      pick = ALPHABET[(ALPHABET.indexOf(pick) + 1) % ALPHABET.length]
++    }
++    out.push(pick)
++    previous = pick
++  }
++  // The decoy next to the final letter must differ from it, or the last roll
++  // would be a letter rolling into itself.
++  if (out[out.length - 1] === ch) {
++    const at = ALPHABET.indexOf(ch)
++    out[out.length - 1] = ALPHABET[(at + 1) % ALPHABET.length]
++  }
++  return [...out, ch]
++}
++
++/* ── The rulers ─────────────────────────────────────────────────────────────
++   A baseline and a row of ticks, in a 1000-wide box that is stretched to the
++   viewport. Major ticks every 100 units, minor every 10. */
++
++export const RULE_W = 1000
++export const RULE_H = 24
++
++/** The baseline's `d`: along the screen-side edge of the ruler. */
++export function ruleLine(edge: 'top' | 'bottom'): string {
++  const y = edge === 'top' ? RULE_H - 2 : 2
++  return `M0 ${y} H${RULE_W}`
++}
++
++/** The ticks' `d`: grow away from the baseline, inward to the page. */
++export function ruleTicks(edge: 'top' | 'bottom'): string {
++  const base = edge === 'top' ? RULE_H - 2 : 2
++  const sign = edge === 'top' ? -1 : 1
++  const parts: string[] = []
++  for (let x = 0; x <= RULE_W; x += 10) {
++    const major = x % 100 === 0
++    parts.push(`M${x} ${base} V${base + sign * (major ? 14 : 6)}`)
++  }
++  return parts.join(' ')
++}
++
++/* ── The timecode decode ────────────────────────────────────────────────── */
++
++const NOISE_DIGITS = '0123456789'
++const NOISE_LETTERS = 'ABCDEFGHJKLMNPRSTUVWXYZ'
++
++const isDigit = (c: string) => c >= '0' && c <= '9'
++const isLetter = (c: string) => c >= 'A' && c <= 'Z'
++
++/**
++ * `target`, partly decoded at `progress` (0 to 1).
++ *
++ * Characters resolve left to right; those not yet resolved are noise of their
++ * own kind (a digit stays a digit, a letter a letter) and punctuation never
++ * changes, so the line holds its shape and its width while it decodes. The noise
++ * is a hash of the position and `frame`, so a given frame always reads the same.
++ */
++export function scrambleAt(
++  target: string,
++  progress: number,
++  frame: number,
++): string {
++  const p = Number.isFinite(progress) ? Math.min(1, Math.max(0, progress)) : 0
++  const resolved = Math.floor(p * target.length)
++  let out = ''
++  for (let i = 0; i < target.length; i += 1) {
++    const c = target[i]
++    if (i < resolved || p >= 1 || !(isDigit(c) || isLetter(c))) {
++      out += c
++    } else {
++      const pool = isDigit(c) ? NOISE_DIGITS : NOISE_LETTERS
++      out += pool[hash(i, frame) % pool.length]
++    }
++  }
++  return out
++}
++
++/** Decode `target` into `ref`'s text between `start` and `end` ms after mount.
++ *  Written to the node, not to state: forty frames of noise are forty text
++ *  writes and no renders. With `enabled` false the final text is set at once. */
++export function useScramble(
++  ref: RefObject<HTMLElement | null>,
++  target: string,
++  { start, end, enabled }: { start: number; end: number; enabled: boolean },
++) {
++  useEffect(() => {
++    const node = ref.current
++    if (!node) return
++    if (!enabled) {
++      node.textContent = target
++      return
++    }
++    const t0 = performance.now()
++    let raf = 0
++    const frame = (now: number) => {
++      const elapsed = now - t0
++      const progress = (elapsed - start) / Math.max(1, end - start)
++      node.textContent = scrambleAt(target, progress, Math.floor(elapsed / 45))
++      if (progress < 1) raf = requestAnimationFrame(frame)
++    }
++    node.textContent = scrambleAt(target, 0, 0)
++    raf = requestAnimationFrame(frame)
++    return () => cancelAnimationFrame(raf)
++  }, [ref, target, start, end, enabled])
++}
++
++/* ── The component ──────────────────────────────────────────────────────── */
++
++const reducedNow = () =>
++  typeof window !== 'undefined' &&
++  typeof window.matchMedia === 'function' &&
++  window.matchMedia('(prefers-reduced-motion: reduce)').matches
++
++/**
++ * One ruler: a baseline and a row of ticks, both drawn left to right by the same
++ * technique. The baseline is a path with `pathLength` 1, so its dash is
++ * independent of how wide the screen stretches it; the ticks are revealed
++ * through a mask whose own stroke is drawn the same way, so they cannot get
++ * ahead of or behind the line they stand on.
++ */
++function Rule({ edge, uid }: { edge: 'top' | 'bottom'; uid: string }) {
++  const maskId = `slp-rule-${edge}-${uid}`
++  return (
++    <svg
++      className={cn(s.rule, edge === 'top' ? s.ruleTop : s.ruleBottom)}
++      viewBox={`0 0 ${RULE_W} ${RULE_H}`}
++      preserveAspectRatio="none"
++      aria-hidden="true"
++      focusable="false"
++    >
++      <defs>
++        <mask
++          id={maskId}
++          maskUnits="userSpaceOnUse"
++          x="0"
++          y="0"
++          width={RULE_W}
++          height={RULE_H}
++        >
++          <path
++            className={s.ruleMask}
++            pathLength={1}
++            d={`M0 ${RULE_H / 2} H${RULE_W}`}
++          />
++        </mask>
++      </defs>
++      <path className={s.ruleLine} pathLength={1} d={ruleLine(edge)} />
++      <path
++        className={s.ruleTicks}
++        d={ruleTicks(edge)}
++        mask={`url(#${maskId})`}
++      />
++    </svg>
++  )
++}
++
++export type SignalLockPreloaderProps = {
++  /** Called once, when the sequence ends (the overlay then removes itself). */
++  onComplete?: () => void
++  /** Merged over the container's classes, e.g. a higher `z-*` than the default. */
++  className?: string
++}
++
++/**
++ * The preloader. Render it over the page and let it end: it removes itself, and
++ * calls `onComplete` so a parent that mounted it can stop rendering it too.
++ */
++export default function SignalLockPreloader({
++  onComplete,
++  className,
++}: SignalLockPreloaderProps) {
++  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
++  const clipId = `slp-cell-${uid}`
++  const [reduced] = useState(reducedNow)
++  const [done, setDone] = useState(false)
++  const timecode = useRef<HTMLSpanElement | null>(null)
++  const complete = useRef(onComplete)
++
++  useEffect(() => {
++    complete.current = onComplete
++  })
++
++  useScramble(timecode, TIMECODE, { ...TIMELINE.scramble, enabled: !reduced })
++
++  useEffect(() => {
++    const id = window.setTimeout(
++      () => {
++        setDone(true)
++        complete.current?.()
++      },
++      reduced ? REDUCED_MS : TIMELINE.total,
++    )
++    return () => window.clearTimeout(id)
++  }, [reduced])
++
++  const name = layoutName()
++  const pad = 3
++
++  if (done) return null
++
++  const t = TIMELINE
++  const vars = {
++    contain: 'strict',
++    '--paper': PALETTE.paper,
++    '--ink': PALETTE.ink,
++    '--t-sweep': `${t.sweep.duration}ms`,
++    '--t-reel-dur': `${t.reel.duration}ms`,
++    '--t-rules-start': `${t.rules.start}ms`,
++    '--t-rules-dur': `${t.rules.duration}ms`,
++    '--t-bar-start': `${t.bar.start}ms`,
++    '--t-bar-stagger': `${t.bar.stagger}ms`,
++    '--t-bar-dur': `${t.bar.duration}ms`,
++    '--t-lock-start': `${t.lock.start}ms`,
++    '--t-lock-stagger': `${t.lock.stagger}ms`,
++    '--t-lock-dur': `${t.lock.duration}ms`,
++    '--t-thump-start': `${t.thump.start}ms`,
++    '--t-thump-dur': `${t.thump.duration}ms`,
++    '--t-leave-start': `${t.leave.start}ms`,
++    '--t-leave-dur': `${t.leave.duration}ms`,
++    '--t-shutter-start': `${t.shutter.start}ms`,
++    '--t-shutter-stagger': `${t.shutter.stagger}ms`,
++    '--t-shutter-dur': `${t.shutter.duration}ms`,
++    '--t-reduced': `${REDUCED_MS}ms`,
++  } as CSSProperties
++
++  return (
++    <div
++      className={cn(
++        s.root,
++        'pointer-events-none fixed inset-0 z-50',
++        className,
++      )}
++      style={vars}
++      aria-hidden="true"
++      data-reduced={reduced}
++    >
++      <div className={s.poster}>
++        {LANES.map((lane, i) => {
++          const clips = lane.clips.map(([from, to]) => (
++            <i
++              key={from}
++              className={s.clip}
++              style={{ left: `${from}%`, width: `${to - from}%` }}
++            />
++          ))
++          return (
++            <div
++              key={lane.label}
++              className={s.lane}
++              style={{ '--i': i, '--c': lane.color } as CSSProperties}
++            >
++              <div className={s.laneBase}>{clips}</div>
++              <div className={s.laneLit}>{clips}</div>
++              <span className={s.label}>{lane.label}</span>
++            </div>
++          )
++        })}
++
++        <Rule edge="top" uid={uid} />
++        <Rule edge="bottom" uid={uid} />
++
++        <div className={s.stage}>
++          <svg
++            className={s.title}
++            viewBox={`${-pad} ${-pad} ${name.width + pad * 2} ${name.height + 24 + pad * 2}`}
++            focusable="false"
++          >
++            <defs>
++              {/* One clip for every cell: a clip is read in the user space of the
++                  element that references it, translation included, so the same
++                  rectangle windows each translated cell. */}
++              <clipPath id={clipId}>
++                <rect x="-2" y="-2" width={CELL_W + 4} height={CELL_H + 4} />
++              </clipPath>
++            </defs>
++
++            {name.cells.map((cell, index) => {
++              const strip = reelStrip(cell.ch, index)
++              const decoys = strip.length - 1
++              return (
++                <g
++                  key={`${cell.line}-${cell.col}`}
++                  transform={`translate(${cell.x} ${cell.y})`}
++                  clipPath={`url(#${clipId})`}
++                >
++                  <g
++                    className={s.reel}
++                    style={
++                      {
++                        '--dist': `${decoys * REEL_PITCH}px`,
++                        '--delay': `${cell.delay}ms`,
++                      } as CSSProperties
++                    }
++                  >
++                    {strip.map((key, j) => (
++                      <path
++                        key={j}
++                        d={GLYPHS[key]}
++                        transform={`translate(0 ${-(decoys - j) * REEL_PITCH})`}
++                      />
++                    ))}
++                  </g>
++                </g>
++              )
++            })}
++
++            {/* Registration bar: the three lanes' colours, drawn left to right. */}
++            {LANES.map((lane, i) => {
++              const seg = name.width / LANES.length
++              const y = name.height + 12
++              return (
++                <path
++                  key={lane.label}
++                  className={s.bar}
++                  pathLength={1}
++                  d={`M${i * seg + 1} ${y} H${(i + 1) * seg - 1}`}
++                  stroke={lane.color}
++                  style={{ '--i': i } as CSSProperties}
++                />
++              )
++            })}
++          </svg>
++
++          <p className={s.timecode}>
++            <span ref={timecode}>{scrambleAt(TIMECODE, 0, 0)}</span>
++          </p>
++          <span className={s.leds}>
++            {LANES.map((lane, i) => (
++              <i
++                key={lane.label}
++                style={{ '--c': lane.color, '--i': i } as CSSProperties}
++              />
++            ))}
++          </span>
++        </div>
++
++        <div className={s.playhead}>
++          <i />
++        </div>
++      </div>
++    </div>
++  )
++}
+diff --git a/docs/signal-lock-preloader.md b/docs/signal-lock-preloader.md
+new file mode 100644
+index 0000000..9869f08
+--- /dev/null
++++ b/docs/signal-lock-preloader.md
+@@ -0,0 +1,55 @@
++# Signal Lock preloader
++
++A 1.4s studio-playhead preloader that replaces the slat-count boot in
++`LandingGate`. It plays once per session, over a page that is already rendered.
++
++| Stage | When | What |
++| --- | --- | --- |
++| 1 Playhead sweep | 0–600ms | A playhead crosses three track lanes (`01 // SCOPE` green, `02 // PROCESS` blue, `03 // PRACTICAL` amber) on `#EAE6DF` paper with `#141414` ink; each lane lights behind it |
++| 2 Glyph decode | 150–950ms | `ADITYA / HIMAONE` rolls into place out of vertical reels of monoline glyphs, each letter starting as the playhead passes it; two rulers draw in; the timecode decodes to `00:00:00 -> 00:01:20 // LOCKED`; three lamps lock |
++| 3 Track collapse | 1000–1400ms | The poster thumps (`scale(1.01)`), the name and rulers leave, and the lanes shutter open (`scaleY(0)`, 50ms apart, outer lanes folding away from the middle one) onto the live page |
++
++## Guardrails, and how each is met
++
++- **CLS 0.** Fixed `inset-0`, `contain: strict`; everything inside moves by
++  transform, opacity, clip or dash offset. Nothing animates layout.
++- **No assets.** The name is path data in the component (ten-letter monoline
++  alphabet). Lanes and clips are boxes, rulers are paths. The only text is the
++  timecode and three lane labels, in the platform monospace, so there is no font
++  to wait for.
++- **Does not block hydration.** It is an overlay, `pointer-events: none`,
++  mounted by `LandingGate` a frame after the page, and it unmounts itself at
++  1400ms. The page underneath is never waiting on it.
++- **One schedule.** Every duration and delay is in `TIMELINE`, is handed to the
++  stylesheet as a custom property, and is asserted by a test to end inside 1400ms
++  (and to match the stage windows above). The CSS carries no timing of its own.
++- **Reduced motion** is its own composition, not a faster one: the resolved
++  poster, held, then faded (650ms).
++
++## Pieces
++
++- `layoutName()` places the letters and gives each its start, from its
++  horizontal position, so the reels fire left to right at the playhead's pace.
++- `reelStrip()` chooses each reel's decoys: stable, never repeating back to back.
++- `<Rule />`: a baseline with `pathLength={1}` drawn by dash offset, and ticks
++  revealed through a mask drawn the same way, so they cannot drift apart.
++- `scrambleAt()` / `useScramble()`: the decode. Digits stay digits, letters stay
++  letters, punctuation never changes, so the line keeps its width. Written to the
++  node, not to state: no renders.
++
++## Integration
++
++```tsx
++// features/landing-page/components/landing-gate.tsx
++import SignalLockPreloader from '@/components/ui/signal-lock-preloader'
++
++{showGate ? (
++  <SignalLockPreloader className="z-[100]" onComplete={complete} />
++) : null}
++```
++
++`z-[100]` is the one deliberate departure from the default `z-50`: the dock and
++the music player sit at or above 50 and would otherwise draw over the poster.
++
++`components/ui/slat-count-preloader.tsx` is no longer used by the gate; it and
++its tests are left in place.
+diff --git a/features/landing-page/components/landing-gate.tsx b/features/landing-page/components/landing-gate.tsx
+index 4c80034..1ed1f76 100644
+--- a/features/landing-page/components/landing-gate.tsx
++++ b/features/landing-page/components/landing-gate.tsx
+@@ -2,7 +2,7 @@
+ 
+ import { useCallback, useEffect, useState } from 'react'
+ 
+-import SlatCountPreloader from '@/components/ui/slat-count-preloader'
++import SignalLockPreloader from '@/components/ui/signal-lock-preloader'
+ 
+ /**
+  * The session's key. `sessionStorage`, not `localStorage`: the boot belongs to
+@@ -11,21 +11,13 @@ import SlatCountPreloader from '@/components/ui/slat-count-preloader'
+  */
+ const SESSION_KEY = 'aditya-landing-session-boot'
+ 
+-/** Hoisted so the boot cannot restart on an unrelated re-render: the sequence
+- *  and the palette are props of the preloader, and an inline object would be a
+- *  new identity every time this component renders. */
+-const BOOT_SEQUENCE = ['003', '002', '001', 'READY'] as const
+-const BOOT_PALETTE = {
+-  background: '#14171a',
+-  ink: '#eee9df',
+-  accent: '#ff5a1f',
+-} as const
+-
+ /**
+- * Boots the rack once per session, over the top of the landing page.
++ * Plays the Signal Lock preloader once per session, over the top of the landing
++ * page: a playhead sweeps three track lanes, the name decodes out of vertical
++ * reels, and the lanes shutter open (1.4s in all).
+  *
+  * The page stays mounted underneath. That is the point: the arrangement has to
+- * be measured and laid out before the blinds leave, or the hero would arrive
++ * be measured and laid out before the lanes leave, or the hero would arrive
+  * mid-refresh and the camera's first frame would land on a page that had not
+  * settled. Nothing is deferred to the gate either, so a reader who never sees
+  * it (a repeat visit, or storage switched off) gets exactly the same page.
+@@ -70,20 +62,11 @@ export function LandingGate({ children }: { children: React.ReactNode }) {
+   return (
+     <>
+       {children}
++      {/* `z-[100]` is the one deliberate departure from the component's default
++          `z-50`: the dock and the music player sit at or above 50 and would
++          otherwise be drawn over the poster for the length of the boot. */}
+       {showGate ? (
+-        <div className="fixed inset-0 z-[100]">
+-          <SlatCountPreloader
+-            sequence={BOOT_SEQUENCE}
+-            preset="ink"
+-            palette={BOOT_PALETTE}
+-            label="RACK 01 / SESSION BOOT"
+-            caption="Routing interface, systems and production notes."
+-            exit="blinds"
+-            hud
+-            interactive={false}
+-            onComplete={complete}
+-          />
+-        </div>
++        <SignalLockPreloader className="z-[100]" onComplete={complete} />
+       ) : null}
+     </>
+   )
+diff --git a/tests/landing-gate.test.tsx b/tests/landing-gate.test.tsx
+new file mode 100644
+index 0000000..ceed0d9
+--- /dev/null
++++ b/tests/landing-gate.test.tsx
+@@ -0,0 +1,104 @@
++import { act } from 'react'
++import { createRoot, type Root } from 'react-dom/client'
++
++import { LandingGate } from '@/features/landing-page/components/landing-gate'
++;(
++  globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
++).IS_REACT_ACT_ENVIRONMENT = true
++
++/**
++ * The gate plays the preloader once per session and leaves the page it covers
++ * untouched. What matters here is the contract: the page is always rendered, the
++ * boot is shown once, and a failing `sessionStorage` is the harmless kind of
++ * failure.
++ */
++describe('<LandingGate />', () => {
++  let host: HTMLDivElement
++  let root: Root
++
++  beforeEach(() => {
++    jest.useFakeTimers()
++    window.sessionStorage.clear()
++    Object.defineProperty(window, 'matchMedia', {
++      configurable: true,
++      writable: true,
++      value: (query: string) => ({
++        matches: false,
++        media: query,
++        addEventListener: () => undefined,
++        removeEventListener: () => undefined,
++      }),
++    })
++    host = document.createElement('div')
++    document.body.appendChild(host)
++    root = createRoot(host)
++  })
++  afterEach(() => {
++    act(() => root.unmount())
++    host.remove()
++    jest.useRealTimers()
++    jest.restoreAllMocks()
++  })
++
++  const mount = () =>
++    act(() =>
++      root.render(
++        <LandingGate>
++          <main id="page">the page</main>
++        </LandingGate>,
++      ),
++    )
++
++  it('always renders the page, and puts the poster over it a frame later', () => {
++    mount()
++    expect(host.querySelector('#page')).not.toBeNull()
++    expect(host.querySelector('[aria-hidden="true"].fixed')).toBeNull()
++    act(() => {
++      jest.advanceTimersByTime(20)
++    })
++    const overlay = host.querySelector('[aria-hidden="true"].fixed')
++    expect(overlay).not.toBeNull()
++    expect(overlay!.className).toContain('z-[100]')
++    expect(host.querySelector('#page')).not.toBeNull()
++  })
++
++  it('removes the poster when it ends and remembers it for the session', () => {
++    mount()
++    // First the frame that puts the poster up, then its own 1.4s: a render
++    // scheduled by a timer lands when its `act` ends, so the poster's clock
++    // starts with the second one.
++    act(() => {
++      jest.advanceTimersByTime(20)
++    })
++    act(() => {
++      jest.advanceTimersByTime(1400)
++    })
++    expect(host.querySelector('[aria-hidden="true"].fixed')).toBeNull()
++    expect(host.querySelector('#page')).not.toBeNull()
++    expect(window.sessionStorage.getItem('aditya-landing-session-boot')).toBe(
++      '1',
++    )
++  })
++
++  it('does not play again in the same session', () => {
++    window.sessionStorage.setItem('aditya-landing-session-boot', '1')
++    mount()
++    act(() => {
++      jest.advanceTimersByTime(100)
++    })
++    expect(host.querySelector('[aria-hidden="true"].fixed')).toBeNull()
++    expect(host.querySelector('#page')).not.toBeNull()
++  })
++
++  it('skips the poster, and still renders the page, when storage throws', () => {
++    jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
++      throw new Error('blocked')
++    })
++    mount()
++    act(() => {
++      jest.advanceTimersByTime(100)
++    })
++    expect(host.querySelector('#page')).not.toBeNull()
++    expect(host.querySelector('[aria-hidden="true"].fixed')).toBeNull()
++  })
++})
+diff --git a/tests/signal-lock-preloader.test.tsx b/tests/signal-lock-preloader.test.tsx
+new file mode 100644
+index 0000000..1b2c588
+--- /dev/null
++++ b/tests/signal-lock-preloader.test.tsx
+@@ -0,0 +1,508 @@
++import { act } from 'react'
++import { createRoot, type Root } from 'react-dom/client'
++
++import SignalLockPreloader, {
++  ADVANCE,
++  CELL_H,
++  CELL_W,
++  GLYPHS,
++  LANES,
++  NAME_LINES,
++  REDUCED_MS,
++  REEL_DECOYS,
++  RULE_H,
++  RULE_W,
++  TIMECODE,
++  TIMELINE,
++  hash,
++  layoutName,
++  reelStrip,
++  ruleLine,
++  ruleTicks,
++  scrambleAt,
++  timelineEnd,
++} from '@/components/ui/signal-lock-preloader'
++;(
++  globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
++).IS_REACT_ACT_ENVIRONMENT = true
++
++/* ── The schedule: the numbers in the brief, asserted ───────────────────── */
++
++describe('TIMELINE', () => {
++  it('is 1.4s, and nothing in it runs past that', () => {
++    expect(TIMELINE.total).toBe(1400)
++    expect(timelineEnd()).toBeLessThanOrEqual(TIMELINE.total)
++    // The shutter is the last thing to finish and finishes exactly on time.
++    expect(timelineEnd()).toBe(TIMELINE.total)
++  })
++
++  it('stage 1: the playhead sweeps from 0 to 600ms', () => {
++    expect(TIMELINE.sweep).toEqual({ start: 0, duration: 600 })
++  })
++
++  it('stage 2: the decode lives inside 150–950ms, reels and timecode alike', () => {
++    const { cells } = layoutName()
++    const firstStart = Math.min(...cells.map((c) => c.delay))
++    const lastEnd =
++      Math.max(...cells.map((c) => c.delay)) + TIMELINE.reel.duration
++    expect(firstStart).toBeGreaterThanOrEqual(150)
++    expect(lastEnd).toBeLessThanOrEqual(950)
++    expect(TIMELINE.scramble).toEqual({ start: 150, end: 950 })
++    expect(TIMELINE.rules.start).toBe(150)
++    expect(TIMELINE.rules.start + TIMELINE.rules.duration).toBeLessThanOrEqual(
++      950,
++    )
++  })
++
++  it('stage 3: the thump and the shutter start at 1000ms, 50ms apart, and end at 1400', () => {
++    expect(TIMELINE.thump.start).toBe(1000)
++    expect(TIMELINE.shutter.start).toBe(1000)
++    expect(TIMELINE.shutter.stagger).toBe(50)
++    const last =
++      TIMELINE.shutter.start +
++      (LANES.length - 1) * TIMELINE.shutter.stagger +
++      TIMELINE.shutter.duration
++    expect(last).toBe(1400)
++  })
++
++  it('has the reduced-motion beat well under the full sequence', () => {
++    expect(REDUCED_MS).toBeLessThan(TIMELINE.total / 2)
++  })
++
++  it('locks the lamps as the decode lands, not before it starts', () => {
++    expect(TIMELINE.lock.start).toBeGreaterThan(TIMELINE.scramble.start)
++    expect(TIMELINE.lock.start).toBeLessThanOrEqual(TIMELINE.scramble.end)
++  })
++})
++
++/* ── The glyphs ─────────────────────────────────────────────────────────── */
++
++/** Every coordinate a path touches, so a glyph can be checked against its cell. */
++function points(d: string): [number, number][] {
++  const out: [number, number][] = []
++  let x = 0
++  let y = 0
++  const tokens = d.match(/[MLHVCZ]|-?[\d.]+/g) ?? []
++  let i = 0
++  let cmd = ''
++  const num = () => Number(tokens[i++])
++  while (i < tokens.length) {
++    if (/[MLHVCZ]/.test(tokens[i])) cmd = tokens[i++]
++    if (cmd === 'Z') continue
++    if (cmd === 'H') {
++      x = num()
++      out.push([x, y])
++    } else if (cmd === 'V') {
++      y = num()
++      out.push([x, y])
++    } else if (cmd === 'C') {
++      for (let k = 0; k < 3; k += 1) {
++        x = num()
++        y = num()
++        out.push([x, y])
++      }
++    } else {
++      x = num()
++      y = num()
++      out.push([x, y])
++    }
++  }
++  return out
++}
++
++describe('the monoline alphabet', () => {
++  const letters = [...new Set(NAME_LINES.join(''))]
++
++  it('has a glyph for every letter of the name', () => {
++    for (const ch of letters) expect(GLYPHS[ch]).toBeTruthy()
++  })
++
++  it('is strokes only: commands and numbers, nothing else', () => {
++    for (const d of Object.values(GLYPHS))
++      expect(d).toMatch(/^[MLHVCZ0-9.\s-]+$/)
++  })
++
++  it('stays inside its cell', () => {
++    for (const [ch, d] of Object.entries(GLYPHS)) {
++      for (const [x, y] of points(d)) {
++        expect(x).toBeGreaterThanOrEqual(0)
++        expect(x).toBeLessThanOrEqual(CELL_W)
++        expect(y).toBeGreaterThanOrEqual(0)
++        expect(y).toBeLessThanOrEqual(CELL_H)
++      }
++      // And spans the cell's height, so every letter is cap height.
++      const ys = points(d).map((p) => p[1])
++      expect(Math.min(...ys)).toBe(0)
++      expect(Math.max(...ys)).toBe(CELL_H)
++      expect(ch.length).toBe(1)
++    }
++  })
++})
++
++describe('layoutName', () => {
++  const name = layoutName()
++
++  it('lays out every letter of both lines', () => {
++    expect(name.cells).toHaveLength(NAME_LINES.join('').length)
++    expect(NAME_LINES.join('')).toBe('ADITYAHIMAONE')
++  })
++
++  it('keeps letters apart and in order along each line', () => {
++    for (const line of [0, 1]) {
++      const row = name.cells.filter((c) => c.line === line)
++      for (let i = 1; i < row.length; i += 1) {
++        expect(row[i].x - row[i - 1].x).toBe(ADVANCE)
++      }
++    }
++  })
++
++  it('centres the shorter line on the longer one', () => {
++    const first = name.cells.filter((c) => c.line === 0)
++    const second = name.cells.filter((c) => c.line === 1)
++    const mid = (row: typeof first) =>
++      (row[0].x + row[row.length - 1].x + CELL_W) / 2
++    expect(mid(first)).toBeCloseTo(mid(second), 6)
++    expect(mid(second)).toBeCloseTo(name.width / 2, 6)
++  })
++
++  it('fires reels left to right, at the pace of the playhead', () => {
++    const sorted = [...name.cells].sort((a, b) => a.x - b.x)
++    for (let i = 1; i < sorted.length; i += 1) {
++      expect(sorted[i].delay).toBeGreaterThanOrEqual(sorted[i - 1].delay)
++    }
++  })
++})
++
++describe('reel timing', () => {
++  it('is a straight function of horizontal position: same x, same start', () => {
++    const { cells, width } = layoutName()
++    for (const a of cells) {
++      for (const b of cells) {
++        if (a.x === b.x) expect(a.delay).toBe(b.delay)
++      }
++    }
++    // The leftmost letter starts first and the rightmost last.
++    const left = cells.reduce((m, c) => (c.x < m.x ? c : m))
++    const right = cells.reduce((m, c) => (c.x > m.x ? c : m))
++    expect(left.delay).toBeLessThan(right.delay)
++    expect(right.delay).toBeLessThanOrEqual(150 + 400)
++    expect(width).toBe(7 * ADVANCE - (ADVANCE - CELL_W))
++  })
++})
++
++describe('reelStrip', () => {
++  it('rolls through decoys and lands on the real letter', () => {
++    const strip = reelStrip('M', 4)
++    expect(strip).toHaveLength(REEL_DECOYS + 1)
++    expect(strip[strip.length - 1]).toBe('M')
++  })
++
++  it('never repeats a glyph back to back, so every step of the roll is visible', () => {
++    for (const [i, ch] of [...NAME_LINES.join('')].entries()) {
++      const strip = reelStrip(ch, i)
++      for (let k = 1; k < strip.length; k += 1)
++        expect(strip[k]).not.toBe(strip[k - 1])
++    }
++  })
++
++  it('uses only glyphs that exist, and is the same every time', () => {
++    for (const key of reelStrip('A', 0)) expect(GLYPHS[key]).toBeTruthy()
++    expect(reelStrip('E', 12)).toEqual(reelStrip('E', 12))
++  })
++
++  it('hashes stably', () => {
++    expect(hash(1, 2, 3)).toBe(hash(1, 2, 3))
++    expect(hash(1, 2, 3)).not.toBe(hash(3, 2, 1))
++  })
++})
++
++describe('the rulers', () => {
++  const ticks = (d: string) => d.match(/M[\d.]+ [\d.]+ V[\d.-]+/g) ?? []
++
++  it('draws a baseline across the whole width, on the screen-side edge', () => {
++    expect(ruleLine('top')).toBe(`M0 ${RULE_H - 2} H${RULE_W}`)
++    expect(ruleLine('bottom')).toBe(`M0 2 H${RULE_W}`)
++  })
++
++  it('has a tick every 10 units, longer every 100, growing into the page', () => {
++    for (const edge of ['top', 'bottom'] as const) {
++      const list = ticks(ruleTicks(edge))
++      expect(list).toHaveLength(RULE_W / 10 + 1)
++      const len = (t: string) => {
++        const [, y0, y1] = /M[\d.]+ ([\d.]+) V([\d.-]+)/.exec(t)!
++        return Math.abs(Number(y1) - Number(y0))
++      }
++      list.forEach((t, i) => expect(len(t)).toBe(i % 10 === 0 ? 14 : 6))
++      const ys = list.map((t) => Number(/V([\d.-]+)/.exec(t)![1]))
++      const base = edge === 'top' ? RULE_H - 2 : 2
++      for (const y of ys) {
++        if (edge === 'top') expect(y).toBeLessThan(base)
++        else expect(y).toBeGreaterThan(base)
++        expect(y).toBeGreaterThanOrEqual(0)
++        expect(y).toBeLessThanOrEqual(RULE_H)
++      }
++    }
++  })
++})
++
++describe('scrambleAt', () => {
++  it('is the target, exactly, at progress 1 (and past it)', () => {
++    expect(scrambleAt(TIMECODE, 1, 7)).toBe(TIMECODE)
++    expect(scrambleAt(TIMECODE, 5, 7)).toBe(TIMECODE)
++  })
++
++  it('keeps the shape of the line at every moment: same length, same punctuation', () => {
++    for (let p = 0; p <= 1; p += 0.05) {
++      const out = scrambleAt(TIMECODE, p, 3)
++      expect(out).toHaveLength(TIMECODE.length)
++      for (let i = 0; i < TIMECODE.length; i += 1) {
++        if (!/[0-9A-Z]/.test(TIMECODE[i])) expect(out[i]).toBe(TIMECODE[i])
++      }
++    }
++  })
++
++  it('keeps a digit a digit and a letter a letter while it is noise', () => {
++    const out = scrambleAt(TIMECODE, 0, 11)
++    for (let i = 0; i < TIMECODE.length; i += 1) {
++      if (/[0-9]/.test(TIMECODE[i])) expect(out[i]).toMatch(/[0-9]/)
++      if (/[A-Z]/.test(TIMECODE[i])) expect(out[i]).toMatch(/[A-Z]/)
++    }
++  })
++
++  it('resolves left to right and never un-resolves', () => {
++    let resolved = 0
++    for (let p = 0; p <= 1; p += 0.02) {
++      const out = scrambleAt(TIMECODE, p, 5)
++      let n = 0
++      while (n < TIMECODE.length && out[n] === TIMECODE[n]) n += 1
++      expect(n).toBeGreaterThanOrEqual(
++        Math.floor(Math.min(1, p) * TIMECODE.length) - 1,
++      )
++      // The settled prefix only grows (noise may coincide by chance, so test
++      // the guaranteed part).
++      const guaranteed = Math.floor(p * TIMECODE.length)
++      expect(guaranteed).toBeGreaterThanOrEqual(resolved)
++      resolved = guaranteed
++    }
++  })
++
++  it('is the same for the same frame and changes between frames', () => {
++    expect(scrambleAt(TIMECODE, 0.3, 9)).toBe(scrambleAt(TIMECODE, 0.3, 9))
++    const frames = new Set(
++      Array.from({ length: 12 }, (_, f) => scrambleAt(TIMECODE, 0.2, f)),
++    )
++    expect(frames.size).toBeGreaterThan(6)
++  })
++
++  it('treats a bad progress as the start', () => {
++    expect(scrambleAt(TIMECODE, Number.NaN, 1)).toBe(scrambleAt(TIMECODE, 0, 1))
++    expect(scrambleAt(TIMECODE, -3, 1)).toBe(scrambleAt(TIMECODE, 0, 1))
++  })
++})
++
++/* ── The component ──────────────────────────────────────────────────────── */
++
++function mockReduced(matches: boolean) {
++  Object.defineProperty(window, 'matchMedia', {
++    configurable: true,
++    writable: true,
++    value: (query: string) => ({
++      matches: matches && query.includes('reduce'),
++      media: query,
++      addEventListener: () => undefined,
++      removeEventListener: () => undefined,
++    }),
++  })
++}
++
++describe('<SignalLockPreloader />', () => {
++  let host: HTMLDivElement
++  let root: Root
++
++  beforeEach(() => {
++    jest.useFakeTimers()
++    mockReduced(false)
++    host = document.createElement('div')
++    document.body.appendChild(host)
++    root = createRoot(host)
++  })
++
++  afterEach(() => {
++    act(() => root.unmount())
++    host.remove()
++    jest.useRealTimers()
++  })
++
++  const mount = (props: Parameters<typeof SignalLockPreloader>[0] = {}) =>
++    act(() => root.render(<SignalLockPreloader {...props} />))
++  const overlay = () => host.firstElementChild as HTMLElement | null
++
++  it('is a fixed, inert, contained overlay that hides itself from assistive tech', () => {
++    mount()
++    const el = overlay()!
++    expect(el).not.toBeNull()
++    for (const c of ['fixed', 'inset-0', 'z-50', 'pointer-events-none']) {
++      expect(el.className).toContain(c)
++    }
++    expect(el.style.contain).toBe('strict')
++    expect(el.getAttribute('aria-hidden')).toBe('true')
++  })
++
++  it('draws three lanes with their labels and colours', () => {
++    mount()
++    const text = host.textContent ?? ''
++    for (const lane of LANES) expect(text).toContain(lane.label)
++    expect(LANES.map((l) => l.color)).toEqual(['#10B981', '#3B82F6', '#F59E0B'])
++  })
++
++  it('sets the paper and the ink', () => {
++    mount()
++    expect(overlay()!.style.getPropertyValue('--paper')).toBe('#EAE6DF')
++    expect(overlay()!.style.getPropertyValue('--ink')).toBe('#141414')
++  })
++
++  it('hands the whole schedule to the stylesheet as custom properties', () => {
++    mount()
++    const style = overlay()!.style
++    expect(style.getPropertyValue('--t-sweep')).toBe('600ms')
++    expect(style.getPropertyValue('--t-shutter-start')).toBe('1000ms')
++    expect(style.getPropertyValue('--t-shutter-stagger')).toBe('50ms')
++    expect(style.getPropertyValue('--t-thump-start')).toBe('1000ms')
++  })
++
++  it('builds one reel per letter, each with its own start and distance', () => {
++    mount()
++    const reels = host.querySelectorAll<SVGGElement>('g[style*="--dist"]')
++    expect(reels).toHaveLength(13)
++    for (const reel of reels) {
++      expect(reel.style.getPropertyValue('--dist')).toBe(
++        `${REEL_DECOYS * 18}px`,
++      )
++      expect(
++        parseInt(reel.style.getPropertyValue('--delay'), 10),
++      ).toBeGreaterThanOrEqual(150)
++    }
++  })
++
++  it('draws two rulers whose baselines use pathLength 1', () => {
++    mount()
++    const svgs = [...host.querySelectorAll('svg')].filter(
++      (s) => s.getAttribute('viewBox') === `0 0 ${RULE_W} ${RULE_H}`,
++    )
++    expect(svgs).toHaveLength(2)
++    for (const svg of svgs) {
++      expect(
++        svg.querySelectorAll('path[pathLength="1"]').length,
++      ).toBeGreaterThanOrEqual(2)
++    }
++  })
++
++  it('starts the timecode as noise of the right length and decodes it to LOCKED', () => {
++    mount()
++    const span = host.querySelector('p span')!
++    expect(span.textContent).toHaveLength(TIMECODE.length)
++    expect(span.textContent).not.toBe(TIMECODE)
++    act(() => {
++      jest.advanceTimersByTime(TIMELINE.scramble.end + 50)
++    })
++    expect(host.querySelector('p span')!.textContent).toBe(TIMECODE)
++    expect(host.querySelector('p span')!.textContent).toContain('LOCKED')
++  })
++
++  it('ends at 1400ms: present at 1399, gone at 1400, onComplete once', () => {
++    const onComplete = jest.fn()
++    mount({ onComplete })
++    act(() => {
++      jest.advanceTimersByTime(1399)
++    })
++    expect(overlay()).not.toBeNull()
++    expect(onComplete).not.toHaveBeenCalled()
++    act(() => {
++      jest.advanceTimersByTime(1)
++    })
++    expect(onComplete).toHaveBeenCalledTimes(1)
++    expect(overlay()).toBeNull()
++    act(() => {
++      jest.advanceTimersByTime(5000)
++    })
++    expect(onComplete).toHaveBeenCalledTimes(1)
++  })
++
++  it('calls the latest onComplete without restarting the clock', () => {
++    const first = jest.fn()
++    const second = jest.fn()
++    mount({ onComplete: first })
++    act(() => {
++      jest.advanceTimersByTime(700)
++    })
++    mount({ onComplete: second })
++    act(() => {
++      jest.advanceTimersByTime(699)
++    })
++    expect(overlay()).not.toBeNull()
++    act(() => {
++      jest.advanceTimersByTime(1)
++    })
++    expect(first).not.toHaveBeenCalled()
++    expect(second).toHaveBeenCalledTimes(1)
++  })
++
++  it('does nothing after it is unmounted', () => {
++    const onComplete = jest.fn()
++    mount({ onComplete })
++    act(() => root.unmount())
++    act(() => {
++      jest.advanceTimersByTime(3000)
++    })
++    expect(onComplete).not.toHaveBeenCalled()
++    root = createRoot(host)
++  })
++
++  it('merges a className over the defaults', () => {
++    mount({ className: 'z-[100]' })
++    expect(overlay()!.className).toContain('z-[100]')
++    expect(overlay()!.className).not.toContain('z-50')
++  })
++})
++
++describe('<SignalLockPreloader /> with reduced motion', () => {
++  let host: HTMLDivElement
++  let root: Root
++
++  beforeEach(() => {
++    jest.useFakeTimers()
++    mockReduced(true)
++    host = document.createElement('div')
++    document.body.appendChild(host)
++    root = createRoot(host)
++  })
++  afterEach(() => {
++    act(() => root.unmount())
++    host.remove()
++    jest.useRealTimers()
++    mockReduced(false)
++  })
++
++  it('shows the resolved poster at once, with no decode', () => {
++    act(() => root.render(<SignalLockPreloader />))
++    expect(host.firstElementChild!.getAttribute('data-reduced')).toBe('true')
++    act(() => {
++      jest.advanceTimersByTime(0)
++    })
++    expect(host.querySelector('p span')!.textContent).toBe(TIMECODE)
++  })
++
++  it('is over in the short beat, not 1.4s', () => {
++    const onComplete = jest.fn()
++    act(() => root.render(<SignalLockPreloader onComplete={onComplete} />))
++    act(() => {
++      jest.advanceTimersByTime(REDUCED_MS - 1)
++    })
++    expect(onComplete).not.toHaveBeenCalled()
++    act(() => {
++      jest.advanceTimersByTime(1)
++    })
++    expect(onComplete).toHaveBeenCalledTimes(1)
++    expect(host.firstElementChild).toBeNull()
++  })
++})
+-- 
+2.43.0
+

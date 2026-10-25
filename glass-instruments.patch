@@ -1,0 +1,2444 @@
+From 7ece9d011f2dcfc0dfe42a4abb887a7420fc4615 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 17 Oct 2026 03:54:03 +0000
+Subject: [PATCH] feat(instruments): glass 3D surfaces for the Skills
+ controller and Experience radio
+
+Draw both playable devices with the About section's glass kit (frosted cream
+shell, dark rim, cream chassis, dark glass screens, orange-lit pads, brushed
+knobs) as a three.js layer behind the live DOM. Layout and state are read from
+data-i3d parts and aria/data attributes, so audio, keyboard shortcuts and the
+scroll sequence are untouched and the DOM remains the fallback. Radio gains a
+playable TUNE dial and speaker.
+---
+ docs/glass-instruments.md                     |  54 ++
+ .../components/glass/glass-devices.ts         |  14 +-
+ .../components/instrument/instrument-core.ts  | 390 ++++++++++++
+ .../instrument/instrument-layout.ts           | 185 ++++++
+ .../instrument/instrument-models.ts           | 571 ++++++++++++++++++
+ .../components/instrument/use-instrument.ts   | 102 ++++
+ .../landing-page/rack-01/experience-deck.tsx  |  55 +-
+ features/landing-page/rack-01/primitives.tsx  |   4 +
+ .../landing-page/rack-01/rack-01.module.css   | 121 ++++
+ features/landing-page/rack-01/radio-audio.ts  |  88 +++
+ .../landing-page/rack-01/section-skills.tsx   |  37 +-
+ jest.config.js                                |  10 +-
+ tests/instrument-layout.test.ts               | 197 ++++++
+ tests/instrument-models.test.ts               | 251 ++++++++
+ 14 files changed, 2059 insertions(+), 20 deletions(-)
+ create mode 100644 docs/glass-instruments.md
+ create mode 100644 features/landing-page/components/instrument/instrument-core.ts
+ create mode 100644 features/landing-page/components/instrument/instrument-layout.ts
+ create mode 100644 features/landing-page/components/instrument/instrument-models.ts
+ create mode 100644 features/landing-page/components/instrument/use-instrument.ts
+ create mode 100644 features/landing-page/rack-01/radio-audio.ts
+ create mode 100644 tests/instrument-layout.test.ts
+ create mode 100644 tests/instrument-models.test.ts
+
+diff --git a/docs/glass-instruments.md b/docs/glass-instruments.md
+new file mode 100644
+index 0000000..c71e463
+--- /dev/null
++++ b/docs/glass-instruments.md
+@@ -0,0 +1,54 @@
++# Glass instruments: the Skills controller and the Experience radio
++
++The two playable devices are drawn with the same materials as the About
++section's sampler, cassette and player: a frosted cream shell with a dark rim
++over an opaque cream chassis, near-black glass for the screens, dark pads that
++light orange, brushed metal knobs. They reuse the About kit directly
++(`glassShell`, `inner`, `emissive`, now exported from `glass/glass-devices.ts`),
++so a pad here and a pad on the sampler are the same pad.
++
++## How it works: a surface layer behind the live DOM
++
++The controllers' markup already does everything a playable device must (focus,
++keyboard, `aria-*`, audio, the scroll sequence). Replacing it with a canvas
++would throw that away, so the 3D is a **layer behind it**:
++
++- **Layout from the DOM.** Every control carries `data-i3d="kind:id"`. The model
++  is built at those controls' measured rectangles (orthographic camera, one unit
++  = one CSS px), so reflows, breakpoints and key counts need no changes here.
++- **State from the DOM.** A pad is pressed by `aria-pressed`, flashed by
++  `data-hit`, a knob sits at `aria-valuenow`, a fader at `data-v`. A
++  MutationObserver wakes the renderer. React does not know the canvas exists.
++- **Input stays in the DOM.** Clicks, drags, the A-L keys and 1-6 pad shortcuts
++  all work exactly as before; the canvas is `pointer-events: none`.
++- **The DOM is the fallback.** `data-instrument="on"` is set only after a first
++  frame is drawn; the stylesheet hides DOM *surfaces* only then (controls go to
++  `opacity: 0`, never `display`, so they stay focusable and announced). No
++  WebGL, a phone, a lost context: nothing changes.
++
++## 3D and lightweight
++
++- Desktop width only, and loaded only within 600px of the viewport (three.js is
++  a dynamic import; phones never download it).
++- Render on demand: the loop runs while something moves and sleeps otherwise;
++  off-screen hosts draw nothing even while their DOM changes.
++- One cached geometry per box size, instanced speaker grille, pixel ratio capped
++  at 1.5, one context per instrument (two total, one visible at a time).
++- Pointer parallax (about 2.4 degrees) and a key light that follows the pointer
++  put a glint on the rounded edges.
++
++## What is playable
++
++Controller: pads sink and glow orange (and flash on a hit), knobs turn, fader
++caps slide, the wheels roll, keys dip at their front edge, ARP and PWR light.
++Radio: the TUNE dial (click or wheel) steps stations with a sweep of static and
++a tone, the speaker answers a tap, the LED meter climbs while you press it, the
++needle glides, the dials turn. Sounds are made with Web Audio; no assets.
++
++## Files
++
++`components/instrument/`: `instrument-layout.ts` (pure, tested),
++`instrument-core.ts` (renderer, wiring), `instrument-models.ts` (the two scenes,
++tested headlessly), `use-instrument.ts` (lazy mount). `rack-01/radio-audio.ts`.
++`jest.config.js` now lets ts-jest transform three so scenes can be tested
++without WebGL.
+diff --git a/features/landing-page/components/glass/glass-devices.ts b/features/landing-page/components/glass/glass-devices.ts
+index 085ffb0..f6da01e 100644
+--- a/features/landing-page/components/glass/glass-devices.ts
++++ b/features/landing-page/components/glass/glass-devices.ts
+@@ -60,11 +60,11 @@ export type { GlassHandle, GlassKind, GlassPose }
+ /** The canvas's backing size. Its CSS size is 208 x 156 (4.16 x 3.12 units). */
+ export const GLASS_CANVAS = { width: 512, height: 384 } as const
+ 
+-const ORANGE = new THREE.Color('#ff5a1f')
++export const ORANGE = new THREE.Color('#ff5a1f')
+ const DEG = Math.PI / 180
+ 
+ /** Looks, in one place, because they are tuned by eye and not derivable. */
+-const LOOK = {
++export const LOOK = {
+   shellOpacity: 0.46,
+   backOpacity: 0.3,
+   rimOpacity: 0.5,
+@@ -147,10 +147,10 @@ function shellMaterials() {
+   return { front, back, rim }
+ }
+ 
+-const inner = (color: number, roughness = 0.6) =>
++export const inner = (color: number, roughness = 0.6) =>
+   new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 })
+ 
+-const emissive = (color: number, intensity: number) =>
++export const emissive = (color: number, intensity: number) =>
+   new THREE.MeshStandardMaterial({
+     color,
+     emissive: color,
+@@ -163,7 +163,7 @@ const emissive = (color: number, intensity: number) =>
+  * Draw order is explicit so the rim is behind the back faces, which are behind
+  * the front faces, which are behind nothing.
+  */
+-function glassShell(
++export function glassShell(
+   geometry: THREE.BufferGeometry,
+   scaleRim = 1.025,
+ ): THREE.Group {
+@@ -182,7 +182,7 @@ function glassShell(
+   return group
+ }
+ 
+-function box(
++export function box(
+   w: number,
+   h: number,
+   d: number,
+@@ -487,7 +487,7 @@ function buildVinyl(): Model {
+   }
+ }
+ 
+-function disposeTree(root: THREE.Object3D) {
++export function disposeTree(root: THREE.Object3D) {
+   root.traverse((object) => {
+     const mesh = object as THREE.Mesh
+     mesh.geometry?.dispose()
+diff --git a/features/landing-page/components/instrument/instrument-core.ts b/features/landing-page/components/instrument/instrument-core.ts
+new file mode 100644
+index 0000000..1e55d20
+--- /dev/null
++++ b/features/landing-page/components/instrument/instrument-core.ts
+@@ -0,0 +1,390 @@
++import * as THREE from 'three'
++import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
++
++import {
++  approach,
++  parseId,
++  readPartAttributes,
++  relativeRect,
++  tiltFromPointer,
++  type Part,
++  type PartState,
++} from './instrument-layout'
++
++/**
++ * The glass-instrument renderer: a three.js surface layer behind live DOM.
++ *
++ * See `instrument-layout.ts` for the idea. This file is the machinery:
++ * measure the DOM controls, hand their rectangles to a scene builder, render
++ * the scene into a canvas that sits *behind* the host's children, and keep it
++ * in step with the DOM by reading attributes rather than being told anything.
++ *
++ * ## Why it is built like this
++ *
++ * - **A canvas behind, not a canvas instead.** The host's controls stay where
++ *   they are, with their own focus, keyboard and audio handlers. The canvas is
++ *   `pointer-events: none` at `z-index: -1` inside an isolated host, so it
++ *   paints above the host's own background and below every child. The host's
++ *   background is made transparent by CSS only once a first frame is on the
++ *   canvas (`data-instrument="on"`), so a failed start leaves the DOM exactly
++ *   as it was authored.
++ * - **Orthographic, in host pixels.** One model unit is one CSS pixel, and the
++ *   camera frames the host exactly. A control's model position is its measured
++ *   rectangle, so there is no layout to keep in sync and nothing to drift.
++ * - **Render on demand.** The loop runs while something is moving (a press, a
++ *   settling knob, the pointer's parallax) and goes to sleep when everything
++ *   has landed. A page at rest draws nothing, and a host that is off screen
++ *   draws nothing even while its DOM changes.
++ * - **Its own context, bounded.** The About devices share one off-screen
++ *   renderer because there are a dozen of them. There are two instruments and
++ *   one is on screen at a time, so each gets a context of its own with a capped
++ *   pixel ratio, and gives it back when it leaves the page.
++ * - **It can fail.** No WebGL, a lost context, a thrown build: `mountInstrument`
++ *   returns `null` or tears itself down and the DOM device is what remains.
++ */
++
++export type FrameContext = {
++  dt: number
++  time: number
++  states: ReadonlyMap<string, PartState>
++  hover: string | null
++  pressed: string | null
++  /** The light, as a −1…1 position over the device. */
++  light: { x: number; y: number }
++}
++
++export type InstrumentScene = {
++  /** Centred on the origin, in host pixels, y up. */
++  root: THREE.Group
++  /** Advance by `dt` seconds; return true while anything is still moving. */
++  update: (frame: FrameContext) => boolean
++  dispose: () => void
++}
++
++export type SceneBuilder = (
++  parts: Part[],
++  size: { width: number; height: number; radius: number },
++) => InstrumentScene
++
++export type Instrument = {
++  /** Re-read the DOM and draw. Cheap; coalesced into the next frame. */
++  refresh: () => void
++  dispose: () => void
++}
++
++/** Overscan around the host, so a tilted shell's walls are not clipped. */
++export const OVERSCAN = 24
++
++/** The attributes the scenes read, which is what wakes the renderer. */
++const WATCHED = [
++  'aria-pressed',
++  'aria-valuenow',
++  'aria-selected',
++  'data-v',
++  'data-hit',
++  'data-on',
++]
++
++/** The resting pose: far enough off axis that the shell shows its thickness. */
++const REST_TILT = { rx: -5, ry: 3.5 }
++
++export function mountInstrument(
++  host: HTMLElement,
++  build: SceneBuilder,
++): Instrument | null {
++  if (typeof WebGLRenderingContext === 'undefined') return null
++
++  const canvas = document.createElement('canvas')
++  canvas.setAttribute('aria-hidden', 'true')
++  canvas.dataset.instrumentCanvas = ''
++  canvas.style.cssText = [
++    'position:absolute',
++    `inset:-${OVERSCAN}px`,
++    `width:calc(100% + ${OVERSCAN * 2}px)`,
++    `height:calc(100% + ${OVERSCAN * 2}px)`,
++    'z-index:-1',
++    'pointer-events:none',
++    'display:block',
++  ].join(';')
++
++  let renderer: THREE.WebGLRenderer
++  try {
++    renderer = new THREE.WebGLRenderer({
++      canvas,
++      antialias: true,
++      alpha: true,
++      powerPreference: 'low-power',
++    })
++  } catch {
++    return null
++  }
++  renderer.setClearColor(0x000000, 0)
++  renderer.toneMapping = THREE.ACESFilmicToneMapping
++  renderer.toneMappingExposure = 1.05
++  renderer.outputColorSpace = THREE.SRGBColorSpace
++
++  const pmrem = new THREE.PMREMGenerator(renderer)
++  const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
++  pmrem.dispose()
++
++  const three = new THREE.Scene()
++  three.environment = env
++  const stage = new THREE.Group()
++  three.add(stage)
++
++  // The one moving light. Glass is lit by the environment; a point of key light
++  // is what puts a glint on a rounded key edge and lets it follow the pointer.
++  const key = new THREE.DirectionalLight(0xfff4e6, 1.15)
++  three.add(key)
++  three.add(key.target)
++
++  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -3000, 3000)
++  camera.position.z = 1000
++
++  let scene: InstrumentScene | null = null
++  let parts: Part[] = []
++  const states = new Map<string, PartState>()
++  let width = 0
++  let height = 0
++  let hover: string | null = null
++  let pressed: string | null = null
++  let visible = true
++  let alive = true
++  let raf = 0
++  let last = 0
++  let time = 0
++  let tilt = { rx: REST_TILT.rx, ry: REST_TILT.ry }
++  let tiltTarget = { rx: REST_TILT.rx, ry: REST_TILT.ry }
++  let light = { x: -0.4, y: 0.6 }
++  let lightTarget = { x: -0.4, y: 0.6 }
++  let statesDirty = true
++  let layoutDirty = true
++
++  const nodes = () =>
++    Array.from(host.querySelectorAll<HTMLElement>('[data-i3d]'))
++
++  const measure = () => {
++    const hostBox = host.getBoundingClientRect()
++    const layoutWidth = host.offsetWidth
++    const next: Part[] = []
++    for (const node of nodes()) {
++      const id = node.dataset.i3d ?? ''
++      const box = node.getBoundingClientRect()
++      const rect = relativeRect(
++        { x: box.left, y: box.top, w: box.width, h: box.height },
++        {
++          x: hostBox.left,
++          y: hostBox.top,
++          w: hostBox.width,
++          h: hostBox.height,
++        },
++        layoutWidth,
++      )
++      if (!rect || rect.w < 1 || rect.h < 1) continue
++      next.push({ ...rect, id, ...parseId(id) })
++    }
++    parts = next
++    width = host.offsetWidth
++    height = host.offsetHeight
++  }
++
++  const readStates = () => {
++    states.clear()
++    for (const node of nodes()) {
++      const id = node.dataset.i3d ?? ''
++      states.set(
++        id,
++        readPartAttributes((name) => node.getAttribute(name)),
++      )
++    }
++  }
++
++  const rebuild = () => {
++    measure()
++    if (width < 2 || height < 2) return false
++    scene?.dispose()
++    stage.clear()
++    const radius = parseFloat(getComputedStyle(host).borderTopLeftRadius) || 14
++    scene = build(parts, { width, height, radius })
++    stage.add(scene.root)
++
++    const w = width + OVERSCAN * 2
++    const h = height + OVERSCAN * 2
++    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
++    renderer.setSize(w, h, false)
++    camera.left = -w / 2
++    camera.right = w / 2
++    camera.top = h / 2
++    camera.bottom = -h / 2
++    camera.updateProjectionMatrix()
++    layoutDirty = false
++    return true
++  }
++
++  const schedule = () => {
++    if (raf || !alive || !visible) return
++    raf = requestAnimationFrame(frame)
++  }
++
++  const frame = (now: number) => {
++    raf = 0
++    if (!alive || !visible) return
++    if (layoutDirty && !rebuild()) return
++    if (statesDirty) {
++      readStates()
++      statesDirty = false
++    }
++    const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60
++    last = now
++    time += dt
++
++    tilt = {
++      rx: approach(tilt.rx, tiltTarget.rx, 9, dt, 0.01),
++      ry: approach(tilt.ry, tiltTarget.ry, 9, dt, 0.01),
++    }
++    light = {
++      x: approach(light.x, lightTarget.x, 8, dt, 0.002),
++      y: approach(light.y, lightTarget.y, 8, dt, 0.002),
++    }
++    stage.rotation.x = (tilt.rx * Math.PI) / 180
++    stage.rotation.y = (tilt.ry * Math.PI) / 180
++    key.position.set(light.x * 700, light.y * 500, 600)
++
++    const moving = scene
++      ? scene.update({ dt, time, states, hover, pressed, light })
++      : false
++    renderer.render(three, camera)
++
++    const settling =
++      tilt.rx !== tiltTarget.rx ||
++      tilt.ry !== tiltTarget.ry ||
++      light.x !== lightTarget.x ||
++      light.y !== lightTarget.y
++    if (moving || settling) schedule()
++    else last = 0
++  }
++
++  const refresh = () => {
++    statesDirty = true
++    schedule()
++  }
++
++  /* ── Wiring ─────────────────────────────────────────────── */
++
++  const idAt = (target: EventTarget | null) => {
++    const node = (target as Element | null)?.closest?.('[data-i3d]')
++    return (node as HTMLElement | null)?.dataset.i3d ?? null
++  }
++
++  const onMove = (event: PointerEvent) => {
++    const box = host.getBoundingClientRect()
++    if (box.width < 1 || box.height < 1) return
++    const nx = ((event.clientX - box.left) / box.width) * 2 - 1
++    const ny = ((event.clientY - box.top) / box.height) * 2 - 1
++    const offset = tiltFromPointer(nx, ny, 2.4)
++    tiltTarget = {
++      rx: REST_TILT.rx + offset.rx,
++      ry: REST_TILT.ry + offset.ry,
++    }
++    lightTarget = { x: nx, y: -ny }
++    const id = idAt(event.target)
++    if (id !== hover) hover = id
++    schedule()
++  }
++  const onLeave = () => {
++    hover = null
++    tiltTarget = { ...REST_TILT }
++    lightTarget = { x: -0.4, y: 0.6 }
++    schedule()
++  }
++  const onDown = (event: PointerEvent) => {
++    pressed = idAt(event.target)
++    schedule()
++  }
++  const onUp = () => {
++    if (pressed === null) return
++    pressed = null
++    schedule()
++  }
++
++  host.addEventListener('pointermove', onMove, { passive: true })
++  host.addEventListener('pointerleave', onLeave, { passive: true })
++  host.addEventListener('pointerdown', onDown, { passive: true })
++  window.addEventListener('pointerup', onUp, { passive: true })
++  window.addEventListener('pointercancel', onUp, { passive: true })
++
++  const mutations = new MutationObserver(refresh)
++  mutations.observe(host, {
++    attributes: true,
++    attributeFilter: WATCHED,
++    subtree: true,
++  })
++
++  const resize = new ResizeObserver(() => {
++    layoutDirty = true
++    statesDirty = true
++    schedule()
++  })
++  resize.observe(host)
++
++  const io = new IntersectionObserver((entries) => {
++    visible = entries[0] ? entries[0].isIntersecting : true
++    if (visible) {
++      statesDirty = true
++      schedule()
++    }
++  })
++  io.observe(host)
++
++  const dispose = () => {
++    if (!alive) return
++    alive = false
++    cancelAnimationFrame(raf)
++    host.removeEventListener('pointermove', onMove)
++    host.removeEventListener('pointerleave', onLeave)
++    host.removeEventListener('pointerdown', onDown)
++    window.removeEventListener('pointerup', onUp)
++    window.removeEventListener('pointercancel', onUp)
++    mutations.disconnect()
++    resize.disconnect()
++    io.disconnect()
++    scene?.dispose()
++    env.dispose()
++    renderer.dispose()
++    renderer.forceContextLoss()
++    canvas.remove()
++    delete host.dataset.instrument
++  }
++
++  canvas.addEventListener('webglcontextlost', (event) => {
++    // The DOM device is still there; hand it back.
++    event.preventDefault()
++    dispose()
++  })
++
++  try {
++    host.prepend(canvas)
++    if (!rebuild()) {
++      dispose()
++      return null
++    }
++    readStates()
++    statesDirty = false
++    ;(scene as InstrumentScene | null)?.update({
++      dt: 1 / 60,
++      time: 0,
++      states,
++      hover: null,
++      pressed: null,
++      light,
++    })
++    renderer.render(three, camera)
++    host.dataset.instrument = 'on'
++  } catch (error) {
++    console.error('Glass instrument: could not start', error)
++    dispose()
++    return null
++  }
++
++  return { refresh, dispose }
++}
+diff --git a/features/landing-page/components/instrument/instrument-layout.ts b/features/landing-page/components/instrument/instrument-layout.ts
+new file mode 100644
+index 0000000..a646b85
+--- /dev/null
++++ b/features/landing-page/components/instrument/instrument-layout.ts
+@@ -0,0 +1,185 @@
++/**
++ * Pure helpers for the glass instruments. No three.js, no DOM globals beyond
++ * the structural types, so everything here runs under jest.
++ *
++ * ## The idea the helpers serve
++ *
++ * The Skills controller and the Experience radio are the page's two *playable*
++ * devices, and their markup already does everything a playable device has to:
++ * buttons, sliders, a keyboard, focus order, `aria-*`, the audio. The glass
++ * instruments do not replace any of that. They are a **surface layer**: a
++ * three.js canvas behind the live DOM, drawing the glass, the metal and the
++ * light the same way the About section's devices are drawn, and *reading* the
++ * DOM to know what to show.
++ *
++ * - **Layout comes from the DOM.** Every control carries `data-i3d="kind:id"`;
++ *   the model is built at those controls' measured rectangles, so a different
++ *   key count, a reflowed grid or a media query changes nothing here.
++ * - **State comes from the DOM.** A pad is pressed when its `aria-pressed` says
++ *   so, a knob is at its `aria-valuenow`, a fader at its `data-v`. A
++ *   MutationObserver wakes the renderer; nothing in React knows the canvas
++ *   exists, so the audio, the shortcuts and the scroll sequence are untouched.
++ * - **The DOM is the fallback.** No WebGL, a lost context, a phone: the canvas
++ *   never takes over and the controller is exactly what it was.
++ */
++
++export type Rect = { x: number; y: number; w: number; h: number }
++
++export type Part = Rect & {
++  /** The full `data-i3d` value, e.g. `pad:3`. */
++  id: string
++  /** The part before the colon, e.g. `pad`. */
++  kind: string
++  /** The part after it, e.g. `3`. Empty for singletons like `lcd`. */
++  key: string
++}
++
++/** What a control's own attributes say about it. */
++export type PartState = {
++  pressed: boolean
++  hit: boolean
++  value: number
++}
++
++export const clamp = (n: number, lo: number, hi: number) =>
++  Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : lo
++
++export const clamp01 = (n: number) => clamp(n, 0, 1)
++
++/** `"pad:3"` → `{ kind: 'pad', key: '3' }`. */
++export function parseId(id: string): { kind: string; key: string } {
++  const at = id.indexOf(':')
++  return at < 0
++    ? { kind: id, key: '' }
++    : { kind: id.slice(0, at), key: id.slice(at + 1) }
++}
++
++/**
++ * A child's box in the host's own, unscaled CSS pixels.
++ *
++ * `getBoundingClientRect` reports what is on screen, which includes any
++ * transform on the host (the scroll sequences scale it). The model is built in
++ * the host's layout space, so the offset is divided by the host's own scale,
++ * which is the ratio of its drawn width to its layout width. A host with no
++ * layout width (display: none) has no scale to recover and yields `null`.
++ */
++export function relativeRect(
++  child: Rect,
++  host: Rect,
++  hostLayoutWidth: number,
++): Rect | null {
++  if (!(hostLayoutWidth > 0) || !(host.w > 0)) return null
++  const scale = host.w / hostLayoutWidth
++  return {
++    x: (child.x - host.x) / scale,
++    y: (child.y - host.y) / scale,
++    w: child.w / scale,
++    h: child.h / scale,
++  }
++}
++
++/** DOM space (origin top-left, y down) → model space (origin centre, y up). */
++export function toModel(rect: Rect, width: number, height: number) {
++  return {
++    x: rect.x + rect.w / 2 - width / 2,
++    y: height / 2 - (rect.y + rect.h / 2),
++    w: rect.w,
++    h: rect.h,
++  }
++}
++
++/** The knob's pointer angle in degrees for a 0–100 value: −125° to +125°. */
++export const knobDegrees = (value: number) => -125 + clamp(value, 0, 100) * 2.5
++
++/** `"rotate(135deg)"` → 135. Anything else → 0. */
++export function parseRotation(transform: string | null | undefined): number {
++  const match = /rotate\((-?[\d.]+)deg\)/.exec(transform ?? '')
++  return match ? Number(match[1]) : 0
++}
++
++/** `"36%"` → 36. Anything else → 0. */
++export function parsePercent(value: string | null | undefined): number {
++  const match = /^(-?[\d.]+)%$/.exec((value ?? '').trim())
++  return match ? Number(match[1]) : 0
++}
++
++/**
++ * Move `current` toward `target`, frame-rate independent.
++ *
++ * `rate` is the fraction of the remaining distance covered per second in the
++ * exponential sense (`1 - e^(-rate·dt)`), so 60fps and 144fps displays settle
++ * in the same wall-clock time. It lands exactly on the target inside `epsilon`,
++ * which is what lets the renderer know it has stopped and go to sleep.
++ */
++export function approach(
++  current: number,
++  target: number,
++  rate: number,
++  dt: number,
++  epsilon = 0.0005,
++): number {
++  const gap = target - current
++  if (Math.abs(gap) <= epsilon) return target
++  const next =
++    current + gap * (1 - Math.exp(-Math.max(0, rate) * Math.max(0, dt)))
++  return Math.abs(target - next) <= epsilon ? target : next
++}
++
++/**
++ * The radio's eight level LEDs, 0–1 each, as a function of time and how hard
++ * the set is being driven. A resting radio breathes (two low bars); a driven one
++ * climbs and dances. Pure and bounded, so the meter can be asserted on.
++ */
++export function ledLevels(time: number, drive: number, count = 8): number[] {
++  const d = clamp01(drive)
++  return Array.from({ length: count }, (_, i) => {
++    const wave = 0.5 + 0.5 * Math.sin(time * 5.2 + i * 1.3)
++    const ceiling = d * (count - i * 0.45) // lower bars light first
++    const level = clamp01(((ceiling * (0.45 + 0.55 * wave)) / count) * 1.6)
++    const floor = i < 2 ? 0.28 : 0
++    return Math.max(level, floor)
++  })
++}
++
++/** The pad/key/button depth a pressed control sinks to, in model px. */
++export function pressDepth(
++  kind: string,
++  pressed: boolean,
++  hover: boolean,
++): number {
++  const full = kind === 'key' ? 2.6 : kind === 'pad' ? 3.4 : 2.2
++  if (pressed) return -full
++  return hover ? full * 0.3 : 0
++}
++
++/** Pitch bend is −50…50 and rests at 0; mod is 0…100. Both → a 0–1 turn. */
++export function wheelTurn(kind: string, value: number): number {
++  return kind === 'pitch'
++    ? clamp((value + 50) / 100, 0, 1)
++    : clamp(value / 100, 0, 1)
++}
++
++/** Parallax from the pointer's position over the device, in degrees. */
++export function tiltFromPointer(
++  nx: number,
++  ny: number,
++  max = 3.2,
++): { rx: number; ry: number } {
++  return {
++    rx: clamp(ny, -1, 1) * max,
++    ry: clamp(nx, -1, 1) * max,
++  }
++}
++
++/** Read a control's own attributes into a `PartState`. */
++export function readPartAttributes(
++  get: (name: string) => string | null,
++): PartState {
++  const raw = get('aria-valuenow') ?? get('data-v')
++  const value = raw === null || raw === '' ? 0 : Number(raw)
++  return {
++    pressed: get('aria-pressed') === 'true' || get('data-on') === 'true',
++    hit: get('data-hit') === 'true',
++    value: Number.isFinite(value) ? value : 0,
++  }
++}
+diff --git a/features/landing-page/components/instrument/instrument-models.ts b/features/landing-page/components/instrument/instrument-models.ts
+new file mode 100644
+index 0000000..c8a6928
+--- /dev/null
++++ b/features/landing-page/components/instrument/instrument-models.ts
+@@ -0,0 +1,571 @@
++import * as THREE from 'three'
++import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
++
++import { ORANGE, emissive, glassShell, inner } from '../glass/glass-devices'
++import type {
++  FrameContext,
++  InstrumentScene,
++  SceneBuilder,
++} from './instrument-core'
++import {
++  approach,
++  knobDegrees,
++  ledLevels,
++  pressDepth,
++  toModel,
++  wheelTurn,
++  type Part,
++  type PartState,
++} from './instrument-layout'
++
++/**
++ * The two playable devices, as glass hardware.
++ *
++ * Both are built from the same kit the About section's sampler, cassette and
++ * player are built from (`glassShell`, `inner`, `emissive`): a frosted cream
++ * shell with a dark rim over an opaque cream chassis, near-black glass for the
++ * screens, dark pads that light orange, brushed metal for the knobs. They are
++ * not "inspired by" those devices; they are drawn with the same materials, so
++ * a pad here and a pad on the sampler are the same pad.
++ *
++ * Each scene is a function of the measured `Part`s and returns a scene whose
++ * `update` reads `PartState`s. Neither knows what a skill or an experience is.
++ */
++
++const DEG = Math.PI / 180
++
++/** Chassis face height above the origin, once the shell's depth is chosen. */
++const faceOf = (depth: number) => depth / 2 - 6
++
++/* ── Kit ─────────────────────────────────────────────────── */
++
++const geometries = new Map<string, THREE.BufferGeometry>()
++function boxGeometry(w: number, h: number, d: number, r: number) {
++  const radius = Math.max(
++    0.2,
++    Math.min(r, w / 2 - 0.01, h / 2 - 0.01, d / 2 - 0.01),
++  )
++  const key = [w, h, d, radius].map((n) => n.toFixed(1)).join('x')
++  let geometry = geometries.get(key)
++  if (!geometry) {
++    geometry = new RoundedBoxGeometry(w, h, d, 3, radius)
++    geometries.set(key, geometry)
++  }
++  return geometry
++}
++
++/**
++ * Geometry is cached across scenes (a rebuild after a resize re-uses it), so a
++ * scene must not dispose it. Materials are per-scene and are disposed.
++ */
++function disposeMaterials(root: THREE.Object3D) {
++  root.traverse((object) => {
++    const mesh = object as THREE.Mesh
++    const material = mesh.material
++    if (Array.isArray(material)) material.forEach((m) => m.dispose())
++    else material?.dispose()
++  })
++}
++
++function slab(
++  w: number,
++  h: number,
++  d: number,
++  material: THREE.Material,
++  r = 3,
++) {
++  return new THREE.Mesh(boxGeometry(w, h, d, r), material)
++}
++
++function brushedMetal() {
++  return new THREE.MeshStandardMaterial({
++    color: 0xdedbd4,
++    metalness: 1,
++    roughness: 0.28,
++  })
++}
++
++/** The shell and chassis every device here sits in. */
++function body(width: number, height: number, depth: number, radius: number) {
++  const group = new THREE.Group()
++  const r = Math.min(radius + 4, depth / 2 - 0.5)
++  const shell = glassShell(new RoundedBoxGeometry(width, height, depth, 5, r))
++  // The About devices' rim is a 2.5% scale-up on a unit-sized body; on a
++  // device a thousand pixels wide that would be thirty pixels of rim, so it is
++  // set as a fixed few pixels in each axis instead.
++  shell.children[0].scale.set(1 + 4 / width, 1 + 4 / height, 1 + 8 / depth)
++  group.add(shell)
++  group.add(
++    slab(
++      width - 10,
++      height - 10,
++      depth - 12,
++      inner(0xcfc9bc),
++      Math.max(4, r - 4),
++    ),
++  )
++  return group
++}
++
++type Mover = (frame: FrameContext) => boolean
++
++const stillRequested = () =>
++  typeof window !== 'undefined' &&
++  typeof window.matchMedia === 'function' &&
++  window.matchMedia('(prefers-reduced-motion: reduce)').matches
++
++/** One knob: brushed metal, an orange pointer, turned to an angle. */
++function knobMesh(rect: { w: number; h: number }) {
++  const radius = (Math.min(rect.w, rect.h) / 2) * 0.9
++  const group = new THREE.Group()
++  const base = new THREE.Mesh(
++    new THREE.CylinderGeometry(radius * 1.08, radius * 1.12, 4, 40),
++    inner(0x2a2e2b, 0.5),
++  )
++  base.rotation.x = Math.PI / 2
++  group.add(base)
++  const cap = new THREE.Group()
++  const disc = new THREE.Mesh(
++    new THREE.CylinderGeometry(radius, radius, 11, 40),
++    brushedMetal(),
++  )
++  disc.rotation.x = Math.PI / 2
++  disc.position.z = 7
++  cap.add(disc)
++  const pointer = slab(
++    radius * 0.16,
++    radius * 0.5,
++    2,
++    emissive(0xff5a1f, 0.9),
++    0.8,
++  )
++  pointer.position.set(0, radius * 0.5, 12.6)
++  cap.add(pointer)
++  group.add(cap)
++  return { group, cap }
++}
++
++const valueOf = (frame: FrameContext, id: string): PartState =>
++  frame.states.get(id) ?? { pressed: false, hit: false, value: 0 }
++
++/* ── The Skills controller ───────────────────────────────── */
++
++export const buildController: SceneBuilder = (parts, size) => {
++  const { width, height, radius } = size
++  const depth = 34
++  const face = faceOf(depth)
++  const root = new THREE.Group()
++  root.add(body(width, height, depth, radius))
++
++  const movers: Mover[] = []
++  const place = (part: Part) => toModel(part, width, height)
++
++  const keyParts = parts.filter((p) => p.kind === 'key')
++  const tallest = Math.max(1, ...keyParts.map((p) => p.h))
++
++  for (const part of parts) {
++    const at = place(part)
++
++    if (part.kind === 'lcd') {
++      // Two steps of recess: a pale bezel, then near-black glass. The DOM
++      // screen's own readouts and scope are drawn over the glass.
++      const bezel = slab(at.w + 12, at.h + 12, 4, inner(0xb9b3a5, 0.5), 6)
++      bezel.position.set(at.x, at.y, face + 0.5)
++      const glass = slab(at.w + 2, at.h + 2, 6, inner(0x0b0d0c, 0.22), 5)
++      glass.position.set(at.x, at.y, face + 1.5)
++      root.add(bezel, glass)
++    }
++
++    if (part.kind === 'bed') {
++      const bed = slab(at.w, at.h, 4, inner(0xb2ac9e, 0.6), 6)
++      bed.position.set(at.x, at.y, face + 0.5)
++      root.add(bed)
++    }
++
++    if (part.kind === 'arp' || part.kind === 'pwr') {
++      const material = inner(part.kind === 'pwr' ? 0xd6d0c3 : 0xe7e2d8, 0.4)
++      const led = emissive(0xff5a1f, 0)
++      const button = slab(at.w, at.h, 8, material, 4)
++      const strip = slab(at.w * 0.6, 3, 2, led, 1)
++      strip.position.set(0, -at.h / 2 + 5, 4.6)
++      button.add(strip)
++      button.position.set(at.x, at.y, face + 4)
++      root.add(button)
++      let z = 0
++      let glow = 0
++      movers.push((frame) => {
++        const s = valueOf(frame, part.id)
++        const down = pressDepth(
++          'button',
++          frame.pressed === part.id,
++          frame.hover === part.id,
++        )
++        z = approach(z, down, 22, frame.dt, 0.01)
++        const on = s.pressed
++        glow = approach(glow, on ? 1.6 : 0, 14, frame.dt, 0.01)
++        button.position.z = face + 4 + z
++        led.emissiveIntensity = glow
++        return z !== down || glow !== (on ? 1.6 : 0)
++      })
++    }
++
++    if (part.kind === 'pad') {
++      const material = new THREE.MeshStandardMaterial({
++        color: 0x2a2e2b,
++        emissive: ORANGE,
++        emissiveIntensity: 0,
++        roughness: 0.28,
++      })
++      const pad = slab(at.w, at.h, 10, material, 5)
++      pad.position.set(at.x, at.y, face + 5)
++      root.add(pad)
++      let z = 0
++      let glow = 0
++      movers.push((frame) => {
++        const s = valueOf(frame, part.id)
++        const goal = s.hit
++          ? 1.7
++          : s.pressed
++            ? 0.6
++            : frame.hover === part.id
++              ? 0.2
++              : 0
++        const down = pressDepth(
++          'pad',
++          frame.pressed === part.id || s.hit,
++          frame.hover === part.id,
++        )
++        z = approach(z, down, 24, frame.dt, 0.01)
++        glow = approach(glow, goal, 20, frame.dt, 0.01)
++        pad.position.z = face + 5 + z
++        material.emissiveIntensity = glow
++        return z !== down || glow !== goal
++      })
++    }
++
++    if (part.kind === 'knob') {
++      const { group, cap } = knobMesh(at)
++      group.position.set(at.x, at.y, face)
++      root.add(group)
++      let angle = knobDegrees(0)
++      movers.push((frame) => {
++        const target = knobDegrees(valueOf(frame, part.id).value)
++        angle = approach(angle, target, 16, frame.dt, 0.05)
++        cap.rotation.z = -angle * DEG
++        return angle !== target
++      })
++    }
++
++    if (part.kind === 'fader') {
++      const vertical = part.h >= part.w
++      const length = (vertical ? at.h : at.w) * 0.9
++      const slot = slab(
++        vertical ? 6 : length,
++        vertical ? length : 6,
++        4,
++        inner(0x1d1f1e, 0.3),
++        2.5,
++      )
++      slot.position.set(at.x, at.y, face + 1)
++      const capSize = vertical
++        ? { w: Math.min(at.w, 34), h: 16 }
++        : { w: 16, h: Math.min(at.h, 34) }
++      const metal = brushedMetal()
++      const thumb = slab(capSize.w, capSize.h, 10, metal, 3)
++      const line = slab(
++        vertical ? capSize.w * 0.7 : 2,
++        vertical ? 2 : capSize.h * 0.7,
++        1.5,
++        emissive(0xff5a1f, 0.9),
++        0.6,
++      )
++      line.position.z = 5.6
++      thumb.add(line)
++      root.add(slot, thumb)
++      let t = 0
++      movers.push((frame) => {
++        const target = Math.min(
++          1,
++          Math.max(0, valueOf(frame, part.id).value / 100),
++        )
++        t = approach(t, target, 18, frame.dt, 0.001)
++        const travel = length - (vertical ? capSize.h : capSize.w)
++        thumb.position.set(
++          vertical ? at.x : at.x - travel / 2 + t * travel,
++          vertical ? at.y - travel / 2 + t * travel : at.y,
++          face + 7 + pressDepth('button', frame.pressed === part.id, false),
++        )
++        return t !== target
++      })
++    }
++
++    if (part.kind === 'wheel') {
++      const well = slab(at.w, at.h, 6, inner(0x1d1f1e, 0.3), 4)
++      well.position.set(at.x, at.y, face + 1)
++      const wheelRadius = Math.min(at.h * 0.5, at.w * 0.62)
++      const wheel = new THREE.Group()
++      const drum = new THREE.Mesh(
++        new THREE.CylinderGeometry(wheelRadius, wheelRadius, at.w * 0.8, 36),
++        brushedMetal(),
++      )
++      drum.rotation.z = Math.PI / 2
++      wheel.add(drum)
++      for (let band = 0; band < 5; band += 1) {
++        const ridge = slab(
++          at.w * 0.82,
++          1.6,
++          1.6,
++          emissive(0xff5a1f, band === 2 ? 1 : 0.15),
++          0.5,
++        )
++        const a = (band - 2) * 0.34
++        ridge.position.set(
++          0,
++          Math.sin(a) * wheelRadius,
++          Math.cos(a) * wheelRadius,
++        )
++        ridge.rotation.x = -a
++        wheel.add(ridge)
++      }
++      wheel.position.set(at.x, at.y, face + wheelRadius * 0.45 + 2)
++      root.add(well, wheel)
++      let turn = wheelTurn(part.key, 0)
++      movers.push((frame) => {
++        const target = wheelTurn(part.key, valueOf(frame, part.id).value)
++        turn = approach(turn, target, 14, frame.dt, 0.002)
++        wheel.rotation.x = (turn - 0.5) * -2.2
++        return turn !== target
++      })
++    }
++
++    if (part.kind === 'key') {
++      const black = part.h < tallest * 0.8
++      const material = black ? inner(0x23262a, 0.3) : inner(0xece7dc, 0.42)
++      const keyDepth = black ? 22 : 14
++      const key = slab(
++        Math.max(2, at.w - 1.4),
++        at.h,
++        keyDepth,
++        material,
++        black ? 2.2 : 3,
++      )
++      // Pivot at the key's far edge, so a press dips the front like a real key.
++      const pivot = new THREE.Group()
++      key.position.y = -at.h / 2
++      pivot.add(key)
++      pivot.position.set(at.x, at.y + at.h / 2, face + keyDepth / 2 + 0.5)
++      root.add(pivot)
++      let dip = 0
++      movers.push((frame) => {
++        const s = valueOf(frame, part.id)
++        const goal = pressDepth(
++          'key',
++          frame.pressed === part.id || s.pressed,
++          frame.hover === part.id,
++        )
++        dip = approach(dip, goal, 28, frame.dt, 0.01)
++        pivot.rotation.x = dip * 0.012
++        pivot.position.z = face + keyDepth / 2 + 0.5 + dip * 0.4
++        return dip !== goal
++      })
++    }
++  }
++
++  return finish(root, movers)
++}
++
++/* ── The Experience radio ────────────────────────────────── */
++
++export const buildRadio: SceneBuilder = (parts, size) => {
++  const { width, height, radius } = size
++  const depth = 40
++  const face = faceOf(depth)
++  const root = new THREE.Group()
++  root.add(body(width, height, depth, radius))
++
++  const movers: Mover[] = []
++  const get = (kind: string) => parts.find((p) => p.id === kind)
++  const place = (part: Part) => toModel(part, width, height)
++
++  const handle = get('handle')
++  if (handle) {
++    const at = place(handle)
++    const bar = slab(at.w, Math.max(at.h, 10), 12, inner(0x2a2e2b, 0.35), 5)
++    bar.position.set(at.x, at.y, face + 6)
++    root.add(bar)
++  }
++
++  const plate = get('face')
++  if (plate) {
++    const at = place(plate)
++    const recess = slab(at.w, at.h, 5, inner(0xbdb7a9, 0.55), 10)
++    recess.position.set(at.x, at.y, face + 0.5)
++    root.add(recess)
++  }
++
++  // The speaker: a dark well and a field of grille dots. The dots are an
++  // InstancedMesh, so a hundred and sixty holes are one draw call.
++  const speaker = get('speaker')
++  let speakerGroup: THREE.Group | null = null
++  if (speaker) {
++    const at = place(speaker)
++    speakerGroup = new THREE.Group()
++    speakerGroup.position.set(at.x, at.y, face)
++    const well = slab(at.w, at.h, 6, inner(0x1d1f1e, 0.3), 9)
++    well.position.z = 1.5
++    speakerGroup.add(well)
++    const pitch = 11
++    const cols = Math.max(2, Math.floor((at.w - 28) / pitch))
++    const rows = Math.max(2, Math.floor((at.h - 56) / pitch))
++    const dots = new THREE.InstancedMesh(
++      new THREE.CylinderGeometry(2.6, 2.6, 2, 14),
++      inner(0x4a4d49, 0.5),
++      cols * rows,
++    )
++    const m = new THREE.Matrix4()
++    const q = new THREE.Quaternion().setFromEuler(
++      new THREE.Euler(Math.PI / 2, 0, 0),
++    )
++    let i = 0
++    for (let r = 0; r < rows; r += 1) {
++      for (let c = 0; c < cols; c += 1) {
++        m.compose(
++          new THREE.Vector3(
++            (c - (cols - 1) / 2) * pitch,
++            (r - (rows - 1) / 2) * pitch + 10,
++            5,
++          ),
++          q,
++          new THREE.Vector3(1, 1, 1),
++        )
++        dots.setMatrixAt(i, m)
++        i += 1
++      }
++    }
++    speakerGroup.add(dots)
++    root.add(speakerGroup)
++  }
++
++  const lcd = get('lcd')
++  if (lcd) {
++    const at = place(lcd)
++    const bezel = slab(at.w + 10, at.h + 10, 4, inner(0xb9b3a5, 0.5), 6)
++    bezel.position.set(at.x, at.y, face + 0.5)
++    const glass = slab(at.w + 1, at.h + 1, 6, inner(0x0b0d0c, 0.22), 5)
++    glass.position.set(at.x, at.y, face + 1.5)
++    root.add(bezel, glass)
++  }
++
++  const scale = get('scale')
++  if (scale) {
++    const at = place(scale)
++    const strip = slab(at.w, at.h, 5, inner(0x0f1110, 0.3), 4)
++    strip.position.set(at.x, at.y, face + 1)
++    root.add(strip)
++    const needleMat = emissive(0xff5a1f, 1.3)
++    const needle = slab(3, at.h * 1.15, 8, needleMat, 1.2)
++    root.add(needle)
++    let pct = 0
++    let first = true
++    movers.push((frame) => {
++      const target = valueOf(frame, 'needle').value
++      pct = first ? target : approach(pct, target, 9, frame.dt, 0.02)
++      first = false
++      needle.position.set(at.x - at.w / 2 + (pct / 100) * at.w, at.y, face + 5)
++      return pct !== target
++    })
++  }
++
++  // Eight LEDs. They breathe at rest and climb when the set is being driven,
++  // which is whenever the pointer is over the speaker or a tune is in flight.
++  const level = get('level')
++  if (level) {
++    const at = place(level)
++    const count = 8
++    const gap = 3
++    const barW = (at.w - gap * (count - 1)) / count
++    const bars = Array.from({ length: count }, (_, index) => {
++      const color = index >= 6 ? 0xff5a1f : index >= 4 ? 0xe0b75a : 0x5cd6a3
++      const material = emissive(color, 0)
++      const bar = slab(barW, at.h, 4, material, 1.4)
++      bar.position.set(
++        at.x - at.w / 2 + barW / 2 + index * (barW + gap),
++        at.y,
++        face + 1.5,
++      )
++      root.add(bar)
++      return { bar, material }
++    })
++    const backing = slab(at.w + 8, at.h + 8, 3, inner(0x151716, 0.4), 4)
++    backing.position.set(at.x, at.y, face + 0.5)
++    root.add(backing)
++    let drive = 0.25
++    movers.push((frame) => {
++      const hot =
++        frame.hover === 'speaker' ||
++        frame.pressed === 'speaker' ||
++        frame.pressed === 'dial:tune'
++      drive = approach(drive, hot ? 1 : 0.25, 6, frame.dt, 0.01)
++      ledLevels(frame.time, drive, count).forEach((value, index) => {
++        bars[index].material.emissiveIntensity = value * 1.5
++      })
++      // The LEDs breathe forever; the renderer only needs to keep drawing while
++      // they are visible, which is what the host's visibility gate decides. A
++      // visitor who asked for reduced motion gets them still, and the loop
++      // sleeps like it does on the controller.
++      return !stillRequested() || drive !== (hot ? 1 : 0.25)
++    })
++  }
++
++  for (const id of ['dial:vol', 'dial:tune']) {
++    const part = get(id)
++    if (!part) continue
++    const at = place(part)
++    const { group, cap } = knobMesh(at)
++    group.position.set(at.x, at.y, face)
++    root.add(group)
++    let angle = 0
++    let first = true
++    movers.push((frame) => {
++      const raw = valueOf(frame, id).value
++      // The deck writes the TUNE dial in degrees and leaves VOL at rest.
++      const target = id === 'dial:vol' ? 40 : raw % 360
++      angle = first ? target : approach(angle, target, 10, frame.dt, 0.1)
++      first = false
++      cap.rotation.z = -angle * DEG
++      return angle !== target
++    })
++  }
++
++  const bay = get('bay')
++  if (bay) {
++    const at = place(bay)
++    const well = slab(at.w + 8, at.h + 8, 6, inner(0x1d1f1e, 0.3), 8)
++    well.position.set(at.x, at.y, face + 1)
++    root.add(well)
++  }
++
++  return finish(root, movers, () => {
++    if (speakerGroup) speakerGroup.scale.setScalar(1)
++  })
++}
++
++function finish(
++  root: THREE.Group,
++  movers: Mover[],
++  onSettle?: () => void,
++): InstrumentScene {
++  return {
++    root,
++    update(frame) {
++      let moving = false
++      for (const mover of movers) if (mover(frame)) moving = true
++      if (!moving) onSettle?.()
++      return moving
++    },
++    dispose() {
++      disposeMaterials(root)
++      root.clear()
++    },
++  }
++}
+diff --git a/features/landing-page/components/instrument/use-instrument.ts b/features/landing-page/components/instrument/use-instrument.ts
+new file mode 100644
+index 0000000..328e791
+--- /dev/null
++++ b/features/landing-page/components/instrument/use-instrument.ts
+@@ -0,0 +1,102 @@
++'use client'
++
++import { useEffect, type RefObject } from 'react'
++
++import type { Instrument } from './instrument-core'
++
++export type InstrumentKind = 'controller' | 'radio'
++
++/** Same breakpoint the rack's desktop-only motion uses. */
++const DESKTOP = '(min-width: 769px)'
++
++/**
++ * Give a DOM device a glass surface behind it.
++ *
++ * Nothing about the device's own behaviour moves into this hook: it finds the
++ * host, and — only on a desktop-width screen, and only once the device is
++ * within a screen of the viewport — loads three.js and mounts an instrument
++ * behind the host's children. three.js is imported inside that path, so none of
++ * it is part of first load, and a phone never downloads it.
++ *
++ * The instrument flips `data-instrument="on"` on the host once it has a first
++ * frame; the stylesheet hides the DOM surfaces only then. If WebGL is missing,
++ * the import fails or the context is lost, the attribute never appears (or is
++ * removed) and the DOM device is exactly what it was authored as.
++ */
++export function useInstrument(
++  hostRef: RefObject<HTMLElement | null>,
++  kind: InstrumentKind,
++) {
++  useEffect(() => {
++    const host = hostRef.current
++    if (!host) return
++
++    const query = window.matchMedia(DESKTOP)
++    let instrument: Instrument | null = null
++    let observer: IntersectionObserver | null = null
++    let disposed = false
++    let generation = 0
++
++    const stop = () => {
++      generation += 1
++      observer?.disconnect()
++      observer = null
++      instrument?.dispose()
++      instrument = null
++    }
++
++    const start = async () => {
++      const mine = generation
++      try {
++        const [core, models] = await Promise.all([
++          import('./instrument-core'),
++          import('./instrument-models'),
++        ])
++        if (disposed || mine !== generation) return
++        // A font or an image can still be settling the host's layout; measure
++        // on the next frame so the first build sees the real rectangles.
++        await new Promise<void>((resolve) =>
++          requestAnimationFrame(() => resolve()),
++        )
++        if (disposed || mine !== generation) return
++        instrument = core.mountInstrument(
++          host,
++          kind === 'controller' ? models.buildController : models.buildRadio,
++        )
++      } catch (error) {
++        console.error('Glass instrument: could not load', error)
++      }
++    }
++
++    const arm = () => {
++      if (observer || instrument) return
++      if (typeof IntersectionObserver === 'undefined') {
++        void start()
++        return
++      }
++      observer = new IntersectionObserver(
++        (entries) => {
++          if (!entries.some((entry) => entry.isIntersecting)) return
++          observer?.disconnect()
++          observer = null
++          void start()
++        },
++        { rootMargin: '600px' },
++      )
++      observer.observe(host)
++    }
++
++    const sync = () => {
++      if (query.matches) arm()
++      else stop()
++    }
++
++    sync()
++    query.addEventListener('change', sync)
++    return () => {
++      disposed = true
++      query.removeEventListener('change', sync)
++      stop()
++    }
++  }, [hostRef, kind])
++}
+diff --git a/features/landing-page/rack-01/experience-deck.tsx b/features/landing-page/rack-01/experience-deck.tsx
+index b69fdb7..855413f 100644
+--- a/features/landing-page/rack-01/experience-deck.tsx
++++ b/features/landing-page/rack-01/experience-deck.tsx
+@@ -1,6 +1,6 @@
+ 'use client'
+ 
+-import { useEffect, useState } from 'react'
++import { useCallback, useEffect, useRef, useState } from 'react'
+ import {
+   CassetteFace,
+   cassetteAccentVars,
+@@ -9,6 +9,8 @@ import {
+ import { SilkscreenLabel } from './primitives'
+ import styles from './rack-01.module.css'
+ import { Screw } from '@/components/ui/screw'
++import { useInstrument } from '../components/instrument/use-instrument'
++import { playTap, playTune } from './radio-audio'
+ import { EXPERIENCES } from '../constants'
+ 
+ const STATIONS = [88.5, 94.2, 100.8, 106.5]
+@@ -44,6 +46,22 @@ export function ExperienceDeck({
+     []
+ 
+   const [displayFreq, setDisplayFreq] = useState('88.50')
++  const deckRef = useRef<HTMLDivElement | null>(null)
++
++  // The glass surface behind the radio; see `use-instrument.ts`.
++  useInstrument(deckRef, 'radio')
++
++  // The set is playable: the TUNE dial steps to the next station with a sweep
++  // of static, and the speaker answers a tap. Both are pointer-only extras —
++  // the tabs and cassettes below are the keyboard path to the same state.
++  const tuneNext = useCallback(
++    (step: number) => {
++      const next = (selected + step + EXPERIENCES.length) % EXPERIENCES.length
++      setSelected(next)
++      playTune(STATIONS[next] ?? 88.5)
++    },
++    [selected, setSelected],
++  )
+ 
+   useEffect(() => {
+     const targetFreq = STATIONS[selected] ?? 88.5
+@@ -72,10 +90,14 @@ export function ExperienceDeck({
+   const targetKnob = KNOB_ROTATIONS[selected] ?? 0
+ 
+   return (
+-    <div className={styles.cassetteDeck}>
++    <div
++      ref={deckRef}
++      className={styles.cassetteDeck}
++      data-instrument-host="radio"
++    >
+       <Screw className={styles.screwTopLeft} />
+       <Screw className={styles.screwTopRight} />
+-      <div className={styles.radioHandle} aria-hidden="true">
++      <div className={styles.radioHandle} data-i3d="handle" aria-hidden="true">
+         <span />
+       </div>
+       <div className={styles.cassetteHeader}>
+@@ -85,11 +107,16 @@ export function ExperienceDeck({
+           <b className={styles.radioHeaderStatus}>ON AIR</b>
+         </span>
+       </div>
+-      <div className={styles.radioFace}>
+-        <div className={styles.radioSpeaker} aria-hidden="true">
++      <div className={styles.radioFace} data-i3d="face">
++        <div
++          className={styles.radioSpeaker}
++          data-i3d="speaker"
++          onPointerDown={playTap}
++          aria-hidden="true"
++        >
+           <span className={styles.radioSpeakerBadge}>R-01</span>
+           <div className={styles.speakerGrille} />
+-          <div className={styles.radioLevel}>
++          <div className={styles.radioLevel} data-i3d="level">
+             {Array.from({ length: 8 }, (_, index) => (
+               <i key={index} />
+             ))}
+@@ -97,16 +124,18 @@ export function ExperienceDeck({
+         </div>
+         <div className={styles.radioCore}>
+           <div className={styles.radioTuner} aria-hidden="true">
+-            <div className={styles.frequencyDisplay}>
++            <div className={styles.frequencyDisplay} data-i3d="lcd">
+               <span>FM</span>
+               <strong>{displayFreq}</strong>
+               <small>MHz</small>
+             </div>
+-            <div className={styles.frequencyScale}>
++            <div className={styles.frequencyScale} data-i3d="scale">
+               {[88, 92, 96, 100, 104, 108].map((frequency) => (
+                 <span key={frequency}>{frequency}</span>
+               ))}
+               <i
++                data-i3d="needle"
++                data-v={targetNeedle}
+                 style={{
+                   left: `${targetNeedle}%`,
+                   transition: 'left 450ms cubic-bezier(0.22, 1, 0.36, 1)',
+@@ -115,11 +144,16 @@ export function ExperienceDeck({
+             </div>
+             <div className={styles.radioDials}>
+               <span>
+-                <i />
++                <i data-i3d="dial:vol" />
+                 VOL
+               </span>
+-              <span>
++              <span
++                onClick={() => tuneNext(1)}
++                onWheel={(event) => tuneNext(event.deltaY > 0 ? 1 : -1)}
++              >
+                 <i
++                  data-i3d="dial:tune"
++                  data-v={targetKnob}
+                   style={{
+                     transform: `rotate(${targetKnob}deg)`,
+                     transition:
+@@ -133,6 +167,7 @@ export function ExperienceDeck({
+           <div
+             className={styles.tapeCarousel}
+             data-anim="tape-carousel"
++            data-i3d="bay"
+             role="group"
+             aria-label="Work experience cassette collection"
+           >
+diff --git a/features/landing-page/rack-01/primitives.tsx b/features/landing-page/rack-01/primitives.tsx
+index 18b95f5..c4af10b 100644
+--- a/features/landing-page/rack-01/primitives.tsx
++++ b/features/landing-page/rack-01/primitives.tsx
+@@ -75,10 +75,13 @@ export function Knob({
+   label,
+   value,
+   onChange,
++  i3d,
+ }: {
+   label: string
+   value: number
+   onChange: (value: number) => void
++  /** The glass instrument's part id for this knob, e.g. `knob:2`. */
++  i3d?: string
+ }) {
+   const rotation = -125 + value * 2.5
+   const draggingRef = useRef(false)
+@@ -121,6 +124,7 @@ export function Knob({
+       <button
+         type="button"
+         data-skill-sequence="param"
++        data-i3d={i3d}
+         className={styles.knob}
+         role="slider"
+         aria-label={label}
+diff --git a/features/landing-page/rack-01/rack-01.module.css b/features/landing-page/rack-01/rack-01.module.css
+index b8d9687..c6e1290 100644
+--- a/features/landing-page/rack-01/rack-01.module.css
++++ b/features/landing-page/rack-01/rack-01.module.css
+@@ -11042,3 +11042,124 @@
+   width: 100%;
+   margin: 0;
+ }
++
++/* ═══ Glass instruments ══════════════════════════════════════════════════════
++   The Skills controller and the Experience radio get a three.js surface behind
++   them (see `components/instrument/`). It draws the glass, the metal and the
++   light the way the About section's devices are drawn; the DOM keeps every
++   control, label, readout, focus ring and handler.
++
++   Everything here is conditional on `data-instrument="on"`, which the
++   instrument sets on the host only once it has a first frame on its canvas. No
++   WebGL, a phone, a lost context: the attribute is never there (or is removed)
++   and none of this applies, so the DOM devices are exactly what they were.
++
++   What is hidden is only ever a *surface* — a background, a border, an inset
++   shadow, a drawn knob or key — and only where the canvas now draws the same
++   thing in 3D. Text, readouts, the scope and every control's hit area stay. A
++   control is made invisible with `opacity: 0`, never `display`/`visibility`, so
++   it is still focusable, still clickable and still announced. */
++
++[data-instrument-host] {
++  isolation: isolate;
++}
++
++/* The shell. The 3D glass is the surface and rim; the host keeps only the drop
++   shadow onto the ground, which a canvas inside it cannot cast. */
++.controller[data-instrument='on'],
++.cassetteDeck[data-instrument='on'] {
++  border-color: transparent;
++  background: transparent;
++  box-shadow:
++    0 22px 58px rgb(0 0 0 / 0.42),
++    0 2px 4px rgb(0 0 0 / 0.22);
++  backdrop-filter: none;
++  -webkit-backdrop-filter: none;
++}
++[data-instrument='on'] .screwTopLeft,
++[data-instrument='on'] .screwTopRight,
++[data-instrument='on'] .screwBottomLeft,
++[data-instrument='on'] .screwBottomRight {
++  display: none;
++}
++
++/* ── Controller ── */
++.controller[data-instrument='on'] .controllerTopbar {
++  border-bottom-color: transparent;
++}
++.controller[data-instrument='on'] .padBank button {
++  border-color: transparent !important;
++  background: transparent !important;
++  box-shadow: none !important;
++}
++.controller[data-instrument='on'] .knob,
++.controller[data-instrument='on'] .knob::before,
++.controller[data-instrument='on'] .knob::after {
++  border-color: transparent !important;
++  background: transparent !important;
++  box-shadow: none !important;
++}
++.controller[data-instrument='on'] .knob > * {
++  opacity: 0;
++}
++.controller[data-instrument='on'] .faderBank input[type='range'] {
++  opacity: 0;
++}
++.controller[data-instrument='on'] .wheelWell {
++  border-color: transparent;
++  background: transparent;
++  box-shadow: none;
++}
++.controller[data-instrument='on'] .wheelCylinder {
++  opacity: 0;
++}
++.controller[data-instrument='on'] .keyboardBed {
++  border-color: transparent;
++  background: transparent;
++  box-shadow: none;
++}
++.controller[data-instrument='on'] .whiteKeys button,
++.controller[data-instrument='on'] .blackKeys button {
++  opacity: 0;
++}
++.controller[data-instrument='on'] .arpButton,
++.controller[data-instrument='on'] .powerToggle {
++  border-color: transparent;
++  background: transparent;
++  box-shadow: none;
++  color: #1d1e1c;
++}
++.controller[data-instrument='on'] .arpButton > i,
++.controller[data-instrument='on'] .powerToggle > i {
++  opacity: 0;
++}
++
++/* ── Radio ── */
++.cassetteDeck[data-instrument='on'] .radioHandle {
++  opacity: 0;
++}
++.cassetteDeck[data-instrument='on'] .radioFace,
++.cassetteDeck[data-instrument='on'] .radioSpeaker,
++.cassetteDeck[data-instrument='on'] .radioTuner,
++.cassetteDeck[data-instrument='on'] .radioDials,
++.cassetteDeck[data-instrument='on'] .frequencyDisplay,
++.cassetteDeck[data-instrument='on'] .frequencyScale,
++.cassetteDeck[data-instrument='on'] .radioLevel,
++.cassetteDeck[data-instrument='on'] .tapeCarousel {
++  border-color: transparent !important;
++  background: transparent !important;
++  box-shadow: none !important;
++  backdrop-filter: none !important;
++  -webkit-backdrop-filter: none !important;
++}
++.cassetteDeck[data-instrument='on'] .speakerGrille,
++.cassetteDeck[data-instrument='on'] .radioLevel > i,
++.cassetteDeck[data-instrument='on'] .frequencyScale > i,
++.cassetteDeck[data-instrument='on'] .radioDials > span > i {
++  opacity: 0;
++}
++/* The dials and the speaker are playable now. */
++.cassetteDeck[data-instrument='on'] .radioDials > span:last-child,
++.cassetteDeck[data-instrument='on'] .radioSpeaker {
++  cursor: pointer;
++}
+diff --git a/features/landing-page/rack-01/radio-audio.ts b/features/landing-page/rack-01/radio-audio.ts
+new file mode 100644
+index 0000000..4577ad8
+--- /dev/null
++++ b/features/landing-page/rack-01/radio-audio.ts
+@@ -0,0 +1,88 @@
++/**
++ * The radio's two sounds, made on demand with the Web Audio API.
++ *
++ * Both are tiny and quiet, and neither exists until a pointer has touched the
++ * set (an AudioContext created before a gesture is suspended anyway): turning
++ * the TUNE dial sweeps a band of static toward the station and lands on a short
++ * tone, and a tap on the speaker is a soft burst of noise. There are no assets.
++ */
++
++let context: AudioContext | null = null
++
++function getContext(): AudioContext | null {
++  if (typeof window === 'undefined') return null
++  if (!context) {
++    const Ctor =
++      window.AudioContext ||
++      (window as unknown as { webkitAudioContext?: typeof AudioContext })
++        .webkitAudioContext
++    if (!Ctor) return null
++    context = new Ctor()
++  }
++  if (context.state === 'suspended') void context.resume()
++  return context
++}
++
++function noise(ctx: AudioContext, seconds: number) {
++  const length = Math.max(1, Math.floor(ctx.sampleRate * seconds))
++  const buffer = ctx.createBuffer(1, length, ctx.sampleRate)
++  const data = buffer.getChannelData(0)
++  for (let i = 0; i < length; i += 1) data[i] = Math.random() * 2 - 1
++  const source = ctx.createBufferSource()
++  source.buffer = buffer
++  return source
++}
++
++/** The pitch a station lands on: 88–108 MHz spread over an octave of A. */
++export function stationHz(mhz: number) {
++  const t = Math.min(1, Math.max(0, (mhz - 88) / 20))
++  return 330 * Math.pow(2, t)
++}
++
++/** Static sweeping to a station, then a short tone on it. */
++export function playTune(mhz: number) {
++  const ctx = getContext()
++  if (!ctx) return
++  const now = ctx.currentTime
++  const source = noise(ctx, 0.34)
++  const band = ctx.createBiquadFilter()
++  band.type = 'bandpass'
++  band.Q.value = 4
++  band.frequency.setValueAtTime(600, now)
++  band.frequency.exponentialRampToValueAtTime(stationHz(mhz) * 2, now + 0.3)
++  const hiss = ctx.createGain()
++  hiss.gain.setValueAtTime(0.0001, now)
++  hiss.gain.exponentialRampToValueAtTime(0.07, now + 0.04)
++  hiss.gain.exponentialRampToValueAtTime(0.0001, now + 0.34)
++  source.connect(band).connect(hiss).connect(ctx.destination)
++  source.start(now)
++  source.stop(now + 0.34)
++
++  const tone = ctx.createOscillator()
++  const level = ctx.createGain()
++  tone.type = 'triangle'
++  tone.frequency.setValueAtTime(stationHz(mhz), now + 0.26)
++  level.gain.setValueAtTime(0.0001, now + 0.26)
++  level.gain.exponentialRampToValueAtTime(0.1, now + 0.29)
++  level.gain.exponentialRampToValueAtTime(0.0001, now + 0.62)
++  tone.connect(level).connect(ctx.destination)
++  tone.start(now + 0.26)
++  tone.stop(now + 0.64)
++}
++
++/** A soft tap on the speaker cone. */
++export function playTap() {
++  const ctx = getContext()
++  if (!ctx) return
++  const now = ctx.currentTime
++  const source = noise(ctx, 0.12)
++  const low = ctx.createBiquadFilter()
++  low.type = 'lowpass'
++  low.frequency.value = 900
++  const gain = ctx.createGain()
++  gain.gain.setValueAtTime(0.09, now)
++  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12)
++  source.connect(low).connect(gain).connect(ctx.destination)
++  source.start(now)
++  source.stop(now + 0.12)
++}
+diff --git a/features/landing-page/rack-01/section-skills.tsx b/features/landing-page/rack-01/section-skills.tsx
+index 534a0fc..55b8c4f 100644
+--- a/features/landing-page/rack-01/section-skills.tsx
++++ b/features/landing-page/rack-01/section-skills.tsx
+@@ -5,6 +5,7 @@ import { Knob, SegmentCounter, SilkscreenLabel } from './primitives'
+ import styles from './rack-01.module.css'
+ import { SectionHeading } from './section-heading'
+ import { Screw } from '@/components/ui/screw'
++import { useInstrument } from '../components/instrument/use-instrument'
+ import { EMAIL, EXPERIENCES, MIXER_DATA } from '../constants'
+ 
+ /** Note frequency map for the 36 chromatic piano keys, C3 to B5. */
+@@ -151,8 +152,13 @@ export function Skills() {
+   const waveEnergyRef = useRef(0)
+   const arpTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+   const sectionRef = useRef<HTMLElement | null>(null)
++  const controllerRef = useRef<HTMLDivElement | null>(null)
+   const scrollRatioRef = useRef(0)
+ 
++  // The glass surface behind the controller. The controls below stay the
++  // source of truth for layout, state and behaviour; see `use-instrument.ts`.
++  useInstrument(controllerRef, 'controller')
++
+   const getAudioContext = () => {
+     if (typeof window === 'undefined') return null
+     if (!audioCtxRef.current) {
+@@ -587,7 +593,11 @@ export function Skills() {
+             getting products into the hands of users.
+           </p>
+         </div>
+-        <div className={styles.controller}>
++        <div
++          ref={controllerRef}
++          className={styles.controller}
++          data-instrument-host="controller"
++        >
+           <Screw className={styles.screwTopLeft} />
+           <Screw className={styles.screwTopRight} />
+           <Screw className={styles.screwBottomLeft} />
+@@ -601,7 +611,11 @@ export function Skills() {
+             </div>
+ 
+             {/* CRT Oscilloscope Screen */}
+-            <div className={styles.controllerDisplay} aria-live="polite">
++            <div
++              className={styles.controllerDisplay}
++              aria-live="polite"
++              data-i3d="lcd"
++            >
+               <div className={styles.displayHeader}>
+                 <span>STATUS: {isOn ? 'LIVE STACK' : 'OFFLINE'}</span>
+                 <div className={styles.displayModeTags}>
+@@ -680,6 +694,7 @@ export function Skills() {
+                   isArpPlaying ? styles.arpActive : ''
+                 }`}
+                 onClick={toggleArp}
++                data-i3d="arp"
+                 aria-pressed={isArpPlaying}
+                 aria-label="Toggle Arpeggiator demo jam"
+               >
+@@ -691,6 +706,8 @@ export function Skills() {
+                 type="button"
+                 className={`${styles.powerToggle} ${!isOn ? styles.powerOff : ''}`}
+                 onClick={() => setIsOn((prev) => !prev)}
++                data-i3d="pwr"
++                data-on={isOn}
+                 aria-label={isOn ? 'Power Off' : 'Power On'}
+               >
+                 <i /> {isOn ? 'PWR ON' : 'PWR OFF'}
+@@ -710,6 +727,8 @@ export function Skills() {
+                     type="button"
+                     key={skill.name}
+                     data-skill-sequence="pad"
++                    data-i3d={`pad:${index}`}
++                    data-hit={hitPadIndex === index}
+                     aria-pressed={activeSkill.name === skill.name}
+                     onClick={() => handlePadClick(skill, index)}
+                     className={`${
+@@ -737,6 +756,7 @@ export function Skills() {
+                 {MIXER_DATA[1].channels.map((skill) => (
+                   <Knob
+                     key={skill.name}
++                    i3d={`knob:${MIXER_DATA[1].channels.indexOf(skill)}`}
+                     label={skill.name}
+                     value={Math.round(
+                       levels[skill.name] *
+@@ -760,6 +780,14 @@ export function Skills() {
+                     <input
+                       type="range"
+                       data-skill-sequence="fader"
++                      data-i3d={`fader:${MIXER_DATA[2].channels.indexOf(skill)}`}
++                      data-v={Math.round(
++                        levels[skill.name] *
++                          Math.max(
++                            0,
++                            Math.min(1, (skillSequenceProgress - 0.4) / 0.22),
++                          ),
++                      )}
+                       min="0"
+                       max="100"
+                       value={Math.round(
+@@ -784,6 +812,7 @@ export function Skills() {
+           {/* KEYBOARD BED: Pitch & Mod Wheels + 24 Playable Piano Keys */}
+           <div
+             className={styles.keyboardBed}
++            data-i3d="bed"
+             aria-label="Playable skill keyboard (Keys A-L)"
+           >
+             <div className={styles.pitchControls}>
+@@ -791,6 +820,7 @@ export function Skills() {
+                 <span className={styles.wheelLabel}>PITCH</span>
+                 <div
+                   className={styles.wheelWell}
++                  data-i3d="wheel:pitch"
+                   onPointerDown={handlePitchDown}
+                   onPointerMove={handlePitchMove}
+                   onPointerUp={handlePitchUp}
+@@ -816,6 +846,7 @@ export function Skills() {
+                 <span className={styles.wheelLabel}>MOD</span>
+                 <div
+                   className={styles.wheelWell}
++                  data-i3d="wheel:mod"
+                   onPointerDown={handleModDown}
+                   onPointerMove={handleModMove}
+                   onPointerUp={handleModUp}
+@@ -858,6 +889,7 @@ export function Skills() {
+                   <button
+                     type="button"
+                     key={keyObj.note}
++                    data-i3d={`key:${index}`}
+                     aria-label={`Play ${keyObj.note} key`}
+                     aria-pressed={activeKey === index}
+                     onPointerDown={() =>
+@@ -887,6 +919,7 @@ export function Skills() {
+                     <button
+                       type="button"
+                       key={blackObj.note}
++                      data-i3d={`key:${chromatic}`}
+                       aria-label={`Play ${blackObj.note} key`}
+                       aria-pressed={activeKey === chromatic}
+                       style={
+diff --git a/jest.config.js b/jest.config.js
+index c815560..2b42b73 100644
+--- a/jest.config.js
++++ b/jest.config.js
+@@ -7,6 +7,10 @@ module.exports = {
+     // ts-jest only transforms .ts/.tsx, so a component importing a CSS module
+     // cannot be loaded in a jsdom suite without this. See tests/style-mock.js.
+     '\\.css$': '<rootDir>/tests/style-mock.js',
++    // three ships ESM, and its `three.cjs` is a shim that `require`s the ESM
++    // build, so point straight at the module and let ts-jest transform it. The
++    // glass instruments' scenes are plain object graphs and run without WebGL.
++    '^three$': '<rootDir>/node_modules/three/build/three.module.js',
+   },
+   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+   testMatch: [
+@@ -18,6 +22,10 @@ module.exports = {
+   // load on Playwright's own runtime rather than on anything project-specific.
+   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/e2e/'],
+   transform: {
++    '^.+/node_modules/three/.+\\.js$': [
++      'ts-jest',
++      { tsconfig: 'tsconfig.json', useESM: true, diagnostics: false },
++    ],
+     '^.+\\.(ts|tsx)$': [
+       'ts-jest',
+       {
+@@ -26,7 +34,7 @@ module.exports = {
+       },
+     ],
+   },
+-  transformIgnorePatterns: ['node_modules/(?!(fast-check)/)'],
++  transformIgnorePatterns: ['node_modules/(?!(fast-check|three)/)'],
+   extensionsToTreatAsEsm: ['.ts', '.tsx'],
+   collectCoverageFrom: [
+     '**/*.{ts,tsx}',
+diff --git a/tests/instrument-layout.test.ts b/tests/instrument-layout.test.ts
+new file mode 100644
+index 0000000..2a65033
+--- /dev/null
++++ b/tests/instrument-layout.test.ts
+@@ -0,0 +1,197 @@
++import {
++  approach,
++  clamp,
++  knobDegrees,
++  ledLevels,
++  parseId,
++  parsePercent,
++  parseRotation,
++  pressDepth,
++  readPartAttributes,
++  relativeRect,
++  tiltFromPointer,
++  toModel,
++  wheelTurn,
++} from '@/features/landing-page/components/instrument/instrument-layout'
++
++describe('parseId', () => {
++  it('splits kind and key, and tolerates singletons', () => {
++    expect(parseId('pad:3')).toEqual({ kind: 'pad', key: '3' })
++    expect(parseId('wheel:pitch')).toEqual({ kind: 'wheel', key: 'pitch' })
++    expect(parseId('lcd')).toEqual({ kind: 'lcd', key: '' })
++    expect(parseId('a:b:c')).toEqual({ kind: 'a', key: 'b:c' })
++  })
++})
++
++describe('relativeRect', () => {
++  const host = { x: 100, y: 50, w: 800, h: 400 }
++
++  it('is the plain offset when the host is not scaled', () => {
++    expect(relativeRect({ x: 140, y: 80, w: 40, h: 20 }, host, 800)).toEqual({
++      x: 40,
++      y: 30,
++      w: 40,
++      h: 20,
++    })
++  })
++
++  it('undoes a host transform, so the model is built in layout space', () => {
++    // Drawn at half size: a child 20px in from the left is 40px in layout.
++    const scaled = { x: 0, y: 0, w: 400, h: 200 }
++    expect(relativeRect({ x: 20, y: 10, w: 10, h: 10 }, scaled, 800)).toEqual({
++      x: 40,
++      y: 20,
++      w: 20,
++      h: 20,
++    })
++  })
++
++  it('refuses a host with no layout', () => {
++    expect(relativeRect({ x: 0, y: 0, w: 1, h: 1 }, host, 0)).toBeNull()
++    expect(
++      relativeRect({ x: 0, y: 0, w: 1, h: 1 }, { x: 0, y: 0, w: 0, h: 0 }, 10),
++    ).toBeNull()
++  })
++})
++
++describe('toModel', () => {
++  it('centres the origin and flips y', () => {
++    // A 100×60 box in the top-left corner of a 400×200 host.
++    expect(toModel({ x: 0, y: 0, w: 100, h: 60 }, 400, 200)).toEqual({
++      x: -150,
++      y: 70,
++      w: 100,
++      h: 60,
++    })
++    // A box exactly in the middle sits on the origin.
++    const mid = toModel({ x: 150, y: 70, w: 100, h: 60 }, 400, 200)
++    expect(mid.x).toBe(0)
++    expect(mid.y).toBe(0)
++  })
++})
++
++describe('knobDegrees / parse helpers', () => {
++  it('maps 0–100 onto −125…+125, clamped', () => {
++    expect(knobDegrees(0)).toBe(-125)
++    expect(knobDegrees(50)).toBe(0)
++    expect(knobDegrees(100)).toBe(125)
++    expect(knobDegrees(400)).toBe(125)
++    expect(knobDegrees(-9)).toBe(-125)
++  })
++
++  it('reads the rotation and the needle position the deck writes', () => {
++    expect(parseRotation('rotate(135deg)')).toBe(135)
++    expect(parseRotation('rotate(-20.5deg)')).toBe(-20.5)
++    expect(parseRotation('')).toBe(0)
++    expect(parseRotation(null)).toBe(0)
++    expect(parsePercent('36%')).toBe(36)
++    expect(parsePercent(' 92% ')).toBe(92)
++    expect(parsePercent('12px')).toBe(0)
++    expect(parsePercent(undefined)).toBe(0)
++  })
++})
++
++describe('approach', () => {
++  it('lands exactly on the target, so the renderer can sleep', () => {
++    let v = 0
++    for (let i = 0; i < 600; i += 1) v = approach(v, 10, 12, 1 / 60)
++    expect(v).toBe(10)
++  })
++
++  it('settles in the same wall-clock time at any frame rate', () => {
++    const run = (fps: number) => {
++      let v = 0
++      for (let i = 0; i < fps * 0.5; i += 1) v = approach(v, 1, 10, 1 / fps, 0)
++      return v
++    }
++    expect(run(60)).toBeCloseTo(run(144), 6)
++  })
++
++  it('never overshoots, and ignores a negative step', () => {
++    expect(approach(0, 1, 1000, 10)).toBe(1)
++    expect(approach(0, 1, 5, -1)).toBe(0)
++  })
++})
++
++describe('ledLevels', () => {
++  it('breathes on the two low bars when at rest, nothing above', () => {
++    const rest = ledLevels(1.3, 0)
++    expect(rest).toHaveLength(8)
++    expect(rest[0]).toBeGreaterThan(0)
++    expect(rest[1]).toBeGreaterThan(0)
++    expect(rest.slice(2).every((v) => v === 0)).toBe(true)
++  })
++
++  it('stays inside 0–1 and lights higher bars as the drive rises', () => {
++    for (let t = 0; t < 10; t += 0.37) {
++      for (const level of ledLevels(t, 1)) {
++        expect(level).toBeGreaterThanOrEqual(0)
++        expect(level).toBeLessThanOrEqual(1)
++      }
++    }
++    const lit = (d: number) => ledLevels(0.8, d).reduce((sum, v) => sum + v, 0)
++    expect(lit(1)).toBeGreaterThan(lit(0.3))
++    expect(lit(0.3)).toBeGreaterThanOrEqual(lit(0))
++  })
++
++  it('treats a bad drive as rest', () => {
++    expect(ledLevels(1, Number.NaN)).toEqual(ledLevels(1, 0))
++  })
++})
++
++describe('pressDepth', () => {
++  it('sinks when pressed, lifts a little on hover, and rests at zero', () => {
++    expect(pressDepth('pad', true, false)).toBeLessThan(0)
++    expect(pressDepth('pad', false, true)).toBeGreaterThan(0)
++    expect(pressDepth('pad', false, false)).toBe(0)
++    // Pressed wins over hover: a pointer is always hovering what it presses.
++    expect(pressDepth('key', true, true)).toBeLessThan(0)
++  })
++})
++
++describe('wheelTurn', () => {
++  it('rests pitch bend at the middle and runs mod from the bottom', () => {
++    expect(wheelTurn('pitch', 0)).toBe(0.5)
++    expect(wheelTurn('pitch', -50)).toBe(0)
++    expect(wheelTurn('pitch', 50)).toBe(1)
++    expect(wheelTurn('mod', 0)).toBe(0)
++    expect(wheelTurn('mod', 100)).toBe(1)
++    expect(wheelTurn('mod', 900)).toBe(1)
++  })
++})
++
++describe('tiltFromPointer', () => {
++  it('is bounded by max and centred on zero', () => {
++    expect(tiltFromPointer(0, 0)).toEqual({ rx: 0, ry: 0 })
++    expect(tiltFromPointer(9, -9, 3)).toEqual({ rx: -3, ry: 3 })
++  })
++})
++
++describe('readPartAttributes', () => {
++  const from = (attrs: Record<string, string>) =>
++    readPartAttributes((name) => attrs[name] ?? null)
++
++  it('reads pressed, hit and value from the control itself', () => {
++    expect(from({ 'aria-pressed': 'true', 'data-hit': 'true' })).toEqual({
++      pressed: true,
++      hit: true,
++      value: 0,
++    })
++    expect(from({ 'aria-valuenow': '72' }).value).toBe(72)
++    expect(from({ 'data-v': '41' }).value).toBe(41)
++    expect(from({ 'data-on': 'true' }).pressed).toBe(true)
++  })
++
++  it('prefers aria-valuenow, and never returns NaN', () => {
++    expect(from({ 'aria-valuenow': '5', 'data-v': '9' }).value).toBe(5)
++    expect(from({ 'aria-valuenow': 'abc' }).value).toBe(0)
++    expect(from({}).value).toBe(0)
++  })
++})
++
++describe('clamp', () => {
++  it('treats NaN as the lower bound', () => {
++    expect(clamp(Number.NaN, 2, 5)).toBe(2)
++    expect(clamp(9, 2, 5)).toBe(5)
++  })
++})
+diff --git a/tests/instrument-models.test.ts b/tests/instrument-models.test.ts
+new file mode 100644
+index 0000000..b9e35d0
+--- /dev/null
++++ b/tests/instrument-models.test.ts
+@@ -0,0 +1,251 @@
++/** @jest-environment node */
++import * as THREE from 'three'
++
++import {
++  buildController,
++  buildRadio,
++} from '@/features/landing-page/components/instrument/instrument-models'
++import type { FrameContext } from '@/features/landing-page/components/instrument/instrument-core'
++import type {
++  Part,
++  PartState,
++} from '@/features/landing-page/components/instrument/instrument-layout'
++
++const part = (id: string, x: number, y: number, w: number, h: number): Part => {
++  const at = id.indexOf(':')
++  return {
++    id,
++    kind: at < 0 ? id : id.slice(0, at),
++    key: at < 0 ? '' : id.slice(at + 1),
++    x,
++    y,
++    w,
++    h,
++  }
++}
++
++const SIZE = { width: 1200, height: 640, radius: 14 }
++
++const controllerParts = (): Part[] => [
++  part('lcd', 280, 24, 520, 130),
++  part('arp', 860, 40, 120, 36),
++  part('pwr', 860, 90, 120, 36),
++  ...Array.from({ length: 6 }, (_, i) =>
++    part(`pad:${i}`, 40 + (i % 3) * 120, 200 + Math.floor(i / 3) * 80, 108, 70),
++  ),
++  ...Array.from({ length: 4 }, (_, i) =>
++    part(`knob:${i}`, 420 + i * 80, 210, 56, 56),
++  ),
++  ...Array.from({ length: 4 }, (_, i) =>
++    part(`fader:${i}`, 760 + i * 70, 190, 30, 140),
++  ),
++  part('bed', 20, 360, 1160, 260),
++  part('wheel:pitch', 40, 380, 40, 200),
++  part('wheel:mod', 100, 380, 40, 200),
++  ...Array.from({ length: 21 }, (_, i) =>
++    part(`key:${i}`, 170 + i * 46, 380, 44, 220),
++  ),
++  ...Array.from({ length: 6 }, (_, i) =>
++    part(`key:${22 + i}`, 195 + i * 92, 380, 28, 130),
++  ),
++]
++
++const frame = (
++  states: Record<string, Partial<PartState>> = {},
++  extra: Partial<FrameContext> = {},
++): FrameContext => ({
++  dt: 1 / 60,
++  time: 0,
++  states: new Map(
++    Object.entries(states).map(([id, s]) => [
++      id,
++      { pressed: false, hit: false, value: 0, ...s },
++    ]),
++  ),
++  hover: null,
++  pressed: null,
++  light: { x: 0, y: 0 },
++  ...extra,
++})
++
++const settle = (
++  scene: ReturnType<typeof buildController>,
++  make: () => FrameContext,
++  max = 600,
++) => {
++  for (let i = 0; i < max; i += 1) if (!scene.update(make())) return i
++  return max
++}
++
++describe('buildController', () => {
++  it('builds a scene from measured parts without a GL context', () => {
++    const scene = buildController(controllerParts(), SIZE)
++    expect(scene.root.children.length).toBeGreaterThan(40)
++    scene.dispose()
++  })
++
++  it('keeps every control inside the shell', () => {
++    const scene = buildController(controllerParts(), SIZE)
++    scene.update(frame())
++    const box = new THREE.Box3()
++    scene.root.children.forEach((child, index) => {
++      if (index === 0) return // the shell itself
++      box.setFromObject(child)
++      expect(box.min.x).toBeGreaterThanOrEqual(-SIZE.width / 2 - 1)
++      expect(box.max.x).toBeLessThanOrEqual(SIZE.width / 2 + 1)
++      expect(box.min.y).toBeGreaterThanOrEqual(-SIZE.height / 2 - 1)
++      expect(box.max.y).toBeLessThanOrEqual(SIZE.height / 2 + 1)
++    })
++    scene.dispose()
++  })
++
++  it('puts a part at its measured position, with y flipped', () => {
++    const scene = buildController([part('pad:0', 0, 0, 100, 60)], SIZE)
++    scene.update(frame())
++    const pad = scene.root.children[1] as THREE.Mesh
++    expect(pad.position.x).toBeCloseTo(-SIZE.width / 2 + 50, 5)
++    expect(pad.position.y).toBeCloseTo(SIZE.height / 2 - 30, 5)
++    scene.dispose()
++  })
++
++  it('lights and sinks a hit pad, then returns it to rest', () => {
++    const scene = buildController([part('pad:0', 100, 100, 100, 60)], SIZE)
++    const pad = scene.root.children[1] as THREE.Mesh
++    const material = pad.material as THREE.MeshStandardMaterial
++    scene.update(frame())
++    const rest = pad.position.z
++
++    for (let i = 0; i < 30; i += 1)
++      scene.update(frame({ 'pad:0': { hit: true } }))
++    expect(material.emissiveIntensity).toBeGreaterThan(1)
++    expect(pad.position.z).toBeLessThan(rest)
++
++    const steps = settle(scene, () => frame())
++    expect(steps).toBeLessThan(600)
++    expect(material.emissiveIntensity).toBe(0)
++    expect(pad.position.z).toBe(rest)
++    scene.dispose()
++  })
++
++  it('turns a knob to its value and stops moving once it gets there', () => {
++    const scene = buildController([part('knob:0', 100, 100, 56, 56)], SIZE)
++    const group = scene.root.children[1] as THREE.Group
++    const cap = group.children[1] as THREE.Group
++    for (let i = 0; i < 400; i += 1)
++      scene.update(frame({ 'knob:0': { value: 100 } }))
++    expect(cap.rotation.z).toBeCloseTo((-125 * Math.PI) / 180, 1)
++    const moving = scene.update(frame({ 'knob:0': { value: 100 } }))
++    expect(moving).toBe(false)
++    scene.dispose()
++  })
++
++  it('dips a pressed key at its front edge and releases it', () => {
++    const parts = [
++      part('key:0', 100, 100, 40, 200),
++      part('key:22', 130, 100, 24, 110),
++    ]
++    const scene = buildController(parts, SIZE)
++    const white = scene.root.children[1] as THREE.Group
++    for (let i = 0; i < 30; i += 1)
++      scene.update(frame({ 'key:0': { pressed: true } }))
++    expect(white.rotation.x).toBeLessThan(0)
++    settle(scene, () => frame())
++    expect(white.rotation.x).toBe(0)
++    scene.dispose()
++  })
++
++  it('tells a black key from a white one by its length', () => {
++    const parts = [
++      part('key:0', 100, 100, 40, 200),
++      part('key:22', 130, 100, 24, 110),
++    ]
++    const scene = buildController(parts, SIZE)
++    const [white, black] = scene.root.children.slice(1) as THREE.Group[]
++    const mat = (g: THREE.Group) =>
++      (
++        (g.children[0] as THREE.Mesh).material as THREE.MeshStandardMaterial
++      ).color.getHex()
++    expect(mat(white)).not.toBe(mat(black))
++    scene.dispose()
++  })
++
++  it('moves a fader cap along its slot and keeps it inside', () => {
++    const scene = buildController([part('fader:0', 100, 100, 30, 140)], SIZE)
++    const cap = scene.root.children[2] as THREE.Mesh
++    for (let i = 0; i < 400; i += 1)
++      scene.update(frame({ 'fader:0': { value: 100 } }))
++    const top = cap.position.y
++    for (let i = 0; i < 400; i += 1)
++      scene.update(frame({ 'fader:0': { value: 0 } }))
++    const bottom = cap.position.y
++    expect(top).toBeGreaterThan(bottom)
++    const slotCentre = SIZE.height / 2 - (100 + 70)
++    expect(top).toBeLessThanOrEqual(slotCentre + 70)
++    expect(bottom).toBeGreaterThanOrEqual(slotCentre - 70)
++    scene.dispose()
++  })
++
++  it('ignores parts it does not know and states it was not given', () => {
++    const scene = buildController([part('mystery:1', 10, 10, 20, 20)], SIZE)
++    expect(() => scene.update(frame())).not.toThrow()
++    scene.dispose()
++  })
++})
++
++const radioParts = (): Part[] => [
++  part('handle', 500, 8, 200, 16),
++  part('face', 30, 80, 1140, 300),
++  part('speaker', 50, 100, 300, 260),
++  part('level', 70, 320, 260, 20),
++  part('lcd', 380, 100, 300, 70),
++  part('scale', 380, 190, 300, 36),
++  part('needle', 400, 190, 3, 36),
++  part('dial:vol', 700, 120, 50, 50),
++  part('dial:tune', 780, 120, 50, 50),
++  part('bay', 380, 250, 780, 120),
++]
++
++describe('buildRadio', () => {
++  it('builds, draws the LEDs forever, and disposes cleanly', () => {
++    const scene = buildRadio(radioParts(), SIZE)
++    // The LEDs breathe, so the radio always asks for another frame while it is
++    // on screen; the host's visibility gate is what stops the loop offscreen.
++    expect(scene.update(frame())).toBe(true)
++    expect(() => scene.dispose()).not.toThrow()
++  })
++
++  it('slides the needle to its station and turns the tune dial', () => {
++    const scene = buildRadio(radioParts(), SIZE)
++    const states = { needle: { value: 92 }, 'dial:tune': { value: 405 } }
++    for (let i = 0; i < 600; i += 1)
++      scene.update(frame(states, { time: i / 60 }))
++    const needle = scene.root.children.find(
++      (c) =>
++        (c as THREE.Mesh).isMesh &&
++        Math.abs(c.position.x - (380 - SIZE.width / 2 + 0.92 * 300)) < 2,
++    )
++    expect(needle).toBeDefined()
++    scene.dispose()
++  })
++
++  it('lights the LEDs harder while the speaker is being pressed', () => {
++    const lit = (pressed: string | null) => {
++      const scene = buildRadio(radioParts(), SIZE)
++      for (let i = 0; i < 120; i += 1)
++        scene.update(frame({}, { time: i / 60, pressed }))
++      let total = 0
++      scene.root.traverse((object) => {
++        const material = (object as THREE.Mesh)
++          .material as THREE.MeshStandardMaterial
++        if (
++          material?.emissive &&
++          object.position.y === SIZE.height / 2 - (320 + 10)
++        )
++          total += material.emissiveIntensity
++      })
++      scene.dispose()
++      return total
++    }
++    expect(lit('speaker')).toBeGreaterThan(lit(null))
++  })
++})
+-- 
+2.43.0
+

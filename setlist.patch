@@ -1,0 +1,2909 @@
+From cb001046684cb2e367b7eac58f7d703b9fc80bb1 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 18 Oct 2026 08:23:34 +0000
+Subject: [PATCH] feat(contact): FAQ as a setlist and lyric sheet, no device
+
+Replace the scene-launcher unit with an open composition set on the section's
+graph paper: nine questions as songs in three sides that queue and play on the
+next beat of a live 120 BPM clock; the answer is a lyric sheet that lights word
+by word with a highlighter on the current word, a self-drawing scribble under
+the playing title, a giant numeral that kicks on the beat, and a pointer lamp.
+Reuses the tested playback engine; a queued launch now ends whatever is playing
+and resets the stage.
+---
+ docs/contact-desk.md                          |  89 +--
+ .../rack-01/contact-desk/contact-content.ts   |   7 +
+ .../rack-01/contact-desk/contact-desk.tsx     |  13 +-
+ .../rack-01/contact-desk/scene-engine.ts      |   6 +
+ .../contact-desk/scene-launch.module.css      | 749 ------------------
+ .../rack-01/contact-desk/scene-launch.tsx     | 436 ----------
+ .../rack-01/contact-desk/scene-logic.ts       |  93 +--
+ .../rack-01/contact-desk/setlist.module.css   | 604 ++++++++++++++
+ .../rack-01/contact-desk/setlist.tsx          | 457 +++++++++++
+ tests/contact-desk-markup.test.tsx            |  85 +-
+ tests/scene-engine.test.ts                    |  42 +
+ tests/scene-logic.test.ts                     |  87 +-
+ 12 files changed, 1257 insertions(+), 1411 deletions(-)
+ delete mode 100644 features/landing-page/rack-01/contact-desk/scene-launch.module.css
+ delete mode 100644 features/landing-page/rack-01/contact-desk/scene-launch.tsx
+ create mode 100644 features/landing-page/rack-01/contact-desk/setlist.module.css
+ create mode 100644 features/landing-page/rack-01/contact-desk/setlist.tsx
+
+diff --git a/docs/contact-desk.md b/docs/contact-desk.md
+index be8b739..f47d12d 100644
+--- a/docs/contact-desk.md
++++ b/docs/contact-desk.md
+@@ -1,67 +1,66 @@
+-# Contact: the scene launcher
++# Contact: the setlist
+ 
+ The 16-pad performance controller is unchanged (its GSAP coupling, its audio
+-indices and its sweep order are untouched), and so is the section heading.
+-Under it sits one new unit, the FAQ, built as a second piece of the same
+-hardware.
++indices and its sweep order), and so is the section heading. Under it sits the
++FAQ, set straight onto the section's graph paper as a printed setlist and a
++lyric sheet. There is no device around it: no chassis, screen, panel or shadow.
++What carries it is type, rules, one stage to read on and a lamp on the paper.
+ 
+-## Why it looks like this
++## The idea
+ 
+-The FAQ used to be a full-bleed dark band with its own language. The section is
+-a cream sheet carrying a graphite deck with orange and multicolour pads, so the
+-FAQ is now a unit **on that deck's own materials**: the graphite chassis and its
+-inset highlights, the green-phosphor LCD with scanlines, the pad colours
+-(`CONTACT_PAD_COLORS`), the same mono silkscreen, and the same 780px width so the
+-eye finds one column and not two.
++The questions are songs, listed in running order in three groups (Side A:
++Scope, Side B: Process, Encore: Practical), nine in all.
+ 
+-## What it does
++**A song does not start when you press it. It starts on the next beat** of a
++live 120 BPM clock, which is what makes a press feel performed (it blinks while
++queued, and waits at most 500ms). Its answer then plays as a **lyric sheet**:
++the whole answer is set in large type at once, so nothing reflows, and the
++words light up one after another as the playhead passes, with a highlighter
++block riding the word being sung.
+ 
+-Each question is a **clip** on one of three tracks (Scope, Process, Practical),
+-with its own waveform. **A clip does not start when you press it; it starts on
+-the next beat** of a live 120 BPM clock, which is what makes a press feel
+-performed.
++Around that:
+ 
+-- Press a clip: it blinks (queued), the next beat launches it, and its answer
+-  *plays*: a playhead crosses the clip, the answer types out on the LCD in step
+-  with it, the waveform lights as the playhead passes, and the whole unit
+-  pulses on the beat while it plays. Four LEDs count the beat.
+-- Press the playing clip again, or Stop: it ends and shows the whole answer.
+-- Auto: the next clip queues itself when one finishes.
+-- The unit powers on as it arrives (the LCD flickers up, clips drop in along a
+-  diagonal), and shortly after, the first clip queues itself, unless the visitor
+-  has already acted or came in on a `#hash`.
+-- A light on the chassis follows the pointer.
++- a hand-drawn scribble draws itself under the playing title;
++- a giant outlined numeral behind the stage kicks on the beat;
++- a lamp follows the pointer and lights the graph paper under it;
++- a nine-tick rail with a cursor shows where you are in the setlist;
++- the rows write themselves in as the section arrives, then the first song
++  queues itself, unless the visitor has already acted or came in on a `#hash`.
+ 
+-## Structure
++Colours are the section's own ink (which flips with the theme) and the
++controller's pad colours as the three side accents.
++
++## How it is built
+ 
+ | File | Role |
+ | --- | --- |
+-| `scene-logic.ts` | Pure: the beat clock, clip length, progress, waveforms, transport readout, 2-D focus movement |
++| `setlist.tsx` | The component: wiring only |
++| `setlist.module.css` | The look, and the lyric arithmetic |
+ | `scene-engine.ts` | The playback machine: one rAF loop, the queue, the playhead. Plain module, tested against a fake clock |
+-| `scene-launch.tsx` | The unit: wiring only |
+-| `scene-launch.module.css` | The look |
+-| `contact-content.ts` | The nine questions and answers (edit copy here) |
++| `scene-logic.ts` | Pure: the beat clock, clip length, progress, words, focus movement |
++| `contact-content.ts` | The nine questions and answers, and the side names (edit copy here) |
+ | `contact-status.tsx` | The status strip under the heading |
+ 
+-React is told only what happened (a press, a stop, the unit arriving) and
+-commits only transitions (queued, playing, finished). A playing clip is a few
+-custom-property and text writes per frame and no renders. The loop runs only
+-while the unit is on screen or something is playing, so an idle page costs
+-nothing.
++The engine writes one number, `--p` (0 to 1), onto the stage and the playing
++song. Everything visual is `calc()` on it: a word's brightness is
++`clamp(0, p*n - i, 1)` for its index `i` of `n` words; the highlighter is a
++parabola in the same distance, so it peaks on the current word and is zero on
++either side; the scribble is a dash offset. A playing song is custom-property
++writes and no React renders. The loop runs only while the setlist is on screen
++or something is playing.
+ 
+ ## Accessibility
+ 
+-Real buttons in a labelled group per track, in a roving-tabindex grid: arrows
+-move between tracks and clips, Enter or Space launches, Escape stops. The answer
+-is announced once, whole, in a polite live region; the typed copy is
+-`aria-hidden`. A `#hash` deep link per question (and Copy link on the LCD).
+-Without JavaScript every question and answer is plain text.
++Real buttons in an ordered list per side, in one roving-tabindex column (up and
++down walk it, Home and End jump, Enter or Space plays, Escape stops). The answer
++is announced once, whole, in a polite live region; the animated lyric is
++`aria-hidden`. A `#hash` deep link per question, and Copy link. Without
++JavaScript every question and answer is plain text.
+ 
+-Reduced motion is a complete alternative: no loop, no beat, no sweep; a press
+-selects a clip and its whole answer appears.
++Reduced motion is a complete alternative: no clock, no beat, no sweep; a press
++selects a song and its whole lyric is lit at once.
+ 
+ ## Removed
+ 
+ The signal-path and brief-builder panels (the `.desk` block), the slit-type
+-title, and the first FAQ band. The section heading is back to
+-"Bring me the difficult part."
++title, the full-bleed FAQ band, and the scene-launcher device.
+diff --git a/features/landing-page/rack-01/contact-desk/contact-content.ts b/features/landing-page/rack-01/contact-desk/contact-content.ts
+index 6304ec6..750d749 100644
+--- a/features/landing-page/rack-01/contact-desk/contact-content.ts
++++ b/features/landing-page/rack-01/contact-desk/contact-content.ts
+@@ -14,6 +14,13 @@
+ export const TRACKS = ['Scope', 'Process', 'Practical'] as const
+ export type Track = (typeof TRACKS)[number]
+ 
++/** The setlist's own names for the three tracks, in running order. */
++export const SIDES: Record<Track, string> = {
++  Scope: 'Side A',
++  Process: 'Side B',
++  Practical: 'Encore',
++}
++
+ export type FaqEntry = {
+   /** Stable id, used for the #hash deep link. */
+   id: string
+diff --git a/features/landing-page/rack-01/contact-desk/contact-desk.tsx b/features/landing-page/rack-01/contact-desk/contact-desk.tsx
+index 702fde2..4b1a036 100644
+--- a/features/landing-page/rack-01/contact-desk/contact-desk.tsx
++++ b/features/landing-page/rack-01/contact-desk/contact-desk.tsx
+@@ -1,12 +1,13 @@
+ import { EMAIL } from '../../constants'
+-import { SceneLaunch } from './scene-launch'
++import { Setlist } from './setlist'
+ 
+ /**
+- * What sits under the performance controller: the FAQ, as a second unit on the
+- * same desk. It is rendered between `.contactDeck` and the footer on purpose:
+- * the rack's scroll animations address specific children of `.contactDeck` by
+- * class, so a block added inside it would sit unanimated in a moving box.
++ * What sits under the performance controller: the FAQ, as a setlist and lyric
++ * sheet set straight onto the section's graph paper. It is rendered between
++ * `.contactDeck` and the footer on purpose: the rack's scroll animations address
++ * specific children of `.contactDeck` by class, so a block added inside it would
++ * sit unanimated in a moving box.
+  */
+ export function ContactDesk() {
+-  return <SceneLaunch email={EMAIL} />
++  return <Setlist email={EMAIL} />
+ }
+diff --git a/features/landing-page/rack-01/contact-desk/scene-engine.ts b/features/landing-page/rack-01/contact-desk/scene-engine.ts
+index f4df1e7..dca3d9f 100644
+--- a/features/landing-page/rack-01/contact-desk/scene-engine.ts
++++ b/features/landing-page/rack-01/contact-desk/scene-engine.ts
+@@ -188,6 +188,12 @@ export function createEngine(deps: EngineDeps): Engine {
+       if (immediate) {
+         start(index, performance.now())
+       } else {
++        // The stage switches to the new clip now and the new clip starts on the
++        // beat. Whatever was playing ends here: left running it would keep
++        // writing its progress onto a stage that is already showing another
++        // clip's words, lighting them to the wrong place for up to a beat.
++        if (playing !== null) finish(playing, false)
++        els.master()?.style.setProperty('--p', '0')
+         queued = index
+         lastBeat = beatIndex(performance.now())
+         deps.setView((view) => ({ ...view, selected: index, queued: index }))
+diff --git a/features/landing-page/rack-01/contact-desk/scene-launch.module.css b/features/landing-page/rack-01/contact-desk/scene-launch.module.css
+deleted file mode 100644
+index 202d972..0000000
+--- a/features/landing-page/rack-01/contact-desk/scene-launch.module.css
++++ /dev/null
+@@ -1,749 +0,0 @@
+-/* ── The scene launcher ──────────────────────────────────────
+-   The FAQ, as a second unit on the same desk as the performance controller. It
+-   wears the controller's own materials so the two read as one family of
+-   hardware: the graphite chassis and its inset highlights, the green-phosphor
+-   LCD with its scanlines, the pad colours, the same mono silkscreen, and the
+-   same 780px width, so the eye finds one column down the page and not two.
+-
+-   Everything that moves is a transform, an opacity, a filter or a custom
+-   property on a small subtree; nothing animates layout. The beat is a
+-   `data-beat` on the unit, set by one rAF loop, and every pulse below is CSS
+-   keyed off it, in pairs (A on even beats, B on odd) because an animation does
+-   not restart when only a selector changes unless its name does.
+-
+-   Motion is behind `prefers-reduced-motion: no-preference`. With it off a press
+-   selects a clip and its whole answer appears; nothing pulses, sweeps or types. */
+-
+-.srOnly {
+-  position: absolute;
+-  overflow: hidden;
+-  width: 1px;
+-  height: 1px;
+-  clip-path: inset(50%);
+-  white-space: nowrap;
+-}
+-
+-.unit {
+-  --lcd: var(--lcd-green, #5cd6a3);
+-  --mono: var(--deck-font-mono, ui-monospace, monospace);
+-  --ui: var(--deck-font-ui, sans-serif);
+-  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+-  position: relative;
+-  isolation: isolate;
+-  width: min(780px, 100%);
+-  margin: clamp(48px, 7vw, 96px) auto 0;
+-  padding: clamp(18px, 3vw, 34px);
+-  overflow: hidden;
+-  border: 1px solid #090a09;
+-  border-radius: 18px;
+-  background: radial-gradient(
+-      90% 70% at 8% 0,
+-      rgb(255 255 255 / 0.12),
+-      transparent 48%
+-    ),
+-    linear-gradient(145deg, #2b2d2b, #181a18);
+-  box-shadow:
+-    0 42px 70px rgb(29 30 28 / 0.28),
+-    inset 0 1px rgb(255 255 255 / 0.13),
+-    inset 0 -2px rgb(0 0 0 / 0.5);
+-  color: #e9e6de;
+-}
+-.unit::before {
+-  position: absolute;
+-  z-index: -1;
+-  inset: 10px;
+-  border: 1px solid rgb(255 255 255 / 0.1);
+-  border-radius: 11px;
+-  content: '';
+-  pointer-events: none;
+-}
+-/* The light on the chassis, following the pointer. */
+-.sheen {
+-  position: absolute;
+-  z-index: -1;
+-  inset: 0;
+-  background: radial-gradient(
+-    380px circle at var(--mx, 20%) var(--my, 0%),
+-    rgb(255 255 255 / 0.07),
+-    transparent 70%
+-  );
+-  pointer-events: none;
+-}
+-
+-/* Arrival: the unit powers on, then its clips drop in along a diagonal. */
+-.unit[data-reveal='armed'] {
+-  opacity: 0;
+-  transform: translate3d(0, 30px, 0) scale(0.985);
+-}
+-.unit[data-reveal='armed'] .clip {
+-  opacity: 0;
+-}
+-.unit[data-reveal='in'] {
+-  opacity: 1;
+-  transform: none;
+-}
+-@media (prefers-reduced-motion: no-preference) {
+-  .unit[data-reveal='in'] {
+-    transition:
+-      opacity 0.8s var(--ease),
+-      transform 0.8s var(--ease);
+-  }
+-  .unit[data-reveal='in'] .clip {
+-    animation: clipIn 0.6s var(--ease) backwards;
+-    animation-delay: calc(var(--n) * 55ms + 300ms);
+-  }
+-  .unit[data-reveal='in'] .master {
+-    animation: power 0.9s steps(1, end) 0.15s backwards;
+-  }
+-}
+-@media (prefers-reduced-motion: reduce) {
+-  .unit[data-reveal='armed'],
+-  .unit[data-reveal='armed'] .clip {
+-    opacity: 1;
+-    transform: none;
+-  }
+-}
+-@keyframes clipIn {
+-  from {
+-    opacity: 0;
+-    transform: translateY(16px) scale(0.96);
+-  }
+-}
+-@keyframes power {
+-  0% {
+-    filter: brightness(0.2);
+-  }
+-  18% {
+-    filter: brightness(1.7);
+-  }
+-  30% {
+-    filter: brightness(0.5);
+-  }
+-  46% {
+-    filter: brightness(1.4);
+-  }
+-  100% {
+-    filter: none;
+-  }
+-}
+-
+-/* ── Brand bar and transport ── */
+-.brand {
+-  display: flex;
+-  flex-wrap: wrap;
+-  align-items: flex-start;
+-  justify-content: space-between;
+-  gap: 14px 20px;
+-  margin-bottom: 20px;
+-  padding-bottom: 14px;
+-  border-bottom: 1px solid rgb(255 255 255 / 0.28);
+-  color: #e9e6de;
+-  font-family: var(--mono);
+-  text-transform: uppercase;
+-}
+-.brand > div:first-child {
+-  display: flex;
+-  flex-direction: column;
+-  gap: 3px;
+-}
+-.brand strong {
+-  font-size: 14px;
+-  letter-spacing: 0.08em;
+-}
+-.brand span {
+-  color: rgb(219 224 216 / 0.58);
+-  font-size: 8px;
+-  letter-spacing: 0.12em;
+-}
+-.transport {
+-  display: flex;
+-  flex-wrap: wrap;
+-  align-items: center;
+-  gap: 8px;
+-}
+-.readout {
+-  padding: 8px 10px;
+-  border: 1px solid #060806;
+-  border-radius: 4px;
+-  background: #09130e;
+-  box-shadow: inset 0 0 12px rgb(0 0 0 / 0.8);
+-  color: var(--lcd);
+-  font: 700 10px var(--mono);
+-  letter-spacing: 0.1em;
+-  font-variant-numeric: tabular-nums;
+-}
+-.readout b {
+-  font-weight: 700;
+-}
+-.key {
+-  display: inline-flex;
+-  align-items: center;
+-  gap: 8px;
+-  min-height: 44px;
+-  padding: 0 16px;
+-  border: 1px solid #060806;
+-  border-radius: 6px;
+-  background: linear-gradient(180deg, #3b3e3a, #262825);
+-  box-shadow:
+-    0 3px 0 #0b0c0b,
+-    inset 0 1px rgb(255 255 255 / 0.14);
+-  color: #e9e6de;
+-  cursor: pointer;
+-  font: 700 10px var(--mono);
+-  letter-spacing: 0.16em;
+-  text-transform: uppercase;
+-}
+-.key:active {
+-  transform: translateY(2px);
+-  box-shadow: 0 1px 0 #0b0c0b;
+-}
+-.key[aria-pressed='true'] {
+-  border-color: var(--lcd);
+-  color: var(--lcd);
+-  box-shadow:
+-    0 3px 0 #0b0c0b,
+-    0 0 14px rgb(92 214 163 / 0.3);
+-}
+-.stopIcon {
+-  width: 9px;
+-  height: 9px;
+-  background: currentColor;
+-}
+-.key:focus-visible,
+-.tools button:focus-visible,
+-.clip:focus-visible,
+-.cta:focus-visible {
+-  outline: 2px solid var(--c, var(--lcd));
+-  outline-offset: 2px;
+-}
+-
+-/* ── The master: green-phosphor glass ── */
+-.master {
+-  --c: var(--lcd);
+-  position: relative;
+-  display: grid;
+-  gap: 12px;
+-  min-height: 268px;
+-  padding: 16px 20px 14px;
+-  overflow: hidden;
+-  border: 1px solid rgb(255 255 255 / 0.28);
+-  border-radius: 8px;
+-  background:
+-    linear-gradient(rgb(92 214 163 / 0.035) 1px, transparent 1px) 0 0 / 100% 5px,
+-    #09130e;
+-  box-shadow:
+-    inset 0 0 22px rgb(0 0 0 / 0.9),
+-    0 1px rgb(255 255 255 / 0.08);
+-  color: var(--lcd);
+-}
+-/* A glow behind the glass that breathes on the beat while a clip plays. */
+-.master::before {
+-  position: absolute;
+-  inset: 0;
+-  background: radial-gradient(
+-    70% 80% at 50% 100%,
+-    color-mix(in srgb, var(--c) 22%, transparent),
+-    transparent 70%
+-  );
+-  content: '';
+-  opacity: 0;
+-  pointer-events: none;
+-  transition: opacity 0.4s ease;
+-}
+-.master[data-state='playing']::before {
+-  opacity: 1;
+-}
+-.masterTop {
+-  display: flex;
+-  justify-content: space-between;
+-  gap: 12px;
+-  color: color-mix(in srgb, var(--c) 82%, transparent);
+-  font: 700 9px var(--mono);
+-  letter-spacing: 0.12em;
+-  text-transform: uppercase;
+-  font-variant-numeric: tabular-nums;
+-}
+-.live {
+-  display: grid;
+-}
+-.question {
+-  margin: 0;
+-  color: var(--c);
+-  font: 650 clamp(20px, 3.2vw, 30px) / 1.05 var(--ui);
+-  letter-spacing: -0.035em;
+-  text-transform: uppercase;
+-  text-wrap: balance;
+-}
+-.master[data-state='queued'] .question {
+-  animation: cue 0.5s steps(1, end) infinite;
+-}
+-.answer {
+-  align-self: start;
+-  min-height: 5.1em;
+-  max-width: 62ch;
+-  margin: 0;
+-  color: color-mix(in srgb, var(--c) 78%, #e9e6de);
+-  font: 500 12.5px / 1.7 var(--mono);
+-}
+-.caret {
+-  display: inline-block;
+-  width: 0.55em;
+-  height: 1em;
+-  margin-left: 2px;
+-  background: var(--c);
+-  vertical-align: text-bottom;
+-  opacity: 0;
+-}
+-.master[data-state='playing'] .caret,
+-.master[data-state='idle'] .caret {
+-  opacity: 1;
+-}
+-@media (prefers-reduced-motion: no-preference) {
+-  .master[data-state='playing'] .caret,
+-  .master[data-state='idle'] .caret {
+-    animation: blink 1s steps(1) infinite;
+-  }
+-}
+-@keyframes blink {
+-  50% {
+-    opacity: 0;
+-  }
+-}
+-@keyframes cue {
+-  50% {
+-    opacity: 0.35;
+-  }
+-}
+-
+-/* The master's waveform: the whole clip, lit up to the playhead. */
+-.masterWave {
+-  position: relative;
+-  height: 64px;
+-  --p: 0;
+-}
+-.playhead {
+-  position: absolute;
+-  top: -4px;
+-  bottom: -4px;
+-  left: calc(var(--p, 0) * 100%);
+-  width: 2px;
+-  background: #e9e6de;
+-  box-shadow: 0 0 12px var(--c);
+-  opacity: 0;
+-}
+-.master[data-state='playing'] .playhead {
+-  opacity: 1;
+-}
+-.wave {
+-  position: relative;
+-  display: block;
+-  width: 100%;
+-  height: 100%;
+-}
+-.waveBase,
+-.waveLit {
+-  position: absolute;
+-  inset: 0;
+-  display: flex;
+-  align-items: center;
+-  gap: 2px;
+-}
+-.waveLit {
+-  clip-path: inset(0 calc(100% - var(--p, 0) * 100%) 0 0);
+-}
+-.wave i {
+-  flex: 1;
+-  height: calc(var(--h) * 100%);
+-  min-width: 1px;
+-  border-radius: 1px;
+-  background: rgb(233 230 222 / 0.2);
+-  transform-origin: center;
+-}
+-.waveLit i {
+-  background: var(--c);
+-}
+-@media (prefers-reduced-motion: no-preference) {
+-  .master[data-state='playing'] .waveLit i {
+-    animation: bob 0.62s ease-in-out infinite alternate;
+-    animation-delay: calc(var(--b) * -0.045s);
+-  }
+-  .master[data-state='idle'] .waveBase i {
+-    animation: idle 2.6s ease-in-out infinite alternate;
+-    animation-delay: calc(var(--b) * -0.07s);
+-  }
+-}
+-@keyframes bob {
+-  from {
+-    transform: scaleY(0.55);
+-  }
+-  to {
+-    transform: scaleY(1.08);
+-  }
+-}
+-@keyframes idle {
+-  from {
+-    transform: scaleY(0.4);
+-  }
+-  to {
+-    transform: scaleY(0.85);
+-  }
+-}
+-.tools {
+-  display: flex;
+-  justify-content: flex-end;
+-  gap: 18px;
+-}
+-.tools button {
+-  min-height: 32px;
+-  padding: 0;
+-  border: 0;
+-  background: none;
+-  color: var(--c);
+-  cursor: pointer;
+-  font: 700 9px var(--mono);
+-  letter-spacing: 0.14em;
+-  text-decoration: underline;
+-  text-underline-offset: 3px;
+-  text-transform: uppercase;
+-}
+-.tools button:disabled {
+-  cursor: default;
+-  opacity: 0.4;
+-  text-decoration: none;
+-}
+-
+-/* ── Tracks and clips ── */
+-.tracks {
+-  display: grid;
+-  grid-template-columns: repeat(3, minmax(0, 1fr));
+-  gap: 12px;
+-  margin-top: 16px;
+-}
+-.track {
+-  display: grid;
+-  align-content: start;
+-  gap: 8px;
+-  min-width: 0;
+-}
+-.trackHead {
+-  display: flex;
+-  align-items: center;
+-  gap: 8px;
+-  padding: 0 2px 2px;
+-  color: #8f938d;
+-  font: 700 9px var(--mono);
+-  letter-spacing: 0.14em;
+-  text-transform: uppercase;
+-}
+-.trackHead i {
+-  width: 8px;
+-  height: 8px;
+-  border-radius: 50%;
+-  background: var(--c);
+-  box-shadow: 0 0 8px var(--c);
+-}
+-.trackHead span {
+-  flex: 1;
+-  color: #e9e6de;
+-}
+-
+-.clip {
+-  position: relative;
+-  display: grid;
+-  align-content: space-between;
+-  gap: 8px;
+-  min-height: 112px;
+-  padding: 10px 12px 11px;
+-  overflow: hidden;
+-  border: 1px solid #060806;
+-  border-radius: 8px;
+-  background: linear-gradient(180deg, #343731, #232522);
+-  box-shadow:
+-    0 3px 0 #0b0c0b,
+-    inset 0 1px rgb(255 255 255 / 0.12);
+-  color: #e9e6de;
+-  cursor: pointer;
+-  text-align: left;
+-  transition:
+-    transform 0.14s ease,
+-    box-shadow 0.14s ease,
+-    border-color 0.2s ease;
+-}
+-.clip::before {
+-  position: absolute;
+-  top: 0;
+-  right: 0;
+-  left: 0;
+-  height: 3px;
+-  background: var(--c);
+-  content: '';
+-  opacity: 0.85;
+-}
+-.clip:hover {
+-  transform: translateY(-1px);
+-  border-color: color-mix(in srgb, var(--c) 60%, #060806);
+-}
+-.clip:active {
+-  transform: translateY(2px);
+-  box-shadow: 0 1px 0 #0b0c0b;
+-}
+-.clip[data-selected='true'] {
+-  border-color: var(--c);
+-}
+-/* The playhead's trail: a translucent wash, not an opaque fill, so the title
+-   stays readable on both sides of the line. */
+-.clipFill {
+-  position: absolute;
+-  inset: 0;
+-  background: color-mix(in srgb, var(--c) 34%, transparent);
+-  box-shadow: inset -2px 0 0 var(--c);
+-  opacity: 0;
+-  transform: scaleX(var(--p, 0));
+-  transform-origin: left;
+-  pointer-events: none;
+-}
+-.clip[data-state='playing'] .clipFill {
+-  opacity: 1;
+-}
+-.clipHead {
+-  position: relative;
+-  display: flex;
+-  align-items: center;
+-  justify-content: space-between;
+-  color: #8f938d;
+-  font: 700 9px var(--mono);
+-  letter-spacing: 0.14em;
+-}
+-.clipHead b {
+-  font-weight: 700;
+-}
+-.clipTitle {
+-  position: relative;
+-  font: 600 13.5px / 1.25 var(--ui);
+-  letter-spacing: -0.01em;
+-  text-wrap: balance;
+-}
+-.clip .wave {
+-  position: relative;
+-  height: 22px;
+-}
+-.clip .waveLit i {
+-  background: var(--c);
+-}
+-
+-/* The clip's icon: a play triangle, blinking when queued, bars when playing,
+-   a dot once it has been played. */
+-.clipIcon {
+-  position: relative;
+-  display: block;
+-  width: 12px;
+-  height: 12px;
+-}
+-.clipIcon::before {
+-  position: absolute;
+-  inset: 0;
+-  background: currentColor;
+-  clip-path: polygon(14% 6%, 14% 94%, 94% 50%);
+-  content: '';
+-}
+-.clip[data-state='queued'] .clipIcon {
+-  color: var(--c);
+-}
+-.clip[data-state='playing'] .clipIcon {
+-  color: var(--c);
+-}
+-.clip[data-state='playing'] .clipIcon::before {
+-  clip-path: polygon(
+-    0 100%,
+-    0 30%,
+-    28% 30%,
+-    28% 100%,
+-    36% 100%,
+-    36% 0,
+-    64% 0,
+-    64% 100%,
+-    72% 100%,
+-    72% 55%,
+-    100% 55%,
+-    100% 100%
+-  );
+-}
+-.clip[data-state='played'] .clipIcon {
+-  color: var(--c);
+-  opacity: 0.7;
+-}
+-.clip[data-state='played'] .clipIcon::before {
+-  clip-path: circle(28% at 50% 50%);
+-}
+-.clip[data-state='queued'] {
+-  border-color: var(--c);
+-}
+-@media (prefers-reduced-motion: no-preference) {
+-  .clip[data-state='queued'] {
+-    animation: queued 0.5s steps(1, end) infinite;
+-  }
+-  .clip[data-state='queued'] .clipIcon {
+-    animation: cue 0.5s steps(1, end) infinite;
+-  }
+-  /* On the beat: the playing clip kicks. Pairs, because a changing selector
+-     alone does not restart an animation; a changing name does. */
+-  .unit[data-beat='0'] .clip[data-state='playing'],
+-  .unit[data-beat='2'] .clip[data-state='playing'] {
+-    animation: kickA 0.48s ease-out;
+-  }
+-  .unit[data-beat='1'] .clip[data-state='playing'],
+-  .unit[data-beat='3'] .clip[data-state='playing'] {
+-    animation: kickB 0.48s ease-out;
+-  }
+-  .unit[data-beat='0'] .master[data-state='playing']::before,
+-  .unit[data-beat='2'] .master[data-state='playing']::before {
+-    animation: glowA 0.48s ease-out;
+-  }
+-  .unit[data-beat='1'] .master[data-state='playing']::before,
+-  .unit[data-beat='3'] .master[data-state='playing']::before {
+-    animation: glowB 0.48s ease-out;
+-  }
+-  .clip .waveLit i {
+-    transform-origin: center;
+-  }
+-}
+-@keyframes queued {
+-  50% {
+-    background: linear-gradient(180deg, #4b4e48, #34362f);
+-  }
+-}
+-@keyframes kickA {
+-  from {
+-    filter: brightness(1.45);
+-    transform: scale(1.025);
+-  }
+-}
+-@keyframes kickB {
+-  from {
+-    filter: brightness(1.45);
+-    transform: scale(1.025);
+-  }
+-}
+-@keyframes glowA {
+-  from {
+-    opacity: 1;
+-    filter: brightness(1.8);
+-  }
+-}
+-@keyframes glowB {
+-  from {
+-    opacity: 1;
+-    filter: brightness(1.8);
+-  }
+-}
+-
+-/* ── Footer ── */
+-.foot {
+-  display: flex;
+-  flex-wrap: wrap;
+-  align-items: center;
+-  gap: 12px 18px;
+-  margin-top: 18px;
+-  padding-top: 14px;
+-  border-top: 1px solid rgb(255 255 255 / 0.18);
+-}
+-.leds {
+-  display: flex;
+-  gap: 6px;
+-}
+-.leds i {
+-  width: 8px;
+-  height: 8px;
+-  border-radius: 50%;
+-  background: #1a1c1a;
+-  box-shadow: inset 0 1px 2px #000;
+-  transition: background 0.1s ease;
+-}
+-.unit[data-beat='0'] .leds i:nth-child(1),
+-.unit[data-beat='1'] .leds i:nth-child(2),
+-.unit[data-beat='2'] .leds i:nth-child(3),
+-.unit[data-beat='3'] .leds i:nth-child(4) {
+-  background: var(--lcd);
+-  box-shadow:
+-    0 0 10px var(--lcd),
+-    inset 0 1px 2px rgb(255 255 255 / 0.5);
+-}
+-.foot p {
+-  flex: 1;
+-  min-width: 180px;
+-  margin: 0;
+-  color: #8f938d;
+-  font: 700 9px var(--mono);
+-  letter-spacing: 0.12em;
+-  text-transform: uppercase;
+-}
+-.cta {
+-  display: inline-flex;
+-  align-items: center;
+-  min-height: 44px;
+-  padding: 0 18px;
+-  border: 1px solid rgb(233 230 222 / 0.5);
+-  border-radius: 999px;
+-  color: #e9e6de;
+-  font: 700 10px var(--mono);
+-  letter-spacing: 0.14em;
+-  text-decoration: none;
+-  text-transform: uppercase;
+-  transition:
+-    background 0.2s ease,
+-    color 0.2s ease,
+-    border-color 0.2s ease;
+-}
+-.cta:hover {
+-  border-color: var(--lcd);
+-  background: var(--lcd);
+-  color: #07140d;
+-}
+-
+-/* Without a script the whole FAQ is plain text on the chassis. */
+-.plain {
+-  display: grid;
+-  gap: 18px;
+-  margin: 0;
+-}
+-.plain dt {
+-  font: 650 18px / 1.2 var(--ui);
+-  text-transform: uppercase;
+-}
+-.plain dd {
+-  margin: 6px 0 0;
+-  color: rgb(233 230 222 / 0.8);
+-  font: 500 14px / 1.6 var(--ui);
+-}
+-
+-/* ── Narrow screens: tracks stack, the master stays on top ── */
+-@media (max-width: 700px) {
+-  .tracks {
+-    grid-template-columns: minmax(0, 1fr);
+-    gap: 18px;
+-  }
+-  .clip {
+-    min-height: 92px;
+-  }
+-  .master {
+-    min-height: 300px;
+-  }
+-}
+-@media (max-width: 460px) {
+-  .transport {
+-    width: 100%;
+-  }
+-  .key {
+-    flex: 1;
+-    justify-content: center;
+-  }
+-}
+-
+-@media (prefers-reduced-motion: reduce) {
+-  .clip,
+-  .master::before,
+-  .leds i,
+-  .cta {
+-    transition: none;
+-  }
+-}
+diff --git a/features/landing-page/rack-01/contact-desk/scene-launch.tsx b/features/landing-page/rack-01/contact-desk/scene-launch.tsx
+deleted file mode 100644
+index c5e5345..0000000
+--- a/features/landing-page/rack-01/contact-desk/scene-launch.tsx
++++ /dev/null
+@@ -1,436 +0,0 @@
+-'use client'
+-
+-import {
+-  useEffect,
+-  useId,
+-  useMemo,
+-  useRef,
+-  useState,
+-  type CSSProperties,
+-  type KeyboardEvent,
+-  type PointerEvent,
+-} from 'react'
+-import { CONTACT_PAD_COLORS } from '../../constants'
+-import { FAQ_ITEMS, TRACKS, type FaqEntry } from './contact-content'
+-import styles from './scene-launch.module.css'
+-import { createEngine, type Engine, type EngineView } from './scene-engine'
+-import { BPM, moveFocus, tracksOf, waveformBars } from './scene-logic'
+-import { useReveal } from './use-reveal'
+-
+-/** One accent per track, taken from the controller's own pad colours. */
+-const TRACK_COLORS = [
+-  CONTACT_PAD_COLORS[0],
+-  CONTACT_PAD_COLORS[1],
+-  CONTACT_PAD_COLORS[3],
+-]
+-
+-const INITIAL: EngineView = {
+-  selected: null,
+-  playing: null,
+-  queued: null,
+-  played: [],
+-}
+-
+-function Wave({
+-  seed,
+-  count,
+-  lit,
+-}: {
+-  seed: string
+-  count: number
+-  lit?: boolean
+-}) {
+-  const bars = useMemo(() => waveformBars(seed, count), [seed, count])
+-  const row = bars.map((h, i) => (
+-    <i key={i} style={{ '--h': h, '--b': i } as CSSProperties} />
+-  ))
+-  return (
+-    <span className={styles.wave} aria-hidden="true" data-lit={lit}>
+-      <span className={styles.waveBase}>{row}</span>
+-      <span className={styles.waveLit}>{row}</span>
+-    </span>
+-  )
+-}
+-
+-/**
+- * The FAQ, as a second unit on the same desk as the performance controller.
+- *
+- * It is built from the controller's own materials (the graphite chassis, the
+- * green-phosphor LCD, the pad colours) and borrows one idea from clip-launching
+- * instruments: **a clip does not start when you press it, it starts on the next
+- * beat.** Each question is a clip with its own waveform. Pressing one queues it
+- * (it blinks), the next beat of a live 120 BPM clock launches it, and its
+- * answer then *plays*: a playhead crosses the clip, the answer types out in
+- * step with it on the LCD, and the waveform lights as the playhead passes.
+- *
+- * ## How it is wired
+- *
+- * A single `requestAnimationFrame` loop owns the clock. It does three things
+- * per frame and nothing else: advance the beat (a `data-beat` on the unit,
+- * which CSS turns into LED and pulse animation), launch a queued clip on a beat
+- * boundary, and advance a playing clip (a `--p` custom property on the clip and
+- * on the master, the typed text, the time). None of that is React state, so a
+- * playing clip is sixty DOM writes a second and no renders. React state changes
+- * only on a transition: queued, playing, finished.
+- *
+- * The loop runs while the unit is on screen or a clip is playing, and stops
+- * otherwise. With reduced motion there is no loop: a press selects the clip and
+- * its whole answer appears at once.
+- *
+- * ## What it keeps from a real FAQ
+- *
+- * Real buttons in a roving-tabindex grid (arrows move between tracks and
+- * clips, Enter or Space launches, Escape stops); the answer in an `aria-live`
+- * region, once and whole, while the typed copy is `aria-hidden`; a `#hash` deep
+- * link per question; and, without a script, every question and answer as plain
+- * text.
+- */
+-export function SceneLaunch({ email }: { email: string }) {
+-  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
+-  const [reveal, revealState] = useReveal<HTMLElement>(0.2)
+-  const tracks = useMemo(() => tracksOf(FAQ_ITEMS), [])
+-  const counts = useMemo(() => tracks.map((t) => t.clips.length), [tracks])
+-
+-  const [view, setView] = useState<EngineView>(INITIAL)
+-  const [auto, setAuto] = useState(false)
+-  const [copied, setCopied] = useState(false)
+-  const [focus, setFocus] = useState<[number, number]>([0, 0])
+-
+-  const sheen = useRef<HTMLDivElement | null>(null)
+-  const master = useRef<HTMLDivElement | null>(null)
+-  const typed = useRef<HTMLSpanElement | null>(null)
+-  const timeEl = useRef<HTMLElement | null>(null)
+-  const barEl = useRef<HTMLElement | null>(null)
+-  const clips = useRef<(HTMLButtonElement | null)[]>([])
+-  const engine = useRef<Engine | null>(null)
+-
+-  // The playback machine lives outside React; see `scene-engine.ts`.
+-  useEffect(() => {
+-    const instance = createEngine({
+-      items: FAQ_ITEMS,
+-      setView,
+-      reduced: () =>
+-        typeof window.matchMedia === 'function' &&
+-        window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+-      els: {
+-        unit: () => reveal.current,
+-        master: () => master.current,
+-        typed: () => typed.current,
+-        time: () => timeEl.current,
+-        bar: () => barEl.current,
+-        clip: (index) => clips.current[index],
+-      },
+-    })
+-    engine.current = instance
+-    return () => {
+-      instance.destroy()
+-      engine.current = null
+-    }
+-  }, [reveal])
+-
+-  useEffect(() => {
+-    engine.current?.setAuto(auto)
+-  }, [auto])
+-
+-  // The loop runs while the unit is on screen.
+-  useEffect(() => {
+-    const node = reveal.current
+-    if (!node || typeof IntersectionObserver === 'undefined') return
+-    const observer = new IntersectionObserver((entries) => {
+-      engine.current?.setVisible(entries.some((e) => e.isIntersecting))
+-    })
+-    observer.observe(node)
+-    return () => observer.disconnect()
+-  }, [reveal])
+-
+-  // A #hash that names a question launches it at once and brings it into view.
+-  useEffect(() => {
+-    const fromHash = () => {
+-      const id = decodeURIComponent(window.location.hash.replace(/^#/, ''))
+-      const index = FAQ_ITEMS.findIndex((item) => item.id === id)
+-      if (index < 0) return
+-      engine.current?.launch(index, true)
+-      const track = tracks.findIndex((t) =>
+-        t.clips.some((c) => c.index === index),
+-      )
+-      const row = tracks[track]?.clips.findIndex((c) => c.index === index) ?? 0
+-      setFocus([track, row])
+-      const still = window.matchMedia(
+-        '(prefers-reduced-motion: reduce)',
+-      ).matches
+-      window.setTimeout(
+-        () =>
+-          reveal.current?.scrollIntoView({
+-            block: 'center',
+-            behavior: still ? 'auto' : 'smooth',
+-          }),
+-        80,
+-      )
+-    }
+-    fromHash()
+-    window.addEventListener('hashchange', fromHash)
+-    return () => window.removeEventListener('hashchange', fromHash)
+-  }, [tracks, reveal])
+-
+-  // The unit arrives mid-performance: shortly after it powers on, the first
+-  // clip queues itself, unless the visitor has already done something.
+-  useEffect(() => {
+-    if (revealState !== 'in') return
+-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+-    const id = window.setTimeout(
+-      () => {
+-        if (!engine.current?.touched()) engine.current?.launch(0)
+-      },
+-      still ? 0 : 1400,
+-    )
+-    return () => window.clearTimeout(id)
+-  }, [revealState])
+-
+-  const press = (index: number) => {
+-    // Pressing the clip that is playing or queued stops it and shows the whole
+-    // answer; pressing any other launches that one.
+-    if (view.playing === index || view.queued === index) {
+-      engine.current?.stop()
+-      return
+-    }
+-    engine.current?.launch(index)
+-    history.replaceState(
+-      history.state,
+-      '',
+-      `${window.location.pathname}${window.location.search}#${FAQ_ITEMS[index].id}`,
+-    )
+-  }
+-
+-  const onKeyDown = (event: KeyboardEvent, track: number, row: number) => {
+-    if (event.key === 'Escape') {
+-      engine.current?.stop()
+-      return
+-    }
+-    const to = moveFocus(event.key, track, row, counts)
+-    if (!to) return
+-    event.preventDefault()
+-    setFocus(to)
+-    clips.current[tracks[to[0]].clips[to[1]].index]?.focus()
+-  }
+-
+-  const copyLink = async () => {
+-    if (view.selected === null) return
+-    const url = `${window.location.origin}${window.location.pathname}${window.location.search}#${FAQ_ITEMS[view.selected].id}`
+-    try {
+-      await navigator.clipboard.writeText(url)
+-    } catch {
+-      /* The hash is already in the address bar. */
+-    }
+-    setCopied(true)
+-    window.setTimeout(() => setCopied(false), 1800)
+-  }
+-
+-  const next = () => {
+-    engine.current?.launch(((view.selected ?? -1) + 1) % FAQ_ITEMS.length)
+-  }
+-
+-  // The light on the chassis follows the pointer. The custom properties live on
+-  // one childless element, so moving the pointer restyles that and nothing else.
+-  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
+-    const box = event.currentTarget.getBoundingClientRect()
+-    sheen.current?.style.setProperty('--mx', `${event.clientX - box.left}px`)
+-    sheen.current?.style.setProperty('--my', `${event.clientY - box.top}px`)
+-  }
+-
+-  const current: FaqEntry | null =
+-    view.selected === null ? null : FAQ_ITEMS[view.selected]
+-  const trackIndex = current ? TRACKS.indexOf(current.track) : -1
+-  const stateOf = (index: number) =>
+-    view.playing === index
+-      ? 'playing'
+-      : view.queued === index
+-        ? 'queued'
+-        : view.played.includes(index)
+-          ? 'played'
+-          : 'idle'
+-
+-  return (
+-    <section
+-      ref={reveal}
+-      className={styles.unit}
+-      data-reveal={revealState}
+-      data-beat="0"
+-      aria-labelledby={`${uid}-title`}
+-      onPointerMove={onPointerMove}
+-    >
+-      <div className={styles.sheen} ref={sheen} aria-hidden="true" />
+-
+-      <header className={styles.brand}>
+-        <div>
+-          <strong id={`${uid}-title`}>AH / SCENE LAUNCH</strong>
+-          <span>
+-            FAQ · {FAQ_ITEMS.length} CLIPS · {TRACKS.length} TRACKS
+-          </span>
+-        </div>
+-        <div className={styles.transport}>
+-          <span className={styles.readout} aria-hidden="true">
+-            {BPM} BPM
+-          </span>
+-          <span className={styles.readout} aria-hidden="true">
+-            <b ref={barEl}>BAR 01.1</b>
+-          </span>
+-          <button
+-            type="button"
+-            className={styles.key}
+-            onClick={() => engine.current?.stop()}
+-          >
+-            <i aria-hidden="true" className={styles.stopIcon} />
+-            Stop
+-          </button>
+-          <button
+-            type="button"
+-            className={styles.key}
+-            aria-pressed={auto}
+-            onClick={() => setAuto((v) => !v)}
+-          >
+-            Auto
+-          </button>
+-        </div>
+-      </header>
+-
+-      <div
+-        ref={master}
+-        className={styles.master}
+-        data-state={
+-          view.playing !== null
+-            ? 'playing'
+-            : view.queued !== null
+-              ? 'queued'
+-              : 'idle'
+-        }
+-        style={
+-          {
+-            '--c':
+-              trackIndex >= 0
+-                ? TRACK_COLORS[trackIndex]
+-                : 'var(--lcd-green, #5cd6a3)',
+-          } as CSSProperties
+-        }
+-      >
+-        <div className={styles.masterTop} aria-hidden="true">
+-          <span>
+-            {current
+-              ? `NOW ${view.playing !== null ? 'PLAYING' : view.queued !== null ? 'CUEING' : 'LOADED'} · ${current.track.toUpperCase()} · CLIP ${String(view.selected! + 1).padStart(2, '0')}`
+-              : 'MASTER OUT · STANDBY'}
+-          </span>
+-          <span ref={timeEl}>00:00 / 00:00</span>
+-        </div>
+-
+-        <div
+-          role="region"
+-          aria-live="polite"
+-          aria-label="Answer"
+-          className={styles.live}
+-        >
+-          <h3 className={styles.question}>
+-            {current
+-              ? current.question
+-              : 'Pick a clip. It starts on the next beat.'}
+-          </h3>
+-          {current ? <p className={styles.srOnly}>{current.answer}</p> : null}
+-        </div>
+-        <p className={styles.answer} aria-hidden="true">
+-          <span ref={typed} />
+-          <i className={styles.caret} />
+-        </p>
+-
+-        <div className={styles.masterWave}>
+-          <Wave seed={current ? current.id : 'standby'} count={72} lit />
+-          <i className={styles.playhead} />
+-        </div>
+-
+-        <div className={styles.tools}>
+-          <button type="button" onClick={next}>
+-            Next clip
+-          </button>
+-          <button type="button" onClick={copyLink} disabled={!current}>
+-            {copied ? 'Link copied' : 'Copy link'}
+-          </button>
+-        </div>
+-      </div>
+-
+-      <div className={styles.tracks}>
+-        {tracks.map((track, t) => (
+-          <div
+-            key={track.name}
+-            role="group"
+-            aria-label={`${track.name} track`}
+-            className={styles.track}
+-            style={{ '--c': TRACK_COLORS[t] } as CSSProperties}
+-          >
+-            <div className={styles.trackHead}>
+-              <i aria-hidden="true" />
+-              <span>{track.name}</span>
+-              <small>{String(track.clips.length).padStart(2, '0')}</small>
+-            </div>
+-            {track.clips.map(({ item, index }, row) => {
+-              const state = stateOf(index)
+-              const selected = view.selected === index
+-              return (
+-                <button
+-                  key={item.id}
+-                  ref={(node) => {
+-                    clips.current[index] = node
+-                  }}
+-                  type="button"
+-                  className={styles.clip}
+-                  style={{ '--n': index } as CSSProperties}
+-                  data-state={state}
+-                  data-selected={selected}
+-                  aria-pressed={state === 'playing'}
+-                  tabIndex={focus[0] === t && focus[1] === row ? 0 : -1}
+-                  onClick={() => press(index)}
+-                  onFocus={() => setFocus([t, row])}
+-                  onKeyDown={(event) => onKeyDown(event, t, row)}
+-                >
+-                  <span className={styles.clipFill} aria-hidden="true" />
+-                  <span className={styles.clipHead} aria-hidden="true">
+-                    <b>{String(index + 1).padStart(2, '0')}</b>
+-                    <i className={styles.clipIcon} />
+-                  </span>
+-                  <span className={styles.clipTitle}>{item.question}</span>
+-                  <Wave seed={item.id} count={26} />
+-                  {state === 'queued' || state === 'playing' ? (
+-                    <span className={styles.srOnly}>
+-                      {state === 'queued' ? ' (queued)' : ' (playing)'}
+-                    </span>
+-                  ) : null}
+-                </button>
+-              )
+-            })}
+-          </div>
+-        ))}
+-      </div>
+-
+-      <footer className={styles.foot}>
+-        <span className={styles.leds} aria-hidden="true">
+-          {[0, 1, 2, 3].map((i) => (
+-            <i key={i} />
+-          ))}
+-        </span>
+-        <p>Press a clip. It launches on the next beat.</p>
+-        <a className={styles.cta} href={`mailto:${email}`}>
+-          Still unsure? Email me
+-        </a>
+-      </footer>
+-
+-      {/* Without a script nothing can launch, so the whole FAQ is plain text. */}
+-      <noscript>
+-        <style>{`.${styles.tracks},.${styles.master},.${styles.transport},.${styles.foot}{display:none}`}</style>
+-        <dl className={styles.plain}>
+-          {FAQ_ITEMS.map((item) => (
+-            <div key={item.id}>
+-              <dt>{item.question}</dt>
+-              <dd>{item.answer}</dd>
+-            </div>
+-          ))}
+-        </dl>
+-      </noscript>
+-    </section>
+-  )
+-}
+diff --git a/features/landing-page/rack-01/contact-desk/scene-logic.ts b/features/landing-page/rack-01/contact-desk/scene-logic.ts
+index 1e37f6b..1b4b305 100644
+--- a/features/landing-page/rack-01/contact-desk/scene-logic.ts
++++ b/features/landing-page/rack-01/contact-desk/scene-logic.ts
+@@ -69,47 +69,6 @@ export function transportAt(elapsed: number, bpm: number = BPM): string {
+   return `BAR ${String(bar).padStart(2, '0')}.${(beats % 4) + 1}`
+ }
+ 
+-/** A 32-bit string hash (FNV-1a), for seeding. */
+-export function hash(text: string): number {
+-  let h = 0x811c9dc5
+-  for (let i = 0; i < text.length; i += 1) {
+-    h ^= text.charCodeAt(i)
+-    h = Math.imul(h, 0x01000193)
+-  }
+-  return h >>> 0
+-}
+-
+-/**
+- * A waveform for a clip: `count` bar heights in 0.14–1, the same every time for
+- * the same seed. Each clip's thumbnail is its own shape, so nine clips do not
+- * look like one clip nine times.
+- *
+- * Built from a seeded generator and then smoothed with a short moving average
+- * and an envelope that swells in the middle, because raw noise reads as static
+- * and a clip reads as audio when it has a body.
+- */
+-export function waveformBars(seed: string, count: number): number[] {
+-  let state = hash(seed) || 1
+-  const next = () => {
+-    // xorshift32
+-    state ^= state << 13
+-    state >>>= 0
+-    state ^= state >>> 17
+-    state ^= state << 5
+-    state >>>= 0
+-    return state / 0xffffffff
+-  }
+-  const raw = Array.from({ length: count }, () => next())
+-  return raw.map((_, i) => {
+-    const a = raw[Math.max(0, i - 1)]
+-    const b = raw[i]
+-    const c = raw[Math.min(count - 1, i + 1)]
+-    const smooth = (a + b * 2 + c) / 4
+-    const envelope = 0.55 + 0.45 * Math.sin((Math.PI * (i + 0.5)) / count)
+-    return Math.min(1, Math.max(0.14, 0.14 + smooth * envelope * 0.9))
+-  })
+-}
+-
+ /** The clips grouped by track, each with its index in the flat list. */
+ export function tracksOf(items: readonly FaqEntry[] = FAQ_ITEMS) {
+   return TRACKS.map((name) => ({
+@@ -120,42 +79,22 @@ export function tracksOf(items: readonly FaqEntry[] = FAQ_ITEMS) {
+   }))
+ }
+ 
++/** The answer's words, in order, for the lyric sheet. */
++export function wordsOf(text: string): string[] {
++  return text.split(/\s+/).filter(Boolean)
++}
++
+ /**
+- * Where focus goes from clip (`track`, `row`) on a key press, across a grid of
+- * tracks with `counts[t]` clips each; `null` for a key it does not own.
+- *
+- * Left and right change track and keep the row, clamped to the shorter track;
+- * up and down walk the track and wrap; Home and End are the ends of the track.
++ * Where focus goes on a key press in the setlist, a single column read top to
++ * bottom whichever group a song is in: down and up walk it and wrap, Home and
++ * End are its ends. `-1` for a key it does not own.
+  */
+-export function moveFocus(
+-  key: string,
+-  track: number,
+-  row: number,
+-  counts: readonly number[],
+-): [number, number] | null {
+-  const tracks = counts.length
+-  if (!tracks) return null
+-  const clamp = (t: number, r: number): [number, number] => [
+-    t,
+-    Math.max(0, Math.min(r, Math.max(0, counts[t] - 1))),
+-  ]
+-  switch (key) {
+-    case 'ArrowRight':
+-      return clamp(Math.min(tracks - 1, track + 1), row)
+-    case 'ArrowLeft':
+-      return clamp(Math.max(0, track - 1), row)
+-    case 'ArrowDown':
+-      return [track, counts[track] ? (row + 1) % counts[track] : 0]
+-    case 'ArrowUp':
+-      return [
+-        track,
+-        counts[track] ? (row - 1 + counts[track]) % counts[track] : 0,
+-      ]
+-    case 'Home':
+-      return [track, 0]
+-    case 'End':
+-      return [track, Math.max(0, counts[track] - 1)]
+-    default:
+-      return null
+-  }
++export function linearFocus(key: string, index: number, count: number): number {
++  if (!count) return -1
++  if (key === 'ArrowDown' || key === 'ArrowRight') return (index + 1) % count
++  if (key === 'ArrowUp' || key === 'ArrowLeft')
++    return (index - 1 + count) % count
++  if (key === 'Home') return 0
++  if (key === 'End') return count - 1
++  return -1
+ }
+diff --git a/features/landing-page/rack-01/contact-desk/setlist.module.css b/features/landing-page/rack-01/contact-desk/setlist.module.css
+new file mode 100644
+index 0000000..dfa4b7e
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/setlist.module.css
+@@ -0,0 +1,604 @@
++/* ── The setlist ─────────────────────────────────────────────
++   The FAQ as a printed setlist and a lyric sheet, set straight onto the
++   section's own graph paper. There is no chassis here: no panel, no screen, no
++   shadow, no border box. What carries the design is type, rules, one stage to
++   read on, and a lamp that lights the paper under the pointer.
++
++   Everything reads the section's own ink (`--panel-ink`, which flips with the
++   theme), so it sits on the cream sheet by day and the dark chassis by night
++   without a second set of colours. The three accents are the performance
++   controller's own pad colours, so the setlist and the deck above it share a
++   palette.
++
++   The lyric sheet is arithmetic on one number. The playback engine writes
++   `--p` (0 to 1) onto the stage, and a word's brightness, the highlighter that
++   rides the word being sung, and the scribble under the playing title are all
++   `calc()` on it. Every animated property is an opacity, a transform, a
++   clip or a custom property: nothing animates layout. Motion is behind
++   `prefers-reduced-motion: no-preference`; with it off a press selects a song
++   and the whole lyric is lit at once. */
++
++.srOnly {
++  position: absolute;
++  overflow: hidden;
++  width: 1px;
++  height: 1px;
++  clip-path: inset(50%);
++  white-space: nowrap;
++}
++
++.set {
++  --ink: var(--panel-ink, #101211);
++  --muted: var(--panel-ink-muted, rgb(29 30 28 / 0.66));
++  --rule: color-mix(in srgb, var(--ink) 24%, transparent);
++  --display: var(--deck-font-display, sans-serif);
++  --ui: var(--deck-font-ui, sans-serif);
++  --mono: var(--deck-font-mono, ui-monospace, monospace);
++  --orange: var(--deck-orange, #ff5a1f);
++  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
++  position: relative;
++  isolation: isolate;
++  width: min(1120px, 100%);
++  margin: clamp(72px, 10vw, 140px) auto 0;
++  color: var(--ink);
++}
++
++/* The lamp: the graph paper, stronger, but only under the pointer. */
++.lamp {
++  position: absolute;
++  z-index: -1;
++  inset: -48px -40px -24px;
++  background-image: linear-gradient(90deg, var(--rule) 1px, transparent 1px),
++    linear-gradient(0deg, var(--rule) 1px, transparent 1px);
++  background-size: var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px);
++  mask-image: radial-gradient(
++    circle 260px at var(--mx, 72%) var(--my, 18%),
++    #000 0%,
++    transparent 100%
++  );
++  -webkit-mask-image: radial-gradient(
++    circle 260px at var(--mx, 72%) var(--my, 18%),
++    #000 0%,
++    transparent 100%
++  );
++  pointer-events: none;
++}
++@media (hover: none) {
++  .lamp {
++    display: none;
++  }
++}
++
++.head {
++  display: flex;
++  align-items: baseline;
++  justify-content: space-between;
++  gap: 16px;
++  padding-top: 14px;
++  border-top: 1px solid var(--ink);
++  font: 700 11px var(--mono);
++  letter-spacing: 0.22em;
++  text-transform: uppercase;
++}
++.head h3 {
++  margin: 0;
++  font: inherit;
++}
++.head span {
++  color: var(--muted);
++}
++
++.grid {
++  display: grid;
++  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
++  gap: clamp(28px, 5vw, 88px);
++  margin-top: clamp(28px, 4vw, 56px);
++}
++
++/* ── The list ── */
++.side {
++  margin-bottom: clamp(20px, 2.6vw, 36px);
++}
++.sideHead {
++  display: flex;
++  align-items: center;
++  gap: 10px;
++  margin-bottom: 4px;
++  font: 700 10px var(--mono);
++  letter-spacing: 0.2em;
++  text-transform: uppercase;
++}
++.sideHead i {
++  width: 9px;
++  height: 9px;
++  border-radius: 50%;
++  background: var(--c);
++}
++.sideHead em {
++  color: var(--muted);
++  font-style: normal;
++}
++.songs {
++  margin: 0;
++  padding: 0;
++  list-style: none;
++}
++.song {
++  position: relative;
++}
++.song::before {
++  position: absolute;
++  top: 0;
++  right: 0;
++  left: 0;
++  height: 1px;
++  background: var(--rule);
++  content: '';
++  transform-origin: left;
++}
++.songBtn {
++  position: relative;
++  display: grid;
++  grid-template-columns: 2.4em minmax(0, 1fr) 14px;
++  align-items: start;
++  gap: 12px;
++  width: 100%;
++  padding: 15px 0 16px 16px;
++  border: 0;
++  background: none;
++  color: inherit;
++  cursor: pointer;
++  font: 700 clamp(17px, 1.6vw, 22px) / 1.16 var(--display);
++  letter-spacing: -0.02em;
++  text-align: left;
++  -webkit-tap-highlight-color: transparent;
++}
++/* The marker: a bar in the side's colour beside the selected song. */
++.songBtn::before {
++  position: absolute;
++  top: 12px;
++  bottom: 12px;
++  left: 0;
++  width: 3px;
++  background: var(--c);
++  content: '';
++  transform: scaleY(0);
++  transform-origin: center;
++  transition: transform 0.3s var(--ease);
++}
++.song[data-selected='true'] .songBtn::before {
++  transform: scaleY(1);
++}
++.songBtn:focus-visible {
++  outline: 2px solid var(--c);
++  outline-offset: 2px;
++}
++.num {
++  padding-top: 0.28em;
++  color: var(--muted);
++  font: 700 11px var(--mono);
++  letter-spacing: 0.14em;
++  transition: color 0.2s ease;
++}
++.song[data-selected='true'] .num,
++.song[data-state='playing'] .num {
++  color: var(--ink);
++}
++.title {
++  position: relative;
++  display: block;
++  padding-bottom: 7px;
++  transition: transform 0.3s var(--ease);
++}
++@media (hover: hover) and (pointer: fine) {
++  .songBtn:hover .title {
++    transform: translateX(0.3em);
++  }
++}
++
++/* The scribble: a hand-drawn underline that draws itself as the song plays. */
++.scribble {
++  position: absolute;
++  bottom: 0;
++  left: 0;
++  width: 100%;
++  height: 8px;
++  overflow: visible;
++}
++.scribble path {
++  fill: none;
++  stroke: var(--c);
++  stroke-dasharray: 1;
++  stroke-dashoffset: 1;
++  stroke-linecap: round;
++  stroke-width: 2.4;
++  vector-effect: non-scaling-stroke;
++}
++.song[data-state='playing'] .scribble path {
++  stroke-dashoffset: calc(1 - var(--p, 0));
++}
++.song[data-state='played'] .scribble path {
++  opacity: 0.5;
++  stroke-dashoffset: 0;
++}
++
++/* The state glyph: a play triangle, blinking while queued, bars while playing,
++   a dot once played. */
++.icon {
++  position: relative;
++  display: block;
++  width: 12px;
++  height: 12px;
++  margin-top: 0.42em;
++  color: var(--muted);
++}
++.icon::before {
++  position: absolute;
++  inset: 0;
++  background: currentColor;
++  clip-path: polygon(14% 6%, 14% 94%, 94% 50%);
++  content: '';
++}
++.song[data-selected='true'] .icon {
++  color: var(--ink);
++}
++.song[data-state='queued'] .icon,
++.song[data-state='playing'] .icon {
++  color: var(--c);
++}
++.song[data-state='playing'] .icon::before {
++  clip-path: polygon(
++    0 100%,
++    0 30%,
++    28% 30%,
++    28% 100%,
++    36% 100%,
++    36% 0,
++    64% 0,
++    64% 100%,
++    72% 100%,
++    72% 55%,
++    100% 55%,
++    100% 100%
++  );
++}
++.song[data-state='played'] .icon::before {
++  clip-path: circle(28% at 50% 50%);
++}
++@keyframes cue {
++  50% {
++    opacity: 0.25;
++  }
++}
++@media (prefers-reduced-motion: no-preference) {
++  .song[data-state='queued'] .icon,
++  .song[data-state='queued'] .num {
++    animation: cue 0.5s steps(1, end) infinite;
++  }
++}
++
++/* ── The stage ── */
++.stage {
++  position: sticky;
++  top: clamp(16px, 4vh, 48px);
++  isolation: isolate;
++  display: grid;
++  align-content: start;
++  align-self: start;
++  gap: 18px;
++  min-height: clamp(400px, 38vw, 540px);
++  overflow: hidden;
++  padding: 4px 0 8px;
++}
++.ghost {
++  position: absolute;
++  z-index: -1;
++  top: -6%;
++  right: -3%;
++  color: transparent;
++  font: 800 clamp(180px, 24vw, 360px) / 0.8 var(--display);
++  letter-spacing: -0.06em;
++  pointer-events: none;
++  user-select: none;
++  -webkit-text-stroke: 1.5px color-mix(in srgb, var(--c) 50%, transparent);
++}
++.meta {
++  display: flex;
++  justify-content: space-between;
++  gap: 12px;
++  margin: 0;
++  color: var(--muted);
++  font: 700 10px var(--mono);
++  letter-spacing: 0.18em;
++  text-transform: uppercase;
++  font-variant-numeric: tabular-nums;
++}
++.q {
++  margin: 0;
++  font: 800 clamp(20px, 2.1vw, 30px) / 1.08 var(--display);
++  letter-spacing: -0.025em;
++  text-wrap: balance;
++}
++.stage[data-state='queued'] .q {
++  animation: cue 0.5s steps(1, end) infinite;
++}
++
++/* The lyric sheet: the whole answer, set at once so nothing reflows, lit word
++   by word as the playhead passes. */
++.lyrics {
++  margin: 0;
++  font: 600 clamp(22px, 2.5vw, 36px) / 1.2 var(--ui);
++  letter-spacing: -0.025em;
++  text-wrap: pretty;
++}
++.w {
++  /* How far the playhead is into this word, in words: 0 to 1 while it is on it. */
++  --d: calc(var(--p, 0) * var(--n, 1) - var(--i, 0));
++  /* Lit: 0 before the playhead, 1 once it has passed. */
++  --on: clamp(0, calc(var(--d) * 1.6), 1);
++  /* The highlighter: a parabola in the same distance, so it peaks on the word
++     being sung and is zero on both sides of it. */
++  --cur: clamp(0, calc(1 - (var(--d) - 0.5) * (var(--d) - 0.5) * 4), 1);
++  background-image: linear-gradient(
++    color-mix(in srgb, var(--c) calc(var(--cur) * 62%), transparent),
++    color-mix(in srgb, var(--c) calc(var(--cur) * 62%), transparent)
++  );
++  background-position: 0 92%;
++  background-repeat: no-repeat;
++  background-size: 100% 0.52em;
++  box-decoration-break: clone;
++  opacity: calc(0.15 + var(--on) * 0.85);
++}
++
++/* The rail: nine ticks, one per song, and a cursor where you are. */
++.rail {
++  position: relative;
++  display: grid;
++  grid-template-columns: repeat(9, 1fr);
++  gap: 4px;
++  align-items: end;
++  height: 24px;
++}
++.tick {
++  height: 8px;
++  background: var(--rule);
++  transition:
++    height 0.25s var(--ease),
++    background 0.25s ease;
++}
++.tick[data-on='true'] {
++  height: 20px;
++  background: var(--c);
++}
++.cursor {
++  position: absolute;
++  bottom: -2px;
++  left: calc((var(--k, 0) + var(--p, 0)) / 9 * 100%);
++  width: 2px;
++  height: 26px;
++  background: var(--ink);
++  opacity: 0;
++}
++.stage[data-state='playing'] .cursor {
++  opacity: 1;
++}
++
++.tools {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 4px 22px;
++}
++.tools button {
++  min-height: 44px;
++  padding: 0;
++  border: 0;
++  background: none;
++  color: var(--ink);
++  cursor: pointer;
++  font: 700 11px var(--mono);
++  letter-spacing: 0.16em;
++  text-decoration: underline;
++  text-decoration-thickness: 1.5px;
++  text-underline-offset: 4px;
++  text-transform: uppercase;
++}
++.tools button[aria-pressed='true'] {
++  text-decoration-color: var(--c);
++  text-decoration-thickness: 3px;
++}
++.tools button:disabled {
++  cursor: default;
++  opacity: 0.4;
++  text-decoration: none;
++}
++.tools button:focus-visible,
++.cta:focus-visible {
++  outline: 2px solid var(--c, var(--orange));
++  outline-offset: 3px;
++}
++
++/* ── The way out ── */
++.cta {
++  position: relative;
++  display: inline-flex;
++  align-items: center;
++  gap: 16px;
++  min-height: 56px;
++  margin-top: clamp(28px, 4vw, 60px);
++  padding: 0 6px;
++  border-bottom: 2px solid var(--ink);
++  background: linear-gradient(var(--orange), var(--orange)) 0 100% / 0% 100%
++    no-repeat;
++  color: var(--ink);
++  font: 800 clamp(20px, 2.3vw, 32px) var(--display);
++  letter-spacing: -0.02em;
++  text-decoration: none;
++  transition:
++    background-size 0.45s var(--ease),
++    color 0.2s ease;
++}
++.cta i {
++  position: relative;
++  width: 0.9em;
++  height: 0.9em;
++  transition: transform 0.45s var(--ease);
++}
++.cta i::before,
++.cta i::after {
++  position: absolute;
++  background: currentColor;
++  content: '';
++}
++.cta i::before {
++  top: 0;
++  right: 0;
++  left: 18%;
++  height: 2px;
++}
++.cta i::after {
++  top: 0;
++  right: 0;
++  bottom: 18%;
++  width: 2px;
++}
++.cta:hover {
++  background-size: 100% 100%;
++  color: #14171a;
++}
++.cta:hover i {
++  transform: translate(3px, -3px);
++}
++
++/* Without a script the whole FAQ is plain text. */
++.plain {
++  display: grid;
++  gap: 22px;
++  max-width: 62ch;
++  margin: 28px 0 0;
++}
++.plain dt {
++  font: 800 20px / 1.2 var(--display);
++}
++.plain dd {
++  margin: 6px 0 0;
++  color: var(--muted);
++  font: 500 16px / 1.6 var(--ui);
++}
++
++/* ── Arrival ── */
++.set[data-reveal='armed'] .song,
++.set[data-reveal='armed'] .sideHead,
++.set[data-reveal='armed'] .stage,
++.set[data-reveal='armed'] .head,
++.set[data-reveal='armed'] .cta {
++  opacity: 0;
++}
++@media (prefers-reduced-motion: no-preference) {
++  .set[data-reveal='in'] .head,
++  .set[data-reveal='in'] .sideHead {
++    animation: rise 0.7s var(--ease) backwards;
++  }
++  .set[data-reveal='in'] .song {
++    animation: rise 0.7s var(--ease) backwards;
++    animation-delay: calc(var(--n) * 70ms + 150ms);
++  }
++  .set[data-reveal='in'] .song::before {
++    animation: draw 0.9s var(--ease) backwards;
++    animation-delay: calc(var(--n) * 70ms + 100ms);
++  }
++  .set[data-reveal='in'] .stage {
++    animation: stageIn 0.9s var(--ease) 0.25s backwards;
++  }
++  .set[data-reveal='in'] .cta {
++    animation: rise 0.7s var(--ease) 0.9s backwards;
++  }
++  .ghost {
++    animation: numIn 0.8s var(--ease) backwards;
++  }
++
++  /* On the beat the giant numeral kicks, while a song plays. Pairs, because a
++     changing selector alone does not restart an animation; a changing name
++     does. */
++  .set[data-beat='0'] .ghost[data-playing='true'],
++  .set[data-beat='2'] .ghost[data-playing='true'] {
++    animation: kickA 0.48s ease-out;
++  }
++  .set[data-beat='1'] .ghost[data-playing='true'],
++  .set[data-beat='3'] .ghost[data-playing='true'] {
++    animation: kickB 0.48s ease-out;
++  }
++}
++@media (prefers-reduced-motion: reduce) {
++  .set[data-reveal='armed'] .song,
++  .set[data-reveal='armed'] .sideHead,
++  .set[data-reveal='armed'] .stage,
++  .set[data-reveal='armed'] .head,
++  .set[data-reveal='armed'] .cta {
++    opacity: 1;
++  }
++  .songBtn::before,
++  .title,
++  .tick,
++  .cta,
++  .cta i {
++    transition: none;
++  }
++}
++@keyframes rise {
++  from {
++    opacity: 0;
++    transform: translateY(18px);
++  }
++}
++@keyframes draw {
++  from {
++    transform: scaleX(0);
++  }
++}
++@keyframes stageIn {
++  from {
++    opacity: 0;
++    transform: translateX(28px);
++  }
++}
++@keyframes numIn {
++  from {
++    opacity: 0;
++    transform: translateY(24%);
++  }
++}
++@keyframes kickA {
++  from {
++    transform: scale(1.045);
++    -webkit-text-stroke-color: var(--c);
++  }
++}
++@keyframes kickB {
++  from {
++    transform: scale(1.045);
++    -webkit-text-stroke-color: var(--c);
++  }
++}
++
++/* ── Narrow screens: the stage comes first, the list under it ── */
++@media (max-width: 900px) {
++  .grid {
++    grid-template-columns: minmax(0, 1fr);
++    gap: 32px;
++  }
++  .stage {
++    position: relative;
++    top: auto;
++    order: -1;
++    min-height: 340px;
++  }
++  .ghost {
++    font-size: clamp(150px, 46vw, 260px);
++  }
++}
++
++/* Grid items must be allowed to shrink below their content's width. */
++.list,
++.stage {
++  min-width: 0;
++}
+diff --git a/features/landing-page/rack-01/contact-desk/setlist.tsx b/features/landing-page/rack-01/contact-desk/setlist.tsx
+new file mode 100644
+index 0000000..94a5199
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/setlist.tsx
+@@ -0,0 +1,457 @@
++'use client'
++
++import {
++  Fragment,
++  useEffect,
++  useId,
++  useMemo,
++  useRef,
++  useState,
++  type CSSProperties,
++  type KeyboardEvent,
++  type PointerEvent,
++} from 'react'
++import { CONTACT_PAD_COLORS } from '../../constants'
++import { FAQ_ITEMS, SIDES, TRACKS, type FaqEntry } from './contact-content'
++import { createEngine, type Engine, type EngineView } from './scene-engine'
++import { linearFocus, tracksOf, wordsOf } from './scene-logic'
++import styles from './setlist.module.css'
++import { useReveal } from './use-reveal'
++
++/** One accent per side, taken from the controller's own pad colours. */
++const SIDE_COLORS = [
++  CONTACT_PAD_COLORS[0],
++  CONTACT_PAD_COLORS[1],
++  CONTACT_PAD_COLORS[3],
++]
++
++const INITIAL: EngineView = {
++  selected: null,
++  playing: null,
++  queued: null,
++  played: [],
++}
++
++const two = (n: number) => String(n).padStart(2, '0')
++
++/**
++ * The FAQ, as a printed setlist and a lyric sheet, set straight onto the
++ * section's own graph paper. No chassis, no screen, no panel: type, rules and
++ * one stage to read on.
++ *
++ * ## The idea
++ *
++ * The questions are songs. They are listed in running order in three groups
++ * (Side A, Side B, Encore), and a song does not start when you press it, it
++ * starts on the next beat of a live 120 BPM clock, which is what makes a press
++ * feel performed. Its answer then plays as **a lyric sheet**: the whole answer
++ * is set in big type at once, so nothing reflows, and the words light up one
++ * after another as the playhead passes, with a highlighter block riding the
++ * word being sung. A scribble draws itself under the playing title, a giant
++ * outlined numeral behind the stage kicks on the beat, and a lamp that follows
++ * the pointer lights the graph paper under it.
++ *
++ * ## How it is wired
++ *
++ * The playback machine is `scene-engine.ts` and it never touches React for the
++ * per-frame work. It writes one number, `--p` (0 to 1), onto the stage and onto
++ * the playing song, and every visual here is CSS arithmetic on that number: a
++ * word's brightness is `clamp(0, p·n − i, 1)` for its index `i` out of `n`, the
++ * highlighter is a parabola in the same distance (so it peaks on the current
++ * word and is zero on either side of it), the scribble is a dash offset. A
++ * playing song is sixty custom-property writes a second and no renders.
++ *
++ * ## What it keeps from a real FAQ
++ *
++ * Real buttons in a keyboard list (up and down walk it, Home and End jump,
++ * Enter or Space plays, Escape stops); the answer announced once, whole, in a
++ * polite live region while the animated copy is `aria-hidden`; a `#hash` deep
++ * link per question and a Copy link; and, without a script, every question and
++ * answer as plain text. Reduced motion is a complete alternative: no clock, no
++ * beat, no sweep, and a press selects a song and lights the whole lyric.
++ */
++export function Setlist({ email }: { email: string }) {
++  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
++  const [reveal, revealState] = useReveal<HTMLElement>(0.15)
++  const tracks = useMemo(() => tracksOf(FAQ_ITEMS), [])
++
++  const [view, setView] = useState<EngineView>(INITIAL)
++  const [auto, setAuto] = useState(false)
++  const [copied, setCopied] = useState(false)
++  const [focus, setFocus] = useState(0)
++
++  const lamp = useRef<HTMLDivElement | null>(null)
++  const stage = useRef<HTMLDivElement | null>(null)
++  const timeEl = useRef<HTMLSpanElement | null>(null)
++  const songs = useRef<(HTMLLIElement | null)[]>([])
++  const buttons = useRef<(HTMLButtonElement | null)[]>([])
++  const engine = useRef<Engine | null>(null)
++
++  // The playback machine lives outside React; see `scene-engine.ts`.
++  useEffect(() => {
++    const instance = createEngine({
++      items: FAQ_ITEMS,
++      setView,
++      reduced: () =>
++        typeof window.matchMedia === 'function' &&
++        window.matchMedia('(prefers-reduced-motion: reduce)').matches,
++      els: {
++        unit: () => reveal.current,
++        master: () => stage.current,
++        typed: () => null,
++        time: () => timeEl.current,
++        bar: () => null,
++        clip: (index) => songs.current[index],
++      },
++    })
++    engine.current = instance
++    return () => {
++      instance.destroy()
++      engine.current = null
++    }
++  }, [reveal])
++
++  useEffect(() => {
++    engine.current?.setAuto(auto)
++  }, [auto])
++
++  // The loop runs while the setlist is on screen.
++  useEffect(() => {
++    const node = reveal.current
++    if (!node || typeof IntersectionObserver === 'undefined') return
++    const observer = new IntersectionObserver((entries) => {
++      engine.current?.setVisible(entries.some((e) => e.isIntersecting))
++    })
++    observer.observe(node)
++    return () => observer.disconnect()
++  }, [reveal])
++
++  // A #hash that names a question plays it at once and brings it into view.
++  useEffect(() => {
++    const fromHash = () => {
++      const id = decodeURIComponent(window.location.hash.replace(/^#/, ''))
++      const index = FAQ_ITEMS.findIndex((item) => item.id === id)
++      if (index < 0) return
++      engine.current?.launch(index, true)
++      setFocus(index)
++      const still = window.matchMedia(
++        '(prefers-reduced-motion: reduce)',
++      ).matches
++      window.setTimeout(
++        () =>
++          reveal.current?.scrollIntoView({
++            block: 'start',
++            behavior: still ? 'auto' : 'smooth',
++          }),
++        80,
++      )
++    }
++    fromHash()
++    window.addEventListener('hashchange', fromHash)
++    return () => window.removeEventListener('hashchange', fromHash)
++  }, [reveal])
++
++  // It arrives mid-performance: shortly after the setlist is on the page, the
++  // first song queues itself, unless the visitor has already done something.
++  useEffect(() => {
++    if (revealState !== 'in') return
++    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
++    const id = window.setTimeout(
++      () => {
++        if (!engine.current?.touched()) engine.current?.launch(0)
++      },
++      still ? 0 : 1500,
++    )
++    return () => window.clearTimeout(id)
++  }, [revealState])
++
++  const press = (index: number) => {
++    // Pressing the song that is playing or queued stops it and lights the whole
++    // lyric; pressing any other plays that one.
++    if (view.playing === index || view.queued === index) {
++      engine.current?.stop()
++      return
++    }
++    engine.current?.launch(index)
++    history.replaceState(
++      history.state,
++      '',
++      `${window.location.pathname}${window.location.search}#${FAQ_ITEMS[index].id}`,
++    )
++    // On a narrow screen the stage sits above the list; bring it into view.
++    if (window.matchMedia('(max-width: 900px)').matches) {
++      const still = window.matchMedia(
++        '(prefers-reduced-motion: reduce)',
++      ).matches
++      stage.current?.scrollIntoView({
++        block: 'nearest',
++        behavior: still ? 'auto' : 'smooth',
++      })
++    }
++  }
++
++  const onKeyDown = (event: KeyboardEvent, index: number) => {
++    if (event.key === 'Escape') {
++      engine.current?.stop()
++      return
++    }
++    const to = linearFocus(event.key, index, FAQ_ITEMS.length)
++    if (to < 0) return
++    event.preventDefault()
++    setFocus(to)
++    buttons.current[to]?.focus()
++  }
++
++  const copyLink = async () => {
++    if (view.selected === null) return
++    const url = `${window.location.origin}${window.location.pathname}${window.location.search}#${FAQ_ITEMS[view.selected].id}`
++    try {
++      await navigator.clipboard.writeText(url)
++    } catch {
++      /* The hash is already in the address bar. */
++    }
++    setCopied(true)
++    window.setTimeout(() => setCopied(false), 1800)
++  }
++
++  // The lamp follows the pointer. Its custom properties live on one childless
++  // element, so moving the pointer restyles that and nothing else.
++  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
++    const box = event.currentTarget.getBoundingClientRect()
++    lamp.current?.style.setProperty('--mx', `${event.clientX - box.left}px`)
++    lamp.current?.style.setProperty('--my', `${event.clientY - box.top}px`)
++  }
++
++  const current: FaqEntry | null =
++    view.selected === null ? null : FAQ_ITEMS[view.selected]
++  const side = current ? TRACKS.indexOf(current.track) : -1
++  const words = useMemo(
++    () => (current ? wordsOf(current.answer) : []),
++    [current],
++  )
++  const status =
++    view.playing !== null
++      ? 'Now playing'
++      : view.queued !== null
++        ? 'Cueing'
++        : current
++          ? 'Loaded'
++          : 'Standing by'
++  const stateOf = (index: number) =>
++    view.playing === index
++      ? 'playing'
++      : view.queued === index
++        ? 'queued'
++        : view.played.includes(index)
++          ? 'played'
++          : 'idle'
++
++  return (
++    <section
++      ref={reveal}
++      className={styles.set}
++      data-reveal={revealState}
++      data-beat="0"
++      aria-labelledby={`${uid}-title`}
++      onPointerMove={onPointerMove}
++    >
++      <div className={styles.lamp} ref={lamp} aria-hidden="true" />
++
++      <header className={styles.head}>
++        <h3 id={`${uid}-title`}>Before you write</h3>
++        <span aria-hidden="true">
++          {two(FAQ_ITEMS.length)} songs · {TRACKS.length} sides
++        </span>
++      </header>
++
++      <div className={styles.grid}>
++        <div className={styles.list}>
++          {tracks.map((track, t) => (
++            <div
++              key={track.name}
++              role="group"
++              aria-label={`${SIDES[track.name]}: ${track.name}`}
++              className={styles.side}
++              style={{ '--c': SIDE_COLORS[t] } as CSSProperties}
++            >
++              <div className={styles.sideHead} aria-hidden="true">
++                <i />
++                <span>{SIDES[track.name]}</span>
++                <em>{track.name}</em>
++              </div>
++              <ol className={styles.songs}>
++                {track.clips.map(({ item, index }) => {
++                  const state = stateOf(index)
++                  return (
++                    <li
++                      key={item.id}
++                      ref={(node) => {
++                        songs.current[index] = node
++                      }}
++                      className={styles.song}
++                      style={{ '--n': index } as CSSProperties}
++                      data-state={state}
++                      data-selected={view.selected === index}
++                    >
++                      <button
++                        ref={(node) => {
++                          buttons.current[index] = node
++                        }}
++                        type="button"
++                        className={styles.songBtn}
++                        aria-pressed={state === 'playing'}
++                        tabIndex={focus === index ? 0 : -1}
++                        onClick={() => press(index)}
++                        onFocus={() => setFocus(index)}
++                        onKeyDown={(event) => onKeyDown(event, index)}
++                      >
++                        <span className={styles.num} aria-hidden="true">
++                          {two(index + 1)}
++                        </span>
++                        <span className={styles.title}>
++                          {item.question}
++                          <svg
++                            className={styles.scribble}
++                            viewBox="0 0 120 8"
++                            preserveAspectRatio="none"
++                            aria-hidden="true"
++                          >
++                            <path
++                              pathLength={1}
++                              d="M1 5 C 14 1, 28 8, 44 4 S 76 1, 92 5 S 112 7, 119 3"
++                            />
++                          </svg>
++                        </span>
++                        <i className={styles.icon} aria-hidden="true" />
++                        {state === 'queued' || state === 'playing' ? (
++                          <span className={styles.srOnly}>
++                            {state === 'queued' ? ' (queued)' : ' (playing)'}
++                          </span>
++                        ) : null}
++                      </button>
++                    </li>
++                  )
++                })}
++              </ol>
++            </div>
++          ))}
++        </div>
++
++        <div
++          ref={stage}
++          className={styles.stage}
++          data-state={
++            view.playing !== null
++              ? 'playing'
++              : view.queued !== null
++                ? 'queued'
++                : 'idle'
++          }
++          style={
++            {
++              '--c':
++                side >= 0 ? SIDE_COLORS[side] : 'var(--deck-orange, #ff5a1f)',
++              '--n': words.length,
++              '--k': view.selected ?? 0,
++            } as CSSProperties
++          }
++        >
++          <span
++            key={view.selected ?? 'none'}
++            className={styles.ghost}
++            data-playing={view.playing !== null}
++            aria-hidden="true"
++          >
++            {current ? two(view.selected! + 1) : '··'}
++          </span>
++
++          <p className={styles.meta} aria-hidden="true">
++            <span>
++              {status}
++              {current ? ` · ${SIDES[current.track]}` : ''}
++            </span>
++            <span ref={timeEl}>00:00 / 00:00</span>
++          </p>
++
++          <div role="region" aria-live="polite" aria-label="Answer">
++            <h4 className={styles.q}>
++              {current
++                ? current.question
++                : 'Pick a song. It starts on the next beat.'}
++            </h4>
++            {current ? <p className={styles.srOnly}>{current.answer}</p> : null}
++          </div>
++
++          <p className={styles.lyrics} aria-hidden="true">
++            {words.map((word, i) => (
++              <Fragment key={`${view.selected}-${i}`}>
++                <span
++                  className={styles.w}
++                  style={{ '--i': i } as CSSProperties}
++                >
++                  {word}
++                </span>{' '}
++              </Fragment>
++            ))}
++          </p>
++
++          <div className={styles.rail} aria-hidden="true">
++            {FAQ_ITEMS.map((item, i) => (
++              <i
++                key={item.id}
++                className={styles.tick}
++                data-on={view.selected === i}
++                style={{ '--t': i } as CSSProperties}
++              />
++            ))}
++            <b className={styles.cursor} />
++          </div>
++
++          <div className={styles.tools}>
++            <button
++              type="button"
++              onClick={() =>
++                engine.current?.launch(
++                  ((view.selected ?? -1) + 1) % FAQ_ITEMS.length,
++                )
++              }
++            >
++              Next song
++            </button>
++            <button type="button" onClick={() => engine.current?.stop()}>
++              Stop
++            </button>
++            <button
++              type="button"
++              aria-pressed={auto}
++              onClick={() => setAuto((v) => !v)}
++            >
++              Auto
++            </button>
++            <button type="button" onClick={copyLink} disabled={!current}>
++              {copied ? 'Link copied' : 'Copy link'}
++            </button>
++          </div>
++        </div>
++      </div>
++
++      <a className={styles.cta} href={`mailto:${email}`}>
++        <span>Still unsure? Email me</span>
++        <i aria-hidden="true" />
++      </a>
++
++      {/* Without a script nothing can play, so the whole FAQ is plain text. */}
++      <noscript>
++        <style>{`.${styles.grid},.${styles.head}{display:none}`}</style>
++        <dl className={styles.plain}>
++          {FAQ_ITEMS.map((item) => (
++            <div key={item.id}>
++              <dt>{item.question}</dt>
++              <dd>{item.answer}</dd>
++            </div>
++          ))}
++        </dl>
++      </noscript>
++    </section>
++  )
++}
+diff --git a/tests/contact-desk-markup.test.tsx b/tests/contact-desk-markup.test.tsx
+index bf551ca..b1926c0 100644
+--- a/tests/contact-desk-markup.test.tsx
++++ b/tests/contact-desk-markup.test.tsx
+@@ -5,69 +5,69 @@ import { ContactDesk } from '@/features/landing-page/rack-01/contact-desk/contac
+ import { ContactStatus } from '@/features/landing-page/rack-01/contact-desk/contact-status'
+ import {
+   FAQ_ITEMS,
++  SIDES,
+   TRACKS,
+ } from '@/features/landing-page/rack-01/contact-desk/contact-content'
+ 
+ /**
+  * What the server sends, which is also what a visitor without JavaScript and a
+- * crawler see. These pin the properties that make the launcher a real FAQ and
+- * not a picture of one: every question is a button in a labelled track, the
+- * answer region is live, nothing is hidden before a script runs, and without a
+- * script every question and answer is plain text.
++ * crawler see. These pin the properties that make the setlist a real FAQ and
++ * not a picture of one: every question is a button in a labelled group, the
++ * answer region is live, nothing is hidden before a script runs, the animated
++ * lyric is kept out of the accessibility tree, and without a script every
++ * question and answer is plain text.
+  */
+-describe('the scene launcher, server-rendered', () => {
++describe('the setlist, server-rendered', () => {
+   const html = renderToStaticMarkup(<ContactDesk />)
+ 
+-  it('is one labelled section, named by its brand line', () => {
++  it('is one labelled section with a heading under the section title', () => {
+     expect(html.match(/<section/g)).toHaveLength(1)
+     const id = /aria-labelledby="([^"]+)"/.exec(html)?.[1]
+     expect(id).toBeTruthy()
+     expect(html).toContain(`id="${id}"`)
+-    expect(html).toContain('AH / SCENE LAUNCH')
++    expect(html).toMatch(/<h3[^>]*>Before you write<\/h3>/)
+   })
+ 
+-  it('has a labelled group per track and a button per question', () => {
++  it('has a labelled group per side, with the question as a button', () => {
+     for (const track of TRACKS) {
+-      expect(html).toContain(`aria-label="${track} track"`)
++      expect(html).toContain(`aria-label="${SIDES[track]}: ${track}"`)
+     }
+     expect(html.match(/role="group"/g)).toHaveLength(TRACKS.length)
+-    for (const item of FAQ_ITEMS) {
+-      expect(html).toContain(item.question)
+-    }
+-    // A clip is a toggle: it says whether it is playing, and none is yet.
++    for (const item of FAQ_ITEMS) expect(html).toContain(item.question)
++    // A song is a toggle: it says whether it is playing, and none is yet.
+     expect(html.match(/aria-pressed="false"/g)?.length).toBeGreaterThanOrEqual(
+       FAQ_ITEMS.length,
+     )
+     expect(html).not.toContain('aria-pressed="true"')
+   })
+ 
+-  it('is a roving tabindex: exactly one clip is a tab stop', () => {
+-    const clips = html.match(/<button[^>]*data-state="idle"[^>]*>/g) ?? []
+-    expect(clips).toHaveLength(FAQ_ITEMS.length)
+-    expect(clips.filter((c) => c.includes('tabindex="0"'))).toHaveLength(1)
+-    expect(clips.filter((c) => c.includes('tabindex="-1"'))).toHaveLength(
+-      FAQ_ITEMS.length - 1,
+-    )
++  it('lists the songs as ordered lists, one per side', () => {
++    expect(html.match(/<ol/g)).toHaveLength(TRACKS.length)
++    expect(html.match(/<li/g)).toHaveLength(FAQ_ITEMS.length)
+   })
+ 
+-  it('announces the answer once, in a polite live region, and hides the typed copy', () => {
+-    expect(html).toMatch(
+-      /role="region"[^>]*aria-live="polite"|aria-live="polite"[^>]*role="region"/,
++  it('is a roving tabindex: exactly one song is a tab stop', () => {
++    const buttons =
++      html.match(
++        /<button[^>]*aria-pressed="false"[^>]*tabindex="[^"]+"[^>]*>/g,
++      ) ?? []
++    const songs = buttons.filter((b) => /tabindex="-?[01]"/.test(b))
++    expect(songs.filter((b) => b.includes('tabindex="0"'))).toHaveLength(1)
++    expect(songs.filter((b) => b.includes('tabindex="-1"'))).toHaveLength(
++      FAQ_ITEMS.length - 1,
+     )
+-    expect(html).toMatch(/class="[^"]*answer[^"]*"[^>]*aria-hidden="true"/)
+   })
+ 
+-  it('keeps the decorative parts out of the accessibility tree', () => {
+-    // Waveforms, playheads, the beat LEDs and the readouts are all decoration.
+-    expect((html.match(/aria-hidden="true"/g) ?? []).length).toBeGreaterThan(
+-      FAQ_ITEMS.length * 3,
+-    )
++  it('announces the answer once, in a polite live region, and hides the lyric', () => {
++    expect(html).toMatch(/aria-live="polite"/)
++    expect(html).toMatch(/aria-label="Answer"/)
++    expect(html).toMatch(/class="[^"]*lyrics[^"]*"[^>]*aria-hidden="true"/)
+   })
+ 
+-  it('starts on beat 0, standing by, with nothing chosen', () => {
++  it('stands by with nothing chosen, on beat 0', () => {
+     expect(html).toContain('data-beat="0"')
+-    expect(html).toContain('MASTER OUT · STANDBY')
+-    expect(html).toContain('Pick a clip. It starts on the next beat.')
++    expect(html).toContain('Standing by')
++    expect(html).toContain('Pick a song. It starts on the next beat.')
+   })
+ 
+   it('does not hide anything before a script runs', () => {
+@@ -82,18 +82,29 @@ describe('the scene launcher, server-rendered', () => {
+       expect(plain).toContain(item.question)
+       expect(plain).toContain(item.answer)
+     }
+-    // And the controls that cannot work without a script are hidden there.
+     expect(plain).toMatch(/<style>[^<]*display:none/)
+   })
+ 
++  it('has the stage controls as real buttons', () => {
++    for (const label of ['Next song', 'Stop', 'Auto', 'Copy link']) {
++      expect(html).toContain(`>${label}</button>`)
++    }
++  })
++
+   it('ends on a working mailto', () => {
+     expect(html).toMatch(/href="mailto:[^"]+"/)
+   })
+ 
+-  it('has no leftover pieces of the old desk', () => {
+-    expect(html).not.toContain('Signal path')
+-    expect(html).not.toContain('Brief builder')
+-    expect(html).not.toContain('Before you')
++  it('has no leftover pieces of the earlier designs', () => {
++    for (const gone of [
++      'Signal path',
++      'Brief builder',
++      'SCENE LAUNCH',
++      'MASTER OUT',
++      'BPM',
++    ]) {
++      expect(html).not.toContain(gone)
++    }
+   })
+ })
+ 
+diff --git a/tests/scene-engine.test.ts b/tests/scene-engine.test.ts
+index decb674..6c52566 100644
+--- a/tests/scene-engine.test.ts
++++ b/tests/scene-engine.test.ts
+@@ -118,6 +118,22 @@ describe('the scene engine', () => {
+     expect(h.view().playing).toBe(0)
+   })
+ 
++  it('ends the playing clip and resets the stage the moment another is queued', () => {
++    h.engine.launch(0, true)
++    h.advance(1500)
++    expect(Number(h.master.props['--p'])).toBeGreaterThan(0)
++    h.engine.launch(3)
++    expect(h.view().playing).toBeNull()
++    expect(h.view().played).toEqual([0])
++    expect(h.view().selected).toBe(3)
++    expect(h.master.props['--p']).toBe('0')
++    // The old clip must not keep writing onto the new clip's stage.
++    h.advance(100)
++    expect(h.master.props['--p']).toBe('0')
++    h.advance(600)
++    expect(h.view().playing).toBe(3)
++  })
++
+   it('launches immediately when asked to, as a deep link does', () => {
+     h.engine.launch(4, true)
+     expect(h.view().playing).toBe(4)
+@@ -238,3 +254,29 @@ describe('with reduced motion', () => {
+     expect(h.pending()).toBe(0)
+   })
+ })
++
++describe('without a typed-text element', () => {
++  it('plays, advances and finishes without one (the lyric sheet lights by CSS)', () => {
++    const h2 = setup()
++    // Rebuild the engine with no typed element.
++    const engine = createEngine({
++      items: FAQ_ITEMS,
++      setView: () => undefined,
++      reduced: () => false,
++      els: {
++        unit: () => null,
++        master: () => h2.master as unknown as HTMLElement,
++        typed: () => null,
++        time: () => null,
++        bar: () => null,
++        clip: () => null,
++      },
++    })
++    expect(() => {
++      engine.launch(0, true)
++      h2.advance(clipDuration(FAQ_ITEMS[0].answer) + 300)
++    }).not.toThrow()
++    expect(h2.master.props['--p']).toBe('1')
++    engine.destroy()
++  })
++})
+diff --git a/tests/scene-logic.test.ts b/tests/scene-logic.test.ts
+index f3903e6..a2855ea 100644
+--- a/tests/scene-logic.test.ts
++++ b/tests/scene-logic.test.ts
+@@ -10,14 +10,13 @@ import {
+   beatMs,
+   clipDuration,
+   clock,
+-  hash,
+-  moveFocus,
++  linearFocus,
+   nextBeatDelay,
+   progressAt,
+   tracksOf,
+   transportAt,
+   typedAt,
+-  waveformBars,
++  wordsOf,
+ } from '@/features/landing-page/rack-01/contact-desk/scene-logic'
+ 
+ describe('the content', () => {
+@@ -121,47 +120,6 @@ describe('the transport readout', () => {
+   })
+ })
+ 
+-describe('waveformBars', () => {
+-  it('is deterministic and the right length', () => {
+-    expect(waveformBars('scope', 24)).toEqual(waveformBars('scope', 24))
+-    expect(waveformBars('scope', 24)).toHaveLength(24)
+-    expect(waveformBars('x', 0)).toEqual([])
+-  })
+-
+-  it('differs between clips, so nine thumbnails are nine shapes', () => {
+-    const shapes = new Set(
+-      FAQ_ITEMS.map((i) => waveformBars(i.id, 24).join(',')),
+-    )
+-    expect(shapes.size).toBe(FAQ_ITEMS.length)
+-  })
+-
+-  it('stays inside 0.14–1 and has a body, not a flat line', () => {
+-    for (const item of FAQ_ITEMS) {
+-      const bars = waveformBars(item.id, 64)
+-      for (const v of bars) {
+-        expect(v).toBeGreaterThanOrEqual(0.14)
+-        expect(v).toBeLessThanOrEqual(1)
+-      }
+-      expect(Math.max(...bars) - Math.min(...bars)).toBeGreaterThan(0.25)
+-    }
+-  })
+-
+-  it('swells toward the middle', () => {
+-    const bars = waveformBars('envelope', 64)
+-    const edge =
+-      (bars.slice(0, 6).reduce((a, b) => a + b) +
+-        bars.slice(-6).reduce((a, b) => a + b)) /
+-      12
+-    const mid = bars.slice(26, 38).reduce((a, b) => a + b) / 12
+-    expect(mid).toBeGreaterThan(edge)
+-  })
+-
+-  it('hashes stably', () => {
+-    expect(hash('a')).toBe(hash('a'))
+-    expect(hash('a')).not.toBe(hash('b'))
+-  })
+-})
+-
+ describe('tracksOf', () => {
+   it('groups clips by track and keeps each one’s flat index', () => {
+     const tracks = tracksOf()
+@@ -173,27 +131,34 @@ describe('tracksOf', () => {
+   })
+ })
+ 
+-describe('moveFocus', () => {
+-  const counts = [3, 3, 2]
++describe('wordsOf', () => {
++  it('splits on any whitespace and drops empties', () => {
++    expect(wordsOf('one  two\nthree ')).toEqual(['one', 'two', 'three'])
++    expect(wordsOf('')).toEqual([])
++  })
+ 
+-  it('moves between tracks keeping the row, clamped to a shorter track', () => {
+-    expect(moveFocus('ArrowRight', 0, 1, counts)).toEqual([1, 1])
+-    expect(moveFocus('ArrowRight', 1, 2, counts)).toEqual([2, 1])
+-    expect(moveFocus('ArrowRight', 2, 1, counts)).toEqual([2, 1])
+-    expect(moveFocus('ArrowLeft', 0, 2, counts)).toEqual([0, 2])
+-    expect(moveFocus('ArrowLeft', 2, 1, counts)).toEqual([1, 1])
++  it('keeps every answer a lyric sheet of a readable length', () => {
++    for (const item of FAQ_ITEMS) {
++      const n = wordsOf(item.answer).length
++      expect(n).toBeGreaterThan(12)
++      expect(n).toBeLessThan(60)
++    }
+   })
++})
+ 
+-  it('walks a track and wraps', () => {
+-    expect(moveFocus('ArrowDown', 0, 2, counts)).toEqual([0, 0])
+-    expect(moveFocus('ArrowUp', 0, 0, counts)).toEqual([0, 2])
+-    expect(moveFocus('ArrowDown', 2, 1, counts)).toEqual([2, 0])
++describe('linearFocus', () => {
++  it('walks the whole column and wraps, across groups', () => {
++    expect(linearFocus('ArrowDown', 2, 9)).toBe(3)
++    expect(linearFocus('ArrowDown', 8, 9)).toBe(0)
++    expect(linearFocus('ArrowUp', 0, 9)).toBe(8)
++    expect(linearFocus('ArrowRight', 4, 9)).toBe(5)
++    expect(linearFocus('ArrowLeft', 4, 9)).toBe(3)
+   })
+ 
+-  it('jumps to the ends of the track and ignores other keys', () => {
+-    expect(moveFocus('Home', 2, 1, counts)).toEqual([2, 0])
+-    expect(moveFocus('End', 2, 0, counts)).toEqual([2, 1])
+-    expect(moveFocus('Enter', 0, 0, counts)).toBeNull()
+-    expect(moveFocus('ArrowDown', 0, 0, [])).toBeNull()
++  it('jumps to the ends and ignores other keys', () => {
++    expect(linearFocus('Home', 5, 9)).toBe(0)
++    expect(linearFocus('End', 0, 9)).toBe(8)
++    expect(linearFocus('Enter', 0, 9)).toBe(-1)
++    expect(linearFocus('ArrowDown', 0, 0)).toBe(-1)
+   })
+ })
+-- 
+2.43.0
+

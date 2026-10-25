@@ -1,0 +1,1990 @@
+From 4f7ad10d7568a884f78bf6508243616742f1bf1a Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 17 Oct 2026 12:24:18 +0000
+Subject: [PATCH] feat(contact): rebuild everything around the performance
+ controller as a session desk
+
+Keep the 16-pad controller untouched. Replace the FAQ accordion with a recall
+console (mixer channel strips driving an LCD monitor, as an accessible tabs
+pattern), add a signal path and a brief builder that composes a mailto, and add
+a status strip with a live Jakarta clock. Cream glass hardware from the About
+kit, one dark routing panel, reduced-motion and no-JS safe.
+---
+ docs/contact-desk.md                          |  38 +
+ .../contact-desk/contact-brief-builder.tsx    | 164 ++++
+ .../rack-01/contact-desk/contact-console.tsx  | 152 ++++
+ .../rack-01/contact-desk/contact-content.ts   | 200 +++++
+ .../contact-desk/contact-desk.module.css      | 736 ++++++++++++++++++
+ .../rack-01/contact-desk/contact-desk.tsx     |  27 +
+ .../contact-desk/contact-signal-path.tsx      |  49 ++
+ .../rack-01/contact-desk/contact-status.tsx   |  66 ++
+ .../rack-01/contact-desk/use-reveal.ts        |  38 +
+ .../landing-page/rack-01/section-contact.tsx  | 140 +---
+ tests/contact-content.test.ts                 | 139 ++++
+ tests/contact-desk-markup.test.tsx            | 102 +++
+ 12 files changed, 1726 insertions(+), 125 deletions(-)
+ create mode 100644 docs/contact-desk.md
+ create mode 100644 features/landing-page/rack-01/contact-desk/contact-brief-builder.tsx
+ create mode 100644 features/landing-page/rack-01/contact-desk/contact-console.tsx
+ create mode 100644 features/landing-page/rack-01/contact-desk/contact-content.ts
+ create mode 100644 features/landing-page/rack-01/contact-desk/contact-desk.module.css
+ create mode 100644 features/landing-page/rack-01/contact-desk/contact-desk.tsx
+ create mode 100644 features/landing-page/rack-01/contact-desk/contact-signal-path.tsx
+ create mode 100644 features/landing-page/rack-01/contact-desk/contact-status.tsx
+ create mode 100644 features/landing-page/rack-01/contact-desk/use-reveal.ts
+ create mode 100644 tests/contact-content.test.ts
+ create mode 100644 tests/contact-desk-markup.test.tsx
+
+diff --git a/docs/contact-desk.md b/docs/contact-desk.md
+new file mode 100644
+index 0000000..6636dce
+--- /dev/null
++++ b/docs/contact-desk.md
+@@ -0,0 +1,38 @@
++# Contact: the session desk
++
++The 16-pad performance controller is unchanged (its GSAP coupling, its audio
++indices and its sweep order are untouched). Everything around it is rebuilt as
++the rest of one desk, in the About devices' materials (cream glass shell, dark
++rim, near-black LCD, dark pads that light orange).
++
++## What changed
++
++| Before | After |
++| --- | --- |
++| Header + paragraph | Same heading, plus a **status strip**: channel open, reply time, live Jakarta clock |
++| FAQ accordion (4 questions) | **Recall console**: five mixer channel strips driving an LCD monitor that types the answer out |
++| nothing | **Signal path**: how a project flows (brief, scope, build, hand off) as patched stages with animated cables |
++| nothing | **Brief builder**: pick the kind of work and timing, add a line, and it composes the email (`mailto:` link, plus copy) |
++
++## Decisions
++
++- **Accessible by construction.** The console is a real tabs pattern (tablist,
++  tabpanel, arrow keys, Home/End, roving tabindex). The full answer is real text
++  in the panel; the typed copy is `aria-hidden`, so a screen reader never hears
++  half a sentence. The path is an ordered list. Reduced motion prints the answer
++  whole and stills the meters and cables.
++- **Works without JavaScript.** Server markup is fully visible (`data-reveal="idle"`);
++  elements only hide once a script has armed them. The brief builder's link is a
++  working `mailto:` on first paint.
++- **Nothing is sent anywhere.** No form endpoint, no stored text.
++- **The mailto is capped by its encoded length** (1900), not the typed length:
++  a note of 480 non-ASCII characters encodes to ~4000 and Outlook-class clients
++  refuse past ~2000. The tests caught this.
++- **Copy** is deliberately modest and checkable: no rate, no dated availability,
++  no client list; the honest "no" on native mobile is kept. Edit
++  `contact-desk/contact-content.ts` to change any of it.
++- The desk sits between `.contactDeck` and the footer, because the rack's scroll
++  animation addresses children of `.contactDeck` by class.
++
++The old `.contactBrief*` rules in `rack-01.module.css` are no longer used and can
++be deleted.
+diff --git a/features/landing-page/rack-01/contact-desk/contact-brief-builder.tsx b/features/landing-page/rack-01/contact-desk/contact-brief-builder.tsx
+new file mode 100644
+index 0000000..da33b88
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/contact-brief-builder.tsx
+@@ -0,0 +1,164 @@
++'use client'
++
++import { useId, useMemo, useState } from 'react'
++import {
++  NOTE_LIMIT,
++  PROJECT_TYPES,
++  TIMELINES,
++  composeBrief,
++} from './contact-content'
++import styles from './contact-desk.module.css'
++import { useReveal } from './use-reveal'
++
++type Copy = 'idle' | 'copied' | 'failed'
++
++/**
++ * The brief builder: a few controls that compose the first email.
++ *
++ * The controller above is the way in; this is what people usually need once
++ * they are in, which is something to say. Pick the kind of work and the timing,
++ * add a line, and the LCD shows the message exactly as it will arrive. "Open in
++ * mail" is a plain `mailto:` link, so it works without a script and in any mail
++ * client; "Copy" is there for the people who live in a web mail tab.
++ *
++ * Nothing is sent anywhere by this page. There is no form endpoint and no
++ * stored note: the text exists in this component and in the link.
++ */
++export function ContactBriefBuilder({ email }: { email: string }) {
++  const [type, setType] = useState<string | null>(null)
++  const [timeline, setTimeline] = useState<string | null>(null)
++  const [note, setNote] = useState('')
++  const [copy, setCopy] = useState<Copy>('idle')
++  const [reveal, revealState] = useReveal<HTMLElement>()
++  const id = useId()
++
++  const brief = useMemo(
++    () => composeBrief({ type, timeline, note }, email),
++    [type, timeline, note, email],
++  )
++  const timelinePos = TIMELINES.findIndex((t) => t.id === timeline)
++
++  const copyBrief = async () => {
++    try {
++      await navigator.clipboard.writeText(
++        `To: ${email}\nSubject: ${brief.subject}\n\n${brief.body}`,
++      )
++      setCopy('copied')
++    } catch {
++      setCopy('failed')
++    }
++    window.setTimeout(() => setCopy('idle'), 2200)
++  }
++
++  return (
++    <section
++      ref={reveal}
++      data-reveal={revealState}
++      className={`${styles.panel} ${styles.builder}`}
++      aria-labelledby={`${id}-title`}
++    >
++      <header className={styles.panelHead}>
++        <div>
++          <strong>AH / BRIEF</strong>
++          <span>Compose the first message</span>
++        </div>
++        <h3 id={`${id}-title`}>Brief builder</h3>
++        <small>mailto</small>
++      </header>
++
++      <div className={styles.builderBody}>
++        <div className={styles.controls}>
++          <fieldset className={styles.field}>
++            <legend>Kind of work</legend>
++            <div className={styles.typePads}>
++              {PROJECT_TYPES.map((choice) => (
++                <button
++                  key={choice.id}
++                  type="button"
++                  className={styles.typePad}
++                  aria-pressed={type === choice.id}
++                  onClick={() => setType(type === choice.id ? null : choice.id)}
++                >
++                  {choice.label}
++                </button>
++              ))}
++            </div>
++          </fieldset>
++
++          <fieldset className={styles.field}>
++            <legend>Timing</legend>
++            <div
++              className={styles.switch}
++              data-has={timelinePos >= 0}
++              style={
++                { '--pos': Math.max(0, timelinePos) } as React.CSSProperties
++              }
++            >
++              <span className={styles.switchThumb} aria-hidden="true" />
++              {TIMELINES.map((choice) => (
++                <button
++                  key={choice.id}
++                  type="button"
++                  aria-pressed={timeline === choice.id}
++                  onClick={() =>
++                    setTimeline(timeline === choice.id ? null : choice.id)
++                  }
++                >
++                  {choice.label}
++                </button>
++              ))}
++            </div>
++          </fieldset>
++
++          <div className={styles.field}>
++            <label htmlFor={`${id}-note`} className={styles.fieldLabel}>
++              One line about it
++            </label>
++            <textarea
++              id={`${id}-note`}
++              className={styles.note}
++              rows={3}
++              maxLength={NOTE_LIMIT}
++              value={note}
++              placeholder="What is it, and what is the hard part?"
++              onChange={(event) => setNote(event.target.value)}
++            />
++            <small className={styles.count}>
++              {note.length}/{NOTE_LIMIT}
++            </small>
++          </div>
++        </div>
++
++        <div className={styles.output}>
++          <pre
++            className={styles.lcd}
++            aria-live="polite"
++            aria-label="Message preview"
++          >
++            <span>TO&nbsp;&nbsp;&nbsp;&nbsp;{email}</span>
++            {'\n'}
++            <span>SUBJ&nbsp;&nbsp;{brief.subject}</span>
++            {'\n\n'}
++            {brief.body}
++          </pre>
++          <div className={styles.actions}>
++            <a className={styles.send} href={brief.href}>
++              Open in mail
++            </a>
++            <button
++              type="button"
++              className={styles.copyKey}
++              onClick={copyBrief}
++            >
++              {copy === 'copied'
++                ? 'Copied'
++                : copy === 'failed'
++                  ? 'Select the text'
++                  : 'Copy brief'}
++            </button>
++          </div>
++        </div>
++      </div>
++    </section>
++  )
++}
+diff --git a/features/landing-page/rack-01/contact-desk/contact-console.tsx b/features/landing-page/rack-01/contact-desk/contact-console.tsx
+new file mode 100644
+index 0000000..8916c70
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/contact-console.tsx
+@@ -0,0 +1,152 @@
++'use client'
++
++import { useEffect, useId, useRef, useState } from 'react'
++import { CHANNELS, nextChannel, typedSlice } from './contact-content'
++import styles from './contact-desk.module.css'
++import { useReveal } from './use-reveal'
++
++/** Heights of the monitor's spectrum, fixed so the picture is the same twice. */
++const SPECTRUM = Array.from({ length: 30 }, (_, i) =>
++  Math.round(24 + 60 * Math.abs(Math.sin(i * 0.83) * Math.cos(i * 0.31))),
++)
++
++/**
++ * The recall console: the old FAQ, rebuilt as a mixer.
++ *
++ * Each question is a channel strip, and selecting one plays its answer on the
++ * monitor, typed out the way the controller's own LCD prints. It is a tabs
++ * pattern underneath (one tablist, one panel, arrow keys, roving tabindex) so
++ * it is exactly as operable by keyboard and screen reader as the accordion it
++ * replaces: the panel carries the full answer as real text, and the typed copy
++ * is `aria-hidden`, so a screen reader never hears half a sentence.
++ */
++export function ContactConsole() {
++  const [active, setActive] = useState(0)
++  const [reveal, revealState] = useReveal<HTMLElement>()
++  const typed = useRef<HTMLSpanElement | null>(null)
++  const tabs = useRef<(HTMLButtonElement | null)[]>([])
++  const id = useId()
++  const channel = CHANNELS[active]
++
++  // Type the answer. Written to a node, not to state, so sixty frames of
++  // typing are sixty text writes and no renders. Reduced motion prints it whole.
++  useEffect(() => {
++    const node = typed.current
++    if (!node) return
++    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
++    if (still) {
++      node.textContent = channel.answer
++      return
++    }
++    const duration = Math.min(1500, Math.max(520, channel.answer.length * 9))
++    const start = performance.now()
++    let raf = 0
++    const frame = (now: number) => {
++      const t = Math.min(1, (now - start) / duration)
++      node.textContent = typedSlice(channel.answer, t)
++      if (t < 1) raf = requestAnimationFrame(frame)
++    }
++    node.textContent = ''
++    raf = requestAnimationFrame(frame)
++    return () => cancelAnimationFrame(raf)
++  }, [channel])
++
++  const onKeyDown = (event: React.KeyboardEvent, index: number) => {
++    const next = nextChannel(event.key, index, CHANNELS.length)
++    if (next === null) return
++    event.preventDefault()
++    setActive(next)
++    tabs.current[next]?.focus()
++  }
++
++  return (
++    <section
++      ref={reveal}
++      data-reveal={revealState}
++      className={`${styles.panel} ${styles.console}`}
++      aria-labelledby={`${id}-title`}
++    >
++      <header className={styles.panelHead}>
++        <div>
++          <strong>AH / RECALL</strong>
++          <span>Printed insert · five channels</span>
++        </div>
++        <h3 id={`${id}-title`}>Before you write</h3>
++        <small>
++          CH {String(active + 1).padStart(2, '0')}/
++          {String(CHANNELS.length).padStart(2, '0')}
++        </small>
++      </header>
++
++      <div className={styles.consoleBody}>
++        <div
++          role="tablist"
++          aria-label="Questions"
++          aria-orientation="vertical"
++          className={styles.strips}
++        >
++          {CHANNELS.map((item, index) => (
++            <button
++              key={item.tag}
++              ref={(node) => {
++                tabs.current[index] = node
++              }}
++              id={`${id}-tab-${index}`}
++              type="button"
++              role="tab"
++              aria-selected={index === active}
++              aria-controls={`${id}-panel`}
++              tabIndex={index === active ? 0 : -1}
++              className={styles.strip}
++              onClick={() => setActive(index)}
++              onKeyDown={(event) => onKeyDown(event, index)}
++            >
++              <span className={styles.stripNum}>
++                {String(index + 1).padStart(2, '0')}
++              </span>
++              <span className={styles.stripTag}>{item.tag}</span>
++              <span className={styles.stripMeter} aria-hidden="true">
++                {[0, 1, 2, 3, 4].map((led) => (
++                  <i
++                    key={led}
++                    style={{ '--led': led } as React.CSSProperties}
++                  />
++                ))}
++              </span>
++            </button>
++          ))}
++        </div>
++
++        <div
++          role="tabpanel"
++          id={`${id}-panel`}
++          aria-labelledby={`${id}-tab-${active}`}
++          className={styles.monitor}
++        >
++          <div className={styles.monitorTop} aria-hidden="true">
++            <span>
++              CH {String(active + 1).padStart(2, '0')} · {channel.tag}
++            </span>
++            <span className={styles.play}>PLAY</span>
++          </div>
++          <h4 className={styles.monitorQuestion}>{channel.question}</h4>
++          {/* The whole answer, as text, for everything that is not looking at
++              the typed copy. */}
++          <p className={styles.srOnly}>{channel.answer}</p>
++          <p className={styles.monitorAnswer} aria-hidden="true">
++            <span ref={typed} />
++            <span className={styles.caret} />
++          </p>
++          <div className={styles.spectrum} aria-hidden="true">
++            {SPECTRUM.map((h, i) => (
++              <i
++                key={i}
++                style={{ '--h': `${h}%`, '--i': i } as React.CSSProperties}
++              />
++            ))}
++          </div>
++        </div>
++      </div>
++    </section>
++  )
++}
+diff --git a/features/landing-page/rack-01/contact-desk/contact-content.ts b/features/landing-page/rack-01/contact-desk/contact-content.ts
+new file mode 100644
+index 0000000..77d64b5
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/contact-content.ts
+@@ -0,0 +1,200 @@
++/**
++ * What the Contact section says, and the small pieces of logic behind how it
++ * says it. No React, no DOM, so all of it is testable.
++ *
++ * The performance controller (the 16-pad deck) is untouched and is still the
++ * way in. Everything *around* it is rebuilt as the rest of one session desk:
++ *
++ * - a **recall console** (the old FAQ): five channels, each a question, and an
++ *   LCD monitor that plays the answer;
++ * - a **signal path**: how a project actually flows, as four patched stages;
++ * - a **brief builder**: pick the kind of work and the timing, add a line, and
++ *   it composes the email for you.
++ *
++ * Copy is written to be useful and checkable. There is no availability claim
++ * with a date on it, no rate, no client list: the only promise is the one the
++ * old page already made (replies usually land within a couple of days), and the
++ * "no" on native mobile is kept, because a no saves both people a week.
++ */
++
++export type Channel = {
++  /** Silkscreen label on the strip. */
++  tag: string
++  question: string
++  answer: string
++}
++
++export const CHANNELS: readonly Channel[] = [
++  {
++    tag: 'SCOPE',
++    question: 'What kind of work do you take on?',
++    answer:
++      'Frontend work where the hard part is the state or the edge cases rather than the styling: internal tools, content-heavy public sites, and products that have to work on a phone or on a bad connection.',
++  },
++  {
++    tag: 'BACKEND',
++    question: 'Do you work with existing backends?',
++    answer:
++      'Mostly. Most of the shipped work is a frontend over a service that already exists. Running the infrastructure too is something I do when the product genuinely needs it.',
++  },
++  {
++    tag: 'MOBILE',
++    question: 'Do you do React Native or native mobile?',
++    answer:
++      'No. The mobile work here is responsive web. The habits transfer, the stack does not, and I would rather say so now than take it and hand it back.',
++  },
++  {
++    tag: 'REPLY',
++    question: 'How fast do you reply?',
++    answer:
++      'Usually within a couple of days. If there is a date that matters, put it in the first line so it is the first thing I read.',
++  },
++  {
++    tag: 'FIRST MAIL',
++    question: 'What should the first message say?',
++    answer:
++      'The problem, who it is for, and the constraint that hurts: a date, a budget, a stack you cannot change. A link helps if there is one. Two paragraphs beat a deck.',
++  },
++]
++
++export type Stage = { step: string; title: string; copy: string }
++
++/** The signal path: input to output, left to right. */
++export const PATH: readonly Stage[] = [
++  {
++    step: 'IN',
++    title: 'Brief',
++    copy: 'You send the problem, the constraint and the date. I read it properly, not in a queue.',
++  },
++  {
++    step: '01',
++    title: 'Scope',
++    copy: 'I reply with the questions that change the plan, and a plan small enough to disagree with.',
++  },
++  {
++    step: '02',
++    title: 'Build',
++    copy: 'Small increments, a working build you can click at every step instead of a deck about one.',
++  },
++  {
++    step: 'OUT',
++    title: 'Hand off',
++    copy: 'Code someone else can run, tests where they earn their keep, and notes that outlive the project.',
++  },
++]
++
++export type Choice = { id: string; label: string; line: string }
++
++export const PROJECT_TYPES: readonly Choice[] = [
++  { id: 'build', label: 'New build', line: 'a new frontend build' },
++  { id: 'rescue', label: 'Fix a UI', line: 'a frontend that needs untangling' },
++  { id: 'design', label: 'Design eng.', line: 'design engineering work' },
++  { id: 'talk', label: 'Just talk', line: 'a conversation about a problem' },
++]
++
++export const TIMELINES: readonly Choice[] = [
++  { id: 'soon', label: 'Soon', line: 'as soon as possible' },
++  { id: 'month', label: 'This quarter', line: 'within the next few months' },
++  { id: 'open', label: 'No rush', line: 'with no fixed date' },
++]
++
++export const NOTE_LIMIT = 480
++
++/** The longest `mailto:` link composed. Outlook-class clients refuse past ~2000. */
++export const MAX_HREF = 1900
++
++export type BriefInput = {
++  type: string | null
++  timeline: string | null
++  note: string
++}
++
++export type Brief = { subject: string; body: string; href: string }
++
++const find = (list: readonly Choice[], id: string | null) =>
++  list.find((choice) => choice.id === id) ?? null
++
++/** Collapse whitespace runs and cap the length, so a pasted wall of text cannot
++ * produce a `mailto:` link too long for a mail client to open. */
++export function cleanNote(note: string, limit = NOTE_LIMIT): string {
++  const flat = note
++    .replace(/\r\n?/g, '\n')
++    .replace(/[ \t]+/g, ' ')
++    .trim()
++  return flat.length > limit ? `${flat.slice(0, limit - 1).trimEnd()}…` : flat
++}
++
++/**
++ * The email the builder composes. Pure: the same input is the same brief.
++ *
++ * Nothing selected is still a valid brief ("a frontend project"), so the
++ * Compose button is never dead; picking things only makes it more specific.
++ */
++export function composeBrief(input: BriefInput, to: string): Brief {
++  const type = find(PROJECT_TYPES, input.type)
++  const timeline = find(TIMELINES, input.timeline)
++
++  const subject = type
++    ? `Brief: ${type.label.toLowerCase()}`
++    : 'Brief: a frontend project'
++
++  const build = (note: string) => {
++    const lines = [
++      'Hi Aditya,',
++      '',
++      `I am looking for ${type ? type.line : 'help with a frontend project'}${
++        timeline ? `, ${timeline.line}` : ''
++      }.`,
++    ]
++    if (note) lines.push('', 'About it:', note)
++    lines.push('', 'Thanks,')
++    const body = lines.join('\n')
++    const href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
++    return { subject, body, href }
++  }
++
++  // The cap that matters is on the *encoded* link, not the typed note: a
++  // character outside ASCII becomes up to nine characters of percent-escapes,
++  // so a note well under `NOTE_LIMIT` can still make a link some mail clients
++  // refuse to open. Shrink the note, not the browser's patience.
++  let note = cleanNote(input.note)
++  let brief = build(note)
++  while (brief.href.length > MAX_HREF && note.length > 0) {
++    note = cleanNote(note, Math.floor(note.length * 0.85))
++    brief = build(note)
++  }
++  return brief
++}
++
++/** The first `progress` (0–1) of `text`, for the monitor's typed answer. */
++export function typedSlice(text: string, progress: number): string {
++  const p = Number.isFinite(progress) ? Math.min(1, Math.max(0, progress)) : 0
++  return text.slice(0, Math.round(text.length * p))
++}
++
++/**
++ * The next channel for a key press on the strip list, or `null` for a key that
++ * is not navigation. Arrow keys wrap, Home and End jump; both axes work because
++ * the strips are a column on desktop and a grid on a phone.
++ */
++export function nextChannel(
++  key: string,
++  index: number,
++  count: number,
++): number | null {
++  if (count <= 0) return null
++  switch (key) {
++    case 'ArrowDown':
++    case 'ArrowRight':
++      return (index + 1) % count
++    case 'ArrowUp':
++    case 'ArrowLeft':
++      return (index - 1 + count) % count
++    case 'Home':
++      return 0
++    case 'End':
++      return count - 1
++    default:
++      return null
++  }
++}
+diff --git a/features/landing-page/rack-01/contact-desk/contact-desk.module.css b/features/landing-page/rack-01/contact-desk/contact-desk.module.css
+new file mode 100644
+index 0000000..b9c825c
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/contact-desk.module.css
+@@ -0,0 +1,736 @@
++/* ── The contact desk ────────────────────────────────────────
++   The status strip, the recall console, the signal path and the brief
++   builder: everything in the Contact section except the performance
++   controller, which is untouched.
++
++   Material is the About devices' own, by token: the cream devices use the
++   non-flipping glass shell (`--deck-shell-*`, `--deck-chassis-fill`), the
++   screens the LCD glass (`--deck-lcd-*`), the caps the pad recipe
++   (`--deck-pad-*`). The cream hardware is the same object on the light page
++   and the dark one, so none of it reads `--panel-ink` or any other token that
++   flips with the theme. The signal path is the one dark panel, the hero's
++   ground, so the section has a rhythm of cream, dark, cream.
++
++   Every moving thing is behind `prefers-reduced-motion: no-preference`. With
++   motion off the answer prints whole, the meters hold, the cables are still,
++   and nothing waits to be revealed. */
++
++.srOnly {
++  position: absolute;
++  overflow: hidden;
++  width: 1px;
++  height: 1px;
++  clip-path: inset(50%);
++  white-space: nowrap;
++}
++
++/* ── Status strip ── */
++.status {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 8px;
++  max-width: 1180px;
++  margin: calc(clamp(36px, 6vw, 72px) * -0.5) auto clamp(28px, 4vw, 48px);
++  padding: 0;
++  list-style: none;
++}
++.status li {
++  display: inline-flex;
++  align-items: center;
++  gap: 10px;
++  padding: 8px 14px;
++  border: 2px solid var(--deck-lcd-edge, #282a27);
++  border-radius: var(--deck-r-lcd, 5px);
++  background: var(--deck-lcd-fill, #0b0d0c);
++  box-shadow: var(--deck-lcd-glow, inset 0 4px 18px #000);
++  color: var(--deck-ground-ink, #eee9df);
++  font: 650 11px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.16em;
++  text-transform: uppercase;
++}
++.status span {
++  color: color-mix(in srgb, var(--deck-ground-ink, #eee9df) 55%, transparent);
++}
++.status b {
++  color: var(--deck-lcd-peach, #f0c7ae);
++  font-weight: 650;
++  font-variant-numeric: tabular-nums;
++}
++.lamp {
++  width: 8px;
++  height: 8px;
++  border-radius: 50%;
++  background: var(--deck-lcd-green, #5cd6a3);
++  box-shadow: 0 0 10px var(--deck-lcd-green, #5cd6a3);
++}
++
++/* ── Layout ── */
++.desk {
++  position: relative;
++  z-index: 2;
++  display: grid;
++  gap: clamp(16px, 2vw, 24px);
++  width: min(1180px, 100%);
++  margin: clamp(28px, 4vw, 56px) auto 0;
++}
++.pair {
++  display: grid;
++  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
++  gap: clamp(16px, 2vw, 24px);
++}
++
++/* ── Panel: the cream glass shell every device on the page wears ── */
++.panel {
++  position: relative;
++  border: 1px solid var(--deck-shell-edge, rgb(27 28 26 / 0.5));
++  border-radius: var(--deck-r-shell, 14px);
++  background: var(--deck-shell-fill, #d9d3c6);
++  background-color: var(--deck-paper-lo, #cfc9bc);
++  box-shadow:
++    var(--deck-shell-hi, inset 0 1px 0 rgb(255 255 255 / 0.7)),
++    var(--deck-shell-lo, inset 0 -1px 0 rgb(0 0 0 / 0.1)),
++    0 18px 40px -22px rgb(0 0 0 / 0.5),
++    0 2px 4px rgb(0 0 0 / 0.16);
++  color: var(--deck-cream-ink, #1d1e1c);
++}
++.panelHead {
++  display: grid;
++  grid-template-columns: minmax(0, 1fr) auto auto;
++  align-items: center;
++  gap: 18px;
++  padding: 16px 20px 14px;
++  border-bottom: 1px solid rgb(27 28 26 / 0.18);
++}
++.panelHead > div {
++  display: grid;
++  gap: 2px;
++}
++.panelHead strong {
++  font: 800 13px var(--deck-font-display, sans-serif);
++  letter-spacing: 0.04em;
++  text-transform: uppercase;
++}
++.panelHead span,
++.panelHead small {
++  color: rgb(29 30 28 / 0.58);
++  font: 650 9.5px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.18em;
++  text-transform: uppercase;
++}
++.panelHead h3 {
++  margin: 0;
++  font: 800 clamp(18px, 2vw, 26px) var(--deck-font-display, sans-serif);
++  letter-spacing: -0.01em;
++  text-align: right;
++}
++
++/* Reveal. `idle` (server render, no script) is plain visible. */
++.panel[data-reveal='armed'] {
++  opacity: 0;
++  transform: translate3d(0, 22px, 0);
++}
++.panel[data-reveal='in'] {
++  opacity: 1;
++  transform: none;
++}
++@media (prefers-reduced-motion: no-preference) {
++  .panel[data-reveal='in'] {
++    transition:
++      opacity 0.7s cubic-bezier(0.2, 0.7, 0.1, 1),
++      transform 0.7s cubic-bezier(0.2, 0.7, 0.1, 1);
++  }
++}
++@media (prefers-reduced-motion: reduce) {
++  .panel[data-reveal='armed'] {
++    opacity: 1;
++    transform: none;
++  }
++}
++
++/* ── Recall console ── */
++.consoleBody {
++  display: grid;
++  grid-template-columns: minmax(220px, 0.36fr) minmax(0, 1fr);
++  gap: 14px;
++  padding: 14px;
++}
++.strips {
++  display: grid;
++  align-content: start;
++  gap: 8px;
++  padding: 10px;
++  border: 1px solid rgb(27 28 26 / 0.26);
++  border-radius: var(--deck-r-inner, 9px);
++  background: var(--deck-chassis-fill, #cfc9bc);
++  box-shadow: var(--deck-shell-hi, inset 0 1px 0 rgb(255 255 255 / 0.7)),
++    var(--deck-shell-lo, inset 0 -1px 0 rgb(0 0 0 / 0.1));
++}
++
++/* A channel strip: number cell, tag, meter. A keycap that sinks when it is the
++   one selected. */
++.strip {
++  display: grid;
++  grid-template-columns: 34px minmax(0, 1fr) auto;
++  align-items: center;
++  gap: 12px;
++  min-height: 52px;
++  padding: 0 12px 0 8px;
++  border: 1px solid rgb(27 28 26 / 0.32);
++  border-radius: var(--deck-r-inner, 9px);
++  background: linear-gradient(180deg, #f3efe6, #d8d2c5);
++  box-shadow:
++    0 3px 0 rgb(27 28 26 / 0.3),
++    inset 0 1px 0 rgb(255 255 255 / 0.85);
++  color: var(--deck-cream-ink, #1d1e1c);
++  cursor: pointer;
++  text-align: left;
++}
++.strip:hover {
++  background: linear-gradient(180deg, #fbf8f1, #dfd9cc);
++}
++.strip:focus-visible {
++  outline: 2px solid var(--deck-orange, #ff5a1f);
++  outline-offset: 2px;
++}
++.strip[aria-selected='true'] {
++  transform: translateY(2px);
++  box-shadow:
++    0 1px 0 rgb(27 28 26 / 0.3),
++    inset 0 1px 0 rgb(255 255 255 / 0.5);
++}
++.stripNum {
++  display: grid;
++  place-items: center;
++  height: 30px;
++  border-radius: var(--deck-r-chip, 3px);
++  background: #23262a;
++  color: #e7e2d8;
++  font: 700 11px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.08em;
++}
++.strip[aria-selected='true'] .stripNum {
++  background: var(--deck-orange, #ff5a1f);
++  color: #1b0d06;
++}
++.stripTag {
++  min-width: 0;
++  font: 700 11px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.16em;
++  text-transform: uppercase;
++}
++.stripMeter {
++  display: flex;
++  align-items: flex-end;
++  gap: 3px;
++  height: 18px;
++}
++.stripMeter i {
++  width: 4px;
++  height: 100%;
++  border-radius: 1px;
++  background: rgb(27 28 26 / 0.2);
++  transform-origin: bottom;
++}
++.strip[aria-selected='true'] .stripMeter i {
++  background: var(--deck-orange, #ff5a1f);
++  box-shadow: 0 0 6px
++    color-mix(in srgb, var(--deck-orange, #ff5a1f) 60%, transparent);
++}
++@media (prefers-reduced-motion: no-preference) {
++  .strip[aria-selected='true'] .stripMeter i {
++    animation: meter 0.9s ease-in-out infinite alternate;
++    animation-delay: calc(var(--led) * -0.17s);
++  }
++}
++@keyframes meter {
++  from {
++    transform: scaleY(0.25);
++  }
++  to {
++    transform: scaleY(1);
++  }
++}
++
++/* The monitor: near-black glass, mono type, the controller LCD's family. */
++.monitor {
++  position: relative;
++  display: grid;
++  grid-template-rows: auto auto 1fr auto;
++  gap: 14px;
++  min-height: 330px;
++  padding: 18px 22px 18px;
++  overflow: hidden;
++  border: 2px solid var(--deck-lcd-edge, #282a27);
++  border-radius: var(--deck-r-lcd, 5px);
++  background: var(--deck-lcd-fill, #0b0d0c);
++  box-shadow: var(--deck-lcd-glow, inset 0 4px 18px #000);
++  color: var(--deck-ground-ink, #eee9df);
++}
++.monitor::after {
++  position: absolute;
++  inset: 0;
++  background: repeating-linear-gradient(
++    0deg,
++    transparent 0 2px,
++    rgb(255 255 255 / 0.018) 2px 3px
++  );
++  content: '';
++  pointer-events: none;
++}
++.monitorTop {
++  display: flex;
++  justify-content: space-between;
++  padding-bottom: 10px;
++  border-bottom: 1px solid rgb(238 233 223 / 0.14);
++  color: var(--deck-lcd-green, #5cd6a3);
++  font: 650 10px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.2em;
++  text-transform: uppercase;
++}
++.play {
++  display: inline-flex;
++  align-items: center;
++  gap: 8px;
++  color: var(--deck-orange, #ff5a1f);
++}
++.play::before {
++  width: 0;
++  height: 0;
++  border-top: 5px solid transparent;
++  border-bottom: 5px solid transparent;
++  border-left: 8px solid currentColor;
++  content: '';
++}
++.monitorQuestion {
++  margin: 0;
++  color: var(--deck-orange, #ff5a1f);
++  font: 800 clamp(22px, 2.6vw, 36px) var(--deck-font-display, sans-serif);
++  letter-spacing: -0.02em;
++  line-height: 1.06;
++}
++.monitorAnswer {
++  align-self: start;
++  max-width: 62ch;
++  margin: 0;
++  color: var(--deck-lcd-peach, #f0c7ae);
++  font: 500 clamp(13px, 1.15vw, 15.5px) / 1.7 var(--deck-font-mono, monospace);
++}
++.caret {
++  display: inline-block;
++  width: 0.55em;
++  height: 1.05em;
++  margin-left: 2px;
++  background: var(--deck-orange, #ff5a1f);
++  vertical-align: text-bottom;
++}
++@media (prefers-reduced-motion: no-preference) {
++  .caret {
++    animation: blink 1s steps(1) infinite;
++  }
++}
++@keyframes blink {
++  50% {
++    opacity: 0;
++  }
++}
++.spectrum {
++  display: grid;
++  grid-auto-flow: column;
++  grid-auto-columns: 1fr;
++  align-items: end;
++  gap: 3px;
++  height: 52px;
++}
++.spectrum i {
++  height: var(--h);
++  border-radius: 1px;
++  background: color-mix(
++    in srgb,
++    var(--deck-lcd-green, #5cd6a3) 78%,
++    transparent
++  );
++  transform-origin: bottom;
++}
++@media (prefers-reduced-motion: no-preference) {
++  .spectrum i {
++    animation: spectrum 1.3s ease-in-out infinite alternate;
++    animation-delay: calc(var(--i) * -0.09s);
++  }
++}
++@keyframes spectrum {
++  from {
++    transform: scaleY(0.3);
++  }
++  to {
++    transform: scaleY(1);
++  }
++}
++
++/* ── Signal path: the one dark panel ── */
++.path {
++  border-color: var(--deck-hair, rgb(238 233 223 / 0.13));
++  background: var(--deck-ground-2, #1b1f23);
++  background-image: linear-gradient(
++      90deg,
++      var(--deck-grid-line, rgb(238 233 223 / 0.05)) 1px,
++      transparent 1px
++    ),
++    linear-gradient(
++      0deg,
++      var(--deck-grid-line, rgb(238 233 223 / 0.05)) 1px,
++      transparent 1px
++    );
++  background-size: var(--deck-grid-cell, 30px) var(--deck-grid-cell, 30px);
++  box-shadow:
++    inset 0 1px 0 rgb(255 255 255 / 0.06),
++    0 18px 40px -22px rgb(0 0 0 / 0.6);
++  color: var(--deck-ground-ink, #eee9df);
++}
++.path .panelHead {
++  border-bottom-color: var(--deck-hair, rgb(238 233 223 / 0.13));
++}
++.path .panelHead span,
++.path .panelHead small {
++  color: var(--deck-ground-muted, #8e928e);
++}
++.stages {
++  display: grid;
++  gap: 26px;
++  margin: 0;
++  padding: 26px 22px 24px;
++  list-style: none;
++}
++.stage {
++  position: relative;
++  display: grid;
++  grid-template-columns: 44px minmax(0, 1fr);
++  grid-template-areas:
++    'jack step'
++    'jack title'
++    'jack copy';
++  column-gap: 14px;
++  row-gap: 2px;
++}
++.stage h4 {
++  grid-area: title;
++  margin: 0;
++  font: 800 19px var(--deck-font-display, sans-serif);
++  letter-spacing: -0.01em;
++}
++.stage p {
++  grid-area: copy;
++  max-width: 44ch;
++  margin: 4px 0 0;
++  color: var(--deck-ground-muted, #8e928e);
++  font: 400 13.5px / 1.55 var(--deck-font-ui, sans-serif);
++}
++.stageStep {
++  grid-area: step;
++  color: var(--deck-orange, #ff5a1f);
++  font: 700 10px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.22em;
++}
++.jack {
++  position: relative;
++  z-index: 1;
++  grid-area: jack;
++  align-self: start;
++  width: 28px;
++  height: 28px;
++  margin: 2px 8px 0;
++  border: 2px solid #e7e2d8;
++  border-radius: 50%;
++  background: radial-gradient(circle at 50% 50%, #0b0d0c 38%, #2a2e2b 40%);
++  box-shadow:
++    0 0 0 3px var(--deck-ground-2, #1b1f23),
++    0 2px 5px rgb(0 0 0 / 0.5);
++  transition: background 0.25s ease;
++}
++.stage:hover .jack {
++  background: radial-gradient(
++    circle at 50% 50%,
++    var(--deck-orange, #ff5a1f) 38%,
++    #2a2e2b 40%
++  );
++}
++/* The patch cable down to the next stage. */
++.stage:not(:last-child)::after {
++  position: absolute;
++  top: 34px;
++  bottom: -30px;
++  left: 21px;
++  width: 2px;
++  background: repeating-linear-gradient(
++    180deg,
++    var(--deck-orange, #ff5a1f) 0 6px,
++    transparent 6px 12px
++  );
++  background-size: 2px 12px;
++  content: '';
++  opacity: 0.6;
++}
++@media (prefers-reduced-motion: no-preference) {
++  .stage:not(:last-child)::after {
++    animation: cable 0.9s linear infinite;
++    animation-delay: calc(var(--i) * -0.2s);
++  }
++}
++@keyframes cable {
++  to {
++    background-position: 0 12px;
++  }
++}
++
++/* ── Brief builder ── */
++.builderBody {
++  display: grid;
++  gap: 14px;
++  padding: 14px;
++}
++.controls {
++  display: grid;
++  gap: 18px;
++  padding: 16px;
++  border: 1px solid rgb(27 28 26 / 0.26);
++  border-radius: var(--deck-r-inner, 9px);
++  background: var(--deck-chassis-fill, #cfc9bc);
++  box-shadow: var(--deck-shell-hi, inset 0 1px 0 rgb(255 255 255 / 0.7)),
++    var(--deck-shell-lo, inset 0 -1px 0 rgb(0 0 0 / 0.1));
++}
++.field {
++  display: grid;
++  gap: 8px;
++  min-width: 0;
++  margin: 0;
++  padding: 0;
++  border: 0;
++}
++.field legend,
++.fieldLabel {
++  padding: 0;
++  color: rgb(29 30 28 / 0.62);
++  font: 700 10px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.2em;
++  text-transform: uppercase;
++}
++.typePads {
++  display: grid;
++  grid-template-columns: repeat(4, minmax(0, 1fr));
++  gap: 8px;
++}
++.typePad {
++  min-height: 56px;
++  padding: 6px;
++  border: 1px solid var(--deck-pad-edge, #141613);
++  border-radius: var(--deck-r-key, 5px);
++  background: var(--deck-pad-fill, linear-gradient(145deg, #373935, #222421));
++  box-shadow:
++    0 3px 0 #0c0d0b,
++    inset 0 1px 0 rgb(255 255 255 / 0.12);
++  color: #e7e2d8;
++  cursor: pointer;
++  font: 700 11px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.1em;
++  text-transform: uppercase;
++}
++.typePad:hover {
++  border-color: var(--deck-orange, #ff5a1f);
++}
++.typePad:focus-visible,
++.switch button:focus-visible,
++.send:focus-visible,
++.copyKey:focus-visible,
++.note:focus-visible {
++  outline: 2px solid var(--deck-orange, #ff5a1f);
++  outline-offset: 2px;
++}
++.typePad[aria-pressed='true'] {
++  transform: translateY(2px);
++  border-color: var(--deck-orange, #ff5a1f);
++  background: var(--deck-pad-lit, linear-gradient(145deg, #ff6a35, #e04810));
++  box-shadow:
++    0 1px 0 #0c0d0b,
++    0 0 16px color-mix(in srgb, var(--deck-orange, #ff5a1f) 55%, transparent);
++  color: #1b0d06;
++}
++
++/* A three-position switch: the thumb slides to the chosen detent. */
++.switch {
++  position: relative;
++  display: grid;
++  grid-template-columns: repeat(3, 1fr);
++  padding: 4px;
++  border: 1px solid rgb(27 28 26 / 0.34);
++  border-radius: var(--deck-r-inner, 9px);
++  background: #1d1f1e;
++  box-shadow: inset 0 2px 6px rgb(0 0 0 / 0.6);
++}
++.switch button {
++  position: relative;
++  z-index: 1;
++  min-height: 44px;
++  border: 0;
++  background: transparent;
++  color: #b9b5aa;
++  cursor: pointer;
++  font: 700 11px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.1em;
++  text-transform: uppercase;
++}
++.switch button[aria-pressed='true'] {
++  color: #1b0d06;
++}
++.switchThumb {
++  position: absolute;
++  top: 4px;
++  bottom: 4px;
++  left: 4px;
++  width: calc((100% - 8px) / 3);
++  border-radius: var(--deck-r-key, 5px);
++  background: var(--deck-pad-lit, linear-gradient(145deg, #ff6a35, #e04810));
++  box-shadow: 0 0 14px
++    color-mix(in srgb, var(--deck-orange, #ff5a1f) 50%, transparent);
++  opacity: 0;
++  transform: translateX(calc(var(--pos, 0) * 100%));
++}
++.switch[data-has='true'] .switchThumb {
++  opacity: 1;
++}
++@media (prefers-reduced-motion: no-preference) {
++  .switchThumb {
++    transition:
++      transform 0.28s cubic-bezier(0.3, 1.4, 0.5, 1),
++      opacity 0.2s ease;
++  }
++}
++
++.note {
++  width: 100%;
++  min-height: 92px;
++  padding: 12px 14px;
++  border: 1px solid rgb(27 28 26 / 0.34);
++  border-radius: var(--deck-r-inner, 9px);
++  background: #ece7dc;
++  box-shadow: inset 0 2px 5px rgb(0 0 0 / 0.14);
++  color: var(--deck-cream-ink, #1d1e1c);
++  font: 500 14px / 1.55 var(--deck-font-ui, sans-serif);
++  resize: vertical;
++}
++.note::placeholder {
++  color: rgb(29 30 28 / 0.45);
++}
++.count {
++  justify-self: end;
++  color: rgb(29 30 28 / 0.5);
++  font: 650 10px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.12em;
++}
++
++.output {
++  display: grid;
++  gap: 12px;
++}
++.lcd {
++  min-height: 190px;
++  max-height: 260px;
++  margin: 0;
++  padding: 16px 18px;
++  overflow: auto;
++  border: 2px solid var(--deck-lcd-edge, #282a27);
++  border-radius: var(--deck-r-lcd, 5px);
++  background: var(--deck-lcd-fill, #0b0d0c);
++  box-shadow: var(--deck-lcd-glow, inset 0 4px 18px #000);
++  color: var(--deck-lcd-peach, #f0c7ae);
++  font: 500 12.5px / 1.65 var(--deck-font-mono, monospace);
++  white-space: pre-wrap;
++  overflow-wrap: anywhere;
++}
++.lcd span:first-child,
++.lcd span:nth-child(2) {
++  color: var(--deck-lcd-green, #5cd6a3);
++}
++.actions {
++  display: grid;
++  grid-template-columns: 1.3fr 1fr;
++  gap: 10px;
++}
++.send,
++.copyKey {
++  display: grid;
++  place-items: center;
++  min-height: 52px;
++  border: 1px solid rgb(27 28 26 / 0.4);
++  border-radius: var(--deck-r-inner, 9px);
++  cursor: pointer;
++  font: 800 12px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.14em;
++  text-decoration: none;
++  text-transform: uppercase;
++}
++.send {
++  background: var(--deck-pad-lit, linear-gradient(145deg, #ff6a35, #e04810));
++  box-shadow:
++    0 3px 0 #7a2808,
++    inset 0 1px 0 rgb(255 255 255 / 0.35);
++  color: #1b0d06;
++}
++.copyKey {
++  background: linear-gradient(180deg, #f3efe6, #d8d2c5);
++  box-shadow:
++    0 3px 0 rgb(27 28 26 / 0.3),
++    inset 0 1px 0 rgb(255 255 255 / 0.85);
++  color: var(--deck-cream-ink, #1d1e1c);
++}
++.send:active,
++.copyKey:active {
++  transform: translateY(2px);
++  box-shadow: 0 1px 0 rgb(27 28 26 / 0.3);
++}
++
++/* ── Narrow screens ── */
++@media (max-width: 900px) {
++  .pair {
++    grid-template-columns: minmax(0, 1fr);
++  }
++}
++@media (max-width: 760px) {
++  .consoleBody {
++    grid-template-columns: minmax(0, 1fr);
++  }
++  .strips {
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++  }
++  .strip {
++    grid-template-columns: 30px minmax(0, 1fr);
++  }
++  .stripMeter {
++    display: none;
++  }
++  .panelHead {
++    grid-template-columns: minmax(0, 1fr) auto;
++  }
++  .panelHead small {
++    display: none;
++  }
++  .monitor {
++    min-height: 300px;
++  }
++  .typePads {
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++  }
++}
++@media (max-width: 460px) {
++  .strips {
++    grid-template-columns: minmax(0, 1fr);
++  }
++  .actions {
++    grid-template-columns: minmax(0, 1fr);
++  }
++}
++
++/* Grid items must be allowed to shrink below their content's width. */
++.console,
++.builder,
++.path {
++  min-width: 0;
++}
+diff --git a/features/landing-page/rack-01/contact-desk/contact-desk.tsx b/features/landing-page/rack-01/contact-desk/contact-desk.tsx
+new file mode 100644
+index 0000000..add2497
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/contact-desk.tsx
+@@ -0,0 +1,27 @@
++import { EMAIL } from '../../constants'
++import { ContactBriefBuilder } from './contact-brief-builder'
++import { ContactConsole } from './contact-console'
++import { ContactSignalPath } from './contact-signal-path'
++import styles from './contact-desk.module.css'
++
++/**
++ * Everything under the performance controller: the rest of the session desk.
++ *
++ * The controller is the hardware you play. This is the desk around it — the
++ * printed insert that answers the questions (a recall console), the routing
++ * diagram that says where a message goes next, and the pad that writes the
++ * message for you. It sits between `.contactDeck` and the footer on purpose:
++ * the rack's scroll animations address specific children of `.contactDeck` by
++ * class, so a block added inside it would sit unanimated in a moving box.
++ */
++export function ContactDesk() {
++  return (
++    <div className={styles.desk}>
++      <ContactConsole />
++      <div className={styles.pair}>
++        <ContactSignalPath />
++        <ContactBriefBuilder email={EMAIL} />
++      </div>
++    </div>
++  )
++}
+diff --git a/features/landing-page/rack-01/contact-desk/contact-signal-path.tsx b/features/landing-page/rack-01/contact-desk/contact-signal-path.tsx
+new file mode 100644
+index 0000000..f34a45b
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/contact-signal-path.tsx
+@@ -0,0 +1,49 @@
++'use client'
++
++import { useId } from 'react'
++import { PATH } from './contact-content'
++import styles from './contact-desk.module.css'
++import { useReveal } from './use-reveal'
++
++/**
++ * The signal path: how a project moves, as four stages patched together.
++ *
++ * It is an ordered list, because it is one, with the cables drawn between the
++ * items as decoration. The jacks and cables are `aria-hidden`; what a screen
++ * reader gets is four numbered steps in order.
++ */
++export function ContactSignalPath() {
++  const [reveal, revealState] = useReveal<HTMLElement>()
++  const id = useId()
++  return (
++    <section
++      ref={reveal}
++      data-reveal={revealState}
++      className={`${styles.panel} ${styles.path}`}
++      aria-labelledby={`${id}-title`}
++    >
++      <header className={styles.panelHead}>
++        <div>
++          <strong>AH / ROUTING</strong>
++          <span>Input to output</span>
++        </div>
++        <h3 id={`${id}-title`}>Signal path</h3>
++        <small>04 stages</small>
++      </header>
++      <ol className={styles.stages}>
++        {PATH.map((stage, index) => (
++          <li
++            key={stage.title}
++            className={styles.stage}
++            style={{ '--i': index } as React.CSSProperties}
++          >
++            <span className={styles.jack} aria-hidden="true" />
++            <span className={styles.stageStep}>{stage.step}</span>
++            <h4>{stage.title}</h4>
++            <p>{stage.copy}</p>
++          </li>
++        ))}
++      </ol>
++    </section>
++  )
++}
+diff --git a/features/landing-page/rack-01/contact-desk/contact-status.tsx b/features/landing-page/rack-01/contact-desk/contact-status.tsx
+new file mode 100644
+index 0000000..fef9392
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/contact-status.tsx
+@@ -0,0 +1,66 @@
++'use client'
++
++import { useEffect, useRef } from 'react'
++import styles from './contact-desk.module.css'
++
++/**
++ * The channel's three status lamps, as the strip along the top of the section:
++ * the line is open, replies are measured in days, and what time it is where the
++ * replies come from.
++ *
++ * The clock is written to the DOM on a timer rather than held in state, so a
++ * tick never re-renders anything, and the server renders a placeholder so
++ * hydration has nothing to disagree about.
++ */
++export function ContactStatus({
++  timeZone = 'Asia/Jakarta',
++  place = 'Jakarta',
++}: {
++  timeZone?: string
++  place?: string
++}) {
++  const clock = useRef<HTMLTimeElement | null>(null)
++
++  useEffect(() => {
++    const node = clock.current
++    if (!node) return
++    let format: Intl.DateTimeFormat
++    try {
++      format = new Intl.DateTimeFormat('en-GB', {
++        timeZone,
++        hour: '2-digit',
++        minute: '2-digit',
++        second: '2-digit',
++        hour12: false,
++      })
++    } catch {
++      return
++    }
++    const tick = () => {
++      node.textContent = format.format(new Date())
++    }
++    tick()
++    const id = window.setInterval(tick, 1000)
++    return () => window.clearInterval(id)
++  }, [timeZone])
++
++  return (
++    <ul className={styles.status} aria-label="Channel status">
++      <li>
++        <i className={styles.lamp} aria-hidden="true" />
++        <span>Channel</span>
++        <b>Open</b>
++      </li>
++      <li>
++        <span>Reply</span>
++        <b>~2 days</b>
++      </li>
++      <li>
++        <span>{place}</span>
++        <b>
++          <time ref={clock}>--:--:--</time>
++        </b>
++      </li>
++    </ul>
++  )
++}
+diff --git a/features/landing-page/rack-01/contact-desk/use-reveal.ts b/features/landing-page/rack-01/contact-desk/use-reveal.ts
+new file mode 100644
+index 0000000..ae2f30a
+--- /dev/null
++++ b/features/landing-page/rack-01/contact-desk/use-reveal.ts
+@@ -0,0 +1,38 @@
++'use client'
++
++import { useEffect, useRef, useState } from 'react'
++
++export type RevealState = 'idle' | 'armed' | 'in'
++
++/**
++ * Reveal an element the first time it scrolls into view.
++ *
++ * The three states are the whole trick. `idle` is what the server renders and
++ * what a visitor without JavaScript sees: fully visible, because content must
++ * not depend on a script to exist. Only once the effect has run does the
++ * element become `armed` (hidden, offset), and the observer then moves it to
++ * `in`. An element that is already on screen when it arms goes straight to
++ * `in` on the observer's first callback, so nothing is left hidden.
++ */
++export function useReveal<T extends HTMLElement>(threshold = 0.18) {
++  const ref = useRef<T | null>(null)
++  const [state, setState] = useState<RevealState>('idle')
++
++  useEffect(() => {
++    const node = ref.current
++    if (!node || typeof IntersectionObserver === 'undefined') return
++    setState('armed')
++    const observer = new IntersectionObserver(
++      (entries) => {
++        if (!entries.some((entry) => entry.isIntersecting)) return
++        setState('in')
++        observer.disconnect()
++      },
++      { threshold },
++    )
++    observer.observe(node)
++    return () => observer.disconnect()
++  }, [threshold])
++
++  return [ref, state] as const
++}
+diff --git a/features/landing-page/rack-01/section-contact.tsx b/features/landing-page/rack-01/section-contact.tsx
+index d1ac813..be9c0d7 100644
+--- a/features/landing-page/rack-01/section-contact.tsx
++++ b/features/landing-page/rack-01/section-contact.tsx
+@@ -4,12 +4,6 @@ import { RESUME_URL } from './shared'
+ 
+ import { useCallback, useEffect, useRef, useState } from 'react'
+ import HalftoneWordmarkFooter from '@/components/ui/halftone-wordmark-footer'
+-import {
+-  Accordion,
+-  AccordionContent,
+-  AccordionItem,
+-  AccordionTrigger,
+-} from '@/components/ui/accordion'
+ import {
+   CONTACT_PAD_COLORS,
+   EMAIL,
+@@ -19,42 +13,8 @@ import {
+ import styles from './rack-01.module.css'
+ import { SectionHeading } from './section-heading'
+ import { Mail, Square } from 'lucide-react'
+-import { Screw } from '@/components/ui/screw'
+-import { SilkscreenLabel } from './primitives'
+-
+-/**
+- * The questions people actually ask before emailing, answered honestly.
+- *
+- * Written as straight answers rather than a sales pitch: the "React Native"
+- * line is a no, because a portfolio that hedges on what it cannot do wastes the
+- * reader's time and the writer's.
+- *
+- * No links live here. Pads 01 to 04 are Email, LinkedIn, GitHub and Résumé,
+- * and a second list of the same four destinations below the deck made the pad
+- * grid look like an oversight rather than the point.
+- */
+-const CONTACT_QUESTIONS = [
+-  {
+-    question: 'What kind of work do you take on?',
+-    answer:
+-      'Frontend work where the hard part is the state or the edge cases rather than the styling: internal tools, content-heavy public sites, and products that need to work on a phone or on a bad connection.',
+-  },
+-  {
+-    question: 'Do you work with existing backends?',
+-    answer:
+-      'Mostly. Most of the shipped work is a frontend over an existing service. Running the infrastructure too is something I do when the product genuinely needs it.',
+-  },
+-  {
+-    question: 'Do you do React Native or native mobile?',
+-    answer:
+-      'No. The mobile work here is responsive web. The habit that matters transfers, but the stack does not, and I would rather say so than take it and hand it back.',
+-  },
+-  {
+-    question: 'What is your availability?',
+-    answer:
+-      'Frontend work, design engineering, and hard interface problems. Replies usually land within a couple of days.',
+-  },
+-] as const
++import { ContactDesk } from './contact-desk/contact-desk'
++import { ContactStatus } from './contact-desk/contact-status'
+ 
+ /** The top row of the footer's wordmark band. */
+ const FOOTER_LINKS = [
+@@ -332,6 +292,8 @@ export function Contact() {
+         </p>
+       </div>
+ 
++      <ContactStatus />
++
+       <div className={styles.contactDeck}>
+         <div className={styles.contactDeckBrand}>
+           <div>
+@@ -484,90 +446,18 @@ export function Contact() {
+       </div>
+ 
+       {/*
+-        What used to be the standalone `/contact` route: the questions people
+-        actually ask before emailing, answered where the deck is.
+-
+-        The four link channels this block used to carry are gone. Pads 01 to 04
+-        are already Email, LinkedIn, GitHub and Résumé, in the same controller,
+-        with the same numbers on them — so a second list below the deck said
+-        the same four things twice and made the pad grid look like an accident.
+-        One copy of a link is the point.
+-
+-        Read as the deck's own documentation rather than as a page of copy: the
+-        controller above is the hardware, this is the printed insert that ships
+-        in the box with it. Hence the panel, the corner screws, and the head
+-        strip — label on the left, entry count on the right, the same
+-        left/right shape as the deck's own brand bar. It is a card, not a
+-        second device: one border, one hairline between rows, no dials.
+-
+-        A Radix accordion rather than an open `<dl>`. Four always-open answers
+-        is a wall of text that reads as a page of copy below the deck; four
+-        collapsed ones read as a list of things this person has already
+-        answered, which is what they are. It is also why the questions have to
+-        be legible on their own — collapsed, they are all the reader sees. The
+-        shadcn demo styles its trigger at `text-foreground/20`, which is the
+-        near-invisible version of this component, so the ink comes from the
+-        contact section's own `--panel-ink` tokens instead and the demo's
+-        ghosted `01`-style numbering is kept but given real contrast.
+-
+-        Each row is a channel strip: number cell, question, chevron cell. The
+-        number is boxed rather than set free because the box is what makes it
+-        read as a channel assignment instead of a list marker — the same reason
+-        the deck's pads carry numbers. The open row lights its number and takes
+-        the panel's own 4% fill, so the state is visible at a glance without
+-        the row changing size.
+-
+-        Placement is deliberate: between `.contactDeck` and `<footer>`, because
+-        `use-rack-animations.ts:444-522` queries specific children of
+-        `.contactDeck` by class name and applies 3D transforms to each. A child
+-        added in there would sit unanimated inside a moving container.
+-
+-        `CONTACT_PADS` is untouched: its indices are hardcoded in `triggerSound`
+-        (5, 6, 10, 13, 4, 8, 12) and in the sweep order, so reordering or
+-        padding the array would re-map the audio.
++        Everything under the controller is the rest of the session desk: the
++        recall console (what used to be the FAQ accordion), the signal path and
++        the brief builder. It sits between `.contactDeck` and `<footer>` on
++        purpose: `use-rack-animations.ts` queries specific children of
++        `.contactDeck` by class and applies 3D transforms to each, so a child
++        added inside it would sit unanimated in a moving container.
++
++        `CONTACT_PADS` is untouched: its indices are hardcoded in
++        `triggerSound` (5, 6, 10, 13, 4, 8, 12) and in the sweep order, so
++        reordering or padding the array would re-map the audio.
+       */}
+-      <div className={styles.contactBrief}>
+-        <div className={styles.contactBriefPanel}>
+-          <Screw className={styles.screwTopLeft} />
+-          <Screw className={styles.screwTopRight} />
+-          <div className={styles.contactBriefHead}>
+-            <SilkscreenLabel>Before you write</SilkscreenLabel>
+-            <span className={styles.contactBriefCount}>
+-              {String(CONTACT_QUESTIONS.length).padStart(2, '0')} entries
+-            </span>
+-          </div>
+-          <Accordion
+-            type="single"
+-            collapsible
+-            defaultValue="0"
+-            className={styles.contactBriefAccordion}
+-          >
+-            {CONTACT_QUESTIONS.map((entry, index) => (
+-              <AccordionItem
+-                key={entry.question}
+-                value={String(index)}
+-                className={styles.contactBriefAccordionItem}
+-              >
+-                <AccordionTrigger
+-                  className={styles.contactBriefAccordionTrigger}
+-                >
+-                  <span className={styles.contactBriefAccordionIndex}>
+-                    {String(index + 1).padStart(2, '0')}
+-                  </span>
+-                  <span className={styles.contactBriefAccordionQuestion}>
+-                    {entry.question}
+-                  </span>
+-                </AccordionTrigger>
+-                <AccordionContent
+-                  className={styles.contactBriefAccordionContent}
+-                >
+-                  {entry.answer}
+-                </AccordionContent>
+-              </AccordionItem>
+-            ))}
+-          </Accordion>
+-        </div>
+-      </div>
++      <ContactDesk />
+ 
+       <footer className={styles.footer}>
+         <div className={styles.footerTransition} aria-hidden="true" />
+diff --git a/tests/contact-content.test.ts b/tests/contact-content.test.ts
+new file mode 100644
+index 0000000..c420b44
+--- /dev/null
++++ b/tests/contact-content.test.ts
+@@ -0,0 +1,139 @@
++import {
++  CHANNELS,
++  MAX_HREF,
++  NOTE_LIMIT,
++  PATH,
++  PROJECT_TYPES,
++  TIMELINES,
++  cleanNote,
++  composeBrief,
++  nextChannel,
++  typedSlice,
++} from '@/features/landing-page/rack-01/contact-desk/contact-content'
++
++const TO = 'hello@example.com'
++
++describe('content', () => {
++  it('has distinct, non-empty channels and stages', () => {
++    expect(CHANNELS.length).toBeGreaterThanOrEqual(4)
++    expect(new Set(CHANNELS.map((c) => c.tag)).size).toBe(CHANNELS.length)
++    for (const c of CHANNELS) {
++      expect(c.question.endsWith('?')).toBe(true)
++      expect(c.answer.length).toBeGreaterThan(40)
++    }
++    expect(PATH).toHaveLength(4)
++    expect(new Set(PROJECT_TYPES.map((t) => t.id)).size).toBe(
++      PROJECT_TYPES.length,
++    )
++    expect(new Set(TIMELINES.map((t) => t.id)).size).toBe(TIMELINES.length)
++  })
++
++  it('keeps the honest no on native mobile', () => {
++    const mobile = CHANNELS.find((c) => c.tag === 'MOBILE')
++    expect(mobile?.answer.startsWith('No.')).toBe(true)
++  })
++
++  it('makes no promise beyond the one the page always made', () => {
++    const text = CHANNELS.map((c) => c.answer)
++      .join(' ')
++      .toLowerCase()
++    expect(text).not.toMatch(/\$|per hour|rate|booked|available (from|until)/)
++  })
++})
++
++describe('composeBrief', () => {
++  it('is a valid brief with nothing selected', () => {
++    const brief = composeBrief({ type: null, timeline: null, note: '' }, TO)
++    expect(brief.subject).toBe('Brief: a frontend project')
++    expect(brief.body).toContain('help with a frontend project.')
++    expect(brief.body).not.toContain('About it:')
++    expect(brief.href.startsWith(`mailto:${TO}?subject=`)).toBe(true)
++  })
++
++  it('folds the type, the timeline and the note into the body', () => {
++    const brief = composeBrief(
++      { type: 'build', timeline: 'soon', note: 'A dashboard for ops.' },
++      TO,
++    )
++    expect(brief.subject).toBe('Brief: new build')
++    expect(brief.body).toContain('a new frontend build, as soon as possible.')
++    expect(brief.body).toContain('About it:\nA dashboard for ops.')
++  })
++
++  it('ignores an id it does not know rather than printing it', () => {
++    const brief = composeBrief({ type: 'nope', timeline: 'nope', note: '' }, TO)
++    expect(brief.body).not.toContain('nope')
++    expect(brief.subject).toBe('Brief: a frontend project')
++  })
++
++  it('encodes the link so a newline or an ampersand cannot break it', () => {
++    const brief = composeBrief(
++      { type: 'talk', timeline: null, note: 'R&D, then "ship"\nsecond line' },
++      TO,
++    )
++    expect(brief.href).not.toMatch(/[\n\r ]/)
++    expect(brief.href).toContain('%0A')
++    expect(brief.href).toContain('R%26D')
++    const body = new URL(brief.href).searchParams.get('body')
++    expect(body).toBe(brief.body)
++  })
++
++  it('is deterministic', () => {
++    const input = { type: 'design', timeline: 'open', note: 'x' }
++    expect(composeBrief(input, TO)).toEqual(composeBrief(input, TO))
++  })
++})
++
++describe('cleanNote', () => {
++  it('collapses runs of spaces and trims', () => {
++    expect(cleanNote('  a   b \t c  ')).toBe('a b c')
++  })
++
++  it('caps the length and marks the cut', () => {
++    const out = cleanNote('x'.repeat(NOTE_LIMIT * 3))
++    expect(out.length).toBeLessThanOrEqual(NOTE_LIMIT)
++    expect(out.endsWith('…')).toBe(true)
++  })
++
++  it('keeps a short note as it was', () => {
++    expect(cleanNote('short')).toBe('short')
++  })
++
++  it('keeps a mailto under a size every mail client accepts', () => {
++    const brief = composeBrief(
++      { type: 'build', timeline: 'soon', note: '“é”\n'.repeat(500) },
++      TO,
++    )
++    expect(brief.href.length).toBeLessThanOrEqual(MAX_HREF)
++    // And it is still a brief with a note, not an empty one.
++    expect(brief.body).toContain('About it:')
++  })
++})
++
++describe('typedSlice', () => {
++  it('reveals proportionally and clamps', () => {
++    expect(typedSlice('abcdefghij', 0)).toBe('')
++    expect(typedSlice('abcdefghij', 0.5)).toBe('abcde')
++    expect(typedSlice('abcdefghij', 1)).toBe('abcdefghij')
++    expect(typedSlice('abcdefghij', 9)).toBe('abcdefghij')
++    expect(typedSlice('abcdefghij', -1)).toBe('')
++    expect(typedSlice('abcdefghij', Number.NaN)).toBe('')
++  })
++})
++
++describe('nextChannel', () => {
++  it('wraps on the arrow keys, both axes', () => {
++    expect(nextChannel('ArrowDown', 4, 5)).toBe(0)
++    expect(nextChannel('ArrowRight', 1, 5)).toBe(2)
++    expect(nextChannel('ArrowUp', 0, 5)).toBe(4)
++    expect(nextChannel('ArrowLeft', 3, 5)).toBe(2)
++  })
++
++  it('jumps on Home and End and ignores everything else', () => {
++    expect(nextChannel('Home', 3, 5)).toBe(0)
++    expect(nextChannel('End', 0, 5)).toBe(4)
++    expect(nextChannel('Enter', 0, 5)).toBeNull()
++    expect(nextChannel('a', 0, 5)).toBeNull()
++    expect(nextChannel('ArrowDown', 0, 0)).toBeNull()
++  })
++})
+diff --git a/tests/contact-desk-markup.test.tsx b/tests/contact-desk-markup.test.tsx
+new file mode 100644
+index 0000000..b12fbfa
+--- /dev/null
++++ b/tests/contact-desk-markup.test.tsx
+@@ -0,0 +1,102 @@
++/** @jest-environment node */
++import { renderToStaticMarkup } from 'react-dom/server'
++
++import { ContactDesk } from '@/features/landing-page/rack-01/contact-desk/contact-desk'
++import { ContactStatus } from '@/features/landing-page/rack-01/contact-desk/contact-status'
++import {
++  CHANNELS,
++  PATH,
++  PROJECT_TYPES,
++  TIMELINES,
++} from '@/features/landing-page/rack-01/contact-desk/contact-content'
++
++/**
++ * What the server sends, which is also what a visitor without JavaScript and a
++ * crawler see. These pin the properties that make the desk a real page and not
++ * a picture of one: every answer is in the markup, the tabs are a correct tabs
++ * pattern, nothing is hidden before a script runs, and the brief builder's link
++ * is a working `mailto:` on first paint.
++ */
++describe('the contact desk, server-rendered', () => {
++  const html = renderToStaticMarkup(<ContactDesk />)
++
++  it('prints the active answer and question as real text', () => {
++    // Only the active channel's answer is in the panel; the rest are reached by
++    // the tabs. What must be true is that the first one is present as text.
++    expect(html).toContain(CHANNELS[0].answer)
++    expect(html).toContain(CHANNELS[0].question)
++  })
++
++  it('is a tabs pattern: one tablist, one panel, one selected tab', () => {
++    expect(html.match(/role="tablist"/g)).toHaveLength(1)
++    expect(html.match(/role="tabpanel"/g)).toHaveLength(1)
++    expect(html.match(/role="tab"/g)).toHaveLength(CHANNELS.length)
++    expect(html.match(/aria-selected="true"/g)).toHaveLength(1)
++    expect(html.match(/tabindex="0"/g)).toHaveLength(1)
++    expect(html.match(/tabindex="-1"/g)).toHaveLength(CHANNELS.length - 1)
++  })
++
++  it('wires each tab to the panel and the panel back to the active tab', () => {
++    const panel = /aria-controls="([^"]+)"/.exec(html)?.[1]
++    expect(panel).toBeTruthy()
++    expect(html).toContain(`id="${panel}"`)
++    const labelled = /role="tabpanel"[^>]*aria-labelledby="([^"]+)"/.exec(html)
++    expect(labelled?.[1]).toBeTruthy()
++    expect(html).toContain(`id="${labelled?.[1]}"`)
++  })
++
++  it('hides the typed copy from assistive tech so it never reads half a sentence', () => {
++    expect(html).toMatch(/aria-hidden="true"/)
++    expect(html).toMatch(
++      /class="[^"]*monitorAnswer[^"]*"[^>]*aria-hidden="true"|aria-hidden="true"[^>]*class="[^"]*monitorAnswer/,
++    )
++  })
++
++  it('renders the signal path as an ordered list of its stages, in order', () => {
++    expect(html).toContain('<ol')
++    let at = -1
++    for (const stage of PATH) {
++      const next = html.indexOf(`>${stage.title}<`)
++      expect(next).toBeGreaterThan(at)
++      at = next
++    }
++  })
++
++  it('offers every kind of work and timing, none pre-selected', () => {
++    for (const choice of [...PROJECT_TYPES, ...TIMELINES]) {
++      expect(html).toContain(`>${choice.label}<`)
++    }
++    expect(html).not.toMatch(/aria-pressed="true"/)
++  })
++
++  it('has a working mailto on first paint, before any script', () => {
++    const href =
++      /class="[^"]*send[^"]*"[^>]*href="([^"]+)"|href="(mailto:[^"]+)"[^>]*class="[^"]*send/.exec(
++        html,
++      )
++    const link = href?.[1] ?? href?.[2]
++    expect(link?.startsWith('mailto:')).toBe(true)
++    expect(link).toContain('subject=')
++  })
++
++  it('does not hide anything before a script runs', () => {
++    expect(html).toContain('data-reveal="idle"')
++    expect(html).not.toContain('data-reveal="armed"')
++  })
++
++  it('labels the form controls', () => {
++    expect(html).toMatch(/<label[^>]*for="([^"]+)"/)
++    const id = /<label[^>]*for="([^"]+)"/.exec(html)?.[1]
++    expect(html).toContain(`id="${id}"`)
++    expect(html).toContain('<fieldset')
++    expect(html.match(/<legend>/g)).toHaveLength(2)
++  })
++})
++
++describe('the status strip, server-rendered', () => {
++  it('renders a placeholder clock so hydration has nothing to disagree about', () => {
++    const html = renderToStaticMarkup(<ContactStatus />)
++    expect(html).toContain('--:--:--')
++    expect(html).toContain('aria-label="Channel status"')
++  })
++})
+-- 
+2.43.0
+

@@ -1,0 +1,573 @@
+From 769f924a48305bcf2581485655569250e4b0b64d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 17 Oct 2026 04:23:41 +0000
+Subject: [PATCH] fix(instruments): measure in layout space, fix CSS-modules
+ build error, add depth
+
+- Build: the host rule was an attribute-only selector, which CSS modules
+  reject; name the two local classes instead (checked with lightningcss pure).
+- Alignment: the controller is scroll-tilted by GSAP, so screen-rect
+  measurement mid-tilt put every part where its control had been. Measure from
+  offsetLeft/Top (layout space) plus static translations, and re-measure when
+  parts resize or fonts land.
+- Depth: contact shadows, a near point light that follows the pointer, recessed
+  bank plates, a dark keywell and a raised brand plate; hide the DOM copies of
+  those surfaces.
+---
+ .../components/instrument/instrument-core.ts  |  71 ++++++++----
+ .../instrument/instrument-layout.ts           |  66 +++++++++++
+ .../instrument/instrument-models.ts           | 108 +++++++++++++++++-
+ .../landing-page/rack-01/rack-01.module.css   |  22 +++-
+ .../landing-page/rack-01/section-skills.tsx   |  18 ++-
+ tests/instrument-layout.test.ts               |  61 ++++++++++
+ 6 files changed, 318 insertions(+), 28 deletions(-)
+
+diff --git a/features/landing-page/components/instrument/instrument-core.ts b/features/landing-page/components/instrument/instrument-core.ts
+index 1e55d20..7cf24a2 100644
+--- a/features/landing-page/components/instrument/instrument-core.ts
++++ b/features/landing-page/components/instrument/instrument-core.ts
+@@ -4,8 +4,9 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
+ import {
+   approach,
+   parseId,
++  parseTranslation,
+   readPartAttributes,
+-  relativeRect,
++  stackOffsets,
+   tiltFromPointer,
+   type Part,
+   type PartState,
+@@ -86,7 +87,7 @@ const WATCHED = [
+ ]
+ 
+ /** The resting pose: far enough off axis that the shell shows its thickness. */
+-const REST_TILT = { rx: -5, ry: 3.5 }
++const REST_TILT = { rx: -6, ry: 4 }
+ 
+ export function mountInstrument(
+   host: HTMLElement,
+@@ -137,6 +138,12 @@ export function mountInstrument(
+   const key = new THREE.DirectionalLight(0xfff4e6, 1.15)
+   three.add(key)
+   three.add(key.target)
++  // A point of light close over the face. A directional light gives every flat
++  // face the same shade; a near point light falls off across the device, which
++  // is the gradient that makes a flat plate read as a surface with a sheen on
++  // it, and it follows the pointer.
++  const lamp = new THREE.PointLight(0xfff1de, 2.4, 1500, 1.2)
++  three.add(lamp)
+ 
+   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -3000, 3000)
+   camera.position.z = 1000
+@@ -163,29 +170,41 @@ export function mountInstrument(
+   const nodes = () =>
+     Array.from(host.querySelectorAll<HTMLElement>('[data-i3d]'))
+ 
++  /**
++   * Every part's box in the host's layout space (its padding box), from
++   * offsets rather than screen rectangles, so the host's scroll tilt, its scale
++   * and any animation on the controls cannot move a part. See `stackOffsets`.
++   */
+   const measure = () => {
+-    const hostBox = host.getBoundingClientRect()
+-    const layoutWidth = host.offsetWidth
+     const next: Part[] = []
+     for (const node of nodes()) {
+       const id = node.dataset.i3d ?? ''
+-      const box = node.getBoundingClientRect()
+-      const rect = relativeRect(
+-        { x: box.left, y: box.top, w: box.width, h: box.height },
+-        {
+-          x: hostBox.left,
+-          y: hostBox.top,
+-          w: hostBox.width,
+-          h: hostBox.height,
+-        },
+-        layoutWidth,
+-      )
+-      if (!rect || rect.w < 1 || rect.h < 1) continue
+-      next.push({ ...rect, id, ...parseId(id) })
++      const chain: HTMLElement[] = []
++      let cursor: HTMLElement | null = node
++      while (cursor && cursor !== host) {
++        chain.push(cursor)
++        cursor = cursor.offsetParent as HTMLElement | null
++      }
++      // A part that is not laid out inside the host (display: none, or the host
++      // is not its offset ancestor) has no box to draw.
++      if (cursor !== host) continue
++      const at = stackOffsets(chain)
++      const shift = parseTranslation(getComputedStyle(node).transform)
++      const w = node.offsetWidth
++      const h = node.offsetHeight
++      if (w < 1 || h < 1) continue
++      next.push({
++        id,
++        ...parseId(id),
++        x: at.x + shift.x,
++        y: at.y + shift.y,
++        w,
++        h,
++      })
+     }
+     parts = next
+-    width = host.offsetWidth
+-    height = host.offsetHeight
++    width = host.clientWidth
++    height = host.clientHeight
+   }
+ 
+   const readStates = () => {
+@@ -249,6 +268,7 @@ export function mountInstrument(
+     stage.rotation.x = (tilt.rx * Math.PI) / 180
+     stage.rotation.y = (tilt.ry * Math.PI) / 180
+     key.position.set(light.x * 700, light.y * 500, 600)
++    lamp.position.set(light.x * width * 0.45, light.y * height * 0.45, 320)
+ 
+     const moving = scene
+       ? scene.update({ dt, time, states, hover, pressed, light })
+@@ -281,7 +301,7 @@ export function mountInstrument(
+     if (box.width < 1 || box.height < 1) return
+     const nx = ((event.clientX - box.left) / box.width) * 2 - 1
+     const ny = ((event.clientY - box.top) / box.height) * 2 - 1
+-    const offset = tiltFromPointer(nx, ny, 2.4)
++    const offset = tiltFromPointer(nx, ny, 3.4)
+     tiltTarget = {
+       rx: REST_TILT.rx + offset.rx,
+       ry: REST_TILT.ry + offset.ry,
+@@ -326,6 +346,17 @@ export function mountInstrument(
+     schedule()
+   })
+   resize.observe(host)
++  // A part that changes size without the host changing (a font landing, a
++  // label wrapping) is a layout change too.
++  nodes().forEach((node) => resize.observe(node))
++  if (document.fonts?.ready) {
++    void document.fonts.ready.then(() => {
++      if (!alive) return
++      layoutDirty = true
++      statesDirty = true
++      schedule()
++    })
++  }
+ 
+   const io = new IntersectionObserver((entries) => {
+     visible = entries[0] ? entries[0].isIntersecting : true
+diff --git a/features/landing-page/components/instrument/instrument-layout.ts b/features/landing-page/components/instrument/instrument-layout.ts
+index a646b85..8d1933d 100644
+--- a/features/landing-page/components/instrument/instrument-layout.ts
++++ b/features/landing-page/components/instrument/instrument-layout.ts
+@@ -183,3 +183,69 @@ export function readPartAttributes(
+     value: Number.isFinite(value) ? value : 0,
+   }
+ }
++
++/**
++ * A node's position inside its host from `offsetLeft`/`offsetTop`, which are
++ * layout and so unaffected by any transform.
++ *
++ * This replaced `getBoundingClientRect` arithmetic, which failed on the real
++ * page: the Skills controller is scroll-scrubbed by GSAP (`rotationX: 20 → 0`
++ * under a 1200px perspective, with a scale), and a screen-space rectangle taken
++ * while it is tilted is a perspective-distorted quadrilateral that no uniform
++ * scale can undo. The model was built from those rectangles and never rebuilt,
++ * so every part sat where its control *had been* mid-tilt — pads right and up,
++ * faders left. Layout space has no tilt to undo.
++ *
++ * `chain[0]` is the node itself and each later entry is the previous one's
++ * `offsetParent`, stopping before the host. An `offsetLeft` is measured from
++ * its parent's *padding* edge, so each parent's border (`clientLeft/Top`) is
++ * added on the way up.
++ */
++export function stackOffsets(
++  chain: {
++    offsetLeft: number
++    offsetTop: number
++    clientLeft: number
++    clientTop: number
++  }[],
++): { x: number; y: number } {
++  let x = 0
++  let y = 0
++  chain.forEach((node, index) => {
++    x += node.offsetLeft
++    y += node.offsetTop
++    if (index > 0) {
++      x += node.clientLeft
++      y += node.clientTop
++    }
++  })
++  return { x, y }
++}
++
++/**
++ * The translation in a computed `transform`, if it is a pure translation.
++ *
++ * Some controls are positioned with a *static* transform (the black keys sit
++ * on `translateX(-50%)`), which layout offsets do not include. A matrix with a
++ * scale or a rotation in it is something else (a pressed key, an animation) and
++ * is deliberately read as no offset at all, so a transient never moves a part.
++ */
++export function parseTranslation(transform: string | null | undefined): {
++  x: number
++  y: number
++} {
++  const raw = (transform ?? '').trim()
++  const flat = /^matrix\(([^)]+)\)$/.exec(raw)
++  if (flat) {
++    const [a, b, c, d, tx, ty] = flat[1].split(',').map(Number)
++    const pure =
++      Math.abs(a - 1) < 1e-6 &&
++      Math.abs(d - 1) < 1e-6 &&
++      Math.abs(b) < 1e-6 &&
++      Math.abs(c) < 1e-6
++    return pure && Number.isFinite(tx) && Number.isFinite(ty)
++      ? { x: tx, y: ty }
++      : { x: 0, y: 0 }
++  }
++  return { x: 0, y: 0 }
++}
+diff --git a/features/landing-page/components/instrument/instrument-models.ts b/features/landing-page/components/instrument/instrument-models.ts
+index c8a6928..aa3d4e3 100644
+--- a/features/landing-page/components/instrument/instrument-models.ts
++++ b/features/landing-page/components/instrument/instrument-models.ts
+@@ -77,6 +77,55 @@ function slab(
+   return new THREE.Mesh(boxGeometry(w, h, d, r), material)
+ }
+ 
++/**
++ * A soft contact shadow, one shared radial-falloff texture on a plane under a
++ * raised part. It is what turns a flat orthographic top-down render into
++ * something that reads as stacked: without it a pad and the plate under it are
++ * two rectangles; with it the pad is *on* the plate. Skipped where there is no
++ * canvas to draw the texture on (the headless tests).
++ */
++let shadowMap: THREE.Texture | null | undefined
++function shadowTexture(): THREE.Texture | null {
++  if (shadowMap !== undefined) return shadowMap
++  if (typeof document === 'undefined') return (shadowMap = null)
++  const canvas = document.createElement('canvas')
++  canvas.width = canvas.height = 128
++  const ctx = canvas.getContext('2d')
++  if (!ctx) return (shadowMap = null)
++  const g = ctx.createRadialGradient(64, 64, 8, 64, 64, 64)
++  g.addColorStop(0, 'rgba(0,0,0,0.62)')
++  g.addColorStop(0.55, 'rgba(0,0,0,0.3)')
++  g.addColorStop(1, 'rgba(0,0,0,0)')
++  ctx.fillStyle = g
++  ctx.fillRect(0, 0, 128, 128)
++  shadowMap = new THREE.CanvasTexture(canvas)
++  return shadowMap
++}
++
++function shade(
++  root: THREE.Group,
++  at: { x: number; y: number; w: number; h: number },
++  z: number,
++  grow = 1.35,
++  dx = 2,
++  dy = -4,
++) {
++  const map = shadowTexture()
++  if (!map) return
++  const plane = new THREE.Mesh(
++    new THREE.PlaneGeometry(at.w * grow, at.h * grow),
++    new THREE.MeshBasicMaterial({
++      map,
++      transparent: true,
++      depthWrite: false,
++      opacity: 0.8,
++    }),
++  )
++  plane.position.set(at.x + dx, at.y + dy, z)
++  plane.renderOrder = 6
++  root.add(plane)
++}
++
+ function brushedMetal() {
+   return new THREE.MeshStandardMaterial({
+     color: 0xdedbd4,
+@@ -166,6 +215,31 @@ export const buildController: SceneBuilder = (parts, size) => {
+   for (const part of parts) {
+     const at = place(part)
+ 
++    if (part.kind === 'plate') {
++      // The brand plate: a slightly raised, lighter cream panel.
++      const plate = slab(at.w, at.h, 4, inner(0xe0dbcf, 0.5), 12)
++      plate.position.set(at.x, at.y, face + 1)
++      shade(root, at, face + 0.3, 1.05, 0, -3)
++      root.add(plate)
++    }
++
++    if (part.kind === 'bank') {
++      // A bank is a recessed plate the controls sit on, a shade darker than
++      // the chassis, with a hairline lighter lip around it.
++      const lip = slab(at.w + 3, at.h + 3, 3, inner(0xe9e4d9, 0.5), 11)
++      lip.position.set(at.x, at.y, face + 0.4)
++      const bank = slab(at.w, at.h, 4, inner(0xc2bcae, 0.6), 10)
++      bank.position.set(at.x, at.y, face + 1)
++      root.add(lip, bank)
++    }
++
++    if (part.kind === 'keys') {
++      // The keywell: dark, so the cream keys read against it.
++      const well = slab(at.w, at.h, 6, inner(0x1d1f1e, 0.35), 6)
++      well.position.set(at.x, at.y, face + 1.5)
++      root.add(well)
++    }
++
+     if (part.kind === 'lcd') {
+       // Two steps of recess: a pale bezel, then near-black glass. The DOM
+       // screen's own readouts and scope are drawn over the glass.
+@@ -190,6 +264,7 @@ export const buildController: SceneBuilder = (parts, size) => {
+       strip.position.set(0, -at.h / 2 + 5, 4.6)
+       button.add(strip)
+       button.position.set(at.x, at.y, face + 4)
++      shade(root, at, face + 1.5, 1.2, 1, -4)
+       root.add(button)
+       let z = 0
+       let glow = 0
+@@ -216,8 +291,9 @@ export const buildController: SceneBuilder = (parts, size) => {
+         emissiveIntensity: 0,
+         roughness: 0.28,
+       })
+-      const pad = slab(at.w, at.h, 10, material, 5)
+-      pad.position.set(at.x, at.y, face + 5)
++      const pad = slab(at.w, at.h, 12, material, 6)
++      pad.position.set(at.x, at.y, face + 6)
++      shade(root, at, face + 1.9, 1.22, 2, -5)
+       root.add(pad)
+       let z = 0
+       let glow = 0
+@@ -237,7 +313,7 @@ export const buildController: SceneBuilder = (parts, size) => {
+         )
+         z = approach(z, down, 24, frame.dt, 0.01)
+         glow = approach(glow, goal, 20, frame.dt, 0.01)
+-        pad.position.z = face + 5 + z
++        pad.position.z = face + 6 + z
+         material.emissiveIntensity = glow
+         return z !== down || glow !== goal
+       })
+@@ -246,6 +322,14 @@ export const buildController: SceneBuilder = (parts, size) => {
+     if (part.kind === 'knob') {
+       const { group, cap } = knobMesh(at)
+       group.position.set(at.x, at.y, face)
++      shade(
++        root,
++        { ...at, w: at.w * 0.95, h: at.h * 0.95 },
++        face + 1.6,
++        1.3,
++        3,
++        -5,
++      )
+       root.add(group)
+       let angle = knobDegrees(0)
+       movers.push((frame) => {
+@@ -281,6 +365,14 @@ export const buildController: SceneBuilder = (parts, size) => {
+       )
+       line.position.z = 5.6
+       thumb.add(line)
++      shade(
++        root,
++        { x: at.x, y: at.y, w: capSize.w, h: length },
++        face + 1.6,
++        1.0,
++        3,
++        0,
++      )
+       root.add(slot, thumb)
+       let t = 0
+       movers.push((frame) => {
+@@ -555,6 +647,16 @@ function finish(
+   movers: Mover[],
+   onSettle?: () => void,
+ ): InstrumentScene {
++  // Everything after the body is a part. Parts draw after the glass shell so
++  // the shell's frost never washes over a control's own colour (the glass is
++  // transparent and sorts later regardless, but `renderOrder` also decides the
++  // order of the opaque pass, where it keeps parts from being drawn under the
++  // chassis).
++  root.children.slice(1).forEach((child) =>
++    child.traverse((object) => {
++      if (object.renderOrder === 0) object.renderOrder = 10
++    }),
++  )
+   return {
+     root,
+     update(frame) {
+diff --git a/features/landing-page/rack-01/rack-01.module.css b/features/landing-page/rack-01/rack-01.module.css
+index c6e1290..8563736 100644
+--- a/features/landing-page/rack-01/rack-01.module.css
++++ b/features/landing-page/rack-01/rack-01.module.css
+@@ -11060,7 +11060,10 @@
+    control is made invisible with `opacity: 0`, never `display`/`visibility`, so
+    it is still focusable, still clickable and still announced. */
+ 
+-[data-instrument-host] {
++/* A CSS module selector must contain a local class, so the host rule names the
++   two classes rather than the attribute alone. */
++.controller,
++.cassetteDeck {
+   isolation: isolate;
+ }
+ 
+@@ -11163,3 +11166,20 @@
+ .cassetteDeck[data-instrument='on'] .radioSpeaker {
+   cursor: pointer;
+ }
++
++/* The inset ring both devices draw with ::after, the bank panels and the dark
++   keywell are surfaces the canvas now draws (the banks as recessed plates, the
++   keywell as a dark well), so the DOM copies would double them. */
++.controller[data-instrument='on']::after,
++.cassetteDeck[data-instrument='on']::after {
++  display: none;
++}
++.controller[data-instrument='on'] .controllerTopbar,
++.controller[data-instrument='on'] .controlBank,
++.controller[data-instrument='on'] .controllerKeys,
++.controller[data-instrument='on'] .whiteKeys,
++.controller[data-instrument='on'] .blackKeys {
++  border-color: transparent !important;
++  background: transparent !important;
++  box-shadow: none !important;
++}
+diff --git a/features/landing-page/rack-01/section-skills.tsx b/features/landing-page/rack-01/section-skills.tsx
+index 55b8c4f..90177b5 100644
+--- a/features/landing-page/rack-01/section-skills.tsx
++++ b/features/landing-page/rack-01/section-skills.tsx
+@@ -604,7 +604,7 @@ export function Skills() {
+           <Screw className={styles.screwBottomRight} />
+ 
+           {/* TOPBAR: Branding, Interactive Screen, Actions */}
+-          <div className={styles.controllerTopbar}>
++          <div className={styles.controllerTopbar} data-i3d="plate">
+             <div className={styles.controllerBrand}>
+               <strong>AH / STACK CONTROL</strong>
+               <SilkscreenLabel>FRONTEND / APP / INFRA</SilkscreenLabel>
+@@ -717,7 +717,10 @@ export function Skills() {
+ 
+           {/* BANKS: Drum Pads, Knobs, Faders */}
+           <div className={styles.controllerBanks}>
+-            <div className={`${styles.controlBank} ${styles.padBank}`}>
++            <div
++              className={`${styles.controlBank} ${styles.padBank}`}
++              data-i3d="bank:0"
++            >
+               <SilkscreenLabel>
+                 PAD BANK A / FRONTEND (KEYS 1-6)
+               </SilkscreenLabel>
+@@ -750,7 +753,10 @@ export function Skills() {
+               </div>
+             </div>
+ 
+-            <div className={`${styles.controlBank} ${styles.encoderBank}`}>
++            <div
++              className={`${styles.controlBank} ${styles.encoderBank}`}
++              data-i3d="bank:1"
++            >
+               <SilkscreenLabel>PARAM BANK B / APP + DATA</SilkscreenLabel>
+               <div>
+                 {MIXER_DATA[1].channels.map((skill) => (
+@@ -771,7 +777,10 @@ export function Skills() {
+               </div>
+             </div>
+ 
+-            <div className={`${styles.controlBank} ${styles.faderBank}`}>
++            <div
++              className={`${styles.controlBank} ${styles.faderBank}`}
++              data-i3d="bank:2"
++            >
+               <SilkscreenLabel>FADERS C / DELIVERY + INFRA</SilkscreenLabel>
+               <div>
+                 {MIXER_DATA[2].channels.map((skill) => (
+@@ -872,6 +881,7 @@ export function Skills() {
+ 
+             <div
+               className={styles.controllerKeys}
++              data-i3d="keys"
+               /* The white-key count lives in the note table, but the grid
+                  columns and the black keys' width are CSS, and CSS cannot read
+                  a JS array's length. Stated here as the one place both read
+diff --git a/tests/instrument-layout.test.ts b/tests/instrument-layout.test.ts
+index 2a65033..af45d8b 100644
+--- a/tests/instrument-layout.test.ts
++++ b/tests/instrument-layout.test.ts
+@@ -6,9 +6,11 @@ import {
+   parseId,
+   parsePercent,
+   parseRotation,
++  parseTranslation,
+   pressDepth,
+   readPartAttributes,
+   relativeRect,
++  stackOffsets,
+   tiltFromPointer,
+   toModel,
+   wheelTurn,
+@@ -195,3 +197,62 @@ describe('clamp', () => {
+     expect(clamp(9, 2, 5)).toBe(5)
+   })
+ })
++
++describe('stackOffsets', () => {
++  const node = (offsetLeft: number, offsetTop: number, border = 0) => ({
++    offsetLeft,
++    offsetTop,
++    clientLeft: border,
++    clientTop: border,
++  })
++
++  it('is just the offset for a direct child of the host', () => {
++    expect(stackOffsets([node(40, 30)])).toEqual({ x: 40, y: 30 })
++  })
++
++  it('sums a nested chain and adds each parent border on the way up', () => {
++    // el sits 10/5 inside a bank that has a 2px border, and the bank sits
++    // 100/200 inside the host.
++    expect(stackOffsets([node(10, 5), node(100, 200, 2)])).toEqual({
++      x: 112,
++      y: 207,
++    })
++  })
++
++  it("does not count the element's own border, only its parents'", () => {
++    expect(stackOffsets([node(10, 5, 4)])).toEqual({ x: 10, y: 5 })
++  })
++
++  it('is empty for an empty chain', () => {
++    expect(stackOffsets([])).toEqual({ x: 0, y: 0 })
++  })
++})
++
++describe('parseTranslation', () => {
++  it('reads a pure translation, like the black keys translateX(-50%)', () => {
++    expect(parseTranslation('matrix(1, 0, 0, 1, -13, 0)')).toEqual({
++      x: -13,
++      y: 0,
++    })
++    expect(parseTranslation('matrix(1,0,0,1,4.5,-2)')).toEqual({
++      x: 4.5,
++      y: -2,
++    })
++  })
++
++  it('treats a scale, a rotation, none or junk as no offset', () => {
++    expect(parseTranslation('matrix(0.9, 0, 0, 0.9, 20, 20)')).toEqual({
++      x: 0,
++      y: 0,
++    })
++    expect(parseTranslation('matrix(0, 1, -1, 0, 5, 5)')).toEqual({
++      x: 0,
++      y: 0,
++    })
++    expect(parseTranslation('none')).toEqual({ x: 0, y: 0 })
++    expect(
++      parseTranslation('matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,9,9,0,1)'),
++    ).toEqual({ x: 0, y: 0 })
++    expect(parseTranslation(undefined)).toEqual({ x: 0, y: 0 })
++  })
++})
+-- 
+2.43.0
+

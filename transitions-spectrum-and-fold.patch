@@ -1,0 +1,1534 @@
+From a1563968b59941b5fbf101335f7c94fad7c54b88 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 16 Oct 2026 22:22:03 +0000
+Subject: [PATCH] feat(transitions): spectrum curtain into Work; fold and no
+ dead scroll out of the hero
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Experience→Work: replace the radio's 180° turn with a wall of equaliser
+columns that rises, closes and drops centre-out onto the player (pure
+seam-frame, fixed overlay, swap hidden inside a tested cover plateau).
+
+Hero→About: cut the dead 28% tail of the camera (340→292svh, phases rescaled
+to keep every phase's scroll distance) and fold the supporting lanes into the
+profile lane during the landing.
+---
+ docs/transitions-spectrum-and-fold.md         |  52 +++++
+ .../arrangement/arrangement-camera.ts         | 121 +++++------
+ .../arrangement/arrangement.module.css        |  37 +++-
+ .../arrangement/use-arrangement-hero.ts       |  24 +++
+ features/landing-page/constants/seam.ts       |  12 +-
+ .../landing-page/rack-01/rack-01.module.css   | 105 +---------
+ features/landing-page/rack-01/rack-01.tsx     |   5 +
+ features/landing-page/rack-01/seam-frame.ts   | 182 +++++++++++++++++
+ .../rack-01/seam-spectrum.module.css          | 134 ++++++++++++
+ .../landing-page/rack-01/seam-spectrum.tsx    |  49 +++++
+ .../rack-01/section-experience.tsx            |  28 +--
+ .../rack-01/use-rack-animations.ts            | 193 +++++++++++-------
+ tests/arrangement-camera.test.ts              |  73 ++++++-
+ tests/patch-scroll.test.ts                    |   6 +-
+ tests/seam-frame.test.ts                      | 159 +++++++++++++++
+ 15 files changed, 909 insertions(+), 271 deletions(-)
+ create mode 100644 docs/transitions-spectrum-and-fold.md
+ create mode 100644 features/landing-page/rack-01/seam-frame.ts
+ create mode 100644 features/landing-page/rack-01/seam-spectrum.module.css
+ create mode 100644 features/landing-page/rack-01/seam-spectrum.tsx
+ create mode 100644 tests/seam-frame.test.ts
+
+diff --git a/docs/transitions-spectrum-and-fold.md b/docs/transitions-spectrum-and-fold.md
+new file mode 100644
+index 0000000..74faa5b
+--- /dev/null
++++ b/docs/transitions-spectrum-and-fold.md
+@@ -0,0 +1,52 @@
++# Two transitions: the spectrum curtain and the fold
++
++## Experience → Work: the spectrum curtain
++
++**Replaces** the 180° turn of the radio. A turn is a move *of the object*; this
++is a move *of the room*, so it cannot read as the old rotation.
++
++The radio is an audio object and Work is a music player, so the seam is made of
++the one thing both draw: a level meter.
++
++1. **Lights down.** The heading leaves, the dark wash comes up, and the radio is
++   pushed back (scale 1 → 0.9, lifted, faded) like a speaker cone taking a hit.
++2. **The wall rises.** 24 full-height equaliser columns climb from the bottom,
++   dancing (`sin(i·1.7 + g·11)`, a function of scroll, so it dances backwards
++   too), each with an orange cap and glow. The dance gives way to a solid climb
++   so every column lands on exactly 1.
++3. **Closed.** A plateau (p 0.50–0.56) where the screen is one dark meter and a
++   label reads *Signal locked / Selected work*. The Experience section is
++   hidden and the player shown **inside this plateau**, so the swap is never
++   seen. A test pins that every column covers the screen across it.
++4. **The drop.** Columns fall from the centre outward onto a finished player,
++   which settles from 1.05 → 1 while its chrome, banner, columns and transport
++   bar come in staggered.
++
++Files: `rack-01/seam-frame.ts` (pure, tested), `seam-spectrum.tsx` + `.module.css`
++(fixed overlay, inert, desktop with motion only), seam block in
++`use-rack-animations.ts`. The seam is still `SEAM_SVH` (120svh) long. Phones and
++reduced motion get the plain section boundary, as before.
++
++Removed: the fake player back face (`deckBack*`), the 3D flip CSS, `FLIP_DEGREES`.
++
++Tuning: `SEAM_COLUMNS`, `SEAM_PHASES` in `seam-frame.ts`.
++
++## Hero → About: no dead scroll, and the stack folds
++
++Finding: the hero camera's last 28% was dead. The dive lands at 0.72, the clip
++becomes the page by 0.82, and from there to 1 nothing moved (~550px at 1440×900)
++before the handoff's exits began. That was the unsmooth beat.
++
++1. **Retime.** `ARRANGEMENT_SCROLL_SVH` 340 → 292 with every phase rescaled, so
++   settle, walk and dive cover **exactly the scroll they did** (pinned by test);
++   only the stretch of nothing is gone. A ~13svh beat remains so the clip
++   becoming the page is seen to land.
++2. **Fold.** New `fold` (0→1, window 0.70–0.90) in `arrangementFrame`. The
++   supporting lanes slide to the profile lane's centre and flatten, passing
++   *behind* it: the window minimising into its title bar, the dive's focus being
++   the title bar. Each lane's distance (`--lane-dy`) is measured once per
++   refresh; `--arr-fold` is written per tick. At fold 0 the CSS resolves to the
++   old transform.
++
++The handoff's exits (rail, mixer, toolbar, ruler, ground) are unchanged and now
++start right as the fold ends.
+diff --git a/features/landing-page/components/arrangement/arrangement-camera.ts b/features/landing-page/components/arrangement/arrangement-camera.ts
+index 6d83b0d..cbbe1ed 100644
+--- a/features/landing-page/components/arrangement/arrangement-camera.ts
++++ b/features/landing-page/components/arrangement/arrangement-camera.ts
+@@ -15,72 +15,47 @@
+  */
+ 
+ /**
+- * The window is deliberately longer than the five phases need.
++ * The camera's whole run, in viewport heights of scroll beyond the one the
++ * stage is pinned for.
+  *
+- * The rail reveal completes at `rail`, and everything from there to 1.0 is a
+- * **hold**: the panel the camera dived into stays put, fully revealed, for about
+- * a screen and a bit of scrolling. Without it About would be a flash — the
+- * reader would watch the zoom land and then be swept straight past the thing the
+- * whole move was for. `rail` is early enough that the hold is roughly a quarter
+- * of the window.
++ * ## Why 292 (it was 340)
+  *
+- * The hold is split in two, because About does not fit the window it is revealed
+- * in and the reader still has to be able to reach all of it:
++ * The camera used to be 340 and its last 28% was dead. The dive lands on `rail`
++ * (0.72), the rail slides in and the clip becomes the page by `seamOpen`
++ * (0.82), and from there to 1 nothing moved: `readOverflow` is 0 now that the
++ * panel the read used to travel through is its own section, so the reader
++ * scrolled about 550px at 1440×900 looking at a still frame of a cream band.
++ * That is the beat the hero→About handoff felt least smooth in — the zoom
++ * landed, the page stopped, and only then did the machine start coming apart.
+  *
+- * - `rail → seamOpen` — the clip-path window finishes opening. Short and
+- *   decisive, so the reveal reads as a cut rather than a fade.
+- * - `seamOpen → 1` — **the read.** The panel's content translates up by exactly
+- *   its measured overflow, so the last card is reachable instead of clipped.
++ * 292 is 340 with that tail taken out and a short beat (about 13svh) left so
++ * the clip becoming the page is still seen to land. Every phase boundary was
++ * rescaled by 340/292 so that **each phase spans exactly the scroll it did
++ * before**: the settle, the walk and the dive are the same distance in px, and
++ * only the stretch of nothing is gone. The dive is then immediately followed by
++ * the fold below and by the handoff's exits.
+  *
+- * Measured at five viewports, the overflow runs from 0px (1728×1117) to 304px
+- * (1280×720) — it is a function of the viewport, not a constant, which is why
+- * the read is driven by a measured number rather than a tuned one.
+- *
+- * ## Why 340 (it was 400, and before that 460)
+- *
+- * 340 is the third retime. The handoff into About is now a continuous push
+- * (see `bench-frame.ts`), so the hero no longer needs 400svh to hide a seam; at
+- * 340 every phase keeps its shape and the dive costs 540px less at 900px tall.
+- * The paragraphs below describe the 400 reasoning and still hold in proportion.
+- *
+- * ## Why 400 and not 460
+- *
+- * 460 was the window this was drawn against; it was never measured against the
+- * page. Measuring it did two things. The camera's own travel is this number
+- * less the viewport the stage is pinned for — 3240px at 1440×900 — and the
+- * hero's whole run is therefore the largest single cost between the top of the
+- * page and the SIGNAL word the handoff is built around.
+- *
+- * The bridge, meanwhile, has to be *longer* than it was: its runway now holds
+- * the reading panel clear of the decorative word band for the whole time SIGNAL
+- * is legible (see `matterRunway`), which is what makes that beat watchable at
+- * all, and it costs about 400px of scroll. Paying for it here is what keeps the
+- * total from growing: at 400 the hero gives back 540px, so the page is shorter
+- * than it was *and* the words get their window.
+- *
+- * 400 is also the floor both tests declare, so this is the shortest the hero is
+- * allowed to be without retiming the five phases themselves. The design doc
+- * anticipates the choice: "Final total hero length must be chosen after
+- * measuring current behavior."
++ * The earlier history (460 → 400 → 340) is the same argument made against the
++ * same dead stretch at lower resolution: the hold was sized for a read that no
++ * longer lives in this section.
+  */
+-export const ARRANGEMENT_SCROLL_SVH = 340
++export const ARRANGEMENT_SCROLL_SVH = 292
+ 
+ export const ARRANGEMENT_PHASES = {
+   open: 0,
+-  settle: 0.1,
+-  travel: 0.3,
+-  zoom: 0.52,
+-  rail: 0.72,
++  settle: 0.1164,
++  travel: 0.3493,
++  zoom: 0.6055,
++  rail: 0.8384,
+ } as const
+ 
+ /**
+- * Where the window has finished opening and the read begins. The window gets
+- * `rail → seamOpen` to open and the read gets everything after it, so the read
+- * is the longer half: at 1440×900 that is 324px to open and 583px to read 191px
+- * of overflow, which paces at about 3:1 instead of the 4.75:1 a single hold
+- * would give.
++ * Where the clip has finished becoming the page. It gets `rail → seamOpen` to
++ * do it, and what is left of the window after it is the short beat the page is
++ * allowed to rest in before the handoff's exits begin — about 13svh, or 118px
++ * at 900px tall.
+  */
+-export const ARRANGEMENT_SEAM_OPEN = 0.82
++export const ARRANGEMENT_SEAM_OPEN = 0.955
+ 
+ /**
+  * The immersive reading of the same window: where the eye is, rather than where
+@@ -97,10 +72,10 @@ export const ARRANGEMENT_SEAM_OPEN = 0.82
+  */
+ export const IMMERSIVE_PHASES = {
+   overview: 0,
+-  scan: 0.24,
+-  lock: 0.48,
+-  dive: 0.7,
+-  reveal: 0.84,
++  scan: 0.28,
++  lock: 0.56,
++  dive: 0.82,
++  reveal: 0.94,
+   read: 1,
+ } as const
+ 
+@@ -123,6 +98,27 @@ export const IMMERSIVE_DEPTH_DIVE = 12
+ export const IMMERSIVE_LANE_SCAN_OPACITY = 0.72
+ export const IMMERSIVE_LANE_DIVE_OPACITY = 0.16
+ 
++/**
++ * When the supporting lanes fold into the profile lane.
++ *
++ * The dive used to leave the other lanes where they were and only dim them to
++ * `.16`, so for the second half of the zoom the profile clip landed on a frame
++ * still full of ghost tracks above and below it, and the handoff then had to
++ * dismantle a machine that was mostly already invisible. They now **tuck behind
++ * the profile lane**: each lane slides along the world's Y axis to the profile
++ * lane's centre while it flattens, so the stack collapses into the one lane the
++ * camera is landing on — a window minimising into its own title bar, with the
++ * focal point as the title bar.
++ *
++ * The window straddles the landing on purpose. It starts late in the zoom, when
++ * the eye has already left the supporting tracks (`laneOpacity` is well down
++ * by then), and it finishes just after `rail`, so the last of the stack is
++ * leaving as the rail slides in and the clip turns into the page. Finishing
++ * before the landing would make the dive land on an empty frame; finishing long
++ * after it would put the fold back in the dead stretch it was added to remove.
++ */
++export const ARRANGEMENT_FOLD = [0.7, 0.9] as const
++
+ export type ArrangementPhase = 'open' | 'settle' | 'travel' | 'zoom' | 'rail'
+ 
+ export type SeamInset = {
+@@ -229,6 +225,14 @@ export type ArrangementFrame = {
+    * the others stepping back rather than by the profile clip doing anything.
+    */
+   laneOpacity: number
++  /**
++   * 0 → 1 — how far the supporting lanes have folded into the profile lane.
++   * Written as `--arr-fold` on the track area and spent in the stylesheet as a
++   * translate toward the profile lane and a flatten, per lane. The distance
++   * each lane travels is its own measured offset (`--lane-dy`), so a taller
++   * lane or a different lane count needs no change here.
++   */
++  fold: number
+   phase: ArrangementPhase
+ }
+ 
+@@ -435,6 +439,7 @@ export function arrangementFrame(
+     depth,
+     profileFocus,
+     laneOpacity,
++    fold: span(p, ARRANGEMENT_FOLD[0], ARRANGEMENT_FOLD[1]),
+     phase: arrangementPhase(p),
+   }
+ }
+diff --git a/features/landing-page/components/arrangement/arrangement.module.css b/features/landing-page/components/arrangement/arrangement.module.css
+index d9aeabb..b82713b 100644
+--- a/features/landing-page/components/arrangement/arrangement.module.css
++++ b/features/landing-page/components/arrangement/arrangement.module.css
+@@ -45,11 +45,12 @@
+      `splitProgress`. It left with the seam. A test reads this line and compares
+      it to `ARRANGEMENT_SCROLL_SVH`, so the two cannot drift.
+ 
+-     400 rather than the 460 this was drawn against: the bridge's runway now
+-     holds the reading panel clear of the decorative word band, which costs
+-     scroll, and the hero giving back 540px here is what pays for it. See
++     292, down from 340 and before that 400 and 460: each cut took out a
++     stretch of the window in which nothing moved. The last one removed the
++     dead tail after the dive lands, with every phase rescaled so the settle,
++     the walk and the dive are the distance they always were. See
+      `ARRANGEMENT_SCROLL_SVH` for the measurement. */
+-  --arr-scroll: 340svh;
++  --arr-scroll: 292svh;
+ 
+   position: relative;
+   /* `--arr-hold` is the handoff's, and it defaults to nothing.
+@@ -280,6 +281,10 @@
+      nothing is focused, so the no-JavaScript frame needs no second ruleset. */
+   --arr-depth: 0px;
+   --arr-profile-focus: 0;
++  /* 0 is every lane in its own place, so the no-JavaScript frame is the
++     overview. The hook writes it on this node and each lane's own
++     `--lane-dy` (its distance to the profile lane) at refresh. */
++  --arr-fold: 0;
+   --arr-playhead: calc(
+     (1 - var(--arr-profile-centre)) * var(--arr-rail-w) +
+       var(--arr-profile-centre) * 100%
+@@ -503,10 +508,32 @@
+   opacity: var(--arr-fade, 1);
+ }
+ 
++/* The fold: the supporting lanes tuck behind the profile lane as the dive
++   lands. `--lane-dy` is the world-space distance from the lane's centre to the
++   profile lane's, measured once per refresh and written on the lane, so each
++   lane travels exactly as far as it has to whatever its height. It flattens as
++   it goes (never to nothing, so a hairline of it is the last thing seen) and
++   the profile lane is `z-index: 2` and brought forward, so the others pass
++   *behind* it rather than through it.
++
++   The same `translateZ` the lanes already carry is kept as the last term, so
++   the depth layer is unchanged; at `--arr-fold: 0` this resolves to exactly the
++   old `translateZ(...)`. Specificity is one class higher than `.laneGhost`'s so
++   the ghost tracks fold too — their depth is the supporting lanes', which is
++   the factor they fold at. */
++.lane:not(.laneProfile) {
++  transform: translate3d(
++      0,
++      calc(var(--lane-dy, 0px) * var(--arr-fold, 0)),
++      calc(var(--arr-depth) * -0.18)
++    )
++    scaleY(calc(1 - var(--arr-fold, 0) * 0.92));
++}
++
+ /* The handoff turns the lanes' smoothing off while it runs.
+  *
+  * The `opacity` half of `.lane`'s transition is the hero's: it smooths the
+- * per-tick recession of the dive, which is spread across a fifth of a 340svh
++ * per-tick recession of the dive, which is spread across a fifth of a 292svh
+  * section and can afford to trail the scroll by 120ms. The handoff's dissolve
+  * is a different animal. It is packed into the hold, which is a fraction of a
+  * section, so its window can be *shorter than the smoothing itself* — and a
+diff --git a/features/landing-page/components/arrangement/use-arrangement-hero.ts b/features/landing-page/components/arrangement/use-arrangement-hero.ts
+index a1d3bcf..9a2d1cd 100644
+--- a/features/landing-page/components/arrangement/use-arrangement-hero.ts
++++ b/features/landing-page/components/arrangement/use-arrangement-hero.ts
+@@ -157,6 +157,23 @@ export function useArrangementHero({
+         // reads it too, and it is outside the track area.
+         host.style.setProperty('--arr-rail-w', `${gutter}px`)
+         host.style.setProperty('--arr-profile-centre', String(profileCentre))
++
++        // The fold's distances. Each supporting lane's own offset to the
++        // profile lane's centre, in world px (offsets are layout, so they are
++        // already unaffected by the camera's transform). Written on the lane
++        // that reads it, once per refresh — never per frame.
++        const profileCentreY = profileLaneTop + laneHeight / 2
++        const lanesEl = camera.firstElementChild
++        if (lanesEl) {
++          for (const node of Array.from(lanesEl.children)) {
++            const lane = node as HTMLElement
++            if (lane === laneEl) continue
++            lane.style.setProperty(
++              '--lane-dy',
++              `${profileCentreY - (lane.offsetTop + lane.offsetHeight / 2)}px`,
++            )
++          }
++        }
+         rulerEl?.style.setProperty('--arr-rail-w', `${gutter}px`)
+ 
+         geo = {
+@@ -265,6 +282,9 @@ export function useArrangementHero({
+           '--arr-lane-opacity',
+           frame.laneOpacity.toFixed(3),
+         )
++        // The fold. Per tick: it is the stack collapsing into the profile lane
++        // as the dive lands, and a boundary would make it a pop.
++        host.style.setProperty('--arr-fold', frame.fold.toFixed(3))
+ 
+         // ── The story line, the transport and the strip meters ──
+         //
+@@ -381,6 +401,7 @@ export function useArrangementHero({
+           '--arr-depth',
+           '--arr-profile-focus',
+           '--arr-lane-opacity',
++          '--arr-fold',
+           '--arr-rail-w',
+           '--arr-profile-centre',
+           '--arr-play',
+@@ -393,6 +414,9 @@ export function useArrangementHero({
+           rulerEl?.style.removeProperty(property),
+         )
+         proofEl?.style.removeProperty('--arr-play')
++        Array.from(camera.firstElementChild?.children ?? []).forEach((lane) =>
++          (lane as HTMLElement).style.removeProperty('--lane-dy'),
++        )
+       }
+     }
+ 
+diff --git a/features/landing-page/constants/seam.ts b/features/landing-page/constants/seam.ts
+index ee4998c..1cc679e 100644
+--- a/features/landing-page/constants/seam.ts
++++ b/features/landing-page/constants/seam.ts
+@@ -1,5 +1,9 @@
+-/** Experience → Work radio flip scroll window, in viewport heights. */
++/**
++ * Experience → Work seam length, in viewport heights.
++ *
++ * Both stages are pinned for exactly this long: the Experience stage is
++ * sticky for it and the Work section is pulled up by it (see `.work` and
++ * `.experience` in the stylesheets), so the spectrum curtain in `seam-frame.ts`
++ * has a window in which both sections are on screen and neither is scrolling.
++ */
+ export const SEAM_SVH = 120
+-
+-/** The radio has to land on its back face to reveal the player window. */
+-export const FLIP_DEGREES = 180
+diff --git a/features/landing-page/rack-01/rack-01.module.css b/features/landing-page/rack-01/rack-01.module.css
+index adbeda1..8c2dcfe 100644
+--- a/features/landing-page/rack-01/rack-01.module.css
++++ b/features/landing-page/rack-01/rack-01.module.css
+@@ -10452,106 +10452,26 @@
+   position: relative;
+   width: min(1050px, 100%);
+   margin: 0 auto;
+-  perspective: 2200px;
+-  perspective-origin: 50% 50%;
+ }
+ 
+ .deckFlipInner {
+   position: relative;
+   width: 100%;
+-  transform-origin: 50% 50%;
+-  transform-style: preserve-3d;
+-  will-change: transform;
++}
++
++/* The deck is pushed back into the dark by the spectrum curtain (see
++   `seam-frame.ts`): scaled down, lifted a little and faded. Only the
++   desktop-with-motion layout runs it, so only that layout promotes the box. */
++@media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
++  .deckFlip {
++    transform-origin: 50% 55%;
++    will-change: transform, opacity;
++  }
+ }
+ 
+ .deckFlip .cassetteDeck.deckFront {
+   width: 100%;
+   margin: 0;
+-  -webkit-backface-visibility: hidden;
+-  backface-visibility: hidden;
+-}
+-
+-.deckBack {
+-  position: absolute;
+-  top: 50%;
+-  left: 50%;
+-  display: grid;
+-  grid-template-rows: auto minmax(0, 1fr) auto;
+-  gap: 10px;
+-  width: var(--back-w, 100%);
+-  height: var(--back-h, 100%);
+-  padding: 12px;
+-  border: 1px solid rgba(255, 255, 255, 0.12);
+-  border-radius: clamp(14px, 1.3vw, 20px);
+-  background: linear-gradient(
+-    150deg,
+-    rgba(30, 32, 36, 0.96),
+-    rgba(9, 10, 12, 0.98)
+-  );
+-  box-shadow:
+-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+-    0 30px 80px rgba(0, 0, 0, 0.55);
+-  transform: translate(-50%, -50%) rotateY(180deg);
+-  -webkit-backface-visibility: hidden;
+-  backface-visibility: hidden;
+-}
+-
+-.deckBackChrome {
+-  display: flex;
+-  align-items: center;
+-  gap: 14px;
+-}
+-
+-.deckBackDots,
+-.deckBackTabs {
+-  display: inline-flex;
+-  gap: 6px;
+-}
+-
+-.deckBackTabs {
+-  flex: 1;
+-  gap: 8px;
+-}
+-
+-.deckBackDots i {
+-  width: 9px;
+-  height: 9px;
+-  border-radius: 50%;
+-  background: rgba(255, 255, 255, 0.2);
+-}
+-
+-.deckBackTabs i {
+-  width: 54px;
+-  height: 7px;
+-  border-radius: 4px;
+-  background: rgba(255, 255, 255, 0.1);
+-}
+-
+-.deckBackSearch {
+-  width: 18%;
+-  height: 16px;
+-  border-radius: 8px;
+-  background: rgba(255, 255, 255, 0.08);
+-}
+-
+-.deckBackColumns {
+-  display: grid;
+-  grid-template-columns: 22% minmax(0, 1fr) 24%;
+-  gap: 10px;
+-  min-height: 0;
+-}
+-
+-.deckBackColumns span {
+-  border-radius: 10px;
+-  background: rgba(255, 255, 255, 0.045);
+-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+-}
+-
+-.deckBackBar {
+-  height: 34px;
+-  border-radius: 10px;
+-  background: rgba(255, 255, 255, 0.06);
+-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+ }
+ 
+ .seamWash {
+@@ -10584,14 +10504,9 @@
+ }
+ 
+ @media (max-width: 768px), (prefers-reduced-motion: reduce) {
+-  .deckBack,
+   .seamWash {
+     display: none;
+   }
+-
+-  .deckFlip {
+-    perspective: none;
+-  }
+ }
+ 
+ /* ═══ Pad sea hero ═══════════════════════════════════════════════════════════
+diff --git a/features/landing-page/rack-01/rack-01.tsx b/features/landing-page/rack-01/rack-01.tsx
+index 986d581..69d1f9e 100644
+--- a/features/landing-page/rack-01/rack-01.tsx
++++ b/features/landing-page/rack-01/rack-01.tsx
+@@ -10,6 +10,7 @@ import { SkillsBridge, SkillsLift } from '../components/bridge/skills-bridge'
+ import { CableDivider } from './section-cabledivider'
+ import { Contact } from './section-contact'
+ import { Experience } from './section-experience'
++import { SeamSpectrum } from './seam-spectrum'
+ import { Skills } from './section-skills'
+ import styles from './rack-01.module.css'
+ import { SEAM_SVH } from '../constants/seam'
+@@ -77,6 +78,10 @@ export default function Rack01LandingPage({
+       <Experience selected={experienceIndex} setSelected={setExperienceIndex} />
+       <Work archiveRepos={archiveRepos} />
+       <Contact />
++      {/* The Experience → Work seam's wall. Fixed over the viewport, so it
++          can cover the Experience section on the way in and the Work section
++          on the way out; inert and invisible outside the seam. */}
++      <SeamSpectrum />
+     </main>
+   )
+ }
+diff --git a/features/landing-page/rack-01/seam-frame.ts b/features/landing-page/rack-01/seam-frame.ts
+new file mode 100644
+index 0000000..809d331
+--- /dev/null
++++ b/features/landing-page/rack-01/seam-frame.ts
+@@ -0,0 +1,182 @@
++/**
++ * Experience → Work: the spectrum curtain. One pure function, no DOM.
++ *
++ * ## The idea
++ *
++ * The radio is an audio object and the Work section is a music player, so the
++ * move between them is made of the one thing both of them draw: a level meter.
++ * The house lights go down on the radio, the radio is pushed back into the
++ * dark like a speaker cone taking a bass hit, and a wall of equaliser columns
++ * rises from the bottom of the screen — dancing as it climbs, then locking
++ * solid. For a beat the whole screen is one dark meter. Then the columns drop,
++ * from the centre outward, and the player is what was behind them.
++ *
++ * It replaces a 180° turn of the radio. A turn is a move *of the object*; this
++ * is a move *of the room*, which is why it does not read as a second flip and
++ * why the Work section can simply be there afterwards instead of arriving
++ * through a card.
++ *
++ * ## Why it is a module of its own
++ *
++ * The same rules the About's and the hero's frame functions follow:
++ *
++ * 1. **Pure and stateless.** Progress in, numbers out. Reverse scroll renders
++ *    the forward frame exactly, because nothing accumulates. The dance in the
++ *    rise is a function of progress (`sin(i * k + g * w)`), not a timer, so a
++ *    reader who scrubs backward sees the bars dance backward.
++ * 2. **Bounded.** Every fraction is clamped. A column's top edge is always in
++ *    `[0, 1]` of the viewport, so a resize can never push a bar off its track.
++ * 3. **Measured nowhere.** Nothing here reads a rect. The hook supplies the
++ *    viewport height in px and the frame hands back fractions of it.
++ *
++ * ## The one invariant that matters
++ *
++ * Between `COVER_FROM` and `COVER_TO` every column's top edge is exactly `0`:
++ * the screen is fully covered. The hook swaps the Experience section out and
++ * the player in **inside that plateau**, so the swap is never seen — it is the
++ * reason there is a hold at all, and a test pins it.
++ */
++
++/** Columns in the wall. Even, so the centre falls between two of them. */
++export const SEAM_COLUMNS = 24
++
++/** The seam's windows, as fractions of its own scroll (see `SEAM_SVH`). */
++export const SEAM_PHASES = {
++  /** House lights down: wash, heading, and the radio pushed back. */
++  lights: [0, 0.42],
++  /** The wall rises, dancing. */
++  rise: [0.1, 0.5],
++  /** The first and last progress at which the screen is fully covered. */
++  cover: [0.5, 0.56],
++  /** The wall drops, centre-out. */
++  fall: [0.56, 0.94],
++  /** The label that names the move, in and out. */
++  label: [0.34, 0.5, 0.58, 0.7],
++  /** The player settles and its panels come in. */
++  settle: [0.56, 1],
++} as const
++
++export const COVER_FROM = SEAM_PHASES.cover[0]
++export const COVER_TO = SEAM_PHASES.cover[1]
++
++/** How many of the player's panels are staggered in. */
++export const SEAM_PANELS = 4
++
++const clamp01 = (n: number) =>
++  Number.isFinite(n) ? (n < 0 ? 0 : n > 1 ? 1 : n) : 0
++const smooth = (t: number) => t * t * (3 - 2 * t)
++const span = (p: number, from: number, to: number) =>
++  to <= from ? (p >= to ? 1 : 0) : smooth(clamp01((p - from) / (to - from)))
++const mix = (a: number, b: number, t: number) => a + (b - a) * t
++/** A zero that is never `-0`, so a test can `toBe(0)` and a style never reads `-0px`. */
++const zero = (n: number) => (n === 0 ? 0 : n)
++
++export type SeamFrame = {
++  /** The clamped progress this frame was rendered from. */
++  progress: number
++  /** The overlay is only worth painting while the seam is live. */
++  overlayVisible: boolean
++  /** True once the Experience section may be taken out of paint and hit-testing. */
++  experienceHidden: boolean
++  /** The Experience section's heading. */
++  headingOpacity: number
++  /** The dark wash behind the radio: the house lights going down. */
++  washOpacity: number
++  /** The radio, pushed back. `y` is a percentage of its own height. */
++  deck: { scale: number; y: number; opacity: number }
++  /**
++   * One entry per column: the top edge of its fill as a fraction of the
++   * viewport's height. `0` covers the column's whole track; `1` is hidden.
++   */
++  columns: number[]
++  /** How bright each column's cap is. Zero when it is parked at either end. */
++  caps: number[]
++  /** The label at the centre of the wall. */
++  labelOpacity: number
++  /** The player's shell: it rests a little large, and settles to size. */
++  shell: { opacity: number; scale: number }
++  /** Per panel: 0 → 1, staggered. The hook turns it into opacity and a lift. */
++  panels: number[]
++}
++
++/** How far along its rise a column is, 0 → 1, dancing on the way. */
++function rise(i: number, g: number): number {
++  // A column's own phase. The golden-ratio step keeps neighbours from moving
++  // in unison without any of them being random: the same column is at the same
++  // height at the same scroll, always.
++  const spectrum = 0.5 + 0.5 * Math.sin(i * 1.7 + g * 11)
++  const dance = clamp01(g * (0.35 + 0.85 * spectrum))
++  // The dance gives way to a solid climb over the last third, which is what
++  // makes every column land on exactly 1 — no column is allowed to stop short.
++  return mix(dance, 1, span(g, 0.7, 1))
++}
++
++/** How far along its drop a column is, 0 → 1, centre first. */
++function fall(i: number, n: number, p: number): number {
++  const [f0, f1] = SEAM_PHASES.fall
++  const centre = (n - 1) / 2
++  const away = centre === 0 ? 0 : Math.abs(i - centre) / centre
++  // Each column takes half the window; the stagger spends the other half.
++  const win = (f1 - f0) * 0.5
++  const start = f0 + away * (f1 - f0) * 0.5
++  return span(p, start, start + win)
++}
++
++export function seamFrame(
++  progress: number,
++  n: number = SEAM_COLUMNS,
++): SeamFrame {
++  const p = clamp01(progress)
++
++  const g = span(p, SEAM_PHASES.rise[0], SEAM_PHASES.rise[1])
++  const push = span(p, SEAM_PHASES.lights[0] + 0.04, SEAM_PHASES.lights[1])
++
++  const columns: number[] = []
++  const caps: number[] = []
++  for (let i = 0; i < n; i += 1) {
++    const top = clamp01(1 - rise(i, g) + fall(i, n, p))
++    columns.push(zero(top))
++    // A cap is a line on the top edge of a moving column. Parked at the top of
++    // the viewport (covering) or at the bottom (hidden) it has nothing to mark.
++    caps.push(top <= 0.002 || top >= 0.998 ? 0 : 1)
++  }
++
++  const [l0, l1, l2, l3] = SEAM_PHASES.label
++  const labelOpacity = span(p, l0, l1) * (1 - span(p, l2, l3))
++
++  const [s0, s1] = SEAM_PHASES.settle
++  const settle = span(p, s0, s1)
++  const panels: number[] = []
++  for (let k = 0; k < SEAM_PANELS; k += 1) {
++    const start = mix(s0 + 0.04, s0 + 0.2, k / Math.max(1, SEAM_PANELS - 1))
++    panels.push(span(p, start, start + (s1 - s0) * 0.46))
++  }
++
++  return {
++    progress: p,
++    overlayVisible: p > 0.002 && p < 0.998,
++    // Hidden from just inside the cover plateau onward. The margin is what
++    // keeps the swap off the frame where the wall first closes, and because the
++    // plateau is a stretch of fully-covered frames, scrolling back across this
++    // boundary shows the same dark wall on both sides of it.
++    experienceHidden: p >= COVER_FROM + 0.01,
++    headingOpacity: 1 - span(p, 0, 0.18),
++    washOpacity: span(p, 0.02, SEAM_PHASES.lights[1]),
++    deck: {
++      scale: mix(1, 0.9, push),
++      y: zero(mix(0, -4, push)),
++      opacity: 1 - span(p, 0.14, 0.46),
++    },
++    columns,
++    caps,
++    labelOpacity,
++    shell: {
++      // Dark and hidden behind the wall until the wall is solid; from then on
++      // it is simply there, so the drop uncovers a finished player rather than
++      // one that is still arriving.
++      opacity: p >= COVER_FROM - 0.04 ? 1 : 0,
++      scale: mix(1.05, 1, settle),
++    },
++    panels,
++  }
++}
+diff --git a/features/landing-page/rack-01/seam-spectrum.module.css b/features/landing-page/rack-01/seam-spectrum.module.css
+new file mode 100644
+index 0000000..70ab508
+--- /dev/null
++++ b/features/landing-page/rack-01/seam-spectrum.module.css
+@@ -0,0 +1,134 @@
++/* ── Experience → Work: the spectrum curtain ─────────────────
++   A wall of equaliser columns, fixed over the whole viewport, painted only
++   while the seam is live. Every number that moves is written by the seam's
++   timeline (see `seam-frame.ts`); this file owns what the wall looks like.
++
++   The look is the page's: the columns are the hero's ground, so the closed
++   wall *is* the dark the Work section is drawn on and the swap behind it
++   cannot be seen; the caps are the signal orange; the label is the same mono
++   silkscreen every instrument on the page is lettered in.
++
++   Everything here is a transform or an opacity. Nothing animates layout, and
++   no node carries a filter or a blend mode, because forty-eight of them are
++   rewritten every scroll tick.
++
++   Desktop with motion only. Phones and reduced motion never get the overlay,
++   and the swap they get instead is the plain section boundary. */
++
++.wall {
++  --n: 24;
++  position: fixed;
++  z-index: 6;
++  inset: 0;
++  display: none;
++  overflow: hidden;
++  pointer-events: none;
++  visibility: hidden;
++  contain: layout paint;
++}
++
++@media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
++  .wall {
++    display: block;
++  }
++}
++
++.col,
++.cap {
++  position: absolute;
++  top: 0;
++  left: calc(var(--i) * (100% / var(--n)));
++  width: calc(100% / var(--n) + 1px);
++  /* Written by the timeline. Parked below the viewport until it first runs, so
++     a frame that paints before the hook does shows nothing. */
++  transform: translate3d(0, 100vh, 0);
++  transform-origin: 0 0;
++  will-change: transform;
++}
++
++/* The fill. Scaled from its own top edge, so a column is exactly as tall as the
++   wall is at that moment. Alternate columns are a shade apart: the wall reads
++   as separate columns while it is half-built and as one dark surface once it is
++   closed (the shade difference is a few percent, below what reads as a seam
++   when every column is fully up). */
++.col {
++  height: 100vh;
++  background: var(--deck-ground, #14171a);
++}
++.col:nth-child(odd) {
++  background: var(--deck-ground-2, #1b1f23);
++}
++
++/* The cap: a bright line on a column's top edge and a short wash below it. It
++   is a separate node from the fill, so scaling the fill never stretches it. */
++.cap {
++  height: 0;
++  opacity: 0;
++  transition: opacity 90ms linear;
++}
++.cap::before {
++  position: absolute;
++  top: -2px;
++  right: 1px;
++  left: 0;
++  height: 3px;
++  border-radius: 1px;
++  background: var(--deck-orange, #ff5a1f);
++  box-shadow: 0 0 14px 1px
++    color-mix(in srgb, var(--deck-orange, #ff5a1f) 70%, transparent);
++  content: '';
++}
++.cap::after {
++  position: absolute;
++  top: 1px;
++  right: 1px;
++  left: 0;
++  height: 22vh;
++  background: linear-gradient(
++    180deg,
++    color-mix(in srgb, var(--deck-orange, #ff5a1f) 28%, transparent),
++    transparent
++  );
++  content: '';
++}
++
++/* The label that names the move, at the centre of the closed wall. */
++.label {
++  position: absolute;
++  z-index: 1;
++  top: 50%;
++  left: 50%;
++  display: grid;
++  justify-items: center;
++  gap: 10px;
++  color: var(--deck-ground-ink, #eee9df);
++  opacity: 0;
++  text-align: center;
++  transform: translate(-50%, -50%);
++}
++.label small {
++  display: inline-flex;
++  align-items: center;
++  gap: 10px;
++  color: color-mix(in srgb, var(--deck-ground-ink, #eee9df) 62%, transparent);
++  font: 650 11px var(--deck-font-mono, ui-monospace, monospace);
++  letter-spacing: 0.24em;
++  text-transform: uppercase;
++}
++.label small::before {
++  width: 7px;
++  height: 7px;
++  border-radius: 50%;
++  background: var(--deck-orange, #ff5a1f);
++  box-shadow: 0 0 10px
++    color-mix(in srgb, var(--deck-orange, #ff5a1f) 80%, transparent);
++  content: '';
++}
++.label strong {
++  font-family: var(--deck-font-display, var(--font-syne), sans-serif);
++  font-size: clamp(30px, 5.4vw, 84px);
++  font-weight: 800;
++  letter-spacing: -0.03em;
++  line-height: 0.95;
++  text-transform: uppercase;
++}
+diff --git a/features/landing-page/rack-01/seam-spectrum.tsx b/features/landing-page/rack-01/seam-spectrum.tsx
+new file mode 100644
+index 0000000..0484cbe
+--- /dev/null
++++ b/features/landing-page/rack-01/seam-spectrum.tsx
+@@ -0,0 +1,49 @@
++import type { CSSProperties } from 'react'
++import { SEAM_COLUMNS } from './seam-frame'
++import styles from './seam-spectrum.module.css'
++
++/**
++ * The wall of equaliser columns the Experience → Work seam is made of.
++ *
++ * It is a plain server-renderable component with no state and no effects: the
++ * seam's timeline (`use-rack-animations.ts`) finds it by its `data-seam-*`
++ * markers and writes every transform, so React never re-renders it while the
++ * reader scrolls. It is `aria-hidden` end to end — it is a transition, and the
++ * label inside it names a move the page is already making in words.
++ *
++ * It sits at the end of `<main>` and is `position: fixed`, which is what lets
++ * the same wall cover the Experience section on the way in and the Work section
++ * on the way out; living inside either would put it under the other.
++ */
++export function SeamSpectrum() {
++  const columns = Array.from({ length: SEAM_COLUMNS }, (_, i) => i)
++  return (
++    <div
++      className={styles.wall}
++      data-seam-wall
++      aria-hidden="true"
++      style={{ '--n': SEAM_COLUMNS } as CSSProperties}
++    >
++      {columns.map((i) => (
++        <i
++          key={`col-${i}`}
++          className={styles.col}
++          data-seam-col
++          style={{ '--i': i } as CSSProperties}
++        />
++      ))}
++      {columns.map((i) => (
++        <i
++          key={`cap-${i}`}
++          className={styles.cap}
++          data-seam-cap
++          style={{ '--i': i } as CSSProperties}
++        />
++      ))}
++      <div className={styles.label} data-seam-label>
++        <small>Signal locked</small>
++        <strong>Selected work</strong>
++      </div>
++    </div>
++  )
++}
+diff --git a/features/landing-page/rack-01/section-experience.tsx b/features/landing-page/rack-01/section-experience.tsx
+index 7516746..cef052e 100644
+--- a/features/landing-page/rack-01/section-experience.tsx
++++ b/features/landing-page/rack-01/section-experience.tsx
+@@ -85,7 +85,7 @@ export function Experience({
+             What shipped, and where.
+           </SectionHeading>
+           <div className={styles.deckFlip} data-deck-flip>
+-            <div className={styles.deckFlipInner} data-deck-flip-inner>
++            <div className={styles.deckFlipInner}>
+               <div className={`${styles.cassetteDeck} ${styles.deckFront}`}>
+                 <Screw className={styles.screwTopLeft} />
+                 <Screw className={styles.screwTopRight} />
+@@ -220,32 +220,6 @@ export function Experience({
+                   </div>
+                 </div>
+               </div>
+-              <div
+-                className={styles.deckBack}
+-                data-deck-back
+-                aria-hidden="true"
+-              >
+-                <div className={styles.deckBackChrome}>
+-                  <span className={styles.deckBackDots}>
+-                    <i />
+-                    <i />
+-                    <i />
+-                  </span>
+-                  <span className={styles.deckBackTabs}>
+-                    <i />
+-                    <i />
+-                    <i />
+-                    <i />
+-                  </span>
+-                  <span className={styles.deckBackSearch} />
+-                </div>
+-                <div className={styles.deckBackColumns}>
+-                  <span />
+-                  <span />
+-                  <span />
+-                </div>
+-                <div className={styles.deckBackBar} />
+-              </div>
+             </div>
+           </div>
+         </div>
+diff --git a/features/landing-page/rack-01/use-rack-animations.ts b/features/landing-page/rack-01/use-rack-animations.ts
+index 3e1284d..c5db873 100644
+--- a/features/landing-page/rack-01/use-rack-animations.ts
++++ b/features/landing-page/rack-01/use-rack-animations.ts
+@@ -7,7 +7,8 @@ import {
+   unregisterSmoothScroll,
+ } from '../lib/smooth-scroll'
+ import { EXPERIENCES } from '../constants'
+-import { FLIP_DEGREES, SEAM_SVH } from '../constants/seam'
++import { SEAM_SVH } from '../constants/seam'
++import { SEAM_PANELS, seamFrame } from './seam-frame'
+ import styles from './rack-01.module.css'
+ 
+ /**
+@@ -381,131 +382,167 @@ export function useRackAnimations({
+             },
+           })
+ 
+-          // ── Experience → Work: the radio flips into the player ──
++          // ── Experience → Work: the spectrum curtain ──
++          //
++          // The radio is pushed back into the dark, a wall of equaliser columns
++          // rises over the screen, closes, and drops from the centre outward
++          // onto the player. The choreography is `seamFrame` (pure, tested);
++          // this block finds the nodes, writes the frame, and puts everything
++          // back on teardown. See `seam-frame.ts` for why it is a wall and not
++          // a second turn of the radio.
+           const experienceSection = rootRef.current?.querySelector<HTMLElement>(
+             `.${styles.experience}`,
+           )
+-          const experienceStage = experienceSection?.querySelector<HTMLElement>(
+-            `.${styles.experienceStage}`,
+-          )
+           const experienceHeading =
+             experienceSection?.querySelector<HTMLElement>(
+               `.${styles.sectionHeading}`,
+             )
+-          const flipHost =
++          const deck =
+             experienceSection?.querySelector<HTMLElement>('[data-deck-flip]')
+-          const flipInner = experienceSection?.querySelector<HTMLElement>(
+-            '[data-deck-flip-inner]',
+-          )
+           const seamWash =
+             experienceSection?.querySelector<HTMLElement>('[data-seam-wash]')
+           const workSection =
+             rootRef.current?.querySelector<HTMLElement>('#work')
+-          const workStage =
+-            workSection?.querySelector<HTMLElement>('[data-work-stage]')
+           const workShell =
+             workSection?.querySelector<HTMLElement>('[data-work-shell]')
++          const wall =
++            rootRef.current?.querySelector<HTMLElement>('[data-seam-wall]')
++          const wallColumns = wall
++            ? Array.from(wall.querySelectorAll<HTMLElement>('[data-seam-col]'))
++            : []
++          const wallCaps = wall
++            ? Array.from(wall.querySelectorAll<HTMLElement>('[data-seam-cap]'))
++            : []
++          const wallLabel =
++            wall?.querySelector<HTMLElement>('[data-seam-label]') ?? null
+ 
+           if (
+             experienceSection &&
+-            experienceStage &&
+             experienceHeading &&
+-            flipHost &&
+-            flipInner &&
++            deck &&
+             seamWash &&
+             workSection &&
+-            workStage &&
+-            workShell
++            workShell &&
++            wall &&
++            wallColumns.length > 0 &&
++            wallColumns.length === wallCaps.length
+           ) {
+-            const geometry = { scale: 1, dy: 0 }
+-            const clamp01 = (n: number) => Math.min(1, Math.max(0, n))
+-            const easeInOut = (t: number) =>
+-              t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+-            const smooth = (t: number) => t * t * (3 - 2 * t)
+-
+-            const measure = () => {
+-              const hostRect = flipHost.getBoundingClientRect()
+-              const stageRect = experienceStage.getBoundingClientRect()
+-              const shellRect = workShell.getBoundingClientRect()
+-              const workStageRect = workStage.getBoundingClientRect()
+-              const deckW = flipHost.offsetWidth
+-              const shellW = workShell.offsetWidth
+-              const shellH = workShell.offsetHeight
+-              if (!deckW || !shellW) return
+-
+-              const scale = shellW / deckW
+-              const deckCenter =
+-                hostRect.top - stageRect.top + flipHost.offsetHeight / 2
+-              const shellCenter = shellRect.top - workStageRect.top + shellH / 2
++            // The player's own panels, staggered in once the wall is down. The
++            // shell's direct children are the chrome, the banner, the three
++            // columns and the transport bar, in that order.
++            const panels = Array.from(workShell.children).slice(
++              0,
++              SEAM_PANELS,
++            ) as HTMLElement[]
+ 
+-              geometry.scale = scale
+-              geometry.dy = shellCenter - deckCenter
+-              flipInner.style.setProperty('--back-w', `${deckW}px`)
+-              flipInner.style.setProperty('--back-h', `${shellH / scale}px`)
++            // Write only what changed: forty-eight nodes are touched per tick,
++            // and an identical string is a style invalidation for nothing. One
++            // memo per property, because a node carries several.
++            const memo = {
++              transform: new WeakMap<HTMLElement, string>(),
++              opacity: new WeakMap<HTMLElement, string>(),
++              visibility: new WeakMap<HTMLElement, string>(),
++            }
++            const put = (
++              node: HTMLElement,
++              prop: 'transform' | 'opacity' | 'visibility',
++              value: string,
++            ) => {
++              if (memo[prop].get(node) === value) return
++              memo[prop].set(node, value)
++              node.style[prop] = value
+             }
+ 
+             const apply = (progress: number) => {
+-              const swing = clamp01((progress - 0.06) / 0.78)
+-              const turn = easeInOut(swing)
+-              const grow = easeInOut(clamp01((progress - 0.02) / 0.84))
+-              const arc = Math.sin(swing * Math.PI)
+-              const settle = Math.sin(
+-                clamp01((progress - 0.74) / 0.2) * Math.PI,
++              const frame = seamFrame(progress, wallColumns.length)
++              const height = window.innerHeight
++
++              put(experienceHeading, 'opacity', String(frame.headingOpacity))
++              put(seamWash, 'opacity', String(frame.washOpacity))
++              put(
++                deck,
++                'transform',
++                `translate3d(0, ${frame.deck.y}%, 0) scale(${frame.deck.scale})`,
++              )
++              put(deck, 'opacity', String(frame.deck.opacity))
++              put(
++                experienceSection,
++                'visibility',
++                frame.experienceHidden ? 'hidden' : '',
+               )
+ 
+-              gsap.set(flipInner, {
+-                rotationY: FLIP_DEGREES * turn + settle * 5,
+-                rotationX: -6 * arc,
+-                rotationZ: 1.6 * arc,
+-                z: 120 * arc,
+-                scale: 1 + (geometry.scale - 1) * grow,
+-                y: geometry.dy * grow,
+-              })
+-              experienceHeading.style.opacity = String(
+-                1 - clamp01(progress / 0.28),
++              put(workShell, 'opacity', String(frame.shell.opacity))
++              put(
++                workShell,
++                'transform',
++                frame.shell.scale === 1 ? '' : `scale(${frame.shell.scale})`,
+               )
+-              seamWash.style.opacity = String(
+-                smooth(clamp01((progress - 0.04) / 0.52)),
++              panels.forEach((panel, index) => {
++                const reveal = frame.panels[index] ?? 1
++                put(panel, 'opacity', reveal >= 0.999 ? '' : String(reveal))
++                put(
++                  panel,
++                  'transform',
++                  reveal >= 0.999
++                    ? ''
++                    : `translate3d(0, ${(1 - reveal) * 18}px, 0)`,
++                )
++              })
++
++              put(
++                wall,
++                'visibility',
++                frame.overlayVisible ? 'visible' : 'hidden',
+               )
+-              workShell.style.opacity = String(clamp01((progress - 0.6) / 0.22))
+-              const cover = 1 - clamp01((progress - 0.86) / 0.12)
+-              experienceSection.style.opacity = String(cover)
+-              experienceSection.style.visibility =
+-                cover <= 0.001 ? 'hidden' : ''
++              if (wallLabel) {
++                put(wallLabel, 'opacity', String(frame.labelOpacity))
++              }
++              frame.columns.forEach((top, index) => {
++                const y = `${top * height}px`
++                put(
++                  wallColumns[index],
++                  'transform',
++                  `translate3d(0, ${y}, 0) scaleY(${1 - top})`,
++                )
++                put(wallCaps[index], 'transform', `translate3d(0, ${y}, 0)`)
++                put(wallCaps[index], 'opacity', String(frame.caps[index]))
++              })
+             }
+ 
+             const seamLength = () => (SEAM_SVH / 100) * window.innerHeight
+-            measure()
+             apply(0)
+             ScrollTrigger.create({
+               trigger: workSection,
+               start: 'top top',
+               end: () => `+=${seamLength()}`,
+               invalidateOnRefresh: true,
+-              onEnter: (self) => {
+-                measure()
+-                apply(self.progress)
+-              },
+-              onEnterBack: (self) => {
+-                measure()
+-                apply(self.progress)
+-              },
+-              onRefresh: (self) => {
+-                measure()
+-                apply(self.progress)
+-              },
++              onEnter: (self) => apply(self.progress),
++              onEnterBack: (self) => apply(self.progress),
++              onRefresh: (self) => apply(self.progress),
+               onUpdate: (self) => apply(self.progress),
+               onLeave: () => apply(1),
+               onLeaveBack: () => apply(0),
+             })
+ 
+             return () => {
+-              experienceSection.style.opacity = ''
+               experienceSection.style.visibility = ''
+               experienceHeading.style.opacity = ''
+               seamWash.style.opacity = ''
++              deck.style.transform = ''
++              deck.style.opacity = ''
+               workShell.style.opacity = ''
+-              gsap.set(flipInner, { clearProps: 'all' })
++              workShell.style.transform = ''
++              panels.forEach((panel) => {
++                panel.style.opacity = ''
++                panel.style.transform = ''
++              })
++              wall.style.visibility = ''
++              if (wallLabel) wallLabel.style.opacity = ''
++              wallColumns.forEach((node) => (node.style.transform = ''))
++              wallCaps.forEach((node) => {
++                node.style.transform = ''
++                node.style.opacity = ''
++              })
+             }
+           }
+         })
+diff --git a/tests/arrangement-camera.test.ts b/tests/arrangement-camera.test.ts
+index 7658f4e..3c140b1 100644
+--- a/tests/arrangement-camera.test.ts
++++ b/tests/arrangement-camera.test.ts
+@@ -1,4 +1,5 @@
+ import {
++  ARRANGEMENT_FOLD,
+   ARRANGEMENT_PHASES,
+   ARRANGEMENT_SCROLL_SVH,
+   ARRANGEMENT_SEAM_OPEN,
+@@ -262,9 +263,27 @@ describe('arrangementFrame', () => {
+     }
+   })
+ 
+-  it('spends at least a quarter of the window on the hold, and enough scroll to make it worth watching', () => {
+-    expect(1 - ARRANGEMENT_PHASES.rail).toBeGreaterThanOrEqual(0.25)
+-    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(340)
++  it('keeps each phase exactly as long, in scroll, as it was before the dead tail was cut', () => {
++    // The camera used to be 340svh with its last 28% dead: the dive landed, the
++    // clip became the page, and nothing moved for ~550px. The tail was taken out
++    // and every boundary rescaled, so the settle, the walk and the dive must
++    // still cover the distances they were drawn at (34, 102, 176.8, 244.8svh).
++    // If this fails, the fix is not to loosen it: a phase that got shorter in px
++    // is a move that got faster, and the dive is the one the reader watches.
++    const px = (p: number) => p * ARRANGEMENT_SCROLL_SVH
++    expect(px(ARRANGEMENT_PHASES.settle)).toBeCloseTo(34, 0)
++    expect(px(ARRANGEMENT_PHASES.travel)).toBeCloseTo(102, 0)
++    expect(px(ARRANGEMENT_PHASES.zoom)).toBeCloseTo(176.8, 0)
++    expect(px(ARRANGEMENT_PHASES.rail)).toBeCloseTo(244.8, 0)
++  })
++
++  it('leaves no dead stretch after the clip has become the page', () => {
++    // Everything after `seamOpen` is scroll in which nothing in the camera
++    // moves (the read has no overflow to travel). It is allowed to be a short
++    // beat — about 13svh — and no more. The old window left 18% of 340svh.
++    const tail = (1 - ARRANGEMENT_SEAM_OPEN) * ARRANGEMENT_SCROLL_SVH
++    expect(tail).toBeGreaterThan(5)
++    expect(tail).toBeLessThanOrEqual(16)
+   })
+ 
+   it('opens the window after the rail and finishes before the end, so the read owns its own stretch', () => {
+@@ -524,3 +543,51 @@ describe('arrangement data', () => {
+     })
+   })
+ })
++
++/**
++ * The fold: the supporting lanes tucking behind the profile lane as the dive
++ * lands. It is the hero half of the hero→About handoff — the machine
++ * minimising into its own title bar — and, like the rest of the camera, a pure
++ * function of progress.
++ */
++describe('the fold', () => {
++  it('is open at the overview, so the CSS fallback is the settled frame', () => {
++    expect(arrangementFrame(0, GEO).fold).toBe(0)
++    expect(arrangementFrame(ARRANGEMENT_FOLD[0], GEO).fold).toBe(0)
++  })
++
++  it('is complete by the time the clip has become the page', () => {
++    expect(arrangementFrame(ARRANGEMENT_FOLD[1], GEO).fold).toBe(1)
++    expect(arrangementFrame(ARRANGEMENT_SEAM_OPEN, GEO).fold).toBe(1)
++    expect(arrangementFrame(1, GEO).fold).toBe(1)
++  })
++
++  it('straddles the landing: it starts in the dive and ends after it', () => {
++    // Starting before the zoom would fold the stack under a camera that has not
++    // moved; ending before `rail` would land the dive on an empty frame.
++    expect(ARRANGEMENT_FOLD[0]).toBeGreaterThan(ARRANGEMENT_PHASES.zoom)
++    expect(ARRANGEMENT_FOLD[0]).toBeLessThan(ARRANGEMENT_PHASES.rail)
++    expect(ARRANGEMENT_FOLD[1]).toBeGreaterThan(ARRANGEMENT_PHASES.rail)
++    expect(ARRANGEMENT_FOLD[1]).toBeLessThanOrEqual(ARRANGEMENT_SEAM_OPEN)
++  })
++
++  it('only ever closes, inside 0 to 1, and never springs back', () => {
++    let previous = -1
++    for (let p = 0; p <= 1.0001; p += 0.005) {
++      const { fold } = arrangementFrame(p, GEO)
++      expect(fold).toBeGreaterThanOrEqual(0)
++      expect(fold).toBeLessThanOrEqual(1)
++      expect(fold).toBeGreaterThanOrEqual(previous - 1e-12)
++      previous = fold
++    }
++  })
++
++  it('has the other lanes already well down by the time it starts', () => {
++    // The eye leaves the supporting tracks first and the stack folds second;
++    // folding lanes that are still at full contrast would read as the layout
++    // breaking rather than as the camera settling.
++    expect(
++      arrangementFrame(ARRANGEMENT_FOLD[0], GEO).laneOpacity,
++    ).toBeLessThanOrEqual(IMMERSIVE_LANE_SCAN_OPACITY)
++  })
++})
+diff --git a/tests/patch-scroll.test.ts b/tests/patch-scroll.test.ts
+index ed291e7..b5ebfee 100644
+--- a/tests/patch-scroll.test.ts
++++ b/tests/patch-scroll.test.ts
+@@ -65,7 +65,11 @@ describe('section height', () => {
+     )
+     const match = css.match(/--arr-scroll:\s*([\d.]+)svh/)
+     expect(Number(match?.[1])).toBeCloseTo(ARRANGEMENT_SCROLL_SVH, 6)
+-    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(340)
++    // 292 is the camera with its dead tail taken out (see the constant); it is
++    // still comfortably more than the one viewport the stage is pinned for, so
++    // the dive keeps its full travel. The floor is what the phases need, not
++    // what the old design spent.
++    expect(ARRANGEMENT_SCROLL_SVH).toBeGreaterThanOrEqual(280)
+   })
+ 
+   it('un-pins the hero on short viewports, where the hook declines to run', () => {
+diff --git a/tests/seam-frame.test.ts b/tests/seam-frame.test.ts
+new file mode 100644
+index 0000000..cd4f53c
+--- /dev/null
++++ b/tests/seam-frame.test.ts
+@@ -0,0 +1,159 @@
++import {
++  COVER_FROM,
++  COVER_TO,
++  SEAM_COLUMNS,
++  SEAM_PANELS,
++  SEAM_PHASES,
++  seamFrame,
++} from '@/features/landing-page/rack-01/seam-frame'
++
++const SWEEP = Array.from({ length: 201 }, (_, i) => i / 200)
++
++describe('seamFrame', () => {
++  it('starts as the untouched radio and ends as the untouched player', () => {
++    const open = seamFrame(0)
++    expect(open.overlayVisible).toBe(false)
++    expect(open.experienceHidden).toBe(false)
++    expect(open.headingOpacity).toBe(1)
++    expect(open.washOpacity).toBe(0)
++    expect(open.deck).toEqual({ scale: 1, y: 0, opacity: 1 })
++    expect(open.shell.opacity).toBe(0)
++    expect(open.columns.every((top) => top === 1)).toBe(true)
++    expect(open.caps.every((cap) => cap === 0)).toBe(true)
++
++    const close = seamFrame(1)
++    expect(close.overlayVisible).toBe(false)
++    expect(close.experienceHidden).toBe(true)
++    expect(close.shell).toEqual({ opacity: 1, scale: 1 })
++    expect(close.columns.every((top) => top === 1)).toBe(true)
++    expect(close.panels.every((panel) => panel === 1)).toBe(true)
++  })
++
++  it('returns one column and one cap per column asked for', () => {
++    expect(seamFrame(0.3).columns).toHaveLength(SEAM_COLUMNS)
++    expect(seamFrame(0.3).caps).toHaveLength(SEAM_COLUMNS)
++    expect(seamFrame(0.3, 10).columns).toHaveLength(10)
++    expect(seamFrame(0.3).panels).toHaveLength(SEAM_PANELS)
++  })
++
++  it('covers the whole screen, every column, across the whole plateau', () => {
++    // The swap between the radio and the player happens inside this plateau and
++    // is never seen. A column that stopped short would show it.
++    for (const p of SWEEP.filter((v) => v >= COVER_FROM && v <= COVER_TO)) {
++      for (const top of seamFrame(p).columns) expect(top).toBe(0)
++    }
++  })
++
++  it('hides the Experience section only once the wall is solid, and keeps it hidden', () => {
++    let hidden = false
++    for (const p of SWEEP) {
++      const frame = seamFrame(p)
++      if (frame.experienceHidden) {
++        hidden = true
++        expect(p).toBeGreaterThan(COVER_FROM)
++      }
++      // Once hidden, never shown again on the way out.
++      if (hidden) expect(frame.experienceHidden).toBe(true)
++    }
++    // And the first hidden frame is inside the plateau.
++    const first = SWEEP.find((p) => seamFrame(p).experienceHidden) as number
++    expect(first).toBeGreaterThanOrEqual(COVER_FROM)
++    expect(first).toBeLessThan(COVER_TO)
++  })
++
++  it('has the player in place before the wall comes down', () => {
++    expect(seamFrame(COVER_FROM).shell.opacity).toBe(1)
++    expect(seamFrame(SEAM_PHASES.fall[0]).shell.opacity).toBe(1)
++  })
++
++  it('keeps every column inside its track', () => {
++    for (const p of SWEEP) {
++      const frame = seamFrame(p)
++      for (const top of frame.columns) {
++        expect(top).toBeGreaterThanOrEqual(0)
++        expect(top).toBeLessThanOrEqual(1)
++      }
++      for (const cap of frame.caps) expect([0, 1]).toContain(cap)
++    }
++  })
++
++  it('only marks a column with a cap while it is moving', () => {
++    const frame = seamFrame(0.3)
++    frame.columns.forEach((top, i) => {
++      if (top > 0.002 && top < 0.998) expect(frame.caps[i]).toBe(1)
++      else expect(frame.caps[i]).toBe(0)
++    })
++  })
++
++  it('drops from the centre outward', () => {
++    const n = SEAM_COLUMNS
++    const [f0, f1] = SEAM_PHASES.fall
++    const p = f0 + (f1 - f0) * 0.4
++    const { columns } = seamFrame(p, n)
++    const centreLeft = columns[n / 2 - 1]
++    const centreRight = columns[n / 2]
++    const edge = columns[0]
++    // The centre has fallen further than the edge, so its top edge is lower.
++    expect(centreLeft).toBeGreaterThan(edge)
++    expect(centreRight).toBeGreaterThan(edge)
++    // And the two centre columns are mirror images.
++    expect(centreLeft).toBeCloseTo(centreRight, 9)
++    expect(columns[0]).toBeCloseTo(columns[n - 1], 9)
++  })
++
++  it('has dropped every column all the way by the end of the fall', () => {
++    for (const top of seamFrame(SEAM_PHASES.fall[1]).columns) {
++      expect(top).toBe(1)
++    }
++  })
++
++  it('is stateless: the same progress renders the same frame, forwards or back', () => {
++    const forward = SWEEP.map((p) => seamFrame(p))
++    const backward = [...SWEEP]
++      .reverse()
++      .map((p) => seamFrame(p))
++      .reverse()
++    expect(backward).toEqual(forward)
++  })
++
++  it('clamps out-of-range and non-finite progress to a real frame', () => {
++    expect(seamFrame(-4)).toEqual(seamFrame(0))
++    expect(seamFrame(9)).toEqual(seamFrame(1))
++    expect(seamFrame(Number.NaN)).toEqual(seamFrame(0))
++  })
++
++  it('pushes the radio back monotonically while the lights go down', () => {
++    let scale = 2
++    let opacity = 2
++    for (const p of SWEEP) {
++      const { deck } = seamFrame(p)
++      expect(deck.scale).toBeLessThanOrEqual(scale + 1e-9)
++      expect(deck.opacity).toBeLessThanOrEqual(opacity + 1e-9)
++      scale = deck.scale
++      opacity = deck.opacity
++    }
++    expect(scale).toBeGreaterThanOrEqual(0.9 - 1e-9)
++    expect(opacity).toBe(0)
++  })
++
++  it('shows its label only while the wall is closing, closed, or just opening', () => {
++    expect(seamFrame(0.1).labelOpacity).toBe(0)
++    expect(seamFrame(COVER_FROM).labelOpacity).toBeGreaterThan(0.9)
++    expect(seamFrame(0.9).labelOpacity).toBe(0)
++  })
++
++  it('staggers the player panels in order', () => {
++    const mid = seamFrame(0.78).panels
++    for (let k = 1; k < mid.length; k += 1) {
++      expect(mid[k]).toBeLessThanOrEqual(mid[k - 1] + 1e-9)
++    }
++  })
++
++  it('never writes a negative zero into a style', () => {
++    for (const p of SWEEP) {
++      const frame = seamFrame(p)
++      expect(Object.is(frame.deck.y, -0)).toBe(false)
++      for (const top of frame.columns) expect(Object.is(top, -0)).toBe(false)
++    }
++  })
++})
+-- 
+2.43.0
+

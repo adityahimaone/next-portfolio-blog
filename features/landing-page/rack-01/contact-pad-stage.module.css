@@ -1,0 +1,103 @@
+.stage {
+  --tx: 0deg;
+  --ty: 0deg;
+  width: 100%;
+  height: 100%;
+  perspective: 900px;
+  pointer-events: none;
+}
+.board {
+  --s: min(8.4cqi, 74px);
+  position: absolute;
+  right: 6%;
+  bottom: 2%;
+  display: grid;
+  grid-template-columns: repeat(4, var(--s));
+  gap: calc(var(--s) * 0.16);
+  padding: calc(var(--s) * 0.2);
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  transform-style: preserve-3d;
+  transform: rotateX(calc(58deg + var(--ty))) rotateZ(calc(-32deg + var(--tx)));
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pad {
+  position: relative;
+  width: var(--s);
+  height: var(--s);
+  transform-style: preserve-3d;
+  transform: translateZ(0);
+  transition: transform 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.pad[data-lit='true'] {
+  transform: translateZ(calc(var(--s) * 0.7));
+}
+.cap {
+  --h: calc(var(--s) * 0.28);
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: wave 3.4s ease-in-out var(--d) infinite;
+}
+.top,
+.front,
+.side {
+  position: absolute;
+  display: block;
+}
+.top {
+  inset: 0;
+  transform: translateZ(var(--h));
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--c) 34%, #1d1e1c);
+  color: #fff;
+  font: 700 calc(var(--s) * 0.17) / 1 ui-monospace, monospace;
+  padding: 6px 7px;
+  transition: background 300ms, box-shadow 300ms;
+}
+.pad[data-lit='true'] .top {
+  background: var(--c);
+  box-shadow: 0 0 calc(var(--s) * 0.9) var(--c);
+}
+.front {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: var(--h);
+  transform-origin: bottom;
+  transform: rotateX(-90deg);
+  background: color-mix(in srgb, var(--c) 22%, #0b0d0c);
+}
+.side {
+  right: 0;
+  top: 0;
+  width: var(--h);
+  height: 100%;
+  transform-origin: right;
+  transform: rotateY(90deg);
+  background: color-mix(in srgb, var(--c) 14%, #0b0d0c);
+}
+.pad[data-lit='true'] .front,
+.pad[data-lit='true'] .side {
+  background: color-mix(in srgb, var(--c) 60%, #000);
+}
+@keyframes wave {
+  0%,
+  60%,
+  100% {
+    transform: translateZ(0);
+  }
+  30% {
+    transform: translateZ(calc(var(--s) * 0.22));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cap {
+    animation: none;
+  }
+  .board,
+  .pad {
+    transition: none;
+  }
+}

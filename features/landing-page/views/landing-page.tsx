@@ -1,29 +1,24 @@
-import { LandingGate } from '../components/landing-gate'
-import Rack01LandingPage from '../rack-01/rack-01'
+import StudioLandingPage from '../studio-01/studio-landing'
 import type { ArchiveRepo } from '@/features/projects/lib/github'
 
 /**
- * The page is a server component and the rack is a client component, so the
- * repository rows cross that boundary as plain serialisable data. They cannot
- * be fetched lower down: an async server component cannot be rendered inside
- * this client tree.
+ * The landing page's composition boundary.
  *
- * The rows are `ArchiveRepo`, not `GitHubRepo` — the page narrows them before
- * passing, so only the fields the archive reads cross the boundary.
+ * The page is a server component and the landing page is a client tree, so the
+ * repository rows cross that boundary as plain serialisable `ArchiveRepo`
+ * values. They are narrowed by `app/page.tsx` before they arrive, which keeps
+ * the RSC payload small and means the client is not handed fields it never
+ * renders.
  *
- * `LandingGate` wraps the rack rather than replacing it. The gate renders the
- * rack first and the boot overlay after it, so the landing page is already in
- * the DOM and already measured when the blinds leave — no layout shift, and no
- * second layout pass for the camera to be re-measured through.
+ * The previous rack shipped behind a session preloader. This page does not:
+ * the hero's first frame is the page, and the 3D ring arrives with hydration
+ * rather than sitting behind a cover that has to be dismissed. That is the
+ * seamless half of the redesign, and it is why `LandingGate` is absent here.
  */
 export default function LandingPage({
   archiveRepos,
 }: {
   archiveRepos: readonly ArchiveRepo[]
 }) {
-  return (
-    <LandingGate>
-      <Rack01LandingPage archiveRepos={archiveRepos} />
-    </LandingGate>
-  )
+  return <StudioLandingPage archiveRepos={archiveRepos} />
 }

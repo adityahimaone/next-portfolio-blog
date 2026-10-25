@@ -1,7 +1,7 @@
 {
-  "theme": "dark",
-  "radius": 16,
+  "theme": "light",
+  "radius": 18,
   "padding": 24,
   "scale": 100,
-  "accentColor": "#6366f1"
+  "accentColor": "#10b981"
 }

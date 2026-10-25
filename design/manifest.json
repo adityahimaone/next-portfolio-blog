@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "surfaces": [
+    {
+      "id": "landing-listening-room",
+      "route": "/",
+      "concept": "Studio 01 / Listening Room",
+      "design": "design/new-design-for-portoflio-website.pen",
+      "export": "design/exports/new-design-for-portoflio-website.png",
+      "viewport": {
+        "width": 1440,
+        "height": 4024
+      },
+      "theme": "light",
+      "notes": "Full-page board. Warm bone paper, ink, one burnt orange signal. Hero is anchored by a 3D chrome waveform ring; a connected hairline rail with pulse nodes carries that signal through every section divider."
+    }
+  ]
+}

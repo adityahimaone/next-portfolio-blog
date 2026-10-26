@@ -1,0 +1,401 @@
+/* ── Sticker Boot ─────────────────────────────────────────────────────────
+   The landing page's first frame made of its own materials: cobalt room, dot
+   grid, cream sticker sheet, fat marker "hello!", footer stickers. The sheet
+   peels upward at the end instead of cross-fading, so the handoff is one
+   physical move rather than two pictures dissolving into each other. */
+
+.root,
+.cover {
+  --sbf-paper: #f3ecdf;
+  --sbf-paper-hi: #fffaf1;
+  --sbf-ink: #191a2e;
+  --sbf-muted: #5f5b6e;
+  --sbf-cobalt: #3d53d6;
+  --sbf-cobalt-deep: #2c3cae;
+  --sbf-tangerine: #ff6a2b;
+  --sbf-butter: #ffd23f;
+  --sbf-pink: #ffb6e1;
+  --sbf-mint: #b7e4c7;
+  --sbf-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: 50% 0;
+  transition:
+    transform 650ms cubic-bezier(0.7, 0, 0.2, 1),
+    opacity 260ms ease 360ms;
+  will-change: transform;
+}
+
+.root[data-leaving='true'] {
+  transform: translateY(-108%) rotate(-1.2deg);
+  opacity: 0.98;
+}
+
+.groundPaint {
+  background-color: var(--sbf-cobalt);
+  background-image: radial-gradient(
+    rgb(255 250 241 / 0.2) 1.2px,
+    transparent 1.2px
+  );
+  background-size: 18px 18px;
+}
+
+.ground {
+  position: absolute;
+  inset: 0;
+}
+
+/* The boot cover: the server's first frame, painted before React exists. It is
+   the same bare room the overlay shows at t=0, then the sheet arrives. */
+.cover {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 200ms ease-out,
+    visibility 0s linear 200ms;
+}
+
+:global(html[data-boot='on']) .cover {
+  opacity: 1;
+  visibility: visible;
+  transition: none;
+}
+
+.halo {
+  position: absolute;
+  right: -12vw;
+  top: -18vw;
+  width: min(62vw, 54rem);
+  aspect-ratio: 1;
+  border: 2px solid rgb(255 210 63 / 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.halo::before,
+.halo::after {
+  content: '';
+  position: absolute;
+  border: 1.5px solid rgb(255 250 241 / 0.22);
+  border-radius: 50%;
+}
+
+.halo::before {
+  inset: 10%;
+}
+
+.halo::after {
+  inset: 23%;
+  border-color: rgb(255 210 63 / 0.24);
+}
+
+
+.stage {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1rem, 2.2vh, 1.6rem);
+  padding: clamp(1rem, 3vw, 2.4rem);
+}
+
+.card {
+  position: relative;
+  display: flex;
+  width: min(86vw, 33rem);
+  min-height: min(68svh, 33rem);
+  flex-direction: column;
+  padding: clamp(1.1rem, 2.6vw, 1.7rem);
+  border: 2px solid var(--sbf-ink);
+  border-radius: clamp(20px, 2.4vw, 28px);
+  background: var(--sbf-paper-hi);
+  color: var(--sbf-ink);
+  box-shadow: 15px 17px 0 rgb(0 0 0 / 0.22);
+  rotate: 2.2deg;
+}
+
+.tape {
+  position: absolute;
+  z-index: 4;
+  height: 1.5rem;
+  background: rgb(255 210 63 / 0.86);
+  clip-path: polygon(2% 0, 100% 4%, 98% 100%, 0 94%);
+  box-shadow: 0 1px 1px rgb(25 26 46 / 0.1);
+}
+
+.tapeTop {
+  top: -0.75rem;
+  left: 16%;
+  width: 5.6rem;
+  rotate: -4deg;
+}
+
+.tapeBottom {
+  right: 13%;
+  bottom: -0.7rem;
+  width: 4.4rem;
+  background: rgb(255 182 225 / 0.8);
+  rotate: 3deg;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--sbf-muted);
+}
+
+.sun {
+  width: min(48%, 11.5rem);
+  margin: clamp(0.6rem, 1.8vh, 1.1rem) auto 0;
+  filter: drop-shadow(3px 4px 0 rgb(25 26 46 / 0.12));
+  animation: sbf-sway 7s ease-in-out infinite alternate;
+}
+
+.hello {
+  width: min(76%, 18rem);
+  height: auto;
+  margin: clamp(0.55rem, 1.5vh, 1rem) 0 0 2%;
+  overflow: visible;
+}
+
+.helloMain,
+.helloDot {
+  stroke-dashoffset: 0;
+}
+
+.line {
+  margin-top: 0.15rem;
+  font-family: var(--font-syne), var(--font-space-grotesk), sans-serif;
+  font-size: clamp(0.95rem, 1.55vw, 1.2rem);
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.cardFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-top: auto;
+  padding-top: 0.85rem;
+  border-top: 1px dashed rgb(25 26 46 / 0.2);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 7.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--sbf-muted);
+}
+
+.swatches {
+  display: flex;
+  gap: 0.28rem;
+}
+
+.swatches i {
+  display: block;
+  width: 0.62rem;
+  height: 0.62rem;
+  border: 1px solid var(--sbf-ink);
+  border-radius: 50%;
+}
+
+.sticker {
+  position: absolute;
+  z-index: 5;
+  display: block;
+  filter: drop-shadow(3px 4px 0 rgb(25 26 46 / 0.13));
+  pointer-events: none;
+}
+
+.stickerInner {
+  display: block;
+  animation: sbf-float 5.6s var(--sbf-float-delay, 0s) ease-in-out infinite
+    alternate;
+}
+
+.stickerBurst {
+  right: -7%;
+  top: -8%;
+  width: clamp(3.8rem, 8vw, 5.6rem);
+  rotate: 9deg;
+  --sbf-float-delay: 0.2s;
+}
+
+.stickerSmiley {
+  left: -9%;
+  top: 20%;
+  width: clamp(3.2rem, 7vw, 4.6rem);
+  rotate: -8deg;
+  --sbf-float-delay: 0.7s;
+}
+
+.stickerDaisy {
+  right: -7%;
+  bottom: 16%;
+  width: clamp(3.4rem, 7.4vw, 4.8rem);
+  rotate: 6deg;
+  --sbf-float-delay: 1.1s;
+}
+
+.stickerHeart {
+  left: 8%;
+  top: -7%;
+  width: clamp(2.3rem, 5vw, 3.4rem);
+  rotate: -7deg;
+  --sbf-float-delay: 0.4s;
+}
+
+.stickerBolt {
+  left: -6%;
+  bottom: -4%;
+  width: clamp(2.4rem, 5vw, 3.3rem);
+  rotate: -12deg;
+  --sbf-float-delay: 1.5s;
+}
+
+.cover .stickerInner,
+.cover .sun {
+  animation: none;
+}
+
+.cover .progressFill {
+  animation: none;
+  transform: scaleX(0.12);
+}
+
+.progress {
+  display: grid;
+  width: min(32rem, 84vw);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.6rem, 1.4vw, 0.9rem);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(255 250 241 / 0.9);
+}
+
+.progressTrack {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgb(255 250 241 / 0.2);
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sbf-tangerine);
+  transform: scaleX(0.12);
+  transform-origin: 0 50%;
+  animation: sbf-progress 850ms 80ms linear both;
+}
+
+@keyframes sbf-sway {
+  from {
+    rotate: 0deg;
+    translate: 0 0;
+  }
+  to {
+    rotate: 2.5deg;
+    translate: 0 -4px;
+  }
+}
+
+@keyframes sbf-float {
+  from {
+    transform: translateY(0) rotate(0);
+  }
+  to {
+    transform: translateY(-4px) rotate(1.2deg);
+  }
+}
+
+@keyframes sbf-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (max-width: 639px) {
+  .card {
+    width: min(88vw, 24rem);
+    min-height: min(64svh, 31rem);
+  }
+
+  .stickerSmiley {
+    left: -3%;
+  }
+
+  .stickerDaisy {
+    right: -3%;
+  }
+
+  .stickerBurst {
+    right: -3%;
+    top: -6%;
+  }
+
+  .stickerBolt {
+    display: none;
+  }
+
+  .line {
+    font-size: 0.95rem;
+  }
+
+  .progress {
+    width: min(22rem, 84vw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    transition: none;
+  }
+
+  .card,
+  .sun,
+  .line,
+  .cardFoot,
+  .progress,
+  .helloMain,
+  .helloDot,
+  .stickerInner,
+  .halo {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  .progressFill {
+    animation: none !important;
+    transform: scaleX(1) !important;
+  }
+}

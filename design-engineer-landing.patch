@@ -1,0 +1,1025 @@
+diff --git a/features/landing-page/studio/end-of-track.tsx b/features/landing-page/studio/end-of-track.tsx
+new file mode 100644
+index 0000000..15dfed2
+--- /dev/null
++++ b/features/landing-page/studio/end-of-track.tsx
+@@ -0,0 +1,58 @@
++'use client'
++
++import { motion } from 'motion/react'
++import { ArrowUpRight, RotateCcw } from 'lucide-react'
++import { CONTACT_HREF, SOCIALS } from './studio-data'
++
++type Props = { onReplay: () => void }
++
++export function EndOfTrack({ onReplay }: Props) {
++  return (
++    <footer
++      id="outro"
++      className="flex min-h-[80svh] flex-col justify-between px-5 pt-28 pb-10 sm:px-10"
++    >
++      <div>
++        <p className="mb-3 font-mono text-xs tracking-[0.2em] text-black/55 uppercase">
++          03 · End of track
++        </p>
++        <h2 className="text-[clamp(2.4rem,7vw,6.5rem)] leading-[0.95] font-semibold tracking-[-0.045em] text-[#141412]">
++          Got something
++          <br />
++          worth <span className="text-[#ff5b1f]">building?</span>
++        </h2>
++        <a
++          href={CONTACT_HREF}
++          className="mt-10 inline-flex items-center gap-2 rounded-full bg-[#141412] px-6 py-3.5 text-sm font-medium text-[#f4f2ec] transition-transform active:scale-95"
++        >
++          Say hello <ArrowUpRight size={16} />
++        </a>
++      </div>
++
++      <div className="mt-20 flex flex-wrap items-end justify-between gap-6 border-t border-black/10 pt-6">
++        <ul className="flex gap-6 font-mono text-xs tracking-widest uppercase">
++          {SOCIALS.map((social) => (
++            <li key={social.label}>
++              <a
++                href={social.href}
++                target="_blank"
++                rel="noopener noreferrer"
++                className="text-black/60 transition-colors hover:text-black"
++              >
++                {social.label}
++              </a>
++            </li>
++          ))}
++        </ul>
++        <motion.button
++          type="button"
++          onClick={onReplay}
++          whileTap={{ scale: 0.94 }}
++          className="inline-flex items-center gap-2 rounded-full border border-black/15 px-5 py-2.5 font-mono text-xs tracking-widest text-[#141412] uppercase transition-colors hover:border-[#ff5b1f] hover:text-[#ff5b1f]"
++        >
++          <RotateCcw size={14} /> Replay from 00:00
++        </motion.button>
++      </div>
++    </footer>
++  )
++}
+diff --git a/features/landing-page/studio/index.ts b/features/landing-page/studio/index.ts
+new file mode 100644
+index 0000000..df27ab3
+--- /dev/null
++++ b/features/landing-page/studio/index.ts
+@@ -0,0 +1 @@
++export { default as Studio } from './studio'
+diff --git a/features/landing-page/studio/knob-scene.tsx b/features/landing-page/studio/knob-scene.tsx
+new file mode 100644
+index 0000000..3795f8a
+--- /dev/null
++++ b/features/landing-page/studio/knob-scene.tsx
+@@ -0,0 +1,184 @@
++'use client'
++
++import { Canvas, useFrame } from '@react-three/fiber'
++import { useEffect, useMemo, useRef, useState } from 'react'
++import * as THREE from 'three'
++import type { MotionValue } from 'motion/react'
++
++const BARS = 48
++const RIDGES = 24
++const SIGNAL = '#ff5b1f'
++
++type Pointer = { x: number; y: number }
++
++type RigProps = {
++  progress: MotionValue<number>
++  energy: MotionValue<number>
++  pointer: React.RefObject<Pointer>
++  reduced: boolean
++}
++
++/**
++ * A tactile knob on a ring of level bars. Cursor tilts the whole module, scroll
++ * turns the knob, and scroll speed drives how hard the bars move.
++ */
++function Rig({ progress, energy, pointer, reduced }: RigProps) {
++  const group = useRef<THREE.Group>(null)
++  const cap = useRef<THREE.Group>(null)
++  const bars = useRef<THREE.InstancedMesh>(null)
++  const dummy = useMemo(() => new THREE.Object3D(), [])
++
++  useFrame((state, dt) => {
++    const g = group.current
++    const c = cap.current
++    const b = bars.current
++    if (!g || !c || !b) return
++
++    const p = progress.get()
++    const e = reduced ? 0.15 : Math.min(1, energy.get())
++    const t = state.clock.elapsedTime
++    const px = reduced ? 0 : pointer.current.x
++    const py = reduced ? 0 : pointer.current.y
++
++    g.rotation.x = THREE.MathUtils.damp(g.rotation.x, -0.25 + py * 0.3, 4, dt)
++    g.rotation.y = THREE.MathUtils.damp(
++      g.rotation.y,
++      px * 0.6 + t * 0.05,
++      4,
++      dt,
++    )
++    c.rotation.y = THREE.MathUtils.damp(
++      c.rotation.y,
++      -p * Math.PI * 2 * 4,
++      6,
++      dt,
++    )
++
++    for (let i = 0; i < BARS; i++) {
++      const a = (i / BARS) * Math.PI * 2
++      const wave = 0.5 + 0.5 * Math.sin(a * 3 + t * 2.4 + p * 18)
++      const h = 0.06 + wave * (0.12 + e * 0.5)
++      dummy.position.set(Math.cos(a) * 1.45, 0.11 + h / 2, Math.sin(a) * 1.45)
++      dummy.rotation.set(0, -a, 0)
++      dummy.scale.set(0.07, h, 0.07)
++      dummy.updateMatrix()
++      b.setMatrixAt(i, dummy.matrix)
++    }
++    b.instanceMatrix.needsUpdate = true
++  })
++
++  return (
++    <group ref={group}>
++      <mesh position-y={0}>
++        <cylinderGeometry args={[1.75, 1.8, 0.22, 96]} />
++        <meshStandardMaterial
++          color="#1b1b19"
++          roughness={0.55}
++          metalness={0.25}
++        />
++      </mesh>
++      <mesh rotation-x={-Math.PI / 2} position-y={0.112}>
++        <ringGeometry args={[1.05, 1.7, 96]} />
++        <meshStandardMaterial color="#262623" roughness={0.3} metalness={0.4} />
++      </mesh>
++      <instancedMesh ref={bars} args={[undefined, undefined, BARS]}>
++        <boxGeometry args={[1, 1, 1]} />
++        <meshStandardMaterial
++          color={SIGNAL}
++          emissive={SIGNAL}
++          emissiveIntensity={0.35}
++          roughness={0.5}
++        />
++      </instancedMesh>
++      <group ref={cap} position-y={0.36}>
++        <mesh>
++          <cylinderGeometry args={[0.8, 0.86, 0.5, 64]} />
++          <meshStandardMaterial
++            color="#ecebe4"
++            roughness={0.35}
++            metalness={0.05}
++          />
++        </mesh>
++        <mesh position-y={0.26}>
++          <cylinderGeometry args={[0.62, 0.62, 0.04, 64]} />
++          <meshStandardMaterial color="#dedcd2" roughness={0.4} />
++        </mesh>
++        <mesh position={[0, 0.29, -0.3]}>
++          <boxGeometry args={[0.08, 0.03, 0.34]} />
++          <meshStandardMaterial color={SIGNAL} roughness={0.4} />
++        </mesh>
++        {Array.from({ length: RIDGES }, (_, i) => {
++          const a = (i / RIDGES) * Math.PI * 2
++          return (
++            <mesh
++              key={i}
++              position={[Math.cos(a) * 0.84, 0, Math.sin(a) * 0.84]}
++              rotation-y={-a}
++            >
++              <boxGeometry args={[0.05, 0.44, 0.07]} />
++              <meshStandardMaterial color="#d3d1c6" roughness={0.5} />
++            </mesh>
++          )
++        })}
++      </group>
++    </group>
++  )
++}
++
++type Props = {
++  progress: MotionValue<number>
++  energy: MotionValue<number>
++  reduced: boolean
++}
++
++export default function KnobScene({ progress, energy, reduced }: Props) {
++  const wrap = useRef<HTMLDivElement>(null)
++  const pointer = useRef<Pointer>({ x: 0, y: 0 })
++  const [active, setActive] = useState(true)
++
++  useEffect(() => {
++    const onMove = (event: PointerEvent) => {
++      pointer.current.x = (event.clientX / window.innerWidth) * 2 - 1
++      pointer.current.y = (event.clientY / window.innerHeight) * 2 - 1
++    }
++    window.addEventListener('pointermove', onMove, { passive: true })
++    return () => window.removeEventListener('pointermove', onMove)
++  }, [])
++
++  // Stop rendering when the hero is off screen: a WebGL loop nobody can see is
++  // the most expensive thing on the page.
++  useEffect(() => {
++    const el = wrap.current
++    if (!el) return
++    const io = new IntersectionObserver(([entry]) =>
++      setActive(entry.isIntersecting),
++    )
++    io.observe(el)
++    return () => io.disconnect()
++  }, [])
++
++  return (
++    <div ref={wrap} className="absolute inset-0" aria-hidden>
++      <Canvas
++        frameloop={active ? 'always' : 'never'}
++        dpr={[1, 1.75]}
++        camera={{ position: [0, 3.1, 5.4], fov: 32 }}
++        gl={{ antialias: true, alpha: true }}
++      >
++        <ambientLight intensity={0.9} />
++        <directionalLight position={[3, 5, 4]} intensity={2.2} />
++        <directionalLight
++          position={[-4, 2, -3]}
++          intensity={0.8}
++          color="#ffb48a"
++        />
++        <Rig
++          progress={progress}
++          energy={energy}
++          pointer={pointer}
++          reduced={reduced}
++        />
++      </Canvas>
++    </div>
++  )
++}
+diff --git a/features/landing-page/studio/selected-tracks.tsx b/features/landing-page/studio/selected-tracks.tsx
+new file mode 100644
+index 0000000..ff20977
+--- /dev/null
++++ b/features/landing-page/studio/selected-tracks.tsx
+@@ -0,0 +1,173 @@
++'use client'
++
++import Image from 'next/image'
++import Link from 'next/link'
++import { AnimatePresence, motion } from 'motion/react'
++import { ArrowUpRight, Pause, Play } from 'lucide-react'
++import { useState } from 'react'
++import {
++  WORK_PROJECTS,
++  formatProjectTime,
++  trackLabel,
++  PROJECT_PREVIEW_DURATION,
++} from '@/data/projects'
++
++/** Four bars that move only while a track is "playing". */
++function Eq({ on, color }: { on: boolean; color: string }) {
++  return (
++    <span className="flex h-4 items-end gap-[2px]" aria-hidden>
++      {[0, 1, 2, 3].map((i) => (
++        <motion.span
++          key={i}
++          className="w-[3px] rounded-full"
++          style={{ background: color, height: 4 }}
++          animate={on ? { height: [4, 16, 7, 14, 4] } : { height: 4 }}
++          transition={
++            on
++              ? {
++                  duration: 0.9 + i * 0.13,
++                  repeat: Infinity,
++                  ease: 'easeInOut',
++                }
++              : { duration: 0.2 }
++          }
++        />
++      ))}
++    </span>
++  )
++}
++
++export function SelectedTracks({ reduced }: { reduced: boolean }) {
++  const [open, setOpen] = useState<number>(0)
++  const [playing, setPlaying] = useState<number | null>(null)
++
++  return (
++    <section id="tracks" className="px-5 py-28 sm:px-10">
++      <p className="mb-3 font-mono text-xs tracking-[0.2em] text-black/55 uppercase">
++        02 · Selected tracks
++      </p>
++      <h2 className="mb-14 max-w-2xl text-[clamp(1.9rem,4.4vw,3.6rem)] leading-[1.02] font-semibold tracking-[-0.035em] text-[#141412]">
++        Design engineering, one track at a time.
++      </h2>
++
++      <ol className="border-t border-black/10">
++        {WORK_PROJECTS.map((project, index) => {
++          const isOpen = open === index
++          const isPlaying = playing === index
++          return (
++            <li key={project.slug} className="border-b border-black/10">
++              <div
++                className="grid cursor-pointer grid-cols-[2.5rem_1fr_auto] items-center gap-3 py-5 sm:grid-cols-[3.5rem_1fr_9rem_auto]"
++                onMouseEnter={() => setOpen(index)}
++              >
++                <button
++                  type="button"
++                  aria-label={`${isPlaying ? 'Pause' : 'Play'} ${project.title}`}
++                  aria-pressed={isPlaying}
++                  onClick={() => setPlaying(isPlaying ? null : index)}
++                  className="grid size-10 place-items-center rounded-full border border-black/15 text-[#141412] transition-all hover:border-transparent hover:text-white active:scale-90"
++                  style={
++                    isPlaying
++                      ? {
++                          background: project.palette.accent,
++                          borderColor: 'transparent',
++                          color: '#fff',
++                        }
++                      : undefined
++                  }
++                >
++                  {isPlaying ? (
++                    <Pause size={14} />
++                  ) : (
++                    <Play size={14} className="translate-x-px" />
++                  )}
++                </button>
++                <button
++                  type="button"
++                  aria-expanded={isOpen}
++                  onClick={() => setOpen(isOpen ? -1 : index)}
++                  className="min-w-0 text-left"
++                >
++                  <span className="mr-3 font-mono text-[11px] text-black/45">
++                    {trackLabel(index)}
++                  </span>
++                  <span className="text-xl font-medium tracking-tight text-[#141412] sm:text-3xl">
++                    {project.title}
++                  </span>
++                </button>
++                <span className="hidden font-mono text-[11px] tracking-wider text-black/55 uppercase sm:block">
++                  {project.genre} · {project.year}
++                </span>
++                <span className="flex items-center gap-3 font-mono text-[11px] text-black/55 tabular-nums">
++                  <Eq on={isPlaying} color={project.palette.accent} />
++                  {formatProjectTime(PROJECT_PREVIEW_DURATION)}
++                </span>
++              </div>
++
++              <AnimatePresence initial={false}>
++                {isOpen ? (
++                  <motion.div
++                    key="panel"
++                    initial={reduced ? false : { height: 0, opacity: 0 }}
++                    animate={{ height: 'auto', opacity: 1 }}
++                    exit={{ height: 0, opacity: 0 }}
++                    transition={{ type: 'spring', stiffness: 220, damping: 30 }}
++                    className="overflow-hidden"
++                  >
++                    <div className="grid gap-6 pb-8 sm:grid-cols-[3.5rem_1fr] md:grid-cols-[3.5rem_220px_1fr]">
++                      <span className="hidden sm:block" />
++                      <div className="relative aspect-square w-40 overflow-hidden rounded-xl bg-black/5 sm:w-full">
++                        {project.cover ? (
++                          <Image
++                            src={project.cover}
++                            alt={`${project.title} cover art`}
++                            fill
++                            sizes="220px"
++                            className="object-cover"
++                          />
++                        ) : null}
++                      </div>
++                      <div className="flex flex-col justify-between gap-5">
++                        <div>
++                          <p className="max-w-xl text-sm leading-relaxed text-black/70">
++                            {project.description}
++                          </p>
++                          <p className="mt-3 font-mono text-[11px] tracking-wider text-black/50 uppercase">
++                            {project.role}
++                          </p>
++                        </div>
++                        <ul className="flex flex-wrap gap-2">
++                          {project.stack.map((tech) => (
++                            <li
++                              key={tech}
++                              className="rounded-full border border-black/15 px-3 py-1 font-mono text-[11px] text-black/70"
++                            >
++                              {tech}
++                            </li>
++                          ))}
++                        </ul>
++                        <Link
++                          href={`/projects/${project.slug}`}
++                          className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-[#141412] underline-offset-4 hover:underline"
++                        >
++                          Read the liner notes <ArrowUpRight size={15} />
++                        </Link>
++                      </div>
++                    </div>
++                  </motion.div>
++                ) : null}
++              </AnimatePresence>
++            </li>
++          )
++        })}
++      </ol>
++
++      <Link
++        href="/projects"
++        className="mt-8 inline-flex items-center gap-1.5 font-mono text-xs tracking-widest text-black/60 uppercase transition-colors hover:text-black"
++      >
++        Full discography <ArrowUpRight size={14} />
++      </Link>
++    </section>
++  )
++}
+diff --git a/features/landing-page/studio/stems.tsx b/features/landing-page/studio/stems.tsx
+new file mode 100644
+index 0000000..f8f7d92
+--- /dev/null
++++ b/features/landing-page/studio/stems.tsx
+@@ -0,0 +1,60 @@
++'use client'
++
++import { motion } from 'motion/react'
++import { STEMS, seeded } from './studio-data'
++
++const BARS = 56
++
++export function Stems({ reduced }: { reduced: boolean }) {
++  return (
++    <section id="stems" className="px-5 py-28 sm:px-10">
++      <p className="mb-3 font-mono text-xs tracking-[0.2em] text-black/55 uppercase">
++        01 · Stems
++      </p>
++      <h2 className="mb-14 max-w-2xl text-[clamp(1.9rem,4.4vw,3.6rem)] leading-[1.02] font-semibold tracking-[-0.035em] text-[#141412]">
++        One mix, three stems. Solo any of them and the work falls apart.
++      </h2>
++      <div className="divide-y divide-black/10 border-y border-black/10">
++        {STEMS.map((stem) => (
++          <motion.div
++            key={stem.id}
++            initial={reduced ? false : 'hidden'}
++            whileInView="shown"
++            viewport={{ once: true, margin: '-15% 0px' }}
++            className="grid items-center gap-4 py-7 md:grid-cols-[180px_1fr_1.1fr] md:gap-8"
++          >
++            <h3 className="font-mono text-sm tracking-widest text-[#141412] uppercase">
++              {stem.label}
++            </h3>
++            <p className="text-sm leading-relaxed text-black/65">{stem.line}</p>
++            <div className="flex h-12 items-center gap-[2px]" aria-hidden>
++              {Array.from({ length: BARS }, (_, i) => {
++                const h = 0.18 + seeded(stem.seed, i) * 0.82
++                return (
++                  <motion.span
++                    key={i}
++                    className="w-full origin-center rounded-full bg-[#141412]/80"
++                    style={{ height: `${h * 100}%` }}
++                    variants={{
++                      hidden: { scaleY: 0, opacity: 0 },
++                      shown: {
++                        scaleY: 1,
++                        opacity: 1,
++                        transition: {
++                          type: 'spring',
++                          stiffness: 260,
++                          damping: 18,
++                          delay: i * 0.012,
++                        },
++                      },
++                    }}
++                  />
++                )
++              })}
++            </div>
++          </motion.div>
++        ))}
++      </div>
++    </section>
++  )
++}
+diff --git a/features/landing-page/studio/studio-data.ts b/features/landing-page/studio/studio-data.ts
+new file mode 100644
+index 0000000..a710b8e
+--- /dev/null
++++ b/features/landing-page/studio/studio-data.ts
+@@ -0,0 +1,68 @@
++/**
++ * The page is one track. Its length is a fiction, but a consistent one: every
++ * readout (timecode, bar, tempo) is derived from scroll progress through this
++ * single constant, so the transport and the sections can never disagree.
++ */
++export const TRACK_SECONDS = 150
++export const BASE_BPM = 120
++export const BEATS_PER_BAR = 4
++
++export const CHAPTERS = [
++  { id: 'intro', label: 'Intro' },
++  { id: 'stems', label: 'Stems' },
++  { id: 'tracks', label: 'Tracks' },
++  { id: 'outro', label: 'End' },
++] as const
++
++export type ChapterId = (typeof CHAPTERS)[number]['id']
++
++export const STEMS = [
++  {
++    id: 'design',
++    label: 'Design',
++    line: 'Hierarchy, spacing and type decided in the browser, not handed over as a mockup.',
++    seed: 3,
++  },
++  {
++    id: 'motion',
++    label: 'Motion',
++    line: 'Springs, scroll-linked timing and micro-interactions that explain what the interface is doing.',
++    seed: 7,
++  },
++  {
++    id: 'engineering',
++    label: 'Engineering',
++    line: 'Next.js and TypeScript with the performance and accessibility work left in, not cut.',
++    seed: 11,
++  },
++] as const
++
++export const SOCIALS = [
++  { label: 'GitHub', href: 'https://github.com/adityahimaone' },
++  { label: 'LinkedIn', href: 'https://linkedin.com/in/adityahimaone' },
++  { label: 'X', href: 'https://x.com/adityahimaone' },
++] as const
++
++export const CONTACT_HREF = 'mailto:adityahimaone@gmail.com'
++
++export function formatTimecode(progress: number): string {
++  const total = Math.max(0, Math.min(1, progress)) * TRACK_SECONDS
++  const m = Math.floor(total / 60)
++  const s = Math.floor(total % 60)
++  const f = Math.floor((total % 1) * 100)
++  return `${m.toString().padStart(2, '0')}:${s
++    .toString()
++    .padStart(2, '0')}.${f.toString().padStart(2, '0')}`
++}
++
++export function formatBar(progress: number): string {
++  const seconds = Math.max(0, Math.min(1, progress)) * TRACK_SECONDS
++  const bar = Math.floor(seconds / ((60 / BASE_BPM) * BEATS_PER_BAR)) + 1
++  return bar.toString().padStart(3, '0')
++}
++
++/** Deterministic 0..1 noise, so a stem's waveform is the same on every render. */
++export function seeded(seed: number, index: number): number {
++  const x = Math.sin(seed * 127.1 + index * 311.7) * 43758.5453
++  return x - Math.floor(x)
++}
+diff --git a/features/landing-page/studio/studio-hero.tsx b/features/landing-page/studio/studio-hero.tsx
+new file mode 100644
+index 0000000..db3d6d3
+--- /dev/null
++++ b/features/landing-page/studio/studio-hero.tsx
+@@ -0,0 +1,131 @@
++'use client'
++
++import dynamic from 'next/dynamic'
++import { motion, useSpring, useTransform } from 'motion/react'
++import type { MotionValue } from 'motion/react'
++import { ArrowDown } from 'lucide-react'
++import { EASE_OUT } from '@/lib/ease'
++
++// The WebGL bundle is its own chunk and never runs on the server.
++const KnobScene = dynamic(() => import('./knob-scene'), {
++  ssr: false,
++  loading: () => null,
++})
++
++type Props = {
++  progress: MotionValue<number>
++  energy: MotionValue<number>
++  scrollY: MotionValue<number>
++  reduced: boolean
++  onJump: (id: string) => void
++}
++
++const TICKS = Array.from({ length: 81 }, (_, i) => i)
++
++export function StudioHero({
++  progress,
++  energy,
++  scrollY,
++  reduced,
++  onJump,
++}: Props) {
++  // The ruler slides against the scroll with spring lag, so it reads as
++  // something being scrubbed rather than something being scrolled.
++  const rulerX = useSpring(
++    useTransform(scrollY, (y) => -y * 0.35),
++    { stiffness: 120, damping: 24, mass: 0.6 },
++  )
++
++  return (
++    <section
++      id="intro"
++      className="relative flex min-h-[100svh] flex-col justify-between overflow-hidden px-5 pt-28 pb-8 sm:px-10"
++    >
++      <div className="relative z-10 grid flex-1 items-center gap-6 lg:grid-cols-[1.1fr_0.9fr]">
++        <div>
++          <motion.p
++            initial={reduced ? false : { opacity: 0, y: 12 }}
++            animate={{ opacity: 1, y: 0 }}
++            transition={{ duration: 0.7, ease: EASE_OUT }}
++            className="mb-6 font-mono text-xs tracking-[0.2em] text-black/55 uppercase"
++          >
++            Aditya Himawan · Design Engineer
++          </motion.p>
++          <h1 className="text-[clamp(2.75rem,8.2vw,7.5rem)] leading-[0.92] font-semibold tracking-[-0.045em] text-[#141412]">
++            {['I design it,', 'then I', 'engineer it.'].map((line, i) => (
++              <span key={line} className="block overflow-hidden pb-[0.08em]">
++                <motion.span
++                  className={`block ${i === 2 ? 'text-[#ff5b1f]' : ''}`}
++                  initial={reduced ? false : { y: '105%' }}
++                  animate={{ y: 0 }}
++                  transition={{
++                    duration: 0.9,
++                    ease: EASE_OUT,
++                    delay: 0.1 + i * 0.09,
++                  }}
++                >
++                  {line}
++                </motion.span>
++              </span>
++            ))}
++          </h1>
++          <motion.p
++            initial={reduced ? false : { opacity: 0 }}
++            animate={{ opacity: 1 }}
++            transition={{ duration: 0.8, delay: 0.6 }}
++            className="mt-8 max-w-md text-base leading-relaxed text-black/65"
++          >
++            Frontend engineer working where interface craft, motion and code
++            meet: Next.js, TypeScript, and the details between a mockup and a
++            shipped product.
++          </motion.p>
++          <motion.div
++            initial={reduced ? false : { opacity: 0, y: 8 }}
++            animate={{ opacity: 1, y: 0 }}
++            transition={{ duration: 0.7, delay: 0.75, ease: EASE_OUT }}
++            className="mt-8 flex flex-wrap gap-3"
++          >
++            <button
++              type="button"
++              onClick={() => onJump('tracks')}
++              className="inline-flex items-center gap-2 rounded-full bg-[#141412] px-5 py-3 text-sm font-medium text-[#f4f2ec] transition-transform active:scale-95"
++            >
++              Play selected tracks <ArrowDown size={15} />
++            </button>
++            <button
++              type="button"
++              onClick={() => onJump('outro')}
++              className="rounded-full border border-black/15 px-5 py-3 text-sm font-medium text-[#141412] transition-colors hover:border-black/40"
++            >
++              Get in touch
++            </button>
++          </motion.div>
++        </div>
++
++        <div className="relative h-[46vh] min-h-[300px] lg:h-[62vh]">
++          <KnobScene progress={progress} energy={energy} reduced={reduced} />
++        </div>
++      </div>
++
++      <div className="relative z-10 mt-6 h-8 overflow-hidden" aria-hidden>
++        <motion.div
++          className="flex h-full items-end gap-[14px]"
++          style={{ x: rulerX }}
++        >
++          {TICKS.map((i) => (
++            <div key={i} className="relative shrink-0">
++              <span
++                className={`block w-px bg-black/35 ${i % 4 === 0 ? 'h-4' : 'h-2'}`}
++              />
++              {i % 4 === 0 ? (
++                <span className="absolute -top-4 left-1 font-mono text-[9px] text-black/45">
++                  {(i / 4 + 1).toString().padStart(2, '0')}
++                </span>
++              ) : null}
++            </div>
++          ))}
++        </motion.div>
++      </div>
++    </section>
++  )
++}
+diff --git a/features/landing-page/studio/studio.tsx b/features/landing-page/studio/studio.tsx
+new file mode 100644
+index 0000000..3d88c80
+--- /dev/null
++++ b/features/landing-page/studio/studio.tsx
+@@ -0,0 +1,148 @@
++'use client'
++
++import {
++  useReducedMotion,
++  useScroll,
++  useSpring,
++  useTransform,
++  useVelocity,
++} from 'motion/react'
++import { useCallback, useEffect, useRef, useState } from 'react'
++import { EndOfTrack } from './end-of-track'
++import { SelectedTracks } from './selected-tracks'
++import { StudioHero } from './studio-hero'
++import { Stems } from './stems'
++import { BASE_BPM, CHAPTERS } from './studio-data'
++import { Transport } from './transport'
++
++/** Auto-scroll speed at the base tempo, in px per second. */
++const PLAY_SPEED = 140
++
++function clamp(v: number, lo: number, hi: number) {
++  return Math.min(hi, Math.max(lo, v))
++}
++
++/**
++ * The landing page as one track. Scroll is the playhead: the transport shows
++ * where it is, the hero knob turns with it, and scroll speed is the tempo.
++ */
++export default function Studio() {
++  const reduced = useReducedMotion() ?? false
++  const { scrollY, scrollYProgress } = useScroll()
++  const progress = useSpring(scrollYProgress, {
++    stiffness: 140,
++    damping: 26,
++    mass: 0.5,
++  })
++  const velocity = useVelocity(scrollY)
++  const bpm = useSpring(
++    useTransform(velocity, (v) => BASE_BPM + clamp(v / 80, -24, 24)),
++    { stiffness: 90, damping: 18 },
++  )
++  const energy = useTransform(velocity, (v) => clamp(Math.abs(v) / 1800, 0, 1))
++
++  const [marks, setMarks] = useState<readonly number[]>([0, 0.25, 0.5, 1])
++  const [playing, setPlaying] = useState(false)
++  const [loop, setLoop] = useState(false)
++  const loopRef = useRef(loop)
++  useEffect(() => {
++    loopRef.current = loop
++  }, [loop])
++
++  // Chapter markers sit where their sections actually are.
++  useEffect(() => {
++    const measure = () => {
++      const max = document.documentElement.scrollHeight - window.innerHeight
++      if (max <= 0) return
++      setMarks(
++        CHAPTERS.map((chapter) => {
++          const el = document.getElementById(chapter.id)
++          return el
++            ? clamp(
++                (el.getBoundingClientRect().top + window.scrollY) / max,
++                0,
++                1,
++              )
++            : 0
++        }),
++      )
++    }
++    measure()
++    const ro = new ResizeObserver(measure)
++    ro.observe(document.body)
++    return () => ro.disconnect()
++  }, [])
++
++  const jump = useCallback(
++    (id: string) => {
++      document.getElementById(id)?.scrollIntoView({
++        behavior: reduced ? 'auto' : 'smooth',
++        block: 'start',
++      })
++    },
++    [reduced],
++  )
++
++  const replay = useCallback(() => {
++    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
++    setPlaying(false)
++  }, [reduced])
++
++  // "Play" auto-scrolls the page at the current tempo. Any manual input takes
++  // the wheel back.
++  useEffect(() => {
++    if (!playing) return
++    let raf = 0
++    let last = performance.now()
++    const stop = () => setPlaying(false)
++    const tick = (now: number) => {
++      const dt = (now - last) / 1000
++      last = now
++      const max = document.documentElement.scrollHeight - window.innerHeight
++      if (window.scrollY >= max - 1) {
++        if (loopRef.current) window.scrollTo({ top: 0 })
++        else {
++          setPlaying(false)
++          return
++        }
++      } else {
++        window.scrollBy(0, PLAY_SPEED * (bpm.get() / BASE_BPM) * dt)
++      }
++      raf = requestAnimationFrame(tick)
++    }
++    raf = requestAnimationFrame(tick)
++    const events = ['wheel', 'touchstart', 'keydown'] as const
++    events.forEach((name) =>
++      window.addEventListener(name, stop, { passive: true }),
++    )
++    return () => {
++      cancelAnimationFrame(raf)
++      events.forEach((name) => window.removeEventListener(name, stop))
++    }
++  }, [playing, bpm])
++
++  return (
++    <main className="min-h-screen bg-[#f4f2ec] text-[#141412]">
++      <Transport
++        progress={progress}
++        bpm={bpm}
++        marks={marks}
++        playing={playing}
++        loop={loop}
++        onTogglePlay={() => setPlaying((p) => !p)}
++        onToggleLoop={() => setLoop((l) => !l)}
++        onSeek={jump}
++      />
++      <StudioHero
++        progress={progress}
++        energy={energy}
++        scrollY={scrollY}
++        reduced={reduced}
++        onJump={jump}
++      />
++      <Stems reduced={reduced} />
++      <SelectedTracks reduced={reduced} />
++      <EndOfTrack onReplay={replay} />
++    </main>
++  )
++}
+diff --git a/features/landing-page/studio/transport.tsx b/features/landing-page/studio/transport.tsx
+new file mode 100644
+index 0000000..03b4aec
+--- /dev/null
++++ b/features/landing-page/studio/transport.tsx
+@@ -0,0 +1,106 @@
++'use client'
++
++import { motion, useTransform } from 'motion/react'
++import type { MotionValue } from 'motion/react'
++import { Pause, Play, Repeat } from 'lucide-react'
++import { CHAPTERS, formatBar, formatTimecode } from './studio-data'
++
++type Props = {
++  progress: MotionValue<number>
++  bpm: MotionValue<number>
++  marks: readonly number[]
++  playing: boolean
++  loop: boolean
++  onTogglePlay: () => void
++  onToggleLoop: () => void
++  onSeek: (chapterId: string) => void
++}
++
++/** The page's playhead: timecode, bar, tempo and a scrubbable chapter strip. */
++export function Transport({
++  progress,
++  bpm,
++  marks,
++  playing,
++  loop,
++  onTogglePlay,
++  onToggleLoop,
++  onSeek,
++}: Props) {
++  const timecode = useTransform(progress, formatTimecode)
++  const bar = useTransform(progress, formatBar)
++  const bpmText = useTransform(bpm, (v) => Math.round(v).toString())
++  const playheadLeft = useTransform(progress, (v) => `${v * 100}%`)
++
++  return (
++    <div className="pointer-events-none fixed inset-x-0 top-3 z-40 flex justify-center px-3">
++      <div className="pointer-events-auto flex w-full max-w-2xl items-center gap-3 rounded-full border border-black/10 bg-[#f4f2ec]/85 py-1.5 pr-4 pl-1.5 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.25)] backdrop-blur-md">
++        <button
++          type="button"
++          onClick={onTogglePlay}
++          aria-label={
++            playing ? 'Pause auto-scroll' : 'Play: auto-scroll the page'
++          }
++          aria-pressed={playing}
++          className="grid size-9 shrink-0 place-items-center rounded-full bg-[#141412] text-[#f4f2ec] transition-transform active:scale-95"
++        >
++          {playing ? (
++            <Pause size={15} />
++          ) : (
++            <Play size={15} className="translate-x-px" />
++          )}
++        </button>
++        <button
++          type="button"
++          onClick={onToggleLoop}
++          aria-label="Loop back to the top at the end"
++          aria-pressed={loop}
++          className={`grid size-8 shrink-0 place-items-center rounded-full transition-colors ${
++            loop ? 'bg-[#ff5b1f] text-white' : 'text-black/50 hover:text-black'
++          }`}
++        >
++          <Repeat size={14} />
++        </button>
++
++        <div
++          className="relative h-6 min-w-0 flex-1"
++          role="group"
++          aria-label="Chapters"
++        >
++          <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-black/15" />
++          <motion.div
++            className="absolute inset-x-0 top-1/2 h-px origin-left -translate-y-1/2 bg-[#ff5b1f]"
++            style={{ scaleX: progress }}
++          />
++          {CHAPTERS.map((chapter, i) => (
++            <button
++              key={chapter.id}
++              type="button"
++              onClick={() => onSeek(chapter.id)}
++              aria-label={`Jump to ${chapter.label}`}
++              title={chapter.label}
++              className="group absolute top-0 h-full w-4 -translate-x-1/2 outline-offset-2"
++              style={{ left: `${(marks[i] ?? 0) * 100}%` }}
++            >
++              <span className="absolute top-1/2 left-1/2 h-3 w-px -translate-x-1/2 -translate-y-1/2 bg-black/40 transition-all group-hover:h-5 group-hover:bg-[#ff5b1f]" />
++            </button>
++          ))}
++          <motion.div
++            className="pointer-events-none absolute top-1/2 left-0 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ff5b1f] shadow-[0_0_0_3px_rgba(255,91,31,0.2)]"
++            style={{ left: playheadLeft }}
++          />
++        </div>
++
++        <div className="hidden shrink-0 items-center gap-3 font-mono text-[11px] tracking-wider text-black/60 tabular-nums sm:flex">
++          <motion.span className="text-black">{timecode}</motion.span>
++          <span>
++            BAR <motion.span>{bar}</motion.span>
++          </span>
++          <span>
++            <motion.span>{bpmText}</motion.span> BPM
++          </span>
++        </div>
++      </div>
++    </div>
++  )
++}
+diff --git a/features/landing-page/views/landing-page.tsx b/features/landing-page/views/landing-page.tsx
+index 4fc389f..41d2d75 100644
+--- a/features/landing-page/views/landing-page.tsx
++++ b/features/landing-page/views/landing-page.tsx
+@@ -1,29 +1,24 @@
+ import { LandingGate } from '../components/landing-gate'
+-import Rack01LandingPage from '../rack-01/rack-01'
++import { Studio } from '../studio'
+ import type { ArchiveRepo } from '@/features/projects/lib/github'
+ 
+ /**
+- * The page is a server component and the rack is a client component, so the
+- * repository rows cross that boundary as plain serialisable data. They cannot
+- * be fetched lower down: an async server component cannot be rendered inside
+- * this client tree.
++ * The landing page is the "track timeline" studio. `LandingGate` still wraps
++ * it: the boot overlay is driven by a `<head>` script in `app/layout.tsx`, so
++ * the gate has to stay mounted for that cover to be released.
+  *
+- * The rows are `ArchiveRepo`, not `GitHubRepo` — the page narrows them before
+- * passing, so only the fields the archive reads cross the boundary.
+- *
+- * `LandingGate` wraps the rack rather than replacing it. The gate renders the
+- * rack first and the boot overlay after it, so the landing page is already in
+- * the DOM and already measured when the blinds leave — no layout shift, and no
+- * second layout pass for the camera to be re-measured through.
++ * `archiveRepos` is still accepted so `app/page.tsx` and its server-side fetch
++ * are untouched; the studio does not read it.
+  */
+ export default function LandingPage({
+   archiveRepos,
+ }: {
+   archiveRepos: readonly ArchiveRepo[]
+ }) {
++  void archiveRepos
+   return (
+     <LandingGate>
+-      <Rack01LandingPage archiveRepos={archiveRepos} />
++      <Studio />
+     </LandingGate>
+   )
+ }

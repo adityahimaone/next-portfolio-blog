@@ -8,10 +8,18 @@ import {
   useState,
 } from 'react'
 
-import SignalStormPreloader, {
-  BOOT,
-  StormCover,
-} from '@/components/ui/signal-storm-preloader'
+import StickerBootPreloader, {
+  StickerBootCover,
+} from '@/components/ui/sticker-boot-preloader'
+
+/** The hero's letter variables, still owned by the gate even though the new
+ *  hero does not read them. The head script sets them, and something has to
+ *  hand them back when storage switches the boot off. */
+const BOOT = {
+  play: '--boot-play',
+  delay: '--boot-delay',
+  stagger: '--boot-stagger',
+} as const
 
 /**
  * `useLayoutEffect` in the browser, `useEffect` on the server — where a layout
@@ -66,11 +74,10 @@ const BOOT_ATTR = 'data-boot'
 type Phase = 'cover' | 'storm' | 'done'
 
 /**
- * Plays the Signal Storm preloader once per session, over the top of the landing
- * page: studio words run edge to edge across the hero's own ground, are pulled
- * into the hero's name clip, and the hero's own letters rise onto it (2.52s in
- * all). `SignalLockPreloader` (the 1.4s playhead version) is a drop-in
- * alternative: swap the import and the element below.
+ * Plays the Sticker Boot once per session, over the top of the landing page: a
+ * cobalt room, a cream sticker sheet with the sun and the marker "hello!", then
+ * the sheet peels upward and off to reveal the cream hero. The page beneath is
+ * mounted from the first frame, so the handoff is simply the sheet leaving.
  *
  * The page stays mounted underneath. That is the point: the arrangement has to
  * be measured and laid out before the lanes leave, or the hero would arrive
@@ -201,13 +208,13 @@ export function LandingGate({ children }: { children: React.ReactNode }) {
           DOM means first in the first chunk. Stacking is unaffected — the cover
           is `position: fixed` with a z-index, which does not care about
           document order. */}
-      {phase === 'cover' ? <StormCover /> : null}
+      {phase === 'cover' ? <StickerBootCover /> : null}
       {children}
       {/* `z-[100]` is the one deliberate departure from the component's default
           `z-50`: the dock and the music player sit at or above 50 and would
           otherwise be drawn over the poster for the length of the boot. */}
       {phase === 'storm' ? (
-        <SignalStormPreloader className="z-[100]" onComplete={complete} />
+        <StickerBootPreloader className="z-[100]" onComplete={complete} />
       ) : null}
     </>
   )

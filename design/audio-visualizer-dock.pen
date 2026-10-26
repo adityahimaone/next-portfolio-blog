@@ -1,0 +1,1577 @@
+{
+  "version": "2.20",
+  "children": [
+    {
+      "type": "frame",
+      "id": "xujKu",
+      "x": 0,
+      "y": 0,
+      "name": "Audio Visualizer Dock — Mockup",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "radial",
+        "enabled": true,
+        "rotation": 0,
+        "size": {
+          "width": 1.6,
+          "height": 1.4
+        },
+        "colors": [
+          {
+            "color": "#131318",
+            "position": 0
+          },
+          {
+            "color": "#0A0A0C",
+            "position": 0.55
+          },
+          {
+            "color": "#070709",
+            "position": 1
+          }
+        ],
+        "center": {
+          "y": 0
+        }
+      },
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "cornerRadius": 5,
+          "id": "HQ2nt",
+          "x": 64,
+          "y": 40,
+          "name": "Ghost Logo",
+          "fill": "#1E1E24",
+          "width": 96,
+          "height": 10
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4,
+          "id": "o7esq",
+          "x": 1150,
+          "y": 39,
+          "name": "Ghost Nav 0",
+          "fill": "#1A1A20",
+          "width": 42,
+          "height": 8
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4,
+          "id": "dQMEo",
+          "x": 1202,
+          "y": 39,
+          "name": "Ghost Nav 1",
+          "fill": "#1A1A20",
+          "width": 42,
+          "height": 8
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4,
+          "id": "mwAWh",
+          "x": 1254,
+          "y": 39,
+          "name": "Ghost Nav 2",
+          "fill": "#1A1A20",
+          "width": 42,
+          "height": 8
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4,
+          "id": "u3Ak5",
+          "x": 340,
+          "y": 120,
+          "name": "Ghost Eyebrow",
+          "fill": "#241810",
+          "width": 88,
+          "height": 8
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 6,
+          "id": "M0UMn",
+          "x": 340,
+          "y": 146,
+          "name": "Ghost Title 1",
+          "fill": "#1E1E24",
+          "width": 560,
+          "height": 30
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 6,
+          "id": "R8HSk",
+          "x": 340,
+          "y": 188,
+          "name": "Ghost Title 2",
+          "fill": "#1A1A20",
+          "width": 430,
+          "height": 30
+        },
+        {
+          "type": "ellipse",
+          "id": "t5AUX",
+          "x": 340,
+          "y": 236,
+          "name": "Ghost Meta 0",
+          "fill": "#242429",
+          "width": 6,
+          "height": 6
+        },
+        {
+          "type": "ellipse",
+          "id": "MCbrB",
+          "x": 358,
+          "y": 236,
+          "name": "Ghost Meta 1",
+          "fill": "#242429",
+          "width": 6,
+          "height": 6
+        },
+        {
+          "type": "ellipse",
+          "id": "uldJh",
+          "x": 376,
+          "y": 236,
+          "name": "Ghost Meta 2",
+          "fill": "#242429",
+          "width": 6,
+          "height": 6
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 20,
+          "id": "dScbc",
+          "x": 340,
+          "y": 258,
+          "name": "Ghost Image",
+          "fill": "#15151A",
+          "width": 760,
+          "height": 280,
+          "stroke": "#1E1E24",
+          "strokeWidth": 1
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4.5,
+          "id": "XWByc",
+          "x": 340,
+          "y": 564,
+          "name": "Ghost Body 0",
+          "fill": "#1C1C21",
+          "width": 760,
+          "height": 9
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4.5,
+          "id": "AN1BN",
+          "x": 340,
+          "y": 586,
+          "name": "Ghost Body 1",
+          "fill": "#1C1C21",
+          "width": 700,
+          "height": 9
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4.5,
+          "id": "PJLGb",
+          "x": 340,
+          "y": 608,
+          "name": "Ghost Body 2",
+          "fill": "#1C1C21",
+          "width": 740,
+          "height": 9
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4.5,
+          "id": "tj9s8",
+          "x": 340,
+          "y": 630,
+          "name": "Ghost Body 3",
+          "fill": "#1C1C21",
+          "width": 520,
+          "height": 9
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4.5,
+          "id": "q2LMo5",
+          "x": 340,
+          "y": 652,
+          "name": "Ghost Body 4",
+          "fill": "#1C1C21",
+          "width": 720,
+          "height": 9
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4.5,
+          "id": "S1qybo",
+          "x": 340,
+          "y": 674,
+          "name": "Ghost Body 5",
+          "fill": "#1C1C21",
+          "width": 380,
+          "height": 9
+        },
+        {
+          "type": "frame",
+          "id": "Czcz2",
+          "x": 20,
+          "y": 756,
+          "name": "Audio Dock",
+          "width": 1400,
+          "height": 120,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#1B1B20",
+                "position": 0
+              },
+              {
+                "color": "#101013",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 26,
+          "stroke": "$border",
+          "strokeWidth": 1,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#000000B0",
+            "offset": {
+              "x": 0,
+              "y": 24
+            },
+            "blur": 60
+          },
+          "padding": [
+            0,
+            28
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "iPH8o",
+              "name": "Track Meta",
+              "width": 320,
+              "gap": 18,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "zJ1Lj",
+                  "name": "Album Art",
+                  "clip": true,
+                  "width": 80,
+                  "height": 80,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#4A2416",
+                        "position": 0
+                      },
+                      {
+                        "color": "#150E0B",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 18,
+                  "stroke": "#2A2018",
+                  "strokeWidth": 1,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "ellipse",
+                      "id": "KIcOA",
+                      "x": 14,
+                      "y": 14,
+                      "name": "Vinyl",
+                      "fill": "#0D0C0E",
+                      "width": 52,
+                      "height": 52,
+                      "stroke": "#2A2A30",
+                      "strokeWidth": 1
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "o3TpZ",
+                      "x": 21,
+                      "y": 21,
+                      "name": "Vinyl Groove 1",
+                      "width": 38,
+                      "height": 38,
+                      "stroke": "#1F1F25",
+                      "strokeWidth": 1
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "pgNIP",
+                      "x": 27,
+                      "y": 27,
+                      "name": "Vinyl Groove 2",
+                      "width": 26,
+                      "height": 26,
+                      "stroke": "#1F1F25",
+                      "strokeWidth": 1
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "Ocmrb",
+                      "x": 33,
+                      "y": 33,
+                      "name": "Vinyl Label",
+                      "fill": "$accent",
+                      "width": 14,
+                      "height": 14
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "iHoHa",
+                  "name": "Track Info",
+                  "layout": "vertical",
+                  "gap": 3,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "OkbS9",
+                      "name": "Status",
+                      "gap": 7,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "LK0rg",
+                          "name": "Live LED",
+                          "fill": "$accent",
+                          "width": 5,
+                          "height": 5,
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#FF8A3DAA",
+                            "blur": 6
+                          }
+                        },
+                        {
+                          "type": "text",
+                          "id": "bVGCu",
+                          "name": "Now Playing",
+                          "fill": "$text-secondary",
+                          "content": "NOW PLAYING",
+                          "fontFamily": "$font-mono",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 2
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "zcIPr",
+                      "name": "Track Title",
+                      "fill": "$text-primary",
+                      "content": "Midnight Frequency",
+                      "fontFamily": "$font-display",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ovQ2s",
+                      "name": "Artist",
+                      "fill": "$text-secondary",
+                      "content": "Aditya Himawan",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "O6Et8",
+              "name": "Transport",
+              "width": 520,
+              "layout": "vertical",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "BJoXI",
+                  "name": "Controls",
+                  "gap": 26,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "TvOA1",
+                      "name": "Shuffle",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "shuffle",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "tf4GF",
+                      "name": "Previous",
+                      "width": 19,
+                      "height": 19,
+                      "icon": "skip-back",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xNllw",
+                      "name": "Play",
+                      "width": 48,
+                      "height": 48,
+                      "fill": "$accent",
+                      "cornerRadius": 24,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#FF8A3D59",
+                        "offset": {
+                          "x": 0,
+                          "y": 8
+                        },
+                        "blur": 26
+                      },
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "L9X03",
+                          "name": "Pause",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "pause",
+                          "library": "lucide",
+                          "fill": "#0B0B0C"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "a32EiX",
+                      "name": "Next",
+                      "width": 19,
+                      "height": 19,
+                      "icon": "skip-forward",
+                      "library": "lucide",
+                      "fill": "$text-primary"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "d6E9t",
+                      "name": "Repeat",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "repeat",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "C9XuD8",
+                  "name": "Seek",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Ny3CU",
+                      "name": "Time Current",
+                      "fill": "$text-secondary",
+                      "content": "1:24",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "PJBTK",
+                      "name": "Waveform Canvas",
+                      "width": 411,
+                      "height": 44,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "iYEQA",
+                          "x": 0,
+                          "y": 6,
+                          "name": "Wave Bar 0",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 32
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "j3C2cv",
+                          "x": 8,
+                          "y": 11,
+                          "name": "Wave Bar 1",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 22
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "H7OUk",
+                          "x": 16,
+                          "y": 5,
+                          "name": "Wave Bar 2",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 34
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "H1DTh",
+                          "x": 24,
+                          "y": 7,
+                          "name": "Wave Bar 3",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 30
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "SZKxk",
+                          "x": 32,
+                          "y": 7,
+                          "name": "Wave Bar 4",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 30
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "bbaok",
+                          "x": 40,
+                          "y": 11.5,
+                          "name": "Wave Bar 5",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 21
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "xGZJW",
+                          "x": 48,
+                          "y": 10.5,
+                          "name": "Wave Bar 6",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 23
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "QHZYy",
+                          "x": 56,
+                          "y": 10,
+                          "name": "Wave Bar 7",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 24
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "HbEXC",
+                          "x": 64,
+                          "y": 8.5,
+                          "name": "Wave Bar 8",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 27
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "O0Bmon",
+                          "x": 72,
+                          "y": 5.5,
+                          "name": "Wave Bar 9",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 33
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "fYN89",
+                          "x": 80,
+                          "y": 6.5,
+                          "name": "Wave Bar 10",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 31
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "MiT9u",
+                          "x": 88,
+                          "y": 7.5,
+                          "name": "Wave Bar 11",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 29
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "X7JeM7",
+                          "x": 96,
+                          "y": 12,
+                          "name": "Wave Bar 12",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 20
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "bQpiF",
+                          "x": 104,
+                          "y": 7.5,
+                          "name": "Wave Bar 13",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 29
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "Ry7Qx",
+                          "x": 112,
+                          "y": 14,
+                          "name": "Wave Bar 14",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 16
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "L0QvGi",
+                          "x": 120,
+                          "y": 6,
+                          "name": "Wave Bar 15",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 32
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "SL8cE",
+                          "x": 128,
+                          "y": 9.5,
+                          "name": "Wave Bar 16",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 25
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "OdwaW",
+                          "x": 136,
+                          "y": 9.5,
+                          "name": "Wave Bar 17",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 25
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "LV4hU",
+                          "x": 144,
+                          "y": 2.5,
+                          "name": "Wave Bar 18",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 39
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "XSokP",
+                          "x": 152,
+                          "y": 9.5,
+                          "name": "Wave Bar 19",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 25
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "SNSL4",
+                          "x": 160,
+                          "y": 7,
+                          "name": "Wave Bar 20",
+                          "fill": "$accent",
+                          "width": 3,
+                          "height": 30
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "M53Oa",
+                          "x": 168,
+                          "y": 14.5,
+                          "name": "Wave Bar 21",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 15
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "PFu6p",
+                          "x": 176,
+                          "y": 10,
+                          "name": "Wave Bar 22",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 24
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "kbMmd",
+                          "x": 184,
+                          "y": 4.5,
+                          "name": "Wave Bar 23",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 35
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "o8RzWt",
+                          "x": 192,
+                          "y": 9,
+                          "name": "Wave Bar 24",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 26
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "blHAh",
+                          "x": 200,
+                          "y": 6.5,
+                          "name": "Wave Bar 25",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 31
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "YSlDV",
+                          "x": 208,
+                          "y": 7,
+                          "name": "Wave Bar 26",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 30
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "c2IGns",
+                          "x": 216,
+                          "y": 10,
+                          "name": "Wave Bar 27",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 24
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "CQorC",
+                          "x": 224,
+                          "y": 16,
+                          "name": "Wave Bar 28",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 12
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "P0cV3D",
+                          "x": 232,
+                          "y": 16.5,
+                          "name": "Wave Bar 29",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 11
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "aY9NK",
+                          "x": 240,
+                          "y": 13,
+                          "name": "Wave Bar 30",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 18
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "c3PCD",
+                          "x": 248,
+                          "y": 9.5,
+                          "name": "Wave Bar 31",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 25
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "hWLzz",
+                          "x": 256,
+                          "y": 13.5,
+                          "name": "Wave Bar 32",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 17
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "S0eTCK",
+                          "x": 264,
+                          "y": 10.5,
+                          "name": "Wave Bar 33",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 23
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "ecJZF",
+                          "x": 272,
+                          "y": 8,
+                          "name": "Wave Bar 34",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 28
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "LwfbV",
+                          "x": 280,
+                          "y": 15,
+                          "name": "Wave Bar 35",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 14
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "hbqxg",
+                          "x": 288,
+                          "y": 9,
+                          "name": "Wave Bar 36",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 26
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "wNDfG",
+                          "x": 296,
+                          "y": 14,
+                          "name": "Wave Bar 37",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 16
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "ry7pe",
+                          "x": 304,
+                          "y": 9.5,
+                          "name": "Wave Bar 38",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 25
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "ZzpR3",
+                          "x": 312,
+                          "y": 3.5,
+                          "name": "Wave Bar 39",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 37
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "uUtnV",
+                          "x": 320,
+                          "y": 3.5,
+                          "name": "Wave Bar 40",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 37
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "GaXZJ",
+                          "x": 328,
+                          "y": 6,
+                          "name": "Wave Bar 41",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 32
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "pawaw",
+                          "x": 336,
+                          "y": 9.5,
+                          "name": "Wave Bar 42",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 25
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "uVwMo",
+                          "x": 344,
+                          "y": 9.5,
+                          "name": "Wave Bar 43",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 25
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "vabu2",
+                          "x": 352,
+                          "y": 10,
+                          "name": "Wave Bar 44",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 24
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "Eake6",
+                          "x": 360,
+                          "y": 6,
+                          "name": "Wave Bar 45",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 32
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "Z3qG1j",
+                          "x": 368,
+                          "y": 5.5,
+                          "name": "Wave Bar 46",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 33
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "J5gn9",
+                          "x": 376,
+                          "y": 1.5,
+                          "name": "Wave Bar 47",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 41
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "R1Pio",
+                          "x": 384,
+                          "y": 9,
+                          "name": "Wave Bar 48",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 26
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "xF7xS",
+                          "x": 392,
+                          "y": 7.5,
+                          "name": "Wave Bar 49",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 29
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "w8Ugr",
+                          "x": 400,
+                          "y": 8.5,
+                          "name": "Wave Bar 50",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 27
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": [
+                            1.5,
+                            1.5,
+                            0,
+                            0
+                          ],
+                          "id": "ZBYll",
+                          "x": 408,
+                          "y": 13,
+                          "name": "Wave Bar 51",
+                          "fill": "$wave-idle",
+                          "width": 3,
+                          "height": 18
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 1,
+                          "id": "mPthM",
+                          "x": 164,
+                          "y": -1,
+                          "name": "Playhead",
+                          "fill": "$accent-bright",
+                          "width": 2,
+                          "height": 46
+                        },
+                        {
+                          "type": "ellipse",
+                          "id": "V0GyG",
+                          "x": 161,
+                          "y": -5,
+                          "name": "Playhead Knob",
+                          "fill": "$accent-bright",
+                          "width": 8,
+                          "height": 8
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "xilLg",
+                      "name": "Time Total",
+                      "fill": "$text-tertiary",
+                      "content": "-3:52",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "tlres",
+              "name": "Audio Controls",
+              "width": 320,
+              "gap": 16,
+              "justifyContent": "end",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "sumle",
+                  "name": "Volume",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "volume-2",
+                  "library": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "frame",
+                  "id": "tjjji",
+                  "name": "Volume Slider",
+                  "width": 84,
+                  "height": 24,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 1.5,
+                      "id": "h2drh",
+                      "x": 0,
+                      "y": 10.5,
+                      "name": "Volume Track",
+                      "fill": "$wave-idle",
+                      "width": 84,
+                      "height": 3
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 1.5,
+                      "id": "e4Ma6",
+                      "x": 0,
+                      "y": 10.5,
+                      "name": "Volume Fill",
+                      "fill": "$accent",
+                      "width": 52,
+                      "height": 3
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "NS78x",
+                      "x": 47,
+                      "y": 7,
+                      "name": "Volume Knob",
+                      "fill": "$text-primary",
+                      "width": 10,
+                      "height": 10
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FwZdW",
+                  "name": "Like",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "$surface-raised",
+                  "cornerRadius": 18,
+                  "stroke": "$border-soft",
+                  "strokeWidth": 1,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "ngilH",
+                      "name": "Heart",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "heart",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 0.5,
+              "id": "a6BMJA",
+              "layoutPosition": "absolute",
+              "x": 26,
+              "y": 0,
+              "name": "Dock Edge Highlight",
+              "opacity": 0.06,
+              "fill": "#FFFFFF",
+              "width": 1348,
+              "height": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "bg": {
+      "type": "color",
+      "value": "#0A0A0C"
+    },
+    "surface": {
+      "type": "color",
+      "value": "#131316"
+    },
+    "surface-raised": {
+      "type": "color",
+      "value": "#1C1C21"
+    },
+    "border": {
+      "type": "color",
+      "value": "#26262C"
+    },
+    "border-soft": {
+      "type": "color",
+      "value": "#1E1E24"
+    },
+    "text-primary": {
+      "type": "color",
+      "value": "#EDEDEF"
+    },
+    "text-secondary": {
+      "type": "color",
+      "value": "#8E8E99"
+    },
+    "text-tertiary": {
+      "type": "color",
+      "value": "#565661"
+    },
+    "accent": {
+      "type": "color",
+      "value": "#FF8A3D"
+    },
+    "accent-bright": {
+      "type": "color",
+      "value": "#FFB25C"
+    },
+    "wave-idle": {
+      "type": "color",
+      "value": "#33333C"
+    },
+    "font-display": {
+      "type": "string",
+      "value": "Space Grotesk"
+    },
+    "font-body": {
+      "type": "string",
+      "value": "Inter"
+    },
+    "font-mono": {
+      "type": "string",
+      "value": "JetBrains Mono"
+    }
+  },
+  "fileToken": "41b27c06-cef7-459d-a051-1cb98a7e37f3"
+}

@@ -1,0 +1,1574 @@
+/*
+  Liquid Glass — 2026
+  ---------------------------------------------------------------------------
+  The material system for the Side Two surface.
+
+  Three ideas carry the whole look:
+
+  1. A glass pane is never one gradient. It is a body gradient (light entering
+     from the upper left), a specular highlight, a chromatic rim and a very soft
+     contact shadow. Each is a separate layer so they can be animated
+     independently — the rim turns with the cursor, the highlight tracks it,
+     and the body stays still.
+  2. Colour is carried by the rim and the bloom, never by a large fill. Obsidian
+     stays obsidian; the iridescence lives in 1px edges and out-of-focus light.
+  3. Everything is driven by two custom properties written per frame:
+     `--lg-level` (0..1 overall loudness) and `--lg-bass` (0..1 low band). The
+     audio engine owns them on :root, so any element can opt into reactivity
+     with one line of CSS and no React re-render.
+
+  All class names are prefixed `lg-` so this file can live next to the site's
+  existing design system without either one leaking into the other.
+*/
+
+:root {
+  /* Surface */
+  --lg-void: #050506;
+  --lg-void-2: #08080b;
+  --lg-void-3: #0d0d12;
+
+  /* Ink */
+  --lg-ink: #f2f3f7;
+  --lg-ink-dim: rgba(242, 243, 247, 0.68);
+  --lg-ink-faint: rgba(242, 243, 247, 0.48);
+  --lg-ink-ghost: rgba(242, 243, 247, 0.22);
+
+  /* Iridescence */
+  --lg-cyan: #96e6ea;
+  --lg-amber: #f2b878;
+  --lg-violet: #a9a0f0;
+  --lg-silver: #cbcfda;
+
+  /* Structure */
+  --lg-line: rgba(255, 255, 255, 0.09);
+  --lg-line-strong: rgba(255, 255, 255, 0.16);
+  --lg-radius-xl: 32px;
+  --lg-radius-lg: 24px;
+  --lg-radius-md: 16px;
+  --lg-radius-pill: 999px;
+
+  /* Motion */
+  --lg-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --lg-ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Type */
+  --lg-sans:
+    var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
+  --lg-mono:
+    var(--font-geist-mono), ui-monospace, 'SFMono-Regular', 'Roboto Mono',
+    monospace;
+
+  /* Written by the audio engine every frame. Sensible idle values first so a
+     visitor who never presses play still sees a living surface. */
+  --lg-level: 0;
+  --lg-bass: 0;
+  --lg-mid: 0;
+
+  /* Written by pointer handlers. */
+  --lg-mx: 50%;
+  --lg-my: 0%;
+  --lg-tilt-x: 0deg;
+  --lg-tilt-y: 0deg;
+  --lg-angle: 140deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --lg-level: 0;
+    --lg-bass: 0;
+    --lg-mid: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Root surface
+   ------------------------------------------------------------------------- */
+
+.lg-root {
+  position: relative;
+  color: var(--lg-ink);
+  font-family: var(--lg-sans);
+  font-feature-settings: 'ss01' 1, 'cv11' 1;
+  background: var(--lg-void);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.lg-root ::selection {
+  background: rgba(150, 230, 234, 0.24);
+  color: #fff;
+}
+
+.lg-shell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+}
+
+.lg-page {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 56px);
+}
+
+/* ---------------------------------------------------------------------------
+   Atmosphere — the light the glass is sitting in
+   ------------------------------------------------------------------------- */
+
+.lg-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      120% 80% at 50% -10%,
+      rgba(24, 26, 34, 0.9) 0%,
+      rgba(5, 5, 6, 0) 62%
+    ),
+    var(--lg-void);
+}
+
+.lg-atmosphere__bloom {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.42;
+  will-change: transform, opacity;
+}
+
+/* Cyan: cool key light, upper left. */
+.lg-atmosphere__bloom--key {
+  width: 46vw;
+  height: 46vw;
+  min-width: 420px;
+  min-height: 420px;
+  left: -12vw;
+  top: -14vw;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(118, 214, 222, 0.5),
+    rgba(88, 150, 168, 0.16) 46%,
+    transparent 70%
+  );
+  transform: scale(calc(1 + var(--lg-bass) * 0.12));
+  opacity: calc(0.3 + var(--lg-level) * 0.26);
+  animation: lg-drift-key 26s var(--lg-ease-soft) infinite alternate;
+}
+
+/* Amber: warm counter light, lower right — the "audio active" colour. */
+.lg-atmosphere__bloom--warm {
+  width: 40vw;
+  height: 40vw;
+  min-width: 360px;
+  min-height: 360px;
+  right: -10vw;
+  bottom: -16vw;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(242, 184, 120, 0.44),
+    rgba(196, 122, 74, 0.14) 48%,
+    transparent 72%
+  );
+  transform: scale(calc(1 + var(--lg-mid) * 0.16));
+  opacity: calc(0.24 + var(--lg-level) * 0.3);
+  animation: lg-drift-warm 32s var(--lg-ease-soft) infinite alternate;
+}
+
+/* Violet: the iridescent middle, barely there. */
+.lg-atmosphere__bloom--iris {
+  width: 30vw;
+  height: 30vw;
+  left: 46%;
+  top: 22%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(169, 160, 240, 0.28),
+    transparent 68%
+  );
+  opacity: calc(0.14 + var(--lg-level) * 0.16);
+  animation: lg-drift-iris 38s var(--lg-ease-soft) infinite alternate;
+}
+
+/* A thin horizon line of light, like a monitor in a dark room. */
+.lg-atmosphere__horizon {
+  position: absolute;
+  left: 50%;
+  bottom: -6%;
+  width: 120vw;
+  height: 46vh;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    60% 100% at 50% 100%,
+    rgba(242, 184, 120, 0.16),
+    transparent 70%
+  );
+  opacity: calc(0.5 + var(--lg-bass) * 0.4);
+}
+
+.lg-atmosphere__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+  background-size: 88px 88px;
+  mask-image: radial-gradient(
+    70% 60% at 50% 40%,
+    #000 0%,
+    rgba(0, 0, 0, 0.5) 55%,
+    transparent 100%
+  );
+  opacity: 0.5;
+}
+
+.lg-atmosphere__grain {
+  position: absolute;
+  inset: -50%;
+  background-image: url('/noise.png');
+  background-size: 220px 220px;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  animation: lg-grain 7s steps(6) infinite;
+}
+
+.lg-atmosphere__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 90% at 50% 45%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+
+@keyframes lg-drift-key {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 4vw 3vw;
+  }
+}
+
+@keyframes lg-drift-warm {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: -5vw -3vw;
+  }
+}
+
+@keyframes lg-drift-iris {
+  from {
+    translate: -3vw 2vw;
+  }
+  to {
+    translate: 3vw -4vw;
+  }
+}
+
+@keyframes lg-grain {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(-2%, 1%, 0);
+  }
+  40% {
+    transform: translate3d(1%, -2%, 0);
+  }
+  60% {
+    transform: translate3d(-1%, 2%, 0);
+  }
+  80% {
+    transform: translate3d(2%, 1%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-atmosphere__bloom,
+  .lg-atmosphere__grain {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The material
+   ------------------------------------------------------------------------- */
+
+.lg-glass {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--lg-radius-lg);
+  background:
+    linear-gradient(
+      152deg,
+      rgba(255, 255, 255, 0.088) 0%,
+      rgba(255, 255, 255, 0.032) 34%,
+      rgba(255, 255, 255, 0.014) 62%,
+      rgba(255, 255, 255, 0.055) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(10, 10, 14, 0.72) 0%,
+      rgba(10, 10, 14, 0.55) 100%
+    );
+  /* Written unprefixed only. Hand-adding `-webkit-backdrop-filter` next to it
+     makes the CSS minifier collapse the pair and keep just the prefixed
+     declaration — which Chrome no longer honours, leaving every pane
+     unfrosted. The build adds prefixes itself. */
+  backdrop-filter: blur(28px) saturate(150%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.045),
+    inset 1px 0 0 rgba(150, 230, 234, 0.07),
+    inset -1px 0 0 rgba(242, 184, 120, 0.06),
+    0 34px 90px -48px rgba(0, 0, 0, 0.95),
+    0 2px 5px rgba(0, 0, 0, 0.35);
+  transition:
+    background 0.6s var(--lg-ease),
+    box-shadow 0.6s var(--lg-ease),
+    transform 0.6s var(--lg-ease);
+}
+
+/* Cursor specular. Negative z-index with `isolation: isolate` on the pane keeps
+   it above the body gradient and below every child — including children that
+   are positioned with utilities, which a `.lg-glass > *` reset would have
+   overridden (it did, and made every absolutely positioned child in a card
+   stretch to full width). */
+.lg-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    280px circle at var(--lg-mx) var(--lg-my),
+    rgba(255, 255, 255, 0.11),
+    rgba(255, 255, 255, 0.03) 40%,
+    transparent 66%
+  );
+  opacity: 0;
+  transition: opacity 0.5s var(--lg-ease);
+}
+
+.lg-glass[data-lit='true']::before {
+  opacity: 1;
+}
+
+/* The chromatic rim. A conic sweep, masked to a 1px frame, turning with the
+   pointer angle so the edge colours travel around the pane. */
+.lg-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--lg-angle),
+    rgba(150, 230, 234, 0.5) 0%,
+    rgba(255, 255, 255, 0.24) 16%,
+    rgba(242, 184, 120, 0.42) 38%,
+    rgba(255, 255, 255, 0.16) 58%,
+    rgba(169, 160, 240, 0.44) 80%,
+    rgba(150, 230, 234, 0.5) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.5;
+  transition: opacity 0.6s var(--lg-ease);
+}
+
+.lg-glass:hover::after,
+.lg-glass[data-lit='true']::after {
+  opacity: 0.9;
+}
+
+/* Denser pane for the dock and the reader rail. */
+.lg-glass--heavy {
+  background:
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.11) 0%,
+      rgba(255, 255, 255, 0.04) 40%,
+      rgba(255, 255, 255, 0.02) 70%,
+      rgba(255, 255, 255, 0.07) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(8, 8, 12, 0.92) 0%,
+      rgba(8, 8, 12, 0.82) 100%
+    );
+  backdrop-filter: blur(40px) saturate(170%);
+}
+
+.lg-glass--flat {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.055) 0%,
+      rgba(255, 255, 255, 0.02) 100%
+    ),
+    rgba(9, 9, 12, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    0 20px 50px -40px rgba(0, 0, 0, 0.9);
+}
+
+/* A pane that is genuinely lit from behind: used for the active audio state. */
+.lg-glass--lit {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    inset 1px 0 0 rgba(150, 230, 234, 0.16),
+    inset -1px 0 0 rgba(242, 184, 120, 0.14),
+    0 0 60px -18px rgba(242, 184, 120, 0.35),
+    0 34px 90px -48px rgba(0, 0, 0, 0.95);
+}
+
+.lg-hairline {
+  border-top: 1px solid var(--lg-line);
+}
+
+/* ---------------------------------------------------------------------------
+   Type
+   ------------------------------------------------------------------------- */
+
+.lg-mono {
+  font-family: var(--lg-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.lg-mono--sm {
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+}
+
+.lg-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--lg-ink-faint);
+}
+
+.lg-eyebrow::before {
+  content: '';
+  width: 24px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.lg-display {
+  font-family: var(--lg-sans);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  text-wrap: balance;
+}
+
+.lg-title {
+  font-family: var(--lg-sans);
+  font-weight: 550;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.lg-body {
+  color: var(--lg-ink-dim);
+  font-size: 1rem;
+  line-height: 1.65;
+  letter-spacing: -0.005em;
+  text-wrap: pretty;
+}
+
+/* Iridescent text, used once per screen at most. */
+.lg-iridescent {
+  background: linear-gradient(
+    100deg,
+    #ffffff 0%,
+    var(--lg-cyan) 28%,
+    #ffffff 48%,
+    var(--lg-amber) 72%,
+    #ffffff 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lg-sheen 12s var(--lg-ease-soft) infinite;
+}
+
+@keyframes lg-sheen {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Controls
+   ------------------------------------------------------------------------- */
+
+.lg-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: var(--lg-ink);
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.14),
+    rgba(255, 255, 255, 0.03)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 24px -12px rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition:
+    transform 0.35s var(--lg-ease),
+    box-shadow 0.35s var(--lg-ease),
+    background 0.35s var(--lg-ease);
+  cursor: pointer;
+}
+
+.lg-icon-button:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.05)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 12px 30px -12px rgba(0, 0, 0, 0.9);
+}
+
+.lg-icon-button:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.lg-icon-button:focus-visible,
+.lg-pill-link:focus-visible,
+.lg-play:focus-visible,
+.lg-card:focus-visible,
+.lg-note-row:focus-visible {
+  outline: 1px solid var(--lg-cyan);
+  outline-offset: 3px;
+}
+
+.lg-play {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(255, 255, 255, 0.35),
+      rgba(255, 255, 255, 0.06) 55%
+    ),
+    rgba(255, 255, 255, 0.03);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    0 0 0 rgba(242, 184, 120, 0);
+  transition:
+    box-shadow 0.5s var(--lg-ease),
+    transform 0.4s var(--lg-ease);
+  cursor: pointer;
+}
+
+.lg-play[data-playing='true'] {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    0 0 34px -6px rgba(242, 184, 120, 0.55);
+}
+
+.lg-play:hover {
+  transform: scale(1.04);
+}
+
+.lg-play:active {
+  transform: scale(0.97);
+}
+
+/* Tags */
+.lg-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding-inline: 10px;
+  border-radius: var(--lg-radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--lg-ink-dim);
+  font-family: var(--lg-mono);
+  font-size: 0.5938rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    color 0.3s var(--lg-ease),
+    border-color 0.3s var(--lg-ease);
+}
+
+.lg-tag[data-active='true'] {
+  color: #0b0b0e;
+  background: var(--lg-ink);
+  border-color: transparent;
+}
+
+/* ---------------------------------------------------------------------------
+   Turntable
+   ------------------------------------------------------------------------- */
+
+.lg-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  perspective: 1200px;
+}
+
+.lg-turntable {
+  position: relative;
+  width: clamp(240px, 34vw, 440px);
+  aspect-ratio: 1;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--lg-tilt-x)) rotateY(var(--lg-tilt-y));
+  transition: transform 0.7s var(--lg-ease);
+}
+
+/* Everything above the platter rim: contact shadow, glow, halo. */
+.lg-turntable__halo {
+  position: absolute;
+  inset: -18%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(150, 230, 234, 0.14) 0%,
+    rgba(169, 160, 240, 0.09) 38%,
+    transparent 68%
+  );
+  filter: blur(18px);
+  opacity: calc(0.45 + var(--lg-level) * 0.55);
+  transform: scale(calc(1 + var(--lg-bass) * 0.06));
+  pointer-events: none;
+}
+
+.lg-turntable__shadow {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: -7%;
+  height: 12%;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.75);
+  filter: blur(28px);
+  transform: scaleY(0.6);
+  pointer-events: none;
+}
+
+.lg-turntable__disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.055) 0px,
+      rgba(255, 255, 255, 0.055) 1px,
+      rgba(0, 0, 0, 0) 1px,
+      rgba(0, 0, 0, 0) 5px
+    ),
+    radial-gradient(
+      circle at 34% 26%,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.02) 34%,
+      rgba(0, 0, 0, 0.5) 68%,
+      rgba(0, 0, 0, 0.72) 100%
+    ),
+    conic-gradient(
+      from 210deg,
+      #16171d,
+      #0a0a0d 24%,
+      #1b1c22 48%,
+      #09090c 72%,
+      #14151a 100%
+    );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 2px 22px rgba(255, 255, 255, 0.06),
+    inset 0 -14px 40px rgba(0, 0, 0, 0.8),
+    0 26px 60px -30px rgba(0, 0, 0, 0.95);
+  will-change: transform;
+}
+
+/* A moving specular band across the vinyl — the "liquid" read. */
+.lg-turntable__sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.12) 24deg,
+    transparent 52deg,
+    transparent 148deg,
+    rgba(150, 230, 234, 0.1) 172deg,
+    transparent 200deg,
+    transparent 300deg,
+    rgba(242, 184, 120, 0.09) 324deg,
+    transparent 352deg
+  );
+  mix-blend-mode: screen;
+  opacity: calc(0.5 + var(--lg-level) * 0.5);
+  transition: opacity 0.4s linear;
+  pointer-events: none;
+}
+
+.lg-turntable__grooves {
+  position: absolute;
+  inset: 7%;
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+    circle at 50% 50%,
+    rgba(0, 0, 0, 0.5) 0px,
+    rgba(255, 255, 255, 0.03) 1px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.35) 3px
+  );
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.lg-turntable__label {
+  position: absolute;
+  inset: 31%;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.6%;
+  text-align: center;
+  background:
+    radial-gradient(
+      circle at 34% 24%,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.14) 28%,
+      transparent 60%
+    ),
+    conic-gradient(
+      from 140deg,
+      #f4b979,
+      #e9a463 20%,
+      #b8b2ee 46%,
+      #8fe0e6 62%,
+      #f6cd95 82%,
+      #f4b979 100%
+    );
+  color: #141318;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.38),
+    0 6px 26px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+/* A wordmark, a spindle, a side marker — the three things printed on a label.
+   The track name lives in the transport card instead, where it is legible. */
+.lg-turntable__label-mark {
+  font-family: var(--lg-mono);
+  font-size: clamp(7px, 1.05vw, 10px);
+  font-weight: 500;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  padding-left: 0.36em;
+  opacity: 0.88;
+}
+
+.lg-turntable__label-spindle {
+  width: 6.5%;
+  min-width: 5px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #0b0b0e;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.lg-turntable__label-side {
+  font-family: var(--lg-mono);
+  font-size: clamp(4.5px, 0.55vw, 6.5px);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  padding-left: 0.24em;
+  opacity: 0.52;
+}
+
+/* Tonearm — geometry is fixed in the turntable's own coordinate space:
+   pivot at (86%, 12%), head resting over the outer grooves at (60%, 34%).
+   The wrapper rotates about the pivot so the whole assembly swings in. */
+.lg-turntable__arm {
+  position: absolute;
+  inset: 0;
+  transform-origin: 92% 10%;
+  transform: rotate(-7deg);
+  transition: transform 1s var(--lg-ease);
+  pointer-events: none;
+}
+
+.lg-turntable[data-playing='true'] .lg-turntable__arm {
+  transform: rotate(0deg);
+}
+
+.lg-turntable__arm-pivot {
+  position: absolute;
+  left: 92%;
+  top: 10%;
+  width: 8.5%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 34% 26%,
+      rgba(255, 255, 255, 0.6),
+      rgba(255, 255, 255, 0.12) 42%
+    ),
+    linear-gradient(160deg, #2c2e36, #101116);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.45),
+    0 8px 20px rgba(0, 0, 0, 0.7);
+}
+
+.lg-turntable__arm-bar {
+  position: absolute;
+  left: 92%;
+  top: 10%;
+  width: 1.1%;
+  height: 31%;
+  transform: translateX(-50%) rotate(56.6deg);
+  transform-origin: 50% 0;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(120, 124, 138, 0.75),
+    rgba(246, 248, 255, 0.95) 42%,
+    rgba(150, 156, 172, 0.7)
+  );
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+}
+
+.lg-turntable__arm-head {
+  position: absolute;
+  left: 66%;
+  top: 27%;
+  width: 12%;
+  height: 4.6%;
+  transform: translate(-50%, -50%) rotate(56.6deg);
+  border-radius: 2px;
+  background: linear-gradient(
+    160deg,
+    #e6e8f0 0%,
+    #9a9eac 46%,
+    #5c5f6b 100%
+  );
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.65);
+}
+
+/* Frequency ring around the platter, drawn with bars. */
+.lg-orbit {
+  position: absolute;
+  inset: -13%;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: calc(0.3 + var(--lg-level) * 0.5);
+  transition: opacity 0.4s linear;
+}
+
+/* One spoke per bar: a full-size wrapper rotated about the ring's centre. */
+.lg-orbit__spoke {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.lg-orbit__bar {
+  position: absolute;
+  left: 50%;
+  top: -9px;
+  width: 2px;
+  height: 13px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to top,
+    rgba(150, 230, 234, 0.06),
+    rgba(232, 240, 248, 0.8)
+  );
+  transform-origin: 50% 100%;
+  will-change: transform, opacity;
+}
+
+/* The rotating assembly: disc, grooves, sheen and label share one clock. */
+.lg-turntable__spin {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transform: rotate(18deg);
+  will-change: transform;
+}
+
+/* ---------------------------------------------------------------------------
+   Waveform readout
+   ------------------------------------------------------------------------- */
+
+.lg-wave {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 22px;
+}
+
+.lg-wave__bar {
+  width: var(--lg-bar-width, 2px);
+  min-height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to top,
+    rgba(150, 230, 234, 0.55),
+    rgba(242, 184, 120, 0.85)
+  );
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.lg-wave--idle .lg-wave__bar {
+  animation: lg-wave-idle 2.8s var(--lg-ease-soft) infinite;
+}
+
+@keyframes lg-wave-idle {
+  0%,
+  100% {
+    transform: scaleY(0.28);
+  }
+  50% {
+    transform: scaleY(0.62);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Dock
+   ------------------------------------------------------------------------- */
+
+.lg-dock {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  bottom: clamp(16px, 2.4vw, 28px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 8px 8px 10px;
+  border-radius: var(--lg-radius-pill);
+  transition:
+    transform 0.7s var(--lg-ease),
+    padding 0.7s var(--lg-ease),
+    background 0.7s var(--lg-ease),
+    box-shadow 0.7s var(--lg-ease);
+  will-change: transform;
+}
+
+/* Compact: docks to the bottom-right corner once the hero is behind you. */
+.lg-dock[data-compact='true'] {
+  left: auto;
+  right: clamp(14px, 2vw, 24px);
+  bottom: clamp(14px, 2vw, 24px);
+  transform: none;
+  padding: 6px 6px 6px 8px;
+  gap: 4px;
+}
+
+.lg-dock[data-hidden='true'] {
+  transform: translateX(-50%) translateY(140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lg-dock[data-compact='true'][data-hidden='true'] {
+  transform: translateY(140%);
+}
+
+.lg-pill-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding-inline: 14px;
+  border-radius: var(--lg-radius-pill);
+  color: var(--lg-ink-dim);
+  font-family: var(--lg-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    color 0.3s var(--lg-ease),
+    background 0.3s var(--lg-ease);
+  cursor: pointer;
+}
+
+.lg-pill-link:hover {
+  color: var(--lg-ink);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.lg-pill-link[data-active='true'] {
+  color: var(--lg-ink);
+}
+
+/* The travelling light behind the active nav pill. Rendered once by the dock. */
+.lg-dock__indicator {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  border-radius: var(--lg-radius-pill);
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.16),
+    rgba(255, 255, 255, 0.04)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 6px 18px -8px rgba(0, 0, 0, 0.8);
+  transition:
+    transform 0.55s var(--lg-ease),
+    width 0.55s var(--lg-ease),
+    opacity 0.3s var(--lg-ease);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lg-dock[data-compact='true'] .lg-dock__nav {
+  display: none;
+}
+
+.lg-dock[data-compact='true'] .lg-pill-link {
+  padding-inline: 10px;
+}
+
+.lg-dock__track {
+  max-width: 190px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--lg-ink);
+}
+
+.lg-dock[data-compact='true'] .lg-dock__track {
+  display: none;
+}
+
+.lg-dock__divider {
+  width: 1px;
+  height: 22px;
+  background: var(--lg-line);
+  flex: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Cards / works
+   ------------------------------------------------------------------------- */
+
+.lg-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 300px;
+  padding: 22px;
+  overflow: hidden;
+  border-radius: var(--lg-radius-lg);
+  text-align: left;
+  color: var(--lg-ink);
+  cursor: pointer;
+  transform: translateZ(0);
+  transition:
+    transform 0.7s var(--lg-ease),
+    box-shadow 0.7s var(--lg-ease);
+}
+
+.lg-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 50px 100px -50px rgba(0, 0, 0, 0.95),
+    0 0 70px -40px rgba(150, 230, 234, 0.4);
+}
+
+.lg-card__media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.lg-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+  filter: saturate(0.75) contrast(1.05);
+  transform: scale(1.04);
+  transition:
+    transform 1.2s var(--lg-ease),
+    opacity 0.8s var(--lg-ease),
+    filter 0.8s var(--lg-ease);
+}
+
+.lg-card:hover .lg-card__media img {
+  transform: scale(1.1);
+  opacity: 0.72;
+  filter: saturate(1.05) contrast(1.08);
+}
+
+.lg-card__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to top,
+      rgba(5, 5, 6, 0.92) 0%,
+      rgba(5, 5, 6, 0.55) 38%,
+      rgba(5, 5, 6, 0.12) 72%,
+      transparent 100%
+    ),
+    linear-gradient(
+      130deg,
+      rgba(150, 230, 234, 0.06),
+      transparent 45%,
+      rgba(242, 184, 120, 0.05)
+    );
+}
+
+.lg-card__index {
+  position: absolute;
+  top: 20px;
+  left: 22px;
+  color: var(--lg-ink-faint);
+}
+
+.lg-card__badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding-inline: 10px;
+  border-radius: var(--lg-radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 10, 14, 0.5);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.4s var(--lg-ease),
+    transform 0.4s var(--lg-ease);
+}
+
+.lg-card:hover .lg-card__badge,
+.lg-card:focus-visible .lg-card__badge {
+  opacity: 1;
+  transform: none;
+}
+
+.lg-card__arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  transition: transform 0.5s var(--lg-ease);
+}
+
+.lg-card:hover .lg-card__arrow {
+  transform: translate(2px, -2px);
+}
+
+/* ---------------------------------------------------------------------------
+   Liner notes
+   ------------------------------------------------------------------------- */
+
+.lg-note-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: clamp(12px, 2vw, 28px);
+  width: 100%;
+  padding: 22px 20px;
+  border-radius: var(--lg-radius-md);
+  border-top: 1px solid var(--lg-line);
+  color: var(--lg-ink);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.45s var(--lg-ease),
+    border-color 0.45s var(--lg-ease),
+    padding-left 0.45s var(--lg-ease);
+}
+
+.lg-note-row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    420px circle at var(--lg-mx) var(--lg-my),
+    rgba(255, 255, 255, 0.07),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.4s var(--lg-ease);
+  pointer-events: none;
+}
+
+.lg-note-row:hover::before,
+.lg-note-row[data-lit='true']::before {
+  opacity: 1;
+}
+
+.lg-note-row:hover {
+  background: rgba(255, 255, 255, 0.028);
+  border-color: rgba(255, 255, 255, 0.14);
+  padding-left: 26px;
+}
+
+.lg-note-row__index {
+  padding-top: 0.32em;
+  color: var(--lg-ink-ghost);
+  font-family: var(--lg-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  transition: color 0.4s var(--lg-ease);
+}
+
+.lg-note-row:hover .lg-note-row__index {
+  color: var(--lg-amber);
+}
+
+.lg-note-row__title {
+  font-size: clamp(1rem, 2vw, 1.375rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.lg-note-row__meta {
+  padding-top: 0.42em;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--lg-ink-faint);
+  font-family: var(--lg-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .lg-note-row {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 12px;
+    padding: 18px 12px;
+  }
+
+  .lg-note-row__meta {
+    grid-column: 2;
+    gap: 10px;
+  }
+
+  .lg-note-row__tags {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Reader
+   ------------------------------------------------------------------------- */
+
+.lg-prose {
+  max-width: 68ch;
+  font-size: clamp(1.0625rem, 1.35vw, 1.1875rem);
+  line-height: 1.75;
+  color: rgba(242, 243, 247, 0.78);
+  letter-spacing: -0.003em;
+}
+
+.lg-prose > * + * {
+  margin-top: 1.5em;
+}
+
+.lg-prose h2 {
+  margin-top: 2.4em;
+  margin-bottom: -0.4em;
+  color: var(--lg-ink);
+  font-size: clamp(1.375rem, 2.4vw, 1.75rem);
+  font-weight: 550;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.lg-prose strong {
+  color: var(--lg-ink);
+  font-weight: 550;
+}
+
+.lg-prose em {
+  color: rgba(242, 243, 247, 0.9);
+}
+
+.lg-prose blockquote {
+  margin-block: 2em;
+  padding: 20px 24px;
+  border-left: 1px solid rgba(242, 184, 120, 0.5);
+  border-radius: 0 var(--lg-radius-md) var(--lg-radius-md) 0;
+  background: linear-gradient(
+    90deg,
+    rgba(242, 184, 120, 0.08),
+    transparent 80%
+  );
+  color: var(--lg-ink);
+  font-size: 1.0625em;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+.lg-prose ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+  padding-left: 0;
+  list-style: none;
+}
+
+.lg-prose li {
+  position: relative;
+  padding-left: 1.4em;
+}
+
+.lg-prose li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 6px;
+  height: 1px;
+  background: var(--lg-cyan);
+  opacity: 0.8;
+}
+
+.lg-prose code {
+  font-family: var(--lg-mono);
+  font-size: 0.85em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--lg-cyan);
+}
+
+.lg-prose pre {
+  overflow-x: auto;
+  padding: 20px;
+  border-radius: var(--lg-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(4, 4, 6, 0.7);
+  font-family: var(--lg-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: rgba(242, 243, 247, 0.82);
+}
+
+.lg-prose pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* ---------------------------------------------------------------------------
+   Keyframes used by inline animation styles
+   ------------------------------------------------------------------------- */
+
+@keyframes lg-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+
+@keyframes lg-eq {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   No backdrop-filter
+   ---------------------------------------------------------------------------
+   A pane that cannot blur must still be readable: text passing underneath a
+   floating dock is a legibility bug, not a texture. The solid layer paints
+   behind the translucent gradients, so the material stays recognisably glass —
+   just denser. */
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lg-glass {
+    background-color: rgba(10, 10, 14, 0.94);
+  }
+
+  .lg-glass--heavy,
+  .lg-glass--flat {
+    background-color: rgba(8, 8, 12, 0.97);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Small screens
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .lg-turntable {
+    width: clamp(200px, 62vw, 300px);
+  }
+
+  .lg-dock {
+    max-width: calc(100vw - 20px);
+    padding: 6px;
+    gap: 2px;
+  }
+
+  .lg-pill-link {
+    height: 34px;
+    padding-inline: 9px;
+    font-size: 0.5625rem;
+    letter-spacing: 0.12em;
+  }
+
+  .lg-dock__divider {
+    height: 18px;
+  }
+
+  .lg-dock__indicator {
+    top: 5px;
+    bottom: 5px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Utilities
+   ------------------------------------------------------------------------- */
+
+.lg-divider {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.12) 20%,
+    rgba(255, 255, 255, 0.12) 80%,
+    transparent
+  );
+}
+
+.lg-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.lg-fade-bottom {
+  mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+}
+
+/* Scrollbar, dark and quiet. */
+.lg-root,
+.lg-root * {
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-iridescent {
+    animation: none;
+  }
+
+  .lg-card,
+  .lg-card__media img,
+  .lg-glass,
+  .lg-dock {
+    transition-duration: 0.01ms;
+  }
+}

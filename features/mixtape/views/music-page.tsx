@@ -298,7 +298,13 @@ export function MusicPageView() {
       />
 
       <div className="relative flex h-auto w-full max-w-[1850px] flex-col gap-4 overflow-y-auto rounded-[2.5rem] border border-[#222] bg-[#111] p-3 shadow-[0_60px_120px_rgba(0,0,0,0.9),inset_0_2px_6px_rgba(255,255,255,0.1)] sm:p-5 lg:h-[750px] lg:flex-row lg:overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 rounded-[2.5rem] bg-[url('/noise.png')] opacity-[0.08] mix-blend-overlay" />
+        <div
+          className="pointer-events-none absolute inset-0 rounded-[2.5rem] opacity-[0.08] mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
+        />
 
         {/* =======================
               DECK 1 (LOCAL)

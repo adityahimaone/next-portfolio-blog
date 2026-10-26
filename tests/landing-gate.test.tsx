@@ -1,7 +1,7 @@
 import { StrictMode, act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 
-import { STORM_TIMELINE } from '@/components/ui/signal-storm-preloader'
+import { STICKER_BOOT_TIMELINE } from '@/components/ui/sticker-boot-preloader'
 import { LandingGate } from '@/features/landing-page/components/landing-gate'
 ;(
   globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
@@ -88,7 +88,7 @@ describe('<LandingGate />', () => {
       jest.advanceTimersByTime(20)
     })
     act(() => {
-      jest.advanceTimersByTime(STORM_TIMELINE.total)
+      jest.advanceTimersByTime(STICKER_BOOT_TIMELINE.total)
     })
     expect(host.querySelector('[data-boot-storm]')).toBeNull()
     expect(host.querySelector('[data-boot-cover]')).toBeNull()
@@ -109,7 +109,7 @@ describe('<LandingGate />', () => {
     })
     expect(document.documentElement.hasAttribute('data-boot')).toBe(true)
     act(() => {
-      jest.advanceTimersByTime(STORM_TIMELINE.total)
+      jest.advanceTimersByTime(STICKER_BOOT_TIMELINE.total)
     })
     expect(document.documentElement.hasAttribute('data-boot')).toBe(false)
   })

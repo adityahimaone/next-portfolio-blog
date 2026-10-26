@@ -16,7 +16,13 @@ module.exports = {
   // Playwright specs live in e2e/ and run via `pnpm test:e2e` against a real
   // server. Jest's testMatch would otherwise sweep them up, where they fail to
   // load on Playwright's own runtime rather than on anything project-specific.
-  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/e2e/'],
+  testPathIgnorePatterns: [
+    '<rootDir>/node_modules/',
+    '<rootDir>/e2e/',
+    // A tool snapshot directory with duplicate copies of old tests; it is not
+    // part of the app and must not decide whether the app's suite is green.
+    '<rootDir>/.switchyard/',
+  ],
   transform: {
     '^.+\\.(ts|tsx)$': [
       'ts-jest',

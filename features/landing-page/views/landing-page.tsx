@@ -1,29 +1,24 @@
 import { LandingGate } from '../components/landing-gate'
-import Rack01LandingPage from '../rack-01/rack-01'
+import { Studio } from '../studio'
 import type { ArchiveRepo } from '@/features/projects/lib/github'
 
 /**
- * The page is a server component and the rack is a client component, so the
- * repository rows cross that boundary as plain serialisable data. They cannot
- * be fetched lower down: an async server component cannot be rendered inside
- * this client tree.
+ * The landing page is the "track timeline" studio. `LandingGate` still wraps
+ * it: the boot overlay is driven by a `<head>` script in `app/layout.tsx`, so
+ * the gate has to stay mounted for that cover to be released.
  *
- * The rows are `ArchiveRepo`, not `GitHubRepo` — the page narrows them before
- * passing, so only the fields the archive reads cross the boundary.
- *
- * `LandingGate` wraps the rack rather than replacing it. The gate renders the
- * rack first and the boot overlay after it, so the landing page is already in
- * the DOM and already measured when the blinds leave — no layout shift, and no
- * second layout pass for the camera to be re-measured through.
+ * `archiveRepos` is still accepted so `app/page.tsx` and its server-side fetch
+ * are untouched; the studio does not read it.
  */
 export default function LandingPage({
   archiveRepos,
 }: {
   archiveRepos: readonly ArchiveRepo[]
 }) {
+  void archiveRepos
   return (
     <LandingGate>
-      <Rack01LandingPage archiveRepos={archiveRepos} />
+      <Studio />
     </LandingGate>
   )
 }

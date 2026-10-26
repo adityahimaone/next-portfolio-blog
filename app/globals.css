@@ -1473,3 +1473,16 @@ body[data-modal-open='true'] .dock {
     transform: none;
   }
 }
+
+/* The landing page retires the dock before hydration. This used to be a React
+   branch inside MagneticDock, which made the server render the dock while the
+   client's first render skipped it — a hydration mismatch on every visit. The
+   flag already lives on <html>, so the dock stays in the tree and CSS takes it
+   out of paint and the accessibility tree instead. */
+html[data-interface='hidden'] [data-dock] {
+  display: none !important;
+}
+
+html[data-interface='hidden'] [data-music-player] {
+  display: none !important;
+}

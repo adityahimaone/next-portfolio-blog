@@ -93,6 +93,7 @@ export function MusicPlayer() {
       {shouldRenderPlayer && (
         <motion.div
           ref={containerRef}
+          data-music-player
           initial={{ opacity: 0, scale: 0.8, y: 50 }}
           animate={{
             opacity: showScrollTop ? 1 : 0,
@@ -109,7 +110,11 @@ export function MusicPlayer() {
         >
           {/* Audio Chassis Widget */}
           <motion.div
-            className="group relative flex items-center gap-2.5 rounded-lg border border-[#3e423c] bg-[#121412] p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.7),inset_0_1px_rgba(255,255,255,0.12),0_0_0_1px_#070807] transition-all"
+            className="group relative flex items-center gap-2.5 rounded-lg border border-[#3e423c] bg-[#121412] p-1.5 transition-all"
+            style={{
+              boxShadow:
+                '0 12px 28px rgba(0, 0, 0, 0.7), inset 0 1px rgba(255, 255, 255, 0.12), 0 0 0 1px #070807',
+            }}
             layout
           >
             {/* Micro Screws */}

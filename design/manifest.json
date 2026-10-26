@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-26",
+  "surfaces": [
+    {
+      "id": "redesign-portfolio-blog",
+      "title": "Aditya Himawan — Portfolio / Blog",
+      "status": "ready-for-review",
+      "design": "design/redesign-portfolio-blog.pen",
+      "export": "design/exports/redesign-portfolio-blog.png",
+      "canvas": "2960x4050",
+      "routes": [
+        "/",
+        "/projects",
+        "/blog",
+        "/blog/[slug]"
+      ],
+      "direction": "Studio Glass — a 2026 refinement of the live DAW-session hero. Warm hardware charcoal, signal orange, lamp amber and monitor moss; one liquid-glass instrument per view; Syne display, Space Grotesk UI, Geist body, Geist Mono silkscreen, Orbitron readouts.",
+      "review": {
+        "feedback": "Keep the current hero's DNA; brainstorm the other sections from the same theme; modernise the hero for 2026 while keeping it clean and simple.",
+        "changes": [
+          "Kept the live DAW arrangement as the centrepiece and reframed it as one sheet of liquid glass over a warm ambient room.",
+          "Kept the name inside the profile clip, simplified the master strip to one fader plus a waveform, and made the dock the only transport.",
+          "Extended the studio vocabulary instead of switching themes: Works is a channel rack, Notes is a tracklist, the Reader is a solo view with a waveform scrub.",
+          "Added a section map and a review-notes frame so the whole signal chain and the reasoning are visible in the deliverable.",
+          "Reworked mobile as a vertical session rather than a scaled desktop, with real tap targets and a compact transport."
+        ]
+      },
+      "frames": [
+        {
+          "name": "00 / System + Section Map",
+          "size": "1440x760",
+          "purpose": "Material tokens, four type voices and the seven-section signal chain."
+        },
+        {
+          "name": "01 / Hero — Session Glass",
+          "size": "1440x960",
+          "purpose": "Arrangement hero, profile clip with name and statement, channel lanes, playhead, master strip and dock."
+        },
+        {
+          "name": "02 / Selected Works — Channel Rack",
+          "size": "1440x1580",
+          "purpose": "Feature release with a live task board, metrics card, two project strips, archive and contact."
+        },
+        {
+          "name": "03 / Liner Notes — Tracklist",
+          "size": "1440x1280",
+          "purpose": "Lead note with waveform, then index / title / tags / runtime / date rows and a play-the-tracklist footer."
+        },
+        {
+          "name": "04 / Reader — Solo View",
+          "size": "1440x1440",
+          "purpose": "Reading transport, 690px article measure, pull quote, code block and a quiet glass rail."
+        },
+        {
+          "name": "05 / Mobile — Hero",
+          "size": "390x844",
+          "purpose": "Two-line name, vertical session card and compact dock."
+        },
+        {
+          "name": "06 / Mobile — Liner Notes",
+          "size": "390x844",
+          "purpose": "Lead note, five-row tracklist and runtime total."
+        },
+        {
+          "name": "07 / Mobile — Selected Works",
+          "size": "390x844",
+          "purpose": "Feature release board, two project strips and archive."
+        },
+        {
+          "name": "08 / What Changed",
+          "size": "1440x416",
+          "purpose": "Review-response notes and the structural motif rule."
+        }
+      ],
+      "sections": [
+        {
+          "id": "hero",
+          "name": "Hero / Arrangement",
+          "concept": "The session opens. The name is set inside the profile clip, not above the instrument."
+        },
+        {
+          "id": "about",
+          "name": "About / Patch Bay",
+          "concept": "The machine opens. Biography reads as routing notes, not a résumé wall."
+        },
+        {
+          "id": "skills",
+          "name": "Skills / Modules",
+          "concept": "Capability is a rack: modules, signal strength and years on the module."
+        },
+        {
+          "id": "experience",
+          "name": "Experience / Timeline",
+          "concept": "A career across the ruler. Roles are clips; the playhead is the current role."
+        },
+        {
+          "id": "works",
+          "name": "Works / Channel Rack",
+          "concept": "Projects are channel strips with a board, a meter and real stack tags."
+        },
+        {
+          "id": "notes",
+          "name": "Notes / Liner Notes",
+          "concept": "Posts are a tracklist: index, title, tags, runtime, date. The reader is solo view."
+        },
+        {
+          "id": "contact",
+          "name": "Contact / Master Out",
+          "concept": "One output. An open brief, an email and a signal that resolves."
+        }
+      ],
+      "tokens": {
+        "color": {
+          "void": "#0D1110",
+          "ink": "#F2F0E9",
+          "inkSecondary": "#C9D0CA",
+          "muted": "#98A19A",
+          "faint": "#6E7771",
+          "signal": "#FF5A1F",
+          "lamp": "#E0B75A",
+          "monitor": "#7ABB5E",
+          "cool": "#7E9BA8",
+          "hairline": "#FFFFFF14"
+        },
+        "type": {
+          "display": "Syne 800",
+          "ui": "Space Grotesk 400 / 500 / 600",
+          "body": "Geist 400",
+          "mono": "Geist Mono 400 / 500 / 600",
+          "readout": "Orbitron 500"
+        },
+        "grid": "1440 desktop / 390 mobile · 48px gutter · 12 columns · 20px gaps",
+        "radii": "16 / 20 / 22 / 32"
+      },
+      "material": {
+        "fill": "rgba(255,255,255,0.04–0.10) linear gradient over the ambient room",
+        "blur": "26px",
+        "saturate": "140%",
+        "rim": "1px gradient rim — white 33% → cool 13% → lamp 13% → white 13%",
+        "innerHighlight": "inset 0 1px 1px rgba(255,255,255,0.25)",
+        "outerShadow": "0 30px 80px rgba(0,0,0,0.67)",
+        "rule": "Glass is for instruments and controls, never for article body. One accent per view."
+      },
+      "motion": [
+        "Lenis inertia scroll feeds GSAP ScrollTrigger for the section handoffs.",
+        "Motion handles stagger and dialog transitions; the audio provider never unmounts.",
+        "The hero analyser drives the waveform bars and the ambient bloom intensity while playing.",
+        "The dock contracts to the bottom pill after the hero; reduced-motion keeps the static frame."
+      ]
+    }
+  ]
+}

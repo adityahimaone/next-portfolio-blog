@@ -13,7 +13,6 @@ import {
   type MotionValue,
 } from 'motion/react'
 import { NAV_ITEMS, isActiveNavItem } from '@/features/booth/nav-items'
-import { useInterfaceVisibility } from '@/hooks/use-hide-interface'
 import { useIsMobile } from '@/hooks/use-media'
 import { cn } from '@/lib/utils'
 
@@ -56,23 +55,20 @@ export function MagneticDock() {
   const pathname = usePathname()
   const mouseX = useMotionValue(Infinity)
   const shouldReduceMotion = useReducedMotion()
-  const interfaceVisibility = useInterfaceVisibility()
   const isMobile = useIsMobile()
 
   if (isBoothRoute(pathname)) return null
   if (!isDockRoute(pathname)) return null
-  // The mixtape's stealth mode. Unmounts outright rather than fading, so the
-  // dock's backdrop-filter layer is gone instead of sitting invisible over
-  // the page still costing a compositing pass.
-  if (interfaceVisibility === 'hidden') return null
-
   // A phone has no pointer to be near, so the magnify never fires there. The
   // dock still earns its place as a persistent route between sections, but it
   // drops to a static bar at ICON_SIZE and the icons stop resizing.
   const magnify = !shouldReduceMotion && !isMobile
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 md:bottom-5">
+    <div
+      data-dock
+      className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 md:bottom-5"
+    >
       <nav
         aria-label="Quick navigation"
         onMouseMove={(event) => mouseX.set(event.clientX)}

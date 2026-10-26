@@ -31,6 +31,8 @@ export async function GET() {
     // real page a crawler can index, not because it is in the navigation.
     { url: '/skills', changefreq: 'monthly', priority: 0.7 },
     { url: '/music', changefreq: 'monthly', priority: 0.8 },
+    // The visual system behind the landing page. Linked from the footer note.
+    { url: '/sunnyside', changefreq: 'monthly', priority: 0.6 },
     // /contact, /about, /work and /guides are absent on purpose. Their content
     // was folded into the landing profile deck, the landing contact section,
     // the projects filter and the blog index, and those routes now redirect.

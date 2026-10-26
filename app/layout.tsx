@@ -192,24 +192,23 @@ export default function RootLayout({
 
             Two things are written here, before the body is parsed:
 
-            - `data-boot="on"`, which shows the boot cover (`StormCover`, in the
-              landing page's HTML, hidden by default). The cover is the
-              preloader's own first frame — the storm's rows start at opacity 0,
-              so the first frame is the bare ground — which is why handing over
-              to the real overlay a moment later is invisible.
-            - `--boot-play: paused`, the variable the hero's letters read. They
-              are held from their very first frame instead of being frozen
-              mid-rise when the overlay's effect finally runs, so the release at
-              1300ms is deterministic. Not written under reduced motion: there
-              the letters do not animate at all, and the overlay's own restore
-              skips them in that mode, so nothing would ever release them.
+            - `data-boot="on"`, which shows the boot cover (`StickerBootCover`,
+              in the landing page's HTML, hidden by default). The cover is the
+              preloader's own first frame: the same cobalt room and cream
+              sticker sheet the live overlay mounts, which is why handing over a
+              moment later is invisible.
+            - `--boot-play: paused`, the variable the retired arrangement hero
+              read. The new hero does not use it, but the gate still clears it
+              so a client-side return to this route cannot leave a stale value
+              behind.
 
-            The 8s failsafe is the price of painting something before knowing
-            whether the app will ever hydrate. If the storm never mounts, the
-            cover comes down and the letters run on their own, so the worst case
-            is a slow page rather than a dark page with no title on it. With no
-            JavaScript at all this block never runs, no attribute is written,
-            the cover stays hidden and the page is exactly the page.
+            The 8s failsafe is the price of painting the cover before knowing
+            whether the app will ever hydrate. If the boot never mounts, the
+            cover comes down and the page underneath is exactly the page, so
+            the worst case is a slow reveal rather than a cobalt room with no
+            way out. With no JavaScript at all this block never runs, no
+            attribute is written, the cover stays hidden and the page is the
+            page.
 
             The attribute goes on last. Everything above it can only fail by
             throwing, and if it does, no cover is shown — rather than a cover

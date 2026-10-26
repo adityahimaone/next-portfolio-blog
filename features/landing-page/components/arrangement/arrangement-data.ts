@@ -176,7 +176,7 @@ const MAKING_CLIPS_RAW: readonly ArrangementClip[] = [
     label: 'PROFILE',
     start: 0.42,
     end: 0.92,
-    color: '#d7b36f',
+    color: '#ffd98e',
     detail: 'The practice behind the screen — how the work is chosen and cut.',
   },
   {
@@ -186,7 +186,7 @@ const MAKING_CLIPS_RAW: readonly ArrangementClip[] = [
     label: 'COMPOSE / INTERACTION → COMPONENTS',
     start: 0.05,
     end: 0.34,
-    color: '#c07352',
+    color: '#ffab94',
     group: 'frontend',
     notes: levels('frontend'),
     detail: 'Understand the interaction, then build the pieces it needs.',
@@ -198,7 +198,7 @@ const MAKING_CLIPS_RAW: readonly ArrangementClip[] = [
     label: 'CONNECT / DATA BOUNDARY',
     start: 0.3,
     end: 0.66,
-    color: '#7d97ab',
+    color: '#a9d4f5',
     group: 'app-data',
     notes: levels('app-data'),
     detail: 'Typed data at the boundary, rendering chosen per route.',
@@ -210,7 +210,7 @@ const MAKING_CLIPS_RAW: readonly ArrangementClip[] = [
     label: 'SHIP / OBSERVE',
     start: 0.62,
     end: 0.97,
-    color: '#4e91a8',
+    color: '#9fe0e8',
     group: 'delivery-infra',
     notes: levels('delivery-infra'),
     detail: 'Deploy, watch it, and fix what the meters show.',
@@ -222,7 +222,7 @@ const MAKING_CLIPS_RAW: readonly ArrangementClip[] = [
     label: 'PRACTICE / READ THE BREAKAGE',
     start: 0.1,
     end: 0.88,
-    color: '#6f8a6d',
+    color: '#b4e3bf',
     notes: envelope(MAKING_RULER_LABELS.length),
     detail: 'Write down what broke, so the next build starts further along.',
   },
@@ -274,7 +274,7 @@ export const CAREER_RULER_LABELS = Array.from({ length: 9 }, (_, index) =>
   String(YEAR_MIN + index),
 )
 
-const CAREER_COLORS = ['#d7b36f', '#7d97ab', '#c07352', '#6f8a6d'] as const
+const CAREER_COLORS = ['#ffd98e', '#a9d4f5', '#ffab94', '#b4e3bf'] as const
 
 /**
  * A label short enough to fit a narrow clip.
@@ -361,7 +361,7 @@ function buildCareerClips(): ArrangementClip[] {
     label: 'PROFILE',
     start: primary.start,
     end: primary.end,
-    color: '#d7b36f',
+    color: '#ffd98e',
     detail: 'The practice behind the record.',
   })
 
@@ -421,7 +421,7 @@ const ABOUT_SEEDS: readonly AboutSeed[] = [
     title: 'FOCUS',
     note: 'REACT / NEXT.JS / TYPESCRIPT / TAILWIND / TANSTACK / JQUERY',
     heading: 'Start with the user.',
-    color: '#d7b36f',
+    color: '#ffd98e',
     group: 'frontend',
     story:
       'I begin with the interaction, not the component, because the component is the cheap part to get right. Four years of production frontends, most of them React and Next.js on systems where the interface is load-bearing rather than decorative.',
@@ -431,7 +431,7 @@ const ABOUT_SEEDS: readonly AboutSeed[] = [
     title: 'SYSTEMS',
     note: 'NODE.JS / GO / POSTGRESQL / PRISMA',
     heading: 'Build the system.',
-    color: '#7d97ab',
+    color: '#a9d4f5',
     group: 'app-data',
     story:
       'I use React, Next.js, and TypeScript to create reusable structures that keep new features consistent. The structure underneath the first screen decides whether the next six months are cheap or expensive: typed data at the boundary, rendering chosen per route rather than by default.',
@@ -441,7 +441,7 @@ const ABOUT_SEEDS: readonly AboutSeed[] = [
     title: 'RANGE',
     note: 'DOCKER / NGINX / GRAFANA / UPTIME KUMA',
     heading: 'Stay close to production.',
-    color: '#b68ba5',
+    color: '#e3b9ea',
     group: 'delivery-infra',
     story:
       'I work across application data, deployment and monitoring when the frontend needs more than a polished screen. This site is built with Next.js and deployed to Cloudflare Workers through OpenNext, with its data and rendering watched end to end — which is why the writing here is about what broke.',
@@ -494,9 +494,9 @@ export type MixerStrip = {
  * it and the Patch's module all take their hue from here. Typed in once.
  */
 export const GROUP_COLORS: Record<string, string> = {
-  frontend: '#c07352',
-  'app-data': '#7d97ab',
-  'delivery-infra': '#4e91a8',
+  frontend: '#ffab94',
+  'app-data': '#a9d4f5',
+  'delivery-infra': '#9fe0e8',
 }
 
 /**
@@ -509,7 +509,7 @@ export const MIXER_STRIPS: readonly MixerStrip[] = MIXER_DATA.flatMap((group) =>
     name: channel.name,
     level: channel.level / 100,
     group: group.id,
-    color: GROUP_COLORS[group.id] ?? '#8e928e',
+    color: GROUP_COLORS[group.id] ?? '#cfc8e6',
   })),
 ).map((strip, index) => ({ ...strip, index: index + 1 }))
 
